@@ -79,7 +79,9 @@ docker compose --profile tools up -d
 ## Core API
 
 程式在 [`services/core-api/`](services/core-api/)：FastAPI ＋ SQLAlchemy 2.0 async，
-目前涵蓋 Identity、Elder 授權 policy、tenant 隔離的 repository 層與 transactional outbox。
+目前涵蓋 Identity、Elder 授權、Consent、Voice Session metadata、Care Event、Memory、
+Daily Summary、Family Report、Assignment、受控 Agent Tool、Deletion workflow，以及具
+tenant 隔離與 replay protection 的 transactional outbox／consumer foundation。
 
 ```powershell
 cd services/core-api
@@ -107,7 +109,7 @@ cd services/agent-runtime
 uv sync --extra test --extra dev
 uv run pytest              # 不需資料庫、AWS 憑證或網路
 uv run ruff check .
-uvicorn --app-dir src agent_runtime.app:app --reload --port 8000
+uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
 ```
 
 可執行的閉環：`POST /api/v1/agent/runs` → contract 驗證 → Orchestrator → Companion
@@ -127,11 +129,27 @@ Safety Evaluator 目前是 deterministic 的關鍵字規則（停藥、改藥、
 
 兩個服務各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
 
+## Frontend → Core → Agent 文字閉環
+
+目前可執行的前端是 [`packages/frontend/`](packages/frontend/)。瀏覽器只呼叫
+Next.js 的同源 `/backend/core/*`；BFF 從 `HttpOnly` Cookie 取得 Access Token，才在
+伺服器端轉成 Core API 要求的 Bearer Header。瀏覽器 JavaScript 不讀取 Token，寫入
+請求另有同源 Origin／CSRF gate。Core 會從可信認證 context 取得 actor／tenant，重新檢查 elder scope 與 `BASIC_VOICE` consent，建立
+Voice Session，才以 server-to-server 方式呼叫 Agent Runtime `:8001`。Agent 的
+安全結果由 Core 寫入稽核 metadata，再以統一 envelope 回給前端。
+
+這一條目前是 **TEXT_ONLY fallback**。麥克風、ASR、WebSocket 與 TTS 尚未實作，
+前端會明確顯示不可用，不會把文字輸入冒充成語音辨識結果。設定、啟動方式、
+安全邊界與 E2E 證據見
+[`docs/handover/2026-08-01-frontend-core-agent-integration.md`](docs/handover/2026-08-01-frontend-core-agent-integration.md)。
+
 ## API Contract
 
-[`contracts/`](contracts/) 放 OpenAPI 3.1 與 JSON Schema。core-api 涵蓋 6 個已實作的
-endpoint；agent-runtime 涵蓋 Agent Run、Handoff、Context Manifest、Safety Evaluation
-與 Tool 的 JSON Schema（尚無 OpenAPI，見 [`contracts/README.md`](contracts/README.md)）。
+[`contracts/`](contracts/) 放 OpenAPI 3.1、AsyncAPI 3.0 與 JSON Schema。core-api 合約涵蓋
+目前 runtime 的 44 個 operations；agent-runtime 另有 `/health` 與
+`POST /api/v1/agent/runs` 的 executable OpenAPI。Handoff、Context Manifest、Safety
+Evaluation 與 Tool schema 中仍有尚未接上 executable endpoint 的目標形狀，邊界見
+[`contracts/README.md`](contracts/README.md) 與 [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md)。
 
 ```powershell
 uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts
@@ -179,8 +197,9 @@ uv run alembic revision -m "PROJ-123 add xxx table"
 
 檔名格式為 `YYYYMMDD_HHMM_<slug>.py`（文件 13 §3.3）。
 
-**`--autogenerate` 目前不能用**：v0.1 baseline 來自手寫 SQL，專案還沒有 SQLAlchemy
-models，所以要自己寫 `op.execute()` 或 `op.create_table(..., schema="eldercare_ai")`。
+**`--autogenerate` 目前不能直接採用**：v0.1 baseline 來自手寫 SQL，48 張 baseline
+table 中目前只有 33 張有 SQLAlchemy model；autogenerate 會把未映射的 table 誤判為
+應刪除。新增 migration 時必須人工撰寫或逐項審查產物，不得套用自動產生的 drop。
 原因與後續打算見 [ADR 0002](docs/adr/0002-alembic-baseline-strategy.md)。
 
 ### baseline 與 `docs/` 那份 SQL 的關係
