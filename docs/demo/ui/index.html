@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kinsun.ai UI Demo — 全部 22 頁</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body {
+    font-family:"Figtree","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:#F6FAFB; color:#164E63; line-height:1.6; padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 1080px; margin:0 auto; }
+  header { padding-bottom: 32px; border-bottom:1px solid #A5F3FC; margin-bottom: 40px; }
+  h1 { font-size: clamp(28px, 4vw, 40px); letter-spacing:-.02em; }
+  .lede { color:#475569; margin-top: 12px; max-width: 62ch; }
+  .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .tag { font-size:12px; font-weight:600; padding:4px 12px; border-radius:9999px;
+         background:#CFFAFE; color:#0E7490; }
+  .tag.warn { background:#FFFBEB; color:#B45309; }
+  section { margin-bottom: 56px; }
+  h2 { font-size: 22px; margin-bottom: 6px; letter-spacing:-.01em; }
+  h2 + p.sub { color:#64748B; font-size:14px; margin-bottom: 20px; }
+  .surfaces { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); }
+  a.surface {
+    display:block; text-decoration:none; color:inherit; background:#fff;
+    border:1px solid #A5F3FC; border-radius:16px; padding:24px;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
+  }
+  a.surface:hover { box-shadow:0 12px 24px rgba(22,78,99,.10); transform: translateY(-2px); border-color:#0891B2; }
+  a.surface h3 { font-size:19px; display:flex; align-items:center; gap:10px; }
+  a.surface .count { font-size:12px; font-weight:700; color:#0E7490; background:#ECFEFF;
+                     padding:3px 10px; border-radius:9999px; margin-left:auto; }
+  a.surface p { font-size:14px; color:#64748B; margin-top:10px; }
+  a.surface code { font-size:12px; background:#F1F5F9; padding:2px 6px; border-radius:4px; color:#475569; }
+  table.pages { width:100%; border-collapse:collapse; font-size:14px; background:#fff;
+                border:1px solid #A5F3FC; border-radius:12px; overflow:hidden; }
+  table.pages th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+                   color:#64748B; padding:12px 16px; background:#F8FDFE; border-bottom:1px solid #A5F3FC; }
+  table.pages td { padding:11px 16px; border-bottom:1px solid #E2E8F0; vertical-align:top; }
+  table.pages tr:last-child td { border-bottom:none; }
+  table.pages a { color:#0E7490; font-weight:600; text-decoration:none; }
+  table.pages a:hover { text-decoration:underline; }
+  .pri { font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+  .p0 { background:#ECFDF5; color:#047857; }
+  .p1 { background:#ECFEFF; color:#0E7490; }
+  .p2 { background:#F1F5F9; color:#64748B; }
+  .tokens { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(168px,1fr)); }
+  .sw { background:#fff; border:1px solid #E2E8F0; border-radius:10px; overflow:hidden; }
+  .sw .chip { height:56px; }
+  .sw .info { padding:10px 12px; font-size:11px; }
+  .sw .info b { display:block; font-size:12px; }
+  .sw .info code { color:#64748B; }
+  .ratio { display:inline-block; margin-top:4px; font-weight:700; }
+  .ok { color:#047857; } .lim { color:#B45309; }
+  .rules { background:#fff; border:1px solid #A5F3FC; border-radius:12px; padding:8px 0; }
+  .rules li { padding:12px 20px; border-bottom:1px solid #E2E8F0; font-size:14px; display:flex; gap:12px; }
+  .rules li:last-child { border-bottom:none; }
+  .rules svg { width:18px; height:18px; flex:none; margin-top:3px; fill:none; stroke:#DC2626;
+               stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .grid2 { display:grid; gap:24px; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); }
+  .box { background:#fff; border:1px solid #A5F3FC; border-radius:12px; padding:20px; }
+  .box h3 { font-size:15px; margin-bottom:12px; }
+  .box table { width:100%; font-size:13px; border-collapse:collapse; }
+  .box td, .box th { padding:6px 0; border-bottom:1px solid #F1F5F9; text-align:left; }
+  .box th { font-size:11px; color:#64748B; text-transform:uppercase; letter-spacing:.05em; }
+  .box td.n { font-variant-numeric:tabular-nums; text-align:right; }
+  footer { margin-top:64px; padding-top:24px; border-top:1px solid #A5F3FC; font-size:13px; color:#64748B; }
+  footer code { background:#F1F5F9; padding:2px 6px; border-radius:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>kinsun.ai — 前端畫面 Demo</h1>
+  <p class="lede">
+    智慧長照 AI 陪伴系統的全部 22 個畫面，依文件 04 §五 的頁面清單與優先級建置。
+    三個 surface 共用一套 design token，各自覆寫字級、密度與觸控尺寸。
+    每個畫面下方附規格說明，指出該畫面對應的產品約束與其實作意涵。
+  </p>
+  <div class="meta">
+    <span class="tag">v0.1 Draft</span>
+    <span class="tag">平板優先 768 / 1024</span>
+    <span class="tag">Accessible &amp; Ethical</span>
+    <span class="tag warn">全部為合成資料</span>
+  </div>
+</header>
+
+<section>
+  <h2>三個 Surface</h2>
+  <p class="sub">點進去後可用右上角切換 平板直式 / 平板橫式 / 手機 / 桌機，畫面會自動縮放至可視範圍。</p>
+  <div class="surfaces">
+    <a class="surface" href="elder.html">
+      <h3>長者端 Voice UI<span class="count">9 頁</span></h3>
+      <p><code>data-surface="voice"</code> · 22px base · 64px 觸控 · 一次一個主要操作</p>
+      <p>首次同意、語音首頁與 9 個狀態、ASR 低信心確認、候選記憶確認、同意撤回、主動陪伴、衛教查詢、遊戲。</p>
+    </a>
+    <a class="surface" href="care.html">
+      <h3>專業照護端<span class="count">9 頁</span></h3>
+      <p><code>data-surface="care"</code> · 16px base · 密度 8 · ≥1024 顯示 sidebar</p>
+      <p>日照多長者概覽、長者詳情、每日摘要、事件時間軸、覆核與修正、居服行程、服務詳情、技術證據、7 狀態。</p>
+    </a>
+    <a class="surface" href="family.html">
+      <h3>家屬端<span class="count">6 頁</span></h3>
+      <p><code>data-surface="family"</code> · 18px base · 單欄 720px</p>
+      <p>首頁與今日摘要、摘要歷史、週報月報、通知設定、安全連結失效頁、8 狀態。</p>
+    </a>
+  </div>
+</section>
+
+<section>
+  <h2>22 個頁面</h2>
+  <p class="sub">編號對應文件 04 §五「頁面清單與優先級」。</p>
+  <table class="pages">
+    <thead><tr><th style="width:52px">#</th><th style="width:76px">優先級</th><th>頁面</th><th style="width:120px">Surface</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td><span class="pri p0">P0</span></td><td><a href="elder.html#e1">長者端首次同意與設定</a></td><td>voice</td></tr>
+      <tr><td>02</td><td><span class="pri p0">P0</span></td><td><a href="elder.html#e2">長者語音互動首頁</a></td><td>voice</td></tr>
+      <tr><td>03</td><td><span class="pri p0">P0</span></td><td><a href="elder.html#e3">錄音／辨識／生成／播放狀態</a></td><td>voice</td></tr>
+      <tr><td>04</td><td><span class="pri p0">P0</span></td><td><a href="elder.html#e4">ASR 低信心確認</a></td><td>voice</td></tr>
+      <tr><td>05</td><td><span class="pri p0">P0</span></td><td><a href="elder.html#e5">候選記憶確認</a></td><td>voice</td></tr>
+      <tr><td>06</td><td><span class="pri p0">P0</span></td><td><a href="care.html#c1">日照多長者概覽</a></td><td>care</td></tr>
+      <tr><td>07</td><td><span class="pri p0">P0</span></td><td><a href="care.html#c2">林阿嬤長者詳情</a></td><td>care</td></tr>
+      <tr><td>08</td><td><span class="pri p0">P0</span></td><td><a href="care.html#c3">每日摘要</a></td><td>care</td></tr>
+      <tr><td>09</td><td><span class="pri p0">P0</span></td><td><a href="care.html#c4">事件時間軸</a></td><td>care</td></tr>
+      <tr><td>10</td><td><span class="pri p0">P0</span></td><td><a href="care.html#c5">事件覆核與修正</a></td><td>care</td></tr>
+      <tr><td>11</td><td><span class="pri p1">P1</span></td><td><a href="care.html#c6">居服員今日行程／派案入口</a></td><td>care</td></tr>
+      <tr><td>12</td><td><span class="pri p1">P1</span></td><td><a href="care.html#c7">陳伯伯服務詳情</a></td><td>care</td></tr>
+      <tr><td>13</td><td><span class="pri p1">P1</span></td><td><a href="family.html#f1">家屬首頁與今日摘要</a></td><td>family</td></tr>
+      <tr><td>14</td><td><span class="pri p1">P1</span></td><td><a href="family.html#f2">家屬每日摘要歷史</a></td><td>family</td></tr>
+      <tr><td>15</td><td><span class="pri p1">P1</span></td><td><a href="family.html#f3">家屬週報與月報</a></td><td>family</td></tr>
+      <tr><td>16</td><td><span class="pri p1">P1</span></td><td><a href="family.html#f4">LINE／Email 通知設定</a></td><td>family</td></tr>
+      <tr><td>17</td><td><span class="pri p1">P1</span></td><td><a href="family.html#f5">家屬安全連結與授權失效頁</a></td><td>family</td></tr>
+      <tr><td>18</td><td><span class="pri p1">P1</span></td><td><a href="elder.html#e6">同意撤回與資料刪除流程</a></td><td>voice</td></tr>
+      <tr><td>19</td><td><span class="pri p2">P2</span></td><td><a href="elder.html#e7">主動陪伴設定與歷史</a></td><td>voice</td></tr>
+      <tr><td>20</td><td><span class="pri p2">P2</span></td><td><a href="elder.html#e8">RAG 衛教查詢</a></td><td>voice</td></tr>
+      <tr><td>21</td><td><span class="pri p2">P2</span></td><td><a href="elder.html#e9">遊戲與積分</a></td><td>voice</td></tr>
+      <tr><td>22</td><td><span class="pri p2">P2</span></td><td><a href="care.html#c8">內容管理與技術證據頁</a></td><td>care</td></tr>
+      <tr><td>—</td><td><span class="pri p2">附</span></td><td><a href="care.html#c9">照護端 7 狀態</a> · <a href="family.html#f6">家屬端 8 狀態</a></td><td>care / family</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>色彩</h2>
+  <p class="sub">主色與 accent 在白底上僅約 3.7:1，<b>不能當內文色</b>，因此拆為 fill 用與 text 用兩組 token。</p>
+  <div class="tokens">
+    <div class="sw"><div class="chip" style="background:#0891B2"></div><div class="info"><b>primary</b><code>#0891B2</code><span class="ratio lim">3.68:1 · 僅填色／≥24px</span></div></div>
+    <div class="sw"><div class="chip" style="background:#0E7490"></div><div class="info"><b>primary-text</b><code>#0E7490</code><span class="ratio ok">5.36:1 · AA</span></div></div>
+    <div class="sw"><div class="chip" style="background:#059669"></div><div class="info"><b>accent</b><code>#059669</code><span class="ratio lim">3.77:1 · 僅填色</span></div></div>
+    <div class="sw"><div class="chip" style="background:#047857"></div><div class="info"><b>accent-text</b><code>#047857</code><span class="ratio ok">5.48:1 · AA</span></div></div>
+    <div class="sw"><div class="chip" style="background:#164E63"></div><div class="info"><b>foreground</b><code>#164E63</code><span class="ratio ok">8.98:1 · AAA</span></div></div>
+    <div class="sw"><div class="chip" style="background:#64748B"></div><div class="info"><b>muted-fg</b><code>#64748B</code><span class="ratio ok">4.76:1 · 下限</span></div></div>
+    <div class="sw"><div class="chip" style="background:#DC2626"></div><div class="info"><b>destructive</b><code>#DC2626</code><span class="ratio ok">4.83:1 · AA</span></div></div>
+    <div class="sw"><div class="chip" style="background:#ECFEFF;border-bottom:1px solid #A5F3FC"></div><div class="info"><b>background</b><code>#ECFEFF</code><span class="ratio">voice 底色</span></div></div>
+  </div>
+
+  <div class="grid2" style="margin-top:24px">
+    <div class="box">
+      <h3>Workflow 狀態色 — 不表達健康</h3>
+      <table>
+        <tr><td><span class="pri" style="background:#F1F5F9;color:#64748B">◌ Candidate</span></td><td>虛線外框 · 尚未成為事實</td></tr>
+        <tr><td><span class="pri" style="background:#FFFBEB;color:#B45309">△ Needs Review</span></td><td>左側 4px 琥珀條 · 是待辦不是警訊</td></tr>
+        <tr><td><span class="pri" style="background:#ECFDF5;color:#047857">✓ Confirmed</span></td><td>已覆核 · <b>不是「她很好」</b></td></tr>
+        <tr><td><span class="pri" style="background:#ECFEFF;color:#0E7490">➤ Published</span></td><td>家屬可見</td></tr>
+        <tr><td><span class="pri" style="background:#FEF2F2;color:#DC2626">⊘ Withdrawn</span></td><td>已撤回 · 標題加刪除線</td></tr>
+        <tr><td><span class="pri" style="background:#F1F5F9;color:#64748B">— Data Insufficient</span></td><td>45° 斜線底紋</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <h3>字級（三 surface 對照）</h3>
+      <table>
+        <thead><tr><th>Token</th><th class="n">voice</th><th class="n">care</th><th class="n">family</th></tr></thead>
+        <tr><td>text-sm</td><td class="n">20</td><td class="n">14</td><td class="n">16</td></tr>
+        <tr><td><b>text-base</b></td><td class="n"><b>22</b></td><td class="n"><b>16</b></td><td class="n"><b>18</b></td></tr>
+        <tr><td>text-lg</td><td class="n">26</td><td class="n">18</td><td class="n">20</td></tr>
+        <tr><td>text-2xl</td><td class="n">40</td><td class="n">24</td><td class="n">30</td></tr>
+        <tr><td>line-height</td><td class="n">1.75</td><td class="n">1.5</td><td class="n">1.6</td></tr>
+        <tr><td>觸控最小</td><td class="n">64</td><td class="n">48</td><td class="n">48</td></tr>
+      </table>
+      <p style="font-size:12px;color:#64748B;margin-top:10px">字型：Figtree（拉丁／數字）+ Noto Sans TC（中文）。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>RWD</h2>
+  <p class="sub">設計順序：先做 768 → 向上做 1024 → 最後才向下做 390。主要載具是平板，先做手機會讓平板變成「放大的手機」。</p>
+  <div class="grid2">
+    <div class="box">
+      <h3>斷點</h3>
+      <table>
+        <thead><tr><th>名稱</th><th class="n">寬度</th><th>定位</th></tr></thead>
+        <tr><td>phone</td><td class="n">390–767</td><td>次要</td></tr>
+        <tr><td><b>tablet-p</b></td><td class="n"><b>768–1023</b></td><td><b>主要基準</b></td></tr>
+        <tr><td><b>tablet-l</b></td><td class="n"><b>1024–1279</b></td><td><b>主要基準</b></td></tr>
+        <tr><td>desktop</td><td class="n">≥1280</td><td>次要（照護端）</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <h3>橫直式差異</h3>
+      <table>
+        <thead><tr><th>Surface</th><th>直式 768</th><th>橫式 1024</th></tr></thead>
+        <tr><td>voice</td><td>置中單欄</td><td>左右分欄，<b>按鈕不放大</b></td></tr>
+        <tr><td>care</td><td>top app bar，2 欄卡</td><td>sidebar 240px，3 欄卡</td></tr>
+        <tr><td>family</td><td>單欄</td><td>單欄置中 720px</td></tr>
+      </table>
+      <p style="font-size:12px;color:#64748B;margin-top:10px">橫式可用高度僅約 660px；長者端按鈕放大會頂到底部操作列。元件層級使用 container query 而非 media query。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>明確禁止</h2>
+  <p class="sub">這些來自 <code>AGENTS.md §4</code> 與文件 04 §二，不是設計偏好。</p>
+  <ul class="rules">
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>健康狀態燈號、風險分數、情緒指數、跨長者排名</b>——顏色只表達 workflow 狀態，永遠不表達健康。</span></li>
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>趨勢預測與異常偵測視覺</b>——文件 04 §十.7 禁止醫療趨勢預測，因此 Gate 1 不引入圖表函式庫。</span></li>
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>未確認記憶／未覆核事件／Draft Report 進入正式讀取路徑</b>——虛線卡是「尚未成為事實」的形狀語言。</span></li>
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>家屬端渲染逐字稿、ASR 信心、內部筆記、未覆核事件</b>——建議在 API client 加 runtime assert。</span></li>
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>恐懼、內疚、壓力或情緒依賴的設計</b>——無連續天數懲罰、無倒數壓力、積分只加不扣。</span></li>
+    <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span><b>emoji 當結構圖示、移除 focus ring、<code>user-scalable=no</code>、AI 紫粉漸層、深色模式（v0.1）</b></span></li>
+  </ul>
+</section>
+
+<footer>
+  <p><b>檔案</b>：<code>docs/demo/ui/</code> — <code>index.html</code>（本頁）、<code>elder.html</code>、<code>care.html</code>、<code>family.html</code>、<code>tokens.css</code>（design token 實作）、<code>demo.js</code>（harness）。</p>
+  <p style="margin-top:8px"><b>規範</b>：<code>design-system/MASTER.md</code>。<b>頁面來源</b>：<code>docs/04…資訊架構、UX 與 User Flow v0.1.md</code> §五。</p>
+  <p style="margin-top:8px">所有人名、數值與內容均為合成資料。尚未決定的項目（app 拓撲、Router、狀態管理、i18n）未在此鎖定。</p>
+</footer>
+
+</div>
+</body>
+</html>

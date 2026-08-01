@@ -1,0 +1,1 @@
+"""Companion agent package."""

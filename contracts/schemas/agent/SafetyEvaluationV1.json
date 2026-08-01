@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/agent/SafetyEvaluationV1.json",
+  "title": "SafetyEvaluationV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision",
+    "risk_level",
+    "reason_codes",
+    "matched_terms",
+    "safe_reply"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["ALLOW", "BLOCK", "SAFE_FALLBACK", "HUMAN_REVIEW"]
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      }
+    },
+    "matched_terms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      }
+    },
+    "safe_reply": {
+      "type": ["string", "null"],
+      "maxLength": 4000
+    }
+  }
+}

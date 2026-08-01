@@ -1,0 +1,200 @@
+openapi: 3.1.0
+
+info:
+  title: kinsun.ai Agent Runtime
+  version: "1.0.0"
+  summary: Agent run endpoint for the smart eldercare AI companion system.
+  description: |
+    Contract for the endpoints that are ACTUALLY IMPLEMENTED in
+    `services/agent-runtime`. Every path, field and status code below can be
+    exercised against a running instance with no database, AWS credentials or
+    network access.
+
+    What this service does NOT do yet, despite `contracts/schemas/` containing
+    shapes for them: execute tools, extract care events, create memory
+    candidates, query OpenSearch or Neptune, or hand off between agents.
+    `HandoffEnvelopeV1`, `ToolRequestV1` and `ToolResponseV1` are target shapes
+    and are deliberately absent from this document.
+
+    Model output comes from `MockModelProvider` — deterministic, local, and not
+    a language model. Nothing here is evidence that a Bedrock-backed runtime
+    behaves the same way.
+
+    Safety behaviour worth knowing before integrating: a high-risk request is
+    answered with HTTP 200 whose `data.result_status` is `BLOCKED` and whose
+    `data.reply_text` is a safe replacement message. Refusal is a conversational
+    outcome, not a transport error — the elder still receives a reply.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development (uvicorn --app-dir src agent_runtime.app:app)
+
+tags:
+  - name: operations
+    description: Liveness probe. Unauthenticated.
+  - name: agent
+    description: Agent execution.
+
+paths:
+  /health:
+    get:
+      tags: [operations]
+      operationId: getAgentRuntimeHealth
+      summary: Process liveness
+      description: |
+        Returns 200 for as long as the process is alive. Touches no dependency,
+        so it stays meaningful when the model provider is unavailable.
+      security: []
+      responses:
+        "200":
+          description: Process is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status, service, version]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+                  service:
+                    type: string
+                    const: agent-runtime
+                  version:
+                    type: string
+                    description: API contract version the process reports.
+              example:
+                status: ok
+                service: agent-runtime
+                version: "1.0.0"
+
+  /api/v1/agent/runs:
+    post:
+      tags: [agent]
+      operationId: createAgentRun
+      summary: Run one agent turn
+      description: |
+        Builds a context manifest, produces a companion reply, evaluates it
+        against the safety rules, and returns the result.
+
+        `max_steps` is the caller's own ceiling. It must not exceed the server's
+        `MAX_AGENT_DECISIONS`; asking for more is a 422, not a silent clamp.
+        M0 always spends exactly one step, so `data.step_count` is always 1.
+
+        The request body carries elder transcript. It is never echoed back in
+        error responses and never written to general logs.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentRunRequestV1"
+      responses:
+        "200":
+          description: |
+            The turn completed. This includes safety-blocked turns — check
+            `data.result_status` and `data.safety_result.decision`.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AgentRunResponseV1"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMetaV1"
+              example:
+                data:
+                  schema_version: "1.0.0"
+                  request_id: req-001
+                  trace_id: trace-001
+                  agent_run_id: run-3f1b2c9e-5d47-4a1e-9c33-7b0a5e2d8f41
+                  selected_agent: companion-agent
+                  reply_text: 知道了，您今天早餐吃了粥。還有其他想和我分享的事情嗎？
+                  reply_language: zh-TW
+                  safety_result:
+                    schema_version: "1.0.0"
+                    decision: ALLOW
+                    risk_level: LOW
+                    reason_codes: [ALLOW]
+                    matched_terms: []
+                    safe_reply: null
+                  context_manifest_id: id-8c2d4e6a-1b39-4f57-a0d2-6e8b3c5a7d19
+                  step_count: 1
+                  result_status: SUCCESS
+                  reason_codes: [ALLOW]
+                meta:
+                  correlation_id: 4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64
+                  timestamp: "2026-07-31T04:12:09.482714Z"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    CorrelationId:
+      name: x-correlation-id
+      in: header
+      required: false
+      description: |
+        Client-supplied correlation id. Generated server-side when absent, and
+        always echoed back in the `x-correlation-id` response header and in
+        `meta.correlation_id`.
+      schema:
+        type: string
+
+  responses:
+    ValidationFailed:
+      description: |
+        The body failed schema validation, or it asked for something the
+        runtime's limits forbid (`max_steps` above `MAX_AGENT_DECISIONS`).
+        Both arrive as `validation_error`.
+
+        `details` is populated for schema rejection and carries the field path
+        plus the rejection type. It never carries the rejected value: the body
+        is elder transcript.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelopeV1"
+          example:
+            error:
+              code: validation_error
+              message: Request failed schema validation.
+              correlation_id: 4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64
+              details:
+                - field: body.max_steps
+                  reason: greater_than_equal
+
+    InternalError:
+      description: |
+        Unexpected server-side failure. The message is generic and the
+        traceback is logged server-side only.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelopeV1"
+          example:
+            error:
+              code: internal_error
+              message: Internal server error.
+              correlation_id: 4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64
+              details: null
+
+  schemas:
+    ResponseMetaV1:
+      $ref: "../schemas/common/ResponseMetaV1.json"
+    ErrorEnvelopeV1:
+      $ref: "../schemas/common/ErrorEnvelopeV1.json"
+    AgentRunRequestV1:
+      $ref: "../schemas/agent/AgentRunRequestV1.json"
+    AgentRunResponseV1:
+      $ref: "../schemas/agent/AgentRunResponseV1.json"
+
+security: []

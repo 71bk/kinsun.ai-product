@@ -1,0 +1,8 @@
+{
+  "data": {
+    "purposes": ["BASIC_VOICE", "CARE_EVENT_EXTRACTION"],
+    "share_scopes": [],
+    "actor_confirmation": true,
+    "policy_version": "consent-demo-v1"
+  }
+}

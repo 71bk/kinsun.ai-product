@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>長者端 — kinsun.ai UI Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* 本頁專用版面 */
+  .grid-states { display:grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); }
+  .state-cell { text-align:center; display:flex; flex-direction:column; align-items:center; gap: var(--space-3); }
+  .ring { width:88px; aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+          background: var(--color-primary); color:#fff; position:relative; flex:none; }
+  .ring svg { width:38%; height:38%; }
+  .ring::before { content:""; position:absolute; inset:-7px; border-radius:50%; border:4px solid var(--color-primary); opacity:.3; }
+  .ring[data-s="rec"], .ring[data-s="play"] { background: var(--color-accent); }
+  .ring[data-s="rec"]::before, .ring[data-s="play"]::before { border-color: var(--color-accent); }
+  .ring[data-s="rec"]::before { animation: breathe 2.2s var(--ease-out) infinite; }
+  .ring[data-s="proc"]::before, .ring[data-s="gen"]::before { animation: breathe 1.4s var(--ease-out) infinite; }
+  .ring[data-s="off"] { background: var(--slate-400); }
+  .ring[data-s="off"]::before { border-color: var(--slate-400); }
+  .state-cell h3 { font-size: var(--text-lg); }
+  .state-cell p { font-size: var(--text-xs); color: var(--color-muted-foreground); line-height:1.55; }
+  .consent-item { padding: var(--space-5) 0; border-bottom:1px solid var(--color-border); }
+  .consent-item:last-child { border-bottom:none; }
+  .consent-item h3 { font-size: var(--text-lg); margin-bottom:6px; }
+  .consent-item p { font-size: var(--text-sm); color: var(--color-muted-foreground); }
+  .big-choice { display:grid; gap: var(--space-4); }
+  @container (min-width: 700px) { .big-choice { grid-template-columns:1fr 1fr; } }
+  .quote { background: var(--color-primary-weak); border-radius: var(--radius-lg);
+           padding: var(--space-6); font-size: var(--text-xl); font-weight:700; line-height:1.6; }
+  .quote mark { background:#FDE68A; padding:0 4px; border-radius:4px; }
+</style>
+</head>
+<body class="demo">
+
+<nav class="demo-nav">
+  <h1>長者端 Voice UI</h1>
+  <p class="sub">data-surface="voice" · 22px base · 64px tap</p>
+  <a class="demo-back" href="index.html">← 回總覽（全部 22 頁）</a>
+
+  <div class="demo-group">
+    <p>P0 — Gate 1 必備</p>
+    <button data-screen="e1"><span class="n">01</span>首次同意與設定</button>
+    <button data-screen="e2"><span class="n">02</span>語音互動首頁</button>
+    <button data-screen="e3"><span class="n">03</span>錄音／辨識／生成／播放狀態</button>
+    <button data-screen="e4"><span class="n">04</span>ASR 低信心確認</button>
+    <button data-screen="e5"><span class="n">05</span>候選記憶確認</button>
+  </div>
+  <div class="demo-group">
+    <p>P1</p>
+    <button data-screen="e6"><span class="n">18</span>同意撤回與資料刪除</button>
+  </div>
+  <div class="demo-group">
+    <p>P2 — 後續擴充</p>
+    <button data-screen="e7"><span class="n">19</span>主動陪伴設定與歷史</button>
+    <button data-screen="e8"><span class="n">20</span>RAG 衛教查詢</button>
+    <button data-screen="e9"><span class="n">21</span>遊戲與積分</button>
+  </div>
+</nav>
+
+<div class="demo-main">
+  <div class="demo-bar">
+    <div class="title" data-screen-title></div>
+    <div class="seg">
+      <button data-view="tp">平板直式</button>
+      <button data-view="tl">平板橫式</button>
+      <button data-view="ph">手機</button>
+      <button data-view="dt">桌機</button>
+    </div>
+    <span style="font-size:11px;color:#94A3B8" data-view-label></span>
+  </div>
+
+  <div class="demo-stage">
+    <div>
+      <div class="frame-wrap">
+        <div data-surface="voice">
+          <div class="device">
+            <span class="synthetic">合成資料 SYNTHETIC</span>
+
+<!-- ══════════ E1 首次同意與設定 ══════════ -->
+<section class="screen" id="e1" data-surface="voice"
+  data-title="01 · 長者端首次同意與設定"
+  data-note="P0 · 文件 04 §6.1 分層同意"
+  data-spec="七個 <b>consent purpose 各自獨立</b>，不得以單一總開關代替（AGENTS.md §5）。拒絕任何一項仍可繼續被允許的基本陪伴，介面必須說明哪些功能不會啟用。底部固定列保留 <b>safe-area-inset-bottom</b>。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回上一步"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">開始之前</h2>
+    <span class="pill pill-published"><svg class="icon"><use href="#i-globe"/></svg>台語</span>
+  </div>
+  <div class="pane stack g6">
+    <div class="stack g3">
+      <h2 style="font-size:var(--text-2xl)">阿嬤，這些要先請你決定</h2>
+      <p class="muted">每一項都可以分開選，也可以隨時改。不同意的部分，我就不會做。</p>
+    </div>
+
+    <div class="card">
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>跟我說話</h3>
+            <p>錄下你說的話，讓我可以回答你。不同意就沒辦法用語音陪伴。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="true" aria-label="跟我說話" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>保存我們說過的話</h3>
+            <p>把逐字內容存起來。不同意的話，講完就不留。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="true" aria-label="保存我們說過的話" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>整理你的生活小事</h3>
+            <p>像是今天吃了什麼、去哪裡走走，整理給照顧你的人看。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="true" aria-label="整理你的生活小事" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>記住重要的事</h3>
+            <p>例如孫子的名字、你喜歡的歌。<b>每一件都會先問過你</b>才記。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="true" aria-label="記住重要的事" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>留意你想不想有人陪</h3>
+            <p>只看聊天的次數和時間，不會判斷你的身體或心情好壞。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="false" aria-label="留意你想不想有人陪" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>我主動找你聊天</h3>
+            <p>在你指定的時間才會出聲。其他時間我不會吵你。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="false" aria-label="我主動找你聊天" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="consent-item">
+        <div class="row g4 between">
+          <div class="grow">
+            <h3>讓家人看到摘要</h3>
+            <p>家人只看得到整理過的摘要，看不到我們說話的原文。</p>
+          </div>
+          <div class="switch" role="switch" aria-checked="true" aria-label="讓家人看到摘要" tabindex="0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-candidate">
+      <div class="row g3">
+        <svg class="icon" style="color:var(--st-candidate-fg)"><use href="#i-dashed"/></svg>
+        <p style="font-size:var(--text-sm)"><b>你關掉了 2 項</b>：留意你想不想有人陪、我主動找你聊天。<br>我不會做這兩件事，其他還是照常。</p>
+      </div>
+    </div>
+  </div>
+  <div class="bottombar">
+    <button class="btn btn-secondary">再看一次</button>
+    <button class="btn btn-primary"><svg class="icon"><use href="#i-check"/></svg>就這樣，開始吧</button>
+  </div>
+</section>
+
+<!-- ══════════ E2 語音互動首頁 ══════════ -->
+<section class="screen" id="e2" data-surface="voice"
+  data-title="02 · 長者語音互動首頁（Idle）"
+  data-note="P0 · 文件 04 §8.1"
+  data-spec="首頁<b>只有一個</b>主要行動。不得塞入長列表、複雜導覽或多個同等重要按鈕。主按鈕 <code>min(55cqw, 280px)</code>；<b>切到平板橫式會改成左右分欄且按鈕不放大</b>——橫式可用高度僅約 660px，放大會頂到底部操作列。">
+  <div class="appbar">
+    <div class="row g3 grow">
+      <svg class="icon icon-lg" style="color:var(--color-primary)"><use href="#i-user"/></svg>
+      <h2>阿嬤</h2>
+    </div>
+    <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-globe"/></svg>台語</button>
+    <button class="btn btn-ghost" aria-label="設定"><svg class="icon"><use href="#i-gear"/></svg></button>
+  </div>
+
+  <div class="voice-stage">
+    <button class="mic" data-state="idle" aria-label="按一下開始說話">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/>
+      </svg>
+    </button>
+    <div class="voice-copy">
+      <p class="voice-status">按一下開始說話</p>
+      <p class="voice-sub">想說什麼都可以，我在這裡聽。</p>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <button class="btn btn-secondary"><svg class="icon"><use href="#i-speaker"/></svg>重播</button>
+    <button class="btn btn-secondary"><svg class="icon"><use href="#i-shield"/></svg>我的資料</button>
+  </div>
+</section>
+
+<!-- ══════════ E3 九狀態 ══════════ -->
+<section class="screen" id="e3" data-surface="voice"
+  data-title="03 · 錄音／辨識／生成／播放狀態（9 狀態）"
+  data-note="P0 · 文件 04 §7.1"
+  data-spec="首頁的 9 個狀態一次列出，<b>每一個都有獨立的視覺 + 文字 + 語音提示</b>，不能只換一行字。失敗文案主詞一律是系統（「我沒聽清楚」而非「辨識失敗」）。呼吸環是全站<b>唯一允許的動態元素</b>；<code>prefers-reduced-motion</code> 下退化為靜態環，資訊不流失。">
+  <div class="appbar"><h2 class="grow">語音首頁的 9 個狀態</h2></div>
+  <div class="pane stack g6">
+    <p class="muted" style="font-size:var(--text-sm)">實際產品中這 9 個狀態在同一個畫面上輪替；此處並列以便審查。</p>
+    <div class="grid-states">
+      <div class="state-cell">
+        <div class="ring" data-s="idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg></div>
+        <h3>按一下開始說話</h3><p>Idle · 靜態環</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg></div>
+        <h3>我在聽…</h3><p>Recording · 呼吸環 + 音量反饋</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="proc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.8v5.4l3.4 2"/></svg></div>
+        <h3>我正在聽清楚你的話</h3><p>Processing ASR</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="gen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.7a8 8 0 0 1-11.7 7.1L4 20.4l1.6-5.2A8 8 0 1 1 21 11.7z"/></svg></div>
+        <h3>我正在整理回答</h3><p>Generating</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5.2l11 6.8-11 6.8z"/></svg></div>
+        <h3>正在說給你聽</h3><p>Playing · 附「再說一次」</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4L2.8 19.5h18.4z"/><path d="M12 10v4"/><path d="M12 16.9v.01"/></svg></div>
+        <h3>我聽到「…」，是這樣嗎？</h3><p>Low Confidence · 見畫面 04</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.8v5.4l3.4 2"/></svg></div>
+        <h3>剛剛沒有聽到聲音</h3><p>Timeout · 要再試一次嗎？</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M2 8.8A16 16 0 0 1 8.2 5.4"/><path d="M13.5 5.2A16 16 0 0 1 22 8.8"/><path d="M8.6 16.3a6 6 0 0 1 6.2-.6"/><path d="M12 20v.01"/></svg></div>
+        <h3>網路好像斷了</h3><p>Offline · 等一下再試</p>
+      </div>
+      <div class="state-cell">
+        <div class="ring" data-s="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5a3 3 0 0 1 6 0v5.5"/><path d="M9 9.5V11a3 3 0 0 0 4.6 2.5"/><path d="M12 18v4"/><path d="M3 3l18 18"/></svg></div>
+        <h3>要先讓我用麥克風</h3><p>Permission Denied · 附白話步驟</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ E4 ASR 低信心確認 ══════════ -->
+<section class="screen" id="e4" data-surface="voice"
+  data-title="04 · ASR 低信心確認"
+  data-note="P0 · 文件 04 §6.3"
+  data-spec="人物、日期、否定或用藥欄位信心不足時觸發。只給<b>「是」「不是／重說」兩個</b>主要選項。<b>不顯示技術信心分數。</b>否認或再次不清楚時<b>不寫入正式事件或記憶</b>。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="取消"><svg class="icon icon-sm"><use href="#i-x"/></svg></button>
+    <h2 class="grow">確認一下</h2>
+  </div>
+  <div class="pane stack g8" style="justify-content:center">
+    <div class="stack g5">
+      <p style="font-size:var(--text-xl);font-weight:700">我聽到你說：</p>
+      <div class="quote">昨天<mark>小明</mark>有來看我，我們吃了<mark>肉粽</mark>。</div>
+      <p class="muted" style="font-size:var(--text-sm)">畫底色的地方我不太確定，可以幫我確認嗎？</p>
+    </div>
+    <div class="big-choice">
+      <button class="btn btn-accent" style="min-height:88px"><svg class="icon icon-lg"><use href="#i-check"/></svg>對，是這樣</button>
+      <button class="btn btn-secondary" style="min-height:88px"><svg class="icon icon-lg"><use href="#i-repeat"/></svg>不是，我再說一次</button>
+    </div>
+    <button class="btn btn-ghost">先跳過這一句</button>
+  </div>
+</section>
+
+<!-- ══════════ E5 候選記憶確認 ══════════ -->
+<section class="screen" id="e5" data-surface="voice"
+  data-title="05 · 候選記憶確認"
+  data-note="P0 · 文件 04 §6.4、§8.2"
+  data-spec="候選記憶以<b>虛線卡片</b>呈現——「虛線 = 尚未成為事實」是跨三端一致的形狀語言。三個選項<b>視覺權重必須不同</b>：記住（filled）、不要記（outline）、稍後再說（ghost）。「稍後再說」保持候選狀態且<b>不得在後續對話引用</b>。不顯示信心分數。">
+  <div class="appbar"><h2 class="grow">要讓我記住這件事嗎？</h2></div>
+  <div class="pane stack g8" style="justify-content:center">
+    <div class="card card-candidate stack g4">
+      <div class="row g3">
+        <span class="pill pill-candidate"><svg class="icon"><use href="#i-dashed"/></svg>還沒記下來</span>
+      </div>
+      <p style="font-size:var(--text-xl);font-weight:700;line-height:1.6">你的孫子叫小明，昨天來看你，你們一起吃肉粽。</p>
+      <div class="divider"></div>
+      <p class="muted" style="font-size:var(--text-sm)">記住以後，下次我們聊天我就會知道小明是誰，不用你再說一次。</p>
+      <button class="btn btn-secondary btn-sm" style="align-self:flex-start"><svg class="icon icon-sm"><use href="#i-speaker"/></svg>念給我聽</button>
+    </div>
+
+    <div class="stack g4">
+      <button class="btn btn-accent btn-block" style="min-height:88px"><svg class="icon icon-lg"><use href="#i-check"/></svg>好，記住</button>
+      <div class="row g4">
+        <button class="btn btn-secondary grow">不要記</button>
+        <button class="btn btn-ghost grow">稍後再說</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ E6 同意撤回與資料刪除 ══════════ -->
+<section class="screen" id="e6" data-surface="voice"
+  data-title="18 · 同意撤回與資料刪除"
+  data-note="P1 · 文件 04 §6.9"
+  data-spec="撤回必須<b>先顯示影響範圍再二次確認</b>。撤回後立即停止新增對應資料與通知、<b>未使用的家屬安全連結立刻失效</b>，再依 Policy 啟動刪除。此路徑優先於 Retry、Replay、Backfill 與主動陪伴（AGENTS.md §4）。破壞性按鈕與主操作至少間隔 24px。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">我的資料</h2>
+  </div>
+  <div class="pane stack g6">
+    <div class="card stack g4">
+      <h3 style="font-size:var(--text-lg)">現在開著的</h3>
+      <div class="stack g3">
+        <div class="row g3"><svg class="icon" style="color:var(--st-confirmed-fg)"><use href="#i-check"/></svg><span class="grow">跟我說話</span></div>
+        <div class="row g3"><svg class="icon" style="color:var(--st-confirmed-fg)"><use href="#i-check"/></svg><span class="grow">記住重要的事</span></div>
+        <div class="row g3"><svg class="icon" style="color:var(--st-confirmed-fg)"><use href="#i-check"/></svg><span class="grow">讓家人看到摘要</span></div>
+      </div>
+    </div>
+
+    <div class="card card-review stack g4">
+      <div class="row g3">
+        <svg class="icon" style="color:var(--st-review-fg)"><use href="#i-warn"/></svg>
+        <h3 style="font-size:var(--text-lg)">如果關掉「讓家人看到摘要」</h3>
+      </div>
+      <ul class="stack g3" style="font-size:var(--text-sm)">
+        <li>• 家人<b>馬上</b>看不到新的摘要。</li>
+        <li>• 已經寄出、還沒點開的連結<b>會立刻失效</b>。</li>
+        <li>• 之前已經發布的 12 份摘要，會在 30 天內刪掉。</li>
+        <li>• 你跟我聊天不受影響。</li>
+      </ul>
+    </div>
+
+    <div class="stack g4" style="margin-top:var(--space-6)">
+      <button class="btn btn-destructive btn-block"><svg class="icon"><use href="#i-ban"/></svg>關掉「讓家人看到摘要」</button>
+      <button class="btn btn-destructive btn-block"><svg class="icon"><use href="#i-trash"/></svg>把我說過的話全部刪掉</button>
+    </div>
+    <button class="btn btn-secondary btn-block">先不要，回去聊天</button>
+  </div>
+</section>
+
+<!-- ══════════ E7 主動陪伴 ══════════ -->
+<section class="screen" id="e7" data-surface="voice"
+  data-title="19 · 主動陪伴設定與歷史"
+  data-note="P2 · 文件 04 §五 P2"
+  data-spec="<b>PROACTIVE_COMPANION</b> 同意獨立於其他 purpose。只在長者指定的時段出聲，靜默時段一律不觸發。<b>不得使用恐懼、內疚、壓力或情緒依賴設計提高互動率</b>（AGENTS.md §4）——因此歷史只呈現事實紀錄，不呈現「你已經 3 天沒理我了」這類文案。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">我主動找你聊天</h2>
+  </div>
+  <div class="pane stack g6">
+    <div class="card">
+      <div class="row g4 between">
+        <div class="grow"><h3 style="font-size:var(--text-lg)">開啟這個功能</h3>
+        <p class="muted" style="font-size:var(--text-sm)">只在你選的時間，其他時間我不會出聲。</p></div>
+        <div class="switch" role="switch" aria-checked="true" aria-label="開啟主動陪伴" tabindex="0"></div>
+      </div>
+    </div>
+
+    <div class="card stack g5">
+      <h3 style="font-size:var(--text-lg)">我可以出聲的時間</h3>
+      <div class="row g3 wrap">
+        <span class="pill pill-published" style="font-size:var(--text-sm);padding:8px 16px"><svg class="icon"><use href="#i-clock"/></svg>早上 09:00</span>
+        <span class="pill pill-published" style="font-size:var(--text-sm);padding:8px 16px"><svg class="icon"><use href="#i-clock"/></svg>下午 15:30</span>
+        <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-plus"/></svg>加一個</button>
+      </div>
+      <div class="divider"></div>
+      <h3 style="font-size:var(--text-lg)">不要吵我的時間</h3>
+      <p class="muted" style="font-size:var(--text-sm)">晚上 20:00 到 隔天早上 08:00</p>
+    </div>
+
+    <div class="stack g4">
+      <h3 style="font-size:var(--text-lg)">我找過你幾次</h3>
+      <div class="card stack g3">
+        <div class="row g3 between"><span>8月1日 09:00</span><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>你有回我</span></div>
+        <div class="divider"></div>
+        <div class="row g3 between"><span>7月31日 15:30</span><span class="pill pill-candidate"><svg class="icon"><use href="#i-minus"/></svg>沒有接</span></div>
+        <div class="divider"></div>
+        <div class="row g3 between"><span>7月31日 09:00</span><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>你有回我</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ E8 RAG 衛教查詢 ══════════ -->
+<section class="screen" id="e8" data-surface="voice"
+  data-title="20 · RAG 衛教查詢"
+  data-note="P2 · 文件 04 §五 P2"
+  data-spec="RAG 必須保存<b>來源、版本、有效日期、覆核狀態</b>並顯示給使用者（AGENTS.md §7）。<b>沒有可靠來源時明確回覆資料不足</b>，不得用模型知識補答。任何情況下不提供診斷或治療建議——右下卡片示範被擋下時的回應。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">問問看</h2>
+  </div>
+  <div class="pane stack g6">
+    <div class="quote" style="font-size:var(--text-lg)">阿嬤問：「血壓的藥可以配葡萄柚汁嗎？」</div>
+
+    <div class="card card-confirmed stack g4">
+      <span class="pill pill-confirmed"><svg class="icon"><use href="#i-book"/></svg>有可靠來源</span>
+      <p style="font-size:var(--text-lg);line-height:1.7">有些血壓藥跟葡萄柚會互相影響。這件事要問過你的醫師或藥師才知道，我不能幫你決定。</p>
+      <div class="divider"></div>
+      <div class="stack g2" style="font-size:var(--text-xs)">
+        <p class="muted">來源：衛生福利部｜用藥安全衛教單張</p>
+        <p class="muted">版本 v2.1 · 有效至 2027-03-31 · 已由藥師覆核</p>
+      </div>
+    </div>
+
+    <div class="card card-nodata stack g3">
+      <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>資料不足</span>
+      <p style="font-size:var(--text-base)">「我這樣算不算失智？」——這個我沒有可靠的資料可以回答，也不能幫你判斷身體狀況。要不要我幫你記下來，下次問照顧你的人？</p>
+    </div>
+  </div>
+  <div class="bottombar">
+    <button class="btn btn-primary btn-block"><svg class="icon"><use href="#i-mic"/></svg>再問一個問題</button>
+  </div>
+</section>
+
+<!-- ══════════ E9 遊戲與積分 ══════════ -->
+<section class="screen" id="e9" data-surface="voice"
+  data-title="21 · 遊戲與積分"
+  data-note="P2 · 文件 04 §五 P2"
+  data-spec="<b>不得使用恐懼、內疚、壓力、欺騙或情緒依賴設計提高互動率</b>（AGENTS.md §4）。因此：無連續天數斷掉的懲罰、無倒數壓力、無「你讓我失望了」式文案。積分只累加不扣除，錯了也不扣分。這是把 gamification 做成<b>可放棄</b>的設計。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">動動腦</h2>
+  </div>
+  <div class="pane stack g6">
+    <div class="card stack g4" style="align-items:center;text-align:center">
+      <svg class="icon" style="width:56px;height:56px;color:var(--color-accent)"><use href="#i-trophy"/></svg>
+      <p style="font-size:var(--text-2xl);font-weight:700" class="num">126 點</p>
+      <p class="muted" style="font-size:var(--text-sm)">慢慢玩就好，不玩也沒關係。點數不會扣掉。</p>
+    </div>
+
+    <div class="card stack g5">
+      <h3 style="font-size:var(--text-lg)">今天的題目</h3>
+      <p style="font-size:var(--text-xl);font-weight:700;line-height:1.6">下面哪一個是水果？</p>
+      <div class="stack g3">
+        <button class="btn btn-secondary btn-block" style="min-height:72px;justify-content:flex-start">芭樂</button>
+        <button class="btn btn-secondary btn-block" style="min-height:72px;justify-content:flex-start">板凳</button>
+        <button class="btn btn-secondary btn-block" style="min-height:72px;justify-content:flex-start">雨傘</button>
+      </div>
+      <p class="muted" style="font-size:var(--text-sm)">答錯不會扣點，想不出來可以直接跳過。</p>
+    </div>
+
+    <button class="btn btn-ghost btn-block">今天不想玩，回去聊天</button>
+  </div>
+</section>
+
+          </div>
+        </div>
+      </div>
+      <p class="device-note" data-screen-spec></p>
+    </div>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

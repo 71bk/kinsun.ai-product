@@ -1,0 +1,13 @@
+{
+  "data": {
+    "purpose": "elder:access_context:read",
+    "allowed_actions": ["elder:basic:read", "elder:access_context:read"],
+    "source_type": "relationship",
+    "source_summary": "DAYCARE_ASSIGNMENT relationship",
+    "expires_at": "2026-12-31T15:59:59Z"
+  },
+  "meta": {
+    "correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64",
+    "timestamp": "2026-07-31T04:12:09.482714Z"
+  }
+}

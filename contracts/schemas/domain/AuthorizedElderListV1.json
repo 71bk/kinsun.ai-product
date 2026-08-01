@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AuthorizedElderListV1.json",
+  "title": "AuthorizedElderListV1",
+  "description": "Paginated elders the caller may access in the requested mode, returned by GET /api/v1/me/authorized-elders. The server filters by role, care unit, assignment, relationship and validity window; document 10 section 4.6 forbids any client filter from widening that set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items", "page"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AuthorizedElderItem"
+      }
+    },
+    "page": {
+      "$ref": "https://kinsun.ai/contracts/schemas/common/PaginationMetaV1.json"
+    }
+  },
+  "$defs": {
+    "AuthorizedElderItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elder_id", "display_name"],
+      "properties": {
+        "elder_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "care_unit_name": {
+          "description": "Care unit this authorization runs through, or null when the authorizing record names no care unit.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "authorization_summary": {
+          "description": "Short description of why the elder is visible. Must not disclose other actors' identities.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

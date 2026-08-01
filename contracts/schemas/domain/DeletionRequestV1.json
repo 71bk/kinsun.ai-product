@@ -1,0 +1,252 @@
+{
+  "$defs": {
+    "DeletionJobItemResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "deletion_job_item_id": {
+          "format": "uuid",
+          "title": "Deletion Job Item Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "system_of_record": {
+          "title": "System Of Record",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "PENDING",
+            "PROCESSING",
+            "COMPLETED",
+            "FAILED",
+            "SKIPPED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "attempt_count": {
+          "minimum": 0,
+          "title": "Attempt Count",
+          "type": "integer"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Started At"
+        },
+        "failure_code": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Failure Code"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Completed At"
+        }
+      },
+      "required": [
+        "deletion_job_item_id",
+        "resource_type",
+        "system_of_record",
+        "status",
+        "attempt_count",
+        "started_at",
+        "failure_code",
+        "completed_at"
+      ],
+      "title": "DeletionJobItemResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "COMPLETED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "completed_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "COMPLETED",
+                    "SKIPPED"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PARTIAL_FAILED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "completed_at": {
+            "type": "null"
+          },
+          "items": {
+            "contains": {
+              "properties": {
+                "status": {
+                  "const": "FAILED"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "minContains": 1
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "deletion_request_id": {
+      "format": "uuid",
+      "title": "Deletion Request Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "consent_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Consent Id"
+    },
+    "scope": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "REQUESTED",
+        "IN_PROGRESS",
+        "PARTIAL_FAILED",
+        "COMPLETED",
+        "CANCELLED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    },
+    "requested_at": {
+      "format": "date-time",
+      "title": "Requested At",
+      "type": "string"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Completed At"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/DeletionJobItemResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "deletion_request_id",
+    "elder_id",
+    "consent_id",
+    "scope",
+    "status",
+    "reason_code",
+    "requested_at",
+    "effective_at",
+    "completed_at",
+    "items"
+  ],
+  "title": "DeletionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DeletionRequestV1.json"
+}

@@ -1,0 +1,88 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "result_status": {
+      "enum": [
+        "SUCCESS",
+        "NO_DATA",
+        "BLOCKED",
+        "FAILED"
+      ],
+      "title": "Result Status",
+      "type": "string"
+    },
+    "data": {
+      "default": null,
+      "title": "Data"
+    },
+    "resource_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Resource Id"
+    },
+    "resource_version": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Resource Version"
+    },
+    "source_refs": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason Code"
+    },
+    "retryable": {
+      "default": false,
+      "title": "Retryable",
+      "type": "boolean"
+    },
+    "redactions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Redactions",
+      "type": "array"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "result_status",
+    "trace_id"
+  ],
+  "title": "ToolResultV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/tools/ToolResultV1.json"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/PaginationMetaV1.json",
+  "title": "PaginationMetaV1",
+  "description": "Cursor-based pagination metadata. Document 10 section 4.6 forbids guessable offset pagination over elder data, so the cursor is opaque and must not be parsed by clients.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["has_more", "limit"],
+  "properties": {
+    "next_cursor": {
+      "description": "Opaque cursor for the next page, or null when there is no next page. Clients must treat this as a blob and never construct one.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "has_more": {
+      "type": "boolean",
+      "description": "Whether further items exist beyond this page."
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Page size actually applied.",
+      "minimum": 1,
+      "maximum": 100
+    }
+  }
+}

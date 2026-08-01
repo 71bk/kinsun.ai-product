@@ -1,0 +1,22 @@
+{
+  "_why_invalid": "page carries 'offset' and 'total' instead of an opaque cursor. Document 10 section 4.6 forbids guessable offset pagination over elder data, and exposing a total count leaks how many elders exist beyond the caller's scope. additionalProperties is false so a contract test rejects both extra fields, and has_more is missing.",
+  "data": {
+    "items": [
+      {
+        "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+        "display_name": "林阿嬤",
+        "care_unit_name": "幸福日照中心",
+        "authorization_summary": "daycare authorization"
+      }
+    ],
+    "page": {
+      "offset": 0,
+      "total": 137,
+      "limit": 20
+    }
+  },
+  "meta": {
+    "correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64",
+    "timestamp": "2026-07-31T04:12:09.482714Z"
+  }
+}

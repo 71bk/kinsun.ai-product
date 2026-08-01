@@ -1,0 +1,148 @@
+{
+  "$defs": {
+    "MemoryType": {
+      "enum": [
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY"
+      ],
+      "title": "MemoryType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "memory_id": {
+      "format": "uuid",
+      "title": "Memory Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "memory_type": {
+      "$ref": "#/$defs/MemoryType"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "CANDIDATE",
+        "CONFIRMED",
+        "ACTIVE",
+        "DEFERRED",
+        "REJECTED",
+        "INACTIVE",
+        "DELETED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "source_event_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Source Event Ids",
+      "type": "array"
+    },
+    "confirmed_by": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Confirmed By"
+    },
+    "confirmed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Confirmed At"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "active_from": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Active From"
+    },
+    "inactive_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Inactive At"
+    },
+    "consent_version": {
+      "title": "Consent Version",
+      "type": "integer"
+    },
+    "graph_projection_status": {
+      "const": "UNAVAILABLE",
+      "default": "UNAVAILABLE",
+      "title": "Graph Projection Status",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "memory_id",
+    "elder_id",
+    "memory_type",
+    "content",
+    "status",
+    "source_event_ids",
+    "confirmed_by",
+    "confirmed_at",
+    "version",
+    "active_from",
+    "inactive_at",
+    "consent_version",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "MemoryV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/MemoryV1.json"
+}
