@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ActorProfileV1.json",
+  "title": "ActorProfileV1",
+  "description": "The authenticated actor's own profile, returned by GET /api/v1/me. Document 10 section 5 requires that this never returns the full authorization ruleset — only enough for the client to choose a mode and render navigation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "actor_type", "display_name", "tenant_id", "role", "care_unit_ids"],
+  "properties": {
+    "actor_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Actor identifier, derived from the authenticated token. Never accepted from the request body."
+    },
+    "actor_type": {
+      "type": "string",
+      "description": "Actor type. Mirrors eldercare_ai.actor_type_enum. There is no LEGAL_REPRESENTATIVE member — legal representation is a care relationship, not an actor type (document 06 section 4.1).",
+      "enum": [
+        "ELDER",
+        "DAYCARE_CARE_WORKER",
+        "HOME_CARE_WORKER",
+        "FAMILY_MEMBER",
+        "ADMIN",
+        "CONTENT_MANAGER",
+        "SYSTEM_SERVICE"
+      ]
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Display name for the actor."
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Tenant the actor is acting within. Derived from the token, never from client input."
+    },
+    "role": {
+      "type": "string",
+      "description": "Role the actor is acting as for this request."
+    },
+    "care_unit_ids": {
+      "type": "array",
+      "description": "Care units the actor actively belongs to within the tenant. Empty for actors with no care-unit-scoped membership.",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    }
+  }
+}

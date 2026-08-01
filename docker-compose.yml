@@ -1,0 +1,62 @@
+name: kinsun
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kinsun-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kinsun}
+      POSTGRES_USER: ${POSTGRES_USER:-kinsun}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kinsun_local_dev}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-kinsun} -d ${POSTGRES_DB:-kinsun}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Alembic Migration Job（文件 13 §七）。一次性工作，預設不啟動：
+  #   docker compose run --rm migrate                    # upgrade head
+  #   docker compose run --rm migrate alembic current    # 查目前版本
+  migrate:
+    build:
+      context: ./services/core-api
+    image: kinsun-core-api-migrate:local
+    profiles: ["migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # 容器內要走 compose 網路的 postgres:5432，不是 host 的 localhost
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-kinsun}:${POSTGRES_PASSWORD:-kinsun_local_dev}@postgres:5432/${POSTGRES_DB:-kinsun}
+
+  # 選用的 DB 管理介面，預設不啟動：docker compose --profile tools up -d
+  adminer:
+    image: adminer:5
+    container_name: kinsun-adminer
+    restart: unless-stopped
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+
+volumes:
+  postgres-data:
+    name: kinsun-postgres-data

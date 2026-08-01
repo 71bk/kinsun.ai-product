@@ -1,0 +1,16 @@
+{
+  "data": {
+    "source_type": "MANUAL",
+    "source_version": 1,
+    "event_type": "MEAL",
+    "event_time": "2026-07-31T04:00:00Z",
+    "structured_payload": {
+      "meal_status": "mentioned",
+      "meal_period": "lunch"
+    },
+    "evidence_refs": ["evidence:11111111-1111-4111-8111-111111111111"],
+    "confidence_band": "MEDIUM",
+    "review_requirement": "REQUIRED",
+    "extractor_version": "event-extractor-v1"
+  }
+}

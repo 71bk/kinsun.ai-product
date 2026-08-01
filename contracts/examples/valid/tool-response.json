@@ -1,0 +1,26 @@
+{
+  "data": {
+    "schema_version": "1.0.0",
+    "tool_call_id": "tc-7f3a2b91",
+    "trace_id": "trace-001",
+    "status": "OK",
+    "result": [
+      { "name": "memory_count", "value": 1 }
+    ],
+    "error_code": null,
+    "reason_codes": [],
+    "retryable": false,
+    "source_refs": [
+      {
+        "source_id": "mem-3c8a7e5b",
+        "source_type": "confirmed_memory",
+        "source_version": "2",
+        "effective_date": "2026-07-28",
+        "review_status": "ELDER_CONFIRMED"
+      }
+    ],
+    "redactions": [],
+    "resource_id": null,
+    "resource_version": null
+  }
+}

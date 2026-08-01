@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>專業照護端 — kinsun.ai UI Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .elder-card { display:flex; flex-direction:column; gap: var(--space-3); text-align:left; }
+  .elder-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-2); }
+  .avatar { width:44px; height:44px; border-radius:50%; background: var(--color-primary-weak);
+            color: var(--color-primary-text); display:flex; align-items:center; justify-content:center; flex:none; font-weight:700; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:6px var(--space-4); font-size: var(--text-sm); }
+  .kv dt { color: var(--color-muted-foreground); }
+  .kv dd { font-weight:500; }
+  .stat { display:flex; flex-direction:column; gap:2px; }
+  .stat b { font-size: var(--text-2xl); font-variant-numeric:tabular-nums; line-height:1.2; }
+  .stat span { font-size: var(--text-xs); color: var(--color-muted-foreground); }
+  .stat-row { display:grid; gap: var(--space-3); grid-template-columns: repeat(2,1fr); }
+  @container (min-width: 640px) { .stat-row { grid-template-columns: repeat(4,1fr); } }
+  .src { font-size: var(--text-xs); color: var(--color-primary-text); text-decoration:underline;
+         text-underline-offset:2px; cursor:pointer; }
+  .schedule-card { display:flex; gap: var(--space-4); align-items:flex-start; }
+  .time-col { flex:none; width:64px; text-align:right; }
+  .time-col b { font-size: var(--text-lg); font-variant-numeric:tabular-nums; display:block; }
+  .time-col span { font-size: var(--text-xs); color: var(--color-muted-foreground); }
+  .two-col { display:grid; gap: var(--space-5); }
+  @container (min-width: 900px) { .two-col { grid-template-columns: 1.4fr 1fr; } }
+  .state-grid { display:grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px;
+          background: var(--slate-100); padding:2px 6px; border-radius:4px; }
+</style>
+</head>
+<body class="demo">
+
+<nav class="demo-nav">
+  <h1>專業照護端</h1>
+  <p class="sub">data-surface="care" · 16px base · 密度 8</p>
+  <a class="demo-back" href="index.html">← 回總覽（全部 22 頁）</a>
+
+  <div class="demo-group">
+    <p>P0 — 日照模式</p>
+    <button data-screen="c1"><span class="n">06</span>日照多長者概覽</button>
+    <button data-screen="c2"><span class="n">07</span>林阿嬤長者詳情</button>
+    <button data-screen="c3"><span class="n">08</span>每日摘要</button>
+    <button data-screen="c4"><span class="n">09</span>事件時間軸</button>
+    <button data-screen="c5"><span class="n">10</span>事件覆核與修正</button>
+  </div>
+  <div class="demo-group">
+    <p>P1 — 居服模式</p>
+    <button data-screen="c6"><span class="n">11</span>居服員今日行程</button>
+    <button data-screen="c7"><span class="n">12</span>陳伯伯服務詳情</button>
+  </div>
+  <div class="demo-group">
+    <p>P2</p>
+    <button data-screen="c8"><span class="n">22</span>內容管理與技術證據</button>
+  </div>
+  <div class="demo-group">
+    <p>附錄</p>
+    <button data-screen="c9"><span class="n">—</span>照護端 7 狀態</button>
+  </div>
+</nav>
+
+<div class="demo-main">
+  <div class="demo-bar">
+    <div class="title" data-screen-title></div>
+    <div class="seg">
+      <button data-view="tp">平板直式</button>
+      <button data-view="tl">平板橫式</button>
+      <button data-view="ph">手機</button>
+      <button data-view="dt">桌機</button>
+    </div>
+    <span style="font-size:11px;color:#94A3B8" data-view-label></span>
+  </div>
+
+  <div class="demo-stage">
+    <div>
+      <div class="frame-wrap">
+        <div data-surface="care">
+          <div class="device">
+            <span class="synthetic">合成資料 SYNTHETIC</span>
+
+<!-- ══════════ C1 日照多長者概覽 ══════════ -->
+<section class="screen" id="c1" data-surface="care"
+  data-title="06 · 日照多長者概覽"
+  data-note="P0 · 文件 04 §8.3"
+  data-spec="長者卡格線用 <code>repeat(auto-fill, minmax(280px,1fr))</code>，自然得到 手機1欄／平板直式2欄／橫式3欄／桌機4欄。<b>禁止跨長者健康或陪伴分數排名</b>（04 §8.3）——卡片上的數字只有互動次數與待覆核數，不是評分。≥1024 顯示 sidebar，&lt;1024 收進 top app bar。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm mobile-only" aria-label="開啟選單"><svg class="icon icon-sm"><use href="#i-list"/></svg></button>
+    <div class="grow"><h2>幸福日照中心</h2><p class="muted" style="font-size:var(--text-xs)">2026年8月1日（六）</p></div>
+    <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-search"/></svg>搜尋</button>
+    <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-filter"/></svg>篩選</button>
+  </div>
+  <div class="shell care-shell">
+    <nav class="sidebar">
+      <a href="#" aria-current="page"><svg class="icon icon-sm"><use href="#i-users"/></svg>長者概覽</a>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-warn"/></svg>待覆核 <span class="pill pill-review num" style="margin-left:auto">3</span></a>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-note"/></svg>關懷待辦</a>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-calendar"/></svg>每日摘要</a>
+      <div class="divider" style="margin:var(--space-3) 0"></div>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-gear"/></svg>設定</a>
+    </nav>
+    <div class="pane stack g5">
+      <div class="stat-row">
+        <div class="card stat"><b class="num">2</b><span>今日在中心</span></div>
+        <div class="card stat"><b class="num">14</b><span>今日互動次數</span></div>
+        <div class="card stat" style="border-left:4px solid var(--st-review-fg)"><b class="num" style="color:var(--st-review-fg)">3</b><span>待覆核事件</span></div>
+        <div class="card stat"><b class="num">1</b><span>未完成關懷待辦</span></div>
+      </div>
+
+      <div class="grid-elders">
+        <button class="card elder-card">
+          <div class="row g3">
+            <div class="avatar">林</div>
+            <div class="grow" style="text-align:left"><b>林阿嬤</b><p class="muted" style="font-size:var(--text-xs)">台語 · 稱呼「阿嬤」</p></div>
+            <svg class="icon icon-sm muted"><use href="#i-next"/></svg>
+          </div>
+          <dl class="kv">
+            <dt>最後互動</dt><dd class="num">14:20</dd>
+            <dt>今日次數</dt><dd class="num">8</dd>
+            <dt>摘要狀態</dt><dd><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核</span></dd>
+          </dl>
+          <div class="row g2"><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>2 筆待覆核</span></div>
+        </button>
+
+        <button class="card elder-card">
+          <div class="row g3">
+            <div class="avatar">張</div>
+            <div class="grow" style="text-align:left"><b>張阿姨</b><p class="muted" style="font-size:var(--text-xs)">華語 · 稱呼「張阿姨」</p></div>
+            <svg class="icon icon-sm muted"><use href="#i-next"/></svg>
+          </div>
+          <dl class="kv">
+            <dt>最後互動</dt><dd class="num">11:05</dd>
+            <dt>今日次數</dt><dd class="num">6</dd>
+            <dt>摘要狀態</dt><dd><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span></dd>
+          </dl>
+          <div class="row g2"><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>1 筆待覆核</span></div>
+        </button>
+
+        <div class="card card-nodata elder-card">
+          <div class="row g3">
+            <div class="avatar" style="background:var(--slate-200);color:var(--slate-500)">王</div>
+            <div class="grow" style="text-align:left"><b>王伯伯</b><p class="muted" style="font-size:var(--text-xs)">今日未到中心</p></div>
+          </div>
+          <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>今日無互動</span>
+          <p class="muted" style="font-size:var(--text-xs)">沒有紀錄就是沒有紀錄，不以推測補滿。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C2 長者詳情 ══════════ -->
+<section class="screen" id="c2" data-surface="care"
+  data-title="07 · 林阿嬤長者詳情"
+  data-note="P0 · 文件 04 §8.5"
+  data-spec="日照與居服<b>共用主要元件</b>，依角色顯示不同服務資訊與操作（04 §8.5）。頁首顯示<b>授權範圍與最後更新</b>。分頁列超出寬度時只捲動 tab 本身，內容不捲。<b>已確認記憶用實線卡、候選記憶用虛線卡</b>，兩者不得同樣式呈現。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回概覽"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="avatar">林</div>
+    <div class="grow"><h2>林阿嬤</h2><p class="muted" style="font-size:var(--text-xs)">台語 · 幸福日照中心 · 授權至 2026-12-31</p></div>
+    <span class="pill pill-published"><svg class="icon"><use href="#i-shield"/></svg>日照照服員</span>
+  </div>
+  <div class="tabs" role="tablist" data-toggle-group="c2-panels">
+    <button role="tab" aria-selected="true" data-toggle-target="p1">今日摘要</button>
+    <button role="tab" aria-selected="false" data-toggle-target="p2">時間軸</button>
+    <button role="tab" aria-selected="false" data-toggle-target="p3">已確認記憶</button>
+    <button role="tab" aria-selected="false" data-toggle-target="p4">待覆核 2</button>
+    <button role="tab" aria-selected="false" data-toggle-target="p5">關懷待辦</button>
+  </div>
+  <div class="pane stack g5" id="c2-panels">
+    <div data-toggle-panel="p1" class="stack g5">
+      <div class="card card-review stack g3">
+        <div class="row g3 between wrap">
+          <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核 · 2 筆事件尚未確認</span>
+          <button class="btn btn-secondary btn-sm">前往覆核</button>
+        </div>
+        <p style="font-size:var(--text-sm)">摘要在事件覆核完成前維持草稿，<b>不會發布給家屬</b>。</p>
+      </div>
+      <div class="card stack g4">
+        <div class="row between"><h3>今日摘要（草稿）</h3><span class="muted" style="font-size:var(--text-xs)">最後更新 15:02 · 系統產生 · v3</span></div>
+        <dl class="kv">
+          <dt>飲食</dt><dd>早餐吃了稀飯，中午在中心用餐。<span class="src">來源事件 ×2</span></dd>
+          <dt>活動</dt><dd>上午參加團體唱歌活動。<span class="src">來源事件 ×1</span></dd>
+          <dt>社交</dt><dd>提到孫子小明昨天來訪。<span class="src">來源事件 ×1</span></dd>
+          <dt>睡眠</dt><dd><span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>未提及</span></dd>
+        </dl>
+      </div>
+      <div class="card stack g3">
+        <h3>本週互動次數</h3>
+        <div class="bars">
+          <div style="height:40%"><span>一</span></div><div style="height:65%"><span>二</span></div>
+          <div style="height:30%"><span>三</span></div><div style="height:80%"><span>四</span></div>
+          <div style="height:55%"><span>五</span></div><div style="height:70%"><span>六</span></div>
+          <div class="on" style="height:100%"><span>日</span></div>
+        </div>
+        <p class="muted" style="font-size:var(--text-xs);margin-top:var(--space-5)">這是<b>互動次數</b>，不是健康或情緒分數。系統不提供趨勢預測。</p>
+      </div>
+    </div>
+
+    <div data-toggle-panel="p2" hidden class="stack g4">
+      <p class="muted" style="font-size:var(--text-sm)">切到「時間軸」分頁 → 見畫面 09 的完整版本。</p>
+    </div>
+    <div data-toggle-panel="p3" hidden class="stack g4">
+      <div class="card card-confirmed stack g2">
+        <span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>長者已確認</span>
+        <p class="ttl"><b>孫子叫小明</b></p>
+        <p class="muted" style="font-size:var(--text-xs)">2026-08-01 由林阿嬤本人確認 · 可用於後續對話</p>
+      </div>
+      <div class="card card-confirmed stack g2">
+        <span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>長者已確認</span>
+        <p class="ttl"><b>喜歡聽望春風</b></p>
+        <p class="muted" style="font-size:var(--text-xs)">2026-07-28 由林阿嬤本人確認 · 可用於後續對話</p>
+      </div>
+      <div class="card card-candidate stack g2">
+        <span class="pill pill-candidate"><svg class="icon"><use href="#i-dashed"/></svg>候選 · 長者尚未確認</span>
+        <p><b>下午常覺得腳痠</b></p>
+        <p class="muted" style="font-size:var(--text-xs)">未確認記憶<b>不得進入長期記憶、Graph、報表或後續對話事實</b>（AGENTS.md §4）。照服員無法代為確認。</p>
+      </div>
+    </div>
+    <div data-toggle-panel="p4" hidden><p class="muted" style="font-size:var(--text-sm)">見畫面 10 事件覆核與修正。</p></div>
+    <div data-toggle-panel="p5" hidden class="stack g4">
+      <div class="card card-review stack g3">
+        <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>未完成</span>
+        <p><b>下週請家屬帶健保卡</b></p>
+        <p class="muted" style="font-size:var(--text-xs)">建立於 2026-07-30 · 照服員 王小美</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="align-self:flex-start"><svg class="icon icon-sm"><use href="#i-plus"/></svg>建立關懷待辦</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C3 每日摘要 ══════════ -->
+<section class="screen" id="c3" data-surface="care"
+  data-title="08 · 每日摘要"
+  data-note="P0 · 文件 04 §五 P0"
+  data-spec="摘要每一段都必須有<b>可追蹤的來源事件連結</b>（Gate 1 第 9 步）。沒有資料的欄位標<b>「未提及」</b>，不得由模型補造內容（04 §二.10）。摘要狀態為 Draft／Needs Review 時<b>家屬不可見</b>，前端亦不得渲染到家屬端。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="grow"><h2>每日摘要 · 林阿嬤</h2><p class="muted" style="font-size:var(--text-xs)">2026年8月1日</p></div>
+    <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>草稿 · 待覆核</span>
+  </div>
+  <div class="pane stack g5">
+    <div class="card card-review row g3">
+      <svg class="icon" style="color:var(--st-review-fg)"><use href="#i-eye-slash"/></svg>
+      <p style="font-size:var(--text-sm)">此摘要目前是 <span class="code">DRAFT</span>，<b>家屬與通知預覽都取不到</b>。覆核通過後才會轉為 <span class="code">PUBLISHED</span>。</p>
+    </div>
+
+    <div class="card stack g5">
+      <div class="stack g2">
+        <div class="row g2"><h3 style="flex:1">飲食</h3><span class="src">2 筆來源</span></div>
+        <p>早上吃了稀飯配醬瓜，中午在中心用餐，說「吃得下」。</p>
+      </div>
+      <div class="divider"></div>
+      <div class="stack g2">
+        <div class="row g2"><h3 style="flex:1">活動</h3><span class="src">1 筆來源</span></div>
+        <p>上午參加團體唱歌活動，唱了望春風。</p>
+      </div>
+      <div class="divider"></div>
+      <div class="stack g2">
+        <div class="row g2"><h3 style="flex:1">社交</h3><span class="src">1 筆來源</span></div>
+        <p>提到孫子小明昨天有來看她，一起吃了肉粽。</p>
+      </div>
+      <div class="divider"></div>
+      <div class="stack g2">
+        <h3>睡眠</h3>
+        <div class="card card-nodata row g3"><svg class="icon icon-sm"><use href="#i-minus"/></svg><span style="font-size:var(--text-sm)">今天沒有提到睡眠狀況。</span></div>
+      </div>
+      <div class="divider"></div>
+      <div class="stack g2">
+        <h3>重要事件</h3>
+        <div class="card card-review stack g2">
+          <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核</span>
+          <p>提到「下午常覺得腳痠」。<span class="src">來源事件</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card stack g2">
+      <p class="muted" style="font-size:var(--text-xs)">產生時間 15:02 · Agent v0.3.1 · Prompt v2 · 摘要版本 v3</p>
+      <p class="muted" style="font-size:var(--text-xs)">上次修正：王小美 於 14:58 修正「活動」段落</p>
+    </div>
+  </div>
+  <div class="bottombar" style="padding:var(--space-3) var(--space-5)">
+    <button class="btn btn-secondary btn-sm grow">先存草稿</button>
+    <button class="btn btn-accent btn-sm grow" aria-disabled="true"><svg class="icon icon-sm"><use href="#i-send"/></svg>覆核通過並發布（尚有 2 筆待覆核）</button>
+  </div>
+</section>
+
+<!-- ══════════ C4 事件時間軸 ══════════ -->
+<section class="screen" id="c4" data-surface="care"
+  data-title="09 · 事件時間軸"
+  data-note="P0 · 文件 04 §五 P0"
+  data-spec="時間軸節點<b>用形狀與圖示區分狀態</b>，不只用顏色：虛線圈＝候選、琥珀＝待覆核、綠＝已覆核。<b>不使用折線圖</b>——04 §十.7 禁止醫療趨勢預測，時間軸是列表不是圖表。每筆都連回來源逐字段落供照服員驗證。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="grow"><h2>事件時間軸 · 林阿嬤</h2><p class="muted" style="font-size:var(--text-xs)">2026年8月1日 · 共 6 筆</p></div>
+    <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-filter"/></svg>只看待覆核</button>
+  </div>
+  <div class="pane">
+    <div class="timeline">
+      <div class="tl-item is-confirmed">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">08:12</b><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已覆核</span>
+        </div>
+        <div class="card stack g2"><p>早餐吃了稀飯配醬瓜。</p>
+          <div class="row g3"><span class="src">來源逐字段落</span><span class="muted" style="font-size:var(--text-xs)">飲食</span></div></div>
+      </div>
+      <div class="tl-item is-confirmed">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">09:40</b><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已覆核</span>
+        </div>
+        <div class="card stack g2"><p>參加團體唱歌活動，唱了望春風。</p>
+          <div class="row g3"><span class="src">來源逐字段落</span><span class="muted" style="font-size:var(--text-xs)">活動</span></div></div>
+      </div>
+      <div class="tl-item is-review">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">10:15</b><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核</span>
+        </div>
+        <div class="card card-review stack g3">
+          <p>提到「下午常覺得腳痠」。</p>
+          <p class="muted" style="font-size:var(--text-xs)">AI 擷取 · 尚未成為 Verified Event，<b>不會進入家屬報表</b>。</p>
+          <div class="row g3 wrap">
+            <button class="btn btn-accent btn-sm"><svg class="icon icon-sm"><use href="#i-check"/></svg>確認</button>
+            <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-pencil"/></svg>修正</button>
+            <span class="src">來源逐字段落</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item is-review">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">11:30</b><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核</span>
+        </div>
+        <div class="card card-review stack g3">
+          <p>提到孫子小明昨天來訪，一起吃肉粽。</p>
+          <p class="muted" style="font-size:var(--text-xs)">ASR 低信心欄位「小明」已由長者確認。</p>
+          <div class="row g3 wrap">
+            <button class="btn btn-accent btn-sm"><svg class="icon icon-sm"><use href="#i-check"/></svg>確認</button>
+            <button class="btn btn-secondary btn-sm"><svg class="icon icon-sm"><use href="#i-pencil"/></svg>修正</button>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item is-candidate">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">13:05</b><span class="pill pill-candidate"><svg class="icon"><use href="#i-dashed"/></svg>候選記憶 · 長者未確認</span>
+        </div>
+        <div class="card card-candidate stack g2">
+          <p>「下午常覺得腳痠」可能成為長期記憶。</p>
+          <p class="muted" style="font-size:var(--text-xs)"><b>只有長者本人能確認</b>，照服員不得代為確認（AGENTS.md §4）。</p>
+        </div>
+      </div>
+      <div class="tl-item is-confirmed">
+        <div class="row g3 wrap" style="margin-bottom:6px">
+          <b class="num">14:20</b><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已覆核</span>
+        </div>
+        <div class="card stack g2"><p>中午在中心用餐，說「吃得下」。</p>
+          <div class="row g3"><span class="src">來源逐字段落</span><span class="muted" style="font-size:var(--text-xs)">飲食</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C5 事件覆核與修正 ══════════ -->
+<section class="screen" id="c5" data-surface="care"
+  data-title="10 · 事件覆核與修正"
+  data-note="P0 · 文件 04 §6.5"
+  data-spec="覆核是 Gate 1 的<b>人工確認關卡</b>：Event Candidate → Verified Event 必須經此。修正後<b>受影響的摘要與 Graph 標記重建</b>，且需保存修正者與版本。左側永遠可對照<b>來源逐字內容</b>——沒有來源就不能覆核。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="grow"><h2>覆核事件 1 / 2</h2><p class="muted" style="font-size:var(--text-xs)">林阿嬤 · 2026-08-01 10:15</p></div>
+    <button class="btn btn-ghost btn-sm" aria-label="關閉"><svg class="icon icon-sm"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="pane">
+    <div class="two-col">
+      <div class="stack g4">
+        <div class="card card-review stack g4">
+          <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>Event Candidate · 待覆核</span>
+          <div class="field">
+            <label for="ev-cat">分類</label>
+            <select id="ev-cat"><option>身體不適</option><option>飲食</option><option>活動</option><option>社交</option></select>
+          </div>
+          <div class="field">
+            <label for="ev-txt">事件內容</label>
+            <textarea id="ev-txt">下午常覺得腳痠</textarea>
+            <p class="help">修正後會建立新版本，舊版本保留於稽核紀錄。</p>
+          </div>
+          <div class="field">
+            <label for="ev-note">照護內部筆記（不對家屬顯示）</label>
+            <textarea id="ev-note" placeholder="僅專業照護人員可見"></textarea>
+            <p class="help">此欄位屬 Restricted Data，<b>不會出現在家屬報表或通知</b>。</p>
+          </div>
+          <div class="toggle-row">
+            <div class="switch" role="switch" aria-checked="false" aria-label="允許分享給家屬" tabindex="0"></div>
+            <div><b style="font-size:var(--text-sm)">允許分享給家屬</b>
+            <p class="muted" style="font-size:var(--text-xs)">預設關閉。開啟才會進入家屬版報表。</p></div>
+          </div>
+        </div>
+        <div class="row g3 wrap">
+          <button class="btn btn-accent"><svg class="icon"><use href="#i-check"/></svg>確認並儲存</button>
+          <button class="btn btn-secondary">存為待處理</button>
+          <button class="btn btn-destructive" style="margin-left:var(--space-6)"><svg class="icon"><use href="#i-ban"/></svg>標記為誤判</button>
+        </div>
+      </div>
+
+      <div class="stack g4">
+        <div class="card stack g3">
+          <h3>來源逐字內容</h3>
+          <p class="muted" style="font-size:var(--text-xs)">2026-08-01 10:14:52 · session 3f2a…</p>
+          <div class="divider"></div>
+          <p style="font-size:var(--text-sm);line-height:1.8">「…啊我下晡攏會跤痠，坐咧嘛痠，行嘛痠。無啦，袂啥物大代誌。」</p>
+          <div class="divider"></div>
+          <p class="muted" style="font-size:var(--text-xs)">此逐字內容<b>僅專業照護端可見</b>，不得出現在家屬端、通知或一般 Log。</p>
+        </div>
+        <div class="card card-review stack g3">
+          <h3 style="font-size:var(--text-sm)">確認後會連帶更新</h3>
+          <ul class="stack g2" style="font-size:var(--text-xs)">
+            <li>• 今日摘要「重要事件」段落 → v4</li>
+            <li>• Graph 標記重建（非同步）</li>
+            <li>• 家屬報表<b>不會</b>更新（未開啟分享）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C6 居服員今日行程 ══════════ -->
+<section class="screen" id="c6" data-surface="care"
+  data-title="11 · 居服員今日行程／派案入口"
+  data-note="P1 · 文件 04 §8.4、§6.6"
+  data-spec="以<b>時間行程</b>為主軸（待驗證問題之一，v0.1 暫採此解）。<b>派案失效卡不得顯示敏感摘要</b>（04 §8.4）——第三張卡示範 Assignment Expired：只留時間與返回入口，長者姓名以外的內容全部不渲染。沒有有效派案時顯示「今日無服務安排」。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm mobile-only" aria-label="開啟選單"><svg class="icon icon-sm"><use href="#i-list"/></svg></button>
+    <div class="grow"><h2>今日服務行程</h2><p class="muted" style="font-size:var(--text-xs)">2026年8月1日 · 3 個服務 · 已同步 15:04</p></div>
+    <span class="pill pill-published"><svg class="icon"><use href="#i-shield"/></svg>居服員</span>
+  </div>
+  <div class="shell care-shell">
+    <nav class="sidebar">
+      <a href="#" aria-current="page"><svg class="icon icon-sm"><use href="#i-calendar"/></svg>今日行程</a>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-users"/></svg>派案長者</a>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-note"/></svg>待追蹤事項</a>
+      <div class="divider" style="margin:var(--space-3) 0"></div>
+      <a href="#"><svg class="icon icon-sm"><use href="#i-gear"/></svg>設定</a>
+    </nav>
+    <div class="pane stack g4">
+      <div class="card card-review row g3">
+        <svg class="icon" style="color:var(--st-review-fg)"><use href="#i-clock"/></svg>
+        <div class="grow"><b>下一個服務：陳伯伯</b><p class="muted" style="font-size:var(--text-xs)">16:00 起 · 還有 56 分鐘</p></div>
+        <button class="btn btn-secondary btn-sm">查看</button>
+      </div>
+
+      <button class="card schedule-card">
+        <div class="time-col"><b class="num">09:30</b><span>90 分</span></div>
+        <div class="grow stack g2" style="text-align:left">
+          <div class="row g3"><b>李奶奶</b><span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已完成</span></div>
+          <p class="muted" style="font-size:var(--text-xs)"><svg class="icon icon-sm" style="display:inline;vertical-align:-3px"><use href="#i-pin"/></svg> 中正區 · 身體照顧</p>
+          <p style="font-size:var(--text-sm)">上次紀錄已於 11:12 提交。</p>
+        </div>
+      </button>
+
+      <button class="card schedule-card">
+        <div class="time-col"><b class="num">16:00</b><span>60 分</span></div>
+        <div class="grow stack g2" style="text-align:left">
+          <div class="row g3 wrap"><b>陳伯伯</b><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>派案有效</span><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>2 筆待追蹤</span></div>
+          <p class="muted" style="font-size:var(--text-xs)"><svg class="icon icon-sm" style="display:inline;vertical-align:-3px"><use href="#i-pin"/></svg> 大安區 · 家務協助</p>
+          <p style="font-size:var(--text-sm)">上次服務摘要：協助備餐，提到膝蓋不舒服。</p>
+        </div>
+      </button>
+
+      <div class="card card-nodata schedule-card">
+        <div class="time-col"><b class="num">18:30</b><span>—</span></div>
+        <div class="grow stack g2" style="text-align:left">
+          <div class="row g3"><b>吳阿姨</b><span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>派案已失效</span></div>
+          <p style="font-size:var(--text-sm)">此派案已於今日 14:20 失效，你目前沒有查看權限。</p>
+          <p class="muted" style="font-size:var(--text-xs)">失效派案<b>不顯示任何服務摘要、事件或記憶</b>。</p>
+          <button class="btn btn-secondary btn-sm" style="align-self:flex-start">聯絡督導</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C7 陳伯伯服務詳情 ══════════ -->
+<section class="screen" id="c7" data-surface="care"
+  data-title="12 · 陳伯伯服務詳情"
+  data-note="P1 · 文件 04 §6.6、§8.5"
+  data-spec="與畫面 07 <b>共用主要元件</b>，差別只在頁首的服務資訊與底部的「服務後紀錄」操作。每次進入都必須<b>重新驗證派案是否仍有效</b>，不信任前一畫面傳來的權限（AGENTS.md §5）。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回行程"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="avatar">陳</div>
+    <div class="grow"><h2>陳伯伯</h2><p class="muted" style="font-size:var(--text-xs)">華語 · 家務協助 · 派案至 2026-09-30</p></div>
+    <span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>派案有效</span>
+  </div>
+  <div class="tabs" role="tablist" data-toggle-group="c7-panels">
+    <button role="tab" aria-selected="true" data-toggle-target="q1">本次服務</button>
+    <button role="tab" aria-selected="false" data-toggle-target="q2">時間軸</button>
+    <button role="tab" aria-selected="false" data-toggle-target="q3">已確認記憶</button>
+    <button role="tab" aria-selected="false" data-toggle-target="q4">待追蹤 2</button>
+  </div>
+  <div class="pane stack g5" id="c7-panels">
+    <div data-toggle-panel="q1" class="stack g5">
+      <div class="card stack g3">
+        <h3>本次服務資訊</h3>
+        <dl class="kv">
+          <dt>時間</dt><dd class="num">16:00 – 17:00</dd>
+          <dt>地點</dt><dd>大安區（住家）</dd>
+          <dt>服務項目</dt><dd>家務協助 · 陪同備餐</dd>
+        </dl>
+      </div>
+
+      <div class="card card-review stack g3">
+        <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>服務前提醒</span>
+        <ul class="stack g2" style="font-size:var(--text-sm)">
+          <li>• 上次提到膝蓋不舒服，可留意行走狀況並記錄。</li>
+          <li>• 家屬上週詢問過用餐狀況。</li>
+        </ul>
+        <p class="muted" style="font-size:var(--text-xs)">提醒僅為已記錄事實的整理，<b>不構成醫療判斷或處置建議</b>。</p>
+      </div>
+
+      <div class="card stack g3">
+        <h3>上次服務摘要（7/29）</h3>
+        <p style="font-size:var(--text-sm)">協助備餐與環境清潔。陳伯伯提到最近膝蓋走路會不舒服，已建立待追蹤事項。</p>
+        <span class="src">來源事件 ×3</span>
+      </div>
+
+      <div class="card stack g4">
+        <h3>服務後紀錄</h3>
+        <div class="field">
+          <label for="svc-note">本次服務內容</label>
+          <textarea id="svc-note" placeholder="記錄實際完成的服務項目與觀察"></textarea>
+        </div>
+        <div class="field">
+          <label for="svc-follow">需要後續追蹤的事項</label>
+          <input id="svc-follow" type="text" placeholder="例如：下週回報膝蓋狀況">
+        </div>
+      </div>
+    </div>
+    <div data-toggle-panel="q2" hidden><p class="muted" style="font-size:var(--text-sm)">結構同畫面 09。</p></div>
+    <div data-toggle-panel="q3" hidden><p class="muted" style="font-size:var(--text-sm)">結構同畫面 07 的「已確認記憶」分頁。</p></div>
+    <div data-toggle-panel="q4" hidden class="stack g3">
+      <div class="card card-review stack g2"><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>未完成</span><p><b>觀察膝蓋行走狀況</b></p><p class="muted" style="font-size:var(--text-xs)">建立於 7/29</p></div>
+      <div class="card card-review stack g2"><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>未完成</span><p><b>回覆家屬用餐狀況詢問</b></p><p class="muted" style="font-size:var(--text-xs)">建立於 7/30</p></div>
+    </div>
+  </div>
+  <div class="bottombar" style="padding:var(--space-3) var(--space-5)">
+    <button class="btn btn-secondary btn-sm grow">存草稿</button>
+    <button class="btn btn-accent btn-sm grow"><svg class="icon icon-sm"><use href="#i-check"/></svg>完成本次服務紀錄</button>
+  </div>
+</section>
+
+<!-- ══════════ C8 內容管理與技術證據 ══════════ -->
+<section class="screen" id="c8" data-surface="care"
+  data-title="22 · 內容管理與技術證據頁"
+  data-note="P2 · 文件 04 §五 P2"
+  data-spec="呈現 AGENTS.md §7 要求的可追溯資訊：<b>Agent、Prompt、Model route、Policy、Guardrail、Tool schema、Context manifest、Release Version</b>。<b>不可只記錄 latest</b>（§8）。此頁為管理者角色，<b>不得因管理介面繞過資料最小化</b>（04 §九）——因此只顯示版本與狀態，不顯示任何長者逐字內容。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm mobile-only" aria-label="開啟選單"><svg class="icon icon-sm"><use href="#i-list"/></svg></button>
+    <div class="grow"><h2>內容管理與技術證據</h2><p class="muted" style="font-size:var(--text-xs)">管理者 · 不含任何長者個人內容</p></div>
+  </div>
+  <div class="pane stack g5">
+    <div class="card card-review row g3">
+      <svg class="icon" style="color:var(--st-review-fg)"><use href="#i-shield"/></svg>
+      <p style="font-size:var(--text-sm)">此頁<b>不顯示逐字稿、Prompt 全文或 Secret</b>。需要完整 Trace 時走稽核流程，另行授權。</p>
+    </div>
+
+    <div class="card stack g4">
+      <h3>本次 Agent 執行版本</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>項目</th><th>版本</th><th>狀態</th></tr></thead>
+          <tbody>
+            <tr><td>Orchestrator</td><td class="num">v0.3.1</td><td><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></td></tr>
+            <tr><td>Companion Agent Prompt</td><td class="num">v2</td><td><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></td></tr>
+            <tr><td>Safety Evaluator</td><td class="num">deterministic v1</td><td><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></td></tr>
+            <tr><td>Model Provider</td><td class="num">MockModelProvider</td><td><span class="pill pill-candidate"><svg class="icon"><use href="#i-dashed"/></svg>未接外部 LLM</span></td></tr>
+            <tr><td>Tool Allowlist</td><td class="num">—</td><td><span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>尚未實作</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-cards">
+        <div class="card stack g2"><div class="row between"><b>Orchestrator</b><span class="num muted">v0.3.1</span></div><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></div>
+        <div class="card stack g2"><div class="row between"><b>Companion Agent Prompt</b><span class="num muted">v2</span></div><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></div>
+        <div class="card stack g2"><div class="row between"><b>Safety Evaluator</b><span class="num muted">v1</span></div><span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>使用中</span></div>
+        <div class="card stack g2"><div class="row between"><b>Model Provider</b><span class="num muted">Mock</span></div><span class="pill pill-candidate"><svg class="icon"><use href="#i-dashed"/></svg>未接外部 LLM</span></div>
+        <div class="card stack g2"><div class="row between"><b>Tool Allowlist</b><span class="num muted">—</span></div><span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>尚未實作</span></div>
+      </div>
+      <p class="muted" style="font-size:var(--text-xs)">依 AGENTS.md §1，尚未實作的項目一律標示，<b>不得描述成已完成功能</b>。</p>
+    </div>
+
+    <div class="card stack g4">
+      <h3>RAG 來源版本</h3>
+      <div class="stack g3">
+        <div class="row g3 between wrap">
+          <div><b style="font-size:var(--text-sm)">衛福部 用藥安全衛教單張</b>
+          <p class="muted" style="font-size:var(--text-xs)">v2.1 · 有效至 2027-03-31</p></div>
+          <span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已覆核</span>
+        </div>
+        <div class="divider"></div>
+        <div class="row g3 between wrap">
+          <div><b style="font-size:var(--text-sm)">長照 2.0 服務項目說明</b>
+          <p class="muted" style="font-size:var(--text-xs)">v1.4 · 有效至 2026-12-31</p></div>
+          <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待覆核</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ C9 照護端 7 狀態 ══════════ -->
+<section class="screen" id="c9" data-surface="care"
+  data-title="附錄 · 照護端 7 狀態"
+  data-note="文件 04 §7.2"
+  data-spec="每個核心頁面都必須實作這 7 個狀態，這不是選配（04 §十三）。特別注意兩點：<b>Loading 不得顯示過期資料假裝完成</b>；<b>Permission Denied 不顯示長者姓名或任何敏感內容</b>——這代表錯誤頁必須在取得資料前就能渲染，不能先畫再遮。">
+  <div class="appbar"><h2 class="grow">照護端的 7 個狀態</h2></div>
+  <div class="pane">
+    <div class="state-grid">
+      <div class="card stack g3">
+        <b style="font-size:var(--text-sm)">Loading</b>
+        <div class="stack g2"><div class="sk" style="width:60%"></div><div class="sk"></div><div class="sk" style="width:80%"></div></div>
+        <p class="muted" style="font-size:var(--text-xs)">骨架畫面。不得顯示過期資料。</p>
+      </div>
+      <div class="card card-nodata stack g3">
+        <b style="font-size:var(--text-sm)">Empty</b>
+        <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>今日無互動</span>
+        <p class="muted" style="font-size:var(--text-xs)">今日無互動／無摘要／無派案。</p>
+      </div>
+      <div class="card card-review stack g3">
+        <b style="font-size:var(--text-sm)">Needs Review</b>
+        <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>2 筆待覆核</span>
+        <p class="muted" style="font-size:var(--text-xs)">清楚顯示<b>數量與原因</b>。</p>
+      </div>
+      <div class="card card-confirmed stack g3">
+        <b style="font-size:var(--text-sm)">Updated</b>
+        <span class="pill pill-confirmed"><svg class="icon"><use href="#i-check"/></svg>已更新 v4</span>
+        <p class="muted" style="font-size:var(--text-xs)">顯示最後更新、修正者與版本。</p>
+      </div>
+      <div class="card card-withdrawn stack g3">
+        <b style="font-size:var(--text-sm)">Permission Denied</b>
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>沒有查看權限</span>
+        <p style="font-size:var(--text-xs)">你目前沒有查看這筆資料的權限。</p>
+        <p class="muted" style="font-size:var(--text-xs)"><b>不顯示長者姓名或任何敏感內容。</b></p>
+      </div>
+      <div class="card card-withdrawn stack g3">
+        <b style="font-size:var(--text-sm)">Assignment Expired</b>
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>派案已失效</span>
+        <button class="btn btn-secondary btn-sm" style="align-self:flex-start">返回今日行程</button>
+        <p class="muted" style="font-size:var(--text-xs)">提供返回入口，不留下敏感摘要。</p>
+      </div>
+      <div class="card card-nodata stack g3">
+        <b style="font-size:var(--text-sm)">Data Insufficient</b>
+        <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>資料不足</span>
+        <p class="muted" style="font-size:var(--text-xs)">顯示資料不足，<b>不產生陪伴結論</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+          </div>
+        </div>
+      </div>
+      <p class="device-note" data-screen-spec></p>
+    </div>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

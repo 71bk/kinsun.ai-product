@@ -1,8 +1,6 @@
-# 14智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1.docx
-
 智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：Python Core API、長者語音、Agent Runtime、Aurora PostgreSQL、EventBridge、SQS／DLQ、Step Functions、OpenSearch、Neptune、S3、Cognito、家屬報表、LINE／Email、CI／CD 與安全事件
 
-### 相關文件
+## 相關文件
 
 07｜Security、Privacy、NFR 與 Threat Model v0.1
 
@@ -46,7 +44,7 @@ https://docs.google.com/document/d/1OGa9igfGHILGPJE3PmvynP23LxA9FPsT8jPO_R-SG9o/
 
 https://docs.google.com/document/d/1UC7AmwYJY8fWxgF-69yKqoplRD519KfvjMz2ck16jOU/edit
 
-## 一、文件目的與營運原則
+# 一、文件目的與營運原則
 
 本文件將 07 的安全／NFR、08 的 AWS 架構、09 的 Agent Trace、11 的品質門檻與 13 的發布／復原流程，轉成每天可以執行的監控、告警、值班、事件處理、Runbook、容量、成本與改善機制。
 
@@ -80,9 +78,9 @@ https://docs.google.com/document/d/1UC7AmwYJY8fWxgF-69yKqoplRD519KfvjMz2ck16jOU/
 
 • Incident Evidence Is Immutable：事件時間線、關鍵決策與證據需保存，普通 Debug Log 可依期限刪除。
 
-## 二、Observability Architecture
+# 二、Observability Architecture
 
-### 2.1 遙測來源
+## 2.1 遙測來源
 
 Client／PWA
 
@@ -112,7 +110,7 @@ External Adapter
 
 → LINE／Email request、accepted、delivered／failed、provider status、secure link open
 
-### 2.2 遙測後端
+## 2.2 遙測後端
 
 • CloudWatch Logs：應用程式、Worker、Agent、Audit 與 AWS Service Logs。
 
@@ -132,15 +130,15 @@ External Adapter
 
 • Security Hub／GuardDuty：正式環境安全發現與事件來源。
 
-### 2.3 帳號與環境
+## 2.3 帳號與環境
 
 Hackathon：同一 AWS Account 可用 dev／demo Stack、Log Group、Metric Dimension 與 KMS Key 分離。
 
 Target：dev、staging、prod 分 Account；使用 CloudWatch 跨帳戶可觀測性／Observability Access Manager 將 telemetry 分享至 Monitoring Account。資料與 Secret 不跨環境混用。
 
-## 三、統一識別與 Correlation
+# 三、統一識別與 Correlation
 
-### 3.1 必要識別碼
+## 3.1 必要識別碼
 
 trace_id
 
@@ -186,7 +184,7 @@ environment
 
 region
 
-### 3.2 傳遞規則
+## 3.2 傳遞規則
 
 • HTTP 使用標準 Trace Context header，並保留 request_id。
 
@@ -202,7 +200,7 @@ region
 
 • LINE／Email Provider Message ID 對應 notification_id，但不把 elder_name 放進外部 Correlation Key。
 
-### 3.3 Trace 邊界
+## 3.3 Trace 邊界
 
 完整長者語音 Trace：
 
@@ -212,9 +210,9 @@ PWA → API Gateway／WebSocket → Core Authorization／Consent → Speech Rout
 
 Scheduler → Step Functions → Source Query → Summary／Report Agent → Share／Safety Gate → Review → Publish → Outbox → EventBridge → Notification Queue → LINE／SES → Secure Link Open。
 
-## 四、Structured Logging Standard
+# 四、Structured Logging Standard
 
-### 4.1 共通 JSON 欄位
+## 4.1 共通 JSON 欄位
 
 {
 
@@ -264,7 +262,7 @@ Scheduler → Step Functions → Source Query → Summary／Report Agent → Sha
 
 }
 
-### 4.2 Log 類型
+## 4.2 Log 類型
 
 Application Log：程式狀態、依賴錯誤、性能與重試。
 
@@ -278,7 +276,7 @@ Data Pipeline Log：Outbox、Queue、Projection、RAG Ingestion、Backfill。
 
 Deployment Log：release_id、image_digest、migration_head、traffic shift、rollback。
 
-### 4.3 禁止紀錄
+## 4.3 禁止紀錄
 
 • 密碼、Access／Refresh Token、API Key、Secret、Private Key。
 
@@ -292,7 +290,7 @@ Deployment Log：release_id、image_digest、migration_head、traffic shift、ro
 
 • Exception 中的 Database DSN、Authorization header、Request Body 明文。
 
-### 4.4 Sanitization
+## 4.4 Sanitization
 
 • Logger Adapter 集中遮罩 token、authorization、cookie、email、phone、address、transcript、prompt、audio_url。
 
@@ -304,15 +302,15 @@ Deployment Log：release_id、image_digest、migration_head、traffic shift、ro
 
 • Log Sampling 不得抽掉安全拒絕、發布、刪除、Consent 與 Incident 證據。
 
-## 五、Metric Taxonomy
+# 五、Metric Taxonomy
 
-### 5.1 RED／USE
+## 5.1 RED／USE
 
 服務採 RED：Rate、Errors、Duration。
 
 資源採 USE：Utilization、Saturation、Errors。
 
-### 5.2 Business／Safety Metrics
+## 5.2 Business／Safety Metrics
 
 voice_session_started_total
 
@@ -350,7 +348,7 @@ medical_boundary_blocked_total
 
 proactive_trigger_blocked_total
 
-### 5.3 API／Python Metrics
+## 5.3 API／Python Metrics
 
 http_requests_total
 
@@ -376,7 +374,7 @@ idempotency_conflict_total
 
 optimistic_lock_conflict_total
 
-### 5.4 Voice Metrics
+## 5.4 Voice Metrics
 
 asr_final_latency_ms
 
@@ -400,7 +398,7 @@ playback_failure_rate
 
 禁止將完整音訊或逐字稿作 Metric Dimension。
 
-### 5.5 Agent／LLM Metrics
+## 5.5 Agent／LLM Metrics
 
 agent_session_total
 
@@ -438,7 +436,7 @@ retrieval_grounding_rate
 
 AgentCore 服務提供的 session、latency、duration、token、error 與 ActiveSessionCount 等指標可直接納入 CloudWatch；自訂 Domain Metric 需額外產生。
 
-### 5.6 Event／Queue Metrics
+## 5.6 Event／Queue Metrics
 
 outbox_unpublished_count
 
@@ -470,7 +468,7 @@ stepfunctions_timed_out_total
 
 stepfunctions_execution_duration
 
-### 5.7 Data Metrics
+## 5.7 Data Metrics
 
 Aurora：CPU、ACU、connections、freeable memory、storage、deadlock、replica lag、transaction duration、slow query。
 
@@ -480,7 +478,7 @@ Neptune：query latency、error、connection、capacity、projection version、s
 
 S3：4xx／5xx、ingestion object count、lifecycle failure、unexpected public access finding。
 
-### 5.8 Notification Metrics
+## 5.8 Notification Metrics
 
 notification_pending_age_seconds
 
@@ -496,7 +494,7 @@ report_published_without_notification_total
 
 通知失敗不降低 family_report 的 Published 可讀性指標，但需獨立告警。
 
-## 六、Dashboard 設計
+# 六、Dashboard 設計
 
 D-01｜Executive／Demo Health
 
@@ -586,9 +584,9 @@ D-08｜Release／Cost
 
 • Bedrock、AgentCore、SageMaker、OpenSearch、Neptune、NAT、CloudWatch 成本趨勢。
 
-## 七、SLO、SLI 與 Error Budget
+# 七、SLO、SLI 與 Error Budget
 
-### 7.1 v0.1 候選 SLO
+## 7.1 v0.1 候選 SLO
 
 SLO-01｜核心登入與正式資料讀取月可用性 ≥ 99.5%。
 
@@ -608,7 +606,7 @@ SLO-07｜Outbox／主要 Queue 事件 99% 在 5 分鐘內開始處理；實際�
 
 SLO-08｜跨長者洩漏、越權成功、Consent 繞過、Draft Report Exposure、危險醫療建議通過率＝0。
 
-### 7.2 Error Budget
+## 7.2 Error Budget
 
 • 可用性 99.5% 的月 Error Budget 約為當月時間的 0.5%；正式核准後再作唯一依據。
 
@@ -618,13 +616,13 @@ SLO-08｜跨長者洩漏、越權成功、Consent 繞過、Draft Report Exposure
 
 • 安全零容忍指標不使用 Error Budget；一次即事件。
 
-### 7.3 SLO Review
+## 7.3 SLO Review
 
 每週檢查趨勢，每月檢查門檻與排除條件。不可透過改 Label、排除失敗流量或刪除資料讓 SLO 看起來通過。
 
-## 八、Alert Design
+# 八、Alert Design
 
-### 8.1 Severity
+## 8.1 Severity
 
 P0／SEV-1｜立即處理
 
@@ -664,7 +662,7 @@ P3／SEV-4｜排入改善
 
 • 單次非敏感錯誤、低影響噪音、Dashboard 缺口。
 
-### 8.2 告警內容
+## 8.2 告警內容
 
 alarm_name
 
@@ -694,7 +692,7 @@ recent_release_id
 
 不得在 Chat／Email 告警正文放長者姓名、地址、逐字稿或完整報表。
 
-### 8.3 告警抑制
+## 8.3 告警抑制
 
 • Deployment Window 只能抑制預期噪音，不可抑制 Security、Cross-Elder、Consent 與 Data Integrity 告警。
 
@@ -704,7 +702,7 @@ recent_release_id
 
 • 告警解除需確認服務恢復，不因 Metric 缺資料自動視為正常。
 
-### 8.4 通知路徑
+## 8.4 通知路徑
 
 CloudWatch Alarm／Log Alarm／AWS Health／Security Finding
 
@@ -716,9 +714,9 @@ CloudWatch Alarm／Log Alarm／AWS Health／Security Finding
 
 AWS Systems Manager Incident Manager 自 2025-11-07 起不再向新客戶開放，因此本專案不將其作為必要新依賴；採 CloudWatch＋EventBridge／SNS＋Chat／Ticket＋版本化 Runbook 的可替換模式。
 
-## 九、Synthetic、Canary 與 Smoke Monitoring
+# 九、Synthetic、Canary 與 Smoke Monitoring
 
-### 9.1 Synthetics
+## 9.1 Synthetics
 
 • 公開首頁與 Login Redirect。
 
@@ -732,7 +730,7 @@ AWS Systems Manager Incident Manager 自 2025-11-07 起不再向新客戶開放�
 
 • 非敏感 Knowledge Search。
 
-### 9.2 Voice Synthetic
+## 9.2 Voice Synthetic
 
 完整語音自動測試成本高，採分層：
 
@@ -742,7 +740,7 @@ AWS Systems Manager Incident Manager 自 2025-11-07 起不再向新客戶開放�
 
 • Demo 前：林阿嬤完整 E2E 連續 5 次。
 
-### 9.3 Canary 安全
+## 9.3 Canary 安全
 
 • 只使用 Test／Synthetic Persona。
 
@@ -754,7 +752,7 @@ AWS Systems Manager Incident Manager 自 2025-11-07 起不再向新客戶開放�
 
 • Canary Failure 建立 trace_id 與 release_id。
 
-## 十、Runbook 標準
+# 十、Runbook 標準
 
 每份 Runbook 包含：
 
@@ -802,7 +800,7 @@ Runbook 操作要求：
 
 • 每次實際使用後更新錯誤步驟與新證據。
 
-## 十一、核心 Runbook Catalog
+# 十一、核心 Runbook Catalog
 
 RB-OPS-01｜Core API 5xx／Latency
 
@@ -892,9 +890,9 @@ RB-OPS-15｜Demo Day Failure
 
 使用離線 Demo Seed、預錄音檔、固定 Safe Response、Graph Snapshot 與 Screenshot 作最後備援，但 ElderScope、Consent、未確認記憶隔離與安全阻擋不可 Mock。
 
-## 十二、Incident Response Lifecycle
+# 十二、Incident Response Lifecycle
 
-### 12.1 Prepare
+## 12.1 Prepare
 
 • Owner、Backup、Incident Commander、Technical Lead、Security／Privacy Lead、Communication Lead。
 
@@ -902,7 +900,7 @@ RB-OPS-15｜Demo Day Failure
 
 • 每月至少一次桌上演練；Demo 前做完整故障演練。
 
-### 12.2 Detect／Declare
+## 12.2 Detect／Declare
 
 • 告警、使用者回報、安全發現、異常 Metric 或測試失敗。
 
@@ -910,7 +908,7 @@ RB-OPS-15｜Demo Day Failure
 
 • 不等待 Root Cause 才宣告事件。
 
-### 12.3 Triage
+## 12.3 Triage
 
 先判斷：
 
@@ -922,7 +920,7 @@ RB-OPS-15｜Demo Day Failure
 
 • 影響單一 Session、Elder、Tenant、Region 或全部？
 
-### 12.4 Contain
+## 12.4 Contain
 
 可用 Kill Switch：
 
@@ -944,11 +942,11 @@ RB-OPS-15｜Demo Day Failure
 
 • tenant maintenance mode
 
-### 12.5 Eradicate／Recover
+## 12.5 Eradicate／Recover
 
 修復程式、Policy、Secret、資料或依賴；選擇 Rollback、Roll Forward、Replay、Rebuild 或 Restore。恢復順序優先正式資料讀取與安全 Gate，再恢復 Agent、Graph、Search、通知與主動功能。
 
-### 12.6 Validate
+## 12.6 Validate
 
 • 正向 E2E。
 
@@ -962,19 +960,19 @@ RB-OPS-15｜Demo Day Failure
 
 • 觀察窗口無復發。
 
-### 12.7 Communicate
+## 12.7 Communicate
 
 內部更新包含：事實、影響、已採動作、下一次更新時間、未知項目。
 
 對外通報需由指定 Owner／法務／合作機構決定；不猜測、不公開長者身份、不提前宣稱完全恢復。
 
-### 12.8 Close／Postmortem
+## 12.8 Close／Postmortem
 
 退出條件：影響停止、資料一致、安全驗證通過、Backlog 受控、Owner 同意。
 
 重大事件 2～5 個工作日完成無責備 Postmortem。
 
-## 十三、Incident Record
+# 十三、Incident Record
 
 incident_id
 
@@ -1030,7 +1028,7 @@ communication_records
 
 evidence_locations
 
-## 十四、Postmortem 標準
+# 十四、Postmortem 標準
 
 1. 摘要與影響。
 
@@ -1052,7 +1050,7 @@ evidence_locations
 
 禁止把「操作人員失誤」當唯一 Root Cause；應追查為何系統允許單一操作造成重大影響。
 
-## 十五、營運節奏
+# 十五、營運節奏
 
 每日
 
@@ -1094,9 +1092,9 @@ evidence_locations
 
 • SLO／Retention／RTO／RPO／成本基準重新核准。
 
-## 十六、容量、Quota 與 Backpressure
+# 十六、容量、Quota 與 Backpressure
 
-### 16.1 容量指標
+## 16.1 容量指標
 
 • Concurrent Voice Session。
 
@@ -1114,7 +1112,7 @@ evidence_locations
 
 • Notification Provider Rate Limit。
 
-### 16.2 Backpressure
+## 16.2 Backpressure
 
 • 限制每 actor／device／tenant 的 Voice Session。
 
@@ -1128,15 +1126,15 @@ evidence_locations
 
 • 不因 Consumer 落後無限制擴大 retry storm。
 
-## 十七、成本可觀測性
+# 十七、成本可觀測性
 
-### 17.1 成本維度
+## 17.1 成本維度
 
 service、environment、tenant_class、feature、model_route、language、workflow、release_id。
 
 不得以 elder_id 作成本 Tag 或高基數 Metric。
 
-### 17.2 每日追蹤
+## 17.2 每日追蹤
 
 • Bedrock Input／Output Token。
 
@@ -1156,7 +1154,7 @@ service、environment、tenant_class、feature、model_route、language、workfl
 
 • Notification Delivery。
 
-### 17.3 成本告警
+## 17.3 成本告警
 
 • 日成本超過基準 150%。
 
@@ -1172,9 +1170,9 @@ service、environment、tenant_class、feature、model_route、language、workfl
 
 成本異常先查錯誤 Loop、重試、模型路由與 Log Volume，不只提高 Budget。
 
-## 十八、資料保存與 Observability Access
+# 十八、資料保存與 Observability Access
 
-### 18.1 建議初始 Retention
+## 18.1 建議初始 Retention
 
 Application Debug Log：14～30 日。
 
@@ -1192,7 +1190,7 @@ Synthetics Artifact：7～30 日。
 
 以上均為 v0.1 候選值，不代表正式法律期限。
 
-### 18.2 Access
+## 18.2 Access
 
 • Developer 只能讀取 dev／demo 普通 Log。
 
@@ -1204,7 +1202,7 @@ Synthetics Artifact：7～30 日。
 
 • 下載／匯出 Incident Evidence 需記錄操作者、理由與期限。
 
-## 十九、Monitoring as Code
+# 十九、Monitoring as Code
 
 Repository：
 
@@ -1236,9 +1234,9 @@ Repository：
 
 • 禁止只在 Console 手動建立關鍵 Alarm 而未回寫 IaC。
 
-## 二十、Hackathon Implementation Profile
+# 二十、Hackathon Implementation Profile
 
-### 20.1 必做
+## 20.1 必做
 
 • Python Core API 結構化 JSON Log。
 
@@ -1264,7 +1262,7 @@ Repository：
 
 • Demo Day Runbook 與 Kill Switch。
 
-### 20.2 建議 8 個核心告警
+## 20.2 建議 8 個核心告警
 
 1. Core API 5xx／Latency。
 
@@ -1282,7 +1280,7 @@ Repository：
 
 8. Authorization／Consent／Cross-Elder／Safety Critical Event。
 
-### 20.3 可延後
+## 20.3 可延後
 
 • 多 Account OAM 集中監控。
 
@@ -1294,7 +1292,7 @@ Repository：
 
 • 長期 Error Budget Automation。
 
-### 20.4 不可省略
+## 20.4 不可省略
 
 • Restricted 資料不得進普通 Log／Alert。
 
@@ -1306,7 +1304,7 @@ Repository：
 
 • Incident Timeline 與 Release／Trace Correlation。
 
-## 二十一、ADR
+# 二十一、ADR
 
 ADR-14-001｜CloudWatch＋OpenTelemetry／ADOT 為主要 Observability Baseline
 
@@ -1350,7 +1348,7 @@ ADR-14-007｜Monitoring Configuration 納入 IaC 與 Release
 
 原因：告警、Dashboard、Retention 與 Runbook 必須可審查、重建與版本回查。
 
-## 二十二、技術 Spike
+# 二十二、技術 Spike
 
 SP-O01｜Python OpenTelemetry／ADOT on ECS Fargate 與 Trace Correlation。
 
@@ -1372,7 +1370,7 @@ SP-O09｜Security Hub／GuardDuty／CloudTrail 事件進 Incident Route。
 
 SP-O10｜AWS Health EventBridge 與 Demo／Production 通知。
 
-## 二十三、待決策
+# 二十三、待決策
 
 1. 正式 Monitoring Account 與跨 Account 模式。
 
@@ -1394,7 +1392,7 @@ SP-O10｜AWS Health EventBridge 與 Demo／Production 通知。
 
 10. Production 24×7 On-call 是否委外或由合作機構承擔。
 
-## 二十四、v0.1 完成判定
+# 二十四、v0.1 完成判定
 
 □ Log、Metric、Trace、Audit、Agent Trace 與 Business Metric 已分層。
 
@@ -1418,7 +1416,7 @@ SP-O10｜AWS Health EventBridge 與 Demo／Production 通知。
 
 □ Monitoring as Code、Hackathon Profile、ADR 與 Spike 已建立。
 
-## 二十五、官方技術參考（檢查日期：2026-07-26）
+# 二十五、官方技術參考（檢查日期：2026-07-26）
 
 CloudWatch Application Signals
 
@@ -1488,7 +1486,7 @@ AWS Security Incident Response
 
 https://docs.aws.amazon.com/security-ir/latest/userguide/people.html
 
-## 二十六、下一份文件
+# 二十六、下一份文件
 
 15｜智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1
 

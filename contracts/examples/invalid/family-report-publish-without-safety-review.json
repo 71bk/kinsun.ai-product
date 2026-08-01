@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "A family report cannot be published unless the human safety review explicitly passed.",
+  "data": {
+    "expected_version": 1,
+    "safety_review_passed": false,
+    "reason_code": "NOT_REVIEWED"
+  }
+}
