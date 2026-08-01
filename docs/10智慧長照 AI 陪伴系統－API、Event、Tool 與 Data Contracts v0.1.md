@@ -1,8 +1,6 @@
-# 10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.docx
-
 智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：REST API、WebSocket、Domain Event、Agent Handoff、Tool Contract、核心資料 Payload、錯誤碼、版本相容與測試
 
-### 相關文件
+## 相關文件
 
 05｜核心工作流、狀態機與錯誤恢復 v0.1
 
@@ -38,7 +36,7 @@ https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/
 
 https://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/edit
 
-## 一、文件目的與使用方式
+# 一、文件目的與使用方式
 
 本文件把 05～09 的流程、Domain、安全、AWS 架構與 Agent 設計轉成可直接開發與測試的 Contract。它回答：前後端如何交換資料、事件如何跨服務傳遞、Agent 如何 Handoff、Tool 如何呼叫、錯誤如何表達、版本如何演進，以及哪些欄位不得遺漏。
 
@@ -56,7 +54,7 @@ https://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/
 
 Contract 不等於內部資料表。API 不直接暴露 Aurora Table、Neptune Node 或 OpenSearch Document 的完整結構；外部欄位只公開任務所需最小資訊。
 
-## 二、Contract 設計原則
+# 二、Contract 設計原則
 
 1. Contract First：先確認 Schema、狀態、錯誤與版本，再實作 Controller、Consumer 或 Agent。
 
@@ -78,9 +76,9 @@ Contract 不等於內部資料表。API 不直接暴露 Aurora Table、Neptune N
 
 10. Traceable：每個 Request、Event、Tool、Agent Run 都可用 trace_id 串接。
 
-## 三、命名、格式與版本慣例
+# 三、命名、格式與版本慣例
 
-### 3.1 命名
+## 3.1 命名
 
 • JSON 欄位：snake_case。
 
@@ -96,13 +94,13 @@ Contract 不等於內部資料表。API 不直接暴露 Aurora Table、Neptune N
 
 • ID：不暴露遞增流水號，使用 UUID／ULID 類型字串。
 
-### 3.2 API Version
+## 3.2 API Version
 
 Base Path：/api/v1
 
 Major Version 只在 Breaking Change 時增加。Minor／Patch 由 Schema metadata 與部署版本管理，不寫入 URL。
 
-### 3.3 Schema Metadata
+## 3.3 Schema Metadata
 
 每個主要 Payload 至少包含：
 
@@ -116,9 +114,9 @@ source_system
 
 trace_id（適用時）
 
-## 四、共用 HTTP Contract
+# 四、共用 HTTP Contract
 
-### 4.1 Request Headers
+## 4.1 Request Headers
 
 Authorization: Bearer <JWT>
 
@@ -134,7 +132,7 @@ X-Client-Version: <app-version>
 
 Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Session 與 Policy Context 取得。Body 中的 elder_id 只作 Resource Target，仍需重新授權。
 
-### 4.2 Success Envelope
+## 4.2 Success Envelope
 
 {
 
@@ -154,7 +152,7 @@ Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Sess
 
 }
 
-### 4.3 List Envelope
+## 4.3 List Envelope
 
 {
 
@@ -174,7 +172,7 @@ Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Sess
 
 }
 
-### 4.4 Error Envelope
+## 4.4 Error Envelope
 
 {
 
@@ -198,7 +196,7 @@ Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Sess
 
 }
 
-### 4.5 HTTP Status Mapping
+## 4.5 HTTP Status Mapping
 
 400：VALIDATION_ERROR、INVALID_STATE_TRANSITION。
 
@@ -222,7 +220,7 @@ Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Sess
 
 504：DEPENDENCY_TIMEOUT。
 
-### 4.6 Pagination／Filtering
+## 4.6 Pagination／Filtering
 
 採 cursor pagination，不使用可猜測 offset 處理敏感長者資料。
 
@@ -230,7 +228,7 @@ Client 不得自行指定可信 tenant_id／actor_role；Server 從 Token、Sess
 
 任何 filter 都不能擴大 Server 端授權範圍。
 
-## 五、身份與目前 Context API
+# 五、身份與目前 Context API
 
 GET /api/v1/me
 
@@ -248,15 +246,15 @@ GET /api/v1/elders/{elder_id}/access-context
 
 禁止：將此回應當永久授權快取；高風險 Command 必須重新驗證。
 
-## 六、長者、同意與分享 API
+# 六、長者、同意與分享 API
 
-### 6.1 長者摘要
+## 6.1 長者摘要
 
 GET /api/v1/elders/{elder_id}
 
 回傳最小 Profile、語言偏好、介面偏好與可見狀態；依 Audience Redaction。
 
-### 6.2 同意
+## 6.2 同意
 
 GET /api/v1/elders/{elder_id}/consents
 
@@ -292,7 +290,7 @@ request_deletion
 
 回應必含 consent_id、consent_version、status、effective_at、affected_capabilities。
 
-### 6.3 家屬分享
+## 6.3 家屬分享
 
 GET /api/v1/elders/{elder_id}/family-relationships
 
@@ -302,9 +300,9 @@ DELETE /api/v1/elders/{elder_id}/family-relationships/{relationship_id}/share-sc
 
 任何分享擴大都需授權與長者同意；家屬本人不可自行擴大 scope。
 
-## 七、語音 Session 與 WebSocket Contract
+# 七、語音 Session 與 WebSocket Contract
 
-### 7.1 建立 Session
+## 7.1 建立 Session
 
 POST /api/v1/elders/{elder_id}/voice-sessions
 
@@ -334,7 +332,7 @@ consent_version
 
 expires_at
 
-### 7.2 Session Command
+## 7.2 Session Command
 
 POST /api/v1/voice-sessions/{session_id}/cancel
 
@@ -342,7 +340,7 @@ POST /api/v1/voice-sessions/{session_id}/retry
 
 GET /api/v1/voice-sessions/{session_id}
 
-### 7.3 WebSocket Client Events
+## 7.3 WebSocket Client Events
 
 client.audio.start
 
@@ -360,7 +358,7 @@ client.cancel
 
 client.ping
 
-### 7.4 WebSocket Server Events
+## 7.4 WebSocket Server Events
 
 server.session.ready
 
@@ -384,7 +382,7 @@ server.error
 
 server.pong
 
-### 7.5 WebSocket Event Envelope
+## 7.5 WebSocket Event Envelope
 
 {
 
@@ -406,7 +404,7 @@ server.pong
 
 sequence 必須單調遞增；Client 重連後以 last_sequence 恢復。原始音訊 Chunk Contract 由 Voice Spike 決定是 binary frame 或 signed upload，不在文字 JSON 內放 base64 大物件。
 
-### 7.6 ASR Final Payload
+## 7.6 ASR Final Payload
 
 transcript_id
 
@@ -422,9 +420,9 @@ critical_fields[]：field_type、value、confidence_band、needs_confirmation
 
 is_final
 
-## 八、Care Event API
+# 八、Care Event API
 
-### 8.1 候選建立
+## 8.1 候選建立
 
 POST /api/v1/elders/{elder_id}/care-event-candidates
 
@@ -452,7 +450,7 @@ review_requirement
 
 extractor_version
 
-### 8.2 查詢與覆核
+## 8.2 查詢與覆核
 
 GET /api/v1/elders/{elder_id}/care-events?status=needs_review
 
@@ -472,7 +470,7 @@ expected_version
 
 Response：event_id、status、version、review_record_id、rebuild_required[]。
 
-### 8.3 Care Event Contract
+## 8.3 Care Event Contract
 
 事件正式欄位：
 
@@ -508,7 +506,7 @@ created_at
 
 updated_at
 
-## 九、確認式記憶 API
+# 九、確認式記憶 API
 
 GET /api/v1/elders/{elder_id}/memory-candidates
 
@@ -580,9 +578,9 @@ graph_projection_status
 
 未 Confirmed 不得出現在 ACTIVE Memory API 或 Context Builder。
 
-## 十、摘要與照護待辦 API
+# 十、摘要與照護待辦 API
 
-### 10.1 Daily Summary
+## 10.1 Daily Summary
 
 GET /api/v1/elders/{elder_id}/summaries?date=YYYY-MM-DD
 
@@ -616,7 +614,7 @@ created_at
 
 updated_at
 
-### 10.2 Care Action
+## 10.2 Care Action
 
 GET /api/v1/elders/{elder_id}/care-actions
 
@@ -642,9 +640,9 @@ expected_elder_scope
 
 不得由 Care Insight Candidate 自動建立，必須由專業照護者確認。
 
-## 十一、日照與居服派案 API
+# 十一、日照與居服派案 API
 
-### 11.1 日照概覽
+## 11.1 日照概覽
 
 GET /api/v1/care-units/{care_unit_id}/elder-overview?date=YYYY-MM-DD
 
@@ -652,7 +650,7 @@ GET /api/v1/care-units/{care_unit_id}/elder-overview?date=YYYY-MM-DD
 
 禁止回傳診斷式排名或陪伴風險排行。
 
-### 11.2 居服行程
+## 11.2 居服行程
 
 GET /api/v1/home-care/assignments?date=YYYY-MM-DD
 
@@ -700,9 +698,9 @@ completed_at
 
 派案失效或取消後，長者敏感詳情 API 應立即拒絕。
 
-## 十二、家屬報表與通知 API
+# 十二、家屬報表與通知 API
 
-### 12.1 報表
+## 12.1 報表
 
 GET /api/v1/family/elders
 
@@ -752,7 +750,7 @@ updated_at
 
 只有 PUBLISHED 且 relationship、share_scope、consent 仍有效時可回傳。WITHDRAWN 回 410 或一般無法存取頁，不暴露內容。
 
-### 12.2 通知設定
+## 12.2 通知設定
 
 GET /api/v1/family/notification-preferences
 
@@ -774,7 +772,7 @@ important_event_enabled
 
 status
 
-### 12.3 Notification Delivery
+## 12.3 Notification Delivery
 
 POST /api/v1/internal/reports/{report_id}/notifications
 
@@ -782,7 +780,7 @@ GET /api/v1/internal/notifications/{notification_id}
 
 通知只引用 report_id／version；LINE／Email 不保存另一份正式報表內容。
 
-## 十三、同意撤回與刪除 API
+# 十三、同意撤回與刪除 API
 
 POST /api/v1/elders/{elder_id}/deletion-requests
 
@@ -816,7 +814,7 @@ partial_failure
 
 撤回同意成功後，停止新增處理不需等待 deletion job 完成。
 
-## 十四、主動陪伴 API
+# 十四、主動陪伴 API
 
 GET /api/v1/elders/{elder_id}/proactive-companion/settings
 
@@ -858,9 +856,9 @@ version
 
 Agent 只能 create_topic_candidate；schedule、approve、play 由確定性 Workflow 控制。
 
-## 十五、Agent Handoff Contract
+# 十五、Agent Handoff Contract
 
-### 15.1 Handoff Envelope
+## 15.1 Handoff Envelope
 
 request_id
 
@@ -906,7 +904,7 @@ created_at
 
 expires_at
 
-### 15.2 Handoff Result
+## 15.2 Handoff Result
 
 agent_run_id
 
@@ -936,7 +934,7 @@ model_id
 
 prompt_version
 
-### 15.3 Result Status
+## 15.3 Result Status
 
 SUCCESS
 
@@ -958,9 +956,9 @@ COST_BUDGET_EXCEEDED
 
 CANCELLED
 
-## 十六、Tool Contract
+# 十六、Tool Contract
 
-### 16.1 共用 Tool Request
+## 16.1 共用 Tool Request
 
 {
 
@@ -990,7 +988,7 @@ CANCELLED
 
 }
 
-### 16.2 共用 Tool Result
+## 16.2 共用 Tool Result
 
 result_status
 
@@ -1010,7 +1008,7 @@ redactions[]
 
 trace_id
 
-### 16.3 Read Tools
+## 16.3 Read Tools
 
 read_session_context
 
@@ -1030,7 +1028,7 @@ get_family_share_scope
 
 read_policy
 
-### 16.4 Candidate Write Tools
+## 16.4 Candidate Write Tools
 
 create_event_candidate
 
@@ -1044,7 +1042,7 @@ create_topic_candidate
 
 create_care_insight_candidate
 
-### 16.5 Command Tools
+## 16.5 Command Tools
 
 confirm_memory
 
@@ -1064,7 +1062,7 @@ create_care_action
 
 Command Tool 一律由 Core API 二次授權、狀態與版本檢查。Agent Tool Allowlist 預設不得包含高風險 Command。
 
-## 十七、Query Plan Contract
+# 十七、Query Plan Contract
 
 Query Planner Output：
 
@@ -1104,9 +1102,9 @@ grounding_status
 
 fallback_used
 
-## 十八、Domain Event Envelope
+# 十八、Domain Event Envelope
 
-### 18.1 共用 Envelope
+## 18.1 共用 Envelope
 
 {
 
@@ -1150,7 +1148,7 @@ fallback_used
 
 }
 
-### 18.2 Event 規則
+## 18.2 Event 規則
 
 • event_id 全域唯一。
 
@@ -1164,7 +1162,7 @@ fallback_used
 
 • event_version Major 變更才建立新 event_type suffix。
 
-## 十九、Domain Event Catalog
+# 十九、Domain Event Catalog
 
 conversation.session.completed.v1
 
@@ -1268,7 +1266,7 @@ Payload：request_id、scope[]、item_summary、reason_code。
 
 Consumers：Deletion Workers、Audit、User Status UI。
 
-## 二十、Queue 與 Consumer Mapping
+# 二十、Queue 與 Consumer Mapping
 
 care-event-extraction：conversation.session.completed.v1
 
@@ -1290,7 +1288,7 @@ deletion-processing：consent.revoked.v1、deletion.requested.v1
 
 每個 Queue 定義：visibility_timeout、max_receive_count、dlq_name、consumer_owner、schema_allowlist、alarm、redrive_runbook。
 
-## 二十一、資料分類與欄位曝露
+# 二十一、資料分類與欄位曝露
 
 Public：公開法規與衛教來源 Metadata。
 
@@ -1310,9 +1308,9 @@ Contract 規則：
 
 • Secure Link Token 只出現在 Header／Fragment 或一次性交換流程，不進一般日誌。
 
-## 二十二、版本相容與 Deprecation
+# 二十二、版本相容與 Deprecation
 
-### 22.1 非 Breaking Change
+## 22.1 非 Breaking Change
 
 • 新增可選欄位。
 
@@ -1322,7 +1320,7 @@ Contract 規則：
 
 • 放寬文字長度但不改原語意。
 
-### 22.2 Breaking Change
+## 22.2 Breaking Change
 
 • 刪除或改名欄位。
 
@@ -1334,13 +1332,13 @@ Contract 規則：
 
 • Event Payload 拆分或合併。
 
-### 22.3 Deprecation 流程
+## 22.3 Deprecation 流程
 
 Draft → Announced → Dual Support → Deprecated → Removed。
 
 每次需記錄 owner、replacement、announce_at、minimum_client_version、sunset_at、migration guide。
 
-### 22.4 Consumer 規則
+## 22.4 Consumer 規則
 
 • 忽略未知可選欄位。
 
@@ -1350,7 +1348,7 @@ Draft → Announced → Dual Support → Deprecated → Removed。
 
 • Event Consumer 只接受 Allowlist Major Version。
 
-## 二十三、Contract Repository 建議結構
+# 二十三、Contract Repository 建議結構
 
 /contracts
 
@@ -1390,9 +1388,9 @@ Generated Pydantic／Typed Model
 
 資料表 Entity、JPA Model、OpenSearch Document 與 API DTO 不直接共用同一 Class。
 
-## 二十四、Contract Test 策略
+# 二十四、Contract Test 策略
 
-### 24.1 Schema Test
+## 24.1 Schema Test
 
 • 所有 Example 通過對應 JSON Schema。
 
@@ -1400,7 +1398,7 @@ Generated Pydantic／Typed Model
 
 • Required、Enum、Format、Max Length、Pattern 與 additionalProperties 策略測試。
 
-### 24.2 API Test
+## 24.2 API Test
 
 • OpenAPI Request／Response Validation。
 
@@ -1414,7 +1412,7 @@ Generated Pydantic／Typed Model
 
 • Withdrawn／Expired／No Permission 不暴露存在性。
 
-### 24.3 Event Test
+## 24.3 Event Test
 
 • Producer Contract Test。
 
@@ -1428,7 +1426,7 @@ Generated Pydantic／Typed Model
 
 • Consent 撤回後等待中 Event 停止處理。
 
-### 24.4 Tool／Agent Test
+## 24.4 Tool／Agent Test
 
 • 未列入 Allowlist Tool 被拒絕。
 
@@ -1440,11 +1438,11 @@ Generated Pydantic／Typed Model
 
 • Query Planner 不可產生任意執行查詢。
 
-### 24.5 Compatibility Test
+## 24.5 Compatibility Test
 
 以前一個 Released Contract 跑 Breaking Change Detection。CI 發現 Breaking Change 時，需升 Major 或提供 Migration。
 
-## 二十五、Demo Contract Trace
+# 二十五、Demo Contract Trace
 
 Demo-01｜林阿嬤語音
 
@@ -1470,7 +1468,7 @@ Demo-06｜失敗恢復
 
 通知失敗事件不回滾報表；Graph 失敗重放；Consent 撤回後安全連結失效。
 
-## 二十六、Hackathon 必做 Contract
+# 二十六、Hackathon 必做 Contract
 
 • /api/v1/voice-sessions 與主要 WebSocket Events。
 
@@ -1498,45 +1496,45 @@ Demo-06｜失敗恢復
 
 可以分期但 Contract 先保留：居服完整服務紀錄、主動陪伴、Care Insight、完整刪除 Fan-out、客語模型路由。
 
-## 二十七、ADR
+# 二十七、ADR
 
-### ADR-10-001｜REST API 採 /api/v1 Resource-oriented Contract
+## ADR-10-001｜REST API 採 /api/v1 Resource-oriented Contract
 
 狀態：Accepted。
 
 原因：角色共用、容易文件化與產生 Client。
 
-### ADR-10-002｜WebSocket 只處理即時 Session 狀態與語音控制
+## ADR-10-002｜WebSocket 只處理即時 Session 狀態與語音控制
 
 狀態：Accepted。
 
 原因：避免把一般 CRUD 與長流程混入長連線。
 
-### ADR-10-003｜所有非同步訊息使用統一 Domain Event Envelope
+## ADR-10-003｜所有非同步訊息使用統一 Domain Event Envelope
 
 狀態：Accepted。
 
 原因：追蹤、去重、分類、版本與授權稽核一致。
 
-### ADR-10-004｜Agent Handoff、Tool 與 Domain Payload 使用獨立 Schema
+## ADR-10-004｜Agent Handoff、Tool 與 Domain Payload 使用獨立 Schema
 
 狀態：Accepted。
 
 原因：模型輸出、工具呼叫與正式業務資料風險不同。
 
-### ADR-10-005｜API DTO 不直接等於資料庫 Entity
+## ADR-10-005｜API DTO 不直接等於資料庫 Entity
 
 狀態：Accepted。
 
 原因：避免洩漏欄位與 Schema 綁死資料庫。
 
-### ADR-10-006｜同一 Major Version 優先向後相容
+## ADR-10-006｜同一 Major Version 優先向後相容
 
 狀態：Accepted。
 
 原因：PWA、照護端、Agent Consumer 與背景 Worker 無法永遠同時部署。
 
-## 二十八、v0.1 完成判定
+# 二十八、v0.1 完成判定
 
 □ REST、WebSocket、Event、Tool、Agent Handoff 與核心 Data Contract 都有共通 Envelope。
 
@@ -1558,7 +1556,7 @@ Demo-06｜失敗恢復
 
 □ 第一條 Demo 從語音到 Graph、照護端與家屬通知可由 trace_id 串起。
 
-## 二十九、待決策
+# 二十九、待決策
 
 1. WebSocket 原始音訊採 binary frame、直連 Speech Provider 或 S3 分段上傳？
 
@@ -1580,7 +1578,7 @@ Demo-06｜失敗恢復
 
 10. Voice Session 斷線後的 Resume Window 與 Audio Chunk 去重規則？
 
-## 三十、下一份文件
+# 三十、下一份文件
 
 11｜智慧長照 AI 陪伴系統－測試策略、Agent Evaluation 與品質門檻 v0.1
 

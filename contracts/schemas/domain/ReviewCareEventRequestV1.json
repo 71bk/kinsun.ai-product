@@ -1,0 +1,110 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "decision": {
+      "enum": [
+        "VERIFY",
+        "CORRECT",
+        "REJECT",
+        "EXCLUDE"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason_code": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Reason Code",
+      "type": "string"
+    },
+    "corrected_payload": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "audio",
+                "audio_uri",
+                "transcript",
+                "transcript_text",
+                "prompt",
+                "full_prompt",
+                "secret",
+                "token",
+                "asr_confidence"
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corrected Payload"
+    },
+    "expected_version": {
+      "minimum": 1,
+      "title": "Expected Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "decision",
+    "reason_code",
+    "expected_version"
+  ],
+  "title": "ReviewCareEventRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ReviewCareEventRequestV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "CORRECT"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "required": [
+          "corrected_payload"
+        ],
+        "properties": {
+          "corrected_payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "VERIFY",
+              "REJECT",
+              "EXCLUDE"
+            ]
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "properties": {
+          "corrected_payload": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

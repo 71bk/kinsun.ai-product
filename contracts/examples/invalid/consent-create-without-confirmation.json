@@ -1,0 +1,9 @@
+{
+  "_why_invalid": "A consent grant requires explicit actor confirmation; false must be rejected.",
+  "data": {
+    "purposes": ["BASIC_VOICE"],
+    "share_scopes": [],
+    "actor_confirmation": false,
+    "policy_version": "consent-demo-v1"
+  }
+}

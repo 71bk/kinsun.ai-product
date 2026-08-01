@@ -1,0 +1,32 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "confirmation_method": {
+      "enum": [
+        "CAREGIVER_REVIEW",
+        "LEGAL_REPRESENTATIVE"
+      ],
+      "title": "Confirmation Method",
+      "type": "string"
+    },
+    "expected_candidate_version": {
+      "minimum": 1,
+      "title": "Expected Candidate Version",
+      "type": "integer"
+    },
+    "consent_version": {
+      "minimum": 1,
+      "title": "Consent Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "confirmation_method",
+    "expected_candidate_version",
+    "consent_version"
+  ],
+  "title": "ConfirmMemoryRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ConfirmMemoryRequestV1.json"
+}

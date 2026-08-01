@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/tools/ToolResponseV1.json",
+  "title": "ToolResponseV1",
+  "description": "Result envelope for an Agent Tool call. TARGET SHAPE: no Tool execution engine exists yet, so nothing emits or consumes this today (AGENTS.md 8.2 exception, recorded in contracts/README.md). Document 10 section 16.2 calls this Tool Result; the name here follows the request/response pairing already used by the agent schemas.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tool_call_id",
+    "trace_id",
+    "status",
+    "result",
+    "error_code",
+    "reason_codes",
+    "retryable",
+    "source_refs",
+    "redactions",
+    "resource_id",
+    "resource_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OK", "BLOCKED", "FAILED"]
+    },
+    "result": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "array",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "error_code": {
+      "type": ["string", "null"],
+      "maxLength": 128
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 64
+      }
+    },
+    "retryable": {
+      "type": "boolean",
+      "description": "Whether the caller may retry. Without this the agent has to infer retry policy from the status, which is exactly the gap catalogued for the Core API error envelope in contracts/DIVERGENCE.md section 1.3."
+    },
+    "source_refs": {
+      "type": "array",
+      "description": "Provenance for every fact in `result`. AGENTS.md 7 requires RAG to keep source, version, effective date and review status; with no field to carry them, a retrieved fact arrives indistinguishable from a generated one. Empty array is valid only when the tool returns no facts.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "source_type"],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "source_type": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "source_version": {
+            "type": ["string", "null"],
+            "maxLength": 64
+          },
+          "effective_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "review_status": {
+            "type": ["string", "null"],
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "redactions": {
+      "type": "array",
+      "description": "What was withheld and why. Records that content was removed without reproducing it — a redaction entry must never carry the redacted value.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "reason_code"],
+        "properties": {
+          "field": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "reason_code": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "resource_id": {
+      "type": ["string", "null"],
+      "description": "Identifier of the resource the call created or updated; null for pure reads.",
+      "maxLength": 128
+    },
+    "resource_version": {
+      "type": ["string", "null"],
+      "description": "Version after the write, for the caller's next optimistic-concurrency check; null for pure reads.",
+      "maxLength": 64
+    }
+  }
+}

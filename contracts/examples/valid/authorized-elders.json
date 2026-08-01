@@ -1,0 +1,27 @@
+{
+  "data": {
+    "items": [
+      {
+        "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+        "display_name": "林阿嬤",
+        "care_unit_name": "幸福日照中心",
+        "authorization_summary": "daycare authorization"
+      },
+      {
+        "elder_id": "9b3e7d15-4c62-4a08-b7f9-5e1c8a2d6034",
+        "display_name": "張阿姨",
+        "care_unit_name": "幸福日照中心",
+        "authorization_summary": "daycare authorization"
+      }
+    ],
+    "page": {
+      "next_cursor": null,
+      "has_more": false,
+      "limit": 20
+    }
+  },
+  "meta": {
+    "correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64",
+    "timestamp": "2026-07-31T04:12:09.482714Z"
+  }
+}

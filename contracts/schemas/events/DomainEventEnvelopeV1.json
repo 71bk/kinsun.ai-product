@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/DomainEventEnvelopeV1.json",
+  "title": "DomainEventEnvelopeV1",
+  "description": "Replay-safe envelope emitted by the Core API outbox relay. Payloads contain identifiers and structured state only; audio, full transcripts, full prompts, tokens and secrets are forbidden.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "tenant_id",
+    "elder_id",
+    "actor_id",
+    "purpose",
+    "consent_version",
+    "trace_id",
+    "correlation_id",
+    "causation_id",
+    "idempotency_key",
+    "classification",
+    "aggregate",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]+\\.v[1-9][0-9]*$",
+      "maxLength": 160
+    },
+    "event_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "elder_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "actor_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "uuid"
+        }
+      ]
+    },
+    "purpose": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 64
+        }
+      ]
+    },
+    "consent_version": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ]
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "correlation_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      ]
+    },
+    "causation_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 80
+        }
+      ]
+    },
+    "idempotency_key": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 160
+        }
+      ]
+    },
+    "classification": {
+      "type": "string",
+      "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"]
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "version"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "payload": {
+      "$ref": "#/$defs/RestrictedSafeObject"
+    }
+  },
+  "$defs": {
+    "RestrictedSafeObject": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "audio",
+            "audio_uri",
+            "transcript",
+            "transcript_text",
+            "prompt",
+            "full_prompt",
+            "secret",
+            "token"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/RestrictedSafeValue"
+      }
+    },
+    "RestrictedSafeValue": {
+      "oneOf": [
+        {"$ref": "#/$defs/RestrictedSafeObject"},
+        {
+          "type": "array",
+          "items": {"$ref": "#/$defs/RestrictedSafeValue"}
+        },
+        {"type": ["string", "number", "boolean", "null"]}
+      ]
+    }
+  }
+}

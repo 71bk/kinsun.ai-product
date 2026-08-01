@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ElderAccessContextV1.json",
+  "title": "ElderAccessContextV1",
+  "description": "The caller's authorization scope for one elder, returned by GET /api/v1/elders/{elder_id}/access-context. Document 10 section 5 forbids treating this as a durable grant: it is a UI hint only, and every high-risk command re-authorizes server-side.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["purpose", "allowed_actions", "source_summary"],
+  "properties": {
+    "purpose": {
+      "type": "string",
+      "description": "Purpose this access context was evaluated for.",
+      "minLength": 1
+    },
+    "allowed_actions": {
+      "type": "array",
+      "description": "Actions the caller may perform on this elder, as granted by the authorizing relationship or assignment. An empty array means no action is permitted.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source_type": {
+      "description": "Which kind of record granted access. Null when access was denied.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "enum": ["relationship", "assignment"]
+        }
+      ]
+    },
+    "source_summary": {
+      "type": "string",
+      "description": "Human-readable summary of the authorizing record. Must not disclose the identity of other actors or elders."
+    },
+    "expires_at": {
+      "description": "When the authorizing record stops being valid, or null when it has no scheduled end. Clients must re-fetch rather than cache past this point.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    }
+  }
+}

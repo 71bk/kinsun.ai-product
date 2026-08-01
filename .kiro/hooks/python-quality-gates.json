@@ -1,0 +1,41 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "core-api-unit-tests",
+      "description": "Run Core API unit tests after Core API Python source changes.",
+      "trigger": "PostFileSave",
+      "matcher": "^services[\\\\/]core-api[\\\\/]app[\\\\/].+\\.py$",
+      "action": {
+        "type": "command",
+        "command": "uv run --project services/core-api pytest services/core-api/tests/unit -q"
+      },
+      "timeout": 180,
+      "enabled": true
+    },
+    {
+      "name": "agent-runtime-tests",
+      "description": "Run Agent Runtime tests after Agent Runtime Python source changes.",
+      "trigger": "PostFileSave",
+      "matcher": "^services[\\\\/]agent-runtime[\\\\/]src[\\\\/].+\\.py$",
+      "action": {
+        "type": "command",
+        "command": "uv run --directory services/agent-runtime pytest -q"
+      },
+      "timeout": 180,
+      "enabled": true
+    },
+    {
+      "name": "contract-validation",
+      "description": "Validate OpenAPI, JSON Schema, and examples after contract changes.",
+      "trigger": "PostFileSave",
+      "matcher": "^contracts[\\\\/].+\\.(json|ya?ml)$",
+      "action": {
+        "type": "command",
+        "command": "uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts"
+      },
+      "timeout": 180,
+      "enabled": true
+    }
+  ]
+}

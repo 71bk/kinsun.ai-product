@@ -1,8 +1,6 @@
-# 08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.docx
-
 智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：長者語音端、專業照護端、家屬端、Agentic Workflow、RAG、Graph、報表通知、安全、可觀測性與部署營運
 
-### 相關文件
+## 相關文件
 
 01｜產品方向與範圍基準 v1.2
 
@@ -50,7 +48,7 @@ https://docs.google.com/document/d/1B4dyCdiuAR7eR15cOgoQRZGsitcJN27Brgil58D4-J8/
 
 https://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/edit
 
-## 一、文件目的與架構策略
+# 一、文件目的與架構策略
 
 本文件將 05～07 的工作流、Domain 與安全需求轉成 AWS Target Architecture，回答：
 
@@ -68,7 +66,7 @@ https://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/
 
 本文件採「完整規劃、分期實作」：Target Architecture 定義最終責任邊界；Hackathon Profile 只縮減部署數量與非核心元件，不改變 Domain、Security、Contract 與資料責任。
 
-## 二、架構決策摘要
+# 二、架構決策摘要
 
 1. 前端採單一多角色 PWA／Web Codebase，依角色與授權顯示長者、日照照服員、居服員及家屬介面。
 
@@ -102,9 +100,9 @@ https://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/
 
 16. Infrastructure as Code 採 AWS CDK；容器映像放 Amazon ECR；CI/CD 以 GitHub Actions OIDC 或 AWS CodePipeline 執行。
 
-## 三、Target Architecture 全貌
+# 三、Target Architecture 全貌
 
-### 3.1 邏輯架構
+## 3.1 邏輯架構
 
 使用者裝置
 
@@ -204,7 +202,7 @@ AI 與語音層
 
 └─ Budgets／Cost Anomaly Detection
 
-### 3.2 架構原則
+## 3.2 架構原則
 
 • System of Record First：先成功寫入 Aurora 與 Outbox，才由背景工作更新 Neptune、OpenSearch、通知與分析。
 
@@ -218,9 +216,9 @@ AI 與語音層
 
 • Region-Aware：模型、AgentCore、Neptune、OpenSearch、Transcribe 及 SageMaker 必須在 Region Matrix 中共同驗證。
 
-## 四、體驗層與 Edge
+# 四、體驗層與 Edge
 
-### 4.1 前端
+## 4.1 前端
 
 選擇：React 或 Vue 的響應式 PWA，單一 Repository、多角色 Route 與 Component Library。
 
@@ -228,13 +226,13 @@ AI 與語音層
 
 理由：三種後台與長者端共用 Design Token、身份、報表及錯誤狀態，避免維護四套前端。
 
-### 4.2 CloudFront／WAF
+## 4.2 CloudFront／WAF
 
 CloudFront 統一提供 TLS、靜態內容、API Domain 與快取控制。AWS WAF 套用 Rate Limit、已知攻擊規則與惡意 Bot 基礎控制。
 
 Restricted API 回應設定 no-store；個人化 HTML／JSON 不進共享 Cache。
 
-### 4.3 API Gateway
+## 4.3 API Gateway
 
 HTTP API：一般 CRUD、摘要、報表、派案、同意與管理 API。
 
@@ -242,9 +240,9 @@ WebSocket API：語音 Session 建立、狀態事件、partial／final transcrip
 
 注意：原始音訊是否經 WebSocket Proxy、直接送 Speech Service，或先傳 S3，須由 Voice Spike 依延遲與格式決定。
 
-## 五、身份、授權與租戶隔離
+# 五、身份、授權與租戶隔離
 
-### 5.1 Amazon Cognito
+## 5.1 Amazon Cognito
 
 • 專業照護者、家屬、管理者使用 Cognito User Pool。
 
@@ -254,7 +252,7 @@ WebSocket API：語音 Session 建立、狀態事件、partial／final transcrip
 
 • 長者受控裝置使用 Device Enrollment＋短效 Session；分享、刪除與高風險設定需再次驗證。
 
-### 5.2 Authorization Policy Service
+## 5.2 Authorization Policy Service
 
 Cognito Groups 只提供粗粒度 Role；Core API 每次請求執行：
 
@@ -262,9 +260,9 @@ actor_id＋role＋tenant_id＋elder_id＋care_unit_id＋relationship_id／assign
 
 授權 Policy 實作先置於 Python Core Domain Module，介面保留未來接 Cedar／Verified Permissions 的可能性。v0.1 不另加 Policy Engine，避免五人團隊同時維護兩套授權語意。
 
-## 六、核心應用運算
+# 六、核心應用運算
 
-### 6.1 Amazon ECS on AWS Fargate
+## 6.1 Amazon ECS on AWS Fargate
 
 選擇：Core API、Authorization、Report API、Outbox Publisher 先採單一 Modular Monolith Container，可依模組與流量拆成服務。
 
@@ -280,7 +278,7 @@ Target：至少兩個 Task 跨 Availability Zone，置於 Private Subnet，由 I
 
 Hackathon：可先單 Task；不得使用真實資料，並保留相同 IAM、Schema 與部署模板。
 
-### 6.2 Lambda 使用邊界
+## 6.2 Lambda 使用邊界
 
 Lambda 適合：
 
@@ -296,9 +294,9 @@ Lambda 適合：
 
 不建議第一版用 Lambda 承擔全部 Python Domain Logic，以避免交易、冷啟動、部署與除錯分散。
 
-## 七、Agent 與 Foundation Model 架構
+# 七、Agent 與 Foundation Model 架構
 
-### 7.1 Amazon Bedrock AgentCore Runtime
+## 7.1 Amazon Bedrock AgentCore Runtime
 
 AgentCore Runtime 負責 Agent Container 的 Session Isolation、Scale、Auth Gate 與 Observability Plumbing；Orchestration Loop 仍由團隊程式控制。
 
@@ -318,7 +316,7 @@ Agent 分工建議：
 
 • Safety Evaluator：應用內容政策與理由碼。
 
-### 7.2 AgentCore 元件邊界
+## 7.2 AgentCore 元件邊界
 
 • Runtime：執行 Agent Code。
 
@@ -332,7 +330,7 @@ Agent 分工建議：
 
 • Memory：只考慮短期 Session／Working Memory；正式確認式長期記憶仍在 Aurora，Neptune 為投影。
 
-### 7.3 Model Router
+## 7.3 Model Router
 
 所有 Agent 呼叫經 Model Router：
 
@@ -340,13 +338,13 @@ task_type＋language＋risk_level＋latency_budget＋quality_tier＋region_avail
 
 不得在 Business Code 寫死單一 Model ID。
 
-### 7.4 Bedrock Guardrails
+## 7.4 Bedrock Guardrails
 
 使用者輸入、RAG Context 與模型輸出套用 Guardrails／自訂 Safety Rule。IAM Policy 應要求高風險 Agent 使用指定 Guardrail；Output 仍需 Core API 做 Schema、PII、Share Scope 與醫療邊界檢查。
 
-## 八、語音鏈路與多語路由
+# 八、語音鏈路與多語路由
 
-### 8.1 Speech Router
+## 8.1 Speech Router
 
 Input：elder preference、explicit language switch、session history、audio metadata。
 
@@ -366,7 +364,7 @@ Output：provider、language_code、model_version、confidence_policy、fallback
 
 現行 Amazon Transcribe 語言表列有 zh-TW 批次與串流，但未列臺語、客語為獨立語言；因此臺語／客語不得只靠 Transcribe 宣稱完整支援。
 
-### 8.2 SageMaker AI Real-Time Endpoint
+## 8.2 SageMaker AI Real-Time Endpoint
 
 用途：自建 ASR、TTS、語言辨識或重排序模型。
 
@@ -382,7 +380,7 @@ Output：provider、language_code、model_version、confidence_policy、fallback
 
 • GPU Endpoint 依 Demo 時段啟停，正式環境才評估 Auto Scaling。
 
-### 8.3 TTS Router
+## 8.3 TTS Router
 
 • 國語：Amazon Polly 作可快速驗證的 Baseline；需以長者可懂度測試，不假設中國普通話聲線等同臺灣長者偏好。
 
@@ -390,9 +388,9 @@ Output：provider、language_code、model_version、confidence_policy、fallback
 
 • TTS 失敗：顯示文字、允許重播，不回滾已完成文字回覆。
 
-## 九、資料架構
+# 九、資料架構
 
-### 9.1 Aurora PostgreSQL
+## 9.1 Aurora PostgreSQL
 
 保存：Actor、Tenant、Elder、Relationship、Assignment、Consent、Conversation Metadata、Care Event、Summary、Memory、Report、Notification State、Care Action、Trigger、Deletion Job、Audit Reference、Outbox。
 
@@ -400,7 +398,7 @@ Output：provider、language_code、model_version、confidence_policy、fallback
 
 理由：交易、外鍵、版本、JSONB、Outbox，並可搭配 Python ORM 與資料驗證工具實作 Domain Model。
 
-### 9.2 Amazon S3
+## 9.2 Amazon S3
 
 Bucket／Prefix 分離：
 
@@ -418,7 +416,7 @@ Bucket／Prefix 分離：
 
 所有 Bucket Block Public Access、KMS Encryption、Lifecycle、Versioning／Object Lock 是否啟用依資料類型決定。前端不得直接列舉 Bucket；只使用短效、限物件、限用途 URL。
 
-### 9.3 Amazon Neptune Serverless
+## 9.3 Amazon Neptune Serverless
 
 保存：ACTIVE／VERIFIED 的人物、家庭關係、照護關係、活動、偏好、作息、事件與來源投影。
 
@@ -440,7 +438,7 @@ Bucket／Prefix 分離：
 
 • Graph 失敗時回到 Aurora／Search 降級。
 
-### 9.4 Amazon OpenSearch Serverless
+## 9.4 Amazon OpenSearch Serverless
 
 Collection：
 
@@ -456,7 +454,7 @@ Keyword BM25＋Vector Similarity＋Metadata Filter＋可選 Reranker。
 
 Graph Search 不與 Keyword／Vector 二選一；只在關係查詢時由 Query Planner 叫用。
 
-### 9.5 Bedrock Knowledge Bases 決策
+## 9.5 Bedrock Knowledge Bases 決策
 
 v0.1 採「保留 Bedrock Knowledge Bases 作 Managed Retrieval 選項，但不立刻交出 Chunking Source of Truth」。
 
@@ -474,7 +472,7 @@ Spike 通過條件：
 
 若未通過，採自訂 Ingestion Pipeline＋OpenSearch Query API。
 
-### 9.6 Cache
+## 9.6 Cache
 
 Target 可用 ElastiCache Redis 保存短期 Session、Rate Limit、Query Cache 與 WebSocket Connection Metadata。
 
@@ -482,15 +480,15 @@ Target 可用 ElastiCache Redis 保存短期 Session、Rate Limit、Query Cache 
 
 Hackathon 可先用 Core Memory／Aurora，避免增加非必要服務。
 
-## 十、事件驅動與工作流架構
+# 十、事件驅動與工作流架構
 
-### 10.1 Transactional Outbox
+## 10.1 Transactional Outbox
 
 Core API 在同一 Aurora Transaction 寫入 Domain Aggregate 與 Outbox Record。
 
 Outbox Publisher 發送至 EventBridge；成功後更新 published_at。Consumer 依 event_id／idempotency_key 去重。
 
-### 10.2 EventBridge＋SQS
+## 10.2 EventBridge＋SQS
 
 EventBridge 依 event_type、tenant、risk、resource_type 路由。
 
@@ -514,7 +512,7 @@ EventBridge 依 event_type、tenant、risk、resource_type 路由。
 
 每個 Queue 具 Visibility Timeout、Max Receive Count、DLQ、Alarm 與 Redrive Runbook。
 
-### 10.3 Step Functions Standard
+## 10.3 Step Functions Standard
 
 適用：
 
@@ -534,7 +532,7 @@ EventBridge 依 event_type、tenant、risk、resource_type 路由。
 
 • 單次低延遲查詢
 
-### 10.4 EventBridge Scheduler
+## 10.4 EventBridge Scheduler
 
 適用：
 
@@ -550,29 +548,29 @@ EventBridge 依 event_type、tenant、risk、resource_type 路由。
 
 每次排程到期仍重新檢查 Consent、Authorization、Source Status 與 Policy，不因排程存在就直接執行。
 
-## 十一、家屬報表與通知架構
+# 十一、家屬報表與通知架構
 
-### 11.1 App／Web
+## 11.1 App／Web
 
 Family Report API 只查 PUBLISHED 且 Share Scope 有效的版本。Report Page 每次開啟重新驗證 Relationship、Consent、report status 與 Secure Link。
 
-### 11.2 LINE
+## 11.2 LINE
 
 Lambda／Fargate Notification Adapter 呼叫 LINE Messaging API。
 
 Secrets 放 Secrets Manager；Webhook 簽章驗證；通知只含最小預覽與安全連結。
 
-### 11.3 Email
+## 11.3 Email
 
 Amazon SES 寄送簡短預覽與連結；不把完整 Restricted 報表當永久附件。
 
-### 11.4 Delivery State
+## 11.4 Delivery State
 
 Aurora 保存 Notification Delivery；SQS 負責重試。通知失敗不修改 Family Report 的 PUBLISHED 狀態。
 
-## 十二、網路與安全部署
+# 十二、網路與安全部署
 
-### 12.1 VPC
+## 12.1 VPC
 
 至少兩個 Availability Zone：
 
@@ -584,7 +582,7 @@ Aurora 保存 Notification Delivery；SQS 負責重試。通知失敗不修改 F
 
 API Gateway 透過 VPC Link 到 Internal ALB。Aurora／Neptune 不開 Public Access。S3、ECR、CloudWatch、Secrets Manager 等優先使用 VPC Endpoint，實際 Endpoint 依成本取捨。
 
-### 12.2 Encryption
+## 12.2 Encryption
 
 • KMS Key 分為 application-data、audio-object、search／graph、logs／backup 等用途。
 
@@ -592,21 +590,21 @@ API Gateway 透過 VPC Link 到 Internal ALB。Aurora／Neptune 不開 Public Ac
 
 • Service Role 只能讀取自身需要 Secret。
 
-### 12.3 Security Services
+## 12.3 Security Services
 
 Target Production：AWS WAF、CloudTrail、AWS Config、GuardDuty、Security Hub、ECR Image Scan、Inspector／Dependency Scan、Backup Vault。
 
 Hackathon：WAF、CloudTrail、Secret Scan、ECR Scan、IAM Least Privilege 與 Demo Data Gate 為最低必做。
 
-## 十三、可觀測性
+# 十三、可觀測性
 
-### 13.1 Trace
+## 13.1 Trace
 
 OpenTelemetry／X-Ray Trace Context：
 
 CloudFront／API Gateway → Core API → AgentCore／Bedrock → Speech → Aurora／EventBridge → Consumer → Report／Notification。
 
-### 13.2 CloudWatch Dashboard
+## 13.2 CloudWatch Dashboard
 
 最低顯示：
 
@@ -632,13 +630,13 @@ CloudFront／API Gateway → Core API → AgentCore／Bedrock → Speech → Aur
 
 • Authorization denied、Consent blocked、Safety blocked
 
-### 13.3 Agent Observability
+## 13.3 Agent Observability
 
 AgentCore Observability 的 Metrics／Spans／Logs 進 CloudWatch；自訂 Trace 需保留 source_ids、tool_name、policy result、model／prompt version，不保留不必要完整 Prompt。
 
-## 十四、Region 與環境策略
+# 十四、Region 與環境策略
 
-### 14.1 Region Decision Matrix
+## 14.1 Region Decision Matrix
 
 部署前對候選 Region 評分：
 
@@ -664,7 +662,7 @@ AgentCore Observability 的 Metrics／Spans／Logs 進 CloudWatch；自訂 Trace
 
 v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務共同可用性及實測延遲決定，不能只依地理距離。
 
-### 14.2 Environment
+## 14.2 Environment
 
 • dev：合成資料、低容量、開發模型與短 Retention。
 
@@ -676,7 +674,7 @@ v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務�
 
 黑客松可暫時同一 Account 不同 Stack／Prefix，但不得共用正式資料與 Secrets。
 
-## 十五、CI/CD 與 Infrastructure as Code
+# 十五、CI/CD 與 Infrastructure as Code
 
 • AWS CDK 定義 Network、IAM、Cognito、API、ECS、Aurora、Queues、State Machines、Buckets、Search、Graph 與 Monitoring。
 
@@ -688,9 +686,9 @@ v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務�
 
 • Prompt、Policy、Schema、Model Route 與 RAG Manifest 與程式一樣版本化。
 
-## 十六、Hackathon Implementation Profile
+# 十六、Hackathon Implementation Profile
 
-### 16.1 Demo 必做
+## 16.1 Demo 必做
 
 • S3＋CloudFront 前端
 
@@ -722,7 +720,7 @@ v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務�
 
 • CloudWatch Trace／Dashboard
 
-### 16.2 可延後但架構保留
+## 16.2 可延後但架構保留
 
 • Multi-AZ Production Scaling
 
@@ -740,7 +738,7 @@ v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務�
 
 • 自動 Backup Restore Drill
 
-### 16.3 禁止以 Mock 取代
+## 16.3 禁止以 Mock 取代
 
 • elder／tenant／assignment 授權
 
@@ -754,41 +752,41 @@ v0.1 不直接鎖定 Region。候選可先比較東京與新加坡；以服務�
 
 • 張阿姨資料不得進林阿嬤 Context
 
-## 十七、主要同步流程
+# 十七、主要同步流程
 
-### 17.1 長者語音
+## 17.1 長者語音
 
 PWA → WebSocket Session → Core Authorization／Consent → Speech Router → Transcribe／SageMaker ASR → Low Confidence Confirmation → AgentCore Orchestrator → Bedrock Guardrail＋Model → TTS Router → Polly／SageMaker TTS → PWA Playback。
 
 Event／Memory Extraction 由完成事件轉非同步，不阻塞主要回覆。
 
-### 17.2 日照照服員
+## 17.2 日照照服員
 
 Web → HTTP API → Cognito JWT → Core ABAC → Aurora Query → Multi-Elder Overview → Elder Detail → Review Command → Aurora Transaction＋Outbox。
 
-### 17.3 居服員
+## 17.3 居服員
 
 PWA → HTTP API → Cognito → Assignment Validation → Minimal Elder View → Service Record → Aurora＋Outbox。
 
-### 17.4 家屬
+## 17.4 家屬
 
 LINE／Email → Secure Link → Cognito／Recipient Verification → Family Relationship＋Consent＋PUBLISHED Check → Report API → App／Web。
 
-## 十八、主要非同步流程
+# 十八、主要非同步流程
 
-### 18.1 Event／Memory
+## 18.1 Event／Memory
 
 ConversationSessionCompleted → EventBridge → SQS → Extractor Agent → Schema／Consent → Candidate Write → Review／Confirm → Outbox → Neptune／OpenSearch Projection。
 
-### 18.2 Family Report
+## 18.2 Family Report
 
 Scheduler → Step Functions → Source Query → Summary Agent → Share／Safety Check → Human Review（必要時）→ PUBLISHED → EventBridge → Notification Queue → LINE／SES。
 
-### 18.3 Deletion
+## 18.3 Deletion
 
 ConsentRevoked → Step Functions → Deletion Job Items → Aurora／S3／Neptune／OpenSearch／Cache／Secure Link Consumers → Completion／Partial Failure → Audit。
 
-## 十九、Service Selection Matrix
+# 十九、Service Selection Matrix
 
 Frontend：S3＋CloudFront｜Alternative：Amplify Hosting｜選擇理由：部署可控、角色共用、易接 WAF。
 
@@ -816,7 +814,7 @@ Custom ML：SageMaker Real-Time Endpoint｜Alternative：ECS GPU｜理由：Mode
 
 Email：SES｜Alternative：第三方 Email｜理由：AWS 整合與最小 Adapter。
 
-## 二十、Architecture Decision Records
+# 二十、Architecture Decision Records
 
 ADR-001｜採 Python Modular Monolith on ECS Fargate
 
@@ -900,7 +898,7 @@ ADR-010｜完整規劃、三階段部署
 
 階段 C：完整主動陪伴、治理與 Production Hardening。
 
-## 二十一、成本控制
+# 二十一、成本控制
 
 • Bedrock：限制最大 Token、Context、工具次數與重試；不同任務使用不同 Quality Tier。
 
@@ -916,7 +914,7 @@ ADR-010｜完整規劃、三階段部署
 
 • Budgets：依 dev／demo／prod 設日、週、月告警。
 
-## 二十二、恢復與降級
+# 二十二、恢復與降級
 
 • Bedrock／AgentCore 失敗：固定安全回覆＋稍後再試；正式資料不受影響。
 
@@ -936,7 +934,7 @@ ADR-010｜完整規劃、三階段部署
 
 • Region 故障：v0.1 先以 Aurora Backup、S3 Versioning、IaC 重建達成 RTO／RPO；跨 Region Active-Active 不在第一版。
 
-## 二十三、技術 Spike 清單
+# 二十三、技術 Spike 清單
 
 SP-01｜候選 Region 服務共同可用性與 RTT。
 
@@ -962,7 +960,7 @@ SP-11｜LINE Secure Link、Recipient Binding、Withdraw 失效。
 
 SP-12｜完整 Voice Trace p95 是否達 05／07 基準。
 
-## 二十四、v0.1 完成判定
+# 二十四、v0.1 完成判定
 
 □ Target Architecture 已涵蓋三類前端、語音、Agent、Workflow、Domain、Graph、RAG、報表與通知。
 
@@ -984,7 +982,7 @@ SP-12｜完整 Voice Trace p95 是否達 05／07 基準。
 
 □ 第一條 Demo 可從語音一路展示到記憶、Graph、照護端及家屬通知。
 
-## 二十五、官方技術參考（檢查日期：2026-07-26）
+# 二十五、官方技術參考（檢查日期：2026-07-26）
 
 Amazon Bedrock AgentCore Release Notes
 
@@ -1070,7 +1068,7 @@ AWS Secrets Manager Encryption
 
 https://docs.aws.amazon.com/secretsmanager/latest/userguide/security-encryption.html
 
-## 二十六、下一份文件
+# 二十六、下一份文件
 
 09｜智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1
 

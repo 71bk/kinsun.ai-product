@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "VOICE confirmation cannot establish a candidate-specific affirmative answer until versioned consent-scoped evidence is implemented.",
+  "data": {
+    "confirmation_method": "VOICE",
+    "expected_candidate_version": 1,
+    "consent_version": 3
+  }
+}

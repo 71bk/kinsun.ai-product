@@ -1,0 +1,56 @@
+[project]
+name = "kinsun-agent-runtime"
+version = "0.0.1"
+description = "kinsun.ai Agent Runtime service（成員 C：Agent／RAG／Graph）"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<0.116",
+    "uvicorn>=0.34,<0.35",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.7,<3",
+    "httpx>=0.27,<0.28",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<0.25",
+    "jsonschema>=4.23,<5",
+    "referencing>=0.35,<1",
+]
+dev = [
+    "ruff>=0.8,<0.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<0.25",
+    "jsonschema>=4.23,<5",
+    "referencing>=0.35,<1",
+    "ruff>=0.8,<0.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["agent_runtime"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

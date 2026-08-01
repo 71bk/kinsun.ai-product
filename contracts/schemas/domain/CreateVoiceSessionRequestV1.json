@@ -1,0 +1,65 @@
+{
+  "$defs": {
+    "LanguageRoute": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "LanguageRoute",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "language_preference": {
+      "$ref": "#/$defs/LanguageRoute"
+    },
+    "input_mode": {
+      "enum": [
+        "voice",
+        "text",
+        "voice_with_text_fallback"
+      ],
+      "title": "Input Mode",
+      "type": "string"
+    },
+    "client_audio_format": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Client Audio Format"
+    },
+    "client_timezone": {
+      "default": "Asia/Taipei",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Client Timezone",
+      "type": "string"
+    },
+    "purpose": {
+      "const": "BASIC_VOICE",
+      "default": "BASIC_VOICE",
+      "title": "Purpose",
+      "type": "string"
+    }
+  },
+  "required": [
+    "language_preference",
+    "input_mode"
+  ],
+  "title": "CreateVoiceSessionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateVoiceSessionRequestV1.json"
+}

@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "CareEventType": {
+      "enum": [
+        "MEAL",
+        "ACTIVITY",
+        "SLEEP",
+        "MEDICATION_STATEMENT",
+        "EMOTION_EXPRESSION",
+        "SOCIAL_CONTACT",
+        "EXPECTED_CONTACT_MISSED",
+        "ACTIVITY_PARTICIPATION",
+        "ACTIVITY_CANCELLED",
+        "COMPANIONSHIP_NEED"
+      ],
+      "title": "CareEventType",
+      "type": "string"
+    },
+    "ConfidenceBand": {
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "ConfidenceBand",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/CareEventType"
+    },
+    "event_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Event Time"
+    },
+    "status": {
+      "enum": [
+        "CANDIDATE",
+        "NEEDS_REVIEW",
+        "VERIFIED",
+        "CORRECTED",
+        "REJECTED",
+        "EXCLUDED",
+        "DELETED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "structured_payload": {
+      "additionalProperties": true,
+      "title": "Structured Payload",
+      "type": "object"
+    },
+    "evidence_refs": {
+      "items": {
+        "description": "Opaque evidence reference in evidence:<UUID> form; never transcript or audio.",
+        "maxLength": 45,
+        "minLength": 45,
+        "pattern": "^evidence:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "confidence_band": {
+      "$ref": "#/$defs/ConfidenceBand"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "consent_version": {
+      "title": "Consent Version",
+      "type": "integer"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "elder_id",
+    "event_type",
+    "event_time",
+    "status",
+    "structured_payload",
+    "evidence_refs",
+    "confidence_band",
+    "version",
+    "consent_version",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "CareEventV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CareEventV1.json"
+}

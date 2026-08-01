@@ -1,0 +1,19 @@
+{
+  "_why_invalid": "Tool parameters recursively reject full_prompt and other Restricted Data keys.",
+  "data": {
+    "tool_call_id": "22222222-2222-4222-8222-222222222222",
+    "agent_run_id": "33333333-3333-4333-8333-333333333333",
+    "tool_name": "retrieve_confirmed_memory",
+    "tool_version": "1.0",
+    "elder_id": "44444444-4444-4444-8444-444444444444",
+    "purpose": "LONG_TERM_MEMORY",
+    "consent_version": 1,
+    "policy_version": "policy-v1",
+    "request_id": "request-001",
+    "parameters": {
+      "context": {
+        "full_prompt": "Internal prompts must never cross this boundary."
+      }
+    }
+  }
+}

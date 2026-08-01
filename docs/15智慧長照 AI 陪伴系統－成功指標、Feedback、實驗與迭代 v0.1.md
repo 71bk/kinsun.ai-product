@@ -1,8 +1,6 @@
-# 15智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1.docx
-
 智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：長者陪伴、日照照服員、居服員、家屬報表、ASR／TTS、Agent、RAG、Graph、事件、記憶、主動陪伴、營運、安全與商業驗證
 
-### 相關文件
+## 相關文件
 
 01｜產品方向與範圍基準 v1.2
 
@@ -54,7 +52,7 @@ https://docs.google.com/document/d/1OGa9igfGHILGPJE3PmvynP23LxA9FPsT8jPO_R-SG9o/
 
 https://docs.google.com/document/d/1SUefwxwKMOQx4tH3avyrFq-DFlkzWpIpgBV3mKw5JiY/edit
 
-## 一、文件目的與衡量原則
+# 一、文件目的與衡量原則
 
 本文件回答四個問題：
 
@@ -94,7 +92,7 @@ https://docs.google.com/document/d/1SUefwxwKMOQx4tH3avyrFq-DFlkzWpIpgBV3mKw5JiY/
 
 • Complete Planning, Phased Thresholds：完整定義未來指標，但門檻依實測逐步校準。
 
-## 二、產品價值鏈與指標樹
+# 二、產品價值鏈與指標樹
 
 2.1 價值鏈
 
@@ -130,11 +128,11 @@ L5｜Operational Health：延遲、可用性、失敗、成本、Incident。
 
 L6｜Guardrails：越權、洩漏、醫療邊界、主動陪伴拒絕與資料權利。
 
-## 三、North Star Metric
+# 三、North Star Metric
 
 3.1 定義
 
-NSM｜Weekly Trusted Care Value Loop Completion
+**NSM｜Weekly Trusted Care Value Loop Completion**
 
 每週至少完成以下任一條完整價值循環，且通過所有安全 Guardrail 的長者數：
 
@@ -164,7 +162,7 @@ D. Verified Event／Summary → 家屬報表 PUBLISHED → 有效家屬安全讀
 
 只要發生跨長者資料洩漏、越權成功、同意繞過、危險醫療建議通過或家屬錯收報表，North Star 不得宣告成功，即使使用量上升。
 
-## 四、Persona Outcome Metrics
+# 四、Persona Outcome Metrics
 
 4.1 長者
 
@@ -274,7 +272,7 @@ D. Verified Event／Summary → 家屬報表 PUBLISHED → 有效家屬安全讀
 
 • notification_opt_out_rate 與原因。
 
-## 五、Product Funnel
+# 五、Product Funnel
 
 5.1 Onboarding／Consent Funnel
 
@@ -386,7 +384,7 @@ trigger_created
 
 → cooldown_applied
 
-## 六、AI／Speech／Retrieval Quality Metrics
+# 六、AI／Speech／Retrieval Quality Metrics
 
 6.1 ASR
 
@@ -536,7 +534,7 @@ trigger_created
 
 • graph_fallback_success_rate。
 
-## 七、安全、隱私與倫理 Guardrail Metrics
+# 七、安全、隱私與倫理 Guardrail Metrics
 
 7.1 零容忍
 
@@ -598,7 +596,7 @@ trigger_created
 
 資料不足時只標示「尚無足夠證據」，不可把小樣本差距解讀為群體特性。
 
-## 八、營運與商業指標
+# 八、營運與商業指標
 
 8.1 營運
 
@@ -666,7 +664,7 @@ trigger_created
 
 • family_value_perception。
 
-## 九、Feedback Architecture
+# 九、Feedback Architecture
 
 9.1 回饋來源
 
@@ -806,7 +804,7 @@ COLLECTED
 
 高風險回饋，例如其他長者資料、錯誤收件、醫療危險建議或同意失效，直接轉 Incident，不等待一般產品排程。
 
-## 十、Persona Feedback Loop
+# 十、Persona Feedback Loop
 
 10.1 長者
 
@@ -840,7 +838,7 @@ COLLECTED
 
 • 不用家屬點擊率推測長者照護品質。
 
-## 十一、研究與驗證方法
+# 十一、研究與驗證方法
 
 11.1 Gate 1 最低研究
 
@@ -896,7 +894,7 @@ COLLECTED
 
 • Pilot 不自動擴大到所有長者。
 
-## 十二、Experiment Taxonomy
+# 十二、Experiment Taxonomy
 
 E0｜Offline Evaluation
 
@@ -926,7 +924,7 @@ E6｜Progressive Rollout
 
 通過 Pilot 後逐步擴大，依 Guardrail、SLO、Human Review 與 Segment 檢查。
 
-## 十三、Experiment Design Contract
+# 十三、Experiment Design Contract
 
 experiment_id
 
@@ -994,7 +992,7 @@ decision
 
 • 如何避免季節、學習效應、裝置、語言與人員差異干擾。
 
-## 十四、不可進行的實驗
+# 十四、不可進行的實驗
 
 • 隨機取消或弱化 Consent 說明。
 
@@ -1012,7 +1010,7 @@ decision
 
 • 因實驗方便而隱藏錯誤、排除不利 Segment 或更改事先定義指標。
 
-## 十五、核心實驗 Backlog
+# 十五、核心實驗 Backlog
 
 EX-01｜低信心確認方式
 
@@ -1110,7 +1108,7 @@ Primary：source_coverage、review_edit_rate。
 
 Guardrail：unsupported_statement、missing_as_normal。
 
-## 十六、A／B、Shadow、Canary 與 Rollout 規則
+# 十六、A／B、Shadow、Canary 與 Rollout 規則
 
 16.1 Assignment Unit
 
@@ -1162,7 +1160,7 @@ Guardrail：unsupported_statement、missing_as_normal。
 
 實驗必須對應 Feature Flag、Prompt Bundle、Model Route、Index Alias、Agent Version 或 UI Version；不能只靠重新部署未知版本。
 
-## 十七、統計與決策原則
+# 十七、統計與決策原則
 
 • 先定義 Primary Metric，避免看到結果後挑有利指標。
 
@@ -1180,7 +1178,7 @@ Guardrail：unsupported_statement、missing_as_normal。
 
 • Safety／Privacy Guardrail 不因統計不顯著就忽略。
 
-## 十八、Agent Evaluation Loop
+# 十八、Agent Evaluation Loop
 
 18.1 Offline Dataset
 
@@ -1250,7 +1248,7 @@ reviewer_notes
 
 • 不把 Judge 單一總分當上線唯一依據。
 
-## 十八A、AgentCore／Bedrock Evaluation 使用方式
+# 十八A、AgentCore／Bedrock Evaluation 使用方式
 
 • AgentCore Evaluations 用於 Agent Trace 的 Dataset、On-Demand 或受控 Online Evaluation。
 
@@ -1262,7 +1260,7 @@ reviewer_notes
 
 • AWS 評估工具只負責執行與結果，不取代產品安全 Gate、人工覆核與正式決策紀錄。
 
-## 十九、Metric／Analytics Event Contract
+# 十九、Metric／Analytics Event Contract
 
 19.1 共通欄位
 
@@ -1340,7 +1338,7 @@ consent_purpose
 
 • 指標 SQL／程式碼版本化並有測試。
 
-## 二十、指標治理
+# 二十、指標治理
 
 20.1 Metric Definition Record
 
@@ -1400,7 +1398,7 @@ change_history
 
 Dashboard 顯示發生什麼；決策仍需結合 Trace、錯誤案例、訪談、Segment、風險與成本。
 
-## 二十一、虛榮指標與反指標
+# 二十一、虛榮指標與反指標
 
 不單獨使用：
 
@@ -1438,7 +1436,7 @@ Dashboard 顯示發生什麼；決策仍需結合 Trace、錯誤案例、訪談�
 
 • Graph 變大是否提升實際關係查詢成功率。
 
-## 二十二、Decision Cadence
+# 二十二、Decision Cadence
 
 每日／Demo Build
 
@@ -1470,7 +1468,7 @@ Dashboard 顯示發生什麼；決策仍需結合 Trace、錯誤案例、訪談�
 
 • North Star、照護成果、產品留存、成本、SLO、偏差、資料治理、退場與合規。
 
-## 二十三、Experiment Decision Record
+# 二十三、Experiment Decision Record
 
 experiment_id
 
@@ -1512,7 +1510,7 @@ approved_by
 
 沒有決策紀錄的實驗不能永久保留在 Production Feature Flag。
 
-## 二十四、Iteration Workflow
+# 二十四、Iteration Workflow
 
 Problem Signal
 
@@ -1550,7 +1548,7 @@ P2：理解度、效率、通知、搜尋與個人化改善。
 
 P3：視覺、次要便利與探索功能。
 
-## 二十五、Backlog Prioritization
+# 二十五、Backlog Prioritization
 
 建議使用：Impact × Evidence × Reach × Risk Reduction ÷ Effort。
 
@@ -1570,7 +1568,7 @@ E5｜Production 多期證據。
 
 安全修復不因 Reach 小而降級；單一跨長者事件即最高優先。
 
-## 二十六、Hackathon Success Scorecard
+# 二十六、Hackathon Success Scorecard
 
 26.1 Product
 
@@ -1626,7 +1624,7 @@ E5｜Production 多期證據。
 
 • 沒有真實任務證據的「市場很大」。
 
-## 二十七、Pilot Success Gate
+# 二十七、Pilot Success Gate
 
 進 Pilot 前：
 
@@ -1656,7 +1654,7 @@ Pilot 擴大條件：
 
 □ 安全、隱私與 Incident 在門檻內。
 
-## 二十八、Production Success Gate
+# 二十八、Production Success Gate
 
 • North Star 連續多期穩定且具 Segment 證據。
 
@@ -1670,7 +1668,7 @@ Pilot 擴大條件：
 
 • 合作機構、法務、安全與照護專業完成核准。
 
-## 二十九、資料偏差與資料不足處理
+# 二十九、資料偏差與資料不足處理
 
 • 對話多的長者不代表產品對沉默或不便使用者有效。
 
@@ -1686,7 +1684,7 @@ Pilot 擴大條件：
 
 任何結論需附資料充分度：INSUFFICIENT／DIRECTIONAL／MODERATE／STRONG。
 
-## 三十、隱私與分析資料治理
+# 三十、隱私與分析資料治理
 
 • 產品改進用途需在 Consent／Privacy Notice 說明。
 
@@ -1700,7 +1698,7 @@ Pilot 擴大條件：
 
 • 報告只顯示必要的彙總，避免小樣本群組重新識別。
 
-## 三十一、AWS 實作基準
+# 三十一、AWS 實作基準
 
 • CloudWatch／Structured Business Metrics：監控產品 Funnel、SLO、Safety 與 Experiment Guardrail。
 
@@ -1718,7 +1716,7 @@ Pilot 擴大條件：
 
 CloudWatch Evidently 已停止支援，因此新專案不將其作為 A／B 或 Feature Launch 核心依賴；實驗資料模型與 Feature Flag 維持可替換。
 
-## 三十二、Repository 建議
+# 三十二、Repository 建議
 
 /product-analytics
 
@@ -1776,7 +1774,7 @@ CloudWatch Evidently 已停止支援，因此新專案不將其作為 A／B 或 
 
 所有 Dataset、Metric、Experiment 與 Evaluator 經 PR Review、版本化並能連到 Release。
 
-## 三十三、Hackathon Implementation Profile
+# 三十三、Hackathon Implementation Profile
 
 必做：
 
@@ -1838,7 +1836,7 @@ CloudWatch Evidently 已停止支援，因此新專案不將其作為 A／B 或 
 
 • 真實資料不進公開 Demo。
 
-## 三十四、ADR
+# 三十四、ADR
 
 ADR-15-001｜North Star 使用可信價值循環，不使用對話量
 
@@ -1888,7 +1886,7 @@ ADR-15-008｜Feedback 內容有錯可直接形成修正流程
 
 原因：回饋不是只進報表；涉及 Event、Memory、Report 的內容錯誤需連至正式版本與修正狀態。
 
-## 三十五、待決策
+# 三十五、待決策
 
 1. North Star 分母的「可用機會」正式定義。
 
@@ -1910,7 +1908,7 @@ ADR-15-008｜Feedback 內容有錯可直接形成修正流程
 
 10. 哪位成員擔任 Metric Owner、Experiment Owner、Human Review Owner。
 
-## 三十六、v0.1 完成判定
+# 三十六、v0.1 完成判定
 
 □ North Star 與產品價值鏈已定義。
 
@@ -1936,7 +1934,7 @@ ADR-15-008｜Feedback 內容有錯可直接形成修正流程
 
 □ 完整規劃、分階段實作原則已落實。
 
-## 三十七、官方技術參考（檢查日期：2026-07-26）
+# 三十七、官方技術參考（檢查日期：2026-07-26）
 
 Amazon Bedrock Evaluations
 
@@ -1974,7 +1972,7 @@ CloudWatch Evidently End-of-Support Notice
 
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Evidently.html
 
-## 三十八、下一份文件
+# 三十八、下一份文件
 
 16｜智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1
 
