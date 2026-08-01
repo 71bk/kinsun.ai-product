@@ -20,7 +20,11 @@ interface CompanionCharacterProps {
  * video/img is mounted at a time.
  */
 const STATE_VIDEO: Partial<Record<ConversationState, string>> = {
+  idle: '/video/happy.mp4',
   listening: '/video/listen.mp4',
+  processing: '/video/remind.mp4',
+  speaking: '/video/encourage.mp4',
+  sleeping: '/video/comfort.mp4',
 };
 
 export function CompanionCharacter({ state = 'idle', message, characterName = '小暖' }: CompanionCharacterProps) {

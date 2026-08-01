@@ -53,9 +53,11 @@ export interface VoiceInteractionPanelProps {
   wsUrl: string;
   /** Elder hasn't granted recording consent yet — disables the mic entirely (A06.2). */
   consentGranted: boolean;
+  /** packages/backend's own Cognito JWT — a different credential from the BFF's HttpOnly cookie, see websocket-client.ts. */
+  token: string;
 }
 
-export function VoiceInteractionPanel({ wsUrl, consentGranted }: VoiceInteractionPanelProps) {
+export function VoiceInteractionPanel({ wsUrl, token, consentGranted }: VoiceInteractionPanelProps) {
   const [state, setState] = useState<VoicePageState>('idle');
   const [previewState, setPreviewState] = useState<VoicePageState | null>(null);
   const [displayText, setDisplayText] = useState('');
@@ -133,14 +135,14 @@ export function VoiceInteractionPanel({ wsUrl, consentGranted }: VoiceInteractio
       void play();
     });
 
-    ws.connect(wsUrl).catch(() => {
+    ws.connect(wsUrl, token).catch(() => {
       setState('offline');
     });
 
     return () => {
       ws.disconnect();
     };
-  }, [wsUrl, consentGranted, isPreview]);
+  }, [wsUrl, token, consentGranted, isPreview]);
 
   const beginRecording = useCallback(async () => {
     const recorder = recorderRef.current;
