@@ -1,0 +1,1122 @@
+{
+  "sourceFile": "01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx",
+  "type": "docx",
+  "convertedAt": "2026-07-30T13:54:15.306Z",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "文件資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "版本：v1.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Draft｜待使用者研究、成功指標與五人分工簽核"
+    },
+    {
+      "type": "paragraph",
+      "text": "建立日期：2026-07-23"
+    },
+    {
+      "type": "paragraph",
+      "text": "適用範圍：AWS Hackathon Target Architecture 與分階段實作"
+    },
+    {
+      "type": "paragraph",
+      "text": "文件 Owner：待團隊指定"
+    },
+    {
+      "type": "paragraph",
+      "text": "審查者：五人團隊"
+    },
+    {
+      "type": "paragraph",
+      "text": "單一事實來源原則：本文件負責產品方向、指標、範圍、風險與 Ownership；使用者研究、Persona、Pain Points 與假設以《01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.1》為準；完整功能需求與驗收條件以《02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2》為準；交付順序以《03智慧長照 AI 陪伴系統－Story Map v1.2》為準。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "相關文件"
+    },
+    {
+      "type": "paragraph",
+      "text": "02 使用者故事與驗收條件："
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1qb89I23zD8GJFzead_R_G6fXq2CZWgEsKBK7Q4o_F8A/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "03 Story Map、Implementation Waves 與 Vertical Slice："
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/spreadsheets/d/1Qmg1jbaN67Tjmpcx6e2zyZOf_-td0_fg9iKqgb128CE/edit"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "01A 使用者研究與 Demo Persona："
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "https://docs.google.com/document/d/1tZjDn5uY2FuVaTTLVshFjGSMaMP-37koqNZxfS2qjIQ/edit"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "v1.1 變更摘要：正式確立跨場域 Target Architecture、日照中心主 Demo、三位虛擬 Persona 分工，以及機構照服員多長者與家庭照護者單一長者的介面收斂原則。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "一、文件目的與決策範圍"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件回答六個問題："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 為什麼值得做？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 為誰做？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 已有哪些證據，哪些仍是假設？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 什麼叫成功，什麼情況需要縮減或轉向？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 目前版本做什麼、不做什麼？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 哪些風險、依賴與責任必須在進入系統設計及實作前確認？"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件不是完整功能清單，也不重複每一條使用者故事。它是後續 UX、Workflow、Domain、System、Agent、Contract 與 Demo 決策的產品基準。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二、問題定義"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "2.1 Problem Statement"
+    },
+    {
+      "type": "paragraph",
+      "text": "臺灣偏鄉、資源不足社區、獨居與居家／日照場域中的長者，可能因子女外出、照護人力有限、醫療與社會支持資源不均，而缺少持續且容易取得的生活陪伴與資訊傳遞管道。同時，部分長者主要使用臺語、客語或混語，且數位操作能力有限，現有以文字、複雜選單或標準國語為主的數位服務並不容易使用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "照護者或家屬則常面臨另一個問題：資訊散落在對話、口頭交接與個人記憶中，必須閱讀大量逐字稿或反覆詢問，才能掌握飲食、睡眠、活動、用藥陳述、社交互動與近期需要關心的變化。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "2.2 產品要解決的核心問題"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 降低長者使用數位服務的操作與語言門檻。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 讓 AI 陪伴具有情境感知與確認式記憶，而不是固定腳本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 將日常對話轉成可追溯、可修正的生活事件與每日摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 讓照護者在不閱讀完整逐字稿的情況下快速掌握近況。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 以同意、權限、安全檢查與人工覆核限制 AI 的決策範圍。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 縮短長者、照護者與家屬之間的資訊落差，但不取代真人關懷。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "2.3 不處理的問題"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不提供醫療診斷、治療建議、停藥、改藥或疾病機率判定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不取代照護者、社工或醫療專業人員。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不宣稱為二十四小時跌倒或環境監控設備。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不在 Demo 使用真實長者個資。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不讓未經確認的推測直接成為長期記憶、家屬通知或正式照護行動。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三、產品願景與價值主張"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.1 Product Vision"
+    },
+    {
+      "type": "paragraph",
+      "text": "打造一套語音優先、可確認記憶、可追溯且受控的智慧長照 AI 陪伴系統，讓長者能以熟悉語言自然互動，並把重要生活資訊安全地轉化為照護者可理解、可覆核與可採取行動的資訊。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.2 核心價值主張"
+    },
+    {
+      "type": "paragraph",
+      "text": "對長者："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不必打字或理解複雜介面，即可用熟悉語言互動。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AI 只引用已確認的個人資訊，避免錯誤記憶與過度推測。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 聽不清楚或資料不足時會詢問與降級，而不是假裝理解。"
+    },
+    {
+      "type": "paragraph",
+      "text": "對日照照服員與居家服務員："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 以摘要、時間軸、證據句與待確認事項掌握近況。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 可修正 AI 擷取結果，並保留版本與稽核紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AI 只提供候選行動，正式待辦與通知仍由人員確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "對家屬："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 在取得授權後收到適量近況，不必閱讀完整逐字稿。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 通知內容使用關懷語氣，避免診斷式或造成恐慌的描述。"
+    },
+    {
+      "type": "paragraph",
+      "text": "對機構與偏鄉場域："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 以可模組化的 AWS 架構支援不同語言、不同照護角色與逐步擴充。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 透過資料治理、權限隔離與可觀測性建立可落地的技術基礎。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四、目標使用者與核心情境"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.1 主要使用者"
+    },
+    {
+      "type": "paragraph",
+      "text": "長者："
+    },
+    {
+      "type": "paragraph",
+      "text": "偏鄉、獨居、居家照護、日照中心或社區關懷據點中的長者；可能偏好國語、臺語、客語、原住民族語、英文或混語，且數位操作能力有限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "機構照服員："
+    },
+    {
+      "type": "paragraph",
+      "text": "同時照顧多位長者，需要多長者概覽、每日摘要、待覆核事件與關懷待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "居家服務員／居服員："
+    },
+    {
+      "type": "paragraph",
+      "text": "由居家長照機構派案，到不同長者家中提供專業服務；可能同時負責多位被派案長者，需要今日服務清單、派案長者列表、服務前摘要、事件、記憶與後續追蹤。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.2 次要使用者"
+    },
+    {
+      "type": "paragraph",
+      "text": "家屬："
+    },
+    {
+      "type": "paragraph",
+      "text": "在取得授權後，透過家屬端 App／Web 查看已發布的每日摘要、每週／每月報表與歷史重要事件，並可設定 LINE／Email 通知；不直接修正事件、記憶或建立專業照護待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "內容管理者／系統管理者："
+    },
+    {
+      "type": "paragraph",
+      "text": "管理衛教來源、版本、量表、規則、權限、資料保留、模型與系統監控。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.3 核心使用情境"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者以臺語或國臺混語描述昨晚睡眠、早餐與家人聯繫情況。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 系統完成 ASR、情境回覆、事件擷取與候選記憶確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 已確認記憶寫入正式資料，並在下一次對話中被正確引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 系統根據當日事件產生可追溯摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護者查看時間軸、來源句與摘要，並修正錯誤。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 經同意與必要覆核後，系統先將家屬版每日摘要保存並發布至家屬端，再依偏好透過 LINE／Email 發送簡短通知與安全連結。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 在後續 Wave 中加入可信 RAG、陪伴需求訊號、主動陪伴、遊戲與多語擴充。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.4 跨場域與 Demo Persona 決策"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "Target Architecture 同時支援日照中心／社區關懷據點與家庭照護，但主要 Live Demo 以日照中心為主。兩種場域共用語音互動、生活事件、每日摘要、確認式記憶與照護工作流；差異集中在角色權限、可管理長者數量與首頁資訊架構，不建立兩套獨立產品。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "Demo Persona 骨架："
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "• 林阿嬤：幸福日照中心，臺語／國臺混語，負責完整端到端 Demo、確認式記憶與 Graph 再次引用。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "• 張阿姨：同一幸福日照中心，負責多長者概覽、不同摘要狀態、空狀態及跨 Persona 資料隔離。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "• 陳伯伯：居家照護，國語，負責家庭照護者單一長者視圖、權限收斂與未授權資料隔離。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "介面收斂原則：機構照服員登入後先看到同據點內的授權長者概覽；家庭照護者只有一位授權長者時可直接進入該長者詳情頁；家屬僅接收經同意及必要人工確認的有限摘要。完整 Persona、研究假設與測試計畫以《01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.1》為準。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "4.5 專業居服與家屬端產品決策"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "居家照護中的主要專業角色為居家服務員／居服員，不以家庭成員代稱。居服員可能同時負責多位派案長者，首頁以今日行程、派案長者、上次服務摘要與待追蹤事項為主；從特定派案或服務行程進入時，可直接開啟該長者詳情。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "家屬端採專屬但輕量的 App／Web 報表中心。正式資料先保存於系統並以 report_id、版本與發布狀態管理；家屬可查看已發布的每日摘要、每週／每月報表、歷史重要事件與通知設定。LINE／Email 只作為通知與導流通路，不是正式資料保存來源。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "日照照服員、居服員與家屬共用同一身份、授權、資料與 API 基礎，但依角色、tenant、派案與分享同意顯示不同首頁及功能。家屬不得查看完整逐字稿、未覆核事件、照護內部筆記、AI 技術資料或其他長者資訊。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "五、證據、事實與待驗證假設"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5.1 已確認事實"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 競賽命題要求完成語音互動陪伴、生活記錄與智慧摘要、照護者資訊介面。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 展示資料必須為模擬或去識別化資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 系統不得作為醫療診斷或治療依據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 命題鼓勵 AI 記憶、多語言、個人化互動、低資源本土語言與 Kiro 使用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 團隊已建立使用者故事 v1.3.1、Implementation Waves 與第一條 Vertical Slice。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5.2 外部與市場證據"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 命題文件指出城鄉長照、醫療與社會支持資源存在落差。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 部分長者使用臺語或族語，且數位識能有限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家庭照護者與機構人員需同時處理多位長者資訊，資訊傳遞效率不足。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 現有公開長照法規與衛教來源可作為 RAG 與產品邊界依據。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5.3 尚待直接使用者驗證的假設"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者願意讓 AI 主動發起低風險陪伴。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者能理解並願意操作「候選記憶確認」。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護者最需要的是摘要、時間軸與待辦，而不是其他資訊排列。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬偏好固定頻率摘要，而不是事件即時通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者對語音回覆長度、稱呼與主動互動頻率的偏好可被簡單設定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 日照場域與居家場域可以共用大部分產品流程。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5.4 使用者研究最低要求"
+    },
+    {
+      "type": "paragraph",
+      "text": "在 Gate 1 正式簽核前，至少完成："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 1 位照服員或照護相關工作者訪談。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 1 位家庭照護者或家屬訪談。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 1 次長者端語音／同意原型可用性測試；若無法接觸長者，需記錄限制並以代理使用者測試暫代。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一份 Current Journey、Pain Point Inventory 與 Assumption Register 更新。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "六、產品目標與成功指標"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.1 產品成果指標"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 語音互動任務完成率：目標值需在原型測試後凍結。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 候選記憶確認流程完成率：目標值需在原型測試後凍結。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護者找到重要事件所需時間：以操作測試建立 baseline 後設定目標。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AI 事件／摘要人工修正率：先建立 baseline，再依錯誤類型改善。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬通知接受度與取消率：Wave 3 實測後決定。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.2 系統與 AI 指標"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 固定 Demo Vertical Slice 可重複完整跑通。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR 報告包含 CER、WER、Key-slot Accuracy、Negation Accuracy、關鍵事件保留率與 final latency。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每日摘要的每個重點可回查 event_id 與證據片段。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• RAG 評估至少包含 Recall@K、MRR 或 NDCG@K。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Agent Golden Dataset 涵蓋正常、資料不足、跨使用者隔離、Prompt Injection、醫療紅線、拒絕主動互動與 Graph 衝突。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.3 Guardrail 指標"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 跨長者或跨 tenant 資料洩漏：0 件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 固定醫療紅線測試中的高風險違規輸出：0 件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未經同意建立長期記憶、陪伴分析或家屬通知：0 件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未確認推測寫入正式 Graph 或記憶：0 件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo 使用真實長者個資：0 件。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.4 暫定工程門檻"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 語音結束至 ASR final：P95 目標不高於 2.5 秒。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Agent 首段可播放內容：P95 目標不高於 5 秒。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• TTS 首段音訊：P95 目標不高於 2 秒。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 語音結束至首段播放：P95 目標不高於 8 秒。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護者主要頁面在 Demo 資料量下：P95 目標不高於 3 秒。"
+    },
+    {
+      "type": "paragraph",
+      "text": "以上均為暫定工程目標，必須由 Spike 與實測更新，不得描述為已達成結果。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.5 Stop／Pivot Criteria"
+    },
+    {
+      "type": "paragraph",
+      "text": "符合下列任一條件時，團隊應縮減範圍或改用降級方案："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 核心 A／B／C 端到端流程無法在 Demo 前穩定重跑。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 臺語 ASR 無法可靠保留人物、否定、日期或用藥等關鍵資訊，且低信心確認仍無法補救。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph DB 導入明顯阻塞核心流程時，改用 RDS 關係表或 Mock 投影保留設計證據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 主動陪伴、陪伴需求或遊戲影響核心 Demo 穩定度時，退回技術證據頁或延後 Wave。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 任何功能無法滿足同意、權限、可追溯或醫療安全底線時，不得進入 Demo 主流程。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "七、Scope 與交付邊界"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.1 完整 Target Architecture"
+    },
+    {
+      "type": "paragraph",
+      "text": "完整產品規劃納入："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 中／臺／客／英語音路徑與共用 Agent。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 受控 Multi-Agent 與 Safety Evaluator。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 確認式長期記憶。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• RDS 交易事實與 Graph 關係投影。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 生活事件、每日摘要、時間軸與照護者覆核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬每日摘要、每週／每月報表中心、LINE／Email 通知、可信 RAG、陪伴需求訊號與主動陪伴。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 遊戲、積分、低資源語言與 ASR 適應。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.2 Implementation Waves"
+    },
+    {
+      "type": "paragraph",
+      "text": "Wave 1：核心語音、事件、確認式記憶、Graph 再次引用與安全基礎。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Wave 2：每日摘要、詳情、時間軸、人工覆核與待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Wave 3：RAG、陪伴需求、家屬報表中心、LINE／Email 通知、主動陪伴與英文穩定路徑。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Wave 4：遊戲、積分、本土低資源語言、ASR 適應與持續改善。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.3 第一條 Demo Vertical Slice"
+    },
+    {
+      "type": "paragraph",
+      "text": "第一條 Demo 必須以同一位虛擬長者完整跑通："
+    },
+    {
+      "type": "paragraph",
+      "text": "同意 → 語音 → ASR → Orchestrator → 安全回覆 → 事件與候選記憶 → 長者確認 → RDS／Outbox → Graph 投影 → 下一輪引用 → 每日摘要 → 照護者詳情、時間軸與修正 → 技術證據。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.4 明確延後或不納入目前交付"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 複雜 Multi-Agent 自由協商、辯論與無上限遞迴。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 超過兩層且沒有明確查詢模式的 Graph 多跳推理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 從零訓練語言或語音模型。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 模型並行與複雜分散式訓練。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完整 Learning to Rank 訓練。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 年度生活報表與長期趨勢預測。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 以自由對話取代正式量表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 公開競爭型健康排行榜。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 與醫院 HIS／EMR 的正式生產整合。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 真實緊急救援、二十四小時監控與自動修改照護計畫。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "八、風險登錄"
+    },
+    {
+      "type": "paragraph",
+      "text": "R1｜臺語／混語 ASR 不穩定"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：高｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：固定測試集、低信心確認、關鍵欄位驗證、備援音檔、基底模型與微調模型比較。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：語音負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R2｜五人團隊範圍過大"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：高｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：第一條 Vertical Slice 優先；每個 Wave 設 Gate；非核心功能使用 Feature Flag、Mock 或延後。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：產品／技術負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R3｜RDS 與 Graph 資料不一致"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：中｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：Transactional Outbox、idempotency_key、重試、DLQ、重放與一致性測試；禁止無保護雙寫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：資料／後端負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R4｜AI 產生醫療越界或無根據資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：中｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：Safety Evaluator、固定醫療紅線、Schema 驗證、最多一次修正、安全降級、Golden Dataset。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：Agent／安全負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R5｜同意、權限或刪除流程不完整"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：中｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：Consent 狀態機、elder_id／tenant_id 隔離、刪除傳播測試、敏感日誌最小化。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：後端／安全負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R6｜RAG 來源不可靠或版本失效"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：中｜影響：中"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：manifest、review_status、有效日期、版本、失效排除、來源引用與人工審查。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：資料治理負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R7｜Demo 網路、模型或 AWS 服務失敗"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：中｜影響：高"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：預先暖機、固定 Persona、備援音檔、降級回覆、離線技術證據、重試與錄製備援。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：部署／Demo 負責人（待指定）"
+    },
+    {
+      "type": "paragraph",
+      "text": "R8｜直接使用者證據不足"
+    },
+    {
+      "type": "paragraph",
+      "text": "機率：高｜影響：中"
+    },
+    {
+      "type": "paragraph",
+      "text": "緩解：快速訪談、代理使用者測試、記錄假設、避免將團隊推測描述為已驗證事實。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner：產品負責人（待指定）"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "九、依賴項目"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AWS Account、Region、Bedrock Model Access 與相關服務配額。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR／TTS 模型與語言支援，包含臺語與混語可用性。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 語音資料集、使用授權、標註品質與測試集隔離。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• PostgreSQL／RDS、Graph DB 或替代關係表的環境。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• S3、Queue／Worker、通知通路與可觀測性服務。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長照法規、衛教文件、來源授權與人工審查。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo 裝置、麥克風、網路與瀏覽器權限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 五位成員的可投入時間與明確 Ownership。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十、Ownership 與 RACI 待辦"
+    },
+    {
+      "type": "paragraph",
+      "text": "在進入全面實作前，至少指定以下責任："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Product Scope／Gate 決策者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者端 UX、錄音與播放 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR、TTS 與 Speech Router Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Backend、RDS、事件、記憶與 Outbox Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph Projection 與關係查詢 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Orchestrator、Agent、Prompt、Safety 與 Eval Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護者後台、摘要、時間軸與覆核 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• RAG 與資料治理 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• CI／CD、AWS 部署、Observability 與 Demo 整合 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Security／Privacy 最終審查者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個交付項目至少標示 Responsible、Accountable、Consulted、Informed；同一項可以多人 Responsible，但只能有一位最終 Accountable。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十一、目前 Gate 狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "G0｜問題值得解決：部分通過"
+    },
+    {
+      "type": "paragraph",
+      "text": "已具備命題、產品方向與外部問題證據；仍缺直接使用者訪談、完整成功指標 baseline 與 Stop／Pivot 簽核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "G1｜MVP／第一條交付可以定案：接近通過"
+    },
+    {
+      "type": "paragraph",
+      "text": "已具備使用者故事、驗收條件與 Story Map；仍需完成 UX／User Flow、使用者研究更新、Risk／Dependency／RACI 簽核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "G2｜可以進入全面實作：尚未通過"
+    },
+    {
+      "type": "paragraph",
+      "text": "仍需完成 Workflow、Domain、資料生命週期、Security／Privacy、NFR、System／Agent Design 與 API／Event／Data Contracts。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十二、未決問題"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 已決策：Target Architecture 同時支援日照與居家照護；主要 Live Demo 以幸福日照中心的林阿嬤為主，張阿姨支援多長者概覽，陳伯伯驗證居家單一長者權限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 五人團隊的角色與最終決策者如何分配？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 臺語 ASR 與 TTS 的最終供應者與備援路徑為何？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph DB 在 Demo 使用真實服務，或以 RDS 關係表／投影方式先驗證價值？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬通知採用哪一個可實際收到的通路？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 直接使用者訪談與原型測試可在何時完成？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 第一條 Vertical Slice 的程式、測試與部署截止日為何？"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十三、變更與維護規則"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修改產品目標、Scope、Out of Scope、Stop／Pivot 或 Wave 邊界時，必須更新本文件版本與變更紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修改功能與驗收條件時，更新使用者故事 v1.3.1 或其後續版本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修改排程、Story 所屬 Wave、Demo Gate、Owner 或狀態時，更新 Story Map。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 四份文件如有衝突：產品方向與邊界以本文件為準；使用者證據與 Persona 以 01A 為準；功能與驗收以使用者故事為準；交付順序與狀態以 Story Map 為準。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每次 Gate Review 前確認 01、01A、02、03 四份文件的決策與版本一致。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十四、第一版簽核清單"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Problem Statement、Vision、Target User 與 Out of Scope 已由團隊確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 已清楚區分已確認事實、外部證據與待驗證假設。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 至少完成最低使用者研究要求，或正式記錄無法完成的限制與替代驗證方式。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 產品、系統與 Guardrail 指標已有 baseline／暫定目標／Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Risk Register、Dependency 與五人 RACI 已填寫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 第一條 Demo Vertical Slice 的範圍與 Gate 已凍結。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ UX／User Flow 已完成，主要狀態與錯誤文案可走通。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 團隊同意進入 G2 設計階段。"
+    }
+  ],
+  "rawText": "智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2\n\n\n\n文件資訊\n\n版本：v1.2\n\n狀態：Draft｜待使用者研究、成功指標與五人分工簽核\n\n建立日期：2026-07-23\n\n適用範圍：AWS Hackathon Target Architecture 與分階段實作\n\n文件 Owner：待團隊指定\n\n審查者：五人團隊\n\n單一事實來源原則：本文件負責產品方向、指標、範圍、風險與 Ownership；使用者研究、Persona、Pain Points 與假設以《01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.1》為準；完整功能需求與驗收條件以《02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2》為準；交付順序以《03智慧長照 AI 陪伴系統－Story Map v1.2》為準。\n\n\n\n相關文件\n\n02 使用者故事與驗收條件：\n\nhttps://docs.google.com/document/d/1qb89I23zD8GJFzead_R_G6fXq2CZWgEsKBK7Q4o_F8A/edit\n\n03 Story Map、Implementation Waves 與 Vertical Slice：\n\nhttps://docs.google.com/spreadsheets/d/1Qmg1jbaN67Tjmpcx6e2zyZOf_-td0_fg9iKqgb128CE/edit\n\n\n\n01A 使用者研究與 Demo Persona：\n\nhttps://docs.google.com/document/d/1tZjDn5uY2FuVaTTLVshFjGSMaMP-37koqNZxfS2qjIQ/edit\n\n\n\nv1.1 變更摘要：正式確立跨場域 Target Architecture、日照中心主 Demo、三位虛擬 Persona 分工，以及機構照服員多長者與家庭照護者單一長者的介面收斂原則。\n\n\n\n一、文件目的與決策範圍\n\n本文件回答六個問題：\n\n• 為什麼值得做？\n\n• 為誰做？\n\n• 已有哪些證據，哪些仍是假設？\n\n• 什麼叫成功，什麼情況需要縮減或轉向？\n\n• 目前版本做什麼、不做什麼？\n\n• 哪些風險、依賴與責任必須在進入系統設計及實作前確認？\n\n\n\n本文件不是完整功能清單，也不重複每一條使用者故事。它是後續 UX、Workflow、Domain、System、Agent、Contract 與 Demo 決策的產品基準。\n\n\n\n二、問題定義\n\n2.1 Problem Statement\n\n臺灣偏鄉、資源不足社區、獨居與居家／日照場域中的長者，可能因子女外出、照護人力有限、醫療與社會支持資源不均，而缺少持續且容易取得的生活陪伴與資訊傳遞管道。同時，部分長者主要使用臺語、客語或混語，且數位操作能力有限，現有以文字、複雜選單或標準國語為主的數位服務並不容易使用。\n\n\n\n照護者或家屬則常面臨另一個問題：資訊散落在對話、口頭交接與個人記憶中，必須閱讀大量逐字稿或反覆詢問，才能掌握飲食、睡眠、活動、用藥陳述、社交互動與近期需要關心的變化。\n\n\n\n2.2 產品要解決的核心問題\n\n• 降低長者使用數位服務的操作與語言門檻。\n\n• 讓 AI 陪伴具有情境感知與確認式記憶，而不是固定腳本。\n\n• 將日常對話轉成可追溯、可修正的生活事件與每日摘要。\n\n• 讓照護者在不閱讀完整逐字稿的情況下快速掌握近況。\n\n• 以同意、權限、安全檢查與人工覆核限制 AI 的決策範圍。\n\n• 縮短長者、照護者與家屬之間的資訊落差，但不取代真人關懷。\n\n\n\n2.3 不處理的問題\n\n• 不提供醫療診斷、治療建議、停藥、改藥或疾病機率判定。\n\n• 不取代照護者、社工或醫療專業人員。\n\n• 不宣稱為二十四小時跌倒或環境監控設備。\n\n• 不在 Demo 使用真實長者個資。\n\n• 不讓未經確認的推測直接成為長期記憶、家屬通知或正式照護行動。\n\n\n\n三、產品願景與價值主張\n\n3.1 Product Vision\n\n打造一套語音優先、可確認記憶、可追溯且受控的智慧長照 AI 陪伴系統，讓長者能以熟悉語言自然互動，並把重要生活資訊安全地轉化為照護者可理解、可覆核與可採取行動的資訊。\n\n\n\n3.2 核心價值主張\n\n對長者：\n\n• 不必打字或理解複雜介面，即可用熟悉語言互動。\n\n• AI 只引用已確認的個人資訊，避免錯誤記憶與過度推測。\n\n• 聽不清楚或資料不足時會詢問與降級，而不是假裝理解。\n\n\n\n對日照照服員與居家服務員：\n\n• 以摘要、時間軸、證據句與待確認事項掌握近況。\n\n• 可修正 AI 擷取結果，並保留版本與稽核紀錄。\n\n• AI 只提供候選行動，正式待辦與通知仍由人員確認。\n\n\n\n對家屬：\n\n• 在取得授權後收到適量近況，不必閱讀完整逐字稿。\n\n• 通知內容使用關懷語氣，避免診斷式或造成恐慌的描述。\n\n\n\n對機構與偏鄉場域：\n\n• 以可模組化的 AWS 架構支援不同語言、不同照護角色與逐步擴充。\n\n• 透過資料治理、權限隔離與可觀測性建立可落地的技術基礎。\n\n\n\n四、目標使用者與核心情境\n\n4.1 主要使用者\n\n長者：\n\n偏鄉、獨居、居家照護、日照中心或社區關懷據點中的長者；可能偏好國語、臺語、客語、原住民族語、英文或混語，且數位操作能力有限。\n\n\n\n機構照服員：\n\n同時照顧多位長者，需要多長者概覽、每日摘要、待覆核事件與關懷待辦。\n\n\n\n居家服務員／居服員：\n\n由居家長照機構派案，到不同長者家中提供專業服務；可能同時負責多位被派案長者，需要今日服務清單、派案長者列表、服務前摘要、事件、記憶與後續追蹤。\n\n\n\n4.2 次要使用者\n\n家屬：\n\n在取得授權後，透過家屬端 App／Web 查看已發布的每日摘要、每週／每月報表與歷史重要事件，並可設定 LINE／Email 通知；不直接修正事件、記憶或建立專業照護待辦。\n\n\n\n內容管理者／系統管理者：\n\n管理衛教來源、版本、量表、規則、權限、資料保留、模型與系統監控。\n\n\n\n4.3 核心使用情境\n\n• 長者以臺語或國臺混語描述昨晚睡眠、早餐與家人聯繫情況。\n\n• 系統完成 ASR、情境回覆、事件擷取與候選記憶確認。\n\n• 已確認記憶寫入正式資料，並在下一次對話中被正確引用。\n\n• 系統根據當日事件產生可追溯摘要。\n\n• 照護者查看時間軸、來源句與摘要，並修正錯誤。\n\n• 經同意與必要覆核後，系統先將家屬版每日摘要保存並發布至家屬端，再依偏好透過 LINE／Email 發送簡短通知與安全連結。\n\n• 在後續 Wave 中加入可信 RAG、陪伴需求訊號、主動陪伴、遊戲與多語擴充。\n\n\n\n4.4 跨場域與 Demo Persona 決策\n\nTarget Architecture 同時支援日照中心／社區關懷據點與家庭照護，但主要 Live Demo 以日照中心為主。兩種場域共用語音互動、生活事件、每日摘要、確認式記憶與照護工作流；差異集中在角色權限、可管理長者數量與首頁資訊架構，不建立兩套獨立產品。\n\n\n\nDemo Persona 骨架：\n\n• 林阿嬤：幸福日照中心，臺語／國臺混語，負責完整端到端 Demo、確認式記憶與 Graph 再次引用。\n\n• 張阿姨：同一幸福日照中心，負責多長者概覽、不同摘要狀態、空狀態及跨 Persona 資料隔離。\n\n• 陳伯伯：居家照護，國語，負責家庭照護者單一長者視圖、權限收斂與未授權資料隔離。\n\n\n\n介面收斂原則：機構照服員登入後先看到同據點內的授權長者概覽；家庭照護者只有一位授權長者時可直接進入該長者詳情頁；家屬僅接收經同意及必要人工確認的有限摘要。完整 Persona、研究假設與測試計畫以《01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.1》為準。\n\n\n\n4.5 專業居服與家屬端產品決策\n\n居家照護中的主要專業角色為居家服務員／居服員，不以家庭成員代稱。居服員可能同時負責多位派案長者，首頁以今日行程、派案長者、上次服務摘要與待追蹤事項為主；從特定派案或服務行程進入時，可直接開啟該長者詳情。\n\n家屬端採專屬但輕量的 App／Web 報表中心。正式資料先保存於系統並以 report_id、版本與發布狀態管理；家屬可查看已發布的每日摘要、每週／每月報表、歷史重要事件與通知設定。LINE／Email 只作為通知與導流通路，不是正式資料保存來源。\n\n日照照服員、居服員與家屬共用同一身份、授權、資料與 API 基礎，但依角色、tenant、派案與分享同意顯示不同首頁及功能。家屬不得查看完整逐字稿、未覆核事件、照護內部筆記、AI 技術資料或其他長者資訊。\n\n\n\n五、證據、事實與待驗證假設\n\n5.1 已確認事實\n\n• 競賽命題要求完成語音互動陪伴、生活記錄與智慧摘要、照護者資訊介面。\n\n• 展示資料必須為模擬或去識別化資料。\n\n• 系統不得作為醫療診斷或治療依據。\n\n• 命題鼓勵 AI 記憶、多語言、個人化互動、低資源本土語言與 Kiro 使用。\n\n• 團隊已建立使用者故事 v1.3.1、Implementation Waves 與第一條 Vertical Slice。\n\n\n\n5.2 外部與市場證據\n\n• 命題文件指出城鄉長照、醫療與社會支持資源存在落差。\n\n• 部分長者使用臺語或族語，且數位識能有限。\n\n• 家庭照護者與機構人員需同時處理多位長者資訊，資訊傳遞效率不足。\n\n• 現有公開長照法規與衛教來源可作為 RAG 與產品邊界依據。\n\n\n\n5.3 尚待直接使用者驗證的假設\n\n• 長者願意讓 AI 主動發起低風險陪伴。\n\n• 長者能理解並願意操作「候選記憶確認」。\n\n• 照護者最需要的是摘要、時間軸與待辦，而不是其他資訊排列。\n\n• 家屬偏好固定頻率摘要，而不是事件即時通知。\n\n• 長者對語音回覆長度、稱呼與主動互動頻率的偏好可被簡單設定。\n\n• 日照場域與居家場域可以共用大部分產品流程。\n\n\n\n5.4 使用者研究最低要求\n\n在 Gate 1 正式簽核前，至少完成：\n\n• 1 位照服員或照護相關工作者訪談。\n\n• 1 位家庭照護者或家屬訪談。\n\n• 1 次長者端語音／同意原型可用性測試；若無法接觸長者，需記錄限制並以代理使用者測試暫代。\n\n• 一份 Current Journey、Pain Point Inventory 與 Assumption Register 更新。\n\n\n\n六、產品目標與成功指標\n\n6.1 產品成果指標\n\n• 語音互動任務完成率：目標值需在原型測試後凍結。\n\n• 候選記憶確認流程完成率：目標值需在原型測試後凍結。\n\n• 照護者找到重要事件所需時間：以操作測試建立 baseline 後設定目標。\n\n• AI 事件／摘要人工修正率：先建立 baseline，再依錯誤類型改善。\n\n• 家屬通知接受度與取消率：Wave 3 實測後決定。\n\n\n\n6.2 系統與 AI 指標\n\n• 固定 Demo Vertical Slice 可重複完整跑通。\n\n• ASR 報告包含 CER、WER、Key-slot Accuracy、Negation Accuracy、關鍵事件保留率與 final latency。\n\n• 每日摘要的每個重點可回查 event_id 與證據片段。\n\n• RAG 評估至少包含 Recall@K、MRR 或 NDCG@K。\n\n• Agent Golden Dataset 涵蓋正常、資料不足、跨使用者隔離、Prompt Injection、醫療紅線、拒絕主動互動與 Graph 衝突。\n\n\n\n6.3 Guardrail 指標\n\n• 跨長者或跨 tenant 資料洩漏：0 件。\n\n• 固定醫療紅線測試中的高風險違規輸出：0 件。\n\n• 未經同意建立長期記憶、陪伴分析或家屬通知：0 件。\n\n• 未確認推測寫入正式 Graph 或記憶：0 件。\n\n• Demo 使用真實長者個資：0 件。\n\n\n\n6.4 暫定工程門檻\n\n• 語音結束至 ASR final：P95 目標不高於 2.5 秒。\n\n• Agent 首段可播放內容：P95 目標不高於 5 秒。\n\n• TTS 首段音訊：P95 目標不高於 2 秒。\n\n• 語音結束至首段播放：P95 目標不高於 8 秒。\n\n• 照護者主要頁面在 Demo 資料量下：P95 目標不高於 3 秒。\n\n以上均為暫定工程目標，必須由 Spike 與實測更新，不得描述為已達成結果。\n\n\n\n6.5 Stop／Pivot Criteria\n\n符合下列任一條件時，團隊應縮減範圍或改用降級方案：\n\n• 核心 A／B／C 端到端流程無法在 Demo 前穩定重跑。\n\n• 臺語 ASR 無法可靠保留人物、否定、日期或用藥等關鍵資訊，且低信心確認仍無法補救。\n\n• Graph DB 導入明顯阻塞核心流程時，改用 RDS 關係表或 Mock 投影保留設計證據。\n\n• 主動陪伴、陪伴需求或遊戲影響核心 Demo 穩定度時，退回技術證據頁或延後 Wave。\n\n• 任何功能無法滿足同意、權限、可追溯或醫療安全底線時，不得進入 Demo 主流程。\n\n\n\n七、Scope 與交付邊界\n\n7.1 完整 Target Architecture\n\n完整產品規劃納入：\n\n• 中／臺／客／英語音路徑與共用 Agent。\n\n• 受控 Multi-Agent 與 Safety Evaluator。\n\n• 確認式長期記憶。\n\n• RDS 交易事實與 Graph 關係投影。\n\n• 生活事件、每日摘要、時間軸與照護者覆核。\n\n• 家屬每日摘要、每週／每月報表中心、LINE／Email 通知、可信 RAG、陪伴需求訊號與主動陪伴。\n\n• 遊戲、積分、低資源語言與 ASR 適應。\n\n\n\n7.2 Implementation Waves\n\nWave 1：核心語音、事件、確認式記憶、Graph 再次引用與安全基礎。\n\nWave 2：每日摘要、詳情、時間軸、人工覆核與待辦。\n\nWave 3：RAG、陪伴需求、家屬報表中心、LINE／Email 通知、主動陪伴與英文穩定路徑。\n\nWave 4：遊戲、積分、本土低資源語言、ASR 適應與持續改善。\n\n\n\n7.3 第一條 Demo Vertical Slice\n\n第一條 Demo 必須以同一位虛擬長者完整跑通：\n\n同意 → 語音 → ASR → Orchestrator → 安全回覆 → 事件與候選記憶 → 長者確認 → RDS／Outbox → Graph 投影 → 下一輪引用 → 每日摘要 → 照護者詳情、時間軸與修正 → 技術證據。\n\n\n\n7.4 明確延後或不納入目前交付\n\n• 複雜 Multi-Agent 自由協商、辯論與無上限遞迴。\n\n• 超過兩層且沒有明確查詢模式的 Graph 多跳推理。\n\n• 從零訓練語言或語音模型。\n\n• 模型並行與複雜分散式訓練。\n\n• 完整 Learning to Rank 訓練。\n\n• 年度生活報表與長期趨勢預測。\n\n• 以自由對話取代正式量表。\n\n• 公開競爭型健康排行榜。\n\n• 與醫院 HIS／EMR 的正式生產整合。\n\n• 真實緊急救援、二十四小時監控與自動修改照護計畫。\n\n\n\n八、風險登錄\n\nR1｜臺語／混語 ASR 不穩定\n\n機率：高｜影響：高\n\n緩解：固定測試集、低信心確認、關鍵欄位驗證、備援音檔、基底模型與微調模型比較。\n\nOwner：語音負責人（待指定）\n\n\n\nR2｜五人團隊範圍過大\n\n機率：高｜影響：高\n\n緩解：第一條 Vertical Slice 優先；每個 Wave 設 Gate；非核心功能使用 Feature Flag、Mock 或延後。\n\nOwner：產品／技術負責人（待指定）\n\n\n\nR3｜RDS 與 Graph 資料不一致\n\n機率：中｜影響：高\n\n緩解：Transactional Outbox、idempotency_key、重試、DLQ、重放與一致性測試；禁止無保護雙寫。\n\nOwner：資料／後端負責人（待指定）\n\n\n\nR4｜AI 產生醫療越界或無根據資訊\n\n機率：中｜影響：高\n\n緩解：Safety Evaluator、固定醫療紅線、Schema 驗證、最多一次修正、安全降級、Golden Dataset。\n\nOwner：Agent／安全負責人（待指定）\n\n\n\nR5｜同意、權限或刪除流程不完整\n\n機率：中｜影響：高\n\n緩解：Consent 狀態機、elder_id／tenant_id 隔離、刪除傳播測試、敏感日誌最小化。\n\nOwner：後端／安全負責人（待指定）\n\n\n\nR6｜RAG 來源不可靠或版本失效\n\n機率：中｜影響：中\n\n緩解：manifest、review_status、有效日期、版本、失效排除、來源引用與人工審查。\n\nOwner：資料治理負責人（待指定）\n\n\n\nR7｜Demo 網路、模型或 AWS 服務失敗\n\n機率：中｜影響：高\n\n緩解：預先暖機、固定 Persona、備援音檔、降級回覆、離線技術證據、重試與錄製備援。\n\nOwner：部署／Demo 負責人（待指定）\n\n\n\nR8｜直接使用者證據不足\n\n機率：高｜影響：中\n\n緩解：快速訪談、代理使用者測試、記錄假設、避免將團隊推測描述為已驗證事實。\n\nOwner：產品負責人（待指定）\n\n\n\n九、依賴項目\n\n• AWS Account、Region、Bedrock Model Access 與相關服務配額。\n\n• ASR／TTS 模型與語言支援，包含臺語與混語可用性。\n\n• 語音資料集、使用授權、標註品質與測試集隔離。\n\n• PostgreSQL／RDS、Graph DB 或替代關係表的環境。\n\n• S3、Queue／Worker、通知通路與可觀測性服務。\n\n• 長照法規、衛教文件、來源授權與人工審查。\n\n• Demo 裝置、麥克風、網路與瀏覽器權限。\n\n• 五位成員的可投入時間與明確 Ownership。\n\n\n\n十、Ownership 與 RACI 待辦\n\n在進入全面實作前，至少指定以下責任：\n\n• Product Scope／Gate 決策者。\n\n• 長者端 UX、錄音與播放 Owner。\n\n• ASR、TTS 與 Speech Router Owner。\n\n• Backend、RDS、事件、記憶與 Outbox Owner。\n\n• Graph Projection 與關係查詢 Owner。\n\n• Orchestrator、Agent、Prompt、Safety 與 Eval Owner。\n\n• 照護者後台、摘要、時間軸與覆核 Owner。\n\n• RAG 與資料治理 Owner。\n\n• CI／CD、AWS 部署、Observability 與 Demo 整合 Owner。\n\n• Security／Privacy 最終審查者。\n\n\n\n每個交付項目至少標示 Responsible、Accountable、Consulted、Informed；同一項可以多人 Responsible，但只能有一位最終 Accountable。\n\n\n\n十一、目前 Gate 狀態\n\nG0｜問題值得解決：部分通過\n\n已具備命題、產品方向與外部問題證據；仍缺直接使用者訪談、完整成功指標 baseline 與 Stop／Pivot 簽核。\n\n\n\nG1｜MVP／第一條交付可以定案：接近通過\n\n已具備使用者故事、驗收條件與 Story Map；仍需完成 UX／User Flow、使用者研究更新、Risk／Dependency／RACI 簽核。\n\n\n\nG2｜可以進入全面實作：尚未通過\n\n仍需完成 Workflow、Domain、資料生命週期、Security／Privacy、NFR、System／Agent Design 與 API／Event／Data Contracts。\n\n\n\n十二、未決問題\n\n• 已決策：Target Architecture 同時支援日照與居家照護；主要 Live Demo 以幸福日照中心的林阿嬤為主，張阿姨支援多長者概覽，陳伯伯驗證居家單一長者權限。\n\n• 五人團隊的角色與最終決策者如何分配？\n\n• 臺語 ASR 與 TTS 的最終供應者與備援路徑為何？\n\n• Graph DB 在 Demo 使用真實服務，或以 RDS 關係表／投影方式先驗證價值？\n\n• 家屬通知採用哪一個可實際收到的通路？\n\n• 直接使用者訪談與原型測試可在何時完成？\n\n• 第一條 Vertical Slice 的程式、測試與部署截止日為何？\n\n\n\n十三、變更與維護規則\n\n• 修改產品目標、Scope、Out of Scope、Stop／Pivot 或 Wave 邊界時，必須更新本文件版本與變更紀錄。\n\n• 修改功能與驗收條件時，更新使用者故事 v1.3.1 或其後續版本。\n\n• 修改排程、Story 所屬 Wave、Demo Gate、Owner 或狀態時，更新 Story Map。\n\n• 四份文件如有衝突：產品方向與邊界以本文件為準；使用者證據與 Persona 以 01A 為準；功能與驗收以使用者故事為準；交付順序與狀態以 Story Map 為準。\n\n• 每次 Gate Review 前確認 01、01A、02、03 四份文件的決策與版本一致。\n\n\n\n十四、第一版簽核清單\n\n□ Problem Statement、Vision、Target User 與 Out of Scope 已由團隊確認。\n\n□ 已清楚區分已確認事實、外部證據與待驗證假設。\n\n□ 至少完成最低使用者研究要求，或正式記錄無法完成的限制與替代驗證方式。\n\n□ 產品、系統與 Guardrail 指標已有 baseline／暫定目標／Owner。\n\n□ Risk Register、Dependency 與五人 RACI 已填寫。\n\n□ 第一條 Demo Vertical Slice 的範圍與 Gate 已凍結。\n\n□ UX／User Flow 已完成，主要狀態與錯誤文案可走通。\n\n□ 團隊同意進入 G2 設計階段。",
+  "warnings": [
+    "Unrecognised paragraph style: 'Title' (Style ID: Title)"
+  ]
+}
