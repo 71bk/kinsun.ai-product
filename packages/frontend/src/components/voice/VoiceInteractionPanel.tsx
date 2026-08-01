@@ -4,8 +4,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RecordingState } from '@elderly-care/shared';
 import { blobToBase64, BrowserVoiceRecorder } from '@/lib/voice/recorder';
 import { VoiceWebSocketClient, type ServerResponsePayload } from '@/lib/voice/websocket-client';
+import { CompanionCharacter, type ConversationState } from './CompanionCharacter';
 import { MicPermissionGuide } from './MicPermissionGuide';
 import { RecordButton } from './RecordButton';
+
+const DEFAULT_GREETING = '你好啊！今天想聊什麼呢？';
+
+/** Maps the real RecordingState (idle/recording/processing/playing) onto the
+ * companion character's animation states — 'sleeping' has no real equivalent yet. */
+function toConversationState(state: RecordingState): ConversationState {
+  switch (state) {
+    case 'recording':
+      return 'listening';
+    case 'processing':
+      return 'processing';
+    case 'playing':
+      return 'speaking';
+    default:
+      return 'idle';
+  }
+}
 
 export interface VoiceInteractionPanelProps {
   wsUrl: string;
@@ -91,15 +109,15 @@ export function VoiceInteractionPanel({ wsUrl, token, consentGranted }: VoiceInt
     );
   }
 
+  const companionMessage = state === 'recording' ? '我在聽...' : state === 'processing' ? '' : displayText || DEFAULT_GREETING;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+      <CompanionCharacter state={toConversationState(state)} message={companionMessage} />
       <RecordButton state={state} onPress={handlePress} />
       {needsMicPermission && <MicPermissionGuide onRetry={handlePress} />}
       {transcript && (
         <p style={{ maxWidth: 420, textAlign: 'center', fontSize: 15, color: '#718096' }}>您說：「{transcript}」</p>
-      )}
-      {displayText && (
-        <p style={{ maxWidth: 420, textAlign: 'center', fontSize: 20, lineHeight: 1.6 }}>{displayText}</p>
       )}
     </div>
   );
