@@ -47,6 +47,31 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Python dependencies
+        run: |
+          pip install ruff pytest pytest-cov
+          if [ -f services/core-api/requirements.txt ]; then
+            pip install -r services/core-api/requirements.txt
+          fi
+
+      - name: Python Lint
+        run: |
+          if [ -d services/ ]; then
+            ruff check services/ --output-format=github
+          fi
+        continue-on-error: false
+
+      - name: Python Format Check
+        run: |
+          if [ -d services/ ]; then
+            ruff format --check services/
+          fi
+
+      - name: Python Unit Tests
+        run: |
+          if [ -d services/core-api/tests ]; then
+            pytest services/core-api/tests/ --cov --cov-report=xml
+          fi
       - name: Setup uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
@@ -104,6 +129,10 @@ jobs:
 
       - name: Security Scan (dependencies)
         run: |
+          pip install pip-audit
+          if [ -f services/core-api/requirements.txt ]; then
+            pip-audit -r services/core-api/requirements.txt || true
+          fi
           uv export --frozen --project services/core-api --no-dev --no-hashes --format requirements-txt --output-file /tmp/core-requirements.txt
           uvx --from "pip-audit==2.9.0" pip-audit -r /tmp/core-requirements.txt
 
