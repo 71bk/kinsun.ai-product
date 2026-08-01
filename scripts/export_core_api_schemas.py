@@ -10,6 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE_API = ROOT / "services" / "core-api"
 sys.path.insert(0, str(CORE_API))
 
+from app.schemas.agent_run import (  # noqa: E402
+    AgentRunCompletionResponse,
+    AgentRunRegistrationResponse,
+    CompleteAgentRunRequest,
+    RegisterAgentRunRequest,
+)
 from app.schemas.assignment import (  # noqa: E402
     AssignmentCommandRequest,
     AssignmentListResponse,
@@ -37,6 +43,12 @@ from app.schemas.conversation import (  # noqa: E402
     VoiceSessionResponse,
 )
 from app.schemas.deletion import DeletionRequestResponse  # noqa: E402
+from app.schemas.family_invitation import (  # noqa: E402
+    CreateFamilyInvitationRequest,
+    FamilyInvitationCreatedResponse,
+    FamilyInvitationListResponse,
+    FamilyInvitationStatusResponse,
+)
 from app.schemas.memory import (  # noqa: E402
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,
@@ -45,6 +57,10 @@ from app.schemas.memory import (  # noqa: E402
     MemoryListResponse,
     MemoryResponse,
     UpdateMemoryRequest,
+)
+from app.schemas.onboarding import (  # noqa: E402
+    ResolveOnboardingRequest,
+    ResolveOnboardingResponse,
 )
 from app.schemas.report import (  # noqa: E402
     CreateFamilyReportDraftRequest,
@@ -65,6 +81,16 @@ from app.schemas.tool import ToolRequest, ToolResult  # noqa: E402
 
 EXPORTS = {
     "domain": {
+        "RegisterAgentRunRequestV1": RegisterAgentRunRequest,
+        "AgentRunRegistrationV1": AgentRunRegistrationResponse,
+        "CompleteAgentRunRequestV1": CompleteAgentRunRequest,
+        "AgentRunCompletionV1": AgentRunCompletionResponse,
+        "ResolveOnboardingRequestV1": ResolveOnboardingRequest,
+        "ResolveOnboardingV1": ResolveOnboardingResponse,
+        "CreateFamilyInvitationRequestV1": CreateFamilyInvitationRequest,
+        "FamilyInvitationCreatedV1": FamilyInvitationCreatedResponse,
+        "FamilyInvitationListV1": FamilyInvitationListResponse,
+        "FamilyInvitationStatusV1": FamilyInvitationStatusResponse,
         "CreateConsentRequestV1": CreateConsentRequest,
         "RevokeConsentRequestV1": RevokeConsentRequest,
         "ConsentV1": ConsentResponse,
@@ -114,6 +140,12 @@ SUCCESS_ENVELOPES = {
     "AuthorizedElderListEnvelopeV1": "domain/AuthorizedElderListV1.json",
     "ElderSummaryEnvelopeV1": "domain/ElderSummaryV1.json",
     "ElderAccessContextEnvelopeV1": "domain/ElderAccessContextV1.json",
+    "AgentRunRegistrationEnvelopeV1": "domain/AgentRunRegistrationV1.json",
+    "AgentRunCompletionEnvelopeV1": "domain/AgentRunCompletionV1.json",
+    "ResolveOnboardingEnvelopeV1": "domain/ResolveOnboardingV1.json",
+    "FamilyInvitationCreatedEnvelopeV1": "domain/FamilyInvitationCreatedV1.json",
+    "FamilyInvitationListEnvelopeV1": "domain/FamilyInvitationListV1.json",
+    "FamilyInvitationStatusEnvelopeV1": "domain/FamilyInvitationStatusV1.json",
     "ConsentEnvelopeV1": "domain/ConsentV1.json",
     "ConsentListEnvelopeV1": "domain/ConsentListV1.json",
     "VoiceSessionEnvelopeV1": "domain/VoiceSessionV1.json",
