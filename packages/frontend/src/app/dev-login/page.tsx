@@ -25,7 +25,6 @@ export default function DevLoginPage() {
   const [credentialPresent, setCredentialPresent] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLocalHost, setIsLocalHost] = useState(false);
 
   // Voice (packages/backend's WebSocket API) is a separate backend with its
   // own Cognito JWT — not the Core API bearer token above, and not stored
@@ -34,8 +33,6 @@ export default function DevLoginPage() {
   const [voiceSaved, setVoiceSaved] = useState(false);
 
   useEffect(() => {
-    const host = window.location.hostname.toLowerCase();
-    setIsLocalHost(host === 'localhost' || host === '127.0.0.1' || host === '[::1]');
     clearLegacyBrowserCredential();
     setElderId(window.localStorage.getItem(AUTH_STORAGE_KEYS.elderId) ?? '');
     setCaregiverId(window.localStorage.getItem(AUTH_STORAGE_KEYS.caregiverId) ?? '');
@@ -55,16 +52,6 @@ export default function DevLoginPage() {
     setVoiceWsToken('');
     setVoiceTokenInput('');
     setVoiceSaved(false);
-  }
-
-  if (process.env.NODE_ENV !== 'development' || !isLocalHost) {
-    return (
-      <main style={{ maxWidth: 560, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ fontSize: 22 }}>本機 Demo 登入</h1>
-        <p>這個頁面只可在本機開發環境使用。</p>
-        <a href="/sign-in">前往正式登入</a>
-      </main>
-    );
   }
 
   async function handleSave(e: React.FormEvent) {
