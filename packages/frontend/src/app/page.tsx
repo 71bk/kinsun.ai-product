@@ -1,88 +1,86 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CompanionTextPanel } from '@/components/companion/CompanionTextPanel';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
-import { DevPreviewBanner, readDevPreviewState } from '@/components/voice/dev-preview';
-import { VoiceInteractionPanel } from '@/components/voice/VoiceInteractionPanel';
-import type { VoicePageState } from '@/components/voice/voice-page-state';
-import { AUTH_STORAGE_KEYS, getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
+import { activeBasicVoiceConsent, listConsents } from '@/lib/api/consent';
+import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 
 export default function HomePage() {
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
-  const [consentGranted, setConsentGranted] = useState(false);
-  const [previewState, setPreviewState] = useState<VoicePageState | null>(null);
+  const [consentGranted, setConsentGranted] = useState<boolean | null>(null);
+  const [consentError, setConsentError] = useState(false);
 
   useEffect(() => {
-    setConfig(getRuntimeConfig());
-    setConsentGranted(window.localStorage.getItem(AUTH_STORAGE_KEYS.consentGranted) === 'true');
-    setPreviewState(readDevPreviewState());
+    let cancelled = false;
+    void getRuntimeConfig().then((nextConfig) => {
+      if (!cancelled) setConfig(nextConfig);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (!config) return null;
+  useEffect(() => {
+    if (config?.credentialStatus !== 'present' || !config.elderId) return;
+    let cancelled = false;
+    listConsents(config, config.elderId)
+      .then((items) => {
+        if (!cancelled) setConsentGranted(activeBasicVoiceConsent(items) !== null);
+      })
+      .catch(() => {
+        if (!cancelled) setConsentError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [config]);
 
-  // The dev preview needs no credentials: it renders the §10.1 states and issues
-  // no authenticated request, opens no socket and records nothing. Auth is still
-  // required for every real render, and in production readDevPreviewState()
-  // always returns null so this gate is unconditional there.
-  if ((!config.token || !config.elderId) && previewState === null) {
-    return <NotLoggedIn reason="尚未設定登入資訊，請先完成登入設定" />;
+  if (!config) return null;
+  if (config.credentialStatus === 'unavailable') {
+    return <NotLoggedIn reason="無法確認登入憑證狀態；系統已停止，不會略過認證" />;
+  }
+  if (config.credentialStatus !== 'present' || !config.elderId) {
+    return <NotLoggedIn reason="尚未設定本機 Demo 身分，請先完成登入設定" />;
   }
 
   return (
-    <>
-      {/* Outside <main> on purpose: this is a dev tool, not part of the voice
-          surface. Inside data-surface="voice" the elder type scale (20px text,
-          64px touch targets) inflates nine state links enough to push the
-          mascot and the record button off screen — the very UI the banner
-          exists to review. Out here it picks up the :root defaults. Normal
-          flow, never position: fixed, so it cannot overlap either. */}
-      {previewState !== null && <DevPreviewBanner active={previewState} />}
+    <main
+      data-surface="voice"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minHeight: '100dvh',
+        gap: 'var(--block-gap)',
+        padding: 'var(--space-6)',
+        paddingBottom: 'calc(var(--space-6) + env(safe-area-inset-bottom))',
+        background: 'var(--color-background)',
+      }}
+    >
+      <h1 style={{ fontSize: 'var(--text-xl)', color: 'var(--color-foreground)', margin: 0 }}>
+        智慧長照 AI 陪伴系統
+      </h1>
 
-      {/* data-surface scopes the voice token overrides (§3). Spec puts this on
-          <body>, which needs per-surface Next.js route groups — a directory
-          restructure. Element-level scoping is equivalent for the cascade and is
-          SSR-correct; migrate to route groups when the app topology is settled
-          (design-system/MASTER.md §0 item 1). */}
-      <main
-        data-surface="voice"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100dvh',
-          gap: 'var(--block-gap)',
-          padding: 'var(--space-6)',
-          paddingBottom: 'calc(var(--space-6) + env(safe-area-inset-bottom))',
-          background: 'var(--color-background)',
-        }}
-      >
-        <h1 style={{ fontSize: 'var(--text-xl)', color: 'var(--color-foreground)', margin: 0 }}>
-          智慧長照 AI 陪伴系統
-        </h1>
+      {consentError && (
+        <p style={{ color: 'var(--color-destructive)' }}>
+          無法向 Core API 確認同意狀態，系統不會開始陪伴。
+        </p>
+      )}
+      {!consentError && consentGranted === null && <p>正在向 Core API 確認同意狀態…</p>}
+      {!consentError && consentGranted === false && (
+        <p>
+          尚未取得 BASIC_VOICE 同意。<a href="/consent">前往同意設定</a>
+        </p>
+      )}
+      {!consentError && consentGranted === true && (
+        <CompanionTextPanel apiConfig={config} elderId={config.elderId} />
+      )}
 
-        <VoiceInteractionPanel
-          wsUrl={config.wsUrl}
-          token={config.token}
-          consentGranted={consentGranted}
-        />
-
-        {!consentGranted && (
-          <a
-            href="/consent"
-            style={{
-              color: 'var(--color-primary-text)',
-              fontSize: 'var(--text-base)',
-              minHeight: 'var(--touch-min)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '0 var(--space-4)',
-            }}
-          >
-            前往同意設定
-          </a>
-        )}
-      </main>
-    </>
+      <nav style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+        <a href="/consent">同意設定</a>
+        <a href="/dev-login">Demo 身分</a>
+      </nav>
+    </main>
   );
 }
