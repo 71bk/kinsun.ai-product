@@ -51,12 +51,11 @@ function toConversationState(state: VoicePageState): ConversationState {
 
 export interface VoiceInteractionPanelProps {
   wsUrl: string;
-  token: string;
   /** Elder hasn't granted recording consent yet — disables the mic entirely (A06.2). */
   consentGranted: boolean;
 }
 
-export function VoiceInteractionPanel({ wsUrl, token, consentGranted }: VoiceInteractionPanelProps) {
+export function VoiceInteractionPanel({ wsUrl, consentGranted }: VoiceInteractionPanelProps) {
   const [state, setState] = useState<VoicePageState>('idle');
   const [previewState, setPreviewState] = useState<VoicePageState | null>(null);
   const [displayText, setDisplayText] = useState('');
@@ -134,14 +133,14 @@ export function VoiceInteractionPanel({ wsUrl, token, consentGranted }: VoiceInt
       void play();
     });
 
-    ws.connect(wsUrl, token).catch(() => {
+    ws.connect(wsUrl).catch(() => {
       setState('offline');
     });
 
     return () => {
       ws.disconnect();
     };
-  }, [wsUrl, token, consentGranted, isPreview]);
+  }, [wsUrl, consentGranted, isPreview]);
 
   const beginRecording = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -226,7 +225,9 @@ export function VoiceInteractionPanel({ wsUrl, token, consentGranted }: VoiceInt
   }
 
   const companionMessage =
-    effectiveState === 'idle' || effectiveState === 'playing' ? displayText || DEFAULT_GREETING : STATE_COPY[effectiveState];
+    effectiveState === 'idle' || effectiveState === 'playing'
+      ? displayText || DEFAULT_GREETING
+      : STATE_COPY[effectiveState];
 
   const cardTranscript = pendingTranscript || (isPreview ? PREVIEW_TRANSCRIPT : '');
 
