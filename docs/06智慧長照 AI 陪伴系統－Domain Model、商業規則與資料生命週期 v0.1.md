@@ -1,8 +1,6 @@
-# 06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.docx
-
 智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：長者、專業照護者、家屬、照護單位、派案、語音互動、事件、摘要、記憶、Graph、報表、通知、同意、刪除與主動陪伴
 
-### 相關文件
+## 相關文件
 
 01｜產品方向與範圍基準 v1.2
 
@@ -42,7 +40,7 @@ https://docs.google.com/document/d/1LO4FIONTEYVj4Oz_blIn25l4YN4ROm7lINrWG3Sd8r0/
 
 https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/edit
 
-## 一、文件目的與邊界
+# 一、文件目的與邊界
 
 本文件將 05 文件中的工作流轉成正式 Domain Model，回答以下問題：
 
@@ -60,7 +58,7 @@ https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/
 
 本文件不等同資料庫建表文件。它先定義商業語意與不變條件，後續才由 08 AWS 系統架構與 10 API／Event／Data Contracts 決定實際資料表、Index、Topic、API 與欄位格式。
 
-## 二、Domain 設計原則
+# 二、Domain 設計原則
 
 1. RDS／交易型資料庫是正式事實來源；Graph DB、搜尋索引、向量索引與快取是可重建投影。
 
@@ -82,43 +80,43 @@ https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/
 
 10. 無資料時保留「未提及／資料不足」，不得用模型補造。
 
-## 三、Bounded Context
+# 三、Bounded Context
 
-### 3.1 Identity & Authorization Context
+## 3.1 Identity & Authorization Context
 
 負責 Actor、Role、Tenant、Care Unit、Relationship、Assignment 與 Authorization Scope。
 
-### 3.2 Elder Profile & Consent Context
+## 3.2 Elder Profile & Consent Context
 
 負責 Elder、Persona Preference、Consent、Share Scope、Retention Preference 與代理授權。
 
-### 3.3 Conversation Context
+## 3.3 Conversation Context
 
 負責 Voice Session、Transcript、Language Route、AI Response、Safety Result 與 Context Usage Trace。
 
-### 3.4 Care Record Context
+## 3.4 Care Record Context
 
 負責 Event Candidate、Verified Event、Review、Daily Summary、Timeline 與 Care Action。
 
-### 3.5 Memory Context
+## 3.5 Memory Context
 
 負責 Memory Candidate、Confirmed Memory、Memory Version、Graph Projection 與 Memory Retrieval Policy。
 
-### 3.6 Family Report Context
+## 3.6 Family Report Context
 
 負責 Family Report、Report Version、Report Publication、Notification Preference、Notification Delivery 與 Secure Link。
 
-### 3.7 Proactive Companion Context
+## 3.7 Proactive Companion Context
 
 負責 Trigger、Eligibility、Topic Candidate、Approval、Follow-up Plan 與 Interaction Feedback。
 
-### 3.8 Privacy & Data Governance Context
+## 3.8 Privacy & Data Governance Context
 
 負責 Consent Revocation、Deletion Request、Retention Policy、Audit Record、Data Lineage 與衍生資料清理。
 
-## 四、核心角色與組織模型
+# 四、核心角色與組織模型
 
-### 4.1 Actor
+## 4.1 Actor
 
 用途：代表可以登入、操作、授權或接收通知的人或系統主體。
 
@@ -128,7 +126,7 @@ actor_type：ELDER、DAYCARE_CARE_WORKER、HOME_CARE_WORKER、FAMILY_MEMBER、AD
 
 Invariant：Actor 狀態非 ACTIVE 時不得新增業務操作；System Service 不得模擬人工核准。
 
-### 4.2 Tenant
+## 4.2 Tenant
 
 用途：代表照護機構、營運單位或隔離邊界。
 
@@ -136,7 +134,7 @@ Invariant：Actor 狀態非 ACTIVE 時不得新增業務操作；System Service 
 
 Invariant：跨 tenant 讀寫預設禁止；共享必須有明確授權關係與用途。
 
-### 4.3 Care Unit
+## 4.3 Care Unit
 
 用途：代表日照中心、社區據點、居家服務單位或服務群組。
 
@@ -144,7 +142,7 @@ Invariant：跨 tenant 讀寫預設禁止；共享必須有明確授權關係與
 
 unit_type：DAYCARE_CENTER、COMMUNITY_SITE、HOME_CARE_AGENCY。
 
-### 4.4 Care Relationship
+## 4.4 Care Relationship
 
 用途：定義 Actor 與 Elder 之間可做什麼。
 
@@ -154,9 +152,9 @@ relationship_type：DAYCARE_ASSIGNMENT、HOME_CARE_ASSIGNMENT、FAMILY_SHARE、L
 
 Invariant：任何長者資料讀取都必須能回溯至有效 Relationship 或 Assignment。
 
-## 五、Aggregate 與 Aggregate Root
+# 五、Aggregate 與 Aggregate Root
 
-### 5.1 Elder Aggregate
+## 5.1 Elder Aggregate
 
 Aggregate Root：Elder
 
@@ -166,7 +164,7 @@ Aggregate Root：Elder
 
 不包含：完整事件、完整記憶、完整報表；這些屬不同 Aggregate。
 
-### 5.2 Consent Aggregate
+## 5.2 Consent Aggregate
 
 Aggregate Root：Consent Grant
 
@@ -174,7 +172,7 @@ Aggregate Root：Consent Grant
 
 責任：控制每種資料用途是否有效。
 
-### 5.3 Conversation Aggregate
+## 5.3 Conversation Aggregate
 
 Aggregate Root：Conversation Session
 
@@ -182,7 +180,7 @@ Aggregate Root：Conversation Session
 
 責任：維持單次對話 Session 的一致狀態與可追溯性。
 
-### 5.4 Care Event Aggregate
+## 5.4 Care Event Aggregate
 
 Aggregate Root：Care Event
 
@@ -190,7 +188,7 @@ Aggregate Root：Care Event
 
 責任：維持候選、覆核、修正、拒絕與正式事件版本。
 
-### 5.5 Daily Summary Aggregate
+## 5.5 Daily Summary Aggregate
 
 Aggregate Root：Daily Summary
 
@@ -198,7 +196,7 @@ Aggregate Root：Daily Summary
 
 責任：確保每個摘要重點都可回查來源，且更新時保留版本。
 
-### 5.6 Memory Aggregate
+## 5.6 Memory Aggregate
 
 Aggregate Root：Memory
 
@@ -206,7 +204,7 @@ Aggregate Root：Memory
 
 責任：確保只有經確認的記憶可啟用及檢索。
 
-### 5.7 Assignment Aggregate
+## 5.7 Assignment Aggregate
 
 Aggregate Root：Care Assignment
 
@@ -214,7 +212,7 @@ Aggregate Root：Care Assignment
 
 責任：控制居服員可見範圍與服務狀態。
 
-### 5.8 Family Report Aggregate
+## 5.8 Family Report Aggregate
 
 Aggregate Root：Family Report
 
@@ -222,7 +220,7 @@ Aggregate Root：Family Report
 
 責任：確保家屬只看到 Published 且符合授權範圍的資料。
 
-### 5.9 Notification Aggregate
+## 5.9 Notification Aggregate
 
 Aggregate Root：Notification Delivery
 
@@ -230,7 +228,7 @@ Aggregate Root：Notification Delivery
 
 責任：管理發送、重試與已讀，不影響報表本身發布狀態。
 
-### 5.10 Care Action Aggregate
+## 5.10 Care Action Aggregate
 
 Aggregate Root：Care Action
 
@@ -238,7 +236,7 @@ Aggregate Root：Care Action
 
 責任：將經確認事項轉成可追蹤工作，不讓 AI 自動做照護決策。
 
-### 5.11 Proactive Interaction Aggregate
+## 5.11 Proactive Interaction Aggregate
 
 Aggregate Root：Proactive Trigger
 
@@ -246,7 +244,7 @@ Aggregate Root：Proactive Trigger
 
 責任：確保每次主動陪伴都重新通過同意、頻率、時段與安全規則。
 
-### 5.12 Deletion Aggregate
+## 5.12 Deletion Aggregate
 
 Aggregate Root：Deletion Request
 
@@ -254,7 +252,7 @@ Aggregate Root：Deletion Request
 
 責任：追蹤撤回後的跨系統清理並確保可重跑。
 
-## 六、Entity 定義與核心欄位
+# 六、Entity 定義與核心欄位
 
 6.1 Elder
 
@@ -400,7 +398,7 @@ deletion_request_id、elder_id、requested_by、scope、status、requested_at、
 
 item_id、deletion_request_id、resource_type、resource_id、system_of_record、status、attempt_count、last_error、completed_at。
 
-## 七、Value Object
+# 七、Value Object
 
 • ElderScope：tenant_id＋elder_id＋relationship／assignment reference。
 
@@ -426,7 +424,7 @@ item_id、deletion_request_id、resource_type、resource_id、system_of_record�
 
 • RetentionRule：資料類型、保存期限、觸發條件與刪除方式。
 
-## 八、關聯模型
+# 八、關聯模型
 
 Tenant 1 ─ N Care Unit
 
@@ -476,9 +474,9 @@ Elder 1 ─ N Deletion Request
 
 Deletion Request 1 ─ N Deletion Job Item
 
-## 九、核心 Invariant
+# 九、核心 Invariant
 
-### 9.1 授權與資料隔離
+## 9.1 授權與資料隔離
 
 1. 所有讀取與寫入都必須同時驗證 actor、role、relationship／assignment、tenant 與 elder scope。
 
@@ -490,7 +488,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 5. 張阿姨資料不得出現在林阿嬤的 Context、摘要、記憶、Graph 查詢或報表中。
 
-### 9.2 事件與摘要
+## 9.2 事件與摘要
 
 1. REJECTED、EXCLUDED 或未確認的低信心事件不得進正式摘要。
 
@@ -500,7 +498,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 4. 無資料欄位必須標示未提及／資料不足。
 
-### 9.3 確認式記憶
+## 9.3 確認式記憶
 
 1. 只有穩定偏好、重要關係、固定作息與個人歷史可成為候選記憶。
 
@@ -510,7 +508,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 4. 一般閒聊、一次性事件、醫療推測與陪伴需求推估不得自動成為長期記憶。
 
-### 9.4 家屬報表
+## 9.4 家屬報表
 
 1. 家屬端只顯示 PUBLISHED 報表。
 
@@ -522,7 +520,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 5. 家屬版不得包含逐字稿、內部筆記、ASR 信心、未覆核事件與診斷式分數。
 
-### 9.5 派案與服務
+## 9.5 派案與服務
 
 1. Service Record 必須對應有效 assignment_id。
 
@@ -530,7 +528,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 3. 同一 assignment、service_date、record_type 不得重複建立正式服務紀錄。
 
-### 9.6 主動陪伴
+## 9.6 主動陪伴
 
 1. 每次播放前必須重新確認同意、靜默時段、每日上限、cooldown、裝置與拒絕紀錄。
 
@@ -540,7 +538,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 4. 敏感主題必須人工核准或直接禁止。
 
-### 9.7 撤回與刪除
+## 9.7 撤回與刪除
 
 1. Consent 轉 REVOKED 後立即停止新處理，不等待資料實體刪除完成。
 
@@ -550,9 +548,9 @@ Deletion Request 1 ─ N Deletion Job Item
 
 4. Deletion Job Item 必須可冪等重跑。
 
-## 十、資料生命週期
+# 十、資料生命週期
 
-### 10.1 Voice／Transcript
+## 10.1 Voice／Transcript
 
 建立：錄音開始後建立 Session；逐字稿由 ASR 產生版本。
 
@@ -564,7 +562,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 刪除：撤回、期限到期或合法刪除請求觸發；衍生事件需依 scope 判斷是否同步刪除。
 
-### 10.2 Care Event
+## 10.2 Care Event
 
 建立：由 AI 產生 Candidate 或由照護者新增。
 
@@ -578,7 +576,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 刪除：依資料用途與稽核規則處理，保留必要 tombstone 避免重建。
 
-### 10.3 Daily Summary
+## 10.3 Daily Summary
 
 建立：依日期與正式事件產生 DRAFT。
 
@@ -590,7 +588,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 刪除／撤回：來源被刪除或分享同意撤回後重建、隱藏或刪除。
 
-### 10.4 Memory
+## 10.4 Memory
 
 建立：事件／對話形成 Candidate。
 
@@ -604,7 +602,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 刪除：RDS 事實、Graph 投影與搜尋索引同步失效。
 
-### 10.5 Family Report
+## 10.5 Family Report
 
 建立：依可分享事件或已發布摘要產生 DRAFT。
 
@@ -618,7 +616,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 刪除：依分享同意、Retention Policy 與合法要求處理。
 
-### 10.6 Notification
+## 10.6 Notification
 
 建立：報表 Published 後依 Preference 建立。
 
@@ -630,7 +628,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 保留：只保留送達狀態與必要稽核，不將通知內容當正式報表副本。
 
-### 10.7 Assignment／Service Record
+## 10.7 Assignment／Service Record
 
 建立：由機構或排班系統建立派案。
 
@@ -642,7 +640,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 過期／取消：立即收回資料存取。
 
-### 10.8 Proactive Trigger
+## 10.8 Proactive Trigger
 
 建立：排程、事件、提醒或照護者安排產生。
 
@@ -654,7 +652,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 取消：同意撤回、來源取消、拒絕或人工拒絕後轉 CANCELLED／BLOCKED。
 
-### 10.9 Consent／Deletion
+## 10.9 Consent／Deletion
 
 建立：保存用途、版本、授權人與生效時間。
 
@@ -666,7 +664,7 @@ Deletion Request 1 ─ N Deletion Job Item
 
 完成：所有工作完成或留下最小必要稽核證據後轉 COMPLETED。
 
-## 十一、System of Record 與投影責任
+# 十一、System of Record 與投影責任
 
 RDS／交易型資料庫
 
@@ -688,7 +686,7 @@ Cache
 
 保存：短時間 UI 或 Context 查詢結果；權限或同意變更時必須失效。
 
-## 十二、Graph Domain Model v0.1
+# 十二、Graph Domain Model v0.1
 
 建議 Node
 
@@ -742,7 +740,7 @@ Graph 規則
 
 4. Graph 查詢回傳後仍需經 Authorization／Consent Filter，不可因在圖中存在就自動可見。
 
-## 十三、資料完整性與一致性策略
+# 十三、資料完整性與一致性策略
 
 • 聚合內：使用交易、唯一鍵、外鍵、狀態轉移檢查與 optimistic locking。
 
@@ -758,7 +756,7 @@ Graph 規則
 
 • 刪除：以 deletion_request_id 串起多系統清理。
 
-## 十四、Domain Event Catalog v0.1
+# 十四、Domain Event Catalog v0.1
 
 • ElderProfileUpdated
 
@@ -830,7 +828,7 @@ Graph 規則
 
 這些名稱為概念名稱，最終 payload、版本與 Topic 命名由 10 文件確定。
 
-## 十五、商業規則優先級
+# 十五、商業規則優先級
 
 P0｜不可違反
 
@@ -844,7 +842,7 @@ P2｜產品品質
 
 • 通知偏好、主動陪伴頻率、週月報內容、Care Action 工作流、離線草稿。
 
-## 十六、Demo Persona 對應
+# 十六、Demo Persona 對應
 
 林阿嬤
 
@@ -874,9 +872,9 @@ P2｜產品品質
 
 • 核心資料：Assignment、Service Record、Family Report、Notification。
 
-## 十七、測試規則
+# 十七、測試規則
 
-### 17.1 Aggregate Invariant
+## 17.1 Aggregate Invariant
 
 • 未確認記憶無法 ACTIVE。
 
@@ -888,7 +886,7 @@ P2｜產品品質
 
 • Consent Revoked 後無法建立新 Report 或 Trigger。
 
-### 17.2 Cross-Aggregate
+## 17.2 Cross-Aggregate
 
 • Event 修正後觸發 Summary rebuild 與 Graph projection update。
 
@@ -898,7 +896,7 @@ P2｜產品品質
 
 • Assignment Expired 後 Authorization Scope 立即失效。
 
-### 17.3 Isolation
+## 17.3 Isolation
 
 • 修改 elder_id、tenant_id、assignment_id、report_id 不得越權。
 
@@ -906,7 +904,7 @@ P2｜產品品質
 
 • 家屬無法讀取專業版摘要或照護內部筆記。
 
-## 十八、v0.1 完成判定
+# 十八、v0.1 完成判定
 
 □ 已定義 Bounded Context、Aggregate Root、Entity、Value Object 與關聯。
 
@@ -928,7 +926,7 @@ P2｜產品品質
 
 □ 三位 Demo Persona 都可映射到 Domain Model。
 
-## 十九、待決策
+# 十九、待決策
 
 1. Event 哪些類型可以自動 VERIFIED，哪些一律 Needs Review？
 
@@ -950,7 +948,7 @@ P2｜產品品質
 
 10. 報表 Withdrawal 是隱藏、軟刪除還是建立撤回版本？
 
-## 二十、下一份文件
+# 二十、下一份文件
 
 07｜智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1
 

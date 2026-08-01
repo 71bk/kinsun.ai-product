@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "ConsentPurpose": {
+      "enum": [
+        "BASIC_VOICE",
+        "TRANSCRIPT_STORAGE",
+        "CARE_EVENT_EXTRACTION",
+        "LONG_TERM_MEMORY",
+        "COMPANION_SIGNAL_ANALYSIS",
+        "PROACTIVE_COMPANION",
+        "FAMILY_SHARING"
+      ],
+      "title": "ConsentPurpose",
+      "type": "string"
+    },
+    "ConsentResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "consent_id": {
+          "format": "uuid",
+          "title": "Consent Id",
+          "type": "string"
+        },
+        "purpose_code": {
+          "$ref": "#/$defs/ConsentPurpose"
+        },
+        "consent_version": {
+          "title": "Consent Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "PENDING",
+            "GRANTED",
+            "REVOKED",
+            "EXPIRED",
+            "REJECTED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "scope": {
+          "additionalProperties": true,
+          "title": "Scope",
+          "type": "object"
+        },
+        "policy_version": {
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "effective_at": {
+          "format": "date-time",
+          "title": "Effective At",
+          "type": "string"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires At"
+        },
+        "revoked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Revoked At"
+        },
+        "affected_capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Affected Capabilities",
+          "type": "array"
+        },
+        "deletion_request_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deletion Request Id"
+        }
+      },
+      "required": [
+        "consent_id",
+        "purpose_code",
+        "consent_version",
+        "status",
+        "scope",
+        "policy_version",
+        "effective_at",
+        "expires_at",
+        "revoked_at",
+        "affected_capabilities"
+      ],
+      "title": "ConsentResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ConsentResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "title": "ConsentListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ConsentListV1.json"
+}

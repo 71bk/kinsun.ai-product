@@ -1,0 +1,11 @@
+{
+  "data": {
+    "summary_date": "2026-07-31",
+    "summary_type": "PROFESSIONAL_DAILY",
+    "items": [],
+    "missing_fields": ["meal"],
+    "conflict_flags": [],
+    "model_version": "synthetic-summary-model-v1",
+    "prompt_version": "summary-prompt-v1"
+  }
+}

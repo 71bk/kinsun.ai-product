@@ -1,0 +1,45 @@
+asyncapi: 3.0.0
+info:
+  title: kinsun.ai Core Domain Events
+  version: 1.0.0
+  description: |
+    Provider-neutral contract produced by the implemented transactional outbox
+    relay and accepted by the implemented idempotent consumer foundation. The
+    failure contract defines retry versus terminal dead-letter disposition,
+    but does not provide an AWS transport binding. EventBridge, per-consumer
+    SQS queues, DLQs, redrive and deployment bindings remain pending the
+    platform decisions listed in AGENTS.md.
+defaultContentType: application/json
+channels:
+  coreDomainEvents:
+    address: kinsun.core-domain-events
+    messages:
+      domainEvent:
+        $ref: "#/components/messages/DomainEventV1"
+operations:
+  publishCoreDomainEvent:
+    action: send
+    channel:
+      $ref: "#/channels/coreDomainEvents"
+    messages:
+      - $ref: "#/channels/coreDomainEvents/messages/domainEvent"
+    x-kinsun-failure-contract:
+      $ref: "#/components/schemas/EventDeliveryFailureV1"
+  consumeCoreDomainEvent:
+    action: receive
+    channel:
+      $ref: "#/channels/coreDomainEvents"
+    messages:
+      - $ref: "#/channels/coreDomainEvents/messages/domainEvent"
+    x-kinsun-failure-contract:
+      $ref: "#/components/schemas/EventDeliveryFailureV1"
+components:
+  messages:
+    DomainEventV1:
+      name: DomainEventV1
+      title: Core domain event
+      payload:
+        $ref: "../schemas/events/DomainEventEnvelopeV1.json"
+  schemas:
+    EventDeliveryFailureV1:
+      $ref: "../schemas/events/EventDeliveryFailureV1.json"

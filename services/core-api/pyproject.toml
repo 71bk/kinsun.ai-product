@@ -1,0 +1,78 @@
+[project]
+name = "kinsun-core-api"
+version = "0.1.0"
+description = "kinsun.ai Core API service"
+requires-python = ">=3.12"
+
+# 兩個 PostgreSQL driver 是刻意的：
+#   psycopg  → Alembic migration，同步連線
+#   asyncpg  → FastAPI 應用層，非同步連線
+# 統一成 psycopg（它也支援 async）可行，但應用層與 294 個測試都是以 asyncpg 寫成，
+# 為了單一 driver 去改動已驗證的授權測試不划算。
+dependencies = [
+    "fastapi>=0.115,<0.116",
+    "uvicorn>=0.34,<0.35",
+    "sqlalchemy>=2.0,<3",
+    "asyncpg>=0.30,<0.31",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.7,<3",
+    "alembic>=1.14,<2",
+    "httpx>=0.27,<0.28",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<0.25",
+    "hypothesis>=6.118,<7",
+    "pytest-cov>=6.0,<7",
+]
+dev = [
+    "ruff>=0.8,<0.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<0.25",
+    "hypothesis>=6.118,<7",
+    "pytest-cov>=6.0,<7",
+    "ruff>=0.8,<0.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+asyncio_mode = "auto"
+# pytest-asyncio 0.24 起，自訂 event_loop fixture 已棄用。改用這兩個設定讓
+# session-scoped 的 engine fixture 與測試跑在同一個 loop，否則 asyncpg 連線會
+# 出現 "attached to a different loop"。
+asyncio_default_fixture_loop_scope = "session"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# 已套用的 migration 視為不可變，不因 lint 規則變動而改寫。
+# script.py.mako 已改用現代語法，新產生的 revision 本來就符合規則。
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "F",     # Pyflakes (includes F401 unused imports)
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "I",     # isort (import sorting)
+    "UP",    # pyupgrade
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

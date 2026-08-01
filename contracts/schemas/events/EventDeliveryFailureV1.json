@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/EventDeliveryFailureV1.json",
+  "title": "EventDeliveryFailureV1",
+  "description": "Provider-neutral publisher or consumer failure outcome. Raw exception messages, event payloads, prompts, transcripts, audio, tokens and secrets are intentionally excluded. disposition is RETRY exactly when retryable is true and attempt_count is below max_attempts; otherwise it is DEAD_LETTER.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "stage",
+    "reason_code",
+    "retryable",
+    "attempt_count",
+    "max_attempts",
+    "disposition",
+    "consumer_name"
+  ],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "stage": {"type": "string", "enum": ["PUBLISHER", "CONSUMER"]},
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "CONSUMER_PROCESSING_FAILED",
+        "CONSUMER_SCHEMA_UNSUPPORTED",
+        "PUBLISHER_ATTEMPT_LIMIT_REACHED",
+        "PUBLISHER_DEPENDENCY_TIMEOUT",
+        "PUBLISHER_SCHEMA_REJECTED",
+        "PUBLISHER_UNEXPECTED_ERROR"
+      ]
+    },
+    "retryable": {"type": "boolean"},
+    "attempt_count": {"type": "integer", "minimum": 1},
+    "max_attempts": {"type": "integer", "minimum": 1},
+    "disposition": {"type": "string", "enum": ["RETRY", "DEAD_LETTER"]},
+    "consumer_name": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$"}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"stage": {"const": "PUBLISHER"}}, "required": ["stage"]},
+      "then": {"properties": {"consumer_name": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"stage": {"const": "CONSUMER"}}, "required": ["stage"]},
+      "then": {
+        "properties": {
+          "consumer_name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"retryable": {"const": false}}, "required": ["retryable"]},
+      "then": {"properties": {"disposition": {"const": "DEAD_LETTER"}}}
+    },
+    {
+      "if": {"properties": {"disposition": {"const": "RETRY"}}, "required": ["disposition"]},
+      "then": {"properties": {"retryable": {"const": true}}}
+    }
+  ]
+}

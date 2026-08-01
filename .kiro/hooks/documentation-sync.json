@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "documentation-sync-after-spec-task",
+      "description": "Keep README, architecture, contracts, and divergence notes aligned after a Spec task.",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "agent",
+        "prompt": "A Kiro Spec task completed. Review the task, changed files, and git diff. If externally observable behavior, architecture, API contracts, domain state, setup commands, or known divergences changed, update the minimum necessary README, architecture, contract examples, live verification scripts, DIVERGENCE.md, or implementation-status document. Do not rewrite unrelated documents and do not describe target AWS architecture or planned features as implemented. If no documentation change is required, report why."
+      },
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "_why_invalid": "A retryable failure at max_attempts must be DEAD_LETTER, not RETRY.",
+  "data": {
+    "event_id": "55555555-5555-4555-8555-555555555555",
+    "stage": "CONSUMER",
+    "reason_code": "CONSUMER_PROCESSING_FAILED",
+    "retryable": true,
+    "attempt_count": 5,
+    "max_attempts": 5,
+    "disposition": "RETRY",
+    "consumer_name": "graph_projection"
+  }
+}

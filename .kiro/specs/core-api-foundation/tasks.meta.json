@@ -1,0 +1,730 @@
+{
+  "pbtResults": {
+    "17.2 Write property test for tenant-scope non-expansion": {
+      "status": "not_run",
+      "lastRunTimestamp": 1785398041641
+    }
+  },
+  "executionHistory": {
+    "1.1 Create pyproject.toml with pinned dependencies and tool configuration": [
+      {
+        "executionId": "05a3a43e-63e6-4955-8b6c-c824b9cf06a1",
+        "chatSessionId": "sess_b706a46e-870c-4d1a-a68b-17243d96c66c",
+        "timestamp": 1785388952831
+      },
+      {
+        "executionId": "05a3a43e-63e6-4955-8b6c-c824b9cf06a1",
+        "chatSessionId": "sess_b706a46e-870c-4d1a-a68b-17243d96c66c",
+        "timestamp": 1785389045639
+      }
+    ],
+    "1.2 Create directory structure and __init__.py files": [
+      {
+        "executionId": "2e45d4a4-fbcc-4983-bb47-20887e119cd5",
+        "chatSessionId": "sess_b706a46e-870c-4d1a-a68b-17243d96c66c",
+        "timestamp": 1785390804770
+      }
+    ],
+    "1.3 Create Dockerfile": [
+      {
+        "executionId": "2e45d4a4-fbcc-4983-bb47-20887e119cd5",
+        "chatSessionId": "sess_b706a46e-870c-4d1a-a68b-17243d96c66c",
+        "timestamp": 1785390809531
+      }
+    ],
+    "1.4 Create Docker Compose and .env files": [
+      {
+        "executionId": "096975cd-20ea-44fa-8772-7bc68a53d3f4",
+        "chatSessionId": "sess_fa823045-9b07-4ef1-9169-50495c3d1e0c",
+        "timestamp": 1785390894045
+      },
+      {
+        "executionId": "096975cd-20ea-44fa-8772-7bc68a53d3f4",
+        "chatSessionId": "sess_fa823045-9b07-4ef1-9169-50495c3d1e0c",
+        "timestamp": 1785390972044
+      }
+    ],
+    "1. Project scaffolding and dependency management": [
+      {
+        "executionId": "096975cd-20ea-44fa-8772-7bc68a53d3f4",
+        "chatSessionId": "sess_fa823045-9b07-4ef1-9169-50495c3d1e0c",
+        "timestamp": 1785390972151
+      }
+    ],
+    "2.1 Implement Settings Manager (app/core/config.py)": [
+      {
+        "executionId": "688d2de3-59b8-4dbb-b3b6-aea654525bf1",
+        "chatSessionId": "sess_242fa720-4813-4f5a-b124-d62fcdbbae5c",
+        "timestamp": 1785391074203
+      },
+      {
+        "executionId": "688d2de3-59b8-4dbb-b3b6-aea654525bf1",
+        "chatSessionId": "sess_242fa720-4813-4f5a-b124-d62fcdbbae5c",
+        "timestamp": 1785391632364
+      }
+    ],
+    "2. Configuration and settings management": [
+      {
+        "executionId": "688d2de3-59b8-4dbb-b3b6-aea654525bf1",
+        "chatSessionId": "sess_242fa720-4813-4f5a-b124-d62fcdbbae5c",
+        "timestamp": 1785391632632
+      }
+    ],
+    "2.2 Write unit tests for Settings Manager": [
+      {
+        "executionId": "4da4b591-512b-417d-b8df-1fba818cc0db",
+        "chatSessionId": "sess_05be9941-c40b-40fe-a2f7-9c147e6667db",
+        "timestamp": 1785392290331
+      },
+      {
+        "executionId": "4da4b591-512b-417d-b8df-1fba818cc0db",
+        "chatSessionId": "sess_05be9941-c40b-40fe-a2f7-9c147e6667db",
+        "timestamp": 1785392356360
+      }
+    ],
+    "3.1 Implement Database Engine (app/db/engine.py)": [
+      {
+        "executionId": "0948a6a7-3a91-4f7d-9837-503151f9fe5d",
+        "chatSessionId": "sess_7ac3113f-e409-40a0-8cc3-08e3cf230ae1",
+        "timestamp": 1785392447362
+      },
+      {
+        "executionId": "0948a6a7-3a91-4f7d-9837-503151f9fe5d",
+        "chatSessionId": "sess_7ac3113f-e409-40a0-8cc3-08e3cf230ae1",
+        "timestamp": 1785392681535
+      }
+    ],
+    "3.2 Implement session dependency (app/db/session.py)": [
+      {
+        "executionId": "0948a6a7-3a91-4f7d-9837-503151f9fe5d",
+        "chatSessionId": "sess_7ac3113f-e409-40a0-8cc3-08e3cf230ae1",
+        "timestamp": 1785392448204
+      },
+      {
+        "executionId": "0948a6a7-3a91-4f7d-9837-503151f9fe5d",
+        "chatSessionId": "sess_7ac3113f-e409-40a0-8cc3-08e3cf230ae1",
+        "timestamp": 1785392682396
+      }
+    ],
+    "3. Database engine and session management": [
+      {
+        "executionId": "0948a6a7-3a91-4f7d-9837-503151f9fe5d",
+        "chatSessionId": "sess_7ac3113f-e409-40a0-8cc3-08e3cf230ae1",
+        "timestamp": 1785392682463
+      }
+    ],
+    "4.1 Implement Base, BaseModel, TenantScopedMixin, OptimisticConcurrencyMixin (app/db/base.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037224
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393234325
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393407302
+      }
+    ],
+    "4.2 Implement domain exception hierarchy (app/core/exceptions.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037304
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393048750
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393225651
+      }
+    ],
+    "5. Checkpoint - Verify base infrastructure": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037367
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393530483
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393534843
+      }
+    ],
+    "6.1 Implement response envelopes (app/core/envelopes.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037430
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393416051
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393497247
+      }
+    ],
+    "6.2 Implement error handler registration (app/api/error_handlers.py or app/main.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037528
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393555629
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393960350
+      }
+    ],
+    "7.1 Implement Request Logger middleware (app/middleware/logging.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037588
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393556400
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393961243
+      }
+    ],
+    "8.1 Implement auth module (app/middleware/auth.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037662
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393985429
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394244058
+      }
+    ],
+    "9.1 Implement BaseRepository (app/repositories/base.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037723
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393986132
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394243169
+      }
+    ],
+    "10.1 Implement health endpoint (app/api/health.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393037812
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394256517
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394466186
+      }
+    ],
+    "10.2 Implement readiness endpoint (app/api/ready.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038012
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394257231
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394467020
+      }
+    ],
+    "11. Checkpoint - Verify middleware and endpoints": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038118
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394473786
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394479509
+      }
+    ],
+    "12.1 Implement OutboxEntry model (app/models/outbox.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038207
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394488932
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394638179
+      }
+    ],
+    "12.2 Implement outbox_writer (app/events/outbox_writer.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038283
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394643173
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395005462
+      }
+    ],
+    "12.3 Implement EventPublisher ABC and FakePublisher (app/events/publisher.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038354
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394643879
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395004420
+      }
+    ],
+    "13.1 Configure Alembic for async (alembic.ini, alembic/env.py, alembic/script.py.mako)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038458
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395012452
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395226961
+      }
+    ],
+    "13.2 Generate initial migration for outbox table": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038531
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395231982
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395311229
+      }
+    ],
+    "14.1 Implement app/main.py with lifespan and create_app": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038609
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395318510
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395591550
+      }
+    ],
+    "15. Checkpoint - Full application runs": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038672
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395597321
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395605971
+      }
+    ],
+    "16.1 Implement integration test conftest (tests/integration/conftest.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038771
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395611634
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395939339
+      }
+    ],
+    "16.2 Implement unit test conftest (tests/unit/conftest.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038854
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395612535
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395940025
+      }
+    ],
+    "18.1 Create services/core-api/README.md": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393038928
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395975715
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785396064324
+      }
+    ],
+    "18.2 Final lint and format verification": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393039000
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395976345
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785396064938
+      }
+    ],
+    "19. Final checkpoint - All tests pass and linting clean": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393039073
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785396070543
+      },
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785396075479
+      }
+    ],
+    "4. Base ORM models and mixins": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393407494
+      }
+    ],
+    "3.3 Write unit tests for Database Engine": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393546399
+      }
+    ],
+    "6. Response envelopes and error handling": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393960441
+      }
+    ],
+    "7. Request logging middleware": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393961326
+      }
+    ],
+    "6.3 Write unit tests for envelopes and error handling": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393979496
+      }
+    ],
+    "7.2 Write unit tests for Request Logger": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785393980273
+      }
+    ],
+    "9. Tenant scope and repository layer": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394243253
+      }
+    ],
+    "8. Authentication abstractions": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394244133
+      }
+    ],
+    "8.2 Write unit tests for authentication": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394250524
+      }
+    ],
+    "9.2 Write unit tests for tenant scope": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394251318
+      }
+    ],
+    "10. Health and readiness endpoints": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394467172
+      }
+    ],
+    "10.3 Write integration tests for health and readiness": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785394472943
+      },
+      {
+        "executionId": "f9ce865b-cd9f-4f5b-a7a0-be1667a9fdeb",
+        "chatSessionId": "sess_717a7edc-ea11-4cdd-bf3a-a9fd4bf71e58",
+        "timestamp": 1785397111534
+      },
+      {
+        "executionId": "f9ce865b-cd9f-4f5b-a7a0-be1667a9fdeb",
+        "chatSessionId": "sess_717a7edc-ea11-4cdd-bf3a-a9fd4bf71e58",
+        "timestamp": 1785397537923
+      }
+    ],
+    "12. Transactional outbox": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395005549
+      }
+    ],
+    "12.4 Write unit tests for outbox validation": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395011329
+      }
+    ],
+    "13. Alembic configuration and initial migration": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395311293
+      }
+    ],
+    "14. Application entrypoint and lifecycle": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395591631
+      }
+    ],
+    "16. Testing infrastructure": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395940135
+      }
+    ],
+    "16.3 Write migration verification tests (tests/integration/test_migrations.py)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395960970
+      },
+      {
+        "executionId": "e8ddb296-dd4f-4f94-995a-5fe88c65e6b7",
+        "chatSessionId": "sess_6b069de7-e358-4772-8ca2-4373ff992d2f",
+        "timestamp": 1785396803043
+      },
+      {
+        "executionId": "e8ddb296-dd4f-4f94-995a-5fe88c65e6b7",
+        "chatSessionId": "sess_6b069de7-e358-4772-8ca2-4373ff992d2f",
+        "timestamp": 1785397049137
+      }
+    ],
+    "17.1 Write property test for identifier and timestamp invariants": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395961786
+      }
+    ],
+    "17. Property-based tests (mandatory)": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395961865
+      }
+    ],
+    "17.2 Write property test for tenant-scope non-expansion": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395963050
+      },
+      {
+        "executionId": "2f41babf-2363-4035-afd5-09e63ab66919",
+        "chatSessionId": "sess_6c1fe5b8-0126-4d02-9028-f08aac0caf24",
+        "timestamp": 1785397715025
+      },
+      {
+        "executionId": "2f41babf-2363-4035-afd5-09e63ab66919",
+        "chatSessionId": "sess_6c1fe5b8-0126-4d02-9028-f08aac0caf24",
+        "timestamp": 1785398066681
+      }
+    ],
+    "17.3 Write property test for optimistic version monotonicity": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395963805
+      }
+    ],
+    "17.4 Write property test for transaction rollback guarantee": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395968959
+      }
+    ],
+    "17.5 Write property test for outbox atomicity": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395969732
+      },
+      {
+        "executionId": "c399d705-b849-49bd-bdd0-ef79337d6099",
+        "chatSessionId": "sess_4f6001ae-1d5b-40b9-b574-a3de19181859",
+        "timestamp": 1785398223909
+      },
+      {
+        "executionId": "c399d705-b849-49bd-bdd0-ef79337d6099",
+        "chatSessionId": "sess_4f6001ae-1d5b-40b9-b574-a3de19181859",
+        "timestamp": 1785398354192
+      }
+    ],
+    "17.6 Write property test for outbox duplicate prevention": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785395970445
+      }
+    ],
+    "18. Developer experience and documentation": [
+      {
+        "executionId": "53459b77-4966-4581-aac2-e7aab75fe7d1",
+        "chatSessionId": "sess_6fc6251d-631f-41a7-9dfe-5f26e22c3ec0",
+        "timestamp": 1785396065004
+      }
+    ]
+  }
+}

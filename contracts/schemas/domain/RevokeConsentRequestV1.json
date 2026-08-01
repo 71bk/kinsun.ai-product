@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "reason_code": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Reason Code",
+      "type": "string"
+    },
+    "requested_effective_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Requested Effective At"
+    },
+    "revoke_scope": {
+      "items": {
+        "type": "string",
+        "enum": [
+          "CONVERSATION_SESSION",
+          "TRANSCRIPT",
+          "AUDIO_OBJECT",
+          "CARE_EVENT",
+          "DAILY_SUMMARY",
+          "MEMORY",
+          "FAMILY_REPORT",
+          "NOTIFICATION",
+          "SECURE_LINK",
+          "COMPANION_SIGNAL",
+          "PROACTIVE_TRIGGER",
+          "GRAPH",
+          "SEARCH_INDEX",
+          "CACHE"
+        ]
+      },
+      "maxItems": 32,
+      "title": "Revoke Scope",
+      "type": "array"
+    },
+    "request_deletion": {
+      "default": false,
+      "title": "Request Deletion",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "reason_code"
+  ],
+  "title": "RevokeConsentRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/RevokeConsentRequestV1.json"
+}

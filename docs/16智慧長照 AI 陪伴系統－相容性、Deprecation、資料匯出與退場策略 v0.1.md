@@ -1,8 +1,6 @@
-# 16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.docx
-
 智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：Python Core API、Web／PWA、REST／WebSocket、Domain Event、Agent、Prompt、Model、ASR／TTS、RAG、Graph、Aurora PostgreSQL、S3、OpenSearch、Neptune、通知、Tenant、長者、家屬與營運資料
 
-### 相關文件
+## 相關文件
 
 06｜Domain Model、商業規則與資料生命週期 v0.1
 
@@ -50,11 +48,11 @@ https://docs.google.com/document/d/1SUefwxwKMOQx4tH3avyrFq-DFlkzWpIpgBV3mKw5JiY/
 
 https://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/edit
 
-### 法律與治理聲明
+## 法律與治理聲明
 
 本文件是產品與技術治理基準，不構成台灣醫療、長照、個資、勞動、契約或稅務法律意見。正式保存、匯出、刪除、法律保留與機構退場，需由法務、資安、照護專業與合作機構依實際資料類型及契約核准。
 
-## 一、文件目的
+# 一、文件目的
 
 本文件處理系統最容易在後期被忽略的四類問題：
 
@@ -80,7 +78,7 @@ https://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/
 
 • 可追蹤的資料處置結果。
 
-## 二、治理原則
+# 二、治理原則
 
 • Compatibility Is a Product Feature：相容性不是只由 Backend 負責，會影響長者裝置、照護工作流、家屬連結與外部通知。
 
@@ -106,7 +104,7 @@ https://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/
 
 • Complete Planning, Phased Execution：完整定義退場能力；黑客松只實作關鍵合約與一條可演示流程。
 
-## 三、相容性分類
+# 三、相容性分類
 
 3.1 相容變更
 
@@ -168,7 +166,7 @@ https://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/
 
 • Export 格式不再可讀或欄位消失。
 
-## 四、版本識別標準
+# 四、版本識別標準
 
 所有可部署或可交換元件需可識別版本：
 
@@ -224,7 +222,7 @@ release_id
 
 禁止只記錄「latest」。正式資料、Event、Agent Trace、Report、Export Manifest 與 Incident 都需能回查實際版本。
 
-## 五、REST API 相容策略
+# 五、REST API 相容策略
 
 5.1 路徑版本
 
@@ -280,7 +278,7 @@ v0.1 候選：
 
 正式天數待 Pilot 裝置更新能力與合作機構契約確認。
 
-## 六、WebSocket／Voice Protocol 相容策略
+# 六、WebSocket／Voice Protocol 相容策略
 
 • connect／session.start 先交換 protocol_version 與 capability。
 
@@ -298,7 +296,7 @@ v0.1 候選：
 
 • 不在 WebSocket Message 暴露內部 Agent Trace、Prompt、其他長者 Context 或 Provider Secret。
 
-## 七、Domain Event 相容策略
+# 七、Domain Event 相容策略
 
 7.1 Event Envelope 穩定欄位
 
@@ -372,7 +370,7 @@ payload
 
 □ Dashboard／Alarm／Runbook 已更新。
 
-## 八、JSON Schema、OpenAPI 與 AsyncAPI
+# 八、JSON Schema、OpenAPI 與 AsyncAPI
 
 • OpenAPI 3.1 描述 REST API。
 
@@ -398,7 +396,7 @@ DRAFT
 
 → RETIRED
 
-## 九、Database Schema 相容策略
+# 九、Database Schema 相容策略
 
 依 13 文件採 Expand → Migrate → Contract：
 
@@ -416,7 +414,7 @@ DRAFT
 
 Database Rollback 不等同把 Migration 反向執行。已寫入正式資料的破壞性變更優先 Roll Forward、Data Repair 或 Snapshot Restore。
 
-## 十、Agent、Prompt 與 Tool 相容策略
+# 十、Agent、Prompt 與 Tool 相容策略
 
 10.1 Agent Contract
 
@@ -462,7 +460,7 @@ Agent 版本至少綁定：
 
 已開始 Session 預設固定 Agent／Prompt／Model Route Bundle。除安全緊急切換外，不在同一 Session 中途切換造成語意不一致。
 
-## 十一、Model Lifecycle 與替換
+# 十一、Model Lifecycle 與替換
 
 Amazon Bedrock 模型可能處於 Active、Legacy 或 End-of-Life 狀態；系統需定期讀取模型生命週期與官方通知，不把模型 ID 永久硬編碼。
 
@@ -538,7 +536,7 @@ Discover Notice
 
 Embedding Model 替換需建立新 Index／Collection、重新向量化、Alias 切換與 Retrieval Eval，不在原 Index 混合不同向量空間。
 
-## 十二、ASR／TTS 相容與退場
+# 十二、ASR／TTS 相容與退場
 
 12.1 Speech Router
 
@@ -584,7 +582,7 @@ fallback_reason
 
 • TTS 失敗可顯示文字；不可因切換 Provider 產生未授權的聲音複製或人格誤導。
 
-## 十三、RAG、Search 與 Knowledge Corpus 演進
+# 十三、RAG、Search 與 Knowledge Corpus 演進
 
 13.1 Corpus Version
 
@@ -642,7 +640,7 @@ Build New Index
 
 正式 ID、Consent、Assignment 與報表狀態仍以 Aurora 為準，不因 Search Index 退場而遺失正式資料。
 
-## 十四、Graph Schema 與 Projection 演進
+# 十四、Graph Schema 與 Projection 演進
 
 • Neptune 為已確認關係／記憶／事件的 Projection，不是授權或正式事實來源。
 
@@ -658,7 +656,7 @@ Build New Index
 
 • Graph Schema Retirement 前確認 Query、Agent、Eval Dataset 與 Dashboard 已切換。
 
-## 十五、Feature Flag Lifecycle
+# 十五、Feature Flag Lifecycle
 
 Feature Flag 狀態：
 
@@ -716,7 +714,7 @@ removal_issue
 
 • 沒有 Owner、Expiry、Migration Path 的 Flag 不得進 Production。
 
-## 十六、Deprecation Lifecycle
+# 十六、Deprecation Lifecycle
 
 16.1 狀態
 
@@ -798,7 +796,7 @@ status
 
 • 後續通知與支援。
 
-## 十七、Migration Plan 標準
+# 十七、Migration Plan 標準
 
 每個 Migration Plan 包含：
 
@@ -850,7 +848,7 @@ completion evidence
 
 □ 舊路徑無流量或有明確例外。
 
-## 十八、資料匯出原則
+# 十八、資料匯出原則
 
 資料匯出需回答：
 
@@ -870,7 +868,7 @@ completion evidence
 
 匯出不是將整個資料庫、Graph、Prompt、Log 或 Agent Trace 打包給申請者。
 
-## 十九、角色別資料匯出範圍
+# 十九、角色別資料匯出範圍
 
 19.1 長者／合法代理人
 
@@ -932,7 +930,7 @@ completion evidence
 
 個人帳號可取得自身帳號、派案、工作紀錄與操作歷史的適當範圍；不能以個人身份下載全部機構長者資料。
 
-## 二十、匯出格式
+# 二十、匯出格式
 
 20.1 Human-Readable Package
 
@@ -1014,7 +1012,7 @@ approvals
 
 delivery_method
 
-## 二十一、Export Request State Machine
+# 二十一、Export Request State Machine
 
 REQUESTED
 
@@ -1064,7 +1062,7 @@ CANCELLED
 
 • 檔案到期後清理 Delivery Copy，不因此刪除正式 Source Record。
 
-## 二十二、安全交付
+# 二十二、安全交付
 
 • 使用加密 S3 Object／Package。
 
@@ -1082,7 +1080,7 @@ CANCELLED
 
 • 匯出檔案與 Staging Artifact 使用短 Retention。
 
-## 二十三、Consent Revocation、Deletion、Export 與 Offboarding 的差異
+# 二十三、Consent Revocation、Deletion、Export 與 Offboarding 的差異
 
 Consent Revocation：停止特定 Purpose 的未來使用與處理；不一定等同立即刪除所有依法需保存資料。
 
@@ -1096,7 +1094,7 @@ Tenant Offboarding：機構停止使用整個服務，需處理帳號、整合�
 
 Legal Hold：在核准範圍內暫停原定刪除，但必須最小化且有 Owner、理由與解除流程。
 
-## 二十四、Tenant Offboarding Lifecycle
+# 二十四、Tenant Offboarding Lifecycle
 
 INITIATED
 
@@ -1144,7 +1142,7 @@ INITIATED
 
 □ 完成成本標籤與資源釋放。
 
-## 二十五、Data Store 處置矩陣
+# 二十五、Data Store 處置矩陣
 
 Aurora PostgreSQL
 
@@ -1194,7 +1192,7 @@ External Provider
 
 • LINE／Email／ASR／TTS／Model／Support Tool 依其資料處理能力確認刪除或到期。
 
-## 二十六、Deletion Workflow 與 Tombstone
+# 二十六、Deletion Workflow 與 Tombstone
 
 26.1 Deletion Request
 
@@ -1272,7 +1270,7 @@ expires_at／retention_basis
 
 只有所有必要 Store 完成或合法例外被核准，Deletion Request 才能 COMPLETED。部分失敗保持 PARTIAL_FAILURE 並進人工處理，不可回覆「已全部刪除」。
 
-## 二十七、Archive、Retention 與 Legal Hold
+# 二十七、Archive、Retention 與 Legal Hold
 
 27.1 Archive
 
@@ -1320,7 +1318,7 @@ release_action
 
 audit evidence
 
-## 二十八、Backup、Snapshot 與刪除關係
+# 二十八、Backup、Snapshot 與刪除關係
 
 • Backup 不是正式查詢來源。
 
@@ -1334,7 +1332,7 @@ audit evidence
 
 • Restore 需產生 restore_id、source_snapshot、policy_version、tombstone_replay_result 與 validation evidence。
 
-## 二十九、Provider／Region／Account 替換
+# 二十九、Provider／Region／Account 替換
 
 29.1 Provider Exit
 
@@ -1380,7 +1378,7 @@ Inventory
 
 不假設可直接轉移所有 AWS Resource。需要明確 Data Export／Import、KMS、DNS、Certificate、Container、IaC State、Secrets、Domain、Audit 與 Billing 交接。
 
-## 三十、系統／產品退場策略
+# 三十、系統／產品退場策略
 
 30.1 退場觸發
 
@@ -1446,7 +1444,7 @@ Phase 6｜Certification and Close
 
 • 確認監控、告警、Pager、Webhook 與外部訂閱也已關閉。
 
-## 三十一、長者與家屬的退場體驗
+# 三十一、長者與家屬的退場體驗
 
 • 用可理解語言說明服務何時停止、哪些功能先停止、資料如何取得與刪除。
 
@@ -1462,7 +1460,7 @@ Phase 6｜Certification and Close
 
 • 不暗示系統停用代表照護關係或機構服務本身終止。
 
-## 三十二、退場 Runbook Catalog
+# 三十二、退場 Runbook Catalog
 
 RB-EXIT-01｜API Major Version Retirement
 
@@ -1496,7 +1494,7 @@ RB-EXIT-15｜Full Product Shutdown
 
 每份 Runbook 需包含 Trigger、Owner、Scope、Prerequisite、Data Inventory、Communication、Commands／Jobs、Validation、Rollback、Evidence、Exit Criteria。
 
-## 三十三、Compatibility／Exit Metrics
+# 三十三、Compatibility／Exit Metrics
 
 • deprecated_client_request_rate。
 
@@ -1550,7 +1548,7 @@ RB-EXIT-15｜Full Product Shutdown
 
 • Provider Exit 後 Secret 仍有效＝0。
 
-## 三十四、Monitoring 與 Alert
+# 三十四、Monitoring 與 Alert
 
 告警：
 
@@ -1586,7 +1584,7 @@ Dashboard 顯示：
 
 • Provider／Model／Region Risk。
 
-## 三十五、Ownership 與批准
+# 三十五、Ownership 與批准
 
 Architecture Owner：API、Event、Schema、Version Policy。
 
@@ -1606,7 +1604,7 @@ Tenant／Care Organization Owner：機構資料交付與最終核准。
 
 高風險退場至少需雙人核准；大量刪除、KMS、Backup Vault Lock、Object Lock、Account Shutdown 不由單一開發者執行。
 
-## 三十六、Hackathon Implementation Profile
+# 三十六、Hackathon Implementation Profile
 
 必做：
 
@@ -1652,7 +1650,7 @@ Tenant／Care Organization Owner：機構資料交付與最終核准。
 
 • Export Link 短效、可撤銷、可稽核。
 
-## 三十七、ADR
+# 三十七、ADR
 
 ADR-16-001｜API 使用 Major Path Version，Minor 採相容演進
 
@@ -1708,7 +1706,7 @@ ADR-16-009｜完整退場流程在設計期定義，實作分階段
 
 原因：符合完整 Target Product 規劃，也避免黑客松過度投入低優先自動化。
 
-## 三十八、待決策
+# 三十八、待決策
 
 1. Production API／Event／Client 的正式支援期限。
 
@@ -1730,7 +1728,7 @@ ADR-16-009｜完整退場流程在設計期定義，實作分階段
 
 10. Full Product Shutdown 的通知期、替代服務與支援責任。
 
-## 三十九、v0.1 完成判定
+# 三十九、v0.1 完成判定
 
 □ API、WebSocket、Event、Schema、Database 相容策略已定義。
 
@@ -1754,7 +1752,7 @@ ADR-16-009｜完整退場流程在設計期定義，實作分階段
 
 □ Runbook、Metric、Alert、Owner、ADR 與 Hackathon Profile 已建立。
 
-## 四十、官方技術參考（檢查日期：2026-07-26）
+# 四十、官方技術參考（檢查日期：2026-07-26）
 
 Amazon Bedrock Model Lifecycle
 
@@ -1772,7 +1770,7 @@ Amazon Aurora Snapshot Export to S3
 
 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-export-snapshot.html
 
-## 四十一、文件集完成狀態
+# 四十一、文件集完成狀態
 
 本文件完成後，智慧長照 AI 陪伴系統的 01～16 與 01A 規劃文件共 17 份已建立。
 

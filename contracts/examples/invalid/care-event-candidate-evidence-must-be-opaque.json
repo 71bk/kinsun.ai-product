@@ -1,0 +1,15 @@
+{
+  "_why_invalid": "evidence_refs must contain only opaque evidence:<UUID> identifiers, never a transcript or other Restricted Data.",
+  "data": {
+    "source_type": "MANUAL",
+    "source_version": 1,
+    "event_type": "MEAL",
+    "structured_payload": {
+      "meal_status": "mentioned"
+    },
+    "evidence_refs": ["這是不得放入 evidence_refs 的完整逐字稿內容"],
+    "confidence_band": "LOW",
+    "review_requirement": "REQUIRED",
+    "extractor_version": "event-extractor-v1"
+  }
+}

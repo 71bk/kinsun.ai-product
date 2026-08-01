@@ -1,0 +1,7 @@
+* text=auto
+
+# 進 Linux container 執行的檔案必須是 LF，否則 bash 會噴 bad interpreter
+*.sh text eol=lf
+docker/**/*.sql text eol=lf
+docker-compose.yml text eol=lf
+services/core-api/alembic/versions/sql/*.sql text eol=lf

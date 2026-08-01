@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "ConsentPurpose": {
+      "enum": [
+        "BASIC_VOICE",
+        "TRANSCRIPT_STORAGE",
+        "CARE_EVENT_EXTRACTION",
+        "LONG_TERM_MEMORY",
+        "COMPANION_SIGNAL_ANALYSIS",
+        "PROACTIVE_COMPANION",
+        "FAMILY_SHARING"
+      ],
+      "title": "ConsentPurpose",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "purposes": {
+      "items": {
+        "$ref": "#/$defs/ConsentPurpose"
+      },
+      "maxItems": 7,
+      "minItems": 1,
+      "title": "Purposes",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "share_scopes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Share Scopes",
+      "type": "array"
+    },
+    "effective_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effective At"
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expires At"
+    },
+    "actor_confirmation": {
+      "title": "Actor Confirmation",
+      "type": "boolean",
+      "const": true
+    },
+    "policy_version": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Policy Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "purposes",
+    "actor_confirmation",
+    "policy_version"
+  ],
+  "title": "CreateConsentRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateConsentRequestV1.json"
+}

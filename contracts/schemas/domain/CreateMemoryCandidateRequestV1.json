@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "MemoryType": {
+      "enum": [
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY"
+      ],
+      "title": "MemoryType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "memory_type": {
+      "$ref": "#/$defs/MemoryType"
+    },
+    "normalized_content": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Normalized Content",
+      "type": "string"
+    },
+    "source_event_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Source Event Ids",
+      "type": "array"
+    },
+    "possible_conflict": {
+      "default": false,
+      "title": "Possible Conflict",
+      "type": "boolean"
+    },
+    "conflict_with_memory_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Conflict With Memory Ids",
+      "type": "array"
+    },
+    "confirmation_question": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Confirmation Question",
+      "type": "string"
+    },
+    "extractor_version": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Extractor Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "memory_type",
+    "normalized_content",
+    "source_event_ids",
+    "confirmation_question",
+    "extractor_version"
+  ],
+  "title": "CreateMemoryCandidateRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateMemoryCandidateRequestV1.json"
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/ErrorEnvelopeV1.json",
+  "title": "ErrorEnvelopeV1",
+  "description": "Standard error response wrapper for every non-2xx Core API and Agent Runtime response. NOTE: this reflects the implemented shape, which differs from document 10 section 4.4 — see contracts/DIVERGENCE.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "$ref": "#/$defs/ErrorBody"
+    }
+  },
+  "$defs": {
+    "ErrorBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "correlation_id", "reason_code", "retryable", "details"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Machine-readable error slug. Lowercase snake_case, derived from the HTTP status.",
+          "enum": [
+            "bad_request",
+            "authentication_required",
+            "forbidden",
+            "not_found",
+            "conflict",
+            "validation_error",
+            "internal_error",
+            "service_unavailable"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message. In production, messages matching internal patterns (stack traces, SQL, file paths) are replaced with a generic string before being returned.",
+          "minLength": 1
+        },
+        "correlation_id": {
+          "type": "string",
+          "description": "Correlation id for support and log lookup.",
+          "minLength": 1
+        },
+        "reason_code": {
+          "description": "Stable reason code. It never includes a rejected sensitive value.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          ]
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Whether an automated retry is safe after backoff."
+        },
+        "details": {
+          "description": "Field-level validation details. Present only for validation_error; null otherwise.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ValidationDetail"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ValidationDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "reason"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Name of the offending field."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the field was rejected. Must not echo the rejected value when that value is Restricted Data."
+        }
+      }
+    }
+  }
+}
