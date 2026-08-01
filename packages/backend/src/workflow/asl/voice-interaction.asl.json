@@ -1,0 +1,158 @@
+{
+  "Comment": "智慧長照 AI 陪伴系統 — 語音互動 Express Workflow. Node config (timeouts/retry/fallback) mirrors packages/backend/src/workflow/nodes.ts VOICE_INTERACTION_NODES; keep both in sync if either changes. Each Task uses ResultPath to accumulate state ($.asrResult, $.contextResult, ...) rather than overwrite it, since every later stage needs elderId/traceId/earlier results. Function ARN placeholders are substituted by infrastructure/lib/elderly-care-stack.ts at synth time.",
+  "StartAt": "TranscribeSpeech",
+  "States": {
+    "TranscribeSpeech": {
+      "Type": "Task",
+      "Resource": "${AsrFunctionArn}",
+      "ResultPath": "$.asrResult",
+      "TimeoutSeconds": 10,
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException", "States.Timeout"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "AsrFallback"
+        }
+      ],
+      "Next": "CheckAsrDegraded"
+    },
+    "AsrFallback": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded": true,
+        "response": "抱歉，我沒聽清楚，請再說一次好嗎？",
+        "strategy": "asr_timeout"
+      },
+      "End": true
+    },
+    "CheckAsrDegraded": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.asrResult.degraded",
+          "BooleanEquals": true,
+          "Next": "AskToRepeat"
+        }
+      ],
+      "Default": "ComposeContext"
+    },
+    "AskToRepeat": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded": true,
+        "response": "不好意思，我沒聽清楚，可以請您再說一次嗎？"
+      },
+      "End": true
+    },
+    "ComposeContext": {
+      "Type": "Task",
+      "Resource": "${ContextFunctionArn}",
+      "ResultPath": "$.contextResult",
+      "TimeoutSeconds": 5,
+      "Retry": [{ "ErrorEquals": ["States.ALL"], "IntervalSeconds": 0, "MaxAttempts": 1, "BackoffRate": 1 }],
+      "Catch": [{ "ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "GenerateReply" }],
+      "Next": "GenerateReply"
+    },
+    "GenerateReply": {
+      "Type": "Task",
+      "Resource": "${LlmFunctionArn}",
+      "ResultPath": "$.llmResult",
+      "TimeoutSeconds": 15,
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.TooManyRequestsException", "States.Timeout"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "LlmFallback"
+        }
+      ],
+      "Next": "GuardrailCheck"
+    },
+    "LlmFallback": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded": true,
+        "response": "系統正在忙碌，請等我一下再跟我說話喔"
+      },
+      "End": true
+    },
+    "GuardrailCheck": {
+      "Type": "Task",
+      "Resource": "${GuardrailFunctionArn}",
+      "ResultPath": "$.guardrailResult",
+      "TimeoutSeconds": 3,
+      "Retry": [{ "ErrorEquals": ["States.ALL"], "IntervalSeconds": 0, "MaxAttempts": 1, "BackoffRate": 1 }],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "GuardrailFallback"
+        }
+      ],
+      "Next": "SynthesizeSpeech"
+    },
+    "GuardrailFallback": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded": true,
+        "response": "這個問題建議您諮詢醫師"
+      },
+      "End": true
+    },
+    "SynthesizeSpeech": {
+      "Type": "Task",
+      "Resource": "${TtsFunctionArn}",
+      "ResultPath": "$.ttsResult",
+      "TimeoutSeconds": 10,
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "States.Timeout"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "TtsFallbackToText"
+        }
+      ],
+      "Next": "Respond"
+    },
+    "TtsFallbackToText": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded": true,
+        "response.$": "$.llmResult.replyText"
+      },
+      "End": true
+    },
+    "Respond": {
+      "Type": "Pass",
+      "Parameters": {
+        "degraded.$": "$.ttsResult.degraded",
+        "response.$": "$.ttsResult.response",
+        "audioUrl.$": "$.ttsResult.audioUrl",
+        "transcript.$": "$.asrResult.text"
+      },
+      "End": true
+    }
+  }
+}

@@ -1,0 +1,3635 @@
+{
+  "sourceFile": "16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.docx",
+  "type": "docx",
+  "convertedAt": "2026-07-30T13:54:16.819Z",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "文件資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "版本：v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Draft｜完整 Target Product 的版本治理、資料可攜、Tenant Offboarding 與產品退場基準，待法務、合作機構、安全與正式保存期限核准"
+    },
+    {
+      "type": "paragraph",
+      "text": "建立日期：2026-07-26"
+    },
+    {
+      "type": "paragraph",
+      "text": "文件 Owner：Architecture／Data Governance／Platform Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "審查者：五人團隊"
+    },
+    {
+      "type": "paragraph",
+      "text": "適用範圍：Python Core API、Web／PWA、REST／WebSocket、Domain Event、Agent、Prompt、Model、ASR／TTS、RAG、Graph、Aurora PostgreSQL、S3、OpenSearch、Neptune、通知、Tenant、長者、家屬與營運資料"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "相關文件"
+    },
+    {
+      "type": "paragraph",
+      "text": "06｜Domain Model、商業規則與資料生命週期 v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1B4dyCdiuAR7eR15cOgoQRZGsitcJN27Brgil58D4-J8/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "07｜Security、Privacy、NFR 與 Threat Model v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "08｜AWS 系統架構、服務選型與 ADR v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "09｜Multi-Agent、Agentic Workflow 與 Context Engineering v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "10｜API、Event、Tool 與 Data Contracts v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1s2iM5Yue8WdpVa04DmQm-F_jTkHrPVaSW5ZaFFXD1bA/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "13｜Database Migration、Release 與 Rollback v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1UC7AmwYJY8fWxgF-69yKqoplRD519KfvjMz2ck16jOU/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "14｜Observability、營運與 Incident Response v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1SUefwxwKMOQx4tH3avyrFq-DFlkzWpIpgBV3mKw5JiY/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "15｜成功指標、Feedback、實驗與迭代 v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/edit"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "法律與治理聲明"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件是產品與技術治理基準，不構成台灣醫療、長照、個資、勞動、契約或稅務法律意見。正式保存、匯出、刪除、法律保留與機構退場，需由法務、資安、照護專業與合作機構依實際資料類型及契約核准。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "一、文件目的"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件處理系統最容易在後期被忽略的四類問題："
+    },
+    {
+      "type": "paragraph",
+      "text": "1. 新版本如何不破壞舊 App、舊 Event、舊 Agent、舊資料與外部整合？"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. API、模型、Prompt、ASR、TTS、RAG、Graph 或 AWS 服務需要替換時，如何有時間窗與遷移路徑？"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. 長者、家屬或照護機構要求匯出、撤回同意、終止服務或刪除資料時，如何安全完成？"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 團隊、供應商、Region、模型或整個產品停止服務時，如何保留必要證據並避免資料遺留？"
+    },
+    {
+      "type": "paragraph",
+      "text": "核心目標不是永遠保留所有舊版本，而是讓每次改變都具備："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 明確 Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 支援期限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 相容性分類。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Migration Path。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 可驗證的停止條件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 可追蹤的資料處置結果。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二、治理原則"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Compatibility Is a Product Feature：相容性不是只由 Backend 負責，會影響長者裝置、照護工作流、家屬連結與外部通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Source of Truth First：Aurora 正式資料與版本紀錄優先；Graph、Search、Cache、Agent Memory 為可重建投影或工作記憶。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Add Before Remove：先新增欄位、版本、Consumer 或 Provider，再遷移流量，最後移除舊路徑。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Consumer Before Producer：事件新增或破壞性變更前，先讓 Consumer 能理解新舊格式。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Explicit Deprecation：不使用「某天突然失效」的隱性退場。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• No Silent Meaning Change：同一欄位、狀態、Event Type、Tool 或 Prompt Version 不可在不改版本下改變語意。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export Is Not Database Dump：匯出需依角色、目的、資料分類與可理解格式設計。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Deletion Is a Workflow：刪除涵蓋交易資料、S3、Graph、Index、Cache、Secure Link、通知、Eval Dataset 與衍生投影。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Revocation Overrides Retry：同意撤回、分享失效與刪除 Tombstone 優先於 Queue Retry、DLQ Replay、Scheduler 與 Backfill。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Evidence Before Destruction：正式刪除前保存合法且最小的稽核證據，不保留已要求刪除的實質內容。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Portability Without Leakage：資料可攜不能導致其他長者、內部 Prompt、照護者私密筆記或系統 Secret 外洩。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Complete Planning, Phased Execution：完整定義退場能力；黑客松只實作關鍵合約與一條可演示流程。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三、相容性分類"
+    },
+    {
+      "type": "paragraph",
+      "text": "3.1 相容變更"
+    },
+    {
+      "type": "paragraph",
+      "text": "通常可在同一 Major Version 中發布："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Optional Request Field。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Response Field，Client 可忽略未知欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Event Type。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Event Payload Optional Field。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Enum 值且 Consumer 有 UNKNOWN／default 處理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Tool，不改既有 Tool 語意。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Prompt／Model Route Version 並保留舊版。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Graph Edge／Node Type，舊 Query 不受影響。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3.2 條件相容"
+    },
+    {
+      "type": "paragraph",
+      "text": "需先驗證 Client／Consumer 能力："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 欄位由 Optional 變成實際業務必要，但仍接受舊 Client 缺省。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Enum 新值可能改變 UI 或流程。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 回應排序或分頁規則改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR 信心分數尺度改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Prompt 產出風格改變但 Schema 不變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• RAG Ranking 或 Graph Query Planner 改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 模型替換造成語言、Latency 或 Tool Calling 差異。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3.3 不相容變更"
+    },
+    {
+      "type": "paragraph",
+      "text": "必須新 Major Version 或雙寫／雙讀遷移："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 移除或重新命名必填欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 欄位型別、單位或語意改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event Type 重用不同意義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• State Machine 合法轉移改變且舊資料無法解讀。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Tool Input／Output Schema 破壞性變更。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Actor、tenant_id、elder_id、assignment_id、consent_version 等安全欄位被移除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬可見範圍改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 記憶確認、事件覆核或報表發布 Gate 被改寫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export 格式不再可讀或欄位消失。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四、版本識別標準"
+    },
+    {
+      "type": "paragraph",
+      "text": "所有可部署或可交換元件需可識別版本："
+    },
+    {
+      "type": "paragraph",
+      "text": "app_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "api_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "event_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "database_migration_head"
+    },
+    {
+      "type": "paragraph",
+      "text": "agent_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "prompt_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "model_route_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "model_id／inference_profile"
+    },
+    {
+      "type": "paragraph",
+      "text": "policy_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "guardrail_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "tool_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "context_manifest_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "asr_route_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "asr_model_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "tts_route_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "tts_voice_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "rag_corpus_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "chunk_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "embedding_model_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "search_index_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "graph_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "graph_projection_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "export_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "release_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "禁止只記錄「latest」。正式資料、Event、Agent Trace、Report、Export Manifest 與 Incident 都需能回查實際版本。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "五、REST API 相容策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "5.1 路徑版本"
+    },
+    {
+      "type": "paragraph",
+      "text": "公開與前端 API 採 Major Version 路徑："
+    },
+    {
+      "type": "paragraph",
+      "text": "/api/v1/..."
+    },
+    {
+      "type": "paragraph",
+      "text": "/api/v2/..."
+    },
+    {
+      "type": "paragraph",
+      "text": "Minor／Patch 變更透過相容欄位、Header 或行為修正完成。重大語意、權限、State 或 Schema 變更建立新 Major Version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5.2 Client Capability"
+    },
+    {
+      "type": "paragraph",
+      "text": "Client Request 可傳："
+    },
+    {
+      "type": "paragraph",
+      "text": "X-Client-Version"
+    },
+    {
+      "type": "paragraph",
+      "text": "X-Platform"
+    },
+    {
+      "type": "paragraph",
+      "text": "X-Capabilities"
+    },
+    {
+      "type": "paragraph",
+      "text": "Accept-Language"
+    },
+    {
+      "type": "paragraph",
+      "text": "X-Contract-Version"
+    },
+    {
+      "type": "paragraph",
+      "text": "Server 不信任 Client 傳入 actor、tenant、elder 或 assignment scope；仍由 Token、Relationship、Assignment、Consent 與 Core ABAC 推導。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5.3 Response 規則"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Client 必須忽略未知欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Server 不隨意移除已發布欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Null、缺省與空集合語意明確區分。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 日期時間使用 ISO-8601 與時區規則。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Money／Duration／Confidence 等單位不可靜默變更。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Error Code 保持穩定；safe_message 可改善但不可用於程式邏輯。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Pagination Cursor 不承諾可被 Client 解碼。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5.4 API Support Window"
+    },
+    {
+      "type": "paragraph",
+      "text": "v0.1 候選："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Production Major API 至少支援目前版與前一個 Major Version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 重大安全缺陷可縮短支援窗，但需提供緊急通知與升級路徑。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Hackathon／Demo API 不承諾長期支援，但需標記 demo_only 與移除日期。"
+    },
+    {
+      "type": "paragraph",
+      "text": "正式天數待 Pilot 裝置更新能力與合作機構契約確認。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "六、WebSocket／Voice Protocol 相容策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "• connect／session.start 先交換 protocol_version 與 capability。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Server Event 有 event_type＋event_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Event 不應使舊 Client 中斷；舊 Client可忽略非必要事件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• audio format、sample rate、codec 與 chunk sequencing 明確版本化。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• asr.partial、asr.final、low_confidence.required、response.text.delta、tts.ready、session.completed 的必要欄位不可靜默改語意。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Server 不向舊 Client 發送其無法理解且會影響安全的流程；必要時要求升級。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Resume Token 有版本、TTL、session_id 與 scope，不跨 Major Protocol 使用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不在 WebSocket Message 暴露內部 Agent Trace、Prompt、其他長者 Context 或 Provider Secret。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "七、Domain Event 相容策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "7.1 Event Envelope 穩定欄位"
+    },
+    {
+      "type": "paragraph",
+      "text": "至少保留："
+    },
+    {
+      "type": "paragraph",
+      "text": "event_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "event_type"
+    },
+    {
+      "type": "paragraph",
+      "text": "event_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "occurred_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "producer"
+    },
+    {
+      "type": "paragraph",
+      "text": "aggregate_type"
+    },
+    {
+      "type": "paragraph",
+      "text": "aggregate_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "aggregate_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "tenant_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "elder_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "trace_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "workflow_instance_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "correlation_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "causation_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "consent_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "policy_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "data_classification"
+    },
+    {
+      "type": "paragraph",
+      "text": "payload"
+    },
+    {
+      "type": "paragraph",
+      "text": "7.2 演進規則"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event 已發布即視為不可變歷史契約。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 同一 event_type 的破壞性 Payload 變更提高 event_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Consumer 先支援新舊版本，Producer 才切換。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 無法處理的版本進 Quarantine／DLQ，不可默默忽略正式狀態事件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Replay 時以原始 event_version 解讀，不用最新 Schema 強行覆蓋。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event Upcaster／Translator 需純函式、可測試、有版本與失敗處理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 大型或 Restricted Payload 使用安全 Pointer，不將完整語音、逐字稿或報表塞入 Event Bus。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7.3 Event Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "停用 Event 前需確認："
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 無 Producer。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 無 Active Consumer。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 無 Scheduled Replay／Backfill。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Audit 與歷史重播仍可解讀。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Replacement Event 已文件化。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Dashboard／Alarm／Runbook 已更新。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "八、JSON Schema、OpenAPI 與 AsyncAPI"
+    },
+    {
+      "type": "paragraph",
+      "text": "• OpenAPI 3.1 描述 REST API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AsyncAPI 描述 Event 與 WebSocket Channel。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• JSON Schema 為 Agent Handoff、Tool、Candidate、Export Manifest 與 Domain Event 的機器可驗證契約。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Schema 存於 Repository，具 Owner、status、version、compatibility test。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• CI 檢查欄位移除、型別改變、required 變化、Enum 破壞與範例有效性。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Runtime 仍執行 Schema Validation，不能只依文件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Schema 狀態："
+    },
+    {
+      "type": "paragraph",
+      "text": "DRAFT"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ REVIEW"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ PUBLISHED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DEPRECATED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ RETIRED"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "九、Database Schema 相容策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "依 13 文件採 Expand → Migrate → Contract："
+    },
+    {
+      "type": "paragraph",
+      "text": "1. Expand：新增欄位／表／Index，不立即刪舊欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. Dual Read／Write：必要時同時維護舊新表示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. Backfill：可重跑、具 Checkpoint、Idempotency 與 Data Validation。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. Switch Read：Feature Flag／Release 切到新欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. Observe：確認 Error、Lag、資料一致與 Rollback Window。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. Contract：確認無舊 Client／Job／Query 後才移除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Database Rollback 不等同把 Migration 反向執行。已寫入正式資料的破壞性變更優先 Roll Forward、Data Repair 或 Snapshot Restore。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十、Agent、Prompt 與 Tool 相容策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "10.1 Agent Contract"
+    },
+    {
+      "type": "paragraph",
+      "text": "Agent 版本至少綁定："
+    },
+    {
+      "type": "paragraph",
+      "text": "• input_schema_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• output_schema_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• allowed_tools。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• max_steps。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• risk policy。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• context_manifest_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• prompt_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• model_route_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10.2 Prompt"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Prompt 以不可變 Version 發布，不覆蓋已發布版本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修改 System Policy、Output Schema、Tool 說明或安全邊界需新 Version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 舊 Prompt 保留至 Active Session、Replay、Incident 與回歸驗證不再需要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Prompt Deprecation 需替代版本、Dataset 結果、已知差異與 Rollback。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10.3 Tool"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Tool 名稱＋Major Version 為穩定識別，例如 get_verified_events.v1。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 破壞性 Input／Output 改變建立 v2，不重用 v1。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 高風險 Tool 仍由 Python Core API 重做 Authorization、Consent、State 與 Idempotency。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Tool Retirement 前確認無 Prompt、Agent、Workflow、Eval Dataset 或 Runbook 引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10.4 Agent Session"
+    },
+    {
+      "type": "paragraph",
+      "text": "已開始 Session 預設固定 Agent／Prompt／Model Route Bundle。除安全緊急切換外，不在同一 Session 中途切換造成語意不一致。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十一、Model Lifecycle 與替換"
+    },
+    {
+      "type": "paragraph",
+      "text": "Amazon Bedrock 模型可能處於 Active、Legacy 或 End-of-Life 狀態；系統需定期讀取模型生命週期與官方通知，不把模型 ID 永久硬編碼。"
+    },
+    {
+      "type": "paragraph",
+      "text": "11.1 Model Registry"
+    },
+    {
+      "type": "paragraph",
+      "text": "model_alias"
+    },
+    {
+      "type": "paragraph",
+      "text": "provider"
+    },
+    {
+      "type": "paragraph",
+      "text": "model_id／inference_profile"
+    },
+    {
+      "type": "paragraph",
+      "text": "lifecycle_status"
+    },
+    {
+      "type": "paragraph",
+      "text": "region"
+    },
+    {
+      "type": "paragraph",
+      "text": "capabilities"
+    },
+    {
+      "type": "paragraph",
+      "text": "context_window"
+    },
+    {
+      "type": "paragraph",
+      "text": "tool_use_support"
+    },
+    {
+      "type": "paragraph",
+      "text": "languages"
+    },
+    {
+      "type": "paragraph",
+      "text": "risk_approval"
+    },
+    {
+      "type": "paragraph",
+      "text": "prompt_compatibility"
+    },
+    {
+      "type": "paragraph",
+      "text": "embedding_dimension（如適用）"
+    },
+    {
+      "type": "paragraph",
+      "text": "activated_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "deprecation_notice_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "last_supported_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "fallback_model"
+    },
+    {
+      "type": "paragraph",
+      "text": "owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "11.2 替換流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "Discover Notice"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Assess Capability／Region／Cost／Risk"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Offline Regression"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Shadow"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Synthetic Canary"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Limited Tenant Rollout"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Compare Quality／Safety／Latency／Cost"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Switch Alias"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Monitor"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Retire Old Model"
+    },
+    {
+      "type": "paragraph",
+      "text": "11.3 不可直接替換的情況"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Embedding 維度或語意空間改變。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Tool Calling Schema／格式不同。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 語言或臺語／混語品質下降。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Safety／Guardrail 行為不一致。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長期 Report、Memory 或 Event 需要版本重現。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Embedding Model 替換需建立新 Index／Collection、重新向量化、Alias 切換與 Retrieval Eval，不在原 Index 混合不同向量空間。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十二、ASR／TTS 相容與退場"
+    },
+    {
+      "type": "paragraph",
+      "text": "12.1 Speech Router"
+    },
+    {
+      "type": "paragraph",
+      "text": "外部介面使用穩定 Speech Contract，Provider 細節藏在 Router 後："
+    },
+    {
+      "type": "paragraph",
+      "text": "language"
+    },
+    {
+      "type": "paragraph",
+      "text": "locale"
+    },
+    {
+      "type": "paragraph",
+      "text": "audio_format"
+    },
+    {
+      "type": "paragraph",
+      "text": "sample_rate"
+    },
+    {
+      "type": "paragraph",
+      "text": "channel_count"
+    },
+    {
+      "type": "paragraph",
+      "text": "confidence_band"
+    },
+    {
+      "type": "paragraph",
+      "text": "transcript_segments"
+    },
+    {
+      "type": "paragraph",
+      "text": "provider_route"
+    },
+    {
+      "type": "paragraph",
+      "text": "model_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "fallback_reason"
+    },
+    {
+      "type": "paragraph",
+      "text": "12.2 ASR 替換"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Managed zh-TW、Custom ASR、臺語／客語模型分開評估。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 比較 CER／WER、Key Entity、False High Confidence、Latency 與長者任務完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Confidence 分數不可跨模型直接比較，需校準成統一 Band 或 Model-specific Threshold。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 轉換期間保存 route_version 與 model_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Provider 失效可降級為替代 ASR、重新錄音或文字輸入，不冒充辨識成功。"
+    },
+    {
+      "type": "paragraph",
+      "text": "12.3 TTS 替換"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Voice ID、語速、語言、發音字典與輸出格式版本化。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 替換需做長者可理解度與專有名詞測試。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• TTS 失敗可顯示文字；不可因切換 Provider 產生未授權的聲音複製或人格誤導。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十三、RAG、Search 與 Knowledge Corpus 演進"
+    },
+    {
+      "type": "paragraph",
+      "text": "13.1 Corpus Version"
+    },
+    {
+      "type": "paragraph",
+      "text": "每次 Ingestion 保存："
+    },
+    {
+      "type": "paragraph",
+      "text": "corpus_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "source_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "source_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "publish_agency"
+    },
+    {
+      "type": "paragraph",
+      "text": "effective_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "review_status"
+    },
+    {
+      "type": "paragraph",
+      "text": "chunk_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "embedding_model_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "index_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "ingested_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "13.2 Chunk／Metadata 變更"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新 Chunk 規則建立新 corpus_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不覆寫舊 Chunk 而無來源對照。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Metadata 欄位改變需 Backfill 與 Filter Regression。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• review_status、effective_date、persona_restriction、risk_level 等安全篩選不可在遷移期間缺失。"
+    },
+    {
+      "type": "paragraph",
+      "text": "13.3 Search Index Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "Build New Index"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Backfill"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Compare Counts／Sample／Metadata"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Retrieval Eval"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Shadow Query"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Alias Switch"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Observe"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Retain Rollback Window"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Delete Old Index"
+    },
+    {
+      "type": "paragraph",
+      "text": "正式 ID、Consent、Assignment 與報表狀態仍以 Aurora 為準，不因 Search Index 退場而遺失正式資料。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十四、Graph Schema 與 Projection 演進"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Neptune 為已確認關係／記憶／事件的 Projection，不是授權或正式事實來源。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Node Label、Edge Type、Property 與 source_version 版本化。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新 Edge 可先雙寫；Query Planner 支援新舊 Graph Schema。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ACTIVE、CONFIRMED、VERIFIED 狀態條件不可在遷移期間放寬。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 刪除、撤回或停用先在 Core Permission Gate 阻擋，再非同步清理 Graph。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph 重建使用 Aurora＋Outbox／Projection Record，不從舊 Graph 猜正式事實。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph Schema Retirement 前確認 Query、Agent、Eval Dataset 與 Dashboard 已切換。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十五、Feature Flag Lifecycle"
+    },
+    {
+      "type": "paragraph",
+      "text": "Feature Flag 狀態："
+    },
+    {
+      "type": "paragraph",
+      "text": "PROPOSED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DEVELOPMENT"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ INTERNAL"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ PILOT"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ GENERAL"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DEPRECATION_PLANNED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DISABLED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ REMOVED"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個 Flag 需："
+    },
+    {
+      "type": "paragraph",
+      "text": "flag_key"
+    },
+    {
+      "type": "paragraph",
+      "text": "owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "purpose"
+    },
+    {
+      "type": "paragraph",
+      "text": "scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "default_value"
+    },
+    {
+      "type": "paragraph",
+      "text": "created_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "expiry_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "risk_level"
+    },
+    {
+      "type": "paragraph",
+      "text": "kill_switch"
+    },
+    {
+      "type": "paragraph",
+      "text": "linked_experiment"
+    },
+    {
+      "type": "paragraph",
+      "text": "linked_release"
+    },
+    {
+      "type": "paragraph",
+      "text": "removal_issue"
+    },
+    {
+      "type": "paragraph",
+      "text": "規則："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 安全 Gate、Consent、Authorization 不得永久依賴臨時 Flag。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• General Release 後移除不再需要的分支。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 到期 Flag 在 CI／Dashboard 告警。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Flag Disabled 不代表程式碼已移除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 沒有 Owner、Expiry、Migration Path 的 Flag 不得進 Production。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十六、Deprecation Lifecycle"
+    },
+    {
+      "type": "paragraph",
+      "text": "16.1 狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "ACTIVE"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DEPRECATION_PLANNED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ NOTICE_PUBLISHED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ MIGRATION_AVAILABLE"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ USAGE_BLOCKED_FOR_NEW_CLIENTS"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ END_OF_SUPPORT"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ RETIRED"
+    },
+    {
+      "type": "paragraph",
+      "text": "16.2 Deprecation Notice 必要內容"
+    },
+    {
+      "type": "paragraph",
+      "text": "deprecation_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "component_type"
+    },
+    {
+      "type": "paragraph",
+      "text": "component_name"
+    },
+    {
+      "type": "paragraph",
+      "text": "current_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "replacement"
+    },
+    {
+      "type": "paragraph",
+      "text": "reason"
+    },
+    {
+      "type": "paragraph",
+      "text": "notice_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "new_client_block_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "end_of_support_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "retirement_date"
+    },
+    {
+      "type": "paragraph",
+      "text": "affected_personas／tenants"
+    },
+    {
+      "type": "paragraph",
+      "text": "breaking_changes"
+    },
+    {
+      "type": "paragraph",
+      "text": "migration_steps"
+    },
+    {
+      "type": "paragraph",
+      "text": "test_plan"
+    },
+    {
+      "type": "paragraph",
+      "text": "rollback_window"
+    },
+    {
+      "type": "paragraph",
+      "text": "support_contact"
+    },
+    {
+      "type": "paragraph",
+      "text": "owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "status"
+    },
+    {
+      "type": "paragraph",
+      "text": "16.3 通知對象"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 開發團隊：Repository、ADR、Release Notes、CI Warning。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護機構管理者：管理介面、Email、正式公告。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 專業照護者：只通知會影響工作流程或裝置的改動。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬：只通知 App、登入、Secure Link、報表或通知偏好的改動。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者：以可理解方式說明裝置、語音、記憶或主動陪伴的重要改變，不用技術術語。"
+    },
+    {
+      "type": "paragraph",
+      "text": "16.4 緊急退場"
+    },
+    {
+      "type": "paragraph",
+      "text": "安全漏洞、資料洩漏、Provider 禁用或法規要求可縮短通知期，但仍需："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Incident／Decision Record。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 受影響範圍。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 替代路徑或明確不可用訊息。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Data Handling。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 後續通知與支援。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十七、Migration Plan 標準"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個 Migration Plan 包含："
+    },
+    {
+      "type": "paragraph",
+      "text": "source_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "target_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "inventory"
+    },
+    {
+      "type": "paragraph",
+      "text": "preconditions"
+    },
+    {
+      "type": "paragraph",
+      "text": "data_mapping"
+    },
+    {
+      "type": "paragraph",
+      "text": "schema mapping"
+    },
+    {
+      "type": "paragraph",
+      "text": "backfill strategy"
+    },
+    {
+      "type": "paragraph",
+      "text": "dual read／write period"
+    },
+    {
+      "type": "paragraph",
+      "text": "validation queries"
+    },
+    {
+      "type": "paragraph",
+      "text": "sample comparison"
+    },
+    {
+      "type": "paragraph",
+      "text": "performance impact"
+    },
+    {
+      "type": "paragraph",
+      "text": "security／privacy impact"
+    },
+    {
+      "type": "paragraph",
+      "text": "rollback／roll forward"
+    },
+    {
+      "type": "paragraph",
+      "text": "communication"
+    },
+    {
+      "type": "paragraph",
+      "text": "owner／backup"
+    },
+    {
+      "type": "paragraph",
+      "text": "start／end"
+    },
+    {
+      "type": "paragraph",
+      "text": "completion evidence"
+    },
+    {
+      "type": "paragraph",
+      "text": "完成條件不能只看程式部署成功，還需："
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Active Client／Consumer 已切換。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 資料數量、關聯、版本與狀態一致。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Authorization／Consent／Cross-Elder Negative Test 通過。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Queue、DLQ、Projection Lag 受控。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Export 與 Audit 仍可讀。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 舊路徑無流量或有明確例外。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十八、資料匯出原則"
+    },
+    {
+      "type": "paragraph",
+      "text": "資料匯出需回答："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 誰提出？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 代表哪位長者或哪個 Tenant？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 有何法律／契約／產品目的？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 能匯出哪些資料類型？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 是否包含第三人或專業照護者資訊？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 誰核准與如何安全交付？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 匯出後檔案保存多久？"
+    },
+    {
+      "type": "paragraph",
+      "text": "匯出不是將整個資料庫、Graph、Prompt、Log 或 Agent Trace 打包給申請者。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十九、角色別資料匯出範圍"
+    },
+    {
+      "type": "paragraph",
+      "text": "19.1 長者／合法代理人"
+    },
+    {
+      "type": "paragraph",
+      "text": "候選可匯出："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 基本個人資料與偏好。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Consent 歷史與目前狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 本人確認的長期記憶。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 可向本人提供的互動紀錄或摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Verified 且依政策可提供的事件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 已發布給本人的報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 資料來源、版本與更正紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "預設排除或需額外審查："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 其他長者資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 專業照護者私人／內部工作筆記。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 系統 Prompt、Model Chain-of-Thought、Secret、內部安全規則。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未確認 Memory Candidate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未覆核 Event Candidate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Draft Family Report。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 其他人的身份與聯絡資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "19.2 家屬"
+    },
+    {
+      "type": "paragraph",
+      "text": "只匯出該家屬在有效 Family Share Scope 下可見的 PUBLISHED Report、Important Event History、通知偏好與存取紀錄摘要。不得因家屬提出匯出而取得完整逐字稿、內部照護筆記、未覆核事件、未確認記憶、照護任務或其他家屬資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "19.3 日照中心／居服機構"
+    },
+    {
+      "type": "paragraph",
+      "text": "依 Tenant、契約、角色與資料控制責任匯出："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Elder Profile／Consent 狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Care Assignment／Service Record。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Verified Event／Summary。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Family Report 與 Publication Record。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Care Action。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 必要 Audit／Access／Change History。"
+    },
+    {
+      "type": "paragraph",
+      "text": "跨 Tenant、跨機構或超出 Assignment Scope 的資料不得混入。"
+    },
+    {
+      "type": "paragraph",
+      "text": "19.4 照服員／居服員"
+    },
+    {
+      "type": "paragraph",
+      "text": "個人帳號可取得自身帳號、派案、工作紀錄與操作歷史的適當範圍；不能以個人身份下載全部機構長者資料。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十、匯出格式"
+    },
+    {
+      "type": "paragraph",
+      "text": "20.1 Human-Readable Package"
+    },
+    {
+      "type": "paragraph",
+      "text": "README.pdf／html"
+    },
+    {
+      "type": "paragraph",
+      "text": "profile.json"
+    },
+    {
+      "type": "paragraph",
+      "text": "consents.csv／json"
+    },
+    {
+      "type": "paragraph",
+      "text": "verified_events.csv／json"
+    },
+    {
+      "type": "paragraph",
+      "text": "confirmed_memories.csv／json"
+    },
+    {
+      "type": "paragraph",
+      "text": "summaries.pdf／json"
+    },
+    {
+      "type": "paragraph",
+      "text": "published_reports.pdf／json"
+    },
+    {
+      "type": "paragraph",
+      "text": "assignments_and_service_records.csv／json（依角色）"
+    },
+    {
+      "type": "paragraph",
+      "text": "audit_summary.csv"
+    },
+    {
+      "type": "paragraph",
+      "text": "manifest.json"
+    },
+    {
+      "type": "paragraph",
+      "text": "checksums.txt"
+    },
+    {
+      "type": "paragraph",
+      "text": "20.2 Machine-Readable"
+    },
+    {
+      "type": "paragraph",
+      "text": "• UTF-8 JSON／JSONL。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• CSV 有欄位說明與時區。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ISO-8601 日期時間。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ID 使用穩定 Export ID 或受控 Pseudonym。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Enum、狀態與版本附 Data Dictionary。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 大型 Binary 以加密檔案與 Manifest Pointer 提供。"
+    },
+    {
+      "type": "paragraph",
+      "text": "20.3 Manifest"
+    },
+    {
+      "type": "paragraph",
+      "text": "export_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "request_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "requested_by"
+    },
+    {
+      "type": "paragraph",
+      "text": "subject_scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "tenant_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "elder_scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "legal／product purpose"
+    },
+    {
+      "type": "paragraph",
+      "text": "export_schema_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "created_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "expires_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "included_datasets"
+    },
+    {
+      "type": "paragraph",
+      "text": "excluded_datasets_and_reasons"
+    },
+    {
+      "type": "paragraph",
+      "text": "record_counts"
+    },
+    {
+      "type": "paragraph",
+      "text": "time_range"
+    },
+    {
+      "type": "paragraph",
+      "text": "source_versions"
+    },
+    {
+      "type": "paragraph",
+      "text": "file_list"
+    },
+    {
+      "type": "paragraph",
+      "text": "checksums"
+    },
+    {
+      "type": "paragraph",
+      "text": "encryption_method"
+    },
+    {
+      "type": "paragraph",
+      "text": "approvals"
+    },
+    {
+      "type": "paragraph",
+      "text": "delivery_method"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十一、Export Request State Machine"
+    },
+    {
+      "type": "paragraph",
+      "text": "REQUESTED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ IDENTITY_VERIFICATION"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ SCOPE_REVIEW"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ THIRD_PARTY_REDACTION"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ APPROVED／REJECTED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ GENERATING"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ VALIDATING"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ READY_FOR_SECURE_DELIVERY"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ DELIVERED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ EXPIRED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ PURGED"
+    },
+    {
+      "type": "paragraph",
+      "text": "替代狀態："
+    },
+    {
+      "type": "paragraph",
+      "text": "NEEDS_MORE_INFORMATION"
+    },
+    {
+      "type": "paragraph",
+      "text": "LEGAL_HOLD_REVIEW"
+    },
+    {
+      "type": "paragraph",
+      "text": "PARTIAL_EXPORT_WITH_REASON"
+    },
+    {
+      "type": "paragraph",
+      "text": "FAILED_RETRYABLE"
+    },
+    {
+      "type": "paragraph",
+      "text": "FAILED_MANUAL_REVIEW"
+    },
+    {
+      "type": "paragraph",
+      "text": "CANCELLED"
+    },
+    {
+      "type": "paragraph",
+      "text": "規則："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Requester 身份與代理關係由 Server 驗證。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 匯出建立時再次檢查 Consent、Family Share、Assignment 與 Tenant Scope。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Generator 使用 Snapshot／一致性時間點，避免檔案間互相矛盾。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 生成後自動做 Cross-Elder、Record Count、Schema、Checksum 與 Restricted Field Scan。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 檔案到期後清理 Delivery Copy，不因此刪除正式 Source Record。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十二、安全交付"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 使用加密 S3 Object／Package。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Secure Download Link 短期有效、單一 Export、可撤銷、需再驗證身份。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Token 不放 Log、Email 主旨或可重用 URL 參數中。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 大型或高敏感 Export 不直接寄 Email Attachment。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 可採另一通道提供解密資訊。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每次下載記錄 requester、時間、IP／device risk、result 與 export_id。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 超過下載次數、期限、關係失效或 Tenant Offboarding 後 Link 失效。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 匯出檔案與 Staging Artifact 使用短 Retention。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十三、Consent Revocation、Deletion、Export 與 Offboarding 的差異"
+    },
+    {
+      "type": "paragraph",
+      "text": "Consent Revocation：停止特定 Purpose 的未來使用與處理；不一定等同立即刪除所有依法需保存資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Deletion Request：要求刪除符合範圍的資料與衍生投影，需追蹤各 Store 完成狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Export Request：提供可攜副本，不改變正式資料狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Family Share Revocation：停止家屬未來報表與通知，撤銷 Secure Link；不自動刪除機構正式紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Tenant Offboarding：機構停止使用整個服務，需處理帳號、整合、資料交付、保存、刪除、Billing 與證據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Legal Hold：在核准範圍內暫停原定刪除，但必須最小化且有 Owner、理由與解除流程。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十四、Tenant Offboarding Lifecycle"
+    },
+    {
+      "type": "paragraph",
+      "text": "INITIATED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ CONTRACT／LEGAL REVIEW"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ INVENTORY_FROZEN"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ NEW_DATA_DISABLED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ EXPORT_SCOPE_APPROVED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ EXPORT_DELIVERED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ ACCESS_REVOKED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ INTEGRATIONS_DISABLED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ RETENTION／DELETION_JOBS"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ VALIDATION"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ CERTIFICATE_ISSUED"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ CLOSED"
+    },
+    {
+      "type": "paragraph",
+      "text": "24.1 Offboarding Checklist"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 確認 Tenant、Care Unit、Elder、Family Share、User、Device 與 Integration Inventory。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 停止新增長者、派案、報表、通知與主動陪伴。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 取消 Scheduler、Webhook、API Client、Secrets 與 Service Account。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 完成約定資料匯出。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 撤銷 Cognito／Session／Secure Link／Refresh Token。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 停止 LINE／Email／第三方通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 處理 Aurora、S3、Graph、Index、Cache、Agent Memory、Eval Dataset、Analytics。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 保存必要 Audit、Invoice、Contract 與 Deletion Certificate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 驗證無跨 Tenant 殘留或共享資源引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 完成成本標籤與資源釋放。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十五、Data Store 處置矩陣"
+    },
+    {
+      "type": "paragraph",
+      "text": "Aurora PostgreSQL"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 正式交易資料、版本、狀態、Audit、Tombstone。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 依 Policy Archive／Delete／Anonymize。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Foreign Key、Outbox、Job、Export、Notification 關聯需一致處理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "S3"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Raw Audio、Transcript Artifact、RAG Source、Report Export、Audit Evidence。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 依 Prefix／Object Tag／Manifest 找出範圍。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Versioning、Replication、Lifecycle、Object Lock／Legal Hold 需檢查。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Neptune"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 刪除或停用受影響 Node／Edge Projection。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 驗證無孤兒 Edge、跨 Elder 關聯與舊 ACTIVE Memory。"
+    },
+    {
+      "type": "paragraph",
+      "text": "OpenSearch"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 依 document_id／elder_id／tenant_id 刪除或重建 Index。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 驗證 Alias、Replica、Snapshot／Export Artifact 與 Cache。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Cache"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 立即失效 Session、Authorization、Report、Secure Link、Retrieval 與 User Context。"
+    },
+    {
+      "type": "paragraph",
+      "text": "AgentCore／Agent Memory"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 清除 Session／Working Memory 與允許的長期記錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 正式 Memory 仍以 Aurora Deletion State 為準。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Analytics／Eval Dataset"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 依 Purpose、Dataset Manifest 與去識別程度處理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不因已複製到 Dataset 就跳過刪除要求。"
+    },
+    {
+      "type": "paragraph",
+      "text": "External Provider"
+    },
+    {
+      "type": "paragraph",
+      "text": "• LINE／Email／ASR／TTS／Model／Support Tool 依其資料處理能力確認刪除或到期。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十六、Deletion Workflow 與 Tombstone"
+    },
+    {
+      "type": "paragraph",
+      "text": "26.1 Deletion Request"
+    },
+    {
+      "type": "paragraph",
+      "text": "request_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "subject_scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "requested_by"
+    },
+    {
+      "type": "paragraph",
+      "text": "verified_authority"
+    },
+    {
+      "type": "paragraph",
+      "text": "purpose"
+    },
+    {
+      "type": "paragraph",
+      "text": "requested_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "policy_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "legal_hold_status"
+    },
+    {
+      "type": "paragraph",
+      "text": "stores[]"
+    },
+    {
+      "type": "paragraph",
+      "text": "status"
+    },
+    {
+      "type": "paragraph",
+      "text": "completion_evidence"
+    },
+    {
+      "type": "paragraph",
+      "text": "certificate_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "26.2 Store Job"
+    },
+    {
+      "type": "paragraph",
+      "text": "store_name"
+    },
+    {
+      "type": "paragraph",
+      "text": "item_scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "status"
+    },
+    {
+      "type": "paragraph",
+      "text": "attempts"
+    },
+    {
+      "type": "paragraph",
+      "text": "last_error"
+    },
+    {
+      "type": "paragraph",
+      "text": "started_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "completed_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "verification"
+    },
+    {
+      "type": "paragraph",
+      "text": "26.3 Tombstone"
+    },
+    {
+      "type": "paragraph",
+      "text": "Tombstone 不保存已刪內容，而保存最小防重建資訊："
+    },
+    {
+      "type": "paragraph",
+      "text": "subject_ref_hash"
+    },
+    {
+      "type": "paragraph",
+      "text": "resource_type"
+    },
+    {
+      "type": "paragraph",
+      "text": "resource_id_hash"
+    },
+    {
+      "type": "paragraph",
+      "text": "deleted_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "deletion_request_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "policy_version"
+    },
+    {
+      "type": "paragraph",
+      "text": "reason"
+    },
+    {
+      "type": "paragraph",
+      "text": "expires_at／retention_basis"
+    },
+    {
+      "type": "paragraph",
+      "text": "用途："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 阻止 DLQ Replay／Backfill／Graph Rebuild 將資料復活。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 讓 Consumer 知道事件不可重新建立。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 證明刪除已處理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "26.4 Completion"
+    },
+    {
+      "type": "paragraph",
+      "text": "只有所有必要 Store 完成或合法例外被核准，Deletion Request 才能 COMPLETED。部分失敗保持 PARTIAL_FAILURE 並進人工處理，不可回覆「已全部刪除」。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十七、Archive、Retention 與 Legal Hold"
+    },
+    {
+      "type": "paragraph",
+      "text": "27.1 Archive"
+    },
+    {
+      "type": "paragraph",
+      "text": "Archive 代表不再供日常產品讀取，但仍依核准目的保存。Archived Data："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 與 Active Data 分權限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不進 Agent Context、RAG、Graph 或報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 有 Retention End Date。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 有 Restore／Access Audit。"
+    },
+    {
+      "type": "paragraph",
+      "text": "27.2 S3 Object Lock"
+    },
+    {
+      "type": "paragraph",
+      "text": "S3 Object Lock 可用 WORM 模型，以 Retention Period 或 Legal Hold 防止特定 Object Version 被覆寫或刪除。啟用前必須確認正式保存需求、成本、版本與刪除例外，不能把所有產品資料無差別鎖死。"
+    },
+    {
+      "type": "paragraph",
+      "text": "27.3 AWS Backup Vault Lock"
+    },
+    {
+      "type": "paragraph",
+      "text": "Governance Mode 允許具權限者管理；Compliance Mode 在 Grace Period 後形成不可變設定。正式啟用前需經法務與資料治理核准，特別避免無限期 Recovery Point 造成無法刪除與成本風險。"
+    },
+    {
+      "type": "paragraph",
+      "text": "27.4 Legal Hold Record"
+    },
+    {
+      "type": "paragraph",
+      "text": "hold_id"
+    },
+    {
+      "type": "paragraph",
+      "text": "subject／dataset scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "reason"
+    },
+    {
+      "type": "paragraph",
+      "text": "authority"
+    },
+    {
+      "type": "paragraph",
+      "text": "approved_by"
+    },
+    {
+      "type": "paragraph",
+      "text": "start_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "review_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "end_at"
+    },
+    {
+      "type": "paragraph",
+      "text": "stores"
+    },
+    {
+      "type": "paragraph",
+      "text": "access restrictions"
+    },
+    {
+      "type": "paragraph",
+      "text": "release_action"
+    },
+    {
+      "type": "paragraph",
+      "text": "audit evidence"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十八、Backup、Snapshot 與刪除關係"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Backup 不是正式查詢來源。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 刪除完成後，既有 Backup 可能依核准 Retention 存在，但不得恢復後重新供產品使用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Restore Drill 必須套用 Deletion Tombstone、Consent Revocation、Share Revocation 與 Offboarding Delta。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Aurora Snapshot 可匯出至加密 S3 作受控資料分析或退場備份，但需依 Region／Engine 支援、IAM、KMS、Manifest 與 Retention 執行。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Backup Expiry 後依 Policy 自動到期，不手動延長而無核准。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Restore 需產生 restore_id、source_snapshot、policy_version、tombstone_replay_result 與 validation evidence。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十九、Provider／Region／Account 替換"
+    },
+    {
+      "type": "paragraph",
+      "text": "29.1 Provider Exit"
+    },
+    {
+      "type": "paragraph",
+      "text": "適用 Bedrock Model、Agent Runtime、ASR、TTS、LINE、Email 或其他外部依賴。"
+    },
+    {
+      "type": "paragraph",
+      "text": "流程："
+    },
+    {
+      "type": "paragraph",
+      "text": "Inventory"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Contract／Data Review"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Alternative Capability Test"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Export Configuration／Artifacts"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Dual Run／Shadow"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Migrate Traffic"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Revoke Credentials"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Confirm Provider Data Handling"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Remove Integration"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ Cost／Security Validation"
+    },
+    {
+      "type": "paragraph",
+      "text": "29.2 Region Migration"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 先確認服務、模型、Quota、資料駐留、Latency 與 KMS 支援。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 建立新 Region 基礎設施與 Key，不直接複製 Secret。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Aurora、S3、OpenSearch、Neptune、Cognito、Agent、Queue、Scheduler 各有獨立遷移計畫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 先同步資料與 Consumer，再切 DNS／API Traffic。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Secure Link、Webhook、Callback URL 與外部 Allowlist 需更新。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 切換後驗證 ElderScope、Consent、Assignment、Family Share、Report 與 Notification。"
+    },
+    {
+      "type": "paragraph",
+      "text": "29.3 Account／Ownership Transfer"
+    },
+    {
+      "type": "paragraph",
+      "text": "不假設可直接轉移所有 AWS Resource。需要明確 Data Export／Import、KMS、DNS、Certificate、Container、IaC State、Secrets、Domain、Audit 與 Billing 交接。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十、系統／產品退場策略"
+    },
+    {
+      "type": "paragraph",
+      "text": "30.1 退場觸發"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 商業停止服務。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 合作機構合約終止。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 法規或安全風險無法接受。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 核心 Provider／模型長期不可用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 團隊停止維護。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 產品被新平台取代。"
+    },
+    {
+      "type": "paragraph",
+      "text": "30.2 退場階段"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 0｜Decision and Freeze"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 核准 Decision Record。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 停止非必要新功能與新 Tenant。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 建立完整 Inventory、Owner、Timeline 與 Communication Plan。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 1｜Notice and Migration"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 通知 Tenant、專業照護者、家屬與必要長者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 提供替代服務、匯出與截止日期。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 凍結 Schema／Contract，避免退場期間再做破壞性變更。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 2｜Read-Only"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 停止新對話記憶、事件候選、主動陪伴、報表與通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 允許核准範圍的查看、匯出、更正、撤回與刪除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 3｜Access Closure"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 撤銷新登入、API Client、Webhook、Service Account、Secure Link。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 處理未完成 Export、Deletion、Incident 與 Legal Hold。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 4｜Data Disposition"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 依 Store 執行 Archive、Return、Delete、Anonymize。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 清除 Graph、Index、Cache、Agent Memory、Analytics、Eval Artifact。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 保留必要 Audit／Contract／Billing Evidence。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 5｜Infrastructure Teardown"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 關閉 Endpoint、ECS、Aurora、OpenSearch、Neptune、NAT、Queue、Scheduler、Secrets、KMS Grant、DNS 與 Certificate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 先確認 Backup／Retention／Legal Hold，再刪除資源。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase 6｜Certification and Close"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 產出 Export Receipt、Deletion Certificate、Residual Data Register、Exception Register、Final Cost Report。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 確認監控、告警、Pager、Webhook 與外部訂閱也已關閉。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十一、長者與家屬的退場體驗"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 用可理解語言說明服務何時停止、哪些功能先停止、資料如何取得與刪除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不在最後一天突然關閉記憶與報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者已確認記憶可提供可閱讀匯出，不以 Graph JSON 作唯一格式。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬只能取得有效分享範圍內已發布資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 服務關閉後 Secure Link 明確顯示已停止，不導向不存在頁面或洩漏狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 主動陪伴、通知與所有自動排程在退場前提早停止，避免使用者誤認仍在持續照護。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不暗示系統停用代表照護關係或機構服務本身終止。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十二、退場 Runbook Catalog"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-01｜API Major Version Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-02｜Domain Event Version Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-03｜Agent／Prompt／Tool Bundle Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-04｜Bedrock Model EOL Migration"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-05｜ASR／TTS Provider Replacement"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-06｜Embedding／OpenSearch Reindex"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-07｜Graph Schema Rebuild／Retirement"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-08｜Family Notification Provider Exit"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-09｜Single Elder Export／Deletion"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-10｜Family Share Revocation"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-11｜Tenant Offboarding"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-12｜Region Migration"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-13｜AWS Account／Ownership Handover"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-14｜Legal Hold Apply／Release"
+    },
+    {
+      "type": "paragraph",
+      "text": "RB-EXIT-15｜Full Product Shutdown"
+    },
+    {
+      "type": "paragraph",
+      "text": "每份 Runbook 需包含 Trigger、Owner、Scope、Prerequisite、Data Inventory、Communication、Commands／Jobs、Validation、Rollback、Evidence、Exit Criteria。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十三、Compatibility／Exit Metrics"
+    },
+    {
+      "type": "paragraph",
+      "text": "• deprecated_client_request_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• unsupported_api_version_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• event_upcast_failure_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• old_consumer_lag。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• deprecated_tool_call_total。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• legacy_prompt_session_count。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• legacy_model_invocation_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• deprecated_asr_route_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• old_index_query_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• graph_schema_fallback_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• expired_feature_flag_count。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• export_request_completion_time。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• export_validation_failure_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• secure_export_download_success_rate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• deletion_partial_failure_count。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• tombstone_reappearance_blocked_total。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• offboarding_open_item_age。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• residual_resource_count。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• residual_data_exception_count。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• retirement_cost_remaining。"
+    },
+    {
+      "type": "paragraph",
+      "text": "零容忍："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Retired Version 造成跨長者暴露＝0。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export 混入其他長者或 Tenant＝0。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 撤回分享後仍可開啟報表＝0。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 刪除後資料重新進 Graph／Index／Report＝0。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Provider Exit 後 Secret 仍有效＝0。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十四、Monitoring 與 Alert"
+    },
+    {
+      "type": "paragraph",
+      "text": "告警："
+    },
+    {
+      "type": "paragraph",
+      "text": "• EOL／Retirement Date 接近但 Migration 未達門檻。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 舊 API／Event／Model 使用率未下降。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export Queue 超過期限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Deletion Job Partial Failure。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Offboarding 後仍有登入、通知、Scheduler、Webhook 或成本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Feature Flag 已過 Expiry。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Legacy Prompt／Model 被新 Release 引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Restore 後 Tombstone 未成功套用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Secure Export Link 超過 TTL 或異常下載。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Dashboard 顯示："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Component Lifecycle Timeline。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Tenant／Client Version Distribution。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Migration Progress。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export／Deletion／Offboarding Status。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Residual Data／Resource Register。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Provider／Model／Region Risk。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十五、Ownership 與批准"
+    },
+    {
+      "type": "paragraph",
+      "text": "Architecture Owner：API、Event、Schema、Version Policy。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Data Governance Owner：Export、Retention、Deletion、Legal Hold。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Platform Owner：AWS Resource、Backup、Region、Provider Exit。"
+    },
+    {
+      "type": "paragraph",
+      "text": "AI Owner：Agent、Prompt、Model、RAG、Graph、Eval。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Speech Owner：ASR／TTS Route、Model、Voice。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Product Owner：使用者通知、退場體驗、替代路徑。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Security／Privacy Owner：Scope、Access、Evidence、Incident。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Tenant／Care Organization Owner：機構資料交付與最終核准。"
+    },
+    {
+      "type": "paragraph",
+      "text": "高風險退場至少需雙人核准；大量刪除、KMS、Backup Vault Lock、Object Lock、Account Shutdown 不由單一開發者執行。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十六、Hackathon Implementation Profile"
+    },
+    {
+      "type": "paragraph",
+      "text": "必做："
+    },
+    {
+      "type": "paragraph",
+      "text": "• API／Event／Agent／Prompt／Model／Graph／Index 版本欄位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一份 Compatibility Matrix。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一個 API 或 Event 的雙版本 Contract Test。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一個 Model／Prompt Alias＋Fallback。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一個 Feature Flag 具 Owner、Expiry、Kill Switch。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一條長者資料 Export Demo，使用 Synthetic Persona。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一條 Consent Revocation／Deletion Tombstone，證明 Graph／Index 不會復活。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一個 Tenant／Persona Offboarding Checklist。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo Seed 與真實資料完全分離。"
+    },
+    {
+      "type": "paragraph",
+      "text": "可延後："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完整法律資料可攜套件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 多 Region 遷移。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Compliance Mode Vault Lock。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 全產品 Shutdown Automation。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 所有外部 Provider Exit Drill。"
+    },
+    {
+      "type": "paragraph",
+      "text": "不可省略："
+    },
+    {
+      "type": "paragraph",
+      "text": "• family PUBLISHED Gate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• elder_id／tenant_id／assignment_id 隔離。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未確認 Memory、未覆核 Event、Draft Report 不進 Export。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Revocation／Deletion 在 Retry／Replay 前重新檢查。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Export Link 短效、可撤銷、可稽核。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十七、ADR"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-001｜API 使用 Major Path Version，Minor 採相容演進"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：讓舊 App 與外部整合有明確遷移窗口，避免每次新增欄位都建立新 API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-002｜Domain Event 不覆寫歷史契約"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：事件需支援重播、稽核與舊資料解讀；破壞性變更新 event_version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-003｜Prompt、Agent、Tool 與 Model Bundle 全部版本化"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：只有 Model ID 不足以重現 Agent 行為與安全結果。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-004｜Model 透過 Alias／Router 使用，不硬編碼單一 ID"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：Bedrock 模型有 Active、Legacy、EOL 生命週期，需可替換與回退。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-005｜Export 採角色與 Purpose 限定 Package，不提供資料庫 Dump"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：避免其他長者、內部工作資料、Prompt、Secret 與未覆核內容外洩。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-006｜Deletion 使用 Tombstone 防止 Replay 復活"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：事件驅動、Graph、Search、Backfill 與 Backup Restore 可能重新建立已刪資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-007｜Graph／Search／Cache 為可重建投影"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：退場與刪除以 Aurora 正式狀態為準，不從 Projection 反推真實資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-008｜S3 Object Lock／Backup Vault Lock 僅在正式保存政策核准後啟用"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：不可變保存可提高保護，但錯誤期限也可能造成資料無法刪除與長期成本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "ADR-16-009｜完整退場流程在設計期定義，實作分階段"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Accepted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "原因：符合完整 Target Product 規劃，也避免黑客松過度投入低優先自動化。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十八、待決策"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. Production API／Event／Client 的正式支援期限。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. App 是否能強制最低版本，長者裝置如何協助升級。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. Export 的法律時限、資料範圍與格式。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 原始語音、逐字稿、Audit、Report、Analytics、Eval Dataset 的正式 Retention。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. Legal Hold 的核准者與解除流程。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. Tenant Offboarding 後哪些資料需交還、匿名化或依法保存。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. Backup Restore 後 Tombstone Delta 的技術實作。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. AgentCore Memory、LINE、Email、ASR／TTS Provider 的資料刪除證明能力。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. Model／Embedding／RAG／Graph 的 Rollback Window。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. Full Product Shutdown 的通知期、替代服務與支援責任。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十九、v0.1 完成判定"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ API、WebSocket、Event、Schema、Database 相容策略已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Agent、Prompt、Tool、Model、ASR／TTS、RAG、Graph 演進規則已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Feature Flag 與 Deprecation Lifecycle 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Migration Plan、支援窗口與通知內容已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 長者、家屬、專業照護者與 Tenant 的 Export Scope 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Export Format、Manifest、State Machine 與安全交付已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Consent Revocation、Deletion、Family Share Revocation、Offboarding、Legal Hold 已區分。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Aurora、S3、Graph、Index、Cache、Agent Memory、Analytics、Provider 處置已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Tombstone、Backup、Restore 與資料復活防護已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Provider、Region、Account 與 Full Product Exit 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Runbook、Metric、Alert、Owner、ADR 與 Hackathon Profile 已建立。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四十、官方技術參考（檢查日期：2026-07-26）"
+    },
+    {
+      "type": "paragraph",
+      "text": "Amazon Bedrock Model Lifecycle"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html"
+    },
+    {
+      "type": "paragraph",
+      "text": "Amazon S3 Object Lock"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html"
+    },
+    {
+      "type": "paragraph",
+      "text": "AWS Backup Vault Lock"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html"
+    },
+    {
+      "type": "paragraph",
+      "text": "Amazon Aurora Snapshot Export to S3"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-export-snapshot.html"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四十一、文件集完成狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件完成後，智慧長照 AI 陪伴系統的 01～16 與 01A 規劃文件共 17 份已建立。"
+    },
+    {
+      "type": "paragraph",
+      "text": "下一階段不是再增加規劃文件，而是進入「規格收斂與實作啟動」："
+    },
+    {
+      "type": "paragraph",
+      "text": "1. 決定 Python Framework、Repository 與基礎專案。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. 將 10 文件轉成 OpenAPI、AsyncAPI 與 JSON Schema。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. 將 06 Domain Model 轉成 Aurora PostgreSQL Physical Schema 與 Alembic Migration。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 依 12 文件拆成五人 Sprint Backlog。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 實作第一條 Vertical Slice：林阿嬤語音 → 低信心確認 → Agent 回覆 → Event／Memory Candidate → 人工確認 → Graph Projection。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. 建立 Demo Persona、測試 Dataset、Dashboard、Runbook 與最小通知流程。"
+    }
+  ],
+  "rawText": "智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1\n\n\n\n文件資訊\n\n版本：v0.1\n\n狀態：Draft｜完整 Target Product 的版本治理、資料可攜、Tenant Offboarding 與產品退場基準，待法務、合作機構、安全與正式保存期限核准\n\n建立日期：2026-07-26\n\n文件 Owner：Architecture／Data Governance／Platform Owner\n\n審查者：五人團隊\n\n適用範圍：Python Core API、Web／PWA、REST／WebSocket、Domain Event、Agent、Prompt、Model、ASR／TTS、RAG、Graph、Aurora PostgreSQL、S3、OpenSearch、Neptune、通知、Tenant、長者、家屬與營運資料\n\n\n\n相關文件\n\n06｜Domain Model、商業規則與資料生命週期 v0.1\n\nhttps://docs.google.com/document/d/1B4dyCdiuAR7eR15cOgoQRZGsitcJN27Brgil58D4-J8/edit\n\n07｜Security、Privacy、NFR 與 Threat Model v0.1\n\nhttps://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/edit\n\n08｜AWS 系統架構、服務選型與 ADR v0.1\n\nhttps://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/edit\n\n09｜Multi-Agent、Agentic Workflow 與 Context Engineering v0.1\n\nhttps://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/edit\n\n10｜API、Event、Tool 與 Data Contracts v0.1\n\nhttps://docs.google.com/document/d/1s2iM5Yue8WdpVa04DmQm-F_jTkHrPVaSW5ZaFFXD1bA/edit\n\n13｜Database Migration、Release 與 Rollback v0.1\n\nhttps://docs.google.com/document/d/1UC7AmwYJY8fWxgF-69yKqoplRD519KfvjMz2ck16jOU/edit\n\n14｜Observability、營運與 Incident Response v0.1\n\nhttps://docs.google.com/document/d/1SUefwxwKMOQx4tH3avyrFq-DFlkzWpIpgBV3mKw5JiY/edit\n\n15｜成功指標、Feedback、實驗與迭代 v0.1\n\nhttps://docs.google.com/document/d/1cclA_-0cA4AHm8kjfKH5WQGduVOTHpQCAWbVm0ml3i0/edit\n\n\n\n法律與治理聲明\n\n本文件是產品與技術治理基準，不構成台灣醫療、長照、個資、勞動、契約或稅務法律意見。正式保存、匯出、刪除、法律保留與機構退場，需由法務、資安、照護專業與合作機構依實際資料類型及契約核准。\n\n\n\n一、文件目的\n\n本文件處理系統最容易在後期被忽略的四類問題：\n\n1. 新版本如何不破壞舊 App、舊 Event、舊 Agent、舊資料與外部整合？\n\n2. API、模型、Prompt、ASR、TTS、RAG、Graph 或 AWS 服務需要替換時，如何有時間窗與遷移路徑？\n\n3. 長者、家屬或照護機構要求匯出、撤回同意、終止服務或刪除資料時，如何安全完成？\n\n4. 團隊、供應商、Region、模型或整個產品停止服務時，如何保留必要證據並避免資料遺留？\n\n\n\n核心目標不是永遠保留所有舊版本，而是讓每次改變都具備：\n\n• 明確 Owner。\n\n• 支援期限。\n\n• 相容性分類。\n\n• Migration Path。\n\n• 可驗證的停止條件。\n\n• 可追蹤的資料處置結果。\n\n\n\n二、治理原則\n\n• Compatibility Is a Product Feature：相容性不是只由 Backend 負責，會影響長者裝置、照護工作流、家屬連結與外部通知。\n\n• Source of Truth First：Aurora 正式資料與版本紀錄優先；Graph、Search、Cache、Agent Memory 為可重建投影或工作記憶。\n\n• Add Before Remove：先新增欄位、版本、Consumer 或 Provider，再遷移流量，最後移除舊路徑。\n\n• Consumer Before Producer：事件新增或破壞性變更前，先讓 Consumer 能理解新舊格式。\n\n• Explicit Deprecation：不使用「某天突然失效」的隱性退場。\n\n• No Silent Meaning Change：同一欄位、狀態、Event Type、Tool 或 Prompt Version 不可在不改版本下改變語意。\n\n• Export Is Not Database Dump：匯出需依角色、目的、資料分類與可理解格式設計。\n\n• Deletion Is a Workflow：刪除涵蓋交易資料、S3、Graph、Index、Cache、Secure Link、通知、Eval Dataset 與衍生投影。\n\n• Revocation Overrides Retry：同意撤回、分享失效與刪除 Tombstone 優先於 Queue Retry、DLQ Replay、Scheduler 與 Backfill。\n\n• Evidence Before Destruction：正式刪除前保存合法且最小的稽核證據，不保留已要求刪除的實質內容。\n\n• Portability Without Leakage：資料可攜不能導致其他長者、內部 Prompt、照護者私密筆記或系統 Secret 外洩。\n\n• Complete Planning, Phased Execution：完整定義退場能力；黑客松只實作關鍵合約與一條可演示流程。\n\n\n\n三、相容性分類\n\n3.1 相容變更\n\n通常可在同一 Major Version 中發布：\n\n• 新增 Optional Request Field。\n\n• 新增 Response Field，Client 可忽略未知欄位。\n\n• 新增 Event Type。\n\n• 新增 Event Payload Optional Field。\n\n• 新增 Enum 值且 Consumer 有 UNKNOWN／default 處理。\n\n• 新增 Tool，不改既有 Tool 語意。\n\n• 新增 Prompt／Model Route Version 並保留舊版。\n\n• 新增 Graph Edge／Node Type，舊 Query 不受影響。\n\n\n\n3.2 條件相容\n\n需先驗證 Client／Consumer 能力：\n\n• 欄位由 Optional 變成實際業務必要，但仍接受舊 Client 缺省。\n\n• Enum 新值可能改變 UI 或流程。\n\n• 回應排序或分頁規則改變。\n\n• ASR 信心分數尺度改變。\n\n• Prompt 產出風格改變但 Schema 不變。\n\n• RAG Ranking 或 Graph Query Planner 改變。\n\n• 模型替換造成語言、Latency 或 Tool Calling 差異。\n\n\n\n3.3 不相容變更\n\n必須新 Major Version 或雙寫／雙讀遷移：\n\n• 移除或重新命名必填欄位。\n\n• 欄位型別、單位或語意改變。\n\n• Event Type 重用不同意義。\n\n• State Machine 合法轉移改變且舊資料無法解讀。\n\n• Tool Input／Output Schema 破壞性變更。\n\n• Actor、tenant_id、elder_id、assignment_id、consent_version 等安全欄位被移除。\n\n• 家屬可見範圍改變。\n\n• 記憶確認、事件覆核或報表發布 Gate 被改寫。\n\n• Export 格式不再可讀或欄位消失。\n\n\n\n四、版本識別標準\n\n所有可部署或可交換元件需可識別版本：\n\napp_version\n\napi_version\n\nevent_version\n\nschema_version\n\ndatabase_migration_head\n\nagent_version\n\nprompt_version\n\nmodel_route_version\n\nmodel_id／inference_profile\n\npolicy_version\n\nguardrail_version\n\ntool_schema_version\n\ncontext_manifest_version\n\nasr_route_version\n\nasr_model_version\n\ntts_route_version\n\ntts_voice_version\n\nrag_corpus_version\n\nchunk_schema_version\n\nembedding_model_version\n\nsearch_index_version\n\ngraph_schema_version\n\ngraph_projection_version\n\nexport_schema_version\n\nrelease_id\n\n\n\n禁止只記錄「latest」。正式資料、Event、Agent Trace、Report、Export Manifest 與 Incident 都需能回查實際版本。\n\n\n\n五、REST API 相容策略\n\n5.1 路徑版本\n\n公開與前端 API 採 Major Version 路徑：\n\n/api/v1/...\n\n/api/v2/...\n\n\n\nMinor／Patch 變更透過相容欄位、Header 或行為修正完成。重大語意、權限、State 或 Schema 變更建立新 Major Version。\n\n\n\n5.2 Client Capability\n\nClient Request 可傳：\n\nX-Client-Version\n\nX-Platform\n\nX-Capabilities\n\nAccept-Language\n\nX-Contract-Version\n\n\n\nServer 不信任 Client 傳入 actor、tenant、elder 或 assignment scope；仍由 Token、Relationship、Assignment、Consent 與 Core ABAC 推導。\n\n\n\n5.3 Response 規則\n\n• Client 必須忽略未知欄位。\n\n• Server 不隨意移除已發布欄位。\n\n• Null、缺省與空集合語意明確區分。\n\n• 日期時間使用 ISO-8601 與時區規則。\n\n• Money／Duration／Confidence 等單位不可靜默變更。\n\n• Error Code 保持穩定；safe_message 可改善但不可用於程式邏輯。\n\n• Pagination Cursor 不承諾可被 Client 解碼。\n\n\n\n5.4 API Support Window\n\nv0.1 候選：\n\n• Production Major API 至少支援目前版與前一個 Major Version。\n\n• 重大安全缺陷可縮短支援窗，但需提供緊急通知與升級路徑。\n\n• Hackathon／Demo API 不承諾長期支援，但需標記 demo_only 與移除日期。\n\n\n\n正式天數待 Pilot 裝置更新能力與合作機構契約確認。\n\n\n\n六、WebSocket／Voice Protocol 相容策略\n\n• connect／session.start 先交換 protocol_version 與 capability。\n\n• Server Event 有 event_type＋event_version。\n\n• 新增 Event 不應使舊 Client 中斷；舊 Client可忽略非必要事件。\n\n• audio format、sample rate、codec 與 chunk sequencing 明確版本化。\n\n• asr.partial、asr.final、low_confidence.required、response.text.delta、tts.ready、session.completed 的必要欄位不可靜默改語意。\n\n• Server 不向舊 Client 發送其無法理解且會影響安全的流程；必要時要求升級。\n\n• Resume Token 有版本、TTL、session_id 與 scope，不跨 Major Protocol 使用。\n\n• 不在 WebSocket Message 暴露內部 Agent Trace、Prompt、其他長者 Context 或 Provider Secret。\n\n\n\n七、Domain Event 相容策略\n\n7.1 Event Envelope 穩定欄位\n\n至少保留：\n\nevent_id\n\nevent_type\n\nevent_version\n\noccurred_at\n\nproducer\n\naggregate_type\n\naggregate_id\n\naggregate_version\n\ntenant_id\n\nelder_id\n\ntrace_id\n\nworkflow_instance_id\n\ncorrelation_id\n\ncausation_id\n\nconsent_version\n\npolicy_version\n\ndata_classification\n\npayload\n\n\n\n7.2 演進規則\n\n• Event 已發布即視為不可變歷史契約。\n\n• 同一 event_type 的破壞性 Payload 變更提高 event_version。\n\n• Consumer 先支援新舊版本，Producer 才切換。\n\n• 無法處理的版本進 Quarantine／DLQ，不可默默忽略正式狀態事件。\n\n• Replay 時以原始 event_version 解讀，不用最新 Schema 強行覆蓋。\n\n• Event Upcaster／Translator 需純函式、可測試、有版本與失敗處理。\n\n• 大型或 Restricted Payload 使用安全 Pointer，不將完整語音、逐字稿或報表塞入 Event Bus。\n\n\n\n7.3 Event Retirement\n\n停用 Event 前需確認：\n\n□ 無 Producer。\n\n□ 無 Active Consumer。\n\n□ 無 Scheduled Replay／Backfill。\n\n□ Audit 與歷史重播仍可解讀。\n\n□ Replacement Event 已文件化。\n\n□ Dashboard／Alarm／Runbook 已更新。\n\n\n\n八、JSON Schema、OpenAPI 與 AsyncAPI\n\n• OpenAPI 3.1 描述 REST API。\n\n• AsyncAPI 描述 Event 與 WebSocket Channel。\n\n• JSON Schema 為 Agent Handoff、Tool、Candidate、Export Manifest 與 Domain Event 的機器可驗證契約。\n\n• Schema 存於 Repository，具 Owner、status、version、compatibility test。\n\n• CI 檢查欄位移除、型別改變、required 變化、Enum 破壞與範例有效性。\n\n• Runtime 仍執行 Schema Validation，不能只依文件。\n\n\n\nSchema 狀態：\n\nDRAFT\n\n→ REVIEW\n\n→ PUBLISHED\n\n→ DEPRECATED\n\n→ RETIRED\n\n\n\n九、Database Schema 相容策略\n\n依 13 文件採 Expand → Migrate → Contract：\n\n1. Expand：新增欄位／表／Index，不立即刪舊欄位。\n\n2. Dual Read／Write：必要時同時維護舊新表示。\n\n3. Backfill：可重跑、具 Checkpoint、Idempotency 與 Data Validation。\n\n4. Switch Read：Feature Flag／Release 切到新欄位。\n\n5. Observe：確認 Error、Lag、資料一致與 Rollback Window。\n\n6. Contract：確認無舊 Client／Job／Query 後才移除。\n\n\n\nDatabase Rollback 不等同把 Migration 反向執行。已寫入正式資料的破壞性變更優先 Roll Forward、Data Repair 或 Snapshot Restore。\n\n\n\n十、Agent、Prompt 與 Tool 相容策略\n\n10.1 Agent Contract\n\nAgent 版本至少綁定：\n\n• input_schema_version。\n\n• output_schema_version。\n\n• allowed_tools。\n\n• max_steps。\n\n• risk policy。\n\n• context_manifest_version。\n\n• prompt_version。\n\n• model_route_version。\n\n\n\n10.2 Prompt\n\n• Prompt 以不可變 Version 發布，不覆蓋已發布版本。\n\n• 修改 System Policy、Output Schema、Tool 說明或安全邊界需新 Version。\n\n• 舊 Prompt 保留至 Active Session、Replay、Incident 與回歸驗證不再需要。\n\n• Prompt Deprecation 需替代版本、Dataset 結果、已知差異與 Rollback。\n\n\n\n10.3 Tool\n\n• Tool 名稱＋Major Version 為穩定識別，例如 get_verified_events.v1。\n\n• 破壞性 Input／Output 改變建立 v2，不重用 v1。\n\n• 高風險 Tool 仍由 Python Core API 重做 Authorization、Consent、State 與 Idempotency。\n\n• Tool Retirement 前確認無 Prompt、Agent、Workflow、Eval Dataset 或 Runbook 引用。\n\n\n\n10.4 Agent Session\n\n已開始 Session 預設固定 Agent／Prompt／Model Route Bundle。除安全緊急切換外，不在同一 Session 中途切換造成語意不一致。\n\n\n\n十一、Model Lifecycle 與替換\n\nAmazon Bedrock 模型可能處於 Active、Legacy 或 End-of-Life 狀態；系統需定期讀取模型生命週期與官方通知，不把模型 ID 永久硬編碼。\n\n\n\n11.1 Model Registry\n\nmodel_alias\n\nprovider\n\nmodel_id／inference_profile\n\nlifecycle_status\n\nregion\n\ncapabilities\n\ncontext_window\n\ntool_use_support\n\nlanguages\n\nrisk_approval\n\nprompt_compatibility\n\nembedding_dimension（如適用）\n\nactivated_at\n\ndeprecation_notice_at\n\nlast_supported_at\n\nfallback_model\n\nowner\n\n\n\n11.2 替換流程\n\nDiscover Notice\n\n→ Assess Capability／Region／Cost／Risk\n\n→ Offline Regression\n\n→ Shadow\n\n→ Synthetic Canary\n\n→ Limited Tenant Rollout\n\n→ Compare Quality／Safety／Latency／Cost\n\n→ Switch Alias\n\n→ Monitor\n\n→ Retire Old Model\n\n\n\n11.3 不可直接替換的情況\n\n• Embedding 維度或語意空間改變。\n\n• Tool Calling Schema／格式不同。\n\n• 語言或臺語／混語品質下降。\n\n• Safety／Guardrail 行為不一致。\n\n• 長期 Report、Memory 或 Event 需要版本重現。\n\n\n\nEmbedding Model 替換需建立新 Index／Collection、重新向量化、Alias 切換與 Retrieval Eval，不在原 Index 混合不同向量空間。\n\n\n\n十二、ASR／TTS 相容與退場\n\n12.1 Speech Router\n\n外部介面使用穩定 Speech Contract，Provider 細節藏在 Router 後：\n\nlanguage\n\nlocale\n\naudio_format\n\nsample_rate\n\nchannel_count\n\nconfidence_band\n\ntranscript_segments\n\nprovider_route\n\nmodel_version\n\nfallback_reason\n\n\n\n12.2 ASR 替換\n\n• Managed zh-TW、Custom ASR、臺語／客語模型分開評估。\n\n• 比較 CER／WER、Key Entity、False High Confidence、Latency 與長者任務完成。\n\n• Confidence 分數不可跨模型直接比較，需校準成統一 Band 或 Model-specific Threshold。\n\n• 轉換期間保存 route_version 與 model_version。\n\n• Provider 失效可降級為替代 ASR、重新錄音或文字輸入，不冒充辨識成功。\n\n\n\n12.3 TTS 替換\n\n• Voice ID、語速、語言、發音字典與輸出格式版本化。\n\n• 替換需做長者可理解度與專有名詞測試。\n\n• TTS 失敗可顯示文字；不可因切換 Provider 產生未授權的聲音複製或人格誤導。\n\n\n\n十三、RAG、Search 與 Knowledge Corpus 演進\n\n13.1 Corpus Version\n\n每次 Ingestion 保存：\n\ncorpus_version\n\nsource_id\n\nsource_version\n\npublish_agency\n\neffective_date\n\nreview_status\n\nchunk_schema_version\n\nembedding_model_version\n\nindex_version\n\ningested_at\n\n\n\n13.2 Chunk／Metadata 變更\n\n• 新 Chunk 規則建立新 corpus_version。\n\n• 不覆寫舊 Chunk 而無來源對照。\n\n• Metadata 欄位改變需 Backfill 與 Filter Regression。\n\n• review_status、effective_date、persona_restriction、risk_level 等安全篩選不可在遷移期間缺失。\n\n\n\n13.3 Search Index Retirement\n\nBuild New Index\n\n→ Backfill\n\n→ Compare Counts／Sample／Metadata\n\n→ Retrieval Eval\n\n→ Shadow Query\n\n→ Alias Switch\n\n→ Observe\n\n→ Retain Rollback Window\n\n→ Delete Old Index\n\n\n\n正式 ID、Consent、Assignment 與報表狀態仍以 Aurora 為準，不因 Search Index 退場而遺失正式資料。\n\n\n\n十四、Graph Schema 與 Projection 演進\n\n• Neptune 為已確認關係／記憶／事件的 Projection，不是授權或正式事實來源。\n\n• Node Label、Edge Type、Property 與 source_version 版本化。\n\n• 新 Edge 可先雙寫；Query Planner 支援新舊 Graph Schema。\n\n• ACTIVE、CONFIRMED、VERIFIED 狀態條件不可在遷移期間放寬。\n\n• 刪除、撤回或停用先在 Core Permission Gate 阻擋，再非同步清理 Graph。\n\n• Graph 重建使用 Aurora＋Outbox／Projection Record，不從舊 Graph 猜正式事實。\n\n• Graph Schema Retirement 前確認 Query、Agent、Eval Dataset 與 Dashboard 已切換。\n\n\n\n十五、Feature Flag Lifecycle\n\nFeature Flag 狀態：\n\nPROPOSED\n\n→ DEVELOPMENT\n\n→ INTERNAL\n\n→ PILOT\n\n→ GENERAL\n\n→ DEPRECATION_PLANNED\n\n→ DISABLED\n\n→ REMOVED\n\n\n\n每個 Flag 需：\n\nflag_key\n\nowner\n\npurpose\n\nscope\n\ndefault_value\n\ncreated_at\n\nexpiry_date\n\nrisk_level\n\nkill_switch\n\nlinked_experiment\n\nlinked_release\n\nremoval_issue\n\n\n\n規則：\n\n• 安全 Gate、Consent、Authorization 不得永久依賴臨時 Flag。\n\n• General Release 後移除不再需要的分支。\n\n• 到期 Flag 在 CI／Dashboard 告警。\n\n• Flag Disabled 不代表程式碼已移除。\n\n• 沒有 Owner、Expiry、Migration Path 的 Flag 不得進 Production。\n\n\n\n十六、Deprecation Lifecycle\n\n16.1 狀態\n\nACTIVE\n\n→ DEPRECATION_PLANNED\n\n→ NOTICE_PUBLISHED\n\n→ MIGRATION_AVAILABLE\n\n→ USAGE_BLOCKED_FOR_NEW_CLIENTS\n\n→ END_OF_SUPPORT\n\n→ RETIRED\n\n\n\n16.2 Deprecation Notice 必要內容\n\ndeprecation_id\n\ncomponent_type\n\ncomponent_name\n\ncurrent_version\n\nreplacement\n\nreason\n\nnotice_date\n\nnew_client_block_date\n\nend_of_support_date\n\nretirement_date\n\naffected_personas／tenants\n\nbreaking_changes\n\nmigration_steps\n\ntest_plan\n\nrollback_window\n\nsupport_contact\n\nowner\n\nstatus\n\n\n\n16.3 通知對象\n\n• 開發團隊：Repository、ADR、Release Notes、CI Warning。\n\n• 照護機構管理者：管理介面、Email、正式公告。\n\n• 專業照護者：只通知會影響工作流程或裝置的改動。\n\n• 家屬：只通知 App、登入、Secure Link、報表或通知偏好的改動。\n\n• 長者：以可理解方式說明裝置、語音、記憶或主動陪伴的重要改變，不用技術術語。\n\n\n\n16.4 緊急退場\n\n安全漏洞、資料洩漏、Provider 禁用或法規要求可縮短通知期，但仍需：\n\n• Incident／Decision Record。\n\n• 受影響範圍。\n\n• 替代路徑或明確不可用訊息。\n\n• Data Handling。\n\n• 後續通知與支援。\n\n\n\n十七、Migration Plan 標準\n\n每個 Migration Plan 包含：\n\nsource_version\n\ntarget_version\n\ninventory\n\npreconditions\n\ndata_mapping\n\nschema mapping\n\nbackfill strategy\n\ndual read／write period\n\nvalidation queries\n\nsample comparison\n\nperformance impact\n\nsecurity／privacy impact\n\nrollback／roll forward\n\ncommunication\n\nowner／backup\n\nstart／end\n\ncompletion evidence\n\n\n\n完成條件不能只看程式部署成功，還需：\n\n□ Active Client／Consumer 已切換。\n\n□ 資料數量、關聯、版本與狀態一致。\n\n□ Authorization／Consent／Cross-Elder Negative Test 通過。\n\n□ Queue、DLQ、Projection Lag 受控。\n\n□ Export 與 Audit 仍可讀。\n\n□ 舊路徑無流量或有明確例外。\n\n\n\n十八、資料匯出原則\n\n資料匯出需回答：\n\n• 誰提出？\n\n• 代表哪位長者或哪個 Tenant？\n\n• 有何法律／契約／產品目的？\n\n• 能匯出哪些資料類型？\n\n• 是否包含第三人或專業照護者資訊？\n\n• 誰核准與如何安全交付？\n\n• 匯出後檔案保存多久？\n\n\n\n匯出不是將整個資料庫、Graph、Prompt、Log 或 Agent Trace 打包給申請者。\n\n\n\n十九、角色別資料匯出範圍\n\n19.1 長者／合法代理人\n\n候選可匯出：\n\n• 基本個人資料與偏好。\n\n• Consent 歷史與目前狀態。\n\n• 本人確認的長期記憶。\n\n• 可向本人提供的互動紀錄或摘要。\n\n• Verified 且依政策可提供的事件。\n\n• 已發布給本人的報表。\n\n• 資料來源、版本與更正紀錄。\n\n\n\n預設排除或需額外審查：\n\n• 其他長者資料。\n\n• 專業照護者私人／內部工作筆記。\n\n• 系統 Prompt、Model Chain-of-Thought、Secret、內部安全規則。\n\n• 未確認 Memory Candidate。\n\n• 未覆核 Event Candidate。\n\n• Draft Family Report。\n\n• 其他人的身份與聯絡資料。\n\n\n\n19.2 家屬\n\n只匯出該家屬在有效 Family Share Scope 下可見的 PUBLISHED Report、Important Event History、通知偏好與存取紀錄摘要。不得因家屬提出匯出而取得完整逐字稿、內部照護筆記、未覆核事件、未確認記憶、照護任務或其他家屬資料。\n\n\n\n19.3 日照中心／居服機構\n\n依 Tenant、契約、角色與資料控制責任匯出：\n\n• Elder Profile／Consent 狀態。\n\n• Care Assignment／Service Record。\n\n• Verified Event／Summary。\n\n• Family Report 與 Publication Record。\n\n• Care Action。\n\n• 必要 Audit／Access／Change History。\n\n\n\n跨 Tenant、跨機構或超出 Assignment Scope 的資料不得混入。\n\n\n\n19.4 照服員／居服員\n\n個人帳號可取得自身帳號、派案、工作紀錄與操作歷史的適當範圍；不能以個人身份下載全部機構長者資料。\n\n\n\n二十、匯出格式\n\n20.1 Human-Readable Package\n\nREADME.pdf／html\n\nprofile.json\n\nconsents.csv／json\n\nverified_events.csv／json\n\nconfirmed_memories.csv／json\n\nsummaries.pdf／json\n\npublished_reports.pdf／json\n\nassignments_and_service_records.csv／json（依角色）\n\naudit_summary.csv\n\nmanifest.json\n\nchecksums.txt\n\n\n\n20.2 Machine-Readable\n\n• UTF-8 JSON／JSONL。\n\n• CSV 有欄位說明與時區。\n\n• ISO-8601 日期時間。\n\n• ID 使用穩定 Export ID 或受控 Pseudonym。\n\n• Enum、狀態與版本附 Data Dictionary。\n\n• 大型 Binary 以加密檔案與 Manifest Pointer 提供。\n\n\n\n20.3 Manifest\n\nexport_id\n\nrequest_id\n\nrequested_by\n\nsubject_scope\n\ntenant_id\n\nelder_scope\n\nlegal／product purpose\n\nexport_schema_version\n\ncreated_at\n\nexpires_at\n\nincluded_datasets\n\nexcluded_datasets_and_reasons\n\nrecord_counts\n\ntime_range\n\nsource_versions\n\nfile_list\n\nchecksums\n\nencryption_method\n\napprovals\n\ndelivery_method\n\n\n\n二十一、Export Request State Machine\n\nREQUESTED\n\n→ IDENTITY_VERIFICATION\n\n→ SCOPE_REVIEW\n\n→ THIRD_PARTY_REDACTION\n\n→ APPROVED／REJECTED\n\n→ GENERATING\n\n→ VALIDATING\n\n→ READY_FOR_SECURE_DELIVERY\n\n→ DELIVERED\n\n→ EXPIRED\n\n→ PURGED\n\n\n\n替代狀態：\n\nNEEDS_MORE_INFORMATION\n\nLEGAL_HOLD_REVIEW\n\nPARTIAL_EXPORT_WITH_REASON\n\nFAILED_RETRYABLE\n\nFAILED_MANUAL_REVIEW\n\nCANCELLED\n\n\n\n規則：\n\n• Requester 身份與代理關係由 Server 驗證。\n\n• 匯出建立時再次檢查 Consent、Family Share、Assignment 與 Tenant Scope。\n\n• Generator 使用 Snapshot／一致性時間點，避免檔案間互相矛盾。\n\n• 生成後自動做 Cross-Elder、Record Count、Schema、Checksum 與 Restricted Field Scan。\n\n• 檔案到期後清理 Delivery Copy，不因此刪除正式 Source Record。\n\n\n\n二十二、安全交付\n\n• 使用加密 S3 Object／Package。\n\n• Secure Download Link 短期有效、單一 Export、可撤銷、需再驗證身份。\n\n• Token 不放 Log、Email 主旨或可重用 URL 參數中。\n\n• 大型或高敏感 Export 不直接寄 Email Attachment。\n\n• 可採另一通道提供解密資訊。\n\n• 每次下載記錄 requester、時間、IP／device risk、result 與 export_id。\n\n• 超過下載次數、期限、關係失效或 Tenant Offboarding 後 Link 失效。\n\n• 匯出檔案與 Staging Artifact 使用短 Retention。\n\n\n\n二十三、Consent Revocation、Deletion、Export 與 Offboarding 的差異\n\nConsent Revocation：停止特定 Purpose 的未來使用與處理；不一定等同立即刪除所有依法需保存資料。\n\n\n\nDeletion Request：要求刪除符合範圍的資料與衍生投影，需追蹤各 Store 完成狀態。\n\n\n\nExport Request：提供可攜副本，不改變正式資料狀態。\n\n\n\nFamily Share Revocation：停止家屬未來報表與通知，撤銷 Secure Link；不自動刪除機構正式紀錄。\n\n\n\nTenant Offboarding：機構停止使用整個服務，需處理帳號、整合、資料交付、保存、刪除、Billing 與證據。\n\n\n\nLegal Hold：在核准範圍內暫停原定刪除，但必須最小化且有 Owner、理由與解除流程。\n\n\n\n二十四、Tenant Offboarding Lifecycle\n\nINITIATED\n\n→ CONTRACT／LEGAL REVIEW\n\n→ INVENTORY_FROZEN\n\n→ NEW_DATA_DISABLED\n\n→ EXPORT_SCOPE_APPROVED\n\n→ EXPORT_DELIVERED\n\n→ ACCESS_REVOKED\n\n→ INTEGRATIONS_DISABLED\n\n→ RETENTION／DELETION_JOBS\n\n→ VALIDATION\n\n→ CERTIFICATE_ISSUED\n\n→ CLOSED\n\n\n\n24.1 Offboarding Checklist\n\n□ 確認 Tenant、Care Unit、Elder、Family Share、User、Device 與 Integration Inventory。\n\n□ 停止新增長者、派案、報表、通知與主動陪伴。\n\n□ 取消 Scheduler、Webhook、API Client、Secrets 與 Service Account。\n\n□ 完成約定資料匯出。\n\n□ 撤銷 Cognito／Session／Secure Link／Refresh Token。\n\n□ 停止 LINE／Email／第三方通知。\n\n□ 處理 Aurora、S3、Graph、Index、Cache、Agent Memory、Eval Dataset、Analytics。\n\n□ 保存必要 Audit、Invoice、Contract 與 Deletion Certificate。\n\n□ 驗證無跨 Tenant 殘留或共享資源引用。\n\n□ 完成成本標籤與資源釋放。\n\n\n\n二十五、Data Store 處置矩陣\n\nAurora PostgreSQL\n\n• 正式交易資料、版本、狀態、Audit、Tombstone。\n\n• 依 Policy Archive／Delete／Anonymize。\n\n• Foreign Key、Outbox、Job、Export、Notification 關聯需一致處理。\n\n\n\nS3\n\n• Raw Audio、Transcript Artifact、RAG Source、Report Export、Audit Evidence。\n\n• 依 Prefix／Object Tag／Manifest 找出範圍。\n\n• Versioning、Replication、Lifecycle、Object Lock／Legal Hold 需檢查。\n\n\n\nNeptune\n\n• 刪除或停用受影響 Node／Edge Projection。\n\n• 驗證無孤兒 Edge、跨 Elder 關聯與舊 ACTIVE Memory。\n\n\n\nOpenSearch\n\n• 依 document_id／elder_id／tenant_id 刪除或重建 Index。\n\n• 驗證 Alias、Replica、Snapshot／Export Artifact 與 Cache。\n\n\n\nCache\n\n• 立即失效 Session、Authorization、Report、Secure Link、Retrieval 與 User Context。\n\n\n\nAgentCore／Agent Memory\n\n• 清除 Session／Working Memory 與允許的長期記錄。\n\n• 正式 Memory 仍以 Aurora Deletion State 為準。\n\n\n\nAnalytics／Eval Dataset\n\n• 依 Purpose、Dataset Manifest 與去識別程度處理。\n\n• 不因已複製到 Dataset 就跳過刪除要求。\n\n\n\nExternal Provider\n\n• LINE／Email／ASR／TTS／Model／Support Tool 依其資料處理能力確認刪除或到期。\n\n\n\n二十六、Deletion Workflow 與 Tombstone\n\n26.1 Deletion Request\n\nrequest_id\n\nsubject_scope\n\nrequested_by\n\nverified_authority\n\npurpose\n\nrequested_at\n\npolicy_version\n\nlegal_hold_status\n\nstores[]\n\nstatus\n\ncompletion_evidence\n\ncertificate_id\n\n\n\n26.2 Store Job\n\nstore_name\n\nitem_scope\n\nstatus\n\nattempts\n\nlast_error\n\nstarted_at\n\ncompleted_at\n\nverification\n\n\n\n26.3 Tombstone\n\nTombstone 不保存已刪內容，而保存最小防重建資訊：\n\nsubject_ref_hash\n\nresource_type\n\nresource_id_hash\n\ndeleted_at\n\ndeletion_request_id\n\npolicy_version\n\nreason\n\nexpires_at／retention_basis\n\n\n\n用途：\n\n• 阻止 DLQ Replay／Backfill／Graph Rebuild 將資料復活。\n\n• 讓 Consumer 知道事件不可重新建立。\n\n• 證明刪除已處理。\n\n\n\n26.4 Completion\n\n只有所有必要 Store 完成或合法例外被核准，Deletion Request 才能 COMPLETED。部分失敗保持 PARTIAL_FAILURE 並進人工處理，不可回覆「已全部刪除」。\n\n\n\n二十七、Archive、Retention 與 Legal Hold\n\n27.1 Archive\n\nArchive 代表不再供日常產品讀取，但仍依核准目的保存。Archived Data：\n\n• 與 Active Data 分權限。\n\n• 不進 Agent Context、RAG、Graph 或報表。\n\n• 有 Retention End Date。\n\n• 有 Restore／Access Audit。\n\n\n\n27.2 S3 Object Lock\n\nS3 Object Lock 可用 WORM 模型，以 Retention Period 或 Legal Hold 防止特定 Object Version 被覆寫或刪除。啟用前必須確認正式保存需求、成本、版本與刪除例外，不能把所有產品資料無差別鎖死。\n\n\n\n27.3 AWS Backup Vault Lock\n\nGovernance Mode 允許具權限者管理；Compliance Mode 在 Grace Period 後形成不可變設定。正式啟用前需經法務與資料治理核准，特別避免無限期 Recovery Point 造成無法刪除與成本風險。\n\n\n\n27.4 Legal Hold Record\n\nhold_id\n\nsubject／dataset scope\n\nreason\n\nauthority\n\napproved_by\n\nstart_at\n\nreview_at\n\nend_at\n\nstores\n\naccess restrictions\n\nrelease_action\n\naudit evidence\n\n\n\n二十八、Backup、Snapshot 與刪除關係\n\n• Backup 不是正式查詢來源。\n\n• 刪除完成後，既有 Backup 可能依核准 Retention 存在，但不得恢復後重新供產品使用。\n\n• Restore Drill 必須套用 Deletion Tombstone、Consent Revocation、Share Revocation 與 Offboarding Delta。\n\n• Aurora Snapshot 可匯出至加密 S3 作受控資料分析或退場備份，但需依 Region／Engine 支援、IAM、KMS、Manifest 與 Retention 執行。\n\n• Backup Expiry 後依 Policy 自動到期，不手動延長而無核准。\n\n• Restore 需產生 restore_id、source_snapshot、policy_version、tombstone_replay_result 與 validation evidence。\n\n\n\n二十九、Provider／Region／Account 替換\n\n29.1 Provider Exit\n\n適用 Bedrock Model、Agent Runtime、ASR、TTS、LINE、Email 或其他外部依賴。\n\n\n\n流程：\n\nInventory\n\n→ Contract／Data Review\n\n→ Alternative Capability Test\n\n→ Export Configuration／Artifacts\n\n→ Dual Run／Shadow\n\n→ Migrate Traffic\n\n→ Revoke Credentials\n\n→ Confirm Provider Data Handling\n\n→ Remove Integration\n\n→ Cost／Security Validation\n\n\n\n29.2 Region Migration\n\n• 先確認服務、模型、Quota、資料駐留、Latency 與 KMS 支援。\n\n• 建立新 Region 基礎設施與 Key，不直接複製 Secret。\n\n• Aurora、S3、OpenSearch、Neptune、Cognito、Agent、Queue、Scheduler 各有獨立遷移計畫。\n\n• 先同步資料與 Consumer，再切 DNS／API Traffic。\n\n• Secure Link、Webhook、Callback URL 與外部 Allowlist 需更新。\n\n• 切換後驗證 ElderScope、Consent、Assignment、Family Share、Report 與 Notification。\n\n\n\n29.3 Account／Ownership Transfer\n\n不假設可直接轉移所有 AWS Resource。需要明確 Data Export／Import、KMS、DNS、Certificate、Container、IaC State、Secrets、Domain、Audit 與 Billing 交接。\n\n\n\n三十、系統／產品退場策略\n\n30.1 退場觸發\n\n• 商業停止服務。\n\n• 合作機構合約終止。\n\n• 法規或安全風險無法接受。\n\n• 核心 Provider／模型長期不可用。\n\n• 團隊停止維護。\n\n• 產品被新平台取代。\n\n\n\n30.2 退場階段\n\nPhase 0｜Decision and Freeze\n\n• 核准 Decision Record。\n\n• 停止非必要新功能與新 Tenant。\n\n• 建立完整 Inventory、Owner、Timeline 與 Communication Plan。\n\n\n\nPhase 1｜Notice and Migration\n\n• 通知 Tenant、專業照護者、家屬與必要長者。\n\n• 提供替代服務、匯出與截止日期。\n\n• 凍結 Schema／Contract，避免退場期間再做破壞性變更。\n\n\n\nPhase 2｜Read-Only\n\n• 停止新對話記憶、事件候選、主動陪伴、報表與通知。\n\n• 允許核准範圍的查看、匯出、更正、撤回與刪除。\n\n\n\nPhase 3｜Access Closure\n\n• 撤銷新登入、API Client、Webhook、Service Account、Secure Link。\n\n• 處理未完成 Export、Deletion、Incident 與 Legal Hold。\n\n\n\nPhase 4｜Data Disposition\n\n• 依 Store 執行 Archive、Return、Delete、Anonymize。\n\n• 清除 Graph、Index、Cache、Agent Memory、Analytics、Eval Artifact。\n\n• 保留必要 Audit／Contract／Billing Evidence。\n\n\n\nPhase 5｜Infrastructure Teardown\n\n• 關閉 Endpoint、ECS、Aurora、OpenSearch、Neptune、NAT、Queue、Scheduler、Secrets、KMS Grant、DNS 與 Certificate。\n\n• 先確認 Backup／Retention／Legal Hold，再刪除資源。\n\n\n\nPhase 6｜Certification and Close\n\n• 產出 Export Receipt、Deletion Certificate、Residual Data Register、Exception Register、Final Cost Report。\n\n• 確認監控、告警、Pager、Webhook 與外部訂閱也已關閉。\n\n\n\n三十一、長者與家屬的退場體驗\n\n• 用可理解語言說明服務何時停止、哪些功能先停止、資料如何取得與刪除。\n\n• 不在最後一天突然關閉記憶與報表。\n\n• 長者已確認記憶可提供可閱讀匯出，不以 Graph JSON 作唯一格式。\n\n• 家屬只能取得有效分享範圍內已發布資料。\n\n• 服務關閉後 Secure Link 明確顯示已停止，不導向不存在頁面或洩漏狀態。\n\n• 主動陪伴、通知與所有自動排程在退場前提早停止，避免使用者誤認仍在持續照護。\n\n• 不暗示系統停用代表照護關係或機構服務本身終止。\n\n\n\n三十二、退場 Runbook Catalog\n\nRB-EXIT-01｜API Major Version Retirement\n\nRB-EXIT-02｜Domain Event Version Retirement\n\nRB-EXIT-03｜Agent／Prompt／Tool Bundle Retirement\n\nRB-EXIT-04｜Bedrock Model EOL Migration\n\nRB-EXIT-05｜ASR／TTS Provider Replacement\n\nRB-EXIT-06｜Embedding／OpenSearch Reindex\n\nRB-EXIT-07｜Graph Schema Rebuild／Retirement\n\nRB-EXIT-08｜Family Notification Provider Exit\n\nRB-EXIT-09｜Single Elder Export／Deletion\n\nRB-EXIT-10｜Family Share Revocation\n\nRB-EXIT-11｜Tenant Offboarding\n\nRB-EXIT-12｜Region Migration\n\nRB-EXIT-13｜AWS Account／Ownership Handover\n\nRB-EXIT-14｜Legal Hold Apply／Release\n\nRB-EXIT-15｜Full Product Shutdown\n\n\n\n每份 Runbook 需包含 Trigger、Owner、Scope、Prerequisite、Data Inventory、Communication、Commands／Jobs、Validation、Rollback、Evidence、Exit Criteria。\n\n\n\n三十三、Compatibility／Exit Metrics\n\n• deprecated_client_request_rate。\n\n• unsupported_api_version_rate。\n\n• event_upcast_failure_rate。\n\n• old_consumer_lag。\n\n• deprecated_tool_call_total。\n\n• legacy_prompt_session_count。\n\n• legacy_model_invocation_rate。\n\n• deprecated_asr_route_rate。\n\n• old_index_query_rate。\n\n• graph_schema_fallback_rate。\n\n• expired_feature_flag_count。\n\n• export_request_completion_time。\n\n• export_validation_failure_rate。\n\n• secure_export_download_success_rate。\n\n• deletion_partial_failure_count。\n\n• tombstone_reappearance_blocked_total。\n\n• offboarding_open_item_age。\n\n• residual_resource_count。\n\n• residual_data_exception_count。\n\n• retirement_cost_remaining。\n\n\n\n零容忍：\n\n• Retired Version 造成跨長者暴露＝0。\n\n• Export 混入其他長者或 Tenant＝0。\n\n• 撤回分享後仍可開啟報表＝0。\n\n• 刪除後資料重新進 Graph／Index／Report＝0。\n\n• Provider Exit 後 Secret 仍有效＝0。\n\n\n\n三十四、Monitoring 與 Alert\n\n告警：\n\n• EOL／Retirement Date 接近但 Migration 未達門檻。\n\n• 舊 API／Event／Model 使用率未下降。\n\n• Export Queue 超過期限。\n\n• Deletion Job Partial Failure。\n\n• Offboarding 後仍有登入、通知、Scheduler、Webhook 或成本。\n\n• Feature Flag 已過 Expiry。\n\n• Legacy Prompt／Model 被新 Release 引用。\n\n• Restore 後 Tombstone 未成功套用。\n\n• Secure Export Link 超過 TTL 或異常下載。\n\n\n\nDashboard 顯示：\n\n• Component Lifecycle Timeline。\n\n• Tenant／Client Version Distribution。\n\n• Migration Progress。\n\n• Export／Deletion／Offboarding Status。\n\n• Residual Data／Resource Register。\n\n• Provider／Model／Region Risk。\n\n\n\n三十五、Ownership 與批准\n\nArchitecture Owner：API、Event、Schema、Version Policy。\n\nData Governance Owner：Export、Retention、Deletion、Legal Hold。\n\nPlatform Owner：AWS Resource、Backup、Region、Provider Exit。\n\nAI Owner：Agent、Prompt、Model、RAG、Graph、Eval。\n\nSpeech Owner：ASR／TTS Route、Model、Voice。\n\nProduct Owner：使用者通知、退場體驗、替代路徑。\n\nSecurity／Privacy Owner：Scope、Access、Evidence、Incident。\n\nTenant／Care Organization Owner：機構資料交付與最終核准。\n\n\n\n高風險退場至少需雙人核准；大量刪除、KMS、Backup Vault Lock、Object Lock、Account Shutdown 不由單一開發者執行。\n\n\n\n三十六、Hackathon Implementation Profile\n\n必做：\n\n• API／Event／Agent／Prompt／Model／Graph／Index 版本欄位。\n\n• 一份 Compatibility Matrix。\n\n• 一個 API 或 Event 的雙版本 Contract Test。\n\n• 一個 Model／Prompt Alias＋Fallback。\n\n• 一個 Feature Flag 具 Owner、Expiry、Kill Switch。\n\n• 一條長者資料 Export Demo，使用 Synthetic Persona。\n\n• 一條 Consent Revocation／Deletion Tombstone，證明 Graph／Index 不會復活。\n\n• 一個 Tenant／Persona Offboarding Checklist。\n\n• Demo Seed 與真實資料完全分離。\n\n\n\n可延後：\n\n• 完整法律資料可攜套件。\n\n• 多 Region 遷移。\n\n• Compliance Mode Vault Lock。\n\n• 全產品 Shutdown Automation。\n\n• 所有外部 Provider Exit Drill。\n\n\n\n不可省略：\n\n• family PUBLISHED Gate。\n\n• elder_id／tenant_id／assignment_id 隔離。\n\n• 未確認 Memory、未覆核 Event、Draft Report 不進 Export。\n\n• Revocation／Deletion 在 Retry／Replay 前重新檢查。\n\n• Export Link 短效、可撤銷、可稽核。\n\n\n\n三十七、ADR\n\nADR-16-001｜API 使用 Major Path Version，Minor 採相容演進\n\n狀態：Accepted。\n\n原因：讓舊 App 與外部整合有明確遷移窗口，避免每次新增欄位都建立新 API。\n\n\n\nADR-16-002｜Domain Event 不覆寫歷史契約\n\n狀態：Accepted。\n\n原因：事件需支援重播、稽核與舊資料解讀；破壞性變更新 event_version。\n\n\n\nADR-16-003｜Prompt、Agent、Tool 與 Model Bundle 全部版本化\n\n狀態：Accepted。\n\n原因：只有 Model ID 不足以重現 Agent 行為與安全結果。\n\n\n\nADR-16-004｜Model 透過 Alias／Router 使用，不硬編碼單一 ID\n\n狀態：Accepted。\n\n原因：Bedrock 模型有 Active、Legacy、EOL 生命週期，需可替換與回退。\n\n\n\nADR-16-005｜Export 採角色與 Purpose 限定 Package，不提供資料庫 Dump\n\n狀態：Accepted。\n\n原因：避免其他長者、內部工作資料、Prompt、Secret 與未覆核內容外洩。\n\n\n\nADR-16-006｜Deletion 使用 Tombstone 防止 Replay 復活\n\n狀態：Accepted。\n\n原因：事件驅動、Graph、Search、Backfill 與 Backup Restore 可能重新建立已刪資料。\n\n\n\nADR-16-007｜Graph／Search／Cache 為可重建投影\n\n狀態：Accepted。\n\n原因：退場與刪除以 Aurora 正式狀態為準，不從 Projection 反推真實資料。\n\n\n\nADR-16-008｜S3 Object Lock／Backup Vault Lock 僅在正式保存政策核准後啟用\n\n狀態：Accepted。\n\n原因：不可變保存可提高保護，但錯誤期限也可能造成資料無法刪除與長期成本。\n\n\n\nADR-16-009｜完整退場流程在設計期定義，實作分階段\n\n狀態：Accepted。\n\n原因：符合完整 Target Product 規劃，也避免黑客松過度投入低優先自動化。\n\n\n\n三十八、待決策\n\n1. Production API／Event／Client 的正式支援期限。\n\n2. App 是否能強制最低版本，長者裝置如何協助升級。\n\n3. Export 的法律時限、資料範圍與格式。\n\n4. 原始語音、逐字稿、Audit、Report、Analytics、Eval Dataset 的正式 Retention。\n\n5. Legal Hold 的核准者與解除流程。\n\n6. Tenant Offboarding 後哪些資料需交還、匿名化或依法保存。\n\n7. Backup Restore 後 Tombstone Delta 的技術實作。\n\n8. AgentCore Memory、LINE、Email、ASR／TTS Provider 的資料刪除證明能力。\n\n9. Model／Embedding／RAG／Graph 的 Rollback Window。\n\n10. Full Product Shutdown 的通知期、替代服務與支援責任。\n\n\n\n三十九、v0.1 完成判定\n\n□ API、WebSocket、Event、Schema、Database 相容策略已定義。\n\n□ Agent、Prompt、Tool、Model、ASR／TTS、RAG、Graph 演進規則已定義。\n\n□ Feature Flag 與 Deprecation Lifecycle 已定義。\n\n□ Migration Plan、支援窗口與通知內容已定義。\n\n□ 長者、家屬、專業照護者與 Tenant 的 Export Scope 已定義。\n\n□ Export Format、Manifest、State Machine 與安全交付已定義。\n\n□ Consent Revocation、Deletion、Family Share Revocation、Offboarding、Legal Hold 已區分。\n\n□ Aurora、S3、Graph、Index、Cache、Agent Memory、Analytics、Provider 處置已定義。\n\n□ Tombstone、Backup、Restore 與資料復活防護已定義。\n\n□ Provider、Region、Account 與 Full Product Exit 已定義。\n\n□ Runbook、Metric、Alert、Owner、ADR 與 Hackathon Profile 已建立。\n\n\n\n四十、官方技術參考（檢查日期：2026-07-26）\n\nAmazon Bedrock Model Lifecycle\n\nhttps://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html\n\n\n\nAmazon S3 Object Lock\n\nhttps://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html\n\n\n\nAWS Backup Vault Lock\n\nhttps://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html\n\n\n\nAmazon Aurora Snapshot Export to S3\n\nhttps://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-export-snapshot.html\n\n\n\n四十一、文件集完成狀態\n\n本文件完成後，智慧長照 AI 陪伴系統的 01～16 與 01A 規劃文件共 17 份已建立。\n\n\n\n下一階段不是再增加規劃文件，而是進入「規格收斂與實作啟動」：\n\n1. 決定 Python Framework、Repository 與基礎專案。\n\n2. 將 10 文件轉成 OpenAPI、AsyncAPI 與 JSON Schema。\n\n3. 將 06 Domain Model 轉成 Aurora PostgreSQL Physical Schema 與 Alembic Migration。\n\n4. 依 12 文件拆成五人 Sprint Backlog。\n\n5. 實作第一條 Vertical Slice：林阿嬤語音 → 低信心確認 → Agent 回覆 → Event／Memory Candidate → 人工確認 → Graph Projection。\n\n6. 建立 Demo Persona、測試 Dataset、Dashboard、Runbook 與最小通知流程。",
+  "warnings": [
+    "Unrecognised paragraph style: 'Title' (Style ID: Title)"
+  ]
+}

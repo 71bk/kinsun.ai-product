@@ -1,0 +1,68 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPO: elderly-care-dev-compute-core-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Core API Image
+        if: hashFiles('services/core-api/**') != ''
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG services/core-api/
+          docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: CDK Deploy (Dev)
+        working-directory: infra
+        run: |
+          npm ci
+          npx cdk deploy --all -c env=dev --require-approval never
+
+      - name: Run DB Migration
+        if: hashFiles('services/core-api/migrations/**') != ''
+        run: |
+          echo "TODO: Run Alembic migration via ECS task or CodeBuild"
+          # aws ecs run-task --cluster ... --task-definition migration-task ...
+
+      - name: Smoke Test
+        run: |
+          echo "TODO: Run smoke tests against dev environment"
+          # curl -f https://dev-api.example.com/health || exit 1

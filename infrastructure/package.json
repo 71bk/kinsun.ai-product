@@ -1,0 +1,23 @@
+{
+  "name": "@elderly-care/infrastructure",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "deploy": "cdk deploy"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.152.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.152.0",
+    "typescript": "^5.5.4",
+    "tsx": "^4.16.5",
+    "esbuild": "^0.23.1",
+    "@types/node": "^20.14.15"
+  }
+}

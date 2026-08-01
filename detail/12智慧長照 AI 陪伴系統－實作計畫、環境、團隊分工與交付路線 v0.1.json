@@ -1,0 +1,2377 @@
+{
+  "sourceFile": "12智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1.docx",
+  "type": "docx",
+  "convertedAt": "2026-07-30T13:54:16.384Z",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "文件資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "版本：v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Draft｜五人團隊實作與交付基準，待競賽日期、AWS Credits 與技術 Spike 結果校準"
+    },
+    {
+      "type": "paragraph",
+      "text": "建立日期：2026-07-26"
+    },
+    {
+      "type": "paragraph",
+      "text": "文件 Owner：Harper（Integration／Delivery Owner）"
+    },
+    {
+      "type": "paragraph",
+      "text": "審查者：五人團隊"
+    },
+    {
+      "type": "paragraph",
+      "text": "適用範圍：Repository、Environment、CI／CD、IaC、Workstream、Task、依賴、Critical Path、Hackathon Build、Demo Freeze、完整產品 Roadmap"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "相關文件"
+    },
+    {
+      "type": "paragraph",
+      "text": "03｜Story Map v1.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/spreadsheets/d/1Qmg1jbaN67Tjmpcx6e2zyZOf_-td0_fg9iKqgb128CE/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "05｜核心工作流、狀態機與錯誤恢復 v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "08｜AWS 系統架構、服務選型與 ADR v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "09｜Multi-Agent、Agentic Workflow 與 Context Engineering v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "10｜API、Event、Tool 與 Data Contracts v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1s2iM5Yue8WdpVa04DmQm-F_jTkHrPVaSW5ZaFFXD1bA/edit"
+    },
+    {
+      "type": "paragraph",
+      "text": "11｜測試策略、Agent Evaluation 與品質門檻 v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "https://docs.google.com/document/d/1saeohikZZ63P2ud1YNHMQDKBKX2wgVnMsQ3LPTAD2qY/edit"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "一、文件目的"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件把前述產品、工作流、Domain、安全、AWS 架構、Agent、Contract 與測試設計轉成五人團隊可以直接執行的工程計畫。它回答：誰負責什麼、程式放哪裡、在哪個環境整合、先做哪一條 Critical Path、什麼時候 Freeze、怎樣判斷完成，以及完整產品架構如何分階段實作。"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件採「完整架構先定義、實作分階段交付」。Target Architecture 不因黑客松縮小而消失；Hackathon Build Profile 只決定本次真正部署、可 Mock 或延後的部分。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二、交付原則"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. Vertical Slice 優先：先讓一條林阿嬤流程端到端可運作，再擴充功能面。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. Contract First：前後端、Agent、Tool、Event 與 Worker 開工前先鎖定最小 Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. Trunk-Based：短生命週期 Branch、每日合併、主幹保持可部署。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. One Owner, One Backup：每個元件有單一 Owner 與備援者，避免無人負責或單點知識。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. Integration Daily：不接受最後一天才整合。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. Security Is Functional：權限、同意、資料隔離、未確認記憶與 Published Gate 都是功能，不是最後補強。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. Observable by Default：每條流程從第一天就有 trace_id、state、reason_code 與基本指標。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. Mock with Boundary：可 Mock 外部服務或延後功能，但不可 Mock 權限、同意、資料隔離與正式狀態規則。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. Demo Freeze：Freeze 後只修 P0／P1，不再臨時加功能。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. Evidence over Claim：每個完成項目必須附測試、畫面、Trace 或可重跑指令。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三、交付模式"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.1 Target Architecture"
+    },
+    {
+      "type": "paragraph",
+      "text": "完整目標保留：ECS Fargate Core API、AgentCore Runtime、Aurora PostgreSQL、Neptune、OpenSearch、S3、EventBridge、SQS／DLQ、Step Functions、Cognito、CloudWatch、LINE／Email Adapter，以及日照、居服、家屬三種專業或關係入口。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.2 Hackathon Build Profile"
+    },
+    {
+      "type": "paragraph",
+      "text": "本次必須真正實作："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者語音或可靠語音替代入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Conversation Orchestrator、Companion、Event Extractor、Memory Candidate、Safety Evaluator。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event Candidate → Review。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Memory Candidate → Confirmed → ACTIVE。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ACTIVE Memory 投影至 Graph 並在下一輪引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 日照多長者概覽與林阿嬤詳情。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬 Published Report Read。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 至少一個 LINE／Email Sandbox 通知或可驗證 Adapter。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Cross-Elder Isolation、Consent Gate、Tool Allowlist、max_steps。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 一條故障降級與一條 Retry／DLQ／Redrive 證據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "本次可分期或 Mock："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 客語與英文完整模型路由。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 居服員完整離線服務紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 全量法規／衛教知識庫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完整主動陪伴與 Care Insight。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 大規模 Multi-Tenant、自動擴縮壓測、跨 Region DR。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 正式 LINE 商業帳號審核；可用 Sandbox／Test Recipient。"
+    },
+    {
+      "type": "paragraph",
+      "text": "不可 Mock："
+    },
+    {
+      "type": "paragraph",
+      "text": "• elder_id／tenant_id／assignment／family relationship 授權。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Consent 撤回與用途限制。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 未確認記憶不得進 Context。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 張阿姨資料不得進林阿嬤 Context。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Agent 不得直接 Publish、Confirm 或繞過 Core Command Gate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Published Report 才能由家屬讀取。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四、五人團隊建議分工"
+    },
+    {
+      "type": "paragraph",
+      "text": "團隊成員對照：A＝Harper；B＝柏成；C＝Isaac；D＝杰倫；E＝Iris。文件其餘工作流、Owner 與 Backup 保留 A～E 代號，並以此對照表為準。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.1 成員 A（Harper）｜Integration／Product／Demo Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要責任：Vertical Slice、需求取捨、Demo Story、跨 Workstream 整合、Core API 共用框架。"
+    },
+    {
+      "type": "paragraph",
+      "text": "交付：整合 Backlog、Demo Script、Feature Flag、E2E Harness、技術證據頁、每日決策紀錄。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要責任：協助 B 的 Core API 與 Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "備援：E。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.2 成員 B（柏成）｜Domain Backend／Security Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要責任：Python Core API、Aurora Schema、Domain State、ABAC、Consent、Idempotency、Outbox。"
+    },
+    {
+      "type": "paragraph",
+      "text": "交付：Elder／Consent／Care Event／Memory／Report／Assignment API、Alembic／框架原生 Migration、Negative Authorization Test。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要責任：EventBridge／SQS Producer 與 Consumer 基礎。"
+    },
+    {
+      "type": "paragraph",
+      "text": "備援：A。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.3 成員 C（Isaac）｜Agent／RAG／Graph Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要責任：AgentCore Runtime、自有 Orchestration Loop、Agent Schema、Context Builder、OpenSearch、Neptune、Evaluation。"
+    },
+    {
+      "type": "paragraph",
+      "text": "交付：Orchestrator、Companion、Extractor、Memory Candidate、Safety Evaluator、Graph Projection、Query Planner、Context Manifest。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要責任：Prompt／Model Router、Agent Trace。"
+    },
+    {
+      "type": "paragraph",
+      "text": "備援：D。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.4 成員 D（杰倫）｜Speech／Elder Experience Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要責任：ASR／TTS、語言路由、Voice Session、WebSocket、長者端 UI 與低信心確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "交付：錄音／上傳、ASR Final、Confirmation UI、TTS 播放、文字降級、語音 Latency 報告。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要責任：協助 C 的語言與 Prompt 評估。"
+    },
+    {
+      "type": "paragraph",
+      "text": "備援：C。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.5 成員 E（Iris）｜Professional／Family UI、Quality／DevOps Owner"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要責任：日照照護端、家屬 App／Web、通知 Adapter、CI／CD、Staging、Release Evidence。"
+    },
+    {
+      "type": "paragraph",
+      "text": "交付：多長者概覽、事件覆核、報表頁、通知設定、Pipeline、CloudWatch Dashboard、Demo Runbook。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要責任：QA Gate、Accessibility、Rehearsal。"
+    },
+    {
+      "type": "paragraph",
+      "text": "備援：A。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.6 分工限制"
+    },
+    {
+      "type": "paragraph",
+      "text": "• A 不成為所有工作最後接手者；阻塞必須在每日整合會議提出。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• E 管理 Gate，但測試仍由各 Feature Owner 撰寫。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• C 不得自行決定正式 Domain State；透過 B 提供的 Core Command API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• D 不直接把 ASR Transcript 寫成正式事件；只建立 Session／Transcript Version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每個 Owner 至少安排一次 Pair Review 給 Backup。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "五、Workstream 與責任邊界"
+    },
+    {
+      "type": "paragraph",
+      "text": "WS-01｜Core Domain／Security｜Owner B｜Backup A"
+    },
+    {
+      "type": "paragraph",
+      "text": "範圍：Identity Context、ElderScope、Consent、Domain State、Persistence、Outbox、API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "WS-02｜Agent／Retrieval／Graph｜Owner C｜Backup D"
+    },
+    {
+      "type": "paragraph",
+      "text": "範圍：Orchestrator、Specialist、Safety、Context、RAG、Graph、Eval。"
+    },
+    {
+      "type": "paragraph",
+      "text": "WS-03｜Speech／Elder App｜Owner D｜Backup C"
+    },
+    {
+      "type": "paragraph",
+      "text": "範圍：Audio、ASR、TTS、WebSocket、長者端狀態與無障礙。"
+    },
+    {
+      "type": "paragraph",
+      "text": "WS-04｜Care／Family／Notification｜Owner E｜Backup A"
+    },
+    {
+      "type": "paragraph",
+      "text": "範圍：日照、居服入口、家屬報表、LINE／Email、照護端覆核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "WS-05｜Platform／Integration／Delivery｜Owner A＋E"
+    },
+    {
+      "type": "paragraph",
+      "text": "範圍：Repository、IaC、Environment、CI／CD、Feature Flag、Observability、E2E、Demo。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "六、RACI 摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Product Scope／Demo Story：A Accountable；全員 Consulted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Core API／Domain：B Accountable；A Responsible Backup。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Authorization／Consent：B Accountable；E Test Responsible；A Consulted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Agent Runtime／Prompt／Context：C Accountable；D Consulted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR／TTS／Voice UI：D Accountable；C Consulted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Daycare／Family UI：E Accountable；A Consulted。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Contract：B、C、D、E 各負責自己 Producer／Consumer；A Accountable for integration。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• IaC／CI／Staging：E Responsible；A Accountable。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Quality Gate：E Accountable；各 Feature Owner Responsible。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo Rehearsal／Fallback：A Accountable；全員 Responsible。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "七、Repository 結構"
+    },
+    {
+      "type": "paragraph",
+      "text": "採 Monorepo，讓 Contract、Frontend、Backend、Agent、IaC 與 Eval 在同一版本標籤下交付。"
+    },
+    {
+      "type": "paragraph",
+      "text": "/README.md"
+    },
+    {
+      "type": "paragraph",
+      "text": "/AGENTS.md"
+    },
+    {
+      "type": "paragraph",
+      "text": "/docs"
+    },
+    {
+      "type": "paragraph",
+      "text": "/adr"
+    },
+    {
+      "type": "paragraph",
+      "text": "/runbooks"
+    },
+    {
+      "type": "paragraph",
+      "text": "/demo"
+    },
+    {
+      "type": "paragraph",
+      "text": "/contracts"
+    },
+    {
+      "type": "paragraph",
+      "text": "/openapi"
+    },
+    {
+      "type": "paragraph",
+      "text": "/asyncapi"
+    },
+    {
+      "type": "paragraph",
+      "text": "/schemas/common"
+    },
+    {
+      "type": "paragraph",
+      "text": "/schemas/domain"
+    },
+    {
+      "type": "paragraph",
+      "text": "/schemas/agent"
+    },
+    {
+      "type": "paragraph",
+      "text": "/schemas/tools"
+    },
+    {
+      "type": "paragraph",
+      "text": "/schemas/events"
+    },
+    {
+      "type": "paragraph",
+      "text": "/examples/valid"
+    },
+    {
+      "type": "paragraph",
+      "text": "/examples/invalid"
+    },
+    {
+      "type": "paragraph",
+      "text": "/apps"
+    },
+    {
+      "type": "paragraph",
+      "text": "/elder-web"
+    },
+    {
+      "type": "paragraph",
+      "text": "/care-web"
+    },
+    {
+      "type": "paragraph",
+      "text": "/family-web"
+    },
+    {
+      "type": "paragraph",
+      "text": "/services"
+    },
+    {
+      "type": "paragraph",
+      "text": "/core-api"
+    },
+    {
+      "type": "paragraph",
+      "text": "/agent-runtime"
+    },
+    {
+      "type": "paragraph",
+      "text": "/speech-gateway"
+    },
+    {
+      "type": "paragraph",
+      "text": "/notification-worker"
+    },
+    {
+      "type": "paragraph",
+      "text": "/projection-worker"
+    },
+    {
+      "type": "paragraph",
+      "text": "/report-worker"
+    },
+    {
+      "type": "paragraph",
+      "text": "/infra"
+    },
+    {
+      "type": "paragraph",
+      "text": "/modules"
+    },
+    {
+      "type": "paragraph",
+      "text": "/environments/dev"
+    },
+    {
+      "type": "paragraph",
+      "text": "/environments/staging"
+    },
+    {
+      "type": "paragraph",
+      "text": "/environments/prod"
+    },
+    {
+      "type": "paragraph",
+      "text": "/data"
+    },
+    {
+      "type": "paragraph",
+      "text": "/seed"
+    },
+    {
+      "type": "paragraph",
+      "text": "/synthetic"
+    },
+    {
+      "type": "paragraph",
+      "text": "/rag-manifest"
+    },
+    {
+      "type": "paragraph",
+      "text": "/evals"
+    },
+    {
+      "type": "paragraph",
+      "text": "/datasets"
+    },
+    {
+      "type": "paragraph",
+      "text": "/rubrics"
+    },
+    {
+      "type": "paragraph",
+      "text": "/runners"
+    },
+    {
+      "type": "paragraph",
+      "text": "/tests"
+    },
+    {
+      "type": "paragraph",
+      "text": "/e2e"
+    },
+    {
+      "type": "paragraph",
+      "text": "/contract"
+    },
+    {
+      "type": "paragraph",
+      "text": "/resilience"
+    },
+    {
+      "type": "paragraph",
+      "text": "/ops"
+    },
+    {
+      "type": "paragraph",
+      "text": "/dashboards"
+    },
+    {
+      "type": "paragraph",
+      "text": "/alarms"
+    },
+    {
+      "type": "paragraph",
+      "text": "/runbooks"
+    },
+    {
+      "type": "paragraph",
+      "text": "/scripts"
+    },
+    {
+      "type": "paragraph",
+      "text": "規則："
+    },
+    {
+      "type": "paragraph",
+      "text": "• API Schema、ORM Entity／Model、Agent Model 與 Frontend View Model 不直接共用同一 Class。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Contract 可產生 Client／Type，但 Domain Mapping 保持明確。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 大型音訊、模型權重、Secret 與正式資料不進 Git。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "八、Branch 與版本策略"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.1 Branch"
+    },
+    {
+      "type": "paragraph",
+      "text": "• main：永遠可建置、可部署至 Dev。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• feature/<ticket>-<short-name>：目標一日內合併，最長不超過兩日。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• fix/<ticket>-<short-name>：缺陷修正。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• release/<version>：只在 Demo Freeze 或正式 Release 使用。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.2 Pull Request"
+    },
+    {
+      "type": "paragraph",
+      "text": "PR 必須小於可審查範圍，包含：目的、Contract 影響、測試、Screenshot／Trace、Rollback Notes、Known Risk。"
+    },
+    {
+      "type": "paragraph",
+      "text": "至少一位非作者核准；Security、Contract 或 IaC 變更需對應 Owner 核准。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.3 Commit／Tag"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Conventional Commit 類型：feat、fix、refactor、test、docs、chore、infra、contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo Candidate Tag：demo-rc.N。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Final Demo Tag：demo-v1.0.0。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Model／Prompt／Policy／Dataset 版本與 Git Tag 一起記錄。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "九、開發環境"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "9.1 Local"
+    },
+    {
+      "type": "paragraph",
+      "text": "Docker Compose 或 Local Emulator 提供 PostgreSQL、Queue Stub、Object Storage Stub；Agent、Speech 與外部通知可切 Mock／Sandbox。"
+    },
+    {
+      "type": "paragraph",
+      "text": "使用完全合成或去識別資料。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "9.2 Shared Dev"
+    },
+    {
+      "type": "paragraph",
+      "text": "每次 main 合併後自動部署。"
+    },
+    {
+      "type": "paragraph",
+      "text": "用途：前後端聯調、Agent Tool、WebSocket、Graph／Search Spike。"
+    },
+    {
+      "type": "paragraph",
+      "text": "允許重設資料，不作最終 Demo 證據。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "9.3 Staging／Demo"
+    },
+    {
+      "type": "paragraph",
+      "text": "接近 Target Architecture，固定 Persona、Seed、Contract、Prompt、Policy、Model 與通知 Sandbox。"
+    },
+    {
+      "type": "paragraph",
+      "text": "只有受控 Migration 可改資料；所有 Demo Rehearsal 與失敗恢復在此執行。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "9.4 Production"
+    },
+    {
+      "type": "paragraph",
+      "text": "黑客松期間可不開放真實長者使用；正式產品階段才建立 Production Account／VPC／Data Governance 與 Release Gate。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "9.5 環境隔離"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AWS Account 優先：shared-services、dev、staging、prod；資源不足時至少以 Account／VPC／IAM／Prefix 分離。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• S3 Bucket、KMS Key、Secrets、Cognito Pool、Database、Queue、Index、Graph Endpoint 不跨環境共用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 不從 Production 複製資料到 Dev。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十、設定與 Secret"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 非敏感設定：版本化 Config／Environment Variable。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Secret：AWS Secrets Manager／Parameter Store SecureString。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Local 使用 .env.example，不提交真實 .env。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Model ID、Prompt Version、Policy Version、Feature Flag 可獨立切換。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每個 Environment 有明確 ALLOWED_ORIGINS、LOG_LEVEL、DATA_RETENTION、NOTIFICATION_MODE。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo 使用專用 Test Recipient Allowlist，避免誤寄。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十一、Infrastructure as Code"
+    },
+    {
+      "type": "paragraph",
+      "text": "建議使用 AWS CDK 或 Terraform，五人團隊只選一套，不混用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "IaC 模組："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Network／VPC／Security Group。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Cognito／IAM／KMS／Secrets。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ECS／ALB／API Gateway／WebSocket。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Aurora／S3。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• EventBridge／SQS／DLQ／Scheduler／Step Functions。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• OpenSearch／Neptune。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AgentCore Runtime／Gateway 相關部署設定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• CloudWatch Log、Metric、Alarm、Dashboard。"
+    },
+    {
+      "type": "paragraph",
+      "text": "規則："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 禁止 Console-only Critical Resource。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 手動建立的 Spike Resource 必須在 24 小時內轉 IaC 或標記可刪除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• IaC Plan／Diff 在 PR 顯示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每個 Stack 有 Owner、Cost Tag、Environment Tag 與 Removal Policy。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十二、CI／CD Pipeline"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "12.1 PR Pipeline"
+    },
+    {
+      "type": "paragraph",
+      "text": "checkout"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ lint／format"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ unit"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ schema／OpenAPI／AsyncAPI lint"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ contract test"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ secret／dependency／IaC scan"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ build"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ component test"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ test report"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "12.2 Main Pipeline"
+    },
+    {
+      "type": "paragraph",
+      "text": "PR Gate"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ build immutable artifacts"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ deploy Dev"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ migration"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ integration smoke"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ agent／speech smoke"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ frontend smoke"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ publish version／trace"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "12.3 Staging Pipeline"
+    },
+    {
+      "type": "paragraph",
+      "text": "manual candidate selection"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ deploy Staging"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ migration dry run／apply"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ E2E"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ security negative"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ evaluation subset／full set"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ performance smoke"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ selected resilience"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ manual approval"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "12.4 Demo Freeze Pipeline"
+    },
+    {
+      "type": "paragraph",
+      "text": "release branch／tag"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ locked Contract／Prompt／Policy／Model／Dataset"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ clean Staging restore"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ full rehearsal"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ evidence bundle"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ final tag"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "12.5 Rollback"
+    },
+    {
+      "type": "paragraph",
+      "text": "Application 使用前一個 immutable image；Database Rollback 原則由 13 文件定義。不得在不理解資料相容性的情況直接降版。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十三、Task 模板"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個 Task 必須包含："
+    },
+    {
+      "type": "paragraph",
+      "text": "Task ID／Title"
+    },
+    {
+      "type": "paragraph",
+      "text": "User Story／Workflow／Contract Link"
+    },
+    {
+      "type": "paragraph",
+      "text": "Owner／Backup"
+    },
+    {
+      "type": "paragraph",
+      "text": "Goal"
+    },
+    {
+      "type": "paragraph",
+      "text": "In Scope／Out of Scope"
+    },
+    {
+      "type": "paragraph",
+      "text": "Dependencies"
+    },
+    {
+      "type": "paragraph",
+      "text": "Acceptance Criteria"
+    },
+    {
+      "type": "paragraph",
+      "text": "Security／Consent／Privacy Consideration"
+    },
+    {
+      "type": "paragraph",
+      "text": "API／Event／Tool／Schema Impact"
+    },
+    {
+      "type": "paragraph",
+      "text": "Test Cases"
+    },
+    {
+      "type": "paragraph",
+      "text": "Observability"
+    },
+    {
+      "type": "paragraph",
+      "text": "Demo Evidence"
+    },
+    {
+      "type": "paragraph",
+      "text": "Estimate"
+    },
+    {
+      "type": "paragraph",
+      "text": "Risk"
+    },
+    {
+      "type": "paragraph",
+      "text": "Definition of Done"
+    },
+    {
+      "type": "paragraph",
+      "text": "禁止使用「做 Agent」、「做資料庫」、「做前端」等無法驗收的大 Task。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十四、Definition of Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "Task 進入 In Progress 前："
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 使用者價值與 Actor 清楚。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Input／Output／State／Error 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Contract 或 Stub 已存在。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Owner／Backup／Dependency 已確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 測試與安全負向案例已寫出。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 是否可 Mock、何時替換已說明。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 不存在尚未決定的 Critical Product Rule。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十五、Definition of Done"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Code 已合併 main，無長期私人 Branch。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Unit／Contract／必要 Integration Test 通過。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Authorization、Consent、Cross-Elder Negative Test 通過。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Schema、Error、Idempotency、Version 規則符合 10 文件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Trace／Log／Metric 可找到。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ UI 有 Loading、Empty、Error、Forbidden／Expired 狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 文件、ADR 或 Runbook 已更新。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Staging 可重跑，無手動改資料庫才能成功。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Demo Evidence 已附上。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Owner 與 Backup 都能說明如何操作與恢復。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十六、Critical Path"
+    },
+    {
+      "type": "paragraph",
+      "text": "Critical Path 依序為："
+    },
+    {
+      "type": "paragraph",
+      "text": "1. Contract＋Environment＋Seed Persona。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. ElderScope／Consent／Core Domain State。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. Voice Session／ASR／Transcript Confirmation。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. Orchestrator／Companion／Safety。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. Session Completed Event。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. Event／Memory Candidate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. Memory Confirmation＋Outbox。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. Graph Projection＋Context Retrieval。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. 日照概覽／事件覆核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. Family Report Published Gate＋Notification。"
+    },
+    {
+      "type": "paragraph",
+      "text": "11. E2E、Failure Recovery、Trace、Rehearsal。"
+    },
+    {
+      "type": "paragraph",
+      "text": "任何不在此路徑且不支援 Demo 證據的功能，不得阻塞 Critical Path。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十七、依賴圖"
+    },
+    {
+      "type": "paragraph",
+      "text": "D／Speech UI 依賴 B 提供 Session／Consent Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "C／Agent 依賴 B 提供受控 Tool API 與 ElderScope。"
+    },
+    {
+      "type": "paragraph",
+      "text": "B／Core 依賴 10 Contract 與 Seed Data。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E／Care／Family UI 依賴 B 的 Event、Summary、Report API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "C／Graph 依賴 B 的 Outbox Event。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E／Notification 依賴 Report Published Event。"
+    },
+    {
+      "type": "paragraph",
+      "text": "A／E2E 依賴所有 Owner 提供可自動建立的 Seed 與可重跑 Scenario。"
+    },
+    {
+      "type": "paragraph",
+      "text": "解耦方式："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 先提供 Contract Mock Server。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event 使用固定 Example Payload。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Frontend 使用 Generated Client／Typed Stub。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Agent Tool 使用 Sandbox Endpoint。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每個依賴設定最晚交付日與 Fallback。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十八、十天 Hackathon Build Plan"
+    },
+    {
+      "type": "paragraph",
+      "text": "以下以 Build Day 表示，可依實際剩餘日期平移。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 1｜Foundation Freeze"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 確認 Scope、Persona、Demo Story、Owner。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 建 Monorepo、CI、Dev Environment、Seed Data。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 鎖定最小 OpenAPI／Event／Agent／Tool Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：main 可部署；三個 Persona 可登入或模擬 Actor Context。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 2｜Core Security＋Voice Skeleton"
+    },
+    {
+      "type": "paragraph",
+      "text": "• B：ElderScope、Consent、Session API。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• D：錄音／上傳／WebSocket Skeleton。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• C：Agent Runtime Hello Flow。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• E：長者端與日照端 Shell。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：林阿嬤建立 Voice Session，張阿姨不可被錯誤存取。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 3｜ASR → Companion → TTS"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR Final、低信心確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Orchestrator、Companion、Safety。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Text／TTS 回覆與錯誤降級。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：一個完整短回合可重跑三次。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 4｜Event Candidate＋Review"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Session Completed Event。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event Extractor＋Schema。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 照護端待覆核、Verify／Correct／Reject。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：事件有 Evidence，可修正且 Idempotent。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 5｜Memory＋Graph"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Memory Candidate、確認 UI、ACTIVE Memory。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Outbox、Graph Projection、重放。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 下一輪 Context 引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：「女兒／每週日通話」可確認、投影、引用；未確認不可讀。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 6｜Daycare Vertical Slice"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 多長者概覽、林阿嬤詳情、張阿姨隔離。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Daily Summary Draft／Rebuild。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Trace 頁基本版。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：照服員完成概覽 → 詳情 → 覆核。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 7｜Family Report＋Notification"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Family Report Draft／Published Gate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬 App／Web。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• LINE／Email Sandbox Adapter。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：Published Report 可讀；Draft／Withdrawn 不可讀；通知失敗不回滾。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 8｜Security／Resilience／Evaluation"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Prompt Injection、Cross-Elder、Consent Revoked。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Graph／Notification Failure、DLQ／Redrive。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• ASR、Agent、RAG／Graph Eval 子集。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：零容忍 Gate 通過；至少兩條失敗恢復證據。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 9｜Integration Freeze Candidate"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完整 E2E、效能 Smoke、Accessibility。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Feature Flag 關閉不穩功能。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 鎖 Prompt、Model、Policy、Dataset。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：demo-rc.1，完整流程連續成功三次。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Day 10｜Demo Freeze／Rehearsal"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 只修 P0／P1。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 清空並重建 Staging Seed。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 正常與備援 Demo 各排練五次。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 產出 Final Tag、影片、截圖、Trace、Runbook。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Exit：demo-v1.0.0；無手動 DB 救場。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十九、每日運作節奏"
+    },
+    {
+      "type": "paragraph",
+      "text": "09:00 Stand-up（15 分鐘）：昨日完成、今日一個主要交付、阻塞、需要誰。"
+    },
+    {
+      "type": "paragraph",
+      "text": "09:15 Contract／Integration Check（15 分鐘）：只處理跨 Workstream 介面。"
+    },
+    {
+      "type": "paragraph",
+      "text": "13:30 Midday Sync（10 分鐘）：檢查 Critical Path 與環境。"
+    },
+    {
+      "type": "paragraph",
+      "text": "17:30 Integration Window（60～90 分鐘）：合併、部署 Dev、跑 Smoke。"
+    },
+    {
+      "type": "paragraph",
+      "text": "19:00 Demo Check（20 分鐘）：從使用者角度跑目前 Vertical Slice。"
+    },
+    {
+      "type": "paragraph",
+      "text": "每次同步都不得變成長時間設計會議；重大設計以 ADR Owner＋時限處理。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十、工作看板"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Backlog → Ready → In Progress → Review → Integrated → Verified → Done。"
+    },
+    {
+      "type": "paragraph",
+      "text": "WIP Limit："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 每人最多 1 個主要 In Progress Task。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 全隊最多 2 個未整合 Cross-Workstream Feature。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Blocked 超過 2 小時必須升級。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Review 超過 4 小時由 Backup 接手。"
+    },
+    {
+      "type": "paragraph",
+      "text": "優先級："
+    },
+    {
+      "type": "paragraph",
+      "text": "P0 Demo／Safety Critical。"
+    },
+    {
+      "type": "paragraph",
+      "text": "P1 Vertical Slice Required。"
+    },
+    {
+      "type": "paragraph",
+      "text": "P2 Quality／Extension。"
+    },
+    {
+      "type": "paragraph",
+      "text": "P3 Future Product。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十一、技術 Spike 排程"
+    },
+    {
+      "type": "paragraph",
+      "text": "Spike 必須是 Time-boxed Experiment，不是無限研究。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-01｜Voice Transport｜Owner D｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "決定 WebSocket Binary、Signed Upload 或 Provider Streaming；產出 Latency、限制、選擇。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-02｜AgentCore Runtime＋Gateway｜Owner C｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出最小 Agent Run、Tool Call、Trace、部署方式。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-03｜Core ABAC＋Tool 二次授權｜Owner B｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出允許／拒絕測試與 Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-04｜Aurora Outbox → EventBridge／SQS｜Owner B／E｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出去重、重試、DLQ、Redrive。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-05｜Neptune Projection／Fallback｜Owner C｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出林阿嬤關係圖、刪除／停用、Aurora 降級。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-06｜OpenSearch Hybrid Retrieval｜Owner C｜4 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出 Keyword、Vector、Metadata Filter 三組查詢。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-07｜LINE／Email Sandbox｜Owner E｜3 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出實際通知、失敗狀態與 App 仍可讀證據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "SP-08｜ASR Baseline｜Owner D｜6 小時"
+    },
+    {
+      "type": "paragraph",
+      "text": "產出國語、臺語／混語 Golden Set CER、Critical Entity 與 p95。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Spike 結束必須決定：Adopt、Adapt、Mock with replacement date、Drop。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十二、Mock 與 Feature Flag 政策"
+    },
+    {
+      "type": "paragraph",
+      "text": "Mock 類型："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Provider Mock：外部 ASR、TTS、LINE、Email。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Data Mock：合成 Persona、固定 RAG Corpus。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Projection Mock：Graph／Search 暫用 In-Memory 或固定 Adapter。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• UI Mock：未完成頁面用 Contract Example。"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個 Mock 必須標示：mock_id、owner、reason、contract、replacement、expires_at、demo_disclosure。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Feature Flag："
+    },
+    {
+      "type": "paragraph",
+      "text": "voice_custom_asr"
+    },
+    {
+      "type": "paragraph",
+      "text": "graph_retrieval"
+    },
+    {
+      "type": "paragraph",
+      "text": "family_notification"
+    },
+    {
+      "type": "paragraph",
+      "text": "proactive_companion"
+    },
+    {
+      "type": "paragraph",
+      "text": "care_insight"
+    },
+    {
+      "type": "paragraph",
+      "text": "home_care_mode"
+    },
+    {
+      "type": "paragraph",
+      "text": "hak_language"
+    },
+    {
+      "type": "paragraph",
+      "text": "en_language"
+    },
+    {
+      "type": "paragraph",
+      "text": "Flag 關閉後系統需安全降級，不得出現半完成狀態。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十三、Seed 與 Demo Data"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定 Persona：林阿嬤、張阿姨、陳伯伯。"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定關係：林阿嬤—女兒—每週日通話。"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定場域：幸福日照中心＋一筆陳伯伯居服派案。"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定報表：一份 Draft、一份 Published、一份 Withdrawn。"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定通知：一筆 Sent、一筆 Failed／Retrying。"
+    },
+    {
+      "type": "paragraph",
+      "text": "固定故障：Graph unavailable、Notification failed、Consent revoked。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Seed 必須可用單一 Command 重建，且每次 ID、版本或 Mapping 可被測試腳本取得；禁止 Demo 前手動修改資料庫。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十四、整合測試情境"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-01｜林阿嬤正常語音 → 回覆 → Event Candidate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-02｜低信心人物／日期確認後才繼續。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-03｜Memory Confirmed → Graph → 下一輪引用。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-04｜日照帳號只見林阿嬤與張阿姨，不見陳伯伯。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-05｜張阿姨資料不進林阿嬤 Context Manifest。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-06｜家屬只讀 Published Report。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-07｜通知失敗但 App Report 可讀。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-08｜Graph 失敗後 Aurora／Search 降級與重放。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-09｜Consent Revoked 後 Queue 中工作停止。"
+    },
+    {
+      "type": "paragraph",
+      "text": "E2E-10｜Agent 嘗試高風險 Command 被拒絕。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十五、Demo Freeze 規則"
+    },
+    {
+      "type": "paragraph",
+      "text": "Freeze 時點：正式展示前至少 24 小時；可行時提前 48 小時。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Freeze 後允許："
+    },
+    {
+      "type": "paragraph",
+      "text": "• P0／P1 修復。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 文案、講稿與不影響 Contract 的展示調整。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Feature Flag 關閉不穩功能。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Freeze 後禁止："
+    },
+    {
+      "type": "paragraph",
+      "text": "• 新增 Agent、Database、AWS Service 或主要 Feature。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修改 Event／API Breaking Contract。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 更換未評估模型、Prompt、Policy 或 Dataset。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 臨時把真實個資加入 Demo。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Release Candidate 必須記錄：Git Tag、Image Digest、Migration Version、Contract、Prompt、Policy、Model、Dataset、Seed、Environment、Known Risks。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十六、Demo Runbook"
+    },
+    {
+      "type": "paragraph",
+      "text": "角色分工："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Presenter：A。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Primary Operator：D 或 E，依畫面。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• AWS／Trace Operator：C。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Backend／Data Recovery：B。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Timekeeper／Fallback／錄影：E 或 A Backup。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Runbook 包含："
+    },
+    {
+      "type": "paragraph",
+      "text": "1. 展示前健康檢查。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. Seed Reset。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. 登入角色與 Test Account。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 正常 Demo Click／Speech Script。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 預期 Trace／畫面／通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. 每一步最長等待時間。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. 失敗時的安全 Fallback。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. 不可展示的 Admin／Secret／個資頁面。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. 結束後資料清理。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十七、風險與緩衝"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-01｜臺語 ASR 未達門檻"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：低信心確認、預錄 Golden Audio、文字輸入備援；不可假裝辨識正確。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-02｜AgentCore／Bedrock Latency"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：縮短 Context、三步上限、較快模型、固定安全 Fallback。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-03｜Neptune／OpenSearch 建置耗時"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：先用 Adapter／Local Projection 完成 Contract，再替換；Graph 隔離規則不可省略。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-04｜LINE 帳號／外部審核"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：Sandbox／Email Test Recipient；App 是正式報表來源。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-05｜五人並行造成整合延遲"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：Contract Mock、每日 Integration Window、WIP Limit。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-06｜功能太多"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：Critical Path、Feature Flag、P0／P1／P2 分層；Day 8 後不再加新主流程。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-07｜AWS 成本突增"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：Budget Alarm、Auto-stop、TTL Tag、Serverless／On-demand、刪除 Spike Resource。"
+    },
+    {
+      "type": "paragraph",
+      "text": "R-08｜Demo 網路不穩"
+    },
+    {
+      "type": "paragraph",
+      "text": "處理：正式雲端主路徑＋錄影＋Local Read-Only Evidence；安全與權限不可改用假的成功畫面。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十八、工程證據包"
+    },
+    {
+      "type": "paragraph",
+      "text": "每個 Release Candidate 必須包含："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Architecture Diagram／ADR。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• OpenAPI／AsyncAPI／Schema Artifact。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Git Tag／Commit／Image Digest。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• IaC Version／Plan。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Migration Version。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Test Report／Agent Eval／ASR Eval。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Cross-Elder／Consent／Safety 結果。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• E2E Trace。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Cost／Latency 摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Known Risks／Feature Flags。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Demo Video／Screenshots。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Runbook／Rollback Notes。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二十九、完整產品 Roadmap"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase A｜Hackathon Evidence"
+    },
+    {
+      "type": "paragraph",
+      "text": "完成林阿嬤 Vertical Slice、照護端、家屬報表、受控 Multi-Agent、Graph 與安全證據。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase B｜Pilot Readiness"
+    },
+    {
+      "type": "paragraph",
+      "text": "加入真實使用者研究、日照現場流程、完整同意、Data Retention、正式 Monitoring、Backup／Restore、更多語音資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase C｜Home Care Extension"
+    },
+    {
+      "type": "paragraph",
+      "text": "完整居服排班、派案、服務紀錄、行動裝置安全、弱網／離線策略、家屬關係管理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase D｜Multilingual and Proactive"
+    },
+    {
+      "type": "paragraph",
+      "text": "客語／英文、個人化主動陪伴、人工核准、頻率控制、Care Insight Candidate。"
+    },
+    {
+      "type": "paragraph",
+      "text": "Phase E｜Operational Scale"
+    },
+    {
+      "type": "paragraph",
+      "text": "Multi-Tenant、SLO、成本治理、正式 Incident、資料匯出、相容性與退場管理。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十、里程碑 Gate"
+    },
+    {
+      "type": "paragraph",
+      "text": "M0｜Foundation Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "Repository、CI、Dev、Contract、Seed、Owner 完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "M1｜Voice Slice Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "林阿嬤完成 ASR／Agent／TTS；低信心可修正。"
+    },
+    {
+      "type": "paragraph",
+      "text": "M2｜Memory Slice Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "候選、確認、ACTIVE、Graph、下一輪引用完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "M3｜Professional／Family Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "照護端覆核、摘要、Published Report、通知完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "M4｜Quality Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "零容忍安全、Agent／ASR／RAG／Graph Gate、Failure Recovery 完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "M5｜Demo Ready"
+    },
+    {
+      "type": "paragraph",
+      "text": "連續五次、Freeze、Evidence、Runbook、Fallback 完成。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十一、v0.1 完成判定"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 五人 Workstream、Owner、Backup 與責任邊界已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Target Architecture 與 Hackathon Build Profile 已分開。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Repository、Branch、Environment、Secret、IaC、CI／CD 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Critical Path、依賴、十天 Build Plan 與每日整合節奏已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Task、Definition of Ready、Definition of Done 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Spike、Mock、Feature Flag、Seed 與 Demo Data 規則已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Demo Freeze、Runbook、Release Evidence 與風險緩衝已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 完整產品 Roadmap 與里程碑 Gate 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 下一步可將本文件轉成實際 Issue／Epic／Sprint Board。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十二、待決策"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. 五名成員的姓名、可投入時數、主要技能與無法參與時段。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. 最終競賽日、Demo 時長與簡報限制。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. AWS Account／Region／Credits／Quota 與可使用模型。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. IaC 選 CDK 或 Terraform。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 前端選 React／Vue 或既有技術；是否共用 Design System。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. Agent Runtime 使用 Python／Strands 或其他框架。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. Core API 是否採單一 Python Modular Monolith；Web Framework、ORM 與 Worker Runtime 如何統一。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. Voice Transport 與 ASR Provider 最終選擇。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. Neptune、OpenSearch、LINE 哪些採真實服務，哪些使用 Adapter／Sandbox。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. 每日團隊可工作的固定整合時段。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三十三、下一份文件"
+    },
+    {
+      "type": "paragraph",
+      "text": "13｜智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "13 文件將定義："
+    },
+    {
+      "type": "paragraph",
+      "text": "• Aurora／RDS Schema Migration、Flyway Version 與資料回填。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Expand／Migrate／Contract、向後相容與 Zero／Low Downtime。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Application、Agent、Prompt、Policy、Contract、Index 與 Graph Release。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Feature Flag、Canary、Blue／Green、Rollback Decision。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Event Consumer 相容、DLQ、Replay、Projection Rebuild。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Backup／Restore、Release Checklist 與失敗復原演練。"
+    }
+  ],
+  "rawText": "智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1\n\n\n\n文件資訊\n\n版本：v0.1\n\n狀態：Draft｜五人團隊實作與交付基準，待競賽日期、AWS Credits 與技術 Spike 結果校準\n\n建立日期：2026-07-26\n\n文件 Owner：Harper（Integration／Delivery Owner）\n\n審查者：五人團隊\n\n適用範圍：Repository、Environment、CI／CD、IaC、Workstream、Task、依賴、Critical Path、Hackathon Build、Demo Freeze、完整產品 Roadmap\n\n\n\n相關文件\n\n03｜Story Map v1.2\n\nhttps://docs.google.com/spreadsheets/d/1Qmg1jbaN67Tjmpcx6e2zyZOf_-td0_fg9iKqgb128CE/edit\n\n05｜核心工作流、狀態機與錯誤恢復 v0.1\n\nhttps://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/edit\n\n08｜AWS 系統架構、服務選型與 ADR v0.1\n\nhttps://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/edit\n\n09｜Multi-Agent、Agentic Workflow 與 Context Engineering v0.1\n\nhttps://docs.google.com/document/d/1ZfkKMMW2tfu5nSXn74WncuN6VN2iVVOeJ5kDxMSVr4Q/edit\n\n10｜API、Event、Tool 與 Data Contracts v0.1\n\nhttps://docs.google.com/document/d/1s2iM5Yue8WdpVa04DmQm-F_jTkHrPVaSW5ZaFFXD1bA/edit\n\n11｜測試策略、Agent Evaluation 與品質門檻 v0.1\n\nhttps://docs.google.com/document/d/1saeohikZZ63P2ud1YNHMQDKBKX2wgVnMsQ3LPTAD2qY/edit\n\n\n\n一、文件目的\n\n本文件把前述產品、工作流、Domain、安全、AWS 架構、Agent、Contract 與測試設計轉成五人團隊可以直接執行的工程計畫。它回答：誰負責什麼、程式放哪裡、在哪個環境整合、先做哪一條 Critical Path、什麼時候 Freeze、怎樣判斷完成，以及完整產品架構如何分階段實作。\n\n\n\n本文件採「完整架構先定義、實作分階段交付」。Target Architecture 不因黑客松縮小而消失；Hackathon Build Profile 只決定本次真正部署、可 Mock 或延後的部分。\n\n\n\n二、交付原則\n\n1. Vertical Slice 優先：先讓一條林阿嬤流程端到端可運作，再擴充功能面。\n\n2. Contract First：前後端、Agent、Tool、Event 與 Worker 開工前先鎖定最小 Contract。\n\n3. Trunk-Based：短生命週期 Branch、每日合併、主幹保持可部署。\n\n4. One Owner, One Backup：每個元件有單一 Owner 與備援者，避免無人負責或單點知識。\n\n5. Integration Daily：不接受最後一天才整合。\n\n6. Security Is Functional：權限、同意、資料隔離、未確認記憶與 Published Gate 都是功能，不是最後補強。\n\n7. Observable by Default：每條流程從第一天就有 trace_id、state、reason_code 與基本指標。\n\n8. Mock with Boundary：可 Mock 外部服務或延後功能，但不可 Mock 權限、同意、資料隔離與正式狀態規則。\n\n9. Demo Freeze：Freeze 後只修 P0／P1，不再臨時加功能。\n\n10. Evidence over Claim：每個完成項目必須附測試、畫面、Trace 或可重跑指令。\n\n\n\n三、交付模式\n\n3.1 Target Architecture\n\n完整目標保留：ECS Fargate Core API、AgentCore Runtime、Aurora PostgreSQL、Neptune、OpenSearch、S3、EventBridge、SQS／DLQ、Step Functions、Cognito、CloudWatch、LINE／Email Adapter，以及日照、居服、家屬三種專業或關係入口。\n\n\n\n3.2 Hackathon Build Profile\n\n本次必須真正實作：\n\n• 長者語音或可靠語音替代入口。\n\n• Conversation Orchestrator、Companion、Event Extractor、Memory Candidate、Safety Evaluator。\n\n• Event Candidate → Review。\n\n• Memory Candidate → Confirmed → ACTIVE。\n\n• ACTIVE Memory 投影至 Graph 並在下一輪引用。\n\n• 日照多長者概覽與林阿嬤詳情。\n\n• 家屬 Published Report Read。\n\n• 至少一個 LINE／Email Sandbox 通知或可驗證 Adapter。\n\n• Cross-Elder Isolation、Consent Gate、Tool Allowlist、max_steps。\n\n• 一條故障降級與一條 Retry／DLQ／Redrive 證據。\n\n\n\n本次可分期或 Mock：\n\n• 客語與英文完整模型路由。\n\n• 居服員完整離線服務紀錄。\n\n• 全量法規／衛教知識庫。\n\n• 完整主動陪伴與 Care Insight。\n\n• 大規模 Multi-Tenant、自動擴縮壓測、跨 Region DR。\n\n• 正式 LINE 商業帳號審核；可用 Sandbox／Test Recipient。\n\n\n\n不可 Mock：\n\n• elder_id／tenant_id／assignment／family relationship 授權。\n\n• Consent 撤回與用途限制。\n\n• 未確認記憶不得進 Context。\n\n• 張阿姨資料不得進林阿嬤 Context。\n\n• Agent 不得直接 Publish、Confirm 或繞過 Core Command Gate。\n\n• Published Report 才能由家屬讀取。\n\n\n\n四、五人團隊建議分工\n\n團隊成員對照：A＝Harper；B＝柏成；C＝Isaac；D＝杰倫；E＝Iris。文件其餘工作流、Owner 與 Backup 保留 A～E 代號，並以此對照表為準。\n\n\n\n4.1 成員 A（Harper）｜Integration／Product／Demo Owner\n\n主要責任：Vertical Slice、需求取捨、Demo Story、跨 Workstream 整合、Core API 共用框架。\n\n交付：整合 Backlog、Demo Script、Feature Flag、E2E Harness、技術證據頁、每日決策紀錄。\n\n次要責任：協助 B 的 Core API 與 Contract。\n\n備援：E。\n\n\n\n4.2 成員 B（柏成）｜Domain Backend／Security Owner\n\n主要責任：Python Core API、Aurora Schema、Domain State、ABAC、Consent、Idempotency、Outbox。\n\n交付：Elder／Consent／Care Event／Memory／Report／Assignment API、Alembic／框架原生 Migration、Negative Authorization Test。\n\n次要責任：EventBridge／SQS Producer 與 Consumer 基礎。\n\n備援：A。\n\n\n\n4.3 成員 C（Isaac）｜Agent／RAG／Graph Owner\n\n主要責任：AgentCore Runtime、自有 Orchestration Loop、Agent Schema、Context Builder、OpenSearch、Neptune、Evaluation。\n\n交付：Orchestrator、Companion、Extractor、Memory Candidate、Safety Evaluator、Graph Projection、Query Planner、Context Manifest。\n\n次要責任：Prompt／Model Router、Agent Trace。\n\n備援：D。\n\n\n\n4.4 成員 D（杰倫）｜Speech／Elder Experience Owner\n\n主要責任：ASR／TTS、語言路由、Voice Session、WebSocket、長者端 UI 與低信心確認。\n\n交付：錄音／上傳、ASR Final、Confirmation UI、TTS 播放、文字降級、語音 Latency 報告。\n\n次要責任：協助 C 的語言與 Prompt 評估。\n\n備援：C。\n\n\n\n4.5 成員 E（Iris）｜Professional／Family UI、Quality／DevOps Owner\n\n主要責任：日照照護端、家屬 App／Web、通知 Adapter、CI／CD、Staging、Release Evidence。\n\n交付：多長者概覽、事件覆核、報表頁、通知設定、Pipeline、CloudWatch Dashboard、Demo Runbook。\n\n次要責任：QA Gate、Accessibility、Rehearsal。\n\n備援：A。\n\n\n\n4.6 分工限制\n\n• A 不成為所有工作最後接手者；阻塞必須在每日整合會議提出。\n\n• E 管理 Gate，但測試仍由各 Feature Owner 撰寫。\n\n• C 不得自行決定正式 Domain State；透過 B 提供的 Core Command API。\n\n• D 不直接把 ASR Transcript 寫成正式事件；只建立 Session／Transcript Version。\n\n• 每個 Owner 至少安排一次 Pair Review 給 Backup。\n\n\n\n五、Workstream 與責任邊界\n\nWS-01｜Core Domain／Security｜Owner B｜Backup A\n\n範圍：Identity Context、ElderScope、Consent、Domain State、Persistence、Outbox、API。\n\n\n\nWS-02｜Agent／Retrieval／Graph｜Owner C｜Backup D\n\n範圍：Orchestrator、Specialist、Safety、Context、RAG、Graph、Eval。\n\n\n\nWS-03｜Speech／Elder App｜Owner D｜Backup C\n\n範圍：Audio、ASR、TTS、WebSocket、長者端狀態與無障礙。\n\n\n\nWS-04｜Care／Family／Notification｜Owner E｜Backup A\n\n範圍：日照、居服入口、家屬報表、LINE／Email、照護端覆核。\n\n\n\nWS-05｜Platform／Integration／Delivery｜Owner A＋E\n\n範圍：Repository、IaC、Environment、CI／CD、Feature Flag、Observability、E2E、Demo。\n\n\n\n六、RACI 摘要\n\n• Product Scope／Demo Story：A Accountable；全員 Consulted。\n\n• Core API／Domain：B Accountable；A Responsible Backup。\n\n• Authorization／Consent：B Accountable；E Test Responsible；A Consulted。\n\n• Agent Runtime／Prompt／Context：C Accountable；D Consulted。\n\n• ASR／TTS／Voice UI：D Accountable；C Consulted。\n\n• Daycare／Family UI：E Accountable；A Consulted。\n\n• Contract：B、C、D、E 各負責自己 Producer／Consumer；A Accountable for integration。\n\n• IaC／CI／Staging：E Responsible；A Accountable。\n\n• Quality Gate：E Accountable；各 Feature Owner Responsible。\n\n• Demo Rehearsal／Fallback：A Accountable；全員 Responsible。\n\n\n\n七、Repository 結構\n\n採 Monorepo，讓 Contract、Frontend、Backend、Agent、IaC 與 Eval 在同一版本標籤下交付。\n\n\n\n/README.md\n\n/AGENTS.md\n\n/docs\n\n  /adr\n\n  /runbooks\n\n  /demo\n\n/contracts\n\n  /openapi\n\n  /asyncapi\n\n  /schemas/common\n\n  /schemas/domain\n\n  /schemas/agent\n\n  /schemas/tools\n\n  /schemas/events\n\n  /examples/valid\n\n  /examples/invalid\n\n/apps\n\n  /elder-web\n\n  /care-web\n\n  /family-web\n\n/services\n\n  /core-api\n\n  /agent-runtime\n\n  /speech-gateway\n\n  /notification-worker\n\n  /projection-worker\n\n  /report-worker\n\n/infra\n\n  /modules\n\n  /environments/dev\n\n  /environments/staging\n\n  /environments/prod\n\n/data\n\n  /seed\n\n  /synthetic\n\n  /rag-manifest\n\n/evals\n\n  /datasets\n\n  /rubrics\n\n  /runners\n\n/tests\n\n  /e2e\n\n  /contract\n\n  /resilience\n\n/ops\n\n  /dashboards\n\n  /alarms\n\n  /runbooks\n\n/scripts\n\n\n\n規則：\n\n• API Schema、ORM Entity／Model、Agent Model 與 Frontend View Model 不直接共用同一 Class。\n\n• Contract 可產生 Client／Type，但 Domain Mapping 保持明確。\n\n• 大型音訊、模型權重、Secret 與正式資料不進 Git。\n\n\n\n八、Branch 與版本策略\n\n8.1 Branch\n\n• main：永遠可建置、可部署至 Dev。\n\n• feature/<ticket>-<short-name>：目標一日內合併，最長不超過兩日。\n\n• fix/<ticket>-<short-name>：缺陷修正。\n\n• release/<version>：只在 Demo Freeze 或正式 Release 使用。\n\n\n\n8.2 Pull Request\n\nPR 必須小於可審查範圍，包含：目的、Contract 影響、測試、Screenshot／Trace、Rollback Notes、Known Risk。\n\n至少一位非作者核准；Security、Contract 或 IaC 變更需對應 Owner 核准。\n\n\n\n8.3 Commit／Tag\n\n• Conventional Commit 類型：feat、fix、refactor、test、docs、chore、infra、contract。\n\n• Demo Candidate Tag：demo-rc.N。\n\n• Final Demo Tag：demo-v1.0.0。\n\n• Model／Prompt／Policy／Dataset 版本與 Git Tag 一起記錄。\n\n\n\n九、開發環境\n\n9.1 Local\n\nDocker Compose 或 Local Emulator 提供 PostgreSQL、Queue Stub、Object Storage Stub；Agent、Speech 與外部通知可切 Mock／Sandbox。\n\n使用完全合成或去識別資料。\n\n\n\n9.2 Shared Dev\n\n每次 main 合併後自動部署。\n\n用途：前後端聯調、Agent Tool、WebSocket、Graph／Search Spike。\n\n允許重設資料，不作最終 Demo 證據。\n\n\n\n9.3 Staging／Demo\n\n接近 Target Architecture，固定 Persona、Seed、Contract、Prompt、Policy、Model 與通知 Sandbox。\n\n只有受控 Migration 可改資料；所有 Demo Rehearsal 與失敗恢復在此執行。\n\n\n\n9.4 Production\n\n黑客松期間可不開放真實長者使用；正式產品階段才建立 Production Account／VPC／Data Governance 與 Release Gate。\n\n\n\n9.5 環境隔離\n\n• AWS Account 優先：shared-services、dev、staging、prod；資源不足時至少以 Account／VPC／IAM／Prefix 分離。\n\n• S3 Bucket、KMS Key、Secrets、Cognito Pool、Database、Queue、Index、Graph Endpoint 不跨環境共用。\n\n• 不從 Production 複製資料到 Dev。\n\n\n\n十、設定與 Secret\n\n• 非敏感設定：版本化 Config／Environment Variable。\n\n• Secret：AWS Secrets Manager／Parameter Store SecureString。\n\n• Local 使用 .env.example，不提交真實 .env。\n\n• Model ID、Prompt Version、Policy Version、Feature Flag 可獨立切換。\n\n• 每個 Environment 有明確 ALLOWED_ORIGINS、LOG_LEVEL、DATA_RETENTION、NOTIFICATION_MODE。\n\n• Demo 使用專用 Test Recipient Allowlist，避免誤寄。\n\n\n\n十一、Infrastructure as Code\n\n建議使用 AWS CDK 或 Terraform，五人團隊只選一套，不混用。\n\n\n\nIaC 模組：\n\n• Network／VPC／Security Group。\n\n• Cognito／IAM／KMS／Secrets。\n\n• ECS／ALB／API Gateway／WebSocket。\n\n• Aurora／S3。\n\n• EventBridge／SQS／DLQ／Scheduler／Step Functions。\n\n• OpenSearch／Neptune。\n\n• AgentCore Runtime／Gateway 相關部署設定。\n\n• CloudWatch Log、Metric、Alarm、Dashboard。\n\n\n\n規則：\n\n• 禁止 Console-only Critical Resource。\n\n• 手動建立的 Spike Resource 必須在 24 小時內轉 IaC 或標記可刪除。\n\n• IaC Plan／Diff 在 PR 顯示。\n\n• 每個 Stack 有 Owner、Cost Tag、Environment Tag 與 Removal Policy。\n\n\n\n十二、CI／CD Pipeline\n\n12.1 PR Pipeline\n\ncheckout\n\n→ lint／format\n\n→ unit\n\n→ schema／OpenAPI／AsyncAPI lint\n\n→ contract test\n\n→ secret／dependency／IaC scan\n\n→ build\n\n→ component test\n\n→ test report\n\n\n\n12.2 Main Pipeline\n\nPR Gate\n\n→ build immutable artifacts\n\n→ deploy Dev\n\n→ migration\n\n→ integration smoke\n\n→ agent／speech smoke\n\n→ frontend smoke\n\n→ publish version／trace\n\n\n\n12.3 Staging Pipeline\n\nmanual candidate selection\n\n→ deploy Staging\n\n→ migration dry run／apply\n\n→ E2E\n\n→ security negative\n\n→ evaluation subset／full set\n\n→ performance smoke\n\n→ selected resilience\n\n→ manual approval\n\n\n\n12.4 Demo Freeze Pipeline\n\nrelease branch／tag\n\n→ locked Contract／Prompt／Policy／Model／Dataset\n\n→ clean Staging restore\n\n→ full rehearsal\n\n→ evidence bundle\n\n→ final tag\n\n\n\n12.5 Rollback\n\nApplication 使用前一個 immutable image；Database Rollback 原則由 13 文件定義。不得在不理解資料相容性的情況直接降版。\n\n\n\n十三、Task 模板\n\n每個 Task 必須包含：\n\nTask ID／Title\n\nUser Story／Workflow／Contract Link\n\nOwner／Backup\n\nGoal\n\nIn Scope／Out of Scope\n\nDependencies\n\nAcceptance Criteria\n\nSecurity／Consent／Privacy Consideration\n\nAPI／Event／Tool／Schema Impact\n\nTest Cases\n\nObservability\n\nDemo Evidence\n\nEstimate\n\nRisk\n\nDefinition of Done\n\n\n\n禁止使用「做 Agent」、「做資料庫」、「做前端」等無法驗收的大 Task。\n\n\n\n十四、Definition of Ready\n\nTask 進入 In Progress 前：\n\n□ 使用者價值與 Actor 清楚。\n\n□ Input／Output／State／Error 已定義。\n\n□ Contract 或 Stub 已存在。\n\n□ Owner／Backup／Dependency 已確認。\n\n□ 測試與安全負向案例已寫出。\n\n□ 是否可 Mock、何時替換已說明。\n\n□ 不存在尚未決定的 Critical Product Rule。\n\n\n\n十五、Definition of Done\n\n□ Code 已合併 main，無長期私人 Branch。\n\n□ Unit／Contract／必要 Integration Test 通過。\n\n□ Authorization、Consent、Cross-Elder Negative Test 通過。\n\n□ Schema、Error、Idempotency、Version 規則符合 10 文件。\n\n□ Trace／Log／Metric 可找到。\n\n□ UI 有 Loading、Empty、Error、Forbidden／Expired 狀態。\n\n□ 文件、ADR 或 Runbook 已更新。\n\n□ Staging 可重跑，無手動改資料庫才能成功。\n\n□ Demo Evidence 已附上。\n\n□ Owner 與 Backup 都能說明如何操作與恢復。\n\n\n\n十六、Critical Path\n\nCritical Path 依序為：\n\n1. Contract＋Environment＋Seed Persona。\n\n2. ElderScope／Consent／Core Domain State。\n\n3. Voice Session／ASR／Transcript Confirmation。\n\n4. Orchestrator／Companion／Safety。\n\n5. Session Completed Event。\n\n6. Event／Memory Candidate。\n\n7. Memory Confirmation＋Outbox。\n\n8. Graph Projection＋Context Retrieval。\n\n9. 日照概覽／事件覆核。\n\n10. Family Report Published Gate＋Notification。\n\n11. E2E、Failure Recovery、Trace、Rehearsal。\n\n\n\n任何不在此路徑且不支援 Demo 證據的功能，不得阻塞 Critical Path。\n\n\n\n十七、依賴圖\n\nD／Speech UI 依賴 B 提供 Session／Consent Contract。\n\nC／Agent 依賴 B 提供受控 Tool API 與 ElderScope。\n\nB／Core 依賴 10 Contract 與 Seed Data。\n\nE／Care／Family UI 依賴 B 的 Event、Summary、Report API。\n\nC／Graph 依賴 B 的 Outbox Event。\n\nE／Notification 依賴 Report Published Event。\n\nA／E2E 依賴所有 Owner 提供可自動建立的 Seed 與可重跑 Scenario。\n\n\n\n解耦方式：\n\n• 先提供 Contract Mock Server。\n\n• Event 使用固定 Example Payload。\n\n• Frontend 使用 Generated Client／Typed Stub。\n\n• Agent Tool 使用 Sandbox Endpoint。\n\n• 每個依賴設定最晚交付日與 Fallback。\n\n\n\n十八、十天 Hackathon Build Plan\n\n以下以 Build Day 表示，可依實際剩餘日期平移。\n\n\n\nDay 1｜Foundation Freeze\n\n• 確認 Scope、Persona、Demo Story、Owner。\n\n• 建 Monorepo、CI、Dev Environment、Seed Data。\n\n• 鎖定最小 OpenAPI／Event／Agent／Tool Contract。\n\nExit：main 可部署；三個 Persona 可登入或模擬 Actor Context。\n\n\n\nDay 2｜Core Security＋Voice Skeleton\n\n• B：ElderScope、Consent、Session API。\n\n• D：錄音／上傳／WebSocket Skeleton。\n\n• C：Agent Runtime Hello Flow。\n\n• E：長者端與日照端 Shell。\n\nExit：林阿嬤建立 Voice Session，張阿姨不可被錯誤存取。\n\n\n\nDay 3｜ASR → Companion → TTS\n\n• ASR Final、低信心確認。\n\n• Orchestrator、Companion、Safety。\n\n• Text／TTS 回覆與錯誤降級。\n\nExit：一個完整短回合可重跑三次。\n\n\n\nDay 4｜Event Candidate＋Review\n\n• Session Completed Event。\n\n• Event Extractor＋Schema。\n\n• 照護端待覆核、Verify／Correct／Reject。\n\nExit：事件有 Evidence，可修正且 Idempotent。\n\n\n\nDay 5｜Memory＋Graph\n\n• Memory Candidate、確認 UI、ACTIVE Memory。\n\n• Outbox、Graph Projection、重放。\n\n• 下一輪 Context 引用。\n\nExit：「女兒／每週日通話」可確認、投影、引用；未確認不可讀。\n\n\n\nDay 6｜Daycare Vertical Slice\n\n• 多長者概覽、林阿嬤詳情、張阿姨隔離。\n\n• Daily Summary Draft／Rebuild。\n\n• Trace 頁基本版。\n\nExit：照服員完成概覽 → 詳情 → 覆核。\n\n\n\nDay 7｜Family Report＋Notification\n\n• Family Report Draft／Published Gate。\n\n• 家屬 App／Web。\n\n• LINE／Email Sandbox Adapter。\n\nExit：Published Report 可讀；Draft／Withdrawn 不可讀；通知失敗不回滾。\n\n\n\nDay 8｜Security／Resilience／Evaluation\n\n• Prompt Injection、Cross-Elder、Consent Revoked。\n\n• Graph／Notification Failure、DLQ／Redrive。\n\n• ASR、Agent、RAG／Graph Eval 子集。\n\nExit：零容忍 Gate 通過；至少兩條失敗恢復證據。\n\n\n\nDay 9｜Integration Freeze Candidate\n\n• 完整 E2E、效能 Smoke、Accessibility。\n\n• Feature Flag 關閉不穩功能。\n\n• 鎖 Prompt、Model、Policy、Dataset。\n\nExit：demo-rc.1，完整流程連續成功三次。\n\n\n\nDay 10｜Demo Freeze／Rehearsal\n\n• 只修 P0／P1。\n\n• 清空並重建 Staging Seed。\n\n• 正常與備援 Demo 各排練五次。\n\n• 產出 Final Tag、影片、截圖、Trace、Runbook。\n\nExit：demo-v1.0.0；無手動 DB 救場。\n\n\n\n十九、每日運作節奏\n\n09:00 Stand-up（15 分鐘）：昨日完成、今日一個主要交付、阻塞、需要誰。\n\n09:15 Contract／Integration Check（15 分鐘）：只處理跨 Workstream 介面。\n\n13:30 Midday Sync（10 分鐘）：檢查 Critical Path 與環境。\n\n17:30 Integration Window（60～90 分鐘）：合併、部署 Dev、跑 Smoke。\n\n19:00 Demo Check（20 分鐘）：從使用者角度跑目前 Vertical Slice。\n\n\n\n每次同步都不得變成長時間設計會議；重大設計以 ADR Owner＋時限處理。\n\n\n\n二十、工作看板\n\n狀態：Backlog → Ready → In Progress → Review → Integrated → Verified → Done。\n\n\n\nWIP Limit：\n\n• 每人最多 1 個主要 In Progress Task。\n\n• 全隊最多 2 個未整合 Cross-Workstream Feature。\n\n• Blocked 超過 2 小時必須升級。\n\n• Review 超過 4 小時由 Backup 接手。\n\n\n\n優先級：\n\nP0 Demo／Safety Critical。\n\nP1 Vertical Slice Required。\n\nP2 Quality／Extension。\n\nP3 Future Product。\n\n\n\n二十一、技術 Spike 排程\n\nSpike 必須是 Time-boxed Experiment，不是無限研究。\n\n\n\nSP-01｜Voice Transport｜Owner D｜4 小時\n\n決定 WebSocket Binary、Signed Upload 或 Provider Streaming；產出 Latency、限制、選擇。\n\n\n\nSP-02｜AgentCore Runtime＋Gateway｜Owner C｜4 小時\n\n產出最小 Agent Run、Tool Call、Trace、部署方式。\n\n\n\nSP-03｜Core ABAC＋Tool 二次授權｜Owner B｜4 小時\n\n產出允許／拒絕測試與 Contract。\n\n\n\nSP-04｜Aurora Outbox → EventBridge／SQS｜Owner B／E｜4 小時\n\n產出去重、重試、DLQ、Redrive。\n\n\n\nSP-05｜Neptune Projection／Fallback｜Owner C｜4 小時\n\n產出林阿嬤關係圖、刪除／停用、Aurora 降級。\n\n\n\nSP-06｜OpenSearch Hybrid Retrieval｜Owner C｜4 小時\n\n產出 Keyword、Vector、Metadata Filter 三組查詢。\n\n\n\nSP-07｜LINE／Email Sandbox｜Owner E｜3 小時\n\n產出實際通知、失敗狀態與 App 仍可讀證據。\n\n\n\nSP-08｜ASR Baseline｜Owner D｜6 小時\n\n產出國語、臺語／混語 Golden Set CER、Critical Entity 與 p95。\n\n\n\nSpike 結束必須決定：Adopt、Adapt、Mock with replacement date、Drop。\n\n\n\n二十二、Mock 與 Feature Flag 政策\n\nMock 類型：\n\n• Provider Mock：外部 ASR、TTS、LINE、Email。\n\n• Data Mock：合成 Persona、固定 RAG Corpus。\n\n• Projection Mock：Graph／Search 暫用 In-Memory 或固定 Adapter。\n\n• UI Mock：未完成頁面用 Contract Example。\n\n\n\n每個 Mock 必須標示：mock_id、owner、reason、contract、replacement、expires_at、demo_disclosure。\n\n\n\nFeature Flag：\n\nvoice_custom_asr\n\ngraph_retrieval\n\nfamily_notification\n\nproactive_companion\n\ncare_insight\n\nhome_care_mode\n\nhak_language\n\nen_language\n\n\n\nFlag 關閉後系統需安全降級，不得出現半完成狀態。\n\n\n\n二十三、Seed 與 Demo Data\n\n固定 Persona：林阿嬤、張阿姨、陳伯伯。\n\n固定關係：林阿嬤—女兒—每週日通話。\n\n固定場域：幸福日照中心＋一筆陳伯伯居服派案。\n\n固定報表：一份 Draft、一份 Published、一份 Withdrawn。\n\n固定通知：一筆 Sent、一筆 Failed／Retrying。\n\n固定故障：Graph unavailable、Notification failed、Consent revoked。\n\n\n\nSeed 必須可用單一 Command 重建，且每次 ID、版本或 Mapping 可被測試腳本取得；禁止 Demo 前手動修改資料庫。\n\n\n\n二十四、整合測試情境\n\nE2E-01｜林阿嬤正常語音 → 回覆 → Event Candidate。\n\nE2E-02｜低信心人物／日期確認後才繼續。\n\nE2E-03｜Memory Confirmed → Graph → 下一輪引用。\n\nE2E-04｜日照帳號只見林阿嬤與張阿姨，不見陳伯伯。\n\nE2E-05｜張阿姨資料不進林阿嬤 Context Manifest。\n\nE2E-06｜家屬只讀 Published Report。\n\nE2E-07｜通知失敗但 App Report 可讀。\n\nE2E-08｜Graph 失敗後 Aurora／Search 降級與重放。\n\nE2E-09｜Consent Revoked 後 Queue 中工作停止。\n\nE2E-10｜Agent 嘗試高風險 Command 被拒絕。\n\n\n\n二十五、Demo Freeze 規則\n\nFreeze 時點：正式展示前至少 24 小時；可行時提前 48 小時。\n\n\n\nFreeze 後允許：\n\n• P0／P1 修復。\n\n• 文案、講稿與不影響 Contract 的展示調整。\n\n• Feature Flag 關閉不穩功能。\n\n\n\nFreeze 後禁止：\n\n• 新增 Agent、Database、AWS Service 或主要 Feature。\n\n• 修改 Event／API Breaking Contract。\n\n• 更換未評估模型、Prompt、Policy 或 Dataset。\n\n• 臨時把真實個資加入 Demo。\n\n\n\nRelease Candidate 必須記錄：Git Tag、Image Digest、Migration Version、Contract、Prompt、Policy、Model、Dataset、Seed、Environment、Known Risks。\n\n\n\n二十六、Demo Runbook\n\n角色分工：\n\n• Presenter：A。\n\n• Primary Operator：D 或 E，依畫面。\n\n• AWS／Trace Operator：C。\n\n• Backend／Data Recovery：B。\n\n• Timekeeper／Fallback／錄影：E 或 A Backup。\n\n\n\nRunbook 包含：\n\n1. 展示前健康檢查。\n\n2. Seed Reset。\n\n3. 登入角色與 Test Account。\n\n4. 正常 Demo Click／Speech Script。\n\n5. 預期 Trace／畫面／通知。\n\n6. 每一步最長等待時間。\n\n7. 失敗時的安全 Fallback。\n\n8. 不可展示的 Admin／Secret／個資頁面。\n\n9. 結束後資料清理。\n\n\n\n二十七、風險與緩衝\n\nR-01｜臺語 ASR 未達門檻\n\n處理：低信心確認、預錄 Golden Audio、文字輸入備援；不可假裝辨識正確。\n\n\n\nR-02｜AgentCore／Bedrock Latency\n\n處理：縮短 Context、三步上限、較快模型、固定安全 Fallback。\n\n\n\nR-03｜Neptune／OpenSearch 建置耗時\n\n處理：先用 Adapter／Local Projection 完成 Contract，再替換；Graph 隔離規則不可省略。\n\n\n\nR-04｜LINE 帳號／外部審核\n\n處理：Sandbox／Email Test Recipient；App 是正式報表來源。\n\n\n\nR-05｜五人並行造成整合延遲\n\n處理：Contract Mock、每日 Integration Window、WIP Limit。\n\n\n\nR-06｜功能太多\n\n處理：Critical Path、Feature Flag、P0／P1／P2 分層；Day 8 後不再加新主流程。\n\n\n\nR-07｜AWS 成本突增\n\n處理：Budget Alarm、Auto-stop、TTL Tag、Serverless／On-demand、刪除 Spike Resource。\n\n\n\nR-08｜Demo 網路不穩\n\n處理：正式雲端主路徑＋錄影＋Local Read-Only Evidence；安全與權限不可改用假的成功畫面。\n\n\n\n二十八、工程證據包\n\n每個 Release Candidate 必須包含：\n\n• Architecture Diagram／ADR。\n\n• OpenAPI／AsyncAPI／Schema Artifact。\n\n• Git Tag／Commit／Image Digest。\n\n• IaC Version／Plan。\n\n• Migration Version。\n\n• Test Report／Agent Eval／ASR Eval。\n\n• Cross-Elder／Consent／Safety 結果。\n\n• E2E Trace。\n\n• Cost／Latency 摘要。\n\n• Known Risks／Feature Flags。\n\n• Demo Video／Screenshots。\n\n• Runbook／Rollback Notes。\n\n\n\n二十九、完整產品 Roadmap\n\nPhase A｜Hackathon Evidence\n\n完成林阿嬤 Vertical Slice、照護端、家屬報表、受控 Multi-Agent、Graph 與安全證據。\n\n\n\nPhase B｜Pilot Readiness\n\n加入真實使用者研究、日照現場流程、完整同意、Data Retention、正式 Monitoring、Backup／Restore、更多語音資料。\n\n\n\nPhase C｜Home Care Extension\n\n完整居服排班、派案、服務紀錄、行動裝置安全、弱網／離線策略、家屬關係管理。\n\n\n\nPhase D｜Multilingual and Proactive\n\n客語／英文、個人化主動陪伴、人工核准、頻率控制、Care Insight Candidate。\n\n\n\nPhase E｜Operational Scale\n\nMulti-Tenant、SLO、成本治理、正式 Incident、資料匯出、相容性與退場管理。\n\n\n\n三十、里程碑 Gate\n\nM0｜Foundation Ready\n\nRepository、CI、Dev、Contract、Seed、Owner 完成。\n\n\n\nM1｜Voice Slice Ready\n\n林阿嬤完成 ASR／Agent／TTS；低信心可修正。\n\n\n\nM2｜Memory Slice Ready\n\n候選、確認、ACTIVE、Graph、下一輪引用完成。\n\n\n\nM3｜Professional／Family Ready\n\n照護端覆核、摘要、Published Report、通知完成。\n\n\n\nM4｜Quality Ready\n\n零容忍安全、Agent／ASR／RAG／Graph Gate、Failure Recovery 完成。\n\n\n\nM5｜Demo Ready\n\n連續五次、Freeze、Evidence、Runbook、Fallback 完成。\n\n\n\n三十一、v0.1 完成判定\n\n□ 五人 Workstream、Owner、Backup 與責任邊界已定義。\n\n□ Target Architecture 與 Hackathon Build Profile 已分開。\n\n□ Repository、Branch、Environment、Secret、IaC、CI／CD 已定義。\n\n□ Critical Path、依賴、十天 Build Plan 與每日整合節奏已定義。\n\n□ Task、Definition of Ready、Definition of Done 已定義。\n\n□ Spike、Mock、Feature Flag、Seed 與 Demo Data 規則已定義。\n\n□ Demo Freeze、Runbook、Release Evidence 與風險緩衝已定義。\n\n□ 完整產品 Roadmap 與里程碑 Gate 已定義。\n\n□ 下一步可將本文件轉成實際 Issue／Epic／Sprint Board。\n\n\n\n三十二、待決策\n\n1. 五名成員的姓名、可投入時數、主要技能與無法參與時段。\n\n2. 最終競賽日、Demo 時長與簡報限制。\n\n3. AWS Account／Region／Credits／Quota 與可使用模型。\n\n4. IaC 選 CDK 或 Terraform。\n\n5. 前端選 React／Vue 或既有技術；是否共用 Design System。\n\n6. Agent Runtime 使用 Python／Strands 或其他框架。\n\n7. Core API 是否採單一 Python Modular Monolith；Web Framework、ORM 與 Worker Runtime 如何統一。\n\n8. Voice Transport 與 ASR Provider 最終選擇。\n\n9. Neptune、OpenSearch、LINE 哪些採真實服務，哪些使用 Adapter／Sandbox。\n\n10. 每日團隊可工作的固定整合時段。\n\n\n\n三十三、下一份文件\n\n13｜智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1\n\n\n\n13 文件將定義：\n\n• Aurora／RDS Schema Migration、Flyway Version 與資料回填。\n\n• Expand／Migrate／Contract、向後相容與 Zero／Low Downtime。\n\n• Application、Agent、Prompt、Policy、Contract、Index 與 Graph Release。\n\n• Feature Flag、Canary、Blue／Green、Rollback Decision。\n\n• Event Consumer 相容、DLQ、Replay、Projection Rebuild。\n\n• Backup／Restore、Release Checklist 與失敗復原演練。",
+  "warnings": [
+    "Unrecognised paragraph style: 'Title' (Style ID: Title)"
+  ]
+}

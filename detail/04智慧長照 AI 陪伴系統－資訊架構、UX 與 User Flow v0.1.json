@@ -1,0 +1,1508 @@
+{
+  "sourceFile": "04智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1.docx",
+  "type": "docx",
+  "convertedAt": "2026-07-30T13:54:15.735Z",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "文件資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "版本：v0.1"
+    },
+    {
+      "type": "paragraph",
+      "text": "狀態：Draft｜IA、核心流程與低保真畫面基準，待訪談與可用性測試"
+    },
+    {
+      "type": "paragraph",
+      "text": "建立日期：2026-07-23"
+    },
+    {
+      "type": "paragraph",
+      "text": "文件 Owner：待團隊指定"
+    },
+    {
+      "type": "paragraph",
+      "text": "審查者：五人團隊"
+    },
+    {
+      "type": "paragraph",
+      "text": "適用範圍：長者端、專業照護端與家屬端的資訊架構、操作流程、畫面狀態及低保真 Wireframe"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "相關文件"
+    },
+    {
+      "type": "paragraph",
+      "text": "01｜產品方向與範圍基準 v1.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "01A｜使用者研究與 Demo Persona v0.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "02｜使用者故事與驗收條件 v1.3.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "03｜Story Map v1.2"
+    },
+    {
+      "type": "paragraph",
+      "text": "03智慧長照 AI 陪伴系統－Story Map v1.2"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "一、文件目的與邊界"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件回答：每一種角色進入系統後看到哪些頁面、如何完成主要任務，以及錄音、等待、資料不足、低信心、權限不足、通知失敗與授權撤回時，介面如何回應。"
+    },
+    {
+      "type": "paragraph",
+      "text": "本文件不決定 AWS 服務、資料表、API、事件格式或 Agent 內部設計；那些內容由後續 Workflow、Domain、System、Agent 與 Contract 文件定義。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "二、UX 設計原則"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. Voice First：長者主要以語音操作，不要求打字或理解複雜選單。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. 一次一個主要操作：長者端每個畫面只保留一個主要行動。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. 狀態可感知：待機、錄音、辨識、生成、播放、失敗都要同時提供視覺與語音提示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 不責怪使用者：聽不清楚、逾時或服務失敗時，文案不得暗示長者操作錯誤。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 確認後成為事實：候選記憶、AI 擷取事件、陪伴需求與家屬分享內容，必須清楚區分未確認、待覆核與已發布。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. 角色最小權限：日照照服員、居服員、家屬與管理者只看到完成任務所需資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. 同一資料，多種呈現：同一 report_id 可在家屬 App／Web、LINE 與 Email 呈現不同長度，但正式內容只保存一份。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. 可復原：重要操作須可取消、返回、修正或撤回，不讓使用者卡在流程中。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. 不做醫療判斷：介面不得使用確診、疾病機率、孤獨分數或醫療紅黃綠燈。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. 無資料就是無資料：沒有紀錄時顯示未提及或資料不足，不用 AI 補造內容。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "三、角色、場域與入口"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.1 長者"
+    },
+    {
+      "type": "paragraph",
+      "text": "場域：日照中心、社區關懷據點或家中。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要入口：語音互動首頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要任務：開始對話、理解狀態、確認候選記憶、管理同意與偏好。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.2 日照中心照服員"
+    },
+    {
+      "type": "paragraph",
+      "text": "場域：同一日照中心或社區據點。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要入口：同據點多長者概覽。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要任務：查看林阿嬤與張阿姨等被授權長者、進入詳情、覆核事件、查看摘要與建立待辦。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.3 居家服務員／居服員"
+    },
+    {
+      "type": "paragraph",
+      "text": "場域：依派案前往不同長者家中。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要入口：今日服務行程／派案長者清單。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要任務：查看服務時段、上次服務摘要、待追蹤事項、進入陳伯伯詳情並完成專業紀錄與覆核。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3.4 家屬"
+    },
+    {
+      "type": "paragraph",
+      "text": "場域：遠端使用手機或網頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要入口：家屬 App／Web 首頁；LINE／Email 通知可導入指定報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要任務：查看已發布的每日摘要、週報、月報、歷史重要事件及通知設定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "限制：不能修改事件、記憶、陪伴需求、照護內部筆記或專業待辦。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "四、整體資訊架構 IA"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.1 長者端"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "長者端"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 首次使用／分層同意"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 語音互動首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 錄音與處理狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ AI 回覆與播放"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 候選記憶確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 對話歷史摘要（簡化）"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 偏好與資料控制"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 語言／稱呼／回覆長度"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 長期記憶同意"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 陪伴需求分析同意"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 主動陪伴同意與時段"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 家屬分享、撤回與刪除"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.2 專業照護端－日照模式"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "日照首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 同據點多長者概覽"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 今日摘要狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 待覆核事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 未完成關懷待辦"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 長者詳情"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 基本資料與語言偏好"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 每日摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 事件時間軸"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 已確認記憶"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 陪伴需求訊號"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 事件覆核／修正"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 關懷待辦"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.3 專業照護端－居服模式"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "居服首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 今日服務行程"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 派案長者清單"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 下一個服務時段"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 上次服務摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 待追蹤事項"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 長者服務詳情"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 本次服務資訊"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 長者摘要與重要事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 事件時間軸"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 已確認記憶"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 服務前提醒"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 服務後紀錄／覆核"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 待追蹤事項"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4.4 家屬端"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "家屬首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 今日最新摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 本週概覽"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 尚未閱讀通知"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 最新重要事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 聯絡長者／照護單位"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "報表中心"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 每日摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 每週報表"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 每月報表"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 歷史重要事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 報表詳情"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "通知與設定"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ LINE／Email 通路"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 每日／每週／每月頻率"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 通知時間"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 靜默時段"
+    },
+    {
+      "type": "paragraph",
+      "text": "├─ 暫停／取消訂閱"
+    },
+    {
+      "type": "paragraph",
+      "text": "└─ 授權與可見範圍"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "五、頁面清單與優先級"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "P0｜第一條 Vertical Slice 必備"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. 長者端首次同意與設定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. 長者語音互動首頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. 錄音／辨識／生成／播放狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. ASR 低信心確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 候選記憶確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. 日照多長者概覽。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. 林阿嬤長者詳情。"
+    },
+    {
+      "type": "paragraph",
+      "text": "8. 每日摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "9. 事件時間軸。"
+    },
+    {
+      "type": "paragraph",
+      "text": "10. 事件覆核與修正。"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "P1｜完整產品重要流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "11. 居服員今日行程／派案入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "12. 陳伯伯服務詳情。"
+    },
+    {
+      "type": "paragraph",
+      "text": "13. 家屬首頁與今日摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "14. 家屬每日摘要歷史。"
+    },
+    {
+      "type": "paragraph",
+      "text": "15. 家屬週報與月報。"
+    },
+    {
+      "type": "paragraph",
+      "text": "16. LINE／Email 通知設定。"
+    },
+    {
+      "type": "paragraph",
+      "text": "17. 家屬安全連結與授權失效頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "18. 同意撤回與資料刪除流程。"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "P2｜後續擴充"
+    },
+    {
+      "type": "paragraph",
+      "text": "19. 主動陪伴設定與歷史。"
+    },
+    {
+      "type": "paragraph",
+      "text": "20. RAG 衛教查詢。"
+    },
+    {
+      "type": "paragraph",
+      "text": "21. 遊戲與積分。"
+    },
+    {
+      "type": "paragraph",
+      "text": "22. 內容管理與技術證據頁。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "六、核心 User Flow"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.1 長者首次同意流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "首次進入"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 選擇語言與稱呼"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 說明錄音、逐字稿與生活事件用途"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 分別選擇長期記憶、陪伴需求分析、主動陪伴與家屬分享"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示選擇摘要"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 使用者確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 進入語音首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "拒絕任何選項時，仍可繼續被允許的基本陪伴功能；介面需清楚說明哪些功能不會啟用。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.2 語音互動正常流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "待機"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 點擊大按鈕開始錄音"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示正在聽"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 使用者結束說話"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 正在辨識"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 正在整理回覆"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 播放簡短回覆"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示此次擷取的生活事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 如有候選記憶，進入記憶確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 返回待機"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.3 ASR 低信心確認流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "ASR 發現人物、日期、否定或用藥關鍵欄位信心不足"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示系統聽到的關鍵內容"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 提供「是」「不是／重說」兩個主要選項"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 確認後繼續事件擷取"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 否認或再次不清楚時不寫入正式事件或記憶"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.4 候選記憶確認流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "系統產生候選記憶"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 用一至兩句說明要保存的內容與用途"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 提供「記住」「不要記」「稍後再說」"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 記住：寫入正式記憶並顯示成功"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 不要記：不保存，回到對話"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 稍後再說：保持候選狀態，不在後續對話引用"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.5 日照照服員流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "照服員登入"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 進入幸福日照中心多長者概覽"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 看到林阿嬤、張阿姨的最後互動、互動次數、摘要狀態與待覆核數"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 點擊林阿嬤"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 查看每日摘要與時間軸"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 開啟待覆核事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 修正或確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 受影響摘要與 Graph 標記重建"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 建立關懷待辦或完成處理"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.6 居服員流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "居服員登入"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 查看今日服務行程與有效派案長者"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 選擇陳伯伯的服務卡"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 查看服務時間、上次服務摘要與待追蹤事項"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 進入陳伯伯詳情"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 查看今日事件與既有記憶"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 完成本次服務紀錄或覆核"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 建立後續追蹤"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 返回今日行程"
+    },
+    {
+      "type": "paragraph",
+      "text": "沒有有效派案時顯示今日無服務安排；無權限或派案失效時不得顯示長者資料。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.7 家屬報表與通知流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "每日摘要完成"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 分享同意與權限檢查"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 產生家屬版報表"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 狀態由 Draft／Needs Review 轉為 Published"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 保存於家屬 App／Web"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 依家屬設定發送 LINE／Email 簡短通知"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 家屬點擊安全連結"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 通過身份與授權驗證"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 開啟指定每日摘要或週／月報表"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 可返回報表中心查看歷史"
+    },
+    {
+      "type": "paragraph",
+      "text": "通知失敗時，App／Web 內 Published 報表仍可查看；系統只重試通知，不重複建立 report_id。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.8 家屬週報／月報流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "排程到期"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 彙整期間內已發布摘要與可分享事件"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 無資料欄位標示未提及或資料不足"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 產生報表版本"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 必要時專業照護人員覆核"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 發布至家屬報表中心"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 依通知頻率發送提醒"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "6.9 同意撤回與刪除流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "長者或授權人進入資料控制"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 選擇撤回家屬分享、長期記憶、陪伴分析或主動陪伴"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示影響範圍"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 再次確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 立即停止新增對應資料與通知"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 未使用安全連結失效"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 依 Policy 啟動資料刪除或隱藏流程"
+    },
+    {
+      "type": "paragraph",
+      "text": "→ 顯示處理狀態與完成通知"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "七、頁面狀態規格"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.1 長者語音首頁狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Idle：顯示「按一下開始說話」。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Recording：顯示明顯錄音指示、結束按鈕與語音提示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Processing ASR：顯示「我正在聽清楚你的話」。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Generating：顯示「我正在整理回答」。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Playing：顯示目前播放內容與重新播放。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Low Confidence：顯示關鍵內容確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Timeout：顯示可重試，不責怪使用者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Offline：顯示網路異常與稍後再試。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Permission Denied：白話引導開啟麥克風。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.2 專業照護端狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Loading：使用骨架畫面，不顯示過期資料假裝完成。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Empty：今日無互動、無摘要或無派案。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Needs Review：清楚顯示待覆核數量與原因。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Updated：顯示最後更新、修正者與版本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Permission Denied：不顯示長者姓名或任何敏感內容。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Assignment Expired：居服員派案已失效，提供返回行程入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Data Insufficient：顯示資料不足，不產生陪伴結論。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "7.3 家屬端狀態"
+    },
+    {
+      "type": "paragraph",
+      "text": "• No Report：尚未產生報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Draft／Needs Review：家屬不可見。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Published：正常顯示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Withdrawn：顯示此報表已撤回，不保留舊敏感內容。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Notification Failed：App 仍顯示報表，設定頁顯示通知異常。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Authorization Expired：安全連結失效，要求重新登入或聯絡照護單位。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Consent Revoked：停止顯示新內容，依政策處理舊報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• Data Insufficient：顯示資料不足，不用空白或推測補滿。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "八、低保真 Wireframe 規格"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.1 長者語音首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "頂部：長者稱呼、目前語言、簡單設定入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "中央：單一大型語音按鈕。"
+    },
+    {
+      "type": "paragraph",
+      "text": "按鈕下方：目前狀態文字與簡短圖示。"
+    },
+    {
+      "type": "paragraph",
+      "text": "底部：重新播放、停止、資料與同意入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "不得在首頁塞入長列表、複雜導覽或多個同等重要按鈕。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.2 候選記憶確認"
+    },
+    {
+      "type": "paragraph",
+      "text": "標題：要讓我記住這件事嗎？"
+    },
+    {
+      "type": "paragraph",
+      "text": "內容卡：以白話顯示候選記憶與用途。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要操作：記住。"
+    },
+    {
+      "type": "paragraph",
+      "text": "次要操作：不要記、稍後再說。"
+    },
+    {
+      "type": "paragraph",
+      "text": "提供語音朗讀，不顯示技術信心分數。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.3 日照多長者概覽"
+    },
+    {
+      "type": "paragraph",
+      "text": "頂部：據點名稱、日期、搜尋與篩選。"
+    },
+    {
+      "type": "paragraph",
+      "text": "長者卡：姓名／虛擬代稱、最後互動、今日次數、摘要狀態、待覆核數。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要操作：查看詳情。"
+    },
+    {
+      "type": "paragraph",
+      "text": "禁止跨長者健康或陪伴分數排名。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.4 居服員今日行程"
+    },
+    {
+      "type": "paragraph",
+      "text": "頂部：日期、今日服務數、同步狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "行程卡：服務時間、長者、服務地點、派案狀態、上次摘要、待追蹤事項。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要操作：開始／查看本次服務。"
+    },
+    {
+      "type": "paragraph",
+      "text": "派案失效卡不得顯示敏感摘要。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.5 專業照護者長者詳情"
+    },
+    {
+      "type": "paragraph",
+      "text": "頁首：長者基本資料、授權範圍、最後更新。"
+    },
+    {
+      "type": "paragraph",
+      "text": "分頁：今日摘要、時間軸、已確認記憶、待覆核、關懷待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "右側或底部：資料來源、版本與更新狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "日照與居服模式共用主要元件，但依角色顯示不同服務資訊與操作。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.6 家屬首頁"
+    },
+    {
+      "type": "paragraph",
+      "text": "頂部：被授權長者、最後更新與通知入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "第一區：今日摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "第二區：本週概覽。"
+    },
+    {
+      "type": "paragraph",
+      "text": "第三區：最新重要事件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "主要操作：查看完整報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "底部：歷史報表、通知設定、聯絡長者／照護單位。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "8.7 家屬報表詳情"
+    },
+    {
+      "type": "paragraph",
+      "text": "標題：日期或期間、發布時間、是否更新。"
+    },
+    {
+      "type": "paragraph",
+      "text": "內容：飲食、活動、睡眠、社交、重要事件；無資料標示未提及。"
+    },
+    {
+      "type": "paragraph",
+      "text": "可顯示關懷式建議，例如「有空時可主動聯絡」，不得顯示診斷或疾病機率。"
+    },
+    {
+      "type": "paragraph",
+      "text": "不顯示逐字稿、未覆核事件、ASR 信心或照護內部筆記。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "九、權限矩陣"
+    },
+    {
+      "type": "paragraph",
+      "text": "長者：查看自己的對話狀態、同意與候選記憶；可拒絕、撤回與刪除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "日照照服員：查看所屬據點且被授權長者；可覆核事件、查看專業資訊與建立待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "居服員：查看有效派案範圍內長者；可處理服務相關紀錄與覆核，不能查看未派案長者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "家屬：查看分享授權範圍內的 Published 報表與可分享事件；不能修改正式事件、記憶或待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "管理者：依職責管理來源、版本、Policy、權限與系統狀態；不得因管理介面繞過資料最小化。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十、家屬報表與通知 UX 決策"
+    },
+    {
+      "type": "paragraph",
+      "text": "1. App／Web 是正式查看與歷史保存介面；LINE／Email 是通知與導流通路。"
+    },
+    {
+      "type": "paragraph",
+      "text": "2. 同一份正式報表只有一個 report_id，不因通路不同產生三份資料。"
+    },
+    {
+      "type": "paragraph",
+      "text": "3. LINE／Email 預覽只放必要資訊，完整內容需登入或通過安全連結驗證後查看。"
+    },
+    {
+      "type": "paragraph",
+      "text": "4. 報表更新後，家屬端顯示最新版本與更新時間；舊通知導入同一 report_id 的最新可見版本。"
+    },
+    {
+      "type": "paragraph",
+      "text": "5. 通知失敗不影響報表發布；報表撤回或授權失效會使安全連結失效。"
+    },
+    {
+      "type": "paragraph",
+      "text": "6. 家屬可設定每日、每週、每月、LINE、Email、通知時間與靜默時段。"
+    },
+    {
+      "type": "paragraph",
+      "text": "7. 每週／每月報表只彙整已記錄、已覆核或已允許分享的資料，不做醫療趨勢預測。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十一、可用性測試計畫"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "11.1 長者測試任務"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 找到並開始錄音。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 理解錄音、辨識、生成與播放狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完成一筆低信心確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 接受、拒絕或延後一筆候選記憶。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 找到同意設定並撤回家屬分享。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "11.2 日照照服員測試任務"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 從多長者概覽找到待覆核最多的長者。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 進入林阿嬤詳情並找到來源事件。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 修正一筆事件並確認更新狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 建立一筆關懷待辦。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "11.3 居服員測試任務"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 從今日行程找到下一位服務對象。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 進入陳伯伯詳情並找到上次服務摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 辨識派案失效與無權限狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 完成一次服務後紀錄或待追蹤事項。"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "11.4 家屬測試任務"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 從 LINE／Email 進入正確的每日摘要。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 找到本週與本月報表。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 理解資料不足、報表更新與撤回狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 調整通知頻率與靜默時段。"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 分辨家屬可見資料與專業照護內部資料。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十二、Story 與畫面追溯"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-A01：長者語音首頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-A02：ASR 語言路徑與低信心確認。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-A03～A05：回覆、處理與失敗狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-A06：首次同意、偏好與撤回。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-B01～B04：事件、摘要、時間軸與覆核。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-C01：日照多長者概覽與居服派案入口。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-C02：共用長者詳情頁。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-C03：家屬摘要發布與 LINE／Email 通知。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-C04：專業照護者關懷待辦。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-C05：家屬每日、每週、每月報表中心。"
+    },
+    {
+      "type": "paragraph",
+      "text": "US-D01～D04：候選記憶、確認、引用與管理。"
+    },
+    {
+      "type": "paragraph",
+      "text": "NFR-H01～H03：角色權限、資料保護、撤回與刪除。"
+    },
+    {
+      "type": "paragraph",
+      "text": "NFR-Q01～Q03：效能、背景工作、報表發布與通知可靠性。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十三、v0.1 完成判定"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ Vertical Slice 16 步都有對應畫面或可觀察狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 日照照服員、居服員與家屬有清楚不同的首頁與任務。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 家屬 App／Web、LINE 與 Email 的角色已區分。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 每個核心頁面都有 Loading、Empty、Error、Permission Denied 或 Data Insufficient 等必要狀態。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 候選記憶、待覆核事件與 Published 報表在介面上可清楚區分。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 撤回同意與授權失效後的 UX 已定義。"
+    },
+    {
+      "type": "paragraph",
+      "text": "□ 主要流程可製作成低保真可點擊原型進行測試。"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十四、待驗證問題"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 長者是否理解分層同意與候選記憶確認文案？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 日照照服員首頁最需要的四個欄位為何？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 居服員首頁應以時間行程、長者清單或待辦優先？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬每日、每週與每月報表各自需要哪些內容？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬偏好的通知通路、時間、頻率與靜默時段為何？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 家屬安全連結應採登入、一次性驗證或 LINE Login？"
+    },
+    {
+      "type": "paragraph",
+      "text": "• 哪些事件可直接分享，哪些必須由專業照護人員覆核？"
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "十五、下一階段"
+    },
+    {
+      "type": "paragraph",
+      "text": "完成本文件 v0.1 後，依此建立低保真 Wireframe／可點擊 Prototype，執行長者、日照照服員、居服員與家屬的可用性測試。測試結果需同步更新 01A Persona、02 驗收條件、03 Story Map 與本文件，再進入 Workflow、Domain、資料生命週期、Security／Privacy、System／Agent Design 與 API／Event／Data Contracts。"
+    }
+  ],
+  "rawText": "智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1\n\n\n\n文件資訊\n\n版本：v0.1\n\n狀態：Draft｜IA、核心流程與低保真畫面基準，待訪談與可用性測試\n\n建立日期：2026-07-23\n\n文件 Owner：待團隊指定\n\n審查者：五人團隊\n\n適用範圍：長者端、專業照護端與家屬端的資訊架構、操作流程、畫面狀態及低保真 Wireframe\n\n\n\n相關文件\n\n01｜產品方向與範圍基準 v1.2\n\n01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2\n\n01A｜使用者研究與 Demo Persona v0.2\n\n01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2\n\n02｜使用者故事與驗收條件 v1.3.2\n\n02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2\n\n03｜Story Map v1.2\n\n03智慧長照 AI 陪伴系統－Story Map v1.2\n\n\n\n一、文件目的與邊界\n\n本文件回答：每一種角色進入系統後看到哪些頁面、如何完成主要任務，以及錄音、等待、資料不足、低信心、權限不足、通知失敗與授權撤回時，介面如何回應。\n\n本文件不決定 AWS 服務、資料表、API、事件格式或 Agent 內部設計；那些內容由後續 Workflow、Domain、System、Agent 與 Contract 文件定義。\n\n\n\n二、UX 設計原則\n\n1. Voice First：長者主要以語音操作，不要求打字或理解複雜選單。\n\n2. 一次一個主要操作：長者端每個畫面只保留一個主要行動。\n\n3. 狀態可感知：待機、錄音、辨識、生成、播放、失敗都要同時提供視覺與語音提示。\n\n4. 不責怪使用者：聽不清楚、逾時或服務失敗時，文案不得暗示長者操作錯誤。\n\n5. 確認後成為事實：候選記憶、AI 擷取事件、陪伴需求與家屬分享內容，必須清楚區分未確認、待覆核與已發布。\n\n6. 角色最小權限：日照照服員、居服員、家屬與管理者只看到完成任務所需資料。\n\n7. 同一資料，多種呈現：同一 report_id 可在家屬 App／Web、LINE 與 Email 呈現不同長度，但正式內容只保存一份。\n\n8. 可復原：重要操作須可取消、返回、修正或撤回，不讓使用者卡在流程中。\n\n9. 不做醫療判斷：介面不得使用確診、疾病機率、孤獨分數或醫療紅黃綠燈。\n\n10. 無資料就是無資料：沒有紀錄時顯示未提及或資料不足，不用 AI 補造內容。\n\n\n\n三、角色、場域與入口\n\n3.1 長者\n\n場域：日照中心、社區關懷據點或家中。\n\n主要入口：語音互動首頁。\n\n主要任務：開始對話、理解狀態、確認候選記憶、管理同意與偏好。\n\n\n\n3.2 日照中心照服員\n\n場域：同一日照中心或社區據點。\n\n主要入口：同據點多長者概覽。\n\n主要任務：查看林阿嬤與張阿姨等被授權長者、進入詳情、覆核事件、查看摘要與建立待辦。\n\n\n\n3.3 居家服務員／居服員\n\n場域：依派案前往不同長者家中。\n\n主要入口：今日服務行程／派案長者清單。\n\n主要任務：查看服務時段、上次服務摘要、待追蹤事項、進入陳伯伯詳情並完成專業紀錄與覆核。\n\n\n\n3.4 家屬\n\n場域：遠端使用手機或網頁。\n\n主要入口：家屬 App／Web 首頁；LINE／Email 通知可導入指定報表。\n\n主要任務：查看已發布的每日摘要、週報、月報、歷史重要事件及通知設定。\n\n限制：不能修改事件、記憶、陪伴需求、照護內部筆記或專業待辦。\n\n\n\n四、整體資訊架構 IA\n\n4.1 長者端\n\n長者端\n\n├─ 首次使用／分層同意\n\n├─ 語音互動首頁\n\n├─ 錄音與處理狀態\n\n├─ AI 回覆與播放\n\n├─ 候選記憶確認\n\n├─ 對話歷史摘要（簡化）\n\n└─ 偏好與資料控制\n\n   ├─ 語言／稱呼／回覆長度\n\n   ├─ 長期記憶同意\n\n   ├─ 陪伴需求分析同意\n\n   ├─ 主動陪伴同意與時段\n\n   └─ 家屬分享、撤回與刪除\n\n\n\n4.2 專業照護端－日照模式\n\n日照首頁\n\n├─ 同據點多長者概覽\n\n├─ 今日摘要狀態\n\n├─ 待覆核事件\n\n├─ 未完成關懷待辦\n\n└─ 長者詳情\n\n   ├─ 基本資料與語言偏好\n\n   ├─ 每日摘要\n\n   ├─ 事件時間軸\n\n   ├─ 已確認記憶\n\n   ├─ 陪伴需求訊號\n\n   ├─ 事件覆核／修正\n\n   └─ 關懷待辦\n\n\n\n4.3 專業照護端－居服模式\n\n居服首頁\n\n├─ 今日服務行程\n\n├─ 派案長者清單\n\n├─ 下一個服務時段\n\n├─ 上次服務摘要\n\n├─ 待追蹤事項\n\n└─ 長者服務詳情\n\n   ├─ 本次服務資訊\n\n   ├─ 長者摘要與重要事件\n\n   ├─ 事件時間軸\n\n   ├─ 已確認記憶\n\n   ├─ 服務前提醒\n\n   ├─ 服務後紀錄／覆核\n\n   └─ 待追蹤事項\n\n\n\n4.4 家屬端\n\n家屬首頁\n\n├─ 今日最新摘要\n\n├─ 本週概覽\n\n├─ 尚未閱讀通知\n\n├─ 最新重要事件\n\n└─ 聯絡長者／照護單位\n\n\n\n報表中心\n\n├─ 每日摘要\n\n├─ 每週報表\n\n├─ 每月報表\n\n├─ 歷史重要事件\n\n└─ 報表詳情\n\n\n\n通知與設定\n\n├─ LINE／Email 通路\n\n├─ 每日／每週／每月頻率\n\n├─ 通知時間\n\n├─ 靜默時段\n\n├─ 暫停／取消訂閱\n\n└─ 授權與可見範圍\n\n\n\n五、頁面清單與優先級\n\nP0｜第一條 Vertical Slice 必備\n\n1. 長者端首次同意與設定。\n\n2. 長者語音互動首頁。\n\n3. 錄音／辨識／生成／播放狀態。\n\n4. ASR 低信心確認。\n\n5. 候選記憶確認。\n\n6. 日照多長者概覽。\n\n7. 林阿嬤長者詳情。\n\n8. 每日摘要。\n\n9. 事件時間軸。\n\n10. 事件覆核與修正。\n\n\n\nP1｜完整產品重要流程\n\n11. 居服員今日行程／派案入口。\n\n12. 陳伯伯服務詳情。\n\n13. 家屬首頁與今日摘要。\n\n14. 家屬每日摘要歷史。\n\n15. 家屬週報與月報。\n\n16. LINE／Email 通知設定。\n\n17. 家屬安全連結與授權失效頁。\n\n18. 同意撤回與資料刪除流程。\n\n\n\nP2｜後續擴充\n\n19. 主動陪伴設定與歷史。\n\n20. RAG 衛教查詢。\n\n21. 遊戲與積分。\n\n22. 內容管理與技術證據頁。\n\n\n\n六、核心 User Flow\n\n6.1 長者首次同意流程\n\n首次進入\n\n→ 選擇語言與稱呼\n\n→ 說明錄音、逐字稿與生活事件用途\n\n→ 分別選擇長期記憶、陪伴需求分析、主動陪伴與家屬分享\n\n→ 顯示選擇摘要\n\n→ 使用者確認\n\n→ 進入語音首頁\n\n\n\n拒絕任何選項時，仍可繼續被允許的基本陪伴功能；介面需清楚說明哪些功能不會啟用。\n\n\n\n6.2 語音互動正常流程\n\n待機\n\n→ 點擊大按鈕開始錄音\n\n→ 顯示正在聽\n\n→ 使用者結束說話\n\n→ 正在辨識\n\n→ 正在整理回覆\n\n→ 播放簡短回覆\n\n→ 顯示此次擷取的生活事件\n\n→ 如有候選記憶，進入記憶確認\n\n→ 返回待機\n\n\n\n6.3 ASR 低信心確認流程\n\nASR 發現人物、日期、否定或用藥關鍵欄位信心不足\n\n→ 顯示系統聽到的關鍵內容\n\n→ 提供「是」「不是／重說」兩個主要選項\n\n→ 確認後繼續事件擷取\n\n→ 否認或再次不清楚時不寫入正式事件或記憶\n\n\n\n6.4 候選記憶確認流程\n\n系統產生候選記憶\n\n→ 用一至兩句說明要保存的內容與用途\n\n→ 提供「記住」「不要記」「稍後再說」\n\n→ 記住：寫入正式記憶並顯示成功\n\n→ 不要記：不保存，回到對話\n\n→ 稍後再說：保持候選狀態，不在後續對話引用\n\n\n\n6.5 日照照服員流程\n\n照服員登入\n\n→ 進入幸福日照中心多長者概覽\n\n→ 看到林阿嬤、張阿姨的最後互動、互動次數、摘要狀態與待覆核數\n\n→ 點擊林阿嬤\n\n→ 查看每日摘要與時間軸\n\n→ 開啟待覆核事件\n\n→ 修正或確認\n\n→ 受影響摘要與 Graph 標記重建\n\n→ 建立關懷待辦或完成處理\n\n\n\n6.6 居服員流程\n\n居服員登入\n\n→ 查看今日服務行程與有效派案長者\n\n→ 選擇陳伯伯的服務卡\n\n→ 查看服務時間、上次服務摘要與待追蹤事項\n\n→ 進入陳伯伯詳情\n\n→ 查看今日事件與既有記憶\n\n→ 完成本次服務紀錄或覆核\n\n→ 建立後續追蹤\n\n→ 返回今日行程\n\n\n\n沒有有效派案時顯示今日無服務安排；無權限或派案失效時不得顯示長者資料。\n\n\n\n6.7 家屬報表與通知流程\n\n每日摘要完成\n\n→ 分享同意與權限檢查\n\n→ 產生家屬版報表\n\n→ 狀態由 Draft／Needs Review 轉為 Published\n\n→ 保存於家屬 App／Web\n\n→ 依家屬設定發送 LINE／Email 簡短通知\n\n→ 家屬點擊安全連結\n\n→ 通過身份與授權驗證\n\n→ 開啟指定每日摘要或週／月報表\n\n→ 可返回報表中心查看歷史\n\n\n\n通知失敗時，App／Web 內 Published 報表仍可查看；系統只重試通知，不重複建立 report_id。\n\n\n\n6.8 家屬週報／月報流程\n\n排程到期\n\n→ 彙整期間內已發布摘要與可分享事件\n\n→ 無資料欄位標示未提及或資料不足\n\n→ 產生報表版本\n\n→ 必要時專業照護人員覆核\n\n→ 發布至家屬報表中心\n\n→ 依通知頻率發送提醒\n\n\n\n6.9 同意撤回與刪除流程\n\n長者或授權人進入資料控制\n\n→ 選擇撤回家屬分享、長期記憶、陪伴分析或主動陪伴\n\n→ 顯示影響範圍\n\n→ 再次確認\n\n→ 立即停止新增對應資料與通知\n\n→ 未使用安全連結失效\n\n→ 依 Policy 啟動資料刪除或隱藏流程\n\n→ 顯示處理狀態與完成通知\n\n\n\n七、頁面狀態規格\n\n7.1 長者語音首頁狀態\n\n• Idle：顯示「按一下開始說話」。\n\n• Recording：顯示明顯錄音指示、結束按鈕與語音提示。\n\n• Processing ASR：顯示「我正在聽清楚你的話」。\n\n• Generating：顯示「我正在整理回答」。\n\n• Playing：顯示目前播放內容與重新播放。\n\n• Low Confidence：顯示關鍵內容確認。\n\n• Timeout：顯示可重試，不責怪使用者。\n\n• Offline：顯示網路異常與稍後再試。\n\n• Permission Denied：白話引導開啟麥克風。\n\n\n\n7.2 專業照護端狀態\n\n• Loading：使用骨架畫面，不顯示過期資料假裝完成。\n\n• Empty：今日無互動、無摘要或無派案。\n\n• Needs Review：清楚顯示待覆核數量與原因。\n\n• Updated：顯示最後更新、修正者與版本。\n\n• Permission Denied：不顯示長者姓名或任何敏感內容。\n\n• Assignment Expired：居服員派案已失效，提供返回行程入口。\n\n• Data Insufficient：顯示資料不足，不產生陪伴結論。\n\n\n\n7.3 家屬端狀態\n\n• No Report：尚未產生報表。\n\n• Draft／Needs Review：家屬不可見。\n\n• Published：正常顯示。\n\n• Withdrawn：顯示此報表已撤回，不保留舊敏感內容。\n\n• Notification Failed：App 仍顯示報表，設定頁顯示通知異常。\n\n• Authorization Expired：安全連結失效，要求重新登入或聯絡照護單位。\n\n• Consent Revoked：停止顯示新內容，依政策處理舊報表。\n\n• Data Insufficient：顯示資料不足，不用空白或推測補滿。\n\n\n\n八、低保真 Wireframe 規格\n\n8.1 長者語音首頁\n\n頂部：長者稱呼、目前語言、簡單設定入口。\n\n中央：單一大型語音按鈕。\n\n按鈕下方：目前狀態文字與簡短圖示。\n\n底部：重新播放、停止、資料與同意入口。\n\n不得在首頁塞入長列表、複雜導覽或多個同等重要按鈕。\n\n\n\n8.2 候選記憶確認\n\n標題：要讓我記住這件事嗎？\n\n內容卡：以白話顯示候選記憶與用途。\n\n主要操作：記住。\n\n次要操作：不要記、稍後再說。\n\n提供語音朗讀，不顯示技術信心分數。\n\n\n\n8.3 日照多長者概覽\n\n頂部：據點名稱、日期、搜尋與篩選。\n\n長者卡：姓名／虛擬代稱、最後互動、今日次數、摘要狀態、待覆核數。\n\n主要操作：查看詳情。\n\n禁止跨長者健康或陪伴分數排名。\n\n\n\n8.4 居服員今日行程\n\n頂部：日期、今日服務數、同步狀態。\n\n行程卡：服務時間、長者、服務地點、派案狀態、上次摘要、待追蹤事項。\n\n主要操作：開始／查看本次服務。\n\n派案失效卡不得顯示敏感摘要。\n\n\n\n8.5 專業照護者長者詳情\n\n頁首：長者基本資料、授權範圍、最後更新。\n\n分頁：今日摘要、時間軸、已確認記憶、待覆核、關懷待辦。\n\n右側或底部：資料來源、版本與更新狀態。\n\n日照與居服模式共用主要元件，但依角色顯示不同服務資訊與操作。\n\n\n\n8.6 家屬首頁\n\n頂部：被授權長者、最後更新與通知入口。\n\n第一區：今日摘要。\n\n第二區：本週概覽。\n\n第三區：最新重要事件。\n\n主要操作：查看完整報表。\n\n底部：歷史報表、通知設定、聯絡長者／照護單位。\n\n\n\n8.7 家屬報表詳情\n\n標題：日期或期間、發布時間、是否更新。\n\n內容：飲食、活動、睡眠、社交、重要事件；無資料標示未提及。\n\n可顯示關懷式建議，例如「有空時可主動聯絡」，不得顯示診斷或疾病機率。\n\n不顯示逐字稿、未覆核事件、ASR 信心或照護內部筆記。\n\n\n\n九、權限矩陣\n\n長者：查看自己的對話狀態、同意與候選記憶；可拒絕、撤回與刪除。\n\n日照照服員：查看所屬據點且被授權長者；可覆核事件、查看專業資訊與建立待辦。\n\n居服員：查看有效派案範圍內長者；可處理服務相關紀錄與覆核，不能查看未派案長者。\n\n家屬：查看分享授權範圍內的 Published 報表與可分享事件；不能修改正式事件、記憶或待辦。\n\n管理者：依職責管理來源、版本、Policy、權限與系統狀態；不得因管理介面繞過資料最小化。\n\n\n\n十、家屬報表與通知 UX 決策\n\n1. App／Web 是正式查看與歷史保存介面；LINE／Email 是通知與導流通路。\n\n2. 同一份正式報表只有一個 report_id，不因通路不同產生三份資料。\n\n3. LINE／Email 預覽只放必要資訊，完整內容需登入或通過安全連結驗證後查看。\n\n4. 報表更新後，家屬端顯示最新版本與更新時間；舊通知導入同一 report_id 的最新可見版本。\n\n5. 通知失敗不影響報表發布；報表撤回或授權失效會使安全連結失效。\n\n6. 家屬可設定每日、每週、每月、LINE、Email、通知時間與靜默時段。\n\n7. 每週／每月報表只彙整已記錄、已覆核或已允許分享的資料，不做醫療趨勢預測。\n\n\n\n十一、可用性測試計畫\n\n11.1 長者測試任務\n\n• 找到並開始錄音。\n\n• 理解錄音、辨識、生成與播放狀態。\n\n• 完成一筆低信心確認。\n\n• 接受、拒絕或延後一筆候選記憶。\n\n• 找到同意設定並撤回家屬分享。\n\n\n\n11.2 日照照服員測試任務\n\n• 從多長者概覽找到待覆核最多的長者。\n\n• 進入林阿嬤詳情並找到來源事件。\n\n• 修正一筆事件並確認更新狀態。\n\n• 建立一筆關懷待辦。\n\n\n\n11.3 居服員測試任務\n\n• 從今日行程找到下一位服務對象。\n\n• 進入陳伯伯詳情並找到上次服務摘要。\n\n• 辨識派案失效與無權限狀態。\n\n• 完成一次服務後紀錄或待追蹤事項。\n\n\n\n11.4 家屬測試任務\n\n• 從 LINE／Email 進入正確的每日摘要。\n\n• 找到本週與本月報表。\n\n• 理解資料不足、報表更新與撤回狀態。\n\n• 調整通知頻率與靜默時段。\n\n• 分辨家屬可見資料與專業照護內部資料。\n\n\n\n十二、Story 與畫面追溯\n\nUS-A01：長者語音首頁。\n\nUS-A02：ASR 語言路徑與低信心確認。\n\nUS-A03～A05：回覆、處理與失敗狀態。\n\nUS-A06：首次同意、偏好與撤回。\n\nUS-B01～B04：事件、摘要、時間軸與覆核。\n\nUS-C01：日照多長者概覽與居服派案入口。\n\nUS-C02：共用長者詳情頁。\n\nUS-C03：家屬摘要發布與 LINE／Email 通知。\n\nUS-C04：專業照護者關懷待辦。\n\nUS-C05：家屬每日、每週、每月報表中心。\n\nUS-D01～D04：候選記憶、確認、引用與管理。\n\nNFR-H01～H03：角色權限、資料保護、撤回與刪除。\n\nNFR-Q01～Q03：效能、背景工作、報表發布與通知可靠性。\n\n\n\n十三、v0.1 完成判定\n\n□ Vertical Slice 16 步都有對應畫面或可觀察狀態。\n\n□ 日照照服員、居服員與家屬有清楚不同的首頁與任務。\n\n□ 家屬 App／Web、LINE 與 Email 的角色已區分。\n\n□ 每個核心頁面都有 Loading、Empty、Error、Permission Denied 或 Data Insufficient 等必要狀態。\n\n□ 候選記憶、待覆核事件與 Published 報表在介面上可清楚區分。\n\n□ 撤回同意與授權失效後的 UX 已定義。\n\n□ 主要流程可製作成低保真可點擊原型進行測試。\n\n\n\n十四、待驗證問題\n\n• 長者是否理解分層同意與候選記憶確認文案？\n\n• 日照照服員首頁最需要的四個欄位為何？\n\n• 居服員首頁應以時間行程、長者清單或待辦優先？\n\n• 家屬每日、每週與每月報表各自需要哪些內容？\n\n• 家屬偏好的通知通路、時間、頻率與靜默時段為何？\n\n• 家屬安全連結應採登入、一次性驗證或 LINE Login？\n\n• 哪些事件可直接分享，哪些必須由專業照護人員覆核？\n\n\n\n十五、下一階段\n\n完成本文件 v0.1 後，依此建立低保真 Wireframe／可點擊 Prototype，執行長者、日照照服員、居服員與家屬的可用性測試。測試結果需同步更新 01A Persona、02 驗收條件、03 Story Map 與本文件，再進入 Workflow、Domain、資料生命週期、Security／Privacy、System／Agent Design 與 API／Event／Data Contracts。",
+  "warnings": [
+    "Unrecognised paragraph style: 'Title' (Style ID: Title)"
+  ]
+}
