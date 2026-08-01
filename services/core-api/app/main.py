@@ -23,15 +23,18 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.agent_runs import router as agent_runs_router
 from app.api.assignments import router as assignments_router
 from app.api.care_events import router as care_events_router
 from app.api.consents import router as consents_router
 from app.api.deletions import router as deletions_router
 from app.api.elders import router as elders_router
 from app.api.error_handlers import register_exception_handlers
+from app.api.family_invitations import router as family_invitations_router
 from app.api.health import router as health_router
 from app.api.identity import router as identity_router
 from app.api.memories import router as memories_router
+from app.api.onboarding import router as onboarding_router
 from app.api.ready import router as ready_router
 from app.api.reports import router as reports_router
 from app.api.summaries import router as summaries_router
@@ -163,7 +166,9 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(ready_router)
     app.include_router(identity_router)
+    app.include_router(onboarding_router)
     app.include_router(elders_router)
+    app.include_router(family_invitations_router)
     app.include_router(consents_router)
     app.include_router(deletions_router)
     app.include_router(voice_sessions_router)
@@ -172,6 +177,7 @@ def create_app() -> FastAPI:
     app.include_router(summaries_router)
     app.include_router(reports_router)
     app.include_router(assignments_router)
+    app.include_router(agent_runs_router)
     app.include_router(tools_router)
 
     # ── Register exception handlers ──────────────────────────────────────────

@@ -9,7 +9,7 @@
 contracts/
 ├── openapi/
 │   ├── core-api.v1.yaml              OpenAPI 3.1，41 個已實作的 path
-│   └── agent-runtime.v1.yaml         OpenAPI 3.1，2 個已實作的 endpoint
+│   └── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 endpoint
 ├── asyncapi/
 │   └── core-events.v1.yaml           AsyncAPI 3.x，Core Domain Event channel
 ├── schemas/
@@ -18,6 +18,8 @@ contracts/
 │   ├── events/                       Domain Event Envelope、publisher／consumer failure outcome
 │   ├── agent/                        AgentRunRequest／Response、ContextManifest、
 │   │                                 HandoffEnvelope、SafetyEvaluation
+│   ├── rag/                          Staging chunk／metadata、ingestion receipt、
+│   │                                 retrieval request／response
 │   └── tools/                        Core ToolRequest／ToolResult、legacy ToolResponse
 ├── examples/
 │   ├── valid/                        必須通過驗證的範例
@@ -29,6 +31,11 @@ contracts/
 `common/` 的 `ResponseMetaV1` 與 `ErrorEnvelopeV1` 由兩邊共用而非各自複製一份
 （[ADR 0005](../docs/adr/0005-agent-runtime-api-conventions.md)）。
 
+Agent Runtime 的第三個 endpoint 是 `POST /api/v1/rag/retrievals`。它只代表 staging
+retrieval HTTP boundary 已可呼叫：未設定 Bedrock／OpenSearch 時仍回 HTTP 200，但
+`data.status = FAILED`、`results = []` 並提供明確 fallback，Agent 不得據此猜測答案。
+這不代表 staging ingestion、Human Review、production projection 或 deletion 已完成。
+
 ## §8.2 的明示例外
 
 兩支 schema 描述的流程尚未接上 executable endpoint，依 AGENTS.md §8.2 在此明列為例外：
@@ -38,9 +45,13 @@ contracts/
 | `agent/HandoffEnvelopeV1` | 有 Pydantic model 與測試，但 orchestrator 從未產生 handoff |
 | `tools/ToolResponseV1` | Agent Runtime 的 legacy target；Core endpoint 實際回傳 `ToolResultV1` |
 
-Core 的 `ToolRequestV1`／`ToolResultV1` 已由 `POST /api/v1/internal/tools/execute` 實際使用，
-並列在 `core-api.v1.yaml`，不屬於例外。Agent Runtime 後續接 Tool 迴圈時，必須以 adapter
-把 legacy `ToolResponseV1` 轉成 Core result，不得把兩份 schema 視為同一型別。
+Core 的 `ToolRequestV1`／`ToolResultV1` 已由 `POST /api/v1/internal/tools/execute` 實際使用；
+`RegisterAgentRunRequestV1`／`AgentRunRegistrationV1` 與
+`CompleteAgentRunRequestV1`／`AgentRunCompletionV1` 則分別描述 Tool 執行前的 Core-owned
+registration 與執行後的 terminal compare-and-set completion。三個 endpoint 都列在
+`core-api.v1.yaml`，不屬於例外。Agent Runtime 的受控 `create_event_candidate` 路徑已以
+adapter 串起 register → Tool → complete；通用多 Tool 迴圈仍未實作，且不得把 legacy
+`ToolResponseV1` 與 Core `ToolResultV1` 視為同一型別。
 
 上述兩支例外 schema 不在 executable OpenAPI path 裡。
 要判斷「這個能不能現在呼叫」，看 OpenAPI，不要看 `schemas/` 底下有沒有檔案。
@@ -52,7 +63,7 @@ Core 的 `ToolRequestV1`／`ToolResultV1` 已由 `POST /api/v1/internal/tools/ex
 尚未決定要往哪邊收斂。改任何一邊之前先讀那份清單。
 
 **Executable contract 只涵蓋已實作的 endpoint。** WebSocket audio transport、Care Action、
-Notification delivery、正式 Agent Handoff／多步 Tool 迴圈、Graph／OpenSearch projection
+Notification delivery、正式 Agent Handoff／多步 Tool 迴圈、Graph／OpenSearch production projection
 與 Cognito verifier 尚未完成；完整差異以 [DIVERGENCE.md](DIVERGENCE.md) 為準。
 
 ## invalid/ 範例的用途
