@@ -1,0 +1,150 @@
+{
+  "$defs": {
+    "FamilyReportItem": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Source Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "text",
+        "source_ids"
+      ],
+      "title": "FamilyReportItem",
+      "type": "object"
+    },
+    "ReportType": {
+      "enum": [
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY",
+        "IMPORTANT_EVENT"
+      ],
+      "title": "ReportType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "recipient_scope_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Recipient Scope Ids",
+      "type": "array"
+    },
+    "report_type": {
+      "$ref": "#/$defs/ReportType"
+    },
+    "period_start": {
+      "format": "date",
+      "title": "Period Start",
+      "type": "string"
+    },
+    "period_end": {
+      "format": "date",
+      "title": "Period End",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/FamilyReportItem"
+      },
+      "maxItems": 64,
+      "title": "Items",
+      "type": "array"
+    },
+    "source_summary_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Source Summary Ids",
+      "type": "array"
+    },
+    "source_event_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Source Event Ids",
+      "type": "array"
+    },
+    "data_gap_notice": {
+      "anyOf": [
+        {
+          "maxLength": 500,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Gap Notice"
+    },
+    "sensitive_review_required": {
+      "default": true,
+      "title": "Sensitive Review Required",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "recipient_scope_ids",
+    "report_type",
+    "period_start",
+    "period_end"
+  ],
+  "title": "CreateFamilyReportDraftRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateFamilyReportDraftRequestV1.json",
+  "anyOf": [
+    {
+      "properties": {
+        "source_summary_ids": {
+          "minItems": 1
+        }
+      },
+      "required": [
+        "source_summary_ids"
+      ]
+    },
+    {
+      "properties": {
+        "source_event_ids": {
+          "minItems": 1
+        }
+      },
+      "required": [
+        "source_event_ids"
+      ]
+    }
+  ]
+}

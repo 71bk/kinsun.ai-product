@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/tools/ToolRequestV1.json",
+  "title": "ToolRequestV1",
+  "description": "Executable request contract for POST /api/v1/internal/tools/execute. Actor, tenant, and trace context are derived by Core from the authenticated service identity and are intentionally not accepted from the request body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tool_call_id",
+    "agent_run_id",
+    "tool_name",
+    "tool_version",
+    "elder_id",
+    "purpose",
+    "consent_version",
+    "policy_version",
+    "request_id"
+  ],
+  "properties": {
+    "tool_call_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "agent_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Must be present in Core's allowlist; the Agent Runtime allowlist alone is not authorization."
+    },
+    "tool_version": {
+      "type": "string",
+      "maxLength": 40,
+      "pattern": "^1\\."
+    },
+    "elder_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "consent_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Required so Core can re-check the purpose and consent version at execution time."
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "idempotency_key": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 160
+        }
+      ],
+      "default": null
+    },
+    "expected_resource_version": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ],
+      "default": null
+    },
+    "parameters": {
+      "type": "object",
+      "default": {},
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "audio",
+            "audio_uri",
+            "full_prompt",
+            "prompt",
+            "secret",
+            "token",
+            "transcript",
+            "transcript_text"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/ToolParameterValue"
+      },
+      "description": "Tool-specific parameters. Core applies recursive Restricted Data validation and then validates the selected tool's parameter model."
+    }
+  },
+  "$defs": {
+    "ToolParameterValue": {
+      "oneOf": [
+        {
+          "type": ["string", "number", "boolean", "null"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolParameterValue"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "audio",
+                "audio_uri",
+                "full_prompt",
+                "prompt",
+                "secret",
+                "token",
+                "transcript",
+                "transcript_text"
+              ]
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/ToolParameterValue"
+          }
+        }
+      ]
+    }
+  }
+}

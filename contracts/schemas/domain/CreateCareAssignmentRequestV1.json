@@ -1,0 +1,61 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "care_unit_id": {
+      "format": "uuid",
+      "title": "Care Unit Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "worker_actor_id": {
+      "format": "uuid",
+      "title": "Worker Actor Id",
+      "type": "string"
+    },
+    "service_start": {
+      "format": "date-time",
+      "title": "Service Start",
+      "type": "string"
+    },
+    "service_end": {
+      "format": "date-time",
+      "title": "Service End",
+      "type": "string"
+    },
+    "allowed_data_scopes": {
+      "items": {
+        "enum": [
+          "elder:basic:read",
+          "elder:sensitive:read",
+          "assignment:read",
+          "assignment:start",
+          "assignment:complete",
+          "care_event:candidate:create",
+          "care_event:read",
+          "summary:read"
+        ],
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Allowed Data Scopes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "care_unit_id",
+    "elder_id",
+    "worker_actor_id",
+    "service_start",
+    "service_end",
+    "allowed_data_scopes"
+  ],
+  "title": "CreateCareAssignmentRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateCareAssignmentRequestV1.json"
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json",
+  "title": "ResponseMetaV1",
+  "description": "Metadata attached to every successful Core API and Agent Runtime response. NOTE: this reflects the implemented shape, which differs from document 10 section 4.2 — see contracts/DIVERGENCE.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["correlation_id", "timestamp", "schema_version"],
+  "properties": {
+    "correlation_id": {
+      "type": "string",
+      "description": "Request correlation id. Taken from the x-correlation-id request header when present, otherwise generated as a UUID v4. Echoed back in the x-correlation-id response header.",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server time when the response was built, ISO 8601 UTC."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Success-envelope schema version."
+    }
+  }
+}

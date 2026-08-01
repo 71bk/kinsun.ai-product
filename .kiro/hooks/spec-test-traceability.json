@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "spec-test-traceability",
+      "description": "Review Kiro Spec changes for acceptance-criteria, task, and test traceability.",
+      "trigger": "PostFileSave",
+      "matcher": "^\\.kiro[\\\\/]specs[\\\\/].+[\\\\/](requirements|design|tasks)\\.md$",
+      "action": {
+        "type": "agent",
+        "prompt": "A Kiro Spec artifact was saved. Review only the changed Spec and its git diff. Verify that each requirement has testable acceptance criteria, the design addresses security and failure paths, and required tasks include corresponding tests or verification. Report missing traceability. Do not mark a task complete, edit production code, or claim tests passed without execution evidence."
+      },
+      "enabled": true
+    }
+  ]
+}

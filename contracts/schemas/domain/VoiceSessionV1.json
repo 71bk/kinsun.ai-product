@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "LanguageRoute": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "LanguageRoute",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "format": "uuid",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "CREATED",
+        "RECORDING",
+        "PROCESSING",
+        "RESPONDING",
+        "COMPLETED",
+        "CANCELLED",
+        "FAILED"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "language_route": {
+      "$ref": "#/$defs/LanguageRoute"
+    },
+    "consent_version": {
+      "title": "Consent Version",
+      "type": "integer"
+    },
+    "policy_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Policy Version"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Ended At"
+    },
+    "transport_status": {
+      "default": "NOT_CONFIGURED",
+      "enum": [
+        "NOT_CONFIGURED",
+        "AVAILABLE"
+      ],
+      "title": "Transport Status",
+      "type": "string"
+    },
+    "websocket_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Websocket Url"
+    },
+    "connection_token": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Connection Token"
+    }
+  },
+  "required": [
+    "session_id",
+    "elder_id",
+    "state",
+    "language_route",
+    "consent_version",
+    "policy_version",
+    "started_at",
+    "ended_at"
+  ],
+  "title": "VoiceSessionV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/VoiceSessionV1.json"
+}

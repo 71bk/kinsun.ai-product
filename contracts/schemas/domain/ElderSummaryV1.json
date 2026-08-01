@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ElderSummaryV1.json",
+  "title": "ElderSummaryV1",
+  "description": "Minimal elder profile returned by GET /api/v1/elders/{elder_id}. Per ADR-10-005 this DTO is deliberately NOT the database entity: language, communication and care preferences, plus every identifier of related records, are withheld.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["elder_id", "display_name", "primary_care_setting", "status"],
+  "properties": {
+    "elder_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Elder identifier."
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Display name. Demo and test data must be synthetic or de-identified.",
+      "minLength": 1
+    },
+    "primary_care_setting": {
+      "type": "string",
+      "description": "Primary care setting. Mirrors the elder.primary_care_setting CHECK constraint in the eldercare_ai schema.",
+      "enum": ["DAYCARE", "COMMUNITY", "HOME_CARE", "INDEPENDENT"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Elder service status.",
+      "enum": ["ACTIVE", "INACTIVE", "DECEASED", "DELETED"]
+    }
+  }
+}

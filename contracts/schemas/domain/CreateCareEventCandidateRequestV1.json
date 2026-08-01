@@ -1,0 +1,161 @@
+{
+  "$defs": {
+    "CareEventType": {
+      "enum": [
+        "MEAL",
+        "ACTIVITY",
+        "SLEEP",
+        "MEDICATION_STATEMENT",
+        "EMOTION_EXPRESSION",
+        "SOCIAL_CONTACT",
+        "EXPECTED_CONTACT_MISSED",
+        "ACTIVITY_PARTICIPATION",
+        "ACTIVITY_CANCELLED",
+        "COMPANIONSHIP_NEED"
+      ],
+      "title": "CareEventType",
+      "type": "string"
+    },
+    "ConfidenceBand": {
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "ConfidenceBand",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "source_type": {
+      "enum": [
+        "CONVERSATION_SESSION",
+        "MANUAL"
+      ],
+      "title": "Source Type",
+      "type": "string"
+    },
+    "source_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Id"
+    },
+    "source_version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Source Version",
+      "type": "integer"
+    },
+    "event_type": {
+      "$ref": "#/$defs/CareEventType"
+    },
+    "event_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Event Time"
+    },
+    "structured_payload": {
+      "additionalProperties": true,
+      "title": "Structured Payload",
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "audio",
+            "audio_uri",
+            "transcript",
+            "transcript_text",
+            "prompt",
+            "full_prompt",
+            "secret",
+            "token",
+            "asr_confidence"
+          ]
+        }
+      }
+    },
+    "evidence_refs": {
+      "items": {
+        "description": "Opaque evidence reference in evidence:<UUID> form; never transcript or audio.",
+        "maxLength": 45,
+        "minLength": 45,
+        "pattern": "^evidence:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "confidence_band": {
+      "$ref": "#/$defs/ConfidenceBand"
+    },
+    "review_requirement": {
+      "default": "REQUIRED",
+      "enum": [
+        "REQUIRED",
+        "OPTIONAL"
+      ],
+      "title": "Review Requirement",
+      "type": "string"
+    },
+    "extractor_version": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Extractor Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_type",
+    "event_type",
+    "structured_payload",
+    "confidence_band",
+    "extractor_version"
+  ],
+  "title": "CreateCareEventCandidateRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateCareEventCandidateRequestV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source_type": {
+            "const": "CONVERSATION_SESSION"
+          }
+        },
+        "required": [
+          "source_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "source_id"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  ]
+}

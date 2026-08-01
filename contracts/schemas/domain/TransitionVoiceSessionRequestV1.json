@@ -1,0 +1,24 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "target_state": {
+      "enum": [
+        "RECORDING",
+        "PROCESSING",
+        "RESPONDING",
+        "COMPLETED",
+        "CANCELLED",
+        "FAILED"
+      ],
+      "title": "Target State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target_state"
+  ],
+  "title": "TransitionVoiceSessionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/TransitionVoiceSessionRequestV1.json"
+}

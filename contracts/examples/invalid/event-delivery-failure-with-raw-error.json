@@ -1,0 +1,14 @@
+{
+  "_why_invalid": "Failure outcomes must expose only a stable reason_code, never a raw exception message that may contain restricted data or credentials.",
+  "data": {
+    "event_id": "55555555-5555-4555-8555-555555555555",
+    "stage": "PUBLISHER",
+    "reason_code": "PUBLISHER_UNEXPECTED_ERROR",
+    "retryable": true,
+    "attempt_count": 1,
+    "max_attempts": 10,
+    "disposition": "RETRY",
+    "consumer_name": null,
+    "error_message": "Connection failed with token=secret-value"
+  }
+}

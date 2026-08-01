@@ -1,0 +1,16 @@
+{
+  "_why_invalid": "retryable is absent. Without it the agent must infer retry policy from `status`, and FAILED covers both a transient dependency timeout and a permanent authorization denial. Guessing wrong in the second case means retrying a call the Core already refused — the same gap catalogued for the Core API error envelope in DIVERGENCE.md section 1.3, which is why the field is required here rather than optional.",
+  "data": {
+    "schema_version": "1.0.0",
+    "tool_call_id": "tc-7f3a2b91",
+    "trace_id": "trace-001",
+    "status": "FAILED",
+    "result": [],
+    "error_code": "DEPENDENCY_TIMEOUT",
+    "reason_codes": ["UPSTREAM_TIMEOUT"],
+    "source_refs": [],
+    "redactions": [],
+    "resource_id": null,
+    "resource_version": null
+  }
+}

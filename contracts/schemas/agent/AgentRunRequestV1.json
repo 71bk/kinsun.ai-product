@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/agent/AgentRunRequestV1.json",
+  "title": "AgentRunRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "session_id",
+    "actor_id",
+    "actor_role",
+    "elder_id",
+    "tenant_id",
+    "purpose",
+    "consent_version",
+    "policy_version",
+    "language",
+    "input_text",
+    "allowed_tools",
+    "max_steps",
+    "latency_budget_ms"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "trace_id": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "actor_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "actor_role": {
+      "type": "string",
+      "enum": ["elder", "family", "staff", "system"]
+    },
+    "elder_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "purpose": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "consent_version": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "policy_version": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(?:-[A-Za-z]{2})?$",
+      "maxLength": 10
+    },
+    "input_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "allowed_tools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{1,40}$"
+      },
+      "default": []
+    },
+    "max_steps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20
+    },
+    "latency_budget_ms": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 300000
+    }
+  }
+}

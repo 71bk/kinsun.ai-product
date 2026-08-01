@@ -1,0 +1,31 @@
+{
+  "data": {
+    "deletion_request_id": "784eb3f0-99d4-44e4-bae7-e963f9469e90",
+    "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+    "consent_id": "26cc0233-6035-4d62-9f04-e536a39d20ab",
+    "scope": [
+      "MEMORY"
+    ],
+    "status": "COMPLETED",
+    "reason_code": "ELDER_REQUEST",
+    "requested_at": "2026-08-01T02:00:00Z",
+    "effective_at": "2026-08-01T02:00:00Z",
+    "completed_at": "2026-08-01T02:01:00Z",
+    "items": [
+      {
+        "deletion_job_item_id": "f928ddf0-457a-4340-a0ef-5e804d4025fa",
+        "resource_type": "MEMORY",
+        "system_of_record": "AURORA",
+        "status": "COMPLETED",
+        "attempt_count": 1,
+        "started_at": "2026-08-01T02:00:30Z",
+        "failure_code": null,
+        "completed_at": "2026-08-01T02:01:00Z"
+      }
+    ]
+  },
+  "meta": {
+    "correlation_id": "707c6fd8-f1b6-445e-835b-05067b5e2291",
+    "timestamp": "2026-08-01T02:01:00Z"
+  }
+}
