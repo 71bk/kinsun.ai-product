@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>家屬端 — kinsun.ai UI Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:10px var(--space-5); font-size: var(--text-base); }
+  .kv dt { color: var(--color-muted-foreground); white-space:nowrap; }
+  .report-item { padding: var(--space-4) 0; border-bottom:1px solid var(--color-border); }
+  .report-item:last-child { border-bottom:none; }
+  .state-grid { display:grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); }
+  .notice { display:flex; gap: var(--space-3); align-items:flex-start; }
+  .center-page { flex:1; display:flex; align-items:center; justify-content:center; padding: var(--space-8); }
+  .seg-tabs { display:flex; gap:2px; background: var(--slate-100); border-radius: var(--radius-md); padding:4px; }
+  .seg-tabs button { flex:1; min-height:44px; border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight:600; color: var(--color-muted-foreground); }
+  .seg-tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-primary-text); box-shadow: var(--shadow-1); }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px;
+          background: var(--slate-100); padding:2px 6px; border-radius:4px; }
+</style>
+</head>
+<body class="demo">
+
+<nav class="demo-nav">
+  <h1>家屬端</h1>
+  <p class="sub">data-surface="family" · 18px base · 單欄 720px</p>
+  <a class="demo-back" href="index.html">← 回總覽（全部 22 頁）</a>
+
+  <div class="demo-group">
+    <p>P1 — 完整產品流程</p>
+    <button data-screen="f1"><span class="n">13</span>家屬首頁與今日摘要</button>
+    <button data-screen="f2"><span class="n">14</span>每日摘要歷史</button>
+    <button data-screen="f3"><span class="n">15</span>週報與月報</button>
+    <button data-screen="f4"><span class="n">16</span>LINE／Email 通知設定</button>
+    <button data-screen="f5"><span class="n">17</span>安全連結與授權失效</button>
+  </div>
+  <div class="demo-group">
+    <p>附錄</p>
+    <button data-screen="f6"><span class="n">—</span>家屬端 8 狀態</button>
+  </div>
+</nav>
+
+<div class="demo-main">
+  <div class="demo-bar">
+    <div class="title" data-screen-title></div>
+    <div class="seg">
+      <button data-view="tp">平板直式</button>
+      <button data-view="tl">平板橫式</button>
+      <button data-view="ph">手機</button>
+      <button data-view="dt">桌機</button>
+    </div>
+    <span style="font-size:11px;color:#94A3B8" data-view-label></span>
+  </div>
+
+  <div class="demo-stage">
+    <div>
+      <div class="frame-wrap">
+        <div data-surface="family">
+          <div class="device">
+            <span class="synthetic">合成資料 SYNTHETIC</span>
+
+<!-- ══════════ F1 家屬首頁 ══════════ -->
+<section class="screen" id="f1" data-surface="family"
+  data-title="13 · 家屬首頁與今日摘要"
+  data-note="P1 · 文件 04 §8.6"
+  data-spec="永遠單欄、<code>max-width:720px</code>，閱讀導向不需寬版。<b>絕不渲染</b>逐字稿、ASR 信心、未覆核事件、內部筆記（04 §8.7）——建議在 family 的 API client 加 runtime assert 攔截這些欄位，不只依賴後端不回傳。可顯示關懷式建議（「有空時可主動聯絡」），<b>不得顯示診斷或疾病機率</b>。">
+  <div class="appbar">
+    <div class="row g3 grow">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--color-primary-weak);color:var(--color-primary-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">林</div>
+      <div><h2>林阿嬤</h2><p class="muted" style="font-size:var(--text-xs)">最後更新 15:40</p></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" aria-label="通知設定"><svg class="icon icon-sm"><use href="#i-bell"/></svg></button>
+  </div>
+  <div class="pane">
+    <div class="reading stack g6">
+      <div class="card stack g4">
+        <div class="row g3 between wrap">
+          <h3>今天（8月1日）</h3>
+          <span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span>
+        </div>
+        <dl class="kv">
+          <dt>飲食</dt><dd>早上吃了稀飯，中午在中心用餐，胃口不錯。</dd>
+          <dt>活動</dt><dd>上午參加團體唱歌，唱了望春風。</dd>
+          <dt>社交</dt><dd>提到小明前一天來看她，一起吃了肉粽。</dd>
+          <dt>睡眠</dt><dd><span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>今天沒有提到</span></dd>
+        </dl>
+        <div class="divider"></div>
+        <div class="card card-nodata notice">
+          <svg class="icon icon-sm"><use href="#i-chat"/></svg>
+          <p style="font-size:var(--text-sm)">阿嬤今天提到小明來訪時很開心。有空時可以主動打個電話。</p>
+        </div>
+        <button class="btn btn-primary btn-block">查看完整報表</button>
+      </div>
+
+      <div class="card stack g4">
+        <h3>本週概覽</h3>
+        <div class="bars">
+          <div style="height:40%"><span>一</span></div><div style="height:65%"><span>二</span></div>
+          <div style="height:30%"><span>三</span></div><div style="height:80%"><span>四</span></div>
+          <div style="height:55%"><span>五</span></div><div style="height:70%"><span>六</span></div>
+          <div class="on" style="height:100%"><span>日</span></div>
+        </div>
+        <p class="muted" style="font-size:var(--text-xs);margin-top:var(--space-5)">這是<b>聊天次數</b>，不是健康或心情評分。</p>
+      </div>
+
+      <div class="stack g4">
+        <h3>最新重要事件</h3>
+        <div class="card stack g2">
+          <span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>照護人員已覆核</span>
+          <p><b>提到下午走路時膝蓋不太舒服</b></p>
+          <p class="muted" style="font-size:var(--text-xs)">8月1日 · 已由照服員確認並同意分享</p>
+        </div>
+        <div class="card card-nodata notice">
+          <svg class="icon icon-sm"><use href="#i-eye-slash"/></svg>
+          <p style="font-size:var(--text-sm)">還有 1 筆事件<b>尚未經照護人員覆核</b>，覆核完成前不會顯示。</p>
+        </div>
+      </div>
+
+      <div class="row g4 wrap">
+        <button class="btn btn-secondary grow"><svg class="icon"><use href="#i-calendar"/></svg>歷史報表</button>
+        <button class="btn btn-secondary grow"><svg class="icon"><use href="#i-bell"/></svg>通知設定</button>
+      </div>
+      <button class="btn btn-ghost btn-block">聯絡幸福日照中心</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ F2 每日摘要歷史 ══════════ -->
+<section class="screen" id="f2" data-surface="family"
+  data-title="14 · 家屬每日摘要歷史"
+  data-note="P1 · 文件 04 §4.4"
+  data-spec="只列出 <span class='code'>PUBLISHED</span> 的報表。<b>Draft／Needs Review 家屬不可見，前端不得渲染</b>。已撤回的報表顯示為 Withdrawn 且<b>不保留舊敏感內容</b>——見第三筆。分頁只能用 opaque cursor，<b>不得出現 offset、page_number 或 total</b>（AGENTS.md §8.1，total 會洩漏授權範圍外的長者數量）。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="grow"><h2>每日摘要</h2><p class="muted" style="font-size:var(--text-xs)">林阿嬤</p></div>
+  </div>
+  <div class="pane">
+    <div class="reading stack g5">
+      <div class="card">
+        <div class="report-item">
+          <div class="row g3 between wrap">
+            <div><b>8月1日（六）</b><p class="muted" style="font-size:var(--text-sm)">飲食、活動、社交 · 1 筆重要事件</p></div>
+            <div class="row g3"><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span><svg class="icon icon-sm muted"><use href="#i-next"/></svg></div>
+          </div>
+        </div>
+        <div class="report-item">
+          <div class="row g3 between wrap">
+            <div><b>7月31日（五）</b><p class="muted" style="font-size:var(--text-sm)">飲食、活動 · 已於 8/1 更新</p></div>
+            <div class="row g3"><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已更新 v2</span><svg class="icon icon-sm muted"><use href="#i-next"/></svg></div>
+          </div>
+        </div>
+        <div class="report-item">
+          <div class="row g3 between wrap">
+            <div><b class="ttl" style="text-decoration:line-through">7月30日（四）</b><p class="muted" style="font-size:var(--text-sm)">此報表已撤回</p></div>
+            <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>已撤回</span>
+          </div>
+        </div>
+        <div class="report-item">
+          <div class="row g3 between wrap">
+            <div><b>7月29日（三）</b><p class="muted" style="font-size:var(--text-sm)">飲食、社交</p></div>
+            <div class="row g3"><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span><svg class="icon icon-sm muted"><use href="#i-next"/></svg></div>
+          </div>
+        </div>
+        <div class="report-item">
+          <div class="row g3 between wrap">
+            <div><b>7月28日（二）</b><p class="muted" style="font-size:var(--text-sm)">活動</p></div>
+            <div class="row g3"><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span><svg class="icon icon-sm muted"><use href="#i-next"/></svg></div>
+          </div>
+        </div>
+        <div class="report-item">
+          <div class="card card-nodata notice">
+            <svg class="icon icon-sm"><use href="#i-minus"/></svg>
+            <p style="font-size:var(--text-sm)"><b>7月27日（一）沒有報表</b>——當天沒有互動紀錄。沒有資料就是沒有資料，不以推測補滿。</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-block">載入更早的報表</button>
+      <p class="muted center" style="font-size:var(--text-xs)">依授權範圍顯示，不呈現總筆數。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ F3 週報與月報 ══════════ -->
+<section class="screen" id="f3" data-surface="family"
+  data-title="15 · 家屬週報與月報"
+  data-note="P1 · 文件 04 §6.8、§十.7"
+  data-spec="只彙整<b>已記錄、已覆核或已允許分享</b>的資料。<b>不做醫療趨勢預測</b>（04 §十.7）——因此沒有折線圖、沒有「情況改善／惡化」的判讀語言，只有次數與已覆核事實。無資料欄位標示「未提及」或「資料不足」。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <div class="grow"><h2>期間報表</h2><p class="muted" style="font-size:var(--text-xs)">林阿嬤</p></div>
+  </div>
+  <div class="pane">
+    <div class="reading stack g5" id="f3-panels">
+      <div class="seg-tabs" role="tablist" data-toggle-group="f3-panels">
+        <button role="tab" aria-selected="true" data-toggle-target="w">本週</button>
+        <button role="tab" aria-selected="false" data-toggle-target="m">本月</button>
+      </div>
+
+      <div data-toggle-panel="w" class="stack g5">
+        <div class="card stack g4">
+          <div class="row g3 between wrap">
+            <h3>7月26日 – 8月1日</h3>
+            <span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span>
+          </div>
+          <p class="muted" style="font-size:var(--text-sm)">發布於 8月1日 18:00 · 已由照服員覆核</p>
+          <div class="divider"></div>
+          <div class="stack g2"><b>聊天次數</b>
+            <div class="bars">
+              <div style="height:40%"><span>一</span></div><div style="height:65%"><span>二</span></div>
+              <div style="height:30%"><span>三</span></div><div style="height:80%"><span>四</span></div>
+              <div style="height:55%"><span>五</span></div><div style="height:70%"><span>六</span></div>
+              <div class="on" style="height:100%"><span>日</span></div>
+            </div>
+            <p class="muted" style="font-size:var(--text-xs);margin-top:var(--space-5)">本週共 38 次。這是次數統計，不做趨勢判讀。</p>
+          </div>
+          <div class="divider"></div>
+          <dl class="kv">
+            <dt>飲食</dt><dd>本週有 6 天提到用餐狀況，多為在中心用餐。</dd>
+            <dt>活動</dt><dd>參加團體活動 3 次，包含唱歌與手作。</dd>
+            <dt>社交</dt><dd>提到家人 4 次，主要是孫子小明。</dd>
+            <dt>睡眠</dt><dd><span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>資料不足</span></dd>
+          </dl>
+        </div>
+
+        <div class="card stack g3">
+          <h3>本週重要事件</h3>
+          <div class="card stack g2">
+            <span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>已覆核並同意分享</span>
+            <p>8月1日 · 提到下午走路時膝蓋不太舒服。</p>
+          </div>
+          <div class="card stack g2">
+            <span class="pill pill-published"><svg class="icon"><use href="#i-check"/></svg>已覆核並同意分享</span>
+            <p>7月29日 · 孫子小明來訪。</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-block"><svg class="icon"><use href="#i-download"/></svg>下載這份報表</button>
+      </div>
+
+      <div data-toggle-panel="m" hidden class="stack g5">
+        <div class="card stack g4">
+          <div class="row g3 between wrap"><h3>2026年7月</h3><span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>待照護人員覆核</span></div>
+          <div class="card card-nodata notice">
+            <svg class="icon icon-sm"><use href="#i-eye-slash"/></svg>
+            <p style="font-size:var(--text-sm)">月報正在由照護人員覆核，<b>覆核完成後才會發布</b>。目前還看不到內容。</p>
+          </div>
+        </div>
+        <div class="card stack g3">
+          <h3>更早的月報</h3>
+          <div class="report-item"><div class="row g3 between"><b>2026年6月</b><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span></div></div>
+          <div class="report-item"><div class="row g3 between"><b>2026年5月</b><span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ F4 通知設定 ══════════ -->
+<section class="screen" id="f4" data-surface="family"
+  data-title="16 · LINE／Email 通知設定"
+  data-note="P1 · 文件 04 §十"
+  data-spec="<b>App／Web 是正式查看介面，LINE／Email 只做最小通知與安全連結導流</b>（AGENTS.md §4）。預覽只放必要資訊，完整內容需通過驗證。<b>通知失敗不影響報表發布</b>——App 內仍可查看，設定頁顯示通知異常（見底部）。系統只重試通知，<b>不重複建立 report_id</b>。">
+  <div class="appbar">
+    <button class="btn btn-ghost btn-sm" aria-label="返回"><svg class="icon icon-sm"><use href="#i-back"/></svg></button>
+    <h2 class="grow">通知設定</h2>
+  </div>
+  <div class="pane">
+    <div class="reading stack g5">
+      <div class="card card-review notice">
+        <svg class="icon" style="color:var(--st-review-fg)"><use href="#i-warn"/></svg>
+        <div>
+          <b style="font-size:var(--text-base)">昨天的 LINE 通知沒有送達</b>
+          <p class="muted" style="font-size:var(--text-sm)">報表本身已正常發布，可在「每日摘要」查看。系統會自動重試。</p>
+        </div>
+      </div>
+
+      <div class="card stack g4">
+        <h3>通知管道</h3>
+        <div class="toggle-row">
+          <div class="switch" role="switch" aria-checked="true" aria-label="LINE 通知" tabindex="0"></div>
+          <div class="grow"><b style="font-size:var(--text-base)">LINE</b>
+          <p class="muted" style="font-size:var(--text-sm)">只送簡短提醒與安全連結，不含摘要內容。</p></div>
+        </div>
+        <div class="divider"></div>
+        <div class="toggle-row">
+          <div class="switch" role="switch" aria-checked="false" aria-label="Email 通知" tabindex="0"></div>
+          <div class="grow"><b style="font-size:var(--text-base)">Email</b>
+          <p class="muted" style="font-size:var(--text-sm)">f****@example.com</p></div>
+        </div>
+      </div>
+
+      <div class="card stack g4">
+        <h3>通知頻率</h3>
+        <div class="toggle-row"><div class="switch" role="switch" aria-checked="true" aria-label="每日摘要" tabindex="0"></div><b class="grow" style="font-size:var(--text-base)">每日摘要</b></div>
+        <div class="toggle-row"><div class="switch" role="switch" aria-checked="true" aria-label="每週報表" tabindex="0"></div><b class="grow" style="font-size:var(--text-base)">每週報表</b></div>
+        <div class="toggle-row"><div class="switch" role="switch" aria-checked="false" aria-label="每月報表" tabindex="0"></div><b class="grow" style="font-size:var(--text-base)">每月報表</b></div>
+      </div>
+
+      <div class="card stack g4">
+        <h3>時間</h3>
+        <div class="field">
+          <label for="nt">通知時間</label>
+          <select id="nt"><option>晚上 20:00</option><option>晚上 21:00</option><option>早上 09:00</option></select>
+        </div>
+        <div class="field">
+          <label for="qh">靜默時段</label>
+          <select id="qh"><option>晚上 22:00 – 早上 08:00</option><option>不設定</option></select>
+          <p class="help">靜默時段內不會送出任何通知。</p>
+        </div>
+      </div>
+
+      <div class="card stack g4">
+        <h3>授權與可見範圍</h3>
+        <dl class="kv" style="font-size:var(--text-sm)">
+          <dt>關係</dt><dd>女兒</dd>
+          <dt>可看到</dt><dd>每日／每週／每月摘要、已覆核且同意分享的重要事件</dd>
+          <dt>看不到</dt><dd>聊天原文、未覆核事件、照護內部筆記</dd>
+          <dt>授權到期</dt><dd class="num">2026-12-31</dd>
+        </dl>
+        <div class="divider"></div>
+        <button class="btn btn-destructive btn-block" style="margin-top:var(--space-4)"><svg class="icon"><use href="#i-ban"/></svg>暫停接收所有通知</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ F5 安全連結與授權失效 ══════════ -->
+<section class="screen" id="f5" data-surface="family"
+  data-title="17 · 家屬安全連結與授權失效頁"
+  data-note="P1 · 文件 04 §6.7、§7.3"
+  data-spec="此頁必須<b>完全獨立、不需既有 session 即可渲染</b>——使用者是從 LINE／Email 點進來的。<b>報表撤回或授權失效會使安全連結失效</b>；失效時<b>不得洩漏任何報表內容、長者姓名或關係人資訊</b>。上方是驗證中，下方是三種失效結果。">
+  <div class="appbar"><h2 class="grow">kinsun.ai</h2></div>
+  <div class="pane">
+    <div class="reading stack g6">
+      <div class="card stack g4" style="align-items:center;text-align:center;padding:var(--space-10) var(--space-6)">
+        <svg class="icon" style="width:44px;height:44px;color:var(--color-primary)"><use href="#i-link"/></svg>
+        <h3>正在確認你的身分…</h3>
+        <div class="stack g2" style="width:100%;max-width:280px"><div class="sk"></div><div class="sk" style="width:70%;margin:0 auto"></div></div>
+        <p class="muted" style="font-size:var(--text-sm)">驗證完成後會直接開啟你要看的那一份摘要。</p>
+      </div>
+
+      <p class="muted center" style="font-size:var(--text-xs)">─── 以下為驗證失敗的三種結果 ───</p>
+
+      <div class="card card-withdrawn stack g4">
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>連結已失效</span>
+        <h3>這個連結已經不能使用了</h3>
+        <p style="font-size:var(--text-sm)">連結可能已過期，或這份報表已被撤回。</p>
+        <button class="btn btn-primary btn-block">登入查看最新報表</button>
+        <button class="btn btn-ghost btn-block">聯絡照護單位</button>
+        <p class="muted" style="font-size:var(--text-xs)">此頁不顯示長者姓名、報表內容或任何關係人資訊。</p>
+      </div>
+
+      <div class="card card-withdrawn stack g4">
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-shield"/></svg>授權已到期</span>
+        <h3>你的查看授權已經到期</h3>
+        <p style="font-size:var(--text-sm)">請重新登入，或聯絡照護單位確認授權狀態。</p>
+        <button class="btn btn-primary btn-block">重新登入</button>
+      </div>
+
+      <div class="card card-withdrawn stack g4">
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>分享已停止</span>
+        <h3>長者已停止分享</h3>
+        <p style="font-size:var(--text-sm)">如有疑問請聯絡照護單位。</p>
+        <button class="btn btn-secondary btn-block">聯絡照護單位</button>
+        <p class="muted" style="font-size:var(--text-xs)">Consent 撤回後立即停止顯示新內容，舊報表依政策處理。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ F6 家屬端 8 狀態 ══════════ -->
+<section class="screen" id="f6" data-surface="family"
+  data-title="附錄 · 家屬端 8 狀態"
+  data-note="文件 04 §7.3"
+  data-spec="八個狀態全部必須實作。<b>Draft／Needs Review 家屬完全不可見</b>——這裡示範的是「不渲染」而不是「顯示為灰色」，因為顯示存在本身就洩漏了資訊。Notification Failed 時 App 內報表<b>仍然可看</b>，只在設定頁顯示通知異常。">
+  <div class="appbar"><h2 class="grow">家屬端的 8 個狀態</h2></div>
+  <div class="pane">
+    <div class="state-grid">
+      <div class="card card-nodata stack g3">
+        <b style="font-size:var(--text-sm)">No Report</b>
+        <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>尚未產生報表</span>
+        <p class="muted" style="font-size:var(--text-xs)">當天還沒有報表。</p>
+      </div>
+      <div class="card card-nodata stack g3" style="opacity:.6">
+        <b style="font-size:var(--text-sm)">Draft／Needs Review</b>
+        <span class="pill pill-nodata"><svg class="icon"><use href="#i-eye-slash"/></svg>家屬端不渲染</span>
+        <p class="muted" style="font-size:var(--text-xs)"><b>連「存在」都不顯示</b>——顯示存在本身即洩漏資訊。</p>
+      </div>
+      <div class="card stack g3">
+        <b style="font-size:var(--text-sm)">Published</b>
+        <span class="pill pill-published"><svg class="icon"><use href="#i-send"/></svg>已發布</span>
+        <p class="muted" style="font-size:var(--text-xs)">正常顯示。</p>
+      </div>
+      <div class="card card-withdrawn stack g3">
+        <b style="font-size:var(--text-sm)">Withdrawn</b>
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>已撤回</span>
+        <p class="muted" style="font-size:var(--text-xs)"><b>不保留舊敏感內容。</b></p>
+      </div>
+      <div class="card card-review stack g3">
+        <b style="font-size:var(--text-sm)">Notification Failed</b>
+        <span class="pill pill-review"><svg class="icon"><use href="#i-warn"/></svg>通知未送達</span>
+        <p class="muted" style="font-size:var(--text-xs)">App 內<b>仍可查看報表</b>，只在設定頁提示。</p>
+      </div>
+      <div class="card card-withdrawn stack g3">
+        <b style="font-size:var(--text-sm)">Authorization Expired</b>
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-shield"/></svg>授權已到期</span>
+        <p class="muted" style="font-size:var(--text-xs)">要求重新登入或聯絡照護單位。</p>
+      </div>
+      <div class="card card-withdrawn stack g3">
+        <b style="font-size:var(--text-sm)">Consent Revoked</b>
+        <span class="pill pill-withdrawn"><svg class="icon"><use href="#i-ban"/></svg>分享已停止</span>
+        <p class="muted" style="font-size:var(--text-xs)">停止顯示新內容，舊報表依政策處理。</p>
+      </div>
+      <div class="card card-nodata stack g3">
+        <b style="font-size:var(--text-sm)">Data Insufficient</b>
+        <span class="pill pill-nodata"><svg class="icon"><use href="#i-minus"/></svg>資料不足</span>
+        <p class="muted" style="font-size:var(--text-xs)"><b>不用空白或推測補滿。</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+          </div>
+        </div>
+      </div>
+      <p class="device-note" data-screen-spec></p>
+    </div>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

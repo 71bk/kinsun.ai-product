@@ -1,0 +1,15 @@
+{
+  "_why_invalid": "actor_type is 'LEGAL_REPRESENTATIVE', which is not a member of eldercare_ai.actor_type_enum. Per document 06 section 4.1 legal representation is a care relationship, not an actor type; such an actor authenticates as FAMILY_MEMBER. This example exists to keep that distinction enforced by a test rather than by memory.",
+  "data": {
+    "actor_id": "3f1b2c9e-5d47-4a1e-9c33-7b0a5e2d8f41",
+    "actor_type": "LEGAL_REPRESENTATIVE",
+    "display_name": "陳先生",
+    "tenant_id": "8c2d4e6a-1b39-4f57-a0d2-6e8b3c5a7d19",
+    "role": "LEGAL_REPRESENTATIVE",
+    "care_unit_ids": []
+  },
+  "meta": {
+    "correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64",
+    "timestamp": "2026-07-31T04:12:09.482714Z"
+  }
+}

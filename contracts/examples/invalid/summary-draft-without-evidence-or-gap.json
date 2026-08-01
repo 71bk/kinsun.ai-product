@@ -1,0 +1,10 @@
+{
+  "_why_invalid": "A summary must contain source-backed items or explicitly identify missing fields.",
+  "data": {
+    "summary_date": "2026-07-31",
+    "summary_type": "PROFESSIONAL_DAILY",
+    "items": [],
+    "missing_fields": [],
+    "conflict_flags": []
+  }
+}

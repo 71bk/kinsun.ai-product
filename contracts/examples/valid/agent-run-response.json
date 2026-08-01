@@ -1,0 +1,31 @@
+{
+  "data": {
+    "schema_version": "1.0.0",
+    "request_id": "req-001",
+    "trace_id": "trace-001",
+    "agent_run_id": "run-001",
+    "selected_agent": "companion-agent",
+    "reply_text": "知道了，您今天早餐吃了粥。還有其他想和我分享的事情嗎？",
+    "reply_language": "zh-TW",
+    "safety_result": {
+      "schema_version": "1.0.0",
+      "decision": "ALLOW",
+      "risk_level": "LOW",
+      "reason_codes": [
+        "ALLOW"
+      ],
+      "matched_terms": [],
+      "safe_reply": null
+    },
+    "context_manifest_id": "cm-001",
+    "step_count": 1,
+    "result_status": "SUCCESS",
+    "reason_codes": [
+      "ALLOW"
+    ]
+  },
+  "meta": {
+    "correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64",
+    "timestamp": "2026-07-31T04:12:09.482714Z"
+  }
+}

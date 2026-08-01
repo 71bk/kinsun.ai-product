@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "schema-migration-guard",
+      "description": "Check schema-related changes for a safe Alembic migration and baseline compatibility.",
+      "trigger": "PostFileSave",
+      "matcher": "^services[\\\\/]core-api[\\\\/](app[\\\\/]models[\\\\/].+\\.py|alembic[\\\\/]versions[\\\\/].+\\.py)$|^docs[\\\\/]smart_eldercare_schema.*\\.sql$",
+      "action": {
+        "type": "agent",
+        "prompt": "A schema-related file was saved. Inspect the changed file and current git diff. Determine whether the change requires a new Alembic revision, whether enums and constraints remain aligned with the eldercare_ai baseline, and whether tests cover upgrade and rollback behavior. Never modify an applied migration or frozen baseline, never run alembic --autogenerate, and never run downgrade/base, docker down -v, or another destructive database command automatically. Report the required migration or verification work."
+      },
+      "enabled": true
+    }
+  ]
+}

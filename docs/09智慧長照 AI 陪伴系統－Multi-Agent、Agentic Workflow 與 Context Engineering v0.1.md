@@ -1,8 +1,6 @@
-# 09智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1.docx
-
 智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：長者陪伴對話、事件擷取、確認式記憶、RAG、Graph、摘要、家屬報表、主動陪伴、安全評估與人工核准
 
-### 相關文件
+## 相關文件
 
 01｜產品方向與範圍基準 v1.2
 
@@ -54,7 +52,7 @@ https://docs.google.com/document/d/1UUnrs6FUCqlaNxaDm12zPVFAPfQG0ruWqdiL0HXvTrI/
 
 https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/edit
 
-## 一、文件目的與核心立場
+# 一、文件目的與核心立場
 
 本文件回答：系統需要哪些 Agent、每個 Agent 的責任與禁止事項是什麼、Orchestrator 如何路由與終止、Context 如何安全組裝、Tool 如何授權、模型輸出如何驗證，以及 Multi-Agent 如何在不失控、不洩漏、不增加無謂成本的前提下運作。
 
@@ -78,9 +76,9 @@ https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/
 
 8. Agent 不能繞過 Consent、Authorization、Policy、Schema、Human Approval 或狀態機。
 
-## 二、為什麼使用 Multi-Agent
+# 二、為什麼使用 Multi-Agent
 
-### 2.1 適合拆成 Agent 的任務
+## 2.1 適合拆成 Agent 的任務
 
 • 任務具有不同目標、Prompt、輸出 Schema、風險、模型需求或評估標準。
 
@@ -90,7 +88,7 @@ https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/
 
 • 任務需要獨立 Owner、版本與品質指標。
 
-### 2.2 不適合拆成 Agent 的任務
+## 2.2 不適合拆成 Agent 的任務
 
 • 日期、時間、狀態轉移、權限、同意、派案有效期與重試次數。
 
@@ -100,7 +98,7 @@ https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/
 
 • 單純為了 Demo 看起來複雜而新增角色。
 
-### 2.3 v0.1 Multi-Agent 目標
+## 2.3 v0.1 Multi-Agent 目標
 
 • 清楚展示 Orchestrator＋Specialist＋Evaluator。
 
@@ -110,7 +108,7 @@ https://docs.google.com/document/d/136qR8PhU8v-vckak286q_2Ln3otQ0KRExTDvAO3_sAE/
 
 • 任何 Specialist 失敗時，主對話仍可安全降級。
 
-## 三、Agentic System 全貌
+# 三、Agentic System 全貌
 
 使用者／背景事件
 
@@ -156,35 +154,35 @@ Schema → Authorization → Consent → Safety → Share Scope → State Transi
 
 使用者回覆／候選資料／人工核准／正式寫入
 
-## 四、Agent 類型與責任邊界
+# 四、Agent 類型與責任邊界
 
-### 4.1 Orchestrator
+## 4.1 Orchestrator
 
 負責：理解目前工作、選擇 Specialist／Tool、控制步驟數、組裝結果、終止與降級。
 
 不負責：直接寫資料庫、直接發布報表、直接確認記憶、直接變更同意或權限。
 
-### 4.2 Specialist Agent
+## 4.2 Specialist Agent
 
 負責：完成單一任務，例如陪伴回覆、事件擷取、摘要或候選話題。
 
 不負責：跨 Domain 決策、隨意擴大 Context、呼叫未列入 Allowlist 的工具。
 
-### 4.3 Evaluator Agent
+## 4.3 Evaluator Agent
 
 負責：檢查安全、Grounding、Schema 語意、敏感內容與禁止行為，輸出通過／阻擋／人工覆核理由。
 
 不負責：自己重寫正式資料或把失敗標記成成功。
 
-### 4.4 Deterministic Services
+## 4.4 Deterministic Services
 
 負責：Authorization、Consent、Eligibility、Schema Validation、State Machine、Idempotency、Persistence、Notification、Deletion 與 Audit。
 
 模型輸出必須經這一層才可影響系統狀態。
 
-## 五、Agent Catalog
+# 五、Agent Catalog
 
-### A-01｜Conversation Orchestrator
+## A-01｜Conversation Orchestrator
 
 目標：在低延遲與最大步驟限制內完成對話或安全降級。
 
@@ -200,7 +198,7 @@ Schema → Authorization → Consent → Safety → Share Scope → State Transi
 
 Owner：Agent Platform Owner。
 
-### A-02｜Companion Agent
+## A-02｜Companion Agent
 
 目標：以長者可理解、簡短、尊重且一次一題的方式回應。
 
@@ -212,7 +210,7 @@ Owner：Agent Platform Owner。
 
 Owner：Conversation Experience Owner。
 
-### A-03｜Knowledge Retrieval Planner
+## A-03｜Knowledge Retrieval Planner
 
 目標：判斷查詢是否需要 Keyword、Vector、Graph、RDS 精確查詢或不需檢索，並產生受限制的 Query Plan。
 
@@ -224,7 +222,7 @@ Owner：Conversation Experience Owner。
 
 Owner：Retrieval Owner。
 
-### A-04｜Event Extractor Agent
+## A-04｜Event Extractor Agent
 
 目標：把對話轉成 Care Event Candidate，不直接形成正式事件。
 
@@ -238,7 +236,7 @@ Owner：Retrieval Owner。
 
 Owner：Care Record Owner。
 
-### A-05｜Memory Candidate Agent
+## A-05｜Memory Candidate Agent
 
 目標：識別可長期保存的穩定偏好、重要關係、固定作息或個人歷史候選。
 
@@ -252,7 +250,7 @@ Owner：Care Record Owner。
 
 Owner：Memory Owner。
 
-### A-06｜Summary Agent
+## A-06｜Summary Agent
 
 目標：依 Verified Event 產生專業照護版 Daily Summary Draft。
 
@@ -266,7 +264,7 @@ Owner：Memory Owner。
 
 Owner：Care Summary Owner。
 
-### A-07｜Family Report Agent
+## A-07｜Family Report Agent
 
 目標：將可分享的已發布摘要或已覆核事件轉為家屬版每日／週／月報 Draft。
 
@@ -280,7 +278,7 @@ Owner：Care Summary Owner。
 
 Owner：Family Experience Owner。
 
-### A-08｜Proactive Topic Agent
+## A-08｜Proactive Topic Agent
 
 目標：在 Eligibility 已由確定性程式判定後，產生低風險主動話題與開場。
 
@@ -292,7 +290,7 @@ Owner：Family Experience Owner。
 
 Owner：Proactive Companion Owner。
 
-### A-09｜Safety Evaluator
+## A-09｜Safety Evaluator
 
 目標：在使用者輸入、檢索 Context、Tool Result 與模型輸出階段判斷安全與政策。
 
@@ -304,7 +302,7 @@ Owner：Proactive Companion Owner。
 
 Owner：Safety／Privacy Owner。
 
-### A-10｜Care Insight Candidate Agent（Wave 3）
+## A-10｜Care Insight Candidate Agent（Wave 3）
 
 目標：整理互動趨勢與關懷候選訊號，供專業照護者參考。
 
@@ -316,7 +314,7 @@ Owner：Safety／Privacy Owner。
 
 Owner：Care Insight Owner。
 
-## 六、哪些元件不是 Agent
+# 六、哪些元件不是 Agent
 
 以下採 Tool／Service：
 
@@ -334,7 +332,7 @@ Owner：Care Insight Owner。
 
 理由：這些任務需要確定、可測、低延遲與不可被模型改寫的行為。
 
-## 七、Agent Handoff Contract
+# 七、Agent Handoff Contract
 
 所有 Agent Handoff 使用同一 Envelope：
 
@@ -398,9 +396,9 @@ Handoff 規則：
 
 6. 同步路徑最多 Orchestrator → Specialist → Evaluator；其他工作轉非同步。
 
-## 八、Agentic Loop 與終止條件
+# 八、Agentic Loop 與終止條件
 
-### 8.1 同步對話 Loop
+## 8.1 同步對話 Loop
 
 START
 
@@ -426,7 +424,7 @@ START
 
 → END
 
-### 8.2 最大限制
+## 8.2 最大限制
 
 • max_agent_decisions：3
 
@@ -440,7 +438,7 @@ START
 
 • 超過 latency 或 cost budget 立即降級。
 
-### 8.3 終止條件
+## 8.3 終止條件
 
 • 已產生通過 Safety 與 Schema 的回覆。
 
@@ -456,7 +454,7 @@ START
 
 • 達到步驟、延遲或成本上限。
 
-### 8.4 禁止的 Loop
+## 8.4 禁止的 Loop
 
 • Agent 互相自由辯論直到「達成共識」。
 
@@ -466,7 +464,7 @@ START
 
 • 自行變更 System Prompt、Policy 或 Tool Allowlist。
 
-## 九、Context Engineering 分層
+# 九、Context Engineering 分層
 
 Context 組裝順序採「先授權、再檢索、再排序、再壓縮、最後生成」。
 
@@ -528,7 +526,7 @@ Layer 10｜Output Constraints
 
 • Audience、字數、語氣、可引用來源、禁止欄位、Safety／Share Scope。
 
-## 十、Context Manifest
+# 十、Context Manifest
 
 每次模型呼叫都建立 Context Manifest：
 
@@ -570,9 +568,9 @@ Manifest 用途：
 
 • 發生問題時可重建相同 Context 範圍，但不需在普通日誌保存完整敏感文字。
 
-## 十一、Context Budget 與優先順序
+# 十一、Context Budget 與優先順序
 
-### 11.1 優先級
+## 11.1 優先級
 
 P0：Policy、Authorization、Consent、Current Turn、Output Schema。
 
@@ -582,7 +580,7 @@ P2：Graph 子圖、RAG Chunk、較舊但相關事件。
 
 P3：一般背景、重複資料、低相關歷史。
 
-### 11.2 預設限制
+## 11.2 預設限制
 
 • 同步對話優先使用最近對話＋最多 3～5 筆長期記憶。
 
@@ -594,7 +592,7 @@ P3：一般背景、重複資料、低相關歷史。
 
 • Token 不足時依 P3 → P2 順序移除，絕不移除 Policy 與 Authorization。
 
-### 11.3 Context Compression
+## 11.3 Context Compression
 
 • Session History：保留最近原文＋較舊結構化摘要。
 
@@ -606,9 +604,9 @@ P3：一般背景、重複資料、低相關歷史。
 
 • 壓縮結果不得改變否定、人物、日期、數量與來源。
 
-## 十二、Memory 分層設計
+# 十二、Memory 分層設計
 
-### 12.1 Working Memory
+## 12.1 Working Memory
 
 用途：單次 Session 的對話連續性、未完成問題、Tool Result 與暫態計畫。
 
@@ -616,11 +614,11 @@ P3：一般背景、重複資料、低相關歷史。
 
 生命週期：Session 或短期限；不等同正式長期記憶。
 
-### 12.2 AgentCore Long-Term Memory
+## 12.2 AgentCore Long-Term Memory
 
 AgentCore Memory 可透過策略從事件擷取語意、偏好、摘要或其他長期記錄。但本專案對長者正式記憶有「明確確認、版本、停用、刪除、來源與同意」要求，因此 AgentCore 自動擷取結果只能作為內部候選或實驗，不能直接取代 Memory Aggregate。
 
-### 12.3 Confirmed Product Memory
+## 12.3 Confirmed Product Memory
 
 正式來源：Aurora Memory Aggregate。
 
@@ -630,13 +628,13 @@ Graph：Neptune 只保存 ACTIVE 投影。
 
 檢索：Context Builder 只讀 ACTIVE、來源與 consent_version 有效的記憶。
 
-### 12.4 Memory Namespace
+## 12.4 Memory Namespace
 
 AgentCore Memory 若啟用，至少以 tenant／elder／actor／purpose 區隔 Namespace；不得只用顯示名稱。
 
-## 十三、Retrieval／Query Planning
+# 十三、Retrieval／Query Planning
 
-### 13.1 Query Type
+## 13.1 Query Type
 
 EXACT_TRANSACTIONAL：派案、同意、報表狀態、日期、正式事件。
 
@@ -650,7 +648,7 @@ HYBRID：Keyword＋Vector＋Metadata Filter。
 
 NONE：一般陪伴回覆不需檢索。
 
-### 13.2 Query Planner 規則
+## 13.2 Query Planner 規則
 
 • 先辨識是否屬正式交易查詢，正式資料優先 Aurora。
 
@@ -664,13 +662,13 @@ NONE：一般陪伴回覆不需檢索。
 
 • 查無資料時回傳 DATA_NOT_FOUND，不由模型補造。
 
-### 13.3 Grounding Output
+## 13.3 Grounding Output
 
 每個知識答案包含：answer_candidate、source_refs、effective_date、grounding_status、uncertainty、safety_note。
 
-## 十四、Tool Gateway 與 Tool Contract
+# 十四、Tool Gateway 與 Tool Contract
 
-### 14.1 Tool 分類
+## 14.1 Tool 分類
 
 Read Tool：讀取已授權資料，不改變狀態。
 
@@ -680,7 +678,7 @@ Command Tool：覆核、發布、撤回、刪除、通知等高風險操作。
 
 External Adapter：LINE、Email、外部排班或知識來源。
 
-### 14.2 共通 Tool Input
+## 14.2 共通 Tool Input
 
 actor_context
 
@@ -700,7 +698,7 @@ parameters
 
 expected_resource_version
 
-### 14.3 共通 Tool Output
+## 14.3 共通 Tool Output
 
 result_status
 
@@ -720,7 +718,7 @@ redactions
 
 trace_id
 
-### 14.4 Tool Allowlist
+## 14.4 Tool Allowlist
 
 Conversation Orchestrator：read_session_context、retrieve_confirmed_memory、retrieve_verified_event、knowledge_search、graph_subgraph、submit_candidate_event、submit_candidate_memory。
 
@@ -738,13 +736,13 @@ Proactive Topic Agent：create_topic_candidate；不得 schedule／play。
 
 Safety Evaluator：read_policy、evaluate_content；不得寫業務狀態。
 
-### 14.5 高風險 Command
+## 14.5 高風險 Command
 
 confirm_memory、review_event、publish_report、withdraw_report、send_notification、revoke_consent、delete_data、create_care_action 必須由 Core API 再次驗證身份、權限、版本與狀態；不能只因 Agent Tool Call 就執行。
 
-## 十五、Approval Gate
+# 十五、Approval Gate
 
-### 15.1 需要人工核准
+## 15.1 需要人工核准
 
 • 家屬報表含健康、家庭衝突、財務、創傷或陪伴需求敏感內容。
 
@@ -756,11 +754,11 @@ confirm_memory、review_event、publish_report、withdraw_report、send_notifica
 
 • 系統要求代長者確認記憶。
 
-### 15.2 Approval Record
+## 15.2 Approval Record
 
 approval_id、target_type、target_id、version、reviewer_id、decision、reason_code、before／after、approved_at、expires_at、policy_version。
 
-### 15.3 人工核准原則
+## 15.3 人工核准原則
 
 • 核准特定版本，內容更新後需重新核准。
 
@@ -768,7 +766,7 @@ approval_id、target_type、target_id、version、reviewer_id、decision、reaso
 
 • 系統不得把超時當作核准。
 
-## 十六、Model Router
+# 十六、Model Router
 
 Model Router 輸入：
 
@@ -806,9 +804,9 @@ cost_policy
 
 • 同一評估版本下比較模型，避免 Prompt、資料與模型同時改變而無法歸因。
 
-## 十七、Prompt Architecture
+# 十七、Prompt Architecture
 
-### 17.1 Prompt 組成
+## 17.1 Prompt 組成
 
 System Policy
 
@@ -826,7 +824,7 @@ System Policy
 
 ＋ Stop／Escalation Rules
 
-### 17.2 Prompt 管理
+## 17.2 Prompt 管理
 
 • 每個 Agent 有 prompt_id、draft、version、status、owner、change_reason。
 
@@ -838,7 +836,7 @@ System Policy
 
 • 不把 Secret、完整權限清單或其他長者資料寫死在 Prompt。
 
-### 17.3 防 Prompt Injection
+## 17.3 防 Prompt Injection
 
 • 使用者、RAG、Graph、Tool Output 全部標示為 Data，不是 System Instruction。
 
@@ -846,41 +844,41 @@ System Policy
 
 • 對索取 System Prompt、其他長者資料、未授權工具與忽略規則的要求直接拒絕。
 
-## 十八、AgentCore 使用方式
+# 十八、AgentCore 使用方式
 
-### 18.1 Runtime
+## 18.1 Runtime
 
 AgentCore Runtime 作為 Agent Code 的 Serverless Hosting；團隊保留 Orchestration Loop、Agent Framework 與 Domain Logic。Runtime 提供執行環境、Session Isolation、Scale、Auth Gate 與 Observability Plumbing。
 
-### 18.2 Gateway
+## 18.2 Gateway
 
 將受控 Core Tool API、Lambda 或其他 Runtime 暴露為統一工具入口，提供集中身份、可觀測性與 Tool Contract。Gateway 不取代 Core ABAC。
 
-### 18.3 Identity
+## 18.3 Identity
 
 外部 Tool 需要代表特定 Actor 呼叫時管理授權流程；不能把外部身份成功等同可查看任意 elder 資料。
 
-### 18.4 Memory
+## 18.4 Memory
 
 短期 Session Memory 可採用；Long-Term Strategy 的自動擷取只作候選或實驗，正式 Memory Aggregate 仍在 Aurora。
 
-### 18.5 Observability
+## 18.5 Observability
 
 Runtime、Memory、Gateway、Identity 與 Built-in Tool 指標／日誌／Span 匯入 CloudWatch；應用程式另補 domain trace、source_ids、policy result 與 schema result。
 
-### 18.6 Evaluations
+## 18.6 Evaluations
 
 建立離線 Dataset、線上 Sample 與 Human Review；不得只看模型平均分數，需按 Persona、語言、任務與風險分層。
 
-### 18.7 Harness 與 Runtime 決策
+## 18.7 Harness 與 Runtime 決策
 
 v0.1 以 Runtime＋自有 Orchestration 為主，保留採用 Harness 的可能性。原因是本專案需要精確的 Domain State、工具授權、確認式記憶與自訂終止條件，不適合把流程控制完全交給預設 Harness。
 
-### 18.8 不採 Bedrock Agents Classic
+## 18.8 不採 Bedrock Agents Classic
 
 新專案以 AgentCore 為主，不再把 Bedrock Agents Classic 當核心平台。避免在 2026 年進入維護模式的舊路線上新增主要依賴。
 
-## 十九、Agent Trace
+# 十九、Agent Trace
 
 每次 Agent Run 保存：
 
@@ -926,7 +924,7 @@ human_review_id
 
 Trace 禁止保存：完整 Access Token、Secret、Secure Link 明文、不必要完整原始語音與其他長者 Context。
 
-## 二十、Failure、Fallback 與 Recovery
+# 二十、Failure、Fallback 與 Recovery
 
 • Orchestrator 失敗：固定安全回覆，保留 Session，可稍後重試。
 
@@ -946,37 +944,37 @@ Trace 禁止保存：完整 Access Token、Secret、Secure Link 明文、不必�
 
 • Tool Timeout：依 Tool retryable flag 有限重試；高風險 Command 不盲目重送。
 
-## 二十一、Multi-Agent Workflow 對應
+# 二十一、Multi-Agent Workflow 對應
 
-### 21.1 長者陪伴對話
+## 21.1 長者陪伴對話
 
 Request Gate → Orchestrator → Context Builder → Companion Agent → Safety Evaluator → Output Gate → TTS。
 
 事件與記憶擷取由 ConversationSessionCompleted 非同步觸發。
 
-### 21.2 Care Event
+## 21.2 Care Event
 
 Session Completed → Event Extractor → Schema／Consent → Candidate → 人工覆核 → Verified Event → Summary／Graph／Search。
 
-### 21.3 確認式記憶
+## 21.3 確認式記憶
 
 Verified Source → Memory Candidate Agent → Candidate → 長者確認 → Core Command → ACTIVE Memory → Outbox → Graph Projection。
 
-### 21.4 日照摘要
+## 21.4 日照摘要
 
 Verified Event → Summary Agent → Draft → Schema／Safety → 專業照護端 → Review／Correction → 新版本。
 
-### 21.5 家屬報表
+## 21.5 家屬報表
 
 Published Source → Family Report Agent → Share／Safety Gate → Human Review（必要）→ Core Publish Command → App／Web → LINE／Email。
 
-### 21.6 主動陪伴
+## 21.6 主動陪伴
 
 Trigger → Deterministic Eligibility → Proactive Topic Agent → Safety Evaluator → Human Approval（必要）→ Ready → 播放 → Feedback。
 
-## 二十二、評估框架
+# 二十二、評估框架
 
-### 22.1 Agent 級指標
+## 22.1 Agent 級指標
 
 Orchestrator：route_accuracy、step_count、loop_rate、timeout_rate、unnecessary_tool_rate。
 
@@ -994,7 +992,7 @@ Family Report：share_scope_violation＝0、sensitive_leakage＝0、readability�
 
 Safety：unsafe_pass_rate、false_positive_rate、reason_code_accuracy。
 
-### 22.2 系統級指標
+## 22.2 系統級指標
 
 • Task Completion。
 
@@ -1014,7 +1012,7 @@ Safety：unsafe_pass_rate、false_positive_rate、reason_code_accuracy。
 
 • Unsupported Medical Advice＝0。
 
-### 22.3 Dataset 分層
+## 22.3 Dataset 分層
 
 • 林阿嬤：國臺混語、長停頓、女兒與週日通話記憶。
 
@@ -1026,7 +1024,7 @@ Safety：unsafe_pass_rate、false_positive_rate、reason_code_accuracy。
 
 • 繁中、臺語、混語；客語與英文列完整架構測試集，依可用資料分期實作。
 
-## 二十三、測試案例
+# 二十三、測試案例
 
 AT-01｜林阿嬤詢問「我女兒上次什麼時候打電話？」Query Planner 應使用 Graph／Verified Event，不讀張阿姨資料。
 
@@ -1052,9 +1050,9 @@ AT-11｜Consent 在 Queue 等待期間撤回，Consumer 執行前重新檢查並
 
 AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topic Agent 不執行。
 
-## 二十四、Hackathon Implementation Profile
+# 二十四、Hackathon Implementation Profile
 
-### 24.1 必做
+## 24.1 必做
 
 • 一個 Conversation Orchestrator。
 
@@ -1076,7 +1074,7 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 • 一條記憶確認後 Graph 投影與下一輪引用。
 
-### 24.2 第二階段
+## 24.2 第二階段
 
 • Summary Agent、Family Report Agent。
 
@@ -1086,7 +1084,7 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 • AgentCore Evaluations Dataset。
 
-### 24.3 第三階段
+## 24.3 第三階段
 
 • Proactive Topic Agent。
 
@@ -1098,7 +1096,7 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 • 線上評估、A／B 與 Prompt Optimization。
 
-### 24.4 不可用 Mock 取代
+## 24.4 不可用 Mock 取代
 
 • ElderScope、Consent、未確認記憶隔離。
 
@@ -1110,9 +1108,9 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 • Safety Block 與最大 Loop 限制。
 
-## 二十五、ADR
+# 二十五、ADR
 
-### ADR-09-001｜受控 Multi-Agent，不採自由辯論
+## ADR-09-001｜受控 Multi-Agent，不採自由辯論
 
 狀態：Accepted。
 
@@ -1120,7 +1118,7 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 代價：Orchestrator 與 Contract 需較多工程設計。
 
-### ADR-09-002｜同步最多三次 Agent Decision
+## ADR-09-002｜同步最多三次 Agent Decision
 
 狀態：Accepted。
 
@@ -1128,13 +1126,13 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 退場：只有實測證明品質顯著提升且仍符合 SLO 才放寬。
 
-### ADR-09-003｜Agent 只能建立候選，不擁有正式 Domain State
+## ADR-09-003｜Agent 只能建立候選，不擁有正式 Domain State
 
 狀態：Accepted。
 
 原因：確保 Consent、Authorization、Review 與 Invariant 不被模型繞過。
 
-### ADR-09-004｜正式長期記憶留在 Aurora
+## ADR-09-004｜正式長期記憶留在 Aurora
 
 狀態：Accepted。
 
@@ -1142,31 +1140,31 @@ AT-12｜主動陪伴因 recent_rejection 被 Eligibility 阻擋，Proactive Topi
 
 AgentCore Memory：Short-Term 可採；Long-Term 自動擷取只作候選／實驗。
 
-### ADR-09-005｜所有 Agent 使用明確 JSON Schema
+## ADR-09-005｜所有 Agent 使用明確 JSON Schema
 
 狀態：Accepted。
 
 原因：可驗證、可重試、可比較、可建立 Contract Test。
 
-### ADR-09-006｜Query Planner 不直接產生可執行任意查詢
+## ADR-09-006｜Query Planner 不直接產生可執行任意查詢
 
 狀態：Accepted。
 
 原因：避免 SQL／Graph／Search Injection 與範圍擴張。
 
-### ADR-09-007｜Prompt、Model、Policy、Schema 分開版本化
+## ADR-09-007｜Prompt、Model、Policy、Schema 分開版本化
 
 狀態：Accepted。
 
 原因：變更可歸因、可回滾、可重現。
 
-### ADR-09-008｜新專案採 AgentCore，不以 Bedrock Agents Classic 為核心
+## ADR-09-008｜新專案採 AgentCore，不以 Bedrock Agents Classic 為核心
 
 狀態：Accepted。
 
 原因：避免新增對進入維護模式舊平台的依賴，保留自有 Agent Loop 與框架自由。
 
-## 二十六、技術 Spike
+# 二十六、技術 Spike
 
 SP-A01｜AgentCore Runtime 部署 Strands／自有 Python Agent 與 Session Isolation。
 
@@ -1188,7 +1186,7 @@ SP-A09｜Prompt Management Version 與 CI Evaluation 串接。
 
 SP-A10｜AgentCore Observability＋OpenTelemetry／CloudWatch Trace 串接。
 
-## 二十七、v0.1 完成判定
+# 二十七、v0.1 完成判定
 
 □ Agent、Tool、Deterministic Service 與 Human Approval 責任已分開。
 
@@ -1210,7 +1208,7 @@ SP-A10｜AgentCore Observability＋OpenTelemetry／CloudWatch Trace 串接。
 
 □ 第一條 Demo 可展示正常回覆、事件候選、記憶確認、Graph 引用、安全阻擋與跨長者隔離。
 
-## 二十八、官方技術參考（檢查日期：2026-07-26）
+# 二十八、官方技術參考（檢查日期：2026-07-26）
 
 AgentCore Harness vs Runtime
 
@@ -1256,7 +1254,7 @@ Bedrock Agents Memory／Agents Classic Notice
 
 https://docs.aws.amazon.com/bedrock/latest/userguide/agents-memory.html
 
-## 二十九、下一份文件
+# 二十九、下一份文件
 
 10｜智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1
 

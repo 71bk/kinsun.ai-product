@@ -1,8 +1,6 @@
-# 13智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1.docx
-
 智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1
 
-### 文件資訊
+## 文件資訊
 
 版本：v0.1
 
@@ -16,7 +14,7 @@
 
 適用範圍：Aurora PostgreSQL、Python Core API、Agent Runtime、Domain Event、OpenSearch、Neptune、S3、Prompt、Policy、Model Route、RAG Corpus、Feature Flag、CI／CD、Backup 與 Restore
 
-### 相關文件
+## 相關文件
 
 08｜AWS 系統架構、服務選型與 ADR v0.1
 
@@ -38,7 +36,7 @@ https://docs.google.com/document/d/1saeohikZZ63P2ud1YNHMQDKBKX2wgVnMsQ3LPTAD2qY/
 
 https://docs.google.com/document/d/1OGa9igfGHILGPJE3PmvynP23LxA9FPsT8jPO_R-SG9o/edit
 
-## 一、文件目的
+# 一、文件目的
 
 本文件定義智慧長照 AI 陪伴系統如何安全地變更資料庫 Schema、資料內容、Python 應用程式、Agent、Prompt、Policy、Contract、Graph、Search Index 與通知元件，並在發布失敗時選擇 Roll Forward、Rollback、Feature Flag Disable、Replay 或 Projection Rebuild。
 
@@ -56,7 +54,7 @@ https://docs.google.com/document/d/1OGa9igfGHILGPJE3PmvynP23LxA9FPsT8jPO_R-SG9o/
 
 6. 失敗時應回退應用程式、關閉功能、修復資料，還是向前補 Migration？
 
-## 二、核心發布原則
+# 二、核心發布原則
 
 1. Database First，但不是先破壞：Schema 先擴充，再部署可同時讀新舊格式的程式，最後才移除舊欄位。
 
@@ -78,9 +76,9 @@ https://docs.google.com/document/d/1OGa9igfGHILGPJE3PmvynP23LxA9FPsT8jPO_R-SG9o/
 
 10. Evidence Before Release：發布必須有 Migration Report、Test Report、Artifact Version、Trace、Rollback Decision 與 Owner。
 
-## 三、Python Migration 技術基準
+# 三、Python Migration 技術基準
 
-### 3.1 Framework 尚未定案時
+## 3.1 Framework 尚未定案時
 
 Python Core API 目前維持 FastAPI／Django 待技術決策，因此本文件採兩條相容路線：
 
@@ -90,7 +88,7 @@ Python Core API 目前維持 FastAPI／Django 待技術決策，因此本文件�
 
 兩條路線都必須遵守相同的版本、相容、鎖定、回填、驗證、Roll Forward 與審計規則。
 
-### 3.2 v0.1 建議
+## 3.2 v0.1 建議
 
 若核心後端採 FastAPI，建議 Repository：
 
@@ -116,7 +114,7 @@ alembic.ini
 
 若採 Django，Migration 位於各 bounded-context app，但發布仍由單一 Migration Job 統一執行，不允許多個 Container 在啟動時同時 migrate。
 
-### 3.3 Migration 命名
+## 3.3 Migration 命名
 
 Alembic：revision ID 由工具產生，檔名使用 YYYYMMDD_HHMM_<ticket>_<purpose>.py。
 
@@ -142,35 +140,35 @@ Django：保留框架編號，Migration Name 附 purpose，例如 0012_add_repor
 
 • Data Classification Impact。
 
-## 四、Migration 類型與風險分級
+# 四、Migration 類型與風險分級
 
-### M1｜低風險 Additive
+## M1｜低風險 Additive
 
 新增 Nullable Column、新 Table、新 Index（非阻塞方式）、新 Enum Lookup Data。
 
 預設可向後相容，但仍需驗證 ORM Default 與讀寫行為。
 
-### M2｜中風險 Behavioral
+## M2｜中風險 Behavioral
 
 新增 NOT NULL、Unique Constraint、Foreign Key、Default、資料型別擴充、索引重建。
 
 需分階段、資料掃描與預估鎖定時間。
 
-### M3｜高風險 Transformative
+## M3｜高風險 Transformative
 
 Rename／Drop Column、拆表、合表、主鍵變更、資料加密格式變更、跨 Tenant 重分配、事件欄位語意改變。
 
 不得一次完成；需 Expand／Migrate／Contract、雙讀／雙寫或版本轉接。
 
-### M4｜不可逆或敏感
+## M4｜不可逆或敏感
 
 大量刪除、匿名化、Consent Revocation 清理、PII Tokenization、Audit Retention 清理。
 
 需明確 Approval、Backup、Dry Run、Sample Verification 與不可逆警告。
 
-## 五、Expand／Migrate／Contract 模式
+# 五、Expand／Migrate／Contract 模式
 
-### 5.1 Expand
+## 5.1 Expand
 
 先加入新結構，不移除舊結構。
 
@@ -188,7 +186,7 @@ Rename／Drop Column、拆表、合表、主鍵變更、資料加密格式變更
 
 5. 建立監控：new_write_success、fallback_read_count、data_mismatch_count。
 
-### 5.2 Migrate
+## 5.2 Migrate
 
 以可重啟、分批、冪等方式回填既有資料。
 
@@ -206,7 +204,7 @@ Rename／Drop Column、拆表、合表、主鍵變更、資料加密格式變更
 
 • 失敗資料進 Migration Error Table 或受控檔案，不靜默略過。
 
-### 5.3 Contract
+## 5.3 Contract
 
 確認新版已穩定、Fallback Read 接近零、資料驗證通過後，才移除舊欄位、舊索引、舊 Event Version 與舊 Feature Flag。
 
@@ -222,7 +220,7 @@ Contract 前提：
 
 • Owner 與 Reviewer 核准。
 
-## 六、資料庫 Migration 執行流程
+# 六、資料庫 Migration 執行流程
 
 1. Developer 產生 Migration。
 
@@ -252,7 +250,7 @@ Contract 前提：
 
 14. Post-Release Observation。
 
-## 七、Migration Job
+# 七、Migration Job
 
 Migration Job 使用與 Core API 相同的程式版本與 Dependency Lock，但使用獨立 Command：
 
@@ -274,7 +272,7 @@ Migration Job 使用與 Core API 相同的程式版本與 Dependency Lock，但�
 
 • 不在 Container 每次啟動時自動 migrate。
 
-## 八、Schema 版本與應用程式相容
+# 八、Schema 版本與應用程式相容
 
 每個應用程式版本宣告：
 
@@ -300,43 +298,43 @@ POLICY_VERSION
 
 • Migration In Progress：需要明確 Maintenance／Compatibility Mode。
 
-## 九、常見 Schema 變更規則
+# 九、常見 Schema 變更規則
 
-### 9.1 新增 Column
+## 9.1 新增 Column
 
 優先 Nullable，不直接在大型 Table 新增高成本 Default＋NOT NULL。
 
 流程：新增 Nullable → 新版寫入 → 回填 → 驗證 → 加 NOT NULL。
 
-### 9.2 Rename Column
+## 9.2 Rename Column
 
 不得直接 Rename 後立即部署。
 
 流程：新增新 Column → 雙寫 → 回填 → 雙讀／優先新欄位 → 停止舊欄位寫入 → Drop。
 
-### 9.3 Drop Column／Table
+## 9.3 Drop Column／Table
 
 至少跨兩個 Release；先移除程式引用與監控 Read Count，再 Contract。
 
-### 9.4 Enum
+## 9.4 Enum
 
 資料庫 Enum 或 Python Enum 不直接移除值。
 
 先停止產生、保留讀取、轉換既有資料、確認 Queue／Event 不含舊值後再移除。
 
-### 9.5 Index
+## 9.5 Index
 
 高流量環境使用低鎖定策略；新增前確認 Query Pattern，移除前確認 Index Usage。
 
-### 9.6 Foreign Key
+## 9.6 Foreign Key
 
 先掃描孤兒資料並修復；若歷史資料不完整，不得直接把 Migration 失敗當成資料已正確。
 
-### 9.7 JSONB
+## 9.7 JSONB
 
 JSONB Schema 仍需 schema_version；讀取端支援至少目前版與前一版，背景 Worker 負責升級。
 
-## 十、資料回填框架
+# 十、資料回填框架
 
 Backfill Job 欄位：
 
@@ -384,7 +382,7 @@ Backfill 規則：
 
 • 執行期間監控 DB CPU、Connections、Replica Lag、Lock、Queue Age。
 
-## 十一、Seed Data 與 Reference Data
+# 十一、Seed Data 與 Reference Data
 
 Reference Data：Role、Event Type、Report Status、Reason Code、Policy Setting 等需版本化。
 
@@ -402,7 +400,7 @@ Reference Data：Role、Event Type、Report Status、Reason Code、Policy Settin
 
 • 林阿嬤、張阿姨、陳伯伯只存在 Demo／Test Environment。
 
-## 十二、Application Release Artifact
+# 十二、Application Release Artifact
 
 Python Backend 發布物：
 
@@ -432,7 +430,7 @@ Python Backend 發布物：
 
 • 手動進 Container 修改程式或套件。
 
-## 十三、Python Dependency Release
+# 十三、Python Dependency Release
 
 • 使用 uv.lock、poetry.lock 或 requirements lock，團隊只選一套。
 
@@ -444,7 +442,7 @@ Python Backend 發布物：
 
 • 安全修補可使用 Fast Track，但仍需 Staging Smoke 與 Rollback Plan。
 
-## 十四、Release Bundle
+# 十四、Release Bundle
 
 每個 Release Candidate 建立 Release Manifest：
 
@@ -490,7 +488,7 @@ known_risks
 
 rollback_target
 
-## 十五、發布順序
+# 十五、發布順序
 
 一般相容發布：
 
@@ -518,9 +516,9 @@ rollback_target
 
 理由：Consumer 必須先能接受新版 Event，再讓 Producer 發送新版內容。
 
-## 十六、Deployment Strategy
+# 十六、Deployment Strategy
 
-### 16.1 Hackathon／Demo
+## 16.1 Hackathon／Demo
 
 採 Rolling 或簡化 Blue／Green：
 
@@ -532,7 +530,7 @@ rollback_target
 
 • 每次切換後跑 10 條核心 E2E 子集。
 
-### 16.2 正式 Target
+## 16.2 正式 Target
 
 Core API 優先 Blue／Green 或 Canary：
 
@@ -548,7 +546,7 @@ Core API 優先 Blue／Green 或 Canary：
 
 • 異常時停止擴大並切回 Blue。
 
-### 16.3 Background Worker
+## 16.3 Background Worker
 
 避免新舊 Consumer 同時對同一工作產生不相容結果。
 
@@ -564,13 +562,13 @@ Core API 優先 Blue／Green 或 Canary：
 
 • Idempotency Key＋Resource Version。
 
-## 十七、Event Contract Release
+# 十七、Event Contract Release
 
-### 17.1 Event Envelope
+## 17.1 Event Envelope
 
 Event Envelope 保留 event_type、event_version、event_id、occurred_at、producer、tenant_id、elder_id、aggregate_id、aggregate_version、trace_id、payload。
 
-### 17.2 相容規則
+## 17.2 相容規則
 
 • 新增 Optional Field：通常相容。
 
@@ -582,17 +580,17 @@ Event Envelope 保留 event_type、event_version、event_id、occurred_at、prod
 
 • DLQ Replay 前固定 Consumer Version 與 Event Transformation Version。
 
-### 17.3 Consumer Deployment
+## 17.3 Consumer Deployment
 
 Consumer 先部署支援 v1＋v2，再讓 Producer 發 v2；待舊 Queue 清空後才停止 v1。
 
-## 十八、Agent、Prompt 與 Policy Release
+# 十八、Agent、Prompt 與 Policy Release
 
-### 18.1 Agent Runtime
+## 18.1 Agent Runtime
 
 Agent Runtime 以 Image Digest 發布，Agent ID、Agent Version、Tool Schema Version 與 Model Router Version 隨 Release Manifest 保存。
 
-### 18.2 Prompt
+## 18.2 Prompt
 
 Prompt 採 Draft → Evaluated → Approved → Published → Deprecated。
 
@@ -610,7 +608,7 @@ Prompt 採 Draft → Evaluated → Approved → Published → Deprecated。
 
 Prompt 回退不代表 Domain State 回退；只切換 prompt_bundle_version。
 
-### 18.3 Policy
+## 18.3 Policy
 
 Authorization、Consent、Safety 與 Share Policy 分開版本化。
 
@@ -624,13 +622,13 @@ Policy 變更屬高風險：
 
 • 不與無關 UI 功能一起發布。
 
-### 18.4 Model Route
+## 18.4 Model Route
 
 Model Route 使用設定版本，支援 Canary／Fallback。
 
 更換模型需固定 Prompt、Dataset 與 Policy，避免無法判斷品質差異來源。
 
-## 十九、RAG Corpus 與 Search Index Release
+# 十九、RAG Corpus 與 Search Index Release
 
 RAG Release Bundle：
 
@@ -662,7 +660,7 @@ corpus_snapshot_id
 
 禁止直接在唯一 Production Index 原地大量覆寫而無 Snapshot／Alias。
 
-## 二十、Neptune Graph Projection Release
+# 二十、Neptune Graph Projection Release
 
 Graph 為 Aurora 正式資料的投影。
 
@@ -694,7 +692,7 @@ rebuild_checkpoint
 
 Graph 失敗不回滾 Aurora；以停用 graph_retrieval Feature Flag、改查 Aurora／OpenSearch 並重建投影。
 
-## 二十一、Feature Flag Release
+# 二十一、Feature Flag Release
 
 Feature Flag 至少包含：
 
@@ -740,7 +738,7 @@ rollback_action
 
 • Contract Migration 前清理舊 Flag。
 
-## 二十二、Rollback Decision Tree
+# 二十二、Rollback Decision Tree
 
 第一步：是否有資料破壞或安全風險？
 
@@ -766,7 +764,7 @@ rollback_action
 
 • 是：人工 Data Repair＋Audit，不執行破壞性 Down Migration。
 
-## 二十三、Rollback 類型
+# 二十三、Rollback 類型
 
 RB-01｜Application Rollback
 
@@ -792,7 +790,7 @@ RB-06｜Database Restore
 
 僅在嚴重災難或整體資料損毀使用。Restore 會影響所有後續正確寫入，不是一般單一 Release 的第一選擇。
 
-## 二十四、為什麼不依賴 Down Migration
+# 二十四、為什麼不依賴 Down Migration
 
 Down Migration 常無法安全還原：
 
@@ -810,9 +808,9 @@ Down Migration 常無法安全還原：
 
 因此正式環境以 Forward Fix、Compatibility Patch、Feature Disable 與資料修復為主；Down 只允許 Local／Test 或確定無資料的 Additive Migration。
 
-## 二十五、Backup 與 Restore
+# 二十五、Backup 與 Restore
 
-### 25.1 Backup Scope
+## 25.1 Backup Scope
 
 • Aurora Snapshot／Point-in-Time Recovery。
 
@@ -826,7 +824,7 @@ Down Migration 常無法安全還原：
 
 • Release Manifest 與 Audit Evidence。
 
-### 25.2 Restore 原則
+## 25.2 Restore 原則
 
 • Restore 到新資源，不直接覆蓋原資源。
 
@@ -836,7 +834,7 @@ Down Migration 常無法安全還原：
 
 • 恢復後重新處理 PITR 時點後的合法 Event，避免重複通知與刪除。
 
-### 25.3 Restore Drill
+## 25.3 Restore Drill
 
 Staging 至少演練：
 
@@ -854,7 +852,7 @@ Staging 至少演練：
 
 7. 記錄實際 RTO／RPO。
 
-## 二十六、Release Gate
+# 二十六、Release Gate
 
 RG-01｜Artifact Gate
 
@@ -880,7 +878,7 @@ RG-06｜Operational Gate
 
 Dashboard、Alarm、Runbook、Rollback Target、Owner、Backup、Feature Flag 已準備。
 
-## 二十七、Release Checklist
+# 二十七、Release Checklist
 
 Release 前：
 
@@ -930,7 +928,7 @@ Release 後：
 
 □ 舊 Artifact／Index 保留至 Rollback Window 結束。
 
-## 二十八、Migration Verification
+# 二十八、Migration Verification
 
 最低驗證：
 
@@ -952,7 +950,7 @@ Release 後：
 
 • Graph／Search Source Version 可追溯。
 
-## 二十九、資料修復 Script 規範
+# 二十九、資料修復 Script 規範
 
 修復 Script 放在 /scripts/data-repair/<ticket>/，包含：
 
@@ -982,7 +980,7 @@ sample-output.txt
 
 • 執行後保存 Script Version、Operator、Reason、Affected IDs Hash 與 Verification Result。
 
-## 三十、Hackathon Implementation Profile
+# 三十、Hackathon Implementation Profile
 
 本次必做：
 
@@ -1028,7 +1026,7 @@ sample-output.txt
 
 • 失敗時不得手動改 DB 後假裝成功。
 
-## 三十一、ADR
+# 三十一、ADR
 
 ADR-13-001｜Python Backend 使用框架原生 Migration，流程規則一致
 
@@ -1066,7 +1064,7 @@ ADR-13-006｜Prompt、Policy、Model Route 納入 Release Manifest
 
 原因：AI 行為變化也是正式 Release，不只是程式碼變更。
 
-## 三十二、待決策
+# 三十二、待決策
 
 1. Python Framework：FastAPI 或 Django。
 
@@ -1088,7 +1086,7 @@ ADR-13-006｜Prompt、Policy、Model Route 納入 Release Manifest
 
 10. Pilot／Production 的 RTO、RPO 與 Backup Retention。
 
-## 三十三、v0.1 完成判定
+# 三十三、v0.1 完成判定
 
 □ Python Backend 的 Migration 路線與 Framework 選擇邊界已定義。
 
@@ -1106,7 +1104,7 @@ ADR-13-006｜Prompt、Policy、Model Route 納入 Release Manifest
 
 □ 下一階段可直接建立 Migration Pipeline、Release Workflow 與 Restore Drill。
 
-## 三十四、下一份文件
+# 三十四、下一份文件
 
 14｜智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1
 

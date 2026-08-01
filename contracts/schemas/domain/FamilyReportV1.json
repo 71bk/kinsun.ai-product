@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "FamilyReportItem": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Source Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "text",
+        "source_ids"
+      ],
+      "title": "FamilyReportItem",
+      "type": "object"
+    },
+    "ReportType": {
+      "enum": [
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY",
+        "IMPORTANT_EVENT"
+      ],
+      "title": "ReportType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "report_id": {
+      "format": "uuid",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "recipient_scope_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Recipient Scope Ids",
+      "type": "array"
+    },
+    "report_type": {
+      "$ref": "#/$defs/ReportType"
+    },
+    "period_start": {
+      "format": "date",
+      "title": "Period Start",
+      "type": "string"
+    },
+    "period_end": {
+      "format": "date",
+      "title": "Period End",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "NEEDS_REVIEW",
+        "PUBLISHED",
+        "WITHDRAWN",
+        "STALE"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/FamilyReportItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "data_gap_notice": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Data Gap Notice"
+    },
+    "sensitive_review_required": {
+      "title": "Sensitive Review Required",
+      "type": "boolean"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Published At"
+    },
+    "withdrawn_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Withdrawn At"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "elder_id",
+    "recipient_scope_ids",
+    "report_type",
+    "period_start",
+    "period_end",
+    "status",
+    "items",
+    "data_gap_notice",
+    "sensitive_review_required",
+    "version",
+    "published_at",
+    "withdrawn_at",
+    "updated_at"
+  ],
+  "title": "FamilyReportV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyReportV1.json"
+}

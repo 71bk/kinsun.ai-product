@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "AssignmentResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment_id": {
+          "format": "uuid",
+          "title": "Assignment Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "provider_tenant_id": {
+          "format": "uuid",
+          "title": "Provider Tenant Id",
+          "type": "string"
+        },
+        "care_unit_id": {
+          "format": "uuid",
+          "title": "Care Unit Id",
+          "type": "string"
+        },
+        "home_care_worker_id": {
+          "format": "uuid",
+          "title": "Home Care Worker Id",
+          "type": "string"
+        },
+        "scheduled_start": {
+          "format": "date-time",
+          "title": "Scheduled Start",
+          "type": "string"
+        },
+        "scheduled_end": {
+          "format": "date-time",
+          "title": "Scheduled End",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "DRAFT",
+            "CONFIRMED",
+            "IN_PROGRESS",
+            "COMPLETED",
+            "EXPIRED",
+            "CANCELLED",
+            "NO_SHOW"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "allowed_data_scopes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Data Scopes",
+          "type": "array"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "assignment_id",
+        "elder_id",
+        "provider_tenant_id",
+        "care_unit_id",
+        "home_care_worker_id",
+        "scheduled_start",
+        "scheduled_end",
+        "status",
+        "allowed_data_scopes",
+        "version",
+        "expires_at"
+      ],
+      "title": "AssignmentResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/AssignmentResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "title": "CareAssignmentListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CareAssignmentListV1.json"
+}

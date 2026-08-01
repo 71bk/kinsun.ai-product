@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "SummaryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "MEAL",
+            "ACTIVITY",
+            "SLEEP",
+            "MEDICATION_STATEMENT",
+            "SOCIAL",
+            "IMPORTANT_EVENT"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "source_event_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Source Event Ids",
+          "type": "array"
+        },
+        "data_status": {
+          "enum": [
+            "PRESENT",
+            "NOT_MENTIONED",
+            "INSUFFICIENT"
+          ],
+          "title": "Data Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "text",
+        "source_event_ids",
+        "data_status"
+      ],
+      "title": "SummaryItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "summary_id": {
+      "format": "uuid",
+      "title": "Summary Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "summary_date": {
+      "format": "date",
+      "title": "Summary Date",
+      "type": "string"
+    },
+    "summary_type": {
+      "const": "PROFESSIONAL_DAILY",
+      "title": "Summary Type",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "READY",
+        "NEEDS_REVIEW",
+        "PUBLISHED",
+        "STALE",
+        "WITHDRAWN"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/SummaryItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "missing_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "conflict_flags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conflict Flags",
+      "type": "array"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "generated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Generated At"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "summary_id",
+    "elder_id",
+    "summary_date",
+    "summary_type",
+    "status",
+    "items",
+    "missing_fields",
+    "conflict_flags",
+    "version",
+    "generated_at",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "DailySummaryV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DailySummaryV1.json"
+}
