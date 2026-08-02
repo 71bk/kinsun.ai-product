@@ -12,7 +12,7 @@ const contextOrEnvironment = (contextKey: string, environmentKey: string): unkno
 
 const requiredString = (value: unknown, settingName: string): string => {
   if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`${settingName} is required when staging Google federation is configured`);
+    throw new Error(`${settingName} is required when federation is configured`);
   }
   return value.trim();
 };
@@ -53,8 +53,26 @@ const googleSettings = [
 ];
 const hasAnyGoogleSetting = googleSettings.some((value) => value !== undefined);
 
-if (hasAnyGoogleSetting && envName !== 'staging') {
-  throw new Error('Google federation is enabled only for the staging stack');
+const lineLoginChannelId = contextOrEnvironment('lineLoginChannelId', 'LINE_LOGIN_CHANNEL_ID');
+const lineLoginChannelSecretId = contextOrEnvironment(
+  'lineLoginChannelSecretId',
+  'LINE_LOGIN_CHANNEL_SECRET_ID',
+);
+const lineLoginBffRoleArn = contextOrEnvironment('lineLoginBffRoleArn', 'LINE_LOGIN_BFF_ROLE_ARN');
+const lineLoginProviderName = contextOrEnvironment(
+  'lineLoginProviderName',
+  'LINE_LOGIN_PROVIDER_NAME',
+);
+const lineSettings = [
+  lineLoginChannelId,
+  lineLoginChannelSecretId,
+  lineLoginBffRoleArn,
+  lineLoginProviderName,
+];
+const hasAnyLineSetting = lineSettings.some((value) => value !== undefined);
+
+if ((hasAnyGoogleSetting || hasAnyLineSetting) && envName !== 'staging') {
+  throw new Error('Login federation is enabled only for the staging stack');
 }
 
 const googleFederation = hasAnyGoogleSetting
@@ -77,6 +95,32 @@ const googleFederation = hasAnyGoogleSetting
     }
   : undefined;
 
+const lineLoginFederation = hasAnyLineSetting
+  ? {
+      channelId: requiredString(lineLoginChannelId, 'lineLoginChannelId/LINE_LOGIN_CHANNEL_ID'),
+      // This secret must contain only the LINE Login Channel secret. It must
+      // not be the LINE Messaging API Channel secret.
+      channelSecret: cdk.SecretValue.secretsManager(
+        requiredString(
+          lineLoginChannelSecretId,
+          'lineLoginChannelSecretId/LINE_LOGIN_CHANNEL_SECRET_ID',
+        ),
+      ),
+      bffExecutionRoleArn: requiredString(
+        lineLoginBffRoleArn,
+        'lineLoginBffRoleArn/LINE_LOGIN_BFF_ROLE_ARN',
+      ),
+      providerName:
+        lineLoginProviderName === undefined
+          ? 'LINE'
+          : requiredString(lineLoginProviderName, 'lineLoginProviderName/LINE_LOGIN_PROVIDER_NAME'),
+    }
+  : undefined;
+
+if (lineLoginFederation && !googleFederation) {
+  throw new Error('LINE Login federation requires Google federation settings');
+}
+
 // Region is pinned, not defaulted from CDK_DEFAULT_REGION — the `cdk` CLI
 // itself injects that env var (falling back to us-east-1 when no AWS
 // profile/credentials are configured at all), which would silently outrank
@@ -85,6 +129,7 @@ new ElderlyCareStack(app, `ElderlyCareStack-${envName}`, {
   envName,
   agentRuntimeBaseUrl,
   googleFederation,
+  lineLoginFederation,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: 'us-west-2',

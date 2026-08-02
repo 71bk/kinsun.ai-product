@@ -1,0 +1,18 @@
+{
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DailyLineNotificationJobRequestV1.json",
+  "title": "DailyLineNotificationJobRequestV1",
+  "description": "Trusted 08:00 scheduler input. The server derives the previous local day and never accepts report content or recipient identifiers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_name", "scheduled_for", "timezone"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "job_name": { "type": "string", "const": "line-daily-family-report" },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Must resolve to exactly 08:00:00 Asia/Taipei."
+    },
+    "timezone": { "type": "string", "const": "Asia/Taipei" }
+  }
+}

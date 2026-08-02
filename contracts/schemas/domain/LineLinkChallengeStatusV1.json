@@ -1,0 +1,36 @@
+{
+  "$id": "urn:kinsun:contracts:schemas:domain:LineLinkChallengeStatusV1",
+  "title": "LineLinkChallengeStatusV1",
+  "description": "Safe challenge status view without nonce, nonce digest, linkToken or external identity subject.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["challenge_id", "status", "expires_at", "redeemed_at"],
+  "properties": {
+    "challenge_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "REDEEMED", "FAILED", "EXPIRED", "REVOKED"]
+    },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "redeemed_at": {
+      "anyOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "status": { "const": "REDEEMED" },
+        "redeemed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "properties": {
+        "status": { "enum": ["PENDING", "FAILED", "EXPIRED", "REVOKED"] },
+        "redeemed_at": { "type": "null" }
+      }
+    }
+  ]
+}

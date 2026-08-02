@@ -24,8 +24,17 @@ from app.models.family_invitation import FamilyInvitation  # noqa: F401
 from app.models.graph_projection import GraphProjectionRecord  # noqa: F401
 from app.models.idempotency import IdempotencyRecord  # noqa: F401
 from app.models.knowledge import KnowledgeSource, KnowledgeSourceVersion  # noqa: F401
+from app.models.line_identity import (  # noqa: F401
+    ExternalIdentity,
+    LineLinkChallenge,
+    LineWebhookReceipt,
+)
 from app.models.membership import ActorTenantMembership  # noqa: F401
 from app.models.memory import Memory, MemoryVersion  # noqa: F401
+from app.models.notification import (  # noqa: F401
+    NotificationDelivery,
+    NotificationPreference,
+)
 from app.models.outbox import OutboxEvent  # noqa: F401
 from app.models.policy import PolicyRegistry  # noqa: F401
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: F401

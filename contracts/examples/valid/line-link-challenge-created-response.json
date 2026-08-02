@@ -1,0 +1,13 @@
+{
+  "data": {
+    "challenge_id": "42000000-0000-4000-8000-000000000001",
+    "status": "PENDING",
+    "expires_at": "2026-08-02T05:10:00Z",
+    "account_link_url": "https://access.line.me/dialog/bot/accountLink?linkToken=synthetic-link-token&nonce=synthetic-nonce-value-20260802"
+  },
+  "meta": {
+    "correlation_id": "92000000-0000-4000-8000-000000000001",
+    "timestamp": "2026-08-02T05:00:00Z",
+    "schema_version": "1.0"
+  }
+}

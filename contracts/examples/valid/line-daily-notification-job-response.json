@@ -1,0 +1,25 @@
+{
+  "data": {
+    "schema_version": "1.0",
+    "job_name": "line-daily-family-report",
+    "status": "COMPLETED",
+    "scheduled_for": "2026-08-02T00:00:00Z",
+    "timezone": "Asia/Taipei",
+    "source_period": { "start": "2026-08-01", "end": "2026-08-01" },
+    "counts": { "eligible": 1, "sent": 1, "replayed": 0, "skipped": 0, "failed": 0 },
+    "deliveries": [
+      {
+        "notification_id": "1f57e63b-55b5-4c53-b29f-487d54308acd",
+        "report_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+        "report_version": 1,
+        "status": "SENT",
+        "reason_code": null
+      }
+    ]
+  },
+  "meta": {
+    "correlation_id": "trace-line-daily-20260802",
+    "timestamp": "2026-08-02T00:00:03Z",
+    "schema_version": "1.0"
+  }
+}

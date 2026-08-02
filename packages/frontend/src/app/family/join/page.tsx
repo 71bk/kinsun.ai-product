@@ -1,4 +1,7 @@
+export const dynamic = 'force-dynamic';
+
 export default function FamilyJoinPage() {
+  const showLine = process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
   return (
     <main style={{ margin: '0 auto', maxWidth: 560, padding: 24 }}>
       <h1 style={{ fontSize: 28 }}>家屬服務</h1>
@@ -10,6 +13,7 @@ export default function FamilyJoinPage() {
       </p>
       <form action="/backend/auth/login" method="post" style={{ marginTop: 20 }}>
         <input name="intent" type="hidden" value="FAMILY" />
+        <input name="provider" type="hidden" value="GOOGLE" />
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         <label
           htmlFor="invitationCode"
@@ -39,6 +43,17 @@ export default function FamilyJoinPage() {
           使用 Google 繼續
         </button>
       </form>
+      {showLine && (
+        <form action="/backend/auth/login" method="post" style={{ marginTop: 20 }}>
+          <input name="intent" type="hidden" value="FAMILY" />
+          <input name="provider" type="hidden" value="LINE" />
+          <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+          <button type="submit">已有帳號：使用已連結的 LINE 登入</button>
+          <p style={{ color: '#4a5568', lineHeight: 1.6 }}>
+            此按鈕不會使用上方邀請碼；首次加入家屬服務仍須使用 Google。
+          </p>
+        </form>
+      )}
       <p style={{ marginTop: 24 }}>
         已完成綁定？ <a href="/family/sign-in">前往家屬登入</a>
       </p>

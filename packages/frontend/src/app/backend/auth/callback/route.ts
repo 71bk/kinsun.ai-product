@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessTokenCookieName, accessTokenCookieOptions } from '@/lib/server/auth-cookie';
 import { exchangeAuthorizationCode, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
-import { redeemCoreOnboarding } from '@/lib/server/core-onboarding';
+import { redeemCoreOnboarding, requireExistingCoreActor } from '@/lib/server/core-onboarding';
 import {
   oauthTransactionCookieName,
   oauthTransactionCookieOptions,
@@ -47,15 +47,20 @@ export async function GET(request: NextRequest): Promise<Response> {
   );
   if (!transaction || !stateMatches(transaction, states[0] ?? null)) return failedCallback();
 
-  let stage: 'token_exchange' | 'core_onboarding' = 'token_exchange';
+  let stage: 'token_exchange' | 'core_onboarding' | 'core_actor_check' = 'token_exchange';
   try {
     const tokenSet = await exchangeAuthorizationCode(
       getCognitoOAuthConfig(),
       codes[0] ?? '',
       transaction,
     );
-    stage = 'core_onboarding';
-    await redeemCoreOnboarding(tokenSet, transaction);
+    if (transaction.provider === 'LINE') {
+      stage = 'core_actor_check';
+      await requireExistingCoreActor(tokenSet.accessToken);
+    } else {
+      stage = 'core_onboarding';
+      await redeemCoreOnboarding(tokenSet, transaction);
+    }
     const response = clearTransaction(noStore(sameOriginRedirect(transaction.returnTo)));
     response.cookies.set(
       accessTokenCookieName(),

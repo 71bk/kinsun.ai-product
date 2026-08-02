@@ -9,7 +9,11 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import * as path from 'node:path';
 import { Api } from './constructs/api';
-import { Auth, GoogleFederationProps } from './constructs/auth';
+import {
+  Auth,
+  type GoogleFederationProps,
+  type LineLoginFederationProps,
+} from './constructs/auth';
 import { DataStore } from './constructs/data-store';
 import { VoiceWorkflow } from './constructs/voice-workflow';
 
@@ -17,6 +21,7 @@ export interface ElderlyCareStackProps extends cdk.StackProps {
   envName: string;
   agentRuntimeBaseUrl?: string;
   googleFederation?: GoogleFederationProps;
+  lineLoginFederation?: LineLoginFederationProps;
 }
 
 export class ElderlyCareStack extends cdk.Stack {
@@ -27,13 +32,17 @@ export class ElderlyCareStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ElderlyCareStackProps) {
     super(scope, id, props);
 
-    if (props.googleFederation && props.envName !== 'staging') {
-      throw new Error('Google federation is enabled only for the staging stack');
+    if ((props.googleFederation || props.lineLoginFederation) && props.envName !== 'staging') {
+      throw new Error('Login federation is enabled only for the staging stack');
+    }
+    if (props.lineLoginFederation && !props.googleFederation) {
+      throw new Error('LINE Login federation requires Google federation');
     }
     this.dataStore = new DataStore(this, 'DataStore', { envName: props.envName });
     this.auth = new Auth(this, 'Auth', {
       envName: props.envName,
       googleFederation: props.googleFederation,
+      lineLoginFederation: props.lineLoginFederation,
     });
 
     // Workflow/component Lambda logs (ASR, Context Composer, Event Extractor,
@@ -251,6 +260,21 @@ export class ElderlyCareStack extends cdk.Stack {
       new cdk.CfnOutput(this, 'GoogleOAuthRedirectUri', {
         value: `${oauthDomain}/oauth2/idpresponse`,
       });
+      if (
+        props.lineLoginFederation &&
+        this.auth.lineLoginIdentityProvider &&
+        this.auth.lineLoginProviderName
+      ) {
+        new cdk.CfnOutput(this, 'LineLoginCognitoRedirectUri', {
+          value: `${oauthDomain}/oauth2/idpresponse`,
+        });
+        new cdk.CfnOutput(this, 'LineLoginProviderName', {
+          value: this.auth.lineLoginProviderName,
+        });
+        new cdk.CfnOutput(this, 'LineLoginChannelId', {
+          value: props.lineLoginFederation.channelId,
+        });
+      }
     }
     new cdk.CfnOutput(this, 'TableName', { value: this.dataStore.table.tableName });
   }

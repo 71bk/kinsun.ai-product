@@ -1,0 +1,38 @@
+{
+  "$id": "urn:kinsun:contracts:schemas:domain:LineLinkStatusV1",
+  "title": "LineLinkStatusV1",
+  "description": "ELDER-only LINE link status. It deliberately excludes LINE user ID, keyed digest, linkToken, nonce and webhook identifiers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provider", "linked", "status", "linked_at", "can_unlink"],
+  "properties": {
+    "provider": { "type": "string", "const": "LINE" },
+    "linked": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["ACTIVE", "UNLINKED"] },
+    "linked_at": {
+      "anyOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ]
+    },
+    "can_unlink": { "type": "boolean" }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "linked": { "const": true },
+        "status": { "const": "ACTIVE" },
+        "linked_at": { "type": "string", "format": "date-time" },
+        "can_unlink": { "const": true }
+      }
+    },
+    {
+      "properties": {
+        "linked": { "const": false },
+        "status": { "const": "UNLINKED" },
+        "linked_at": { "type": "null" },
+        "can_unlink": { "const": false }
+      }
+    }
+  ]
+}

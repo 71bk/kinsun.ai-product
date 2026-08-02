@@ -1,0 +1,11 @@
+{
+  "_why_invalid": "Scheduler input must not carry report content or recipient identifiers.",
+  "data": {
+    "schema_version": "1.0",
+    "job_name": "line-daily-family-report",
+    "scheduled_for": "2026-08-02T08:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "report_content": "不應由排程輸入的內容",
+    "line_user_id": "U00000000000000000000000000000000"
+  }
+}

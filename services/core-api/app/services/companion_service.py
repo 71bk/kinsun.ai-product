@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from time import perf_counter
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -85,7 +85,7 @@ class CompanionService:
         if not conversation.policy_version:
             raise ConflictError("Voice session has no policy version")
 
-        request_id = f"req-{uuid4()}"
+        request_id = f"req-{uuid5(NAMESPACE_URL, f'kinsun:companion:{idempotency_key}')}"
         request_payload: dict[str, object] = {
             "schema_version": "1.0.0",
             "request_id": request_id,

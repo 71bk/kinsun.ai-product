@@ -1,0 +1,54 @@
+{
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DailyLineNotificationJobResultV1.json",
+  "title": "DailyLineNotificationJobResultV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_name", "status", "scheduled_for", "timezone", "source_period", "counts", "deliveries"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "job_name": { "type": "string", "const": "line-daily-family-report" },
+    "status": {
+      "type": "string",
+      "enum": ["COMPLETED", "PARTIAL_FAILURE", "NO_ELIGIBLE_REPORTS"]
+    },
+    "scheduled_for": { "type": "string", "format": "date-time" },
+    "timezone": { "type": "string", "const": "Asia/Taipei" },
+    "source_period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "string", "format": "date" },
+        "end": { "type": "string", "format": "date" }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "sent", "replayed", "skipped", "failed"],
+      "properties": {
+        "eligible": { "type": "integer", "minimum": 0 },
+        "sent": { "type": "integer", "minimum": 0 },
+        "replayed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "deliveries": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["notification_id", "report_id", "report_version", "status", "reason_code"],
+        "properties": {
+          "notification_id": { "type": "string", "format": "uuid" },
+          "report_id": { "type": "string", "format": "uuid" },
+          "report_version": { "type": "integer", "minimum": 1 },
+          "status": { "type": "string", "enum": ["SENT", "REPLAYED", "FAILED", "SKIPPED"] },
+          "reason_code": { "type": ["string", "null"], "maxLength": 80 }
+        }
+      }
+    }
+  }
+}

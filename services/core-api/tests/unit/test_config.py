@@ -155,6 +155,41 @@ class TestValidation:
                 COGNITO_APP_CLIENT_ID="client-id",
             )
 
+    def test_daily_line_notification_requires_complete_independent_secrets(self) -> None:
+        with pytest.raises(ValidationError, match="LINE_ACCOUNT_LINK_ENABLED"):
+            _make_settings(LINE_DAILY_NOTIFICATION_ENABLED="true")
+
+        common = {
+            "LINE_ACCOUNT_LINK_ENABLED": "true",
+            "LINE_CHANNEL_SECRET": "synthetic-channel-secret",
+            "LINE_CHANNEL_ACCESS_TOKEN": "synthetic-channel-token",
+            "LINE_IDENTITY_HMAC_SECRET": "synthetic-identity-hmac-secret-32-bytes",
+            "LINE_ACCOUNT_LINK_BASE_URL": "https://staging.example.com",
+            "LINE_DAILY_NOTIFICATION_ENABLED": "true",
+        }
+        with pytest.raises(ValidationError, match="LINE_SUBJECT_ENCRYPTION_SECRET"):
+            _make_settings(**common)
+
+        settings = _make_settings(
+            **common,
+            LINE_SUBJECT_ENCRYPTION_SECRET=("synthetic-independent-encryption-secret-32-bytes"),
+        )
+        assert settings.line_daily_notification_enabled is True
+        assert settings.line_daily_notification_send_time == "08:00"
+
+    def test_daily_line_notification_rejects_non_0800_schedule(self) -> None:
+        with pytest.raises(ValidationError, match="must remain 08:00"):
+            _make_settings(
+                LINE_ACCOUNT_LINK_ENABLED="true",
+                LINE_CHANNEL_SECRET="synthetic-channel-secret",
+                LINE_CHANNEL_ACCESS_TOKEN="synthetic-channel-token",
+                LINE_IDENTITY_HMAC_SECRET="synthetic-identity-hmac-secret-32-bytes",
+                LINE_ACCOUNT_LINK_BASE_URL="https://staging.example.com",
+                LINE_DAILY_NOTIFICATION_ENABLED="true",
+                LINE_SUBJECT_ENCRYPTION_SECRET=("synthetic-independent-encryption-secret-32-bytes"),
+                LINE_DAILY_NOTIFICATION_SEND_TIME="09:00",
+            )
+
 
 # ─── Secret redaction ────────────────────────────────────────────────────────
 

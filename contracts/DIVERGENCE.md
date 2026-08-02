@@ -1,6 +1,6 @@
 # Contract 與文件 10 差異清單
 
-- 更新日期：2026-08-01
+- 更新日期：2026-08-02
 - 文件基準：`docs/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
 - 執行基準：目前 `services/core-api` 與 `services/agent-runtime`
 
@@ -78,6 +78,94 @@ Core 已實作 Cognito JWT verifier，且以兩條明確分離的路徑使用：
 目前 contract 不代表 staging Cognito domain、Google provider secret、callback URL 或正式
 Refresh Token rotation 已部署／驗證；這些仍須由環境設定與部署證據確認。
 
+### LINE Login federation 與 Cognito 帳號連結
+
+Next.js BFF 與 CDK 已加入 staging-only LINE Login OIDC federation。Cognito OIDC provider 固定使用
+`https://access.line.me`，要求 `openid profile email`，且 Web BFF app client 同時支援 `Google` 與
+自訂 `LINE` provider。因現有 User Pool 將 `email` 設為 required，LINE `email` claim 必須映射到
+Cognito `email`；linking 前會先確認目前 Cognito email 已驗證且等於 LINE verify endpoint 回傳的
+email。這個檢查只防止 federated attribute mapping 覆寫既有 recovery email，不會以 Email 尋找
+Actor、連結兩個 Cognito users 或 merge 兩個 Actor；不相符時一律拒絕並要求人工處理。
+
+安全連結流程只能由已登入且已連結 Google 的 Cognito user 發起，並使用獨立 10 分鐘 HttpOnly
+signed transaction、state、nonce 與 PKCE S256。Transaction 只保存由獨立 secret 對發起者
+Cognito username 產生的 domain-separated HMAC fingerprint，不保存 raw username、subject 或
+email；callback 最終 AdminLink 前會重新比對，同瀏覽器中途切換帳號時一律拒絕並 revoke LINE
+token。BFF 直接向 LINE 換 token、呼叫 LINE ID token
+verify endpoint取得可信 `sub`，再以 IAM `cognito-idp:AdminLinkProviderForUser`、source
+`Cognito_Subject` 連到目前 `GetUser` 回傳的 destination username。LINE token 不保存、不記錄，
+並在流程結束 best-effort revoke。若 LINE subject 已屬於其他 Cognito user，系統拒絕轉移與 merge。
+BFF 執行角色必須提供為 staging `LINE_LOGIN_BFF_ROLE_ARN`；CDK 只會在該既有 same-account
+role 上加入目標 User Pool ARN 的 `cognito-idp:AdminLinkProviderForUser`，不授予
+`Resource: *`。若 hosting 平台尚未建立穩定的 server execution role，LINE federation 設定會因
+缺少此 ARN 而 fail closed，必須先完成 hosting role ownership。
+
+一般 LINE sign-in 仍走 Cognito Hosted UI，但 callback 只用 Access Token 呼叫 Core
+`GET /api/v1/me` 確認既有 `cognito_sub → Actor`；它絕不呼叫 onboarding resolver。User Pool 的
+PreSignUp Lambda 另拒絕 Cognito 嘗試建立新的 `LINE_*` external-provider user，未連結 LINE Login
+因此 fail closed。此 gate 是否在已連結 LINE identity 的 staging sign-in 中確實略過，以及 Google
+federated destination username、LINE required-email mapping 的實際 Cognito 行為，仍須 live staging
+測試，不得只憑 synth 宣稱完成部署驗證。
+
+同一個 LINE Login Channel 必須登錄兩個固定 callback：Cognito domain 的
+`/oauth2/idpresponse`，以及 frontend origin 的
+`/backend/auth/identities/line/callback`。LINE Login Channel secret、LINE Messaging Channel
+secret、LINE identity HMAC secret、一般 OAuth transaction secret 與 LINE linking transaction
+secret必須彼此獨立。LINE Login identity 只存在於 Cognito federation；下節的 LINE Bot
+`external_identity` 只屬於 Messaging API channel，兩者 subject 不可直接比較、共用或轉換。
+
+這些資源與流程目前是程式／synth 層實作，不是 staging deployment 證據。部署前仍需 LINE Login
+Channel ID、Secrets Manager secret name/ARN、BFF execution role ARN、固定 frontend HTTPS origin、
+Cognito User Pool/domain/region、Email permission 與 callback 設定；不得將 Channel secret 貼入 issue、chat 或 commit。
+
+### LINE Account Linking 與 Companion transport
+
+Core 與 Next.js BFF 已實作 ELDER／FAMILY_MEMBER 的官方 LINE Account Linking：一個 ACTIVE LINE subject
+只對應一個 Actor，且每個 Actor 只允許一個 ACTIVE LINE link。Core 只保存獨立 HMAC key 產生的
+subject／nonce digest、排程推播所需的 LINE subject authenticated ciphertext、challenge lifecycle
+與 `webhookEventId` receipt；LINE user ID 明文、linkToken、nonce、replyToken 與訊息逐字內容不進
+資料庫或應用 log。`LINE_SUBJECT_ENCRYPTION_SECRET` 與其他 LINE／邀請 secrets 必須獨立。
+每個長者一般文字事件會重新載入 live
+Actor／Elder、ACTIVE Tenant 與唯一有效的 tenant-wide ELDER membership，執行
+`authorize_elder`、檢查 `BASIC_VOICE` Consent，再同步呼叫 Companion。Webhook 對每個事件獨立
+commit，retryable failure／stale PROCESSING receipt 最多 reclaim 三次；domain state commit 後才消耗
+replyToken，因此 reply delivery 明確為 at-most-once。Batch 事件以獨立 DB session、有界 concurrency
+處理，避免前段模型呼叫耗盡後段 replyToken。Web 狀態頁可查詢與解除連結，linkToken 僅
+短暫存在 10 分鐘 HttpOnly Cookie。FAMILY_MEMBER 連結只用於通知，不會進入 Companion 對話。
+
+Core 會由 `webhookEventId` 派生穩定的 Runtime `request_id`，但 Agent Runtime 尚未提供 durable
+request deduplication；如果 timeout 發生在 Runtime 已完成、Core 尚未收到 response 的模糊窗口，
+LINE redelivery 仍可能重複模型運算。MVP 的 `allowed_tools=[]`，因此此窗口不會重複外部 tool
+side effect，但 production 在開放 tools 或要求成本級 exactly-once 前，必須先加入 Runtime
+idempotency／single-flight store。
+
+MVP 的 `LINE_IDENTITY_HMAC_KEY_VERSION` 固定為 `1`，且第一個 ACTIVE link 建立後不得原地更換
+`LINE_IDENTITY_HMAC_SECRET`；正式 rotation 必須保留舊 key、執行明確 rekey／unlink migration，
+並在 rolling deployment 期間維持跨版本 subject serialization。否則新 digest 無法辨識舊 link，
+會破壞 LINE subject 對 Actor 的 1:1 保證。
+
+官方流程必須把 linkToken 帶到 `/backend/line/account-link/start` 的初始 URL，Core 向 LINE 申請
+linkToken 時也必須把 LINE user ID 放在官方 API path。應用程式不記錄這些值，LINE adapter 亦將
+`httpx`／`httpcore` 細節 log 至少限制在 WARNING；但 staging ingress、CDN／ALB、reverse proxy、
+Next.js hosting、APM 與 tracing 仍必須驗證不記錄或完整遮罩該 start route 的 query、官方 redirect
+`Location`、LINE outbound URL／headers／body。未取得這項部署證據前，不得宣稱達成端到端
+「不記錄」或啟用 account linking。
+
+Core 另實作 `POST /api/v1/internal/notification-jobs/line-daily`：只接受 SYSTEM_SERVICE 提供的
+`scheduled_for`、固定 job name 與 `Asia/Taipei`，且時間必須解析為 08:00；服務自行計算前一個
+台北日，不接受 report content 或 LINE user ID。候選只來自當日 `PUBLISHED` DAILY Report，發送前
+重查 tenant、ACTIVE FAMILY_MEMBER、Family Relationship、`FAMILY_SHARING` Consent、share scope、
+LINE DAILY 08:00 Preference 與 ACTIVE encrypted destination。每筆 delivery 使用穩定 UUID／
+`X-Line-Retry-Key`，最多三次，Provider 失敗只更新 Notification Delivery，不回滾 Report。
+LINE 內容只含日期、已更新提示與登入 Family Web 的連結，不包含長者姓名或報表內容。
+
+這是 feature-gated MVP，不是 staging deployment 證據：`a7c4e2d19f60`、`b8d5f3a21c74` migration
+尚未獲准套用畫面中的遠端 RDS，固定 staging HTTPS origin、獨立
+`LINE_IDENTITY_HMAC_SECRET`／`LINE_SUBJECT_ENCRYPTION_SECRET` 尚未注入，08:00 外部 Scheduler
+也尚未部署，
+先前外洩的 LINE／RDS secrets 也必須先輪替。同步 webhook 尚未具備 production SQS／DLQ、
+push fallback 或正式 queue redrive；Email Notification delivery 仍未實作。
+
 ### Voice transport
 
 Core 已實作 Voice Session metadata 與受控狀態轉移，但 WebSocket binary/audio transport、ASR Final、低信心確認與 TTS 仍屬 Speech workstream。回應明確標示 `transport_status = NOT_CONFIGURED`。
@@ -147,7 +235,7 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 - WebSocket voice event contract 與 audio upload。
 - Care Action API。
-- Notification delivery API／LINE／Email Adapter。
+- Email Notification delivery、LINE queue／DLQ adapter 與正式 Scheduler deployment。
 - 正式 Agent Handoff 與多步 Agent Tool 迴圈。
 - Graph／正式 OpenSearch projection endpoint。
 

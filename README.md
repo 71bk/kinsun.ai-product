@@ -156,7 +156,7 @@ Voice Session，才以 server-to-server 方式呼叫 Agent Runtime `:8001`。Age
 ## API Contract
 
 [`contracts/`](contracts/) 放 OpenAPI 3.1、AsyncAPI 3.0 與 JSON Schema。core-api 合約涵蓋
-目前 runtime 的 44 個 operations；agent-runtime 另有 `/health` 與
+目前 runtime 的 52 個 operations；agent-runtime 另有 `/health` 與
 `POST /api/v1/agent/runs` 的 executable OpenAPI。Handoff、Context Manifest、Safety
 Evaluation 與 Tool schema 中仍有尚未接上 executable endpoint 的目標形狀，邊界見
 [`contracts/README.md`](contracts/README.md) 與 [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md)。

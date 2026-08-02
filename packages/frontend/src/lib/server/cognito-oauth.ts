@@ -1,5 +1,5 @@
 import { normalizeAccessToken } from './auth-cookie';
-import { codeChallenge, type OAuthTransaction } from './oauth-transaction';
+import { codeChallenge, type LoginProvider, type OAuthTransaction } from './oauth-transaction';
 
 const REQUIRED_SCOPES = ['openid', 'email', 'profile'];
 const TOKEN_EXCHANGE_TIMEOUT_MS = 10_000;
@@ -41,6 +41,18 @@ function clientId(): string {
   return value;
 }
 
+function identityProviderName(provider: LoginProvider): string {
+  if (provider === 'GOOGLE') return 'Google';
+  if (process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() !== 'true') {
+    throw new Error('LINE Login is disabled');
+  }
+  const value = process.env.COGNITO_LINE_PROVIDER_NAME ?? 'LINE';
+  if (!/^[A-Za-z][A-Za-z0-9_-]{0,31}$/.test(value)) {
+    throw new Error('COGNITO_LINE_PROVIDER_NAME is invalid');
+  }
+  return value;
+}
+
 export function getCognitoOAuthConfig(): CognitoOAuthConfig {
   const domain = safeAbsoluteUrl(process.env.COGNITO_OAUTH_DOMAIN, 'COGNITO_OAUTH_DOMAIN');
   const callbackUrl = safeAbsoluteUrl(process.env.COGNITO_CALLBACK_URL, 'COGNITO_CALLBACK_URL');
@@ -59,7 +71,7 @@ function cognitoEndpoint(config: CognitoOAuthConfig, pathname: string): URL {
   return endpoint;
 }
 
-export function buildGoogleAuthorizationUrl(
+export function buildCognitoAuthorizationUrl(
   config: CognitoOAuthConfig,
   transaction: OAuthTransaction,
 ): URL {
@@ -67,13 +79,22 @@ export function buildGoogleAuthorizationUrl(
   target.searchParams.set('client_id', config.clientId);
   target.searchParams.set('code_challenge', codeChallenge(transaction.codeVerifier));
   target.searchParams.set('code_challenge_method', 'S256');
-  target.searchParams.set('identity_provider', 'Google');
+  target.searchParams.set('identity_provider', identityProviderName(transaction.provider));
   target.searchParams.set('nonce', transaction.nonce);
   target.searchParams.set('redirect_uri', config.callbackUrl.toString());
   target.searchParams.set('response_type', 'code');
   target.searchParams.set('scope', REQUIRED_SCOPES.join(' '));
   target.searchParams.set('state', transaction.state);
   return target;
+}
+
+/** Backward-compatible wrapper for callers that construct a Google transaction. */
+export function buildGoogleAuthorizationUrl(
+  config: CognitoOAuthConfig,
+  transaction: OAuthTransaction,
+): URL {
+  if (transaction.provider !== 'GOOGLE') throw new Error('Google transaction required');
+  return buildCognitoAuthorizationUrl(config, transaction);
 }
 
 function decodeIdTokenNonce(idToken: string): string | null {
@@ -102,8 +123,9 @@ export async function exchangeAuthorizationCode(
   code: string,
   transaction: OAuthTransaction,
 ): Promise<CognitoTokenSet> {
-  if (!code || code.length > 4_096 || /\s/.test(code))
+  if (!code || code.length > 4_096 || /\s/.test(code)) {
     throw new Error('Invalid authorization code');
+  }
 
   const body = new URLSearchParams({
     client_id: config.clientId,

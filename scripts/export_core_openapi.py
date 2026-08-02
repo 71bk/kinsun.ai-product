@@ -21,6 +21,8 @@ from app.main import create_app  # noqa: E402
 MODEL_FILES = {
     "ResolveOnboardingRequest": "domain/ResolveOnboardingRequestV1.json",
     "CreateFamilyInvitationRequest": "domain/CreateFamilyInvitationRequestV1.json",
+    "CreateLineLinkChallengeRequest": "domain/CreateLineLinkChallengeRequestV1.json",
+    "DailyLineNotificationJobRequest": "domain/DailyLineNotificationJobRequestV1.json",
     "CreateConsentRequest": "domain/CreateConsentRequestV1.json",
     "RevokeConsentRequest": "domain/RevokeConsentRequestV1.json",
     "CreateVoiceSessionRequest": "domain/CreateVoiceSessionRequestV1.json",
@@ -40,6 +42,8 @@ MODEL_FILES = {
     "WithdrawFamilyReportRequest": "domain/WithdrawFamilyReportRequestV1.json",
     "CreateAssignmentRequest": "domain/CreateCareAssignmentRequestV1.json",
     "AssignmentCommandRequest": "domain/AssignmentCommandRequestV1.json",
+    "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
+    "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
     "ToolRequest": "tools/ToolRequestV1.json",
 }
 
@@ -51,13 +55,23 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "list_family_invitations_api_v1_elders__elder_id__family_invitations_get": (
         "FamilyInvitationListEnvelopeV1"
     ),
-    "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__invitation_id__revoke_post": (
-        "FamilyInvitationStatusEnvelopeV1"
+    (
+        "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__"
+        "invitation_id__revoke_post"
+    ): ("FamilyInvitationStatusEnvelopeV1"),
+    "get_line_link_status_api_v1_me_line_link_get": "LineLinkStatusEnvelopeV1",
+    "unlink_line_account_api_v1_me_line_link_delete": "LineLinkStatusEnvelopeV1",
+    "create_line_link_challenge_api_v1_me_line_link_challenges_post": (
+        "LineLinkChallengeCreatedEnvelopeV1"
+    ),
+    "get_line_link_challenge_status_api_v1_me_line_link_challenges__challenge_id__get": (
+        "LineLinkChallengeStatusEnvelopeV1"
+    ),
+    "run_daily_line_notifications_api_v1_internal_notification_jobs_line_daily_post": (
+        "DailyLineNotificationJobEnvelopeV1"
     ),
     "get_me_api_v1_me_get": "ActorProfileEnvelopeV1",
-    "get_authorized_elders_api_v1_me_authorized_elders_get": (
-        "AuthorizedElderListEnvelopeV1"
-    ),
+    "get_authorized_elders_api_v1_me_authorized_elders_get": "AuthorizedElderListEnvelopeV1",
     "get_elder_api_v1_elders__elder_id__get": "ElderSummaryEnvelopeV1",
     "get_elder_access_context_api_v1_elders__elder_id__access_context_get": (
         "ElderAccessContextEnvelopeV1"
@@ -70,9 +84,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "get_deletion_request_api_v1_elders__elder_id__deletion_requests__deletion_request_id__get": (
         "DeletionRequestEnvelopeV1"
     ),
-    "create_voice_session_api_v1_elders__elder_id__voice_sessions_post": (
-        "VoiceSessionEnvelopeV1"
-    ),
+    "create_voice_session_api_v1_elders__elder_id__voice_sessions_post": "VoiceSessionEnvelopeV1",
     "get_voice_session_api_v1_voice_sessions__session_id__get": "VoiceSessionEnvelopeV1",
     "cancel_voice_session_api_v1_voice_sessions__session_id__cancel_post": (
         "VoiceSessionEnvelopeV1"
@@ -90,15 +102,11 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
         "CareEventEnvelopeV1"
     ),
     "list_care_events_api_v1_elders__elder_id__care_events_get": "CareEventListEnvelopeV1",
-    "get_care_event_api_v1_elders__elder_id__care_events__event_id__get": (
-        "CareEventEnvelopeV1"
-    ),
+    "get_care_event_api_v1_elders__elder_id__care_events__event_id__get": "CareEventEnvelopeV1",
     "review_care_event_api_v1_elders__elder_id__care_events__event_id__review_post": (
         "CareEventReviewEnvelopeV1"
     ),
-    "create_memory_candidate_api_v1_elders__elder_id__memory_candidates_post": (
-        "MemoryEnvelopeV1"
-    ),
+    "create_memory_candidate_api_v1_elders__elder_id__memory_candidates_post": ("MemoryEnvelopeV1"),
     "list_memory_candidates_api_v1_elders__elder_id__memory_candidates_get": (
         "MemoryListEnvelopeV1"
     ),
@@ -120,9 +128,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
         "DailySummaryEnvelopeV1"
     ),
     "list_summaries_api_v1_elders__elder_id__summaries_get": "DailySummaryListEnvelopeV1",
-    "get_summary_api_v1_elders__elder_id__summaries__summary_id__get": (
-        "DailySummaryEnvelopeV1"
-    ),
+    "get_summary_api_v1_elders__elder_id__summaries__summary_id__get": "DailySummaryEnvelopeV1",
     "review_summary_api_v1_elders__elder_id__summaries__summary_id__review_post": (
         "SummaryReviewEnvelopeV1"
     ),
@@ -142,28 +148,9 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
         "FamilyReportListEnvelopeV1"
     ),
     "get_family_report_api_v1_family_reports__report_id__get": "FamilyReportEnvelopeV1",
-    "create_assignment_api_v1_internal_home_care_assignments_post": (
-        "CareAssignmentEnvelopeV1"
-    ),
+    "create_assignment_api_v1_internal_home_care_assignments_post": "CareAssignmentEnvelopeV1",
     "list_assignments_api_v1_home_care_assignments_get": "CareAssignmentListEnvelopeV1",
-    "get_assignment_api_v1_home_care_assignments__assignment_id__get": (
-MODEL_FILES.update(
-    {
-        "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
-        "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
-    }
-)
-SUCCESS_ENVELOPE_BY_OPERATION.update(
-    {
-        "register_agent_run_api_v1_internal_agent_runs_post": ("AgentRunRegistrationEnvelopeV1"),
-        "complete_agent_run_api_v1_internal_agent_runs__agent_run_id__complete_post": (
-            "AgentRunCompletionEnvelopeV1"
-        ),
-    }
-)
-
-        "CareAssignmentEnvelopeV1"
-    ),
+    "get_assignment_api_v1_home_care_assignments__assignment_id__get": ("CareAssignmentEnvelopeV1"),
     "confirm_assignment_api_v1_internal_home_care_assignments__assignment_id__confirm_post": (
         "CareAssignmentEnvelopeV1"
     ),
@@ -173,10 +160,15 @@ SUCCESS_ENVELOPE_BY_OPERATION.update(
     "complete_assignment_api_v1_home_care_assignments__assignment_id__complete_post": (
         "CareAssignmentEnvelopeV1"
     ),
+    "register_agent_run_api_v1_internal_agent_runs_post": "AgentRunRegistrationEnvelopeV1",
+    "complete_agent_run_api_v1_internal_agent_runs__agent_run_id__complete_post": (
+        "AgentRunCompletionEnvelopeV1"
+    ),
     "execute_tool_api_v1_internal_tools_execute_post": "ToolResultEnvelopeV1",
 }
 
 HTTP_METHODS = {"get", "post", "patch", "delete"}
+LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
 
 
 def replace_model_refs(node: object) -> None:
@@ -210,14 +202,16 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.2.0",
-        "summary": "Implemented Core Domain, consent, security and outbox APIs.",
+        "version": "1.3.0",
+        "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
         "description": (
             "Current executable Core API contract. Every protected operation "
             "re-evaluates tenant, elder, relationship or assignment scope. "
             "Cognito access tokens authenticate existing actors; the onboarding "
             "resolver separately accepts a verified Cognito ID token and never "
-            "treats persona intent as authorization."
+            "treats persona intent as authorization. LINE webhooks require a "
+            "raw-body HMAC signature; Core stores keyed identity digests and, "
+            "only for scheduled push, an authenticated encrypted destination."
         ),
     }
     for path in ("/health", "/ready"):
@@ -254,57 +248,84 @@ def main() -> None:
                 "verified email; claims do not directly grant any role or elder scope."
             ),
         },
+        "lineSignature": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Line-Signature",
+            "description": (
+                "Base64 HMAC-SHA256 over the unmodified request body using the "
+                "LINE Channel secret. It is not a bearer credential."
+            ),
+        },
     }
     components["responses"] = {
         "Unauthorized": {
-            "description": "Authentication required or authenticator unavailable.",
+            "description": "Authentication or webhook signature validation failed.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
         "Forbidden": {
             "description": "The actor is inactive or its role cannot perform the operation.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
         "NotFoundOrForbidden": {
             "description": "Resource missing or outside live authorization scope.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
         "Conflict": {
             "description": "State, version, or idempotency conflict.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
         "ValidationFailed": {
             "description": "Schema or semantic validation failed.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
         "Unavailable": {
             "description": "Required dependency unavailable.",
             "content": {
-                "application/json": {
-                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
-                }
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
             },
         },
     }
+
+    line_operation = document["paths"].get(LINE_WEBHOOK_PATH, {}).get("post")
+    if isinstance(line_operation, dict):
+        line_operation["description"] = (
+            "Validates the raw-body LINE signature, deduplicates durable domain "
+            "processing by webhookEventId, and consumes reply tokens at most once "
+            "only after the corresponding event transaction commits."
+        )
+        for parameter in line_operation.get("parameters", []):
+            if isinstance(parameter, dict) and parameter.get("name") == "X-Line-Signature":
+                parameter["required"] = True
+        line_operation["requestBody"] = {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "required": ["events"],
+                        "properties": {"events": {"type": "array", "items": {"type": "object"}}},
+                    }
+                }
+            },
+        }
+        line_operation["responses"]["400"] = {
+            "description": "The JSON body or webhook event collection is invalid.",
+            "content": {
+                "application/json": {"schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}}
+            },
+        }
 
     for path, path_item in document["paths"].items():
         for method, operation in path_item.items():
@@ -324,11 +345,12 @@ def main() -> None:
                         }
                 operation["responses"].pop("422", None)
             if path not in {"/health", "/ready"}:
-                operation["security"] = (
-                    [{"cognitoIdToken": []}]
-                    if path == "/api/v1/onboarding/resolve"
-                    else [{"bearerAuth": []}]
-                )
+                if path == "/api/v1/onboarding/resolve":
+                    operation["security"] = [{"cognitoIdToken": []}]
+                elif path == LINE_WEBHOOK_PATH:
+                    operation["security"] = [{"lineSignature": []}]
+                else:
+                    operation["security"] = [{"bearerAuth": []}]
                 operation["responses"].update(
                     {
                         "401": {"$ref": "#/components/responses/Unauthorized"},

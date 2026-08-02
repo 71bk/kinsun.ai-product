@@ -92,13 +92,9 @@ DATA_SCHEMA_FOR = {
     "onboarding-resolve-family-request.json": "domain/ResolveOnboardingRequestV1.json",
     "onboarding-resolve-response.json": "domain/ResolveOnboardingV1.json",
     "onboarding-resolve-family-response.json": "domain/ResolveOnboardingV1.json",
-    "onboarding-family-without-invitation-code.json": (
-        "domain/ResolveOnboardingRequestV1.json"
-    ),
+    "onboarding-family-without-invitation-code.json": ("domain/ResolveOnboardingRequestV1.json"),
     "onboarding-response-mismatched-status.json": "domain/ResolveOnboardingV1.json",
-    "family-invitation-create-request.json": (
-        "domain/CreateFamilyInvitationRequestV1.json"
-    ),
+    "family-invitation-create-request.json": ("domain/CreateFamilyInvitationRequestV1.json"),
     "family-invitation-create-duplicate-scope.json": (
         "domain/CreateFamilyInvitationRequestV1.json"
     ),
@@ -107,8 +103,21 @@ DATA_SCHEMA_FOR = {
     "family-invitation-list-response.json": "domain/FamilyInvitationListV1.json",
     "family-invitation-list-leaks-code.json": "domain/FamilyInvitationListV1.json",
     "family-invitation-revoked-response.json": "domain/FamilyInvitationStatusV1.json",
-    "family-invitation-revoke-leaks-redeemer.json": (
-        "domain/FamilyInvitationStatusV1.json"
+    "family-invitation-revoke-leaks-redeemer.json": ("domain/FamilyInvitationStatusV1.json"),
+    "line-link-challenge-create-request.json": ("domain/CreateLineLinkChallengeRequestV1.json"),
+    "line-link-challenge-create-extra-field.json": ("domain/CreateLineLinkChallengeRequestV1.json"),
+    "line-link-challenge-created-response.json": ("domain/LineLinkChallengeCreatedV1.json"),
+    "line-link-status-response.json": "domain/LineLinkStatusV1.json",
+    "line-link-status-leaks-subject.json": "domain/LineLinkStatusV1.json",
+    "line-link-challenge-status-response.json": ("domain/LineLinkChallengeStatusV1.json"),
+    "line-daily-notification-job-request.json": (
+        "domain/DailyLineNotificationJobRequestV1.json"
+    ),
+    "line-daily-notification-job-response.json": (
+        "domain/DailyLineNotificationJobResultV1.json"
+    ),
+    "line-daily-notification-job-leaks-content.json": (
+        "domain/DailyLineNotificationJobRequestV1.json"
     ),
 }
 
@@ -184,11 +193,7 @@ def check_openapi_document(path: Path) -> None:
     def external_refs(node):
         if isinstance(node, dict):
             for key, value in node.items():
-                if (
-                    key == "$ref"
-                    and isinstance(value, str)
-                    and not value.startswith("#")
-                ):
+                if key == "$ref" and isinstance(value, str) and not value.startswith("#"):
                     yield value
                 else:
                     yield from external_refs(value)
@@ -210,11 +215,7 @@ def check_openapi_document(path: Path) -> None:
 def _refs(node, *, local: bool, trail: str = "$"):
     if isinstance(node, dict):
         for key, value in node.items():
-            if (
-                key == "$ref"
-                and isinstance(value, str)
-                and value.startswith("#/") is local
-            ):
+            if key == "$ref" and isinstance(value, str) and value.startswith("#/") is local:
                 yield value, trail
             else:
                 yield from _refs(value, local=local, trail=f"{trail}.{key}")
@@ -236,15 +237,11 @@ def _check_yaml_refs(doc: dict, path: Path, contract_name: str) -> None:
     for ref, trail in _refs(doc, local=False):
         file_part = ref.split("#", 1)[0]
         if not file_part:
-            failures.append(
-                f"{contract_name}: malformed external $ref {ref} at {trail}"
-            )
+            failures.append(f"{contract_name}: malformed external $ref {ref} at {trail}")
             continue
         target = (path.parent / file_part).resolve()
         if not target.is_file():
-            failures.append(
-                f"{contract_name}: external $ref target missing at {trail}: {ref}"
-            )
+            failures.append(f"{contract_name}: external $ref target missing at {trail}: {ref}")
 
 
 def check_asyncapi() -> None:
@@ -261,19 +258,13 @@ def check_asyncapi() -> None:
             continue
         version = str(doc.get("asyncapi", ""))
         if not version.startswith("3."):
-            failures.append(
-                f"asyncapi {path.name}: version is {version!r}, expected 3.x"
-            )
+            failures.append(f"asyncapi {path.name}: version is {version!r}, expected 3.x")
         channels = doc.get("channels")
         operations = doc.get("operations")
         if not isinstance(channels, dict) or not channels:
-            failures.append(
-                f"asyncapi {path.name}: channels must be a non-empty object"
-            )
+            failures.append(f"asyncapi {path.name}: channels must be a non-empty object")
         if not isinstance(operations, dict) or not operations:
-            failures.append(
-                f"asyncapi {path.name}: operations must be a non-empty object"
-            )
+            failures.append(f"asyncapi {path.name}: operations must be a non-empty object")
         _check_yaml_refs(doc, path, f"asyncapi {path.name}")
         print(
             f"ok    asyncapi {path.name} "
@@ -285,9 +276,7 @@ def _semantic_example_errors(schema_rel: str, payload: dict) -> list[str]:
     """Validate cross-field invariants JSON Schema cannot compare numerically."""
     if schema_rel != "events/EventDeliveryFailureV1.json":
         return []
-    should_retry = (
-        payload["retryable"] and payload["attempt_count"] < payload["max_attempts"]
-    )
+    should_retry = payload["retryable"] and payload["attempt_count"] < payload["max_attempts"]
     expected = "RETRY" if should_retry else "DEAD_LETTER"
     if payload["disposition"] != expected:
         return [f"disposition must be {expected} for the attempt state"]
@@ -299,9 +288,7 @@ def check_examples(registry: Registry) -> None:
         for path in sorted((EXAMPLES / folder).glob("*.json")):
             schema_rel = DATA_SCHEMA_FOR.get(path.name)
             if schema_rel is None:
-                failures.append(
-                    f"{path.name}: no schema mapping declared in this validator"
-                )
+                failures.append(f"{path.name}: no schema mapping declared in this validator")
                 continue
 
             schema = json.loads((SCHEMAS / schema_rel).read_text(encoding="utf-8"))
@@ -313,9 +300,7 @@ def check_examples(registry: Registry) -> None:
             )
             schema_errors = list(validator.iter_errors(payload))
             semantic_errors = _semantic_example_errors(schema_rel, payload)
-            error_messages = [
-                error.message for error in schema_errors
-            ] + semantic_errors
+            error_messages = [error.message for error in schema_errors] + semantic_errors
 
             if expect_valid and error_messages:
                 failures.append(
@@ -327,11 +312,7 @@ def check_examples(registry: Registry) -> None:
                     f"{schema_rel} is too permissive"
                 )
             else:
-                verdict = (
-                    "accepted"
-                    if expect_valid
-                    else f"rejected ({error_messages[0][:60]})"
-                )
+                verdict = "accepted" if expect_valid else f"rejected ({error_messages[0][:60]})"
                 print(f"ok    example {folder}/{path.name}: {verdict}")
 
 
