@@ -20,7 +20,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-# 業務物件所在的 PostgreSQL schema（見 docs/smart_eldercare_schema_v0_1.sql）
+# 業務物件所在的 PostgreSQL schema（見 docs/project/smart_eldercare_schema_v0_1.sql）
 TARGET_SCHEMA = "eldercare_ai"
 
 # Alembic 版本表刻意留在 public，讓 baseline 可以安全地整個 drop 掉 TARGET_SCHEMA
