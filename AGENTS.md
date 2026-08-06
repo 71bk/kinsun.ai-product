@@ -22,8 +22,11 @@
     `apps/` 已依 ADR 0006 清空，不要把 `elder-web`／`care-web`／`family-web` 加回來。
   - `packages/shared`：前端與 legacy backend 共用的 TypeScript 型別；不是 Domain authority，
     跨服務形狀以 `contracts/` 為準。
-  其餘服務目錄（`speech-gateway`、`projection-worker`、`notification-worker`、
-  `report-worker`）仍是空殼。
+  - `services/speech-gateway`：ASR／TTS adapter 骨架（`asr.py`、`tts.py`、`sagemaker_asr.py`，
+    自帶 `pyproject.toml`／`uv.lock`／Dockerfile 與一個 contract boundary 測試）。**尚未接入
+    主線**，不得描述成可用的語音路徑。
+  `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
+  2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
 - **`legacy/backend`（原 `packages/backend`，2026-08-06 目錄重整搬移）與現有
   `infrastructure/lib/elderly-care-stack.ts` 已由
   [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 定為 legacy**：
@@ -37,7 +40,12 @@
   [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
   production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
   不代表 ECR push、Cognito callback、application deploy 或公開流量 gate 已完成。
-- 尚未建立 CI quality gate。
+- 尚未建立 CI quality gate。`.github/workflows-disabled/pr.yml` 是**未啟用的草稿**，GitHub
+  不會讀 `workflows-disabled/` 這個目錄名。它已知有路徑錯誤：`working-directory: infra`
+  應為 `infrastructure`、`infra/package-lock.json` 不存在、`verify_contract_live.py` 未先
+  啟動服務就呼叫。啟用前必須先修這些，否則一定紅。原 `deploy-dev.yml`／`deploy-staging.yml`
+  指向 ADR 0007 廢棄的 legacy stack 與錯誤 region（`ap-northeast-1`，staging 應為
+  `us-west-2`），已於 2026-08-06 移除。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
 - 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
 
@@ -120,6 +128,8 @@ Wave 順序：
   - resource state
   - time／purpose
 - 不信任 Client 或模型傳入的 Actor、Tenant、Elder、Assignment 或 Permission Scope。
+- 單一資源的「未授權」與「不存在」必須回一致的回應，避免以回應差異探測資源是否存在。
+- 失敗的授權不得產生資料修改、Outbox Event 或其他副作用。
 - Consent Purpose 必須分離，不得以單一總開關代替：
   - `BASIC_VOICE`
   - `TRANSCRIPT_STORAGE`
@@ -136,6 +146,8 @@ Wave 順序：
 - Neptune、OpenSearch、Cache 與 Agent Memory 是 Projection 或 Working State，必須可由正式資料重建。
 - 不從 Graph、Search 或模型輸出反推正式授權或正式狀態。
 - 正式寫入使用 Transactional Outbox；採 Outbox → EventBridge → 每個 Consumer 專屬 SQS／DLQ。
+  **正式寫入與 Outbox 寫入必須位於同一交易**，不得先 commit 再補發。
+- Projection 只接受已通過狀態、授權、同意與刪除檢查的正式資料。
 - 不使用 Database + Graph／Index／Event Bus 的無保護 Dual Write。
 - 非同步 Consumer 必須 Idempotent、可重試、可觀測，並在處理前重新檢查撤回、刪除與 Scope。
 - 長流程／人工流程使用顯式 State Machine；不得以隱含 Prompt 狀態代替 Domain State。
@@ -300,10 +312,64 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 
 - 在技術選型尚未核准前，不要自行決定或鎖定 Python Framework、Frontend Framework、Package Manager、AWS Region 或外部 Provider。IaC 已由 ADR 0007 選定 AWS CDK v2；staging region 固定 `us-west-2`，production region 仍待核准。
 - 若任務需要做出上述選擇，提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
-- Monorepo 已依文件 12 建立 `/apps`、`/services`、`/contracts`、`/infrastructure`（文件 12 稱
-  `/infra`，實際目錄名為 `infrastructure/`）、`/data`、`/evals`、`/tests`、`/ops`、`/scripts`、
-  `/packages`；另有 `/legacy`（ADR 0007 凍結的舊後端，見 §1）。在 Framework 與 Deployment
-  設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
+- Repository 結構（2026-08-06 目錄重整後的實際狀態，非文件 12 的原始骨架）：
+
+```text
+kinsun.ai/
+├── .github/               CI；workflows-disabled/pr.yml 是未啟用草稿，見 §1
+├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
+├── apps/                  刻意保持空；前端在 packages/frontend（ADR 0006）
+├── config/rag/            RAG 設定，agent-runtime 與 rag-ingestion 共用
+├── contracts/             OpenAPI、JSON Schema、valid/invalid examples
+├── data/                  RAG chunks、manifest、seed
+├── design-system/         MASTER.md：視覺、RWD、無障礙規範
+├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
+├── docs/
+│   ├── spec/              規格 .md／csv，含 origin/（.docx／.xlsx）與 json/（結構化擷取）
+│   ├── adr/               ADR
+│   ├── architecture/      架構文件
+│   ├── handover/          交接紀錄
+│   ├── ownership/         範圍與責任分工
+│   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
+│   ├── runbooks/          維運手冊
+│   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
+├── infrastructure/        AWS CDK v2 IaC（canonical，ADR 0007；文件 12 稱 /infra）
+├── legacy/backend/        ADR 0007 凍結的舊後端，已移出 npm workspace
+├── packages/
+│   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
+│   └── shared/            前端／legacy backend 共用 TypeScript 型別
+├── scripts/               Contract 與 repository 驗證腳本
+└── services/
+    ├── core-api/          正式 Domain Core 與 API
+    ├── agent-runtime/     受控 Agent Runtime
+    ├── rag-ingestion/     RAG ingestion 與 allowlist 建置
+    └── speech-gateway/    ASR／TTS adapter 骨架，未接入主線
+```
+
+- 文件 12 的 `/evals`、`/tests`、`/ops` 三個目錄從建立起就只有 `.gitkeep`，已於 2026-08-06
+  移除。**空目錄讀起來是「沒做完」而不是「有規劃」**；規劃寫在文件或 Kiro Spec，不要用空
+  目錄佔位。真的要建立時再依上表的層級加。
+- **`config/rag/` 不要搬。** 路徑寫死在 `agent-runtime/src/agent_runtime/settings.py`、
+  `agent-runtime/Dockerfile`、`Dockerfile.dockerignore`、`.env.example` 與
+  `tests/unit/test_container_contract.py`（有測試在守），且由 agent-runtime 與 rag-ingestion
+  共用。搬進任一服務底下都會讓另一個服務跨目錄取用。
+- 在 Framework 與 Deployment 設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
+
+### 分層規則
+
+- API route 只處理 HTTP 邊界、呼叫 service 並包裝 envelope。
+- Service 協調 domain、policy、repository 與 outbox，不組裝 HTTP 錯誤。
+- Policy 採 deny-by-default，正式授權資料必須由 server-side context 取得。
+- Repository 查詢必須明確攜帶 tenant scope。
+- ORM model 只負責資料映射；schema 變更由新的 Alembic revision 管理。
+- 外部 Provider／SDK 只能出現在 adapter 或 provider 邊界，不散入 domain 與 orchestration。
+- Contract 只描述已實作、可實際呼叫的介面；未實作設計放在 `docs/` 或 Kiro Spec。
+
+### 變更同步
+
+- Endpoint 或 envelope 改變時同步 contract、examples、live verification 與 divergence 文件。
+- Domain state 改變時同步 migration、tests、traceability 與必要文件。
+- 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威來源。
 - 目前本機基礎設施由 `docker-compose.yml`、`.env.example` 與 `docker/postgres/init/` 定義：
   - PostgreSQL 16 是本機交易資料庫。
   - `pgcrypto`、`citext` 由初始化腳本安裝。

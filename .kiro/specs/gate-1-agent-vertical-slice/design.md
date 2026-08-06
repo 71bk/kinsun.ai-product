@@ -47,7 +47,7 @@ WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent
 | Core | Auth、tenant/elder policy、Consent、Voice metadata、AgentRun／Tool、outbox foundation | purpose-aware voice gate、review/confirm commands、formal state＋outbox、Context retrieval |
 | Agent Runtime | bounded Companion、Safety、Context、Mock／Bedrock adapter、隔離測試已覆蓋 Event Candidate Tool lifecycle | voice-confirmed turn、Core↔Agent service identity、server-derived Tool scope、唯一 AgentRun authority、Memory proposal、trace/eval evidence |
 | Speech | 尚無 canonical runtime | provider-neutral adapter、ASR final／confidence、TTS fallback；先經 Owner decision |
-| Projection | transactional outbox foundation 已存在；relay／projection consumer 尚未實作，`projection-worker` 仍是空殼 | idempotent Event／Memory projection、tombstone/replay suppression、authorized reuse |
+| Projection | transactional outbox foundation 已存在；relay／projection consumer 尚未實作，`projection-worker` 尚未建立（空殼目錄已於 2026-08-06 移除） | idempotent Event／Memory projection、tombstone/replay suppression、authorized reuse |
 | Summary | Core contract/API 基礎，generation worker 尚缺 | verified-event-only generation、source evidence、review/rebuild |
 | Quality | service unit／contract tests | cross-service E2E、failure matrix、five-run evidence、CI gate |
 
