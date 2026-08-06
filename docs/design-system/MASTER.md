@@ -6,7 +6,7 @@
 適用範圍：長者端、專業照護端（日照／居服）、家屬端的視覺、互動與 RWD 規範
 
 > 本檔是**實作階段**的全域規範。建立任一頁面前先讀本檔；若
-> `design-system/pages/<page-name>.md` 存在，該檔的規則覆寫本檔，其餘一律以本檔為準。
+> `docs/design-system/pages/<page-name>.md` 存在，該檔的規則覆寫本檔，其餘一律以本檔為準。
 >
 > 本檔不取代 `docs/` 的產品規格。衝突時以 `docs/` 與 `AGENTS.md` 為準，
 > 並回頭修正本檔。
@@ -500,7 +500,7 @@ Withdrawn（`#DC2626` on `#FEF2F2` ＝ 4.41:1）都達不到本節要求的 4.5:
 ## 15. 相關檔案
 
 - 全頁面 HTML Demo：`docs/demo/ui/index.html`
-- 頁面覆寫：`design-system/pages/<page-name>.md`（目前無）
+- 頁面覆寫：`docs/design-system/pages/<page-name>.md`（目前無）
 - 頁面清單與優先級：`docs/spec/04…資訊架構、UX 與 User Flow v0.1.md` §五
 - 不可違反邊界：`AGENTS.md` §4
 - Public surface（登入前行銷／法遵頁）：文件 04 §五 22 頁清單未涵蓋，屬 Gate 1

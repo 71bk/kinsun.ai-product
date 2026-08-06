@@ -12,7 +12,7 @@ export interface LowConfidenceCardProps {
 }
 
 /**
- * Low Confidence state (design-system/MASTER.md §10.1): a full-screen card that
+ * Low Confidence state (docs/design-system/MASTER.md §10.1): a full-screen card that
  * asks 我聽到「…」，是這樣嗎？ before anything is treated as understood.
  * This is the Gate 1 rule that ASR must not pretend to have recognised
  * correctly (AGENTS.md §3 item 2) — so the elder gets three ways out, not two

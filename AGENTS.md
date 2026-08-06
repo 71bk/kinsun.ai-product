@@ -332,10 +332,10 @@ kinsun.ai/
 ├── config/rag/            RAG 設定，agent-runtime 與 rag-ingestion 共用
 ├── contracts/             OpenAPI、JSON Schema、valid/invalid examples
 ├── data/                  RAG chunks、manifest、seed
-├── design-system/         MASTER.md：視覺、RWD、無障礙規範
 ├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
 ├── docs/
 │   ├── spec/              規格 .md／csv，含 origin/（.docx／.xlsx）與 json/（結構化擷取）
+│   ├── design-system/     MASTER.md：視覺、RWD、無障礙規範
 │   ├── adr/               ADR
 │   ├── architecture/      架構文件
 │   ├── handover/          交接紀錄
@@ -412,7 +412,7 @@ kinsun.ai/
     樣式一律 CSS Modules ＋ `src/app/tokens.css` 的 CSS 變數。
   - TypeScript 側用 npm workspaces（根 `package.json` ＋ `package-lock.json`），
     與 Python 側的 uv 不共用。
-  - 視覺、RWD 與無障礙規範見 [`design-system/MASTER.md`](design-system/MASTER.md)，
+  - 視覺、RWD 與無障礙規範見 [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md)，
     建立任一頁面前先讀。元件內不得出現 raw hex（MASTER.md §14）。
   - 前端是 BFF：OAuth code exchange 與 access token 只存在伺服器端，
     token 不得進入瀏覽器可讀的位置。`src/app/backend/core/[...path]` 以 header
