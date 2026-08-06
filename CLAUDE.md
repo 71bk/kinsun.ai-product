@@ -1,8 +1,9 @@
 # 智慧長照 AI 陪伴系統 — 專案參考文件
 
-> 此文件整合自原 `detail/` 資料夾（2026-08-06 目錄重整後已併入 `docs/spec/json/`）中的可讀取檔案內容。
-> 原始 .docx 及 .xlsx 二進位檔案已全數轉檔為純文字，完整內容見 `docs/spec/*.md`（人類可讀）與
-> `docs/spec/json/*.json`（結構化資料），本文件下方「docs/spec/ 檔案清單」有逐檔連結。
+> 此文件是競賽命題與規格文件的精簡索引。
+> 規格全文見 [`docs/spec/`](docs/spec/)（17 份 Markdown）。原始 `.docx`／`.xlsx`、
+> 結構化 `.json` 與 Story Map `.csv` 已於 2026-08-06 移除——同內容四種格式無人維護，
+> 只有 `.md` 可 grep、可 diff、可在 GitHub 直接閱讀。需要原始檔用 `git log --follow`。
 
 ---
 
@@ -183,27 +184,27 @@
 
 ## docs/spec/ 檔案清單
 
-原 `detail/` 的 17 個 .docx/.xlsx 原始檔已轉檔為純文字 JSON（`docs/spec/json/*.json`，逐段落/表格結構化）與可讀 Markdown（`docs/spec/*.md`，供人直接閱讀）；原始二進位檔在 `docs/spec/origin/`。下表的連結指向對應的完整內容：
+`.md` 是規格的唯一保留格式，也是權威版本（`AGENTS.md` §2）。
 
-| # | 原始檔案 | 完整內容 |
-|---|---------|---------|
-| 1 | `docs/spec/origin/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.docx` | [docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md](docs/spec/01A智慧長照%20AI%20陪伴系統－使用者研究與%20Demo%20Persona%20v0.2.md) |
-| 2 | `docs/spec/origin/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx` | [docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md](docs/spec/01智慧長照%20AI%20陪伴系統－產品方向與範圍基準%20v1.2.md) |
-| 3 | `docs/spec/origin/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.docx` | [docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md](docs/spec/02智慧長照%20AI%20陪伴系統－使用者故事與驗收條件%20v1.3.2.md) |
-| 4 | `docs/spec/origin/03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx` | [docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md](docs/spec/03智慧長照%20AI%20陪伴系統－Story%20Map%20v1.2.md) |
-| 5 | `docs/spec/origin/04智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1.docx` | [docs/spec/04智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1.md](docs/spec/04智慧長照%20AI%20陪伴系統－資訊架構、UX%20與%20User%20Flow%20v0.1.md) |
-| 6 | `docs/spec/origin/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.docx` | [docs/spec/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.md](docs/spec/05智慧長照%20AI%20陪伴系統－核心工作流、狀態機與錯誤恢復%20v0.1.md) |
-| 7 | `docs/spec/origin/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.docx` | [docs/spec/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.md](docs/spec/06智慧長照%20AI%20陪伴系統－Domain%20Model、商業規則與資料生命週期%20v0.1.md) |
-| 8 | `docs/spec/origin/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.docx` | [docs/spec/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.md](docs/spec/07智慧長照%20AI%20陪伴系統－Security、Privacy、NFR%20與%20Threat%20Model%20v0.1.md) |
-| 9 | `docs/spec/origin/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.docx` | [docs/spec/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.md](docs/spec/08智慧長照%20AI%20陪伴系統－AWS%20系統架構、服務選型與%20ADR%20v0.1.md) |
-| 10 | `docs/spec/origin/09智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1.docx` | [docs/spec/09智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1.md](docs/spec/09智慧長照%20AI%20陪伴系統－Multi-Agent、Agentic%20Workflow%20與%20Context%20Engineering%20v0.1.md) |
-| 11 | `docs/spec/origin/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.docx` | [docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md](docs/spec/10智慧長照%20AI%20陪伴系統－API、Event、Tool%20與%20Data%20Contracts%20v0.1.md) |
-| 12 | `docs/spec/origin/11智慧長照 AI 陪伴系統－測試策略、Agent Evaluation 與品質門檻 v0.1.docx` | [docs/spec/11智慧長照 AI 陪伴系統－測試策略、Agent Evaluation 與品質門檻 v0.1.md](docs/spec/11智慧長照%20AI%20陪伴系統－測試策略、Agent%20Evaluation%20與品質門檻%20v0.1.md) |
-| 13 | `docs/spec/origin/12智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1.docx` | [docs/spec/12智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1.md](docs/spec/12智慧長照%20AI%20陪伴系統－實作計畫、環境、團隊分工與交付路線%20v0.1.md) |
-| 14 | `docs/spec/origin/13智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1.docx` | [docs/spec/13智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1.md](docs/spec/13智慧長照%20AI%20陪伴系統－Database%20Migration、Release%20與%20Rollback%20v0.1.md) |
-| 15 | `docs/spec/origin/14智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1.docx` | [docs/spec/14智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1.md](docs/spec/14智慧長照%20AI%20陪伴系統－Observability、營運與%20Incident%20Response%20v0.1.md) |
-| 16 | `docs/spec/origin/15智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1.docx` | [docs/spec/15智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1.md](docs/spec/15智慧長照%20AI%20陪伴系統－成功指標、Feedback、實驗與迭代%20v0.1.md) |
-| 17 | `docs/spec/origin/16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.docx` | [docs/spec/16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.md](docs/spec/16智慧長照%20AI%20陪伴系統－相容性、Deprecation、資料匯出與退場策略%20v0.1.md) |
-| 18 | `hackathon_challenge_ai_readable.json` | ✅ 已整合至本文件（上方各節） |
+| # | 規格文件 |
+|---|---------|
+| 1 | [docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md](docs/spec/01A智慧長照%20AI%20陪伴系統－使用者研究與%20Demo%20Persona%20v0.2.md) |
+| 2 | [docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md](docs/spec/01智慧長照%20AI%20陪伴系統－產品方向與範圍基準%20v1.2.md) |
+| 3 | [docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md](docs/spec/02智慧長照%20AI%20陪伴系統－使用者故事與驗收條件%20v1.3.2.md) |
+| 4 | [docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md](docs/spec/03智慧長照%20AI%20陪伴系統－Story%20Map%20v1.2.md) |
+| 5 | [docs/spec/04智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1.md](docs/spec/04智慧長照%20AI%20陪伴系統－資訊架構、UX%20與%20User%20Flow%20v0.1.md) |
+| 6 | [docs/spec/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.md](docs/spec/05智慧長照%20AI%20陪伴系統－核心工作流、狀態機與錯誤恢復%20v0.1.md) |
+| 7 | [docs/spec/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.md](docs/spec/06智慧長照%20AI%20陪伴系統－Domain%20Model、商業規則與資料生命週期%20v0.1.md) |
+| 8 | [docs/spec/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.md](docs/spec/07智慧長照%20AI%20陪伴系統－Security、Privacy、NFR%20與%20Threat%20Model%20v0.1.md) |
+| 9 | [docs/spec/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.md](docs/spec/08智慧長照%20AI%20陪伴系統－AWS%20系統架構、服務選型與%20ADR%20v0.1.md) |
+| 10 | [docs/spec/09智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1.md](docs/spec/09智慧長照%20AI%20陪伴系統－Multi-Agent、Agentic%20Workflow%20與%20Context%20Engineering%20v0.1.md) |
+| 11 | [docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md](docs/spec/10智慧長照%20AI%20陪伴系統－API、Event、Tool%20與%20Data%20Contracts%20v0.1.md) |
+| 12 | [docs/spec/11智慧長照 AI 陪伴系統－測試策略、Agent Evaluation 與品質門檻 v0.1.md](docs/spec/11智慧長照%20AI%20陪伴系統－測試策略、Agent%20Evaluation%20與品質門檻%20v0.1.md) |
+| 13 | [docs/spec/12智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1.md](docs/spec/12智慧長照%20AI%20陪伴系統－實作計畫、環境、團隊分工與交付路線%20v0.1.md) |
+| 14 | [docs/spec/13智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1.md](docs/spec/13智慧長照%20AI%20陪伴系統－Database%20Migration、Release%20與%20Rollback%20v0.1.md) |
+| 15 | [docs/spec/14智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1.md](docs/spec/14智慧長照%20AI%20陪伴系統－Observability、營運與%20Incident%20Response%20v0.1.md) |
+| 16 | [docs/spec/15智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1.md](docs/spec/15智慧長照%20AI%20陪伴系統－成功指標、Feedback、實驗與迭代%20v0.1.md) |
+| 17 | [docs/spec/16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.md](docs/spec/16智慧長照%20AI%20陪伴系統－相容性、Deprecation、資料匯出與退場策略%20v0.1.md) |
 
-原始 .docx/.xlsx 檔案在 `docs/spec/origin/`；`docs/spec/json/*.json` 為逐段落/表格的結構化擷取版本（供程式化解析），`docs/spec/*.md` 為人類可讀版本。本文件（CLAUDE.md）維持精簡索引，不內嵌完整逐字內容——需要細節時請開對應的 docs/spec/*.md。
+競賽命題（原 `hackathon_challenge_ai_readable.json`）已整合進本文件上方各節。
+本文件維持精簡索引，不內嵌完整逐字內容——需要細節請開對應的 `docs/spec/*.md`。
