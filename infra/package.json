@@ -10,8 +10,7 @@
     "synth:application": "cdk synth --app \"npx tsx bin/canonical-staging-application.ts\"",
     "diff": "cdk diff",
     "deploy": "cdk deploy KinsunCanonicalStagingFoundation",
-    "deploy:application": "cdk deploy --app \"npx tsx bin/canonical-staging-application.ts\" KinsunCanonicalStagingApplication",
-    "synth:legacy:audit": "cdk synth --app \"npx tsx bin/app.ts\""
+    "deploy:application": "cdk deploy --app \"npx tsx bin/canonical-staging-application.ts\" KinsunCanonicalStagingApplication"
   },
   "dependencies": {
     "aws-cdk-lib": "2.262.0",
