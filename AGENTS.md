@@ -64,13 +64,20 @@
 
 需求解讀依下列順序：
 
-1. `docs/spec/origin/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx`（人類可讀版：
-   `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`）：產品範圍、成功條件與非目標。
-2. `docs/spec/origin/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.docx`：Persona、情境與證據邊界。
-3. `docs/spec/origin/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.docx`：User Story 與 Acceptance Criteria。
-4. `docs/spec/origin/03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx`：Wave、Gate、Backlog 狀態與 Demo Traceability。
+1. `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`：產品範圍、成功條件與非目標。
+2. `docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md`：Persona、情境與證據邊界。
+3. `docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md`：User Story 與 Acceptance Criteria。
+4. `docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md`：Wave、Gate、Backlog 狀態與 Demo
+   Traceability（原 .xlsx 的六個工作表都保留成 markdown 表格）。
 5. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
 6. 其他 `docs/spec/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
+
+**`docs/spec/*.md` 是規格的權威版本。** 2026-08-06 之前同一份內容存在四種格式——`.md`、
+結構化 `.json`、Story Map 的 `.csv`、以及 `origin/` 的 `.docx`／`.xlsx` 原始檔，其中
+`origin/` 曾被指定為權威。四份無人同步維護，且 `.json` 沒有任何程式讀取、`.csv` 的內容
+已完整含在 Story Map 的 `.md` 裡，二進位原始檔則無法 grep 或 diff。現已只留 `.md`。
+需要原始檔時用 `git log --follow` 或 `git show <commit>:docs/spec/origin/<檔名>` 取回。
+Google Drive 上的團隊文件若與此處不一致，依下方衝突規則處理。
 
 若文件互相衝突：
 
@@ -334,7 +341,7 @@ kinsun.ai/
 ├── data/                  RAG chunks、manifest、seed
 ├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
 ├── docs/
-│   ├── spec/              規格 .md／csv，含 origin/（.docx／.xlsx）與 json/（結構化擷取）
+│   ├── spec/              17 份規格 Markdown（唯一保留格式，見 §2）
 │   ├── design-system/     MASTER.md：視覺、RWD、無障礙規範
 │   ├── adr/               ADR
 │   ├── architecture/      架構文件
