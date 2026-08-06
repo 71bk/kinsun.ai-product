@@ -1,4 +1,4 @@
-/* Design tokens — implements design-system/MASTER.md §3–§6, §8.2–8.3.
+/* Design tokens — implements docs/design-system/MASTER.md §3–§6, §8.2–8.3.
    Three layers: primitive -> semantic -> surface.
    Components MUST reference semantic/surface tokens only. No raw hex in components (§14). */
 
