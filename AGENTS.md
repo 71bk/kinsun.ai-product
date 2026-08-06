@@ -23,20 +23,26 @@
     `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
     ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
     2026-08-06 移除，警告改由本檔承載。要拆成獨立部署單元請先寫 ADR 推翻 0006。
-  - `packages/shared`：前端與 legacy backend 共用的 TypeScript 型別；不是 Domain authority，
+  - `packages/shared`：前端使用的 TypeScript 型別（原本也被已刪除的 legacy backend 共用，
+    現在只剩前端一個 consumer，可能有未使用的型別）；不是 Domain authority，
     跨服務形狀以 `contracts/` 為準。
   - `services/speech-gateway`：ASR／TTS adapter 骨架（`asr.py`、`tts.py`、`sagemaker_asr.py`，
     自帶 `pyproject.toml`／`uv.lock`／Dockerfile 與一個 contract boundary 測試）。**尚未接入
     主線**，不得描述成可用的語音路徑。
   `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
   2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
-- **`legacy/backend`（原 `packages/backend`，2026-08-06 目錄重整搬移）與現有
-  `infra/lib/elderly-care-stack.ts` 已由
-  [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 定為 legacy**：
-  不加入新功能，也不得部署現有 Lambda／DynamoDB／另一套 Cognito stack。一般 HTTP 主線
-  只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL` 的舊語音路徑僅是
-  預設關閉、限期至 2026-08-16 的 synthetic staging/demo 例外，不得進 production。
-  AWS CDK v2 已定為 canonical IaC 工具；`kinsun-staging-foundation-v1` 已建立 VPC、ECS
+- **ADR 0007 判定為 legacy 的那一整套已於 2026-08-06 刪除**（原 `packages/backend`
+  → `legacy/backend` 的 TypeScript 後端 155 檔、`infra/bin/app.ts`、`cdk.legacy.json`、
+  `infra/lib/elderly-care-stack.ts` 與其專屬 constructs `api`／`data-store`／
+  `voice-workflow`、`infra/lambda-stubs/`）。
+  [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 的決策不變，
+  只是被判死的程式碼不再留在工作樹；要查歷史用 `git log --follow`。
+  **唯一保留的是 `infra/lib/constructs/auth.ts`**——`.kiro/specs/backend-authentication/`
+  （Proposed）指名它是 Cognito resource 的擁有者。它目前沒有任何 stack import，是等待該
+  提案定案的獨立 construct，由 `infra/test/auth.test.ts` 直接測試。
+  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL`
+  的舊語音路徑僅是預設關閉、限期至 2026-08-16 的 synthetic staging/demo 例外，不得進
+  production。AWS CDK v2 已定為 canonical IaC 工具；`kinsun-staging-foundation-v1` 已建立 VPC、ECS
   cluster、ECR、Aurora、Secrets、Logs 與 IAM foundation。四個 runtime／migration image 與
   `kinsun-staging-application-v1` template 已可在本機建立／驗證，但 AWS 尚未建立 canonical
   ECS application task／service，不能描述成 application runtime 已上線。Frontend 已依
@@ -337,11 +343,10 @@ kinsun.ai/
 │   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
 │   ├── runbooks/          維運手冊
 │   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
-├── infra/                 AWS CDK v2 IaC（canonical，ADR 0007）
-├── legacy/backend/        ADR 0007 凍結的舊後端，已移出 npm workspace
+├── infra/                 AWS CDK v2 IaC（canonical staging stacks；ADR 0007）
 ├── packages/
 │   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
-│   └── shared/            前端／legacy backend 共用 TypeScript 型別
+│   └── shared/            前端使用的 TypeScript 型別
 ├── scripts/               Contract 與 repository 驗證腳本
 └── services/
     ├── core-api/          正式 Domain Core 與 API
