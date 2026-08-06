@@ -9,7 +9,7 @@ inclusion: always
 
 架構與技術決策：
 #[[file:AGENTS.md]]
-#[[file:docs/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.md]]
+#[[file:docs/spec/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.md]]
 
 ## 已實作
 

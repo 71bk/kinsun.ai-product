@@ -18,13 +18,13 @@ export interface VoiceWorkflowProps {
   commonEnv: Record<string, string>;
 }
 
-const backendSrc = (file: string) => path.join(__dirname, `../../../packages/backend/src/${file}`);
+const backendSrc = (file: string) => path.join(__dirname, `../../../legacy/backend/src/${file}`);
 const aslPath = backendSrc('workflow/asl/voice-interaction.asl.json');
 
 /**
  * Voice-interaction Step Functions Express workflow (design.md §協調層).
  * Builds the 5 AI-processing stage Lambdas, then loads the ASL template
- * from packages/backend/src/workflow/asl/voice-interaction.asl.json and
+ * from legacy/backend/src/workflow/asl/voice-interaction.asl.json and
  * substitutes its ${XxxFunctionArn} placeholders with the real function
  * ARNs via Fn::Sub — the ASL file is the single source of truth for the
  * state machine's control flow (see that file's own comment for the

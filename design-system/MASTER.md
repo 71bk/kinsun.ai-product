@@ -501,7 +501,7 @@ Withdrawn（`#DC2626` on `#FEF2F2` ＝ 4.41:1）都達不到本節要求的 4.5:
 
 - 全頁面 HTML Demo：`docs/demo/ui/index.html`
 - 頁面覆寫：`design-system/pages/<page-name>.md`（目前無）
-- 頁面清單與優先級：`docs/04…資訊架構、UX 與 User Flow v0.1.md` §五
+- 頁面清單與優先級：`docs/spec/04…資訊架構、UX 與 User Flow v0.1.md` §五
 - 不可違反邊界：`AGENTS.md` §4
 - Public surface（登入前行銷／法遵頁）：文件 04 §五 22 頁清單未涵蓋，屬 Gate 1
   之外的新增範圍，不代表已由該文件核准的資訊架構；實作位置

@@ -12,13 +12,20 @@ kinsun.ai/
 ├── data/                  資料相關資產邊界
 ├── design-system/         MASTER.md：視覺、RWD、無障礙規範
 ├── docs/                  產品、domain、security、architecture、ADR
+│   ├── spec/              規格 .md／csv，含 origin/（.docx／.xlsx 原始檔）與 json/（結構化擷取）
+│   ├── adr/                ADR
+│   ├── architecture/      架構文件
+│   ├── handover/          交接紀錄
+│   ├── ownership/         範圍與責任分工
+│   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
+│   └── project/           kiro 開發證據、交付狀態、DB schema 快照
 ├── evals/                 Agent evaluation 與報告
-├── infra/                 IaC 邊界；工具尚待決策
-├── ops/                   維運資產
+├── infrastructure/        AWS CDK v2 IaC（canonical，ADR 0007）
+├── legacy/                ADR 0007 凍結的舊程式碼（backend/，已移出 npm workspace）
+├── ops/                   維運資產（含 runbooks/）
 ├── packages/
 │   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
-│   ├── shared/            前端／backend 共用 TypeScript 型別
-│   └── backend/           第二套後端，尚未收斂；見 AGENTS.md §1
+│   └── shared/            前端／legacy backend 共用 TypeScript 型別
 ├── scripts/               Contract 與 repository 驗證腳本
 ├── services/
 │   ├── core-api/          正式 Domain Core 與 API

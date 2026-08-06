@@ -1,7 +1,7 @@
 # Contract 與文件 10 差異清單
 
 - 更新日期：2026-08-02
-- 文件基準：`docs/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
+- 文件基準：`docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
 - 執行基準：目前 `services/core-api` 與 `services/agent-runtime`
 
 `contracts/` 以目前可執行的介面為準；文件 10 同時包含目標設計。下列差異尚未全部收斂，Consumer 不得自行假設文件 10 已實作。

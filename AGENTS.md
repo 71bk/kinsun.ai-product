@@ -24,7 +24,8 @@
     跨服務形狀以 `contracts/` 為準。
   其餘服務目錄（`speech-gateway`、`projection-worker`、`notification-worker`、
   `report-worker`）仍是空殼。
-- **`packages/backend` 與現有 `infrastructure/lib/elderly-care-stack.ts` 已由
+- **`legacy/backend`（原 `packages/backend`，2026-08-06 目錄重整搬移）與現有
+  `infrastructure/lib/elderly-care-stack.ts` 已由
   [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 定為 legacy**：
   不加入新功能，也不得部署現有 Lambda／DynamoDB／另一套 Cognito stack。一般 HTTP 主線
   只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL` 的舊語音路徑僅是
@@ -44,12 +45,13 @@
 
 需求解讀依下列順序：
 
-1. `docs/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx`：產品範圍、成功條件與非目標。
-2. `docs/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.docx`：Persona、情境與證據邊界。
-3. `docs/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.docx`：User Story 與 Acceptance Criteria。
-4. `docs/03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx`：Wave、Gate、Backlog 狀態與 Demo Traceability。
-5. `docs/06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
-6. 其他 `docs/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
+1. `docs/spec/origin/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx`（人類可讀版：
+   `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`）：產品範圍、成功條件與非目標。
+2. `docs/spec/origin/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.docx`：Persona、情境與證據邊界。
+3. `docs/spec/origin/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.docx`：User Story 與 Acceptance Criteria。
+4. `docs/spec/origin/03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx`：Wave、Gate、Backlog 狀態與 Demo Traceability。
+5. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
+6. 其他 `docs/spec/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
 
 若文件互相衝突：
 
@@ -298,7 +300,10 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 
 - 在技術選型尚未核准前，不要自行決定或鎖定 Python Framework、Frontend Framework、Package Manager、AWS Region 或外部 Provider。IaC 已由 ADR 0007 選定 AWS CDK v2；staging region 固定 `us-west-2`，production region 仍待核准。
 - 若任務需要做出上述選擇，提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
-- Monorepo 已依文件 12 建立 `/apps`、`/services`、`/contracts`、`/infra`、`/data`、`/evals`、`/tests`、`/ops`、`/scripts`。在 Framework 與 Deployment 設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
+- Monorepo 已依文件 12 建立 `/apps`、`/services`、`/contracts`、`/infrastructure`（文件 12 稱
+  `/infra`，實際目錄名為 `infrastructure/`）、`/data`、`/evals`、`/tests`、`/ops`、`/scripts`、
+  `/packages`；另有 `/legacy`（ADR 0007 凍結的舊後端，見 §1）。在 Framework 與 Deployment
+  設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
 - 目前本機基礎設施由 `docker-compose.yml`、`.env.example` 與 `docker/postgres/init/` 定義：
   - PostgreSQL 16 是本機交易資料庫。
   - `pgcrypto`、`citext` 由初始化腳本安裝。

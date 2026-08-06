@@ -14,8 +14,8 @@ Browser
       → outbox relay／projection／summary workers（待實作）
 ```
 
-`packages/backend`、legacy Lambda／DynamoDB／Step Functions 與舊 WebSocket token flow 不在本
-設計內。OpenSearch、Neptune、cache 與 Agent memory 都是可重建 projection／working state，
+`legacy/backend`（原 `packages/backend`）、legacy Lambda／DynamoDB／Step Functions 與舊
+WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent memory 都是可重建 projection／working state，
 不能做授權或正式狀態來源。
 
 本文件只描述 Gate 1 目標與增量設計。已存在能力列為 baseline，不會在 `tasks.md` 補登完成；

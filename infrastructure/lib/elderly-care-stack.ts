@@ -58,7 +58,7 @@ export class ElderlyCareStack extends cdk.Stack {
     // result to downstream handlers via the API Gateway authorizer context.
     const authorizerFn = new lambdaNodejs.NodejsFunction(this, 'AuthorizerFn', {
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, '../../packages/backend/src/auth/authorizer.ts'),
+      entry: path.join(__dirname, '../../legacy/backend/src/auth/authorizer.ts'),
       handler: 'handler',
       environment: commonEnv,
       timeout: cdk.Duration.seconds(5),
@@ -71,7 +71,7 @@ export class ElderlyCareStack extends cdk.Stack {
     // Multiple routes share one entry file (e.g. events.ts exports both
     // listEventsHandler and updateEventHandler) — `handler` picks the named
     // export, so no per-route file split is needed.
-    const apiSrc = (file: string) => path.join(__dirname, `../../packages/backend/src/api/${file}`);
+    const apiSrc = (file: string) => path.join(__dirname, `../../legacy/backend/src/api/${file}`);
 
     const makeApiFn = (id: string, entry: string, exportName: string): lambdaNodejs.NodejsFunction => {
       const fn = new lambdaNodejs.NodejsFunction(this, id, {
@@ -120,7 +120,7 @@ export class ElderlyCareStack extends cdk.Stack {
     });
 
     // --- WebSocket handlers (connect/disconnect/control/audio) --------------
-    const workflowSrc = (file: string) => path.join(__dirname, `../../packages/backend/src/workflow/handlers/${file}`);
+    const workflowSrc = (file: string) => path.join(__dirname, `../../legacy/backend/src/workflow/handlers/${file}`);
     const wsEnv = { ...commonEnv, STATE_MACHINE_ARN: voiceWorkflow.stateMachine.attrArn };
 
     const makeWsFn = (id: string, file: string): lambdaNodejs.NodejsFunction => {
@@ -141,7 +141,7 @@ export class ElderlyCareStack extends cdk.Stack {
     // each turn, per design.md's "par 非同步處理" sequence-diagram branch.
     const postProcessingFn = new lambdaNodejs.NodejsFunction(this, 'PostProcessingFn', {
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, '../../packages/backend/src/workflow/stage-handlers/index.ts'),
+      entry: path.join(__dirname, '../../legacy/backend/src/workflow/stage-handlers/index.ts'),
       handler: 'postProcessingHandler',
       environment: commonEnv,
       timeout: cdk.Duration.seconds(30),
@@ -202,7 +202,7 @@ export class ElderlyCareStack extends cdk.Stack {
     // TTL-driven REMOVE events and fans the deletion out to S3/OpenSearch.
     const ttlCleanupFn = new lambdaNodejs.NodejsFunction(this, 'TtlCleanupFn', {
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, '../../packages/backend/src/retention/ttl-stream-handler.ts'),
+      entry: path.join(__dirname, '../../legacy/backend/src/retention/ttl-stream-handler.ts'),
       handler: 'handler',
       environment: { ...commonEnv, AUDIO_BUCKET_NAME: this.dataStore.audioBucket.bucketName },
       timeout: cdk.Duration.seconds(30),
@@ -222,7 +222,7 @@ export class ElderlyCareStack extends cdk.Stack {
     // --- Daily summary generation (B02.1) ------------------------------------
     const summaryGeneratorFn = new lambdaNodejs.NodejsFunction(this, 'SummaryGeneratorFn', {
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, '../../packages/backend/src/summary/handler.ts'),
+      entry: path.join(__dirname, '../../legacy/backend/src/summary/handler.ts'),
       handler: 'handler',
       environment: commonEnv,
       timeout: cdk.Duration.minutes(5),

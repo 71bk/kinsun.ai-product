@@ -6,7 +6,7 @@ inclusion: always
 
 安全規格與威脅模型：
 #[[file:AGENTS.md]]
-#[[file:docs/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.md]]
+#[[file:docs/spec/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.md]]
 
 ## 預設姿態
 
