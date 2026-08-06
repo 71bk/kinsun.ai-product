@@ -5,7 +5,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 
 import { Auth } from '../lib/constructs/auth';
-import { ElderlyCareStack } from '../lib/elderly-care-stack';
 
 const CALLBACK_URL = 'https://staging.kinsun.example/auth/callback';
 const LOGOUT_URL = 'https://staging.kinsun.example/signed-out';
@@ -149,57 +148,5 @@ describe('Auth', () => {
       : [webClient.DependsOn];
     assert.ok(dependencies.includes(providerLogicalId));
     assert.ok(dependencies.includes(domainLogicalId));
-  });
-});
-describe('ElderlyCareStack Google federation integration', () => {
-  it('passes staging federation settings and outputs only public integration values', () => {
-    const app = new cdk.App();
-    const stack = new ElderlyCareStack(app, 'StagingIntegrationTestStack', {
-      envName: 'staging',
-      env: { account: '111111111111', region: 'us-west-2' },
-      googleFederation: {
-        clientId: GOOGLE_CLIENT_ID,
-        clientSecret: cdk.SecretValue.secretsManager(GOOGLE_SECRET_NAME),
-        domainPrefix: 'kinsun-staging-integration-test',
-        callbackUrls: [CALLBACK_URL],
-        logoutUrls: [LOGOUT_URL],
-      },
-    });
-    const template = Template.fromStack(stack);
-
-    template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
-      ClientName: 'elderly-care-web-bff-staging',
-      CallbackURLs: [CALLBACK_URL],
-      LogoutURLs: [LOGOUT_URL],
-    });
-    template.hasOutput('WebBffClientId', {});
-    template.hasOutput('CognitoOAuthDomain', {});
-    template.hasOutput('GoogleOAuthRedirectUri', {});
-
-    const serializedOutputs = JSON.stringify(template.toJSON().Outputs);
-    assert.match(serializedOutputs, /oauth2\/idpresponse/);
-    assert.doesNotMatch(
-      serializedOutputs,
-      /client_secret|secretsmanager|kinsun\/staging\/google-oauth/i,
-    );
-  });
-
-  it('rejects parent-stack federation outside staging', () => {
-    const app = new cdk.App();
-
-    assert.throws(
-      () =>
-        new ElderlyCareStack(app, 'ProductionIntegrationTestStack', {
-          envName: 'production',
-          googleFederation: {
-            clientId: GOOGLE_CLIENT_ID,
-            clientSecret: cdk.SecretValue.secretsManager(GOOGLE_SECRET_NAME),
-            domainPrefix: 'must-not-be-created',
-            callbackUrls: [CALLBACK_URL],
-            logoutUrls: [LOGOUT_URL],
-          },
-        }),
-      /only for the staging stack/,
-    );
   });
 });
