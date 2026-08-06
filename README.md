@@ -9,7 +9,8 @@ Steering 與 v1 Hooks：
 
 - [`.kiro/specs/core-api-foundation/`](.kiro/specs/core-api-foundation/)：requirements、design、
   tasks 與 task execution metadata。
-- [`.kiro/steering/`](.kiro/steering/)：產品、技術、結構、安全與人工確認規則。
+- [`.kiro/steering/`](.kiro/steering/)：只轉發 `AGENTS.md`，不重述規則。原本的 5 個
+  steering 檔已於 2026-08-06 併回 `AGENTS.md`，避免兩份規則互相漂移。
 - [`.kiro/hooks/`](.kiro/hooks/)：Spec traceability、測試、migration 與文件同步檢查。
 - [`docs/project/kiro-development-evidence.md`](docs/project/kiro-development-evidence.md)：
   commit provenance、使用方式與證據邊界。
