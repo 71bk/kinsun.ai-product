@@ -1,10 +1,13 @@
 # AWS infrastructure status
 
-> **Do not deploy the current `ElderlyCareStack`.**
+ADR 0007 選定 AWS CDK v2 作為 canonical IaC 工具。本目錄曾同時存在一套凍結的
+Lambda／DynamoDB legacy stack（`ElderlyCareStack`，會建立另一套 Cognito，與目前
+Next.js BFF → Python Core／Aurora → Agent Runtime 主線不相容）；該 stack、其專屬
+constructs 與 `bin/app.ts`／`cdk.legacy.json` 已於 2026-08-06 連同 `legacy/backend`
+一併刪除。要查歷史用 `git log --follow`。
 
-ADR 0007 選定 AWS CDK v2 作為 canonical IaC 工具，但本目錄現有 stack 是凍結的
-Lambda／DynamoDB legacy implementation，會建立另一套 Cognito，與目前
-Next.js BFF → Python Core／Aurora → Agent Runtime 主線不相容。
+現在只剩 canonical staging 那一套。`infra/lib/constructs/auth.ts` 是唯一保留的舊
+construct，目前沒有任何 stack import——見 `AGENTS.md` §1。
 
 `cdk.json` 的預設 app 已切到 asset-free 的 canonical staging foundation；它只建立
 VPC、ECR、ECS cluster、Aurora、Secrets、Logs、IAM roles 與 external-resource references，
@@ -36,7 +39,6 @@ External Cognito app-client reference 已指向 `kinsun-web-bff-staging`；
 目前允許：
 
 - `npm run synth`／`npm run deploy` 操作 canonical staging foundation。
-- `npm run synth:legacy:audit` 只做 legacy template 的唯讀稽核。
 - `npm run synth:application` 產生初始 `desiredCount=0` 的 application template。
 - `scripts/build_staging_images.ps1` 建立四個 Linux/amd64、non-root 本機 image；Frontend 的
   consent policy version 必須在 `next build` 時傳入並記錄於 OCI label。
