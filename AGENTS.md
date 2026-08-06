@@ -408,6 +408,13 @@ kinsun.ai/
     驗證失敗。`.gitattributes` 必須維持
     `services/core-api/alembic/versions/sql/*.sql text eol=lf`；遇到 checksum 不符時，
     先檢查並將工作樹換行正規化為 LF，不得修改凍結 SQL 內容或預期 checksum 來讓驗證通過。
+  - `docs/project/smart_eldercare_schema_v0_1.sql` 與 baseline **逐位元相同**
+    （122058 bytes），依 ADR 0002 §63 保留為設計產出物與 ER 圖匯入來源（`COMMENT ON
+    TABLE／COLUMN` 匯進 DBeaver／DataGrip 可顯示欄位說明）。它**不是** schema 權威——
+    §9「不建立第二份 schema 作為競爭權威來源」仍然適用，要改 schema 一律新增 Alembic
+    revision。2026-08-06 前它沒有 `.gitattributes` 保護，Windows 工作樹上是 CRLF
+    （123925 bytes），與 ADR 0002 宣稱的逐位元相同不符；現已補上
+    `docs/project/*.sql text eol=lf`。兩份若出現實質差異，以 Alembic baseline 為準。
   - ORM model 的 Python 屬性統一是 `id`，實際對應各表自己的 PK 欄位（`__pk_name__`）。
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
