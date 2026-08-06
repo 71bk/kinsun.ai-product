@@ -19,7 +19,10 @@
   - `packages/frontend`：**唯一的前端**，單一 multi-role PWA，Next.js 16 App Router + React 19，
     同時是 BFF（Cognito OAuth 與 access token 留在伺服器端，反向代理 core-api）
     （[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
-    `apps/` 已依 ADR 0006 清空，不要把 `elder-web`／`care-web`／`family-web` 加回來。
+    前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
+    `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
+    ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
+    2026-08-06 移除，警告改由本檔承載。要拆成獨立部署單元請先寫 ADR 推翻 0006。
   - `packages/shared`：前端與 legacy backend 共用的 TypeScript 型別；不是 Domain authority，
     跨服務形狀以 `contracts/` 為準。
   - `services/speech-gateway`：ASR／TTS adapter 骨架（`asr.py`、`tts.py`、`sagemaker_asr.py`，
@@ -28,7 +31,7 @@
   `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
   2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
 - **`legacy/backend`（原 `packages/backend`，2026-08-06 目錄重整搬移）與現有
-  `infrastructure/lib/elderly-care-stack.ts` 已由
+  `infra/lib/elderly-care-stack.ts` 已由
   [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 定為 legacy**：
   不加入新功能，也不得部署現有 Lambda／DynamoDB／另一套 Cognito stack。一般 HTTP 主線
   只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL` 的舊語音路徑僅是
@@ -41,9 +44,11 @@
   production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
   不代表 ECR push、Cognito callback、application deploy 或公開流量 gate 已完成。
 - 尚未建立 CI quality gate。`.github/workflows-disabled/pr.yml` 是**未啟用的草稿**，GitHub
-  不會讀 `workflows-disabled/` 這個目錄名。它已知有路徑錯誤：`working-directory: infra`
-  應為 `infrastructure`、`infra/package-lock.json` 不存在、`verify_contract_live.py` 未先
-  啟動服務就呼叫。啟用前必須先修這些，否則一定紅。原 `deploy-dev.yml`／`deploy-staging.yml`
+  不會讀 `workflows-disabled/` 這個目錄名。它已知有問題：`infra/package-lock.json` 不存在
+  （`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）、
+  `verify_contract_live.py` 未先啟動服務就呼叫。啟用前必須先修這些，否則一定紅。
+  （`working-directory: infra` 曾經是錯的，2026-08-06 目錄由 `infrastructure/` 改名為
+  `infra/` 後已正確。）原 `deploy-dev.yml`／`deploy-staging.yml`
   指向 ADR 0007 廢棄的 legacy stack 與錯誤 region（`ap-northeast-1`，staging 應為
   `us-west-2`），已於 2026-08-06 移除。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
@@ -318,7 +323,6 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 kinsun.ai/
 ├── .github/               CI；workflows-disabled/pr.yml 是未啟用草稿，見 §1
 ├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
-├── apps/                  刻意保持空；前端在 packages/frontend（ADR 0006）
 ├── config/rag/            RAG 設定，agent-runtime 與 rag-ingestion 共用
 ├── contracts/             OpenAPI、JSON Schema、valid/invalid examples
 ├── data/                  RAG chunks、manifest、seed
@@ -333,7 +337,7 @@ kinsun.ai/
 │   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
 │   ├── runbooks/          維運手冊
 │   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
-├── infrastructure/        AWS CDK v2 IaC（canonical，ADR 0007；文件 12 稱 /infra）
+├── infra/                 AWS CDK v2 IaC（canonical，ADR 0007）
 ├── legacy/backend/        ADR 0007 凍結的舊後端，已移出 npm workspace
 ├── packages/
 │   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
@@ -346,6 +350,11 @@ kinsun.ai/
     └── speech-gateway/    ASR／TTS adapter 骨架，未接入主線
 ```
 
+- **分類軸線是 runtime／toolchain，不是 app／library。** Python 服務進 `services/`，npm
+  workspace 成員進 `packages/`（根 `package.json` 的 `workspaces` 字面上就是
+  `["packages/*", "infra"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
+  慣例**——這個 repo 從未採用它，證據是 `services/core-api` 同樣是可部署應用卻也不在
+  `apps/`。文件 12 的 `/apps` 是被 ADR 0006 廢掉的三-app 方案殘骸，已於 2026-08-06 移除。
 - 文件 12 的 `/evals`、`/tests`、`/ops` 三個目錄從建立起就只有 `.gitkeep`，已於 2026-08-06
   移除。**空目錄讀起來是「沒做完」而不是「有規劃」**；規劃寫在文件或 Kiro Spec，不要用空
   目錄佔位。真的要建立時再依上表的層級加。
