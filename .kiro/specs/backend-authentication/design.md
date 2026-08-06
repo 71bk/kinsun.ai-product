@@ -1,5 +1,16 @@
 # 技術設計：後端登入與註冊系統
 
+> **路徑註記（2026-08-06 加註，未變更提案內容）**
+>
+> `infrastructure/` 目錄已於 2026-08-06 改名為 `infra/`。**本文件內所有 `infrastructure/`
+> 一律指今日的 `infra/`**，包含 `infrastructure/lib/constructs/auth.ts`（今為
+> `infra/lib/constructs/auth.ts`）。
+>
+> ⚠️ 原文提到的「已移除的 `infra/` CDK scaffold」是更早存在、與今日 `infra/` **無關**的
+> 另一個目錄。兩者同名但不是同一個東西。
+>
+> 本註記只說明路徑對應，不改變本提案的任何決策、邊界或核准狀態。
+
 ## 0. 決策狀態
 
 本文件是 **Proposed** 設計，不代表 Cognito、Google federation、AWS CDK、AWS Region／Account／Environment 或 DynamoDB／KMS Session Store 已獲 Owner 核准，也不代表下述元件已實作。Repository 目前只有既有 `infrastructure/lib/constructs/auth.ts` Cognito scaffold、Core Cognito 抽象邊界，以及 Next.js BFF access-token cookie seam；concrete token verifier、Google federation、OAuth callback／refresh、server-side Auth Session Store 與正式部署仍是缺口。
