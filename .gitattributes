@@ -5,3 +5,4 @@
 docker/**/*.sql text eol=lf
 docker-compose.yml text eol=lf
 services/core-api/alembic/versions/sql/*.sql text eol=lf
+docs/project/*.sql text eol=lf
