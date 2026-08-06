@@ -1,5 +1,15 @@
 # 實作任務：後端登入與註冊系統
 
+> **路徑註記（2026-08-06 加註，未變更提案內容）**
+>
+> `infrastructure/` 目錄已於 2026-08-06 改名為 `infra/`。**本文件內所有 `infrastructure/`
+> 一律指今日的 `infra/`。**
+>
+> ⚠️ 原文提到的「已移除的 `infra/` CDK scaffold」是更早存在、與今日 `infra/` **無關**的
+> 另一個目錄。兩者同名但不是同一個東西。
+>
+> 本註記只說明路徑對應，不改變本提案的任何決策、邊界或核准狀態。
+
 > 狀態：Proposed。若 Owner 核准本提案，canonical infrastructure 為`infrastructure/`，Cognito resource ownership只在`infrastructure/lib/constructs/auth.ts`；其他`infrastructure/`檔案可做stack/config/IAM/AuthSessionStore wiring。
 >
 > 執行原則：嚴格依依賴順序；Phase 0 的 Owner／ADR Gate 核准前不得開始資源或產品實作。每個Phase validation gate通過後才能進下一Phase。Google provider/public entry全程feature-gated，直到Staging Gate通過。任務中的測試是完成條件，不代表規格階段已修改程式碼。
