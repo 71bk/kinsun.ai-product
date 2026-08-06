@@ -1,6 +1,6 @@
 /**
  * Placeholder integration target for routes whose real Lambda hasn't been
- * wired into the CDK stack yet. Once packages/backend/src/handlers/* exists
+ * wired into the CDK stack yet. Once legacy/backend/src/handlers/* exists
  * for a route, pass it into Api's props (restHandlers / wsConnectFn / etc.)
  * instead of leaving it on this stub.
  */

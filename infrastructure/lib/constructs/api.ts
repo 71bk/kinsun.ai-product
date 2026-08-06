@@ -12,7 +12,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 export interface ApiProps {
   envName: string;
   table: dynamodb.ITable;
-  /** Lambda Authorizer for REST — wired once packages/backend/src/auth/authorizer.ts exists (task 2). */
+  /** Lambda Authorizer for REST — wired once legacy/backend/src/auth/authorizer.ts exists (task 2). */
   authorizerFn?: lambda.IFunction;
   /** WebSocket $connect/$disconnect/audio/control handlers — wired in task 4 (Router Lambda). */
   wsConnectFn?: lambda.IFunction;

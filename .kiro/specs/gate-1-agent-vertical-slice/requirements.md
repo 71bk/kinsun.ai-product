@@ -5,15 +5,15 @@
 本 Spec 定義 `kinsun.ai` 第一條 canonical Gate 1 Vertical Slice 的**待實作增量**。它將既有產品、
 Domain、Security 與 Test 規格轉成可執行工作，不取代下列權威來源：
 
-1. `docs/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`
-2. `docs/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md`
-3. `docs/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md`
-4. `docs/05`、`docs/06`、`docs/07`、`docs/10`、`docs/11`
+1. `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`
+2. `docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md`
+3. `docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md`
+4. `docs/spec/05`、`docs/spec/06`、`docs/spec/07`、`docs/spec/10`、`docs/spec/11`
 5. `AGENTS.md` 與 ADR 0007
 
 尚未實作的 endpoint、event 或 schema 只留在本 Spec；實作完成前不得寫入 `contracts/`。
-舊 `.kiro/specs/elderly-care-ai-companion/tasks.legacy.md`、`packages/backend` 與 legacy
-Lambda／DynamoDB stack 不屬於本 Spec 的完成證據。
+舊 `.kiro/specs/elderly-care-ai-companion/tasks.legacy.md`、`legacy/backend`（原
+`packages/backend`）與 legacy Lambda／DynamoDB stack 不屬於本 Spec 的完成證據。
 
 **狀態：Draft，需完成 Requirements Review 與 Owner Decisions 後才執行 tasks。**
 
@@ -88,8 +88,8 @@ worker、跨服務 E2E 與 CI quality gate。
 6. WHEN 正式語音連線被建立，Core SHALL 核發短效、單次、綁 actor／tenant／elder／purpose 的
    Voice Ticket；Access Token 與 ID Token SHALL NOT 出現在 URL、browser-readable storage 或
    WebSocket query string。
-7. THE SYSTEM SHALL NOT 對 `packages/backend`、legacy Lambda／DynamoDB／Step Functions stack
-   新增功能或正式寫入，也 SHALL NOT 建立 DynamoDB＋Aurora dual write。
+7. THE SYSTEM SHALL NOT 對 `legacy/backend`（原 `packages/backend`）、legacy Lambda／DynamoDB／
+   Step Functions stack 新增功能或正式寫入，也 SHALL NOT 建立 DynamoDB＋Aurora dual write。
 8. IF actor、tenant、elder、assignment、relationship、purpose、service identity 或 resource state
    無法由可信 context 證明，THEN Core 與 Agent Runtime SHALL deny by default，且不得產生 domain
    write、outbox 或 Tool side effect。

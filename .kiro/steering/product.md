@@ -10,8 +10,8 @@ kinsun.ai 是 Voice-first 智慧長照 AI 陪伴系統，服務長者、照服�
 #[[file:AGENTS.md]]
 
 產品範圍與 Persona：
-#[[file:docs/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md]]
-#[[file:docs/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md]]
+#[[file:docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md]]
+#[[file:docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md]]
 
 ## 核心定位
 

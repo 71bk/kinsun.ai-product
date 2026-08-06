@@ -11,8 +11,8 @@ Steering 與 v1 Hooks：
   tasks 與 task execution metadata。
 - [`.kiro/steering/`](.kiro/steering/)：產品、技術、結構、安全與人工確認規則。
 - [`.kiro/hooks/`](.kiro/hooks/)：Spec traceability、測試、migration 與文件同步檢查。
-- [`docs/kiro-development-evidence.md`](docs/kiro-development-evidence.md)：commit provenance、
-  使用方式與證據邊界。
+- [`docs/project/kiro-development-evidence.md`](docs/project/kiro-development-evidence.md)：
+  commit provenance、使用方式與證據邊界。
 
 歷史 Spec 是開發過程證據，不取代目前的 `AGENTS.md`、產品文件、contracts 與 ADR。
 
@@ -214,7 +214,7 @@ table 中目前只有 33 張有 SQLAlchemy model；autogenerate 會把未映射�
 
 ### baseline 與 `docs/` 那份 SQL 的關係
 
-[`docs/smart_eldercare_schema_v0_1.sql`](docs/smart_eldercare_schema_v0_1.sql) 是設計產出物，
+[`docs/project/smart_eldercare_schema_v0_1.sql`](docs/project/smart_eldercare_schema_v0_1.sql) 是設計產出物，
 也是匯入 DBeaver／DataGrip 看 ER 圖的來源。它的一份逐位元副本被凍結在
 `services/core-api/alembic/versions/sql/` 底下，**那份才是實際套用到資料庫的權威版本**，
 並且會在每次 upgrade 前驗證 SHA-256。

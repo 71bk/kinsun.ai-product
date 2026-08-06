@@ -6,8 +6,8 @@ inclusion: always
 
 Domain state 與生命週期：
 #[[file:AGENTS.md]]
-#[[file:docs/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.md]]
-#[[file:docs/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.md]]
+#[[file:docs/spec/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.md]]
+#[[file:docs/spec/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.md]]
 
 ## 不可繞過的 Gate
 
