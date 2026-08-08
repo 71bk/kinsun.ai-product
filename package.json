@@ -5,7 +5,7 @@
   "description": "智慧長照 AI 陪伴系統 — voice-first elder-care AI companion",
   "workspaces": [
     "packages/*",
-    "infrastructure"
+    "infra"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -17,17 +17,90 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "fast-check": "^3.19.0",
+    "postcss": "8.5.18",
     "prettier": "^3.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.35.3",
     "typescript": "^5.5.4",
     "vitest": "^1.6.0"
   },
+  "overrides": {
+    "next@16.2.12": {
+      "postcss": "8.5.18",
+      "sharp": "0.35.3"
+    }
+  },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.9.0"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "tabWidth": 2
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es2022": true
+    },
+    "ignorePatterns": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.next/**",
+      "**/cdk.out/**"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ],
+      "@typescript-eslint/no-explicit-any": "warn"
+    },
+    "overrides": [
+      {
+        "files": [
+          "packages/frontend/src/**/*.{ts,tsx}"
+        ],
+        "rules": {
+          "no-restricted-syntax": [
+            "error",
+            {
+              "selector": "Literal[value=/#(?:[0-9a-fA-F]{3,4}){1,2}\\b/]",
+              "message": "不得在元件內寫 raw hex（docs/design-system/MASTER.md §14）。改用 app/tokens.css 的 var(--color-*)；需要新色階時加在 primitive 層，不要就地發明顏色。"
+            },
+            {
+              "selector": "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{3,4}){1,2}\\b/]",
+              "message": "同上：樣板字串裡也不得出現 raw hex（docs/design-system/MASTER.md §14）。"
+            }
+          ]
+        }
+      }
+    ]
   }
 }

@@ -7,7 +7,7 @@ export interface MicPermissionGuideProps {
 }
 
 /**
- * Plain-language mic-permission guidance (A01.3, design-system/MASTER.md §10.1
+ * Plain-language mic-permission guidance (A01.3, docs/design-system/MASTER.md §10.1
  * Permission Denied — 附白話步驟). Tokens only, no raw hex (§14). The retry
  * button here is deliberately `secondary` (outline): the record button is
  * already the one filled button on this screen (§8.1).

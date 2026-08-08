@@ -1,5 +1,5 @@
-import { normalizeAccessToken } from './auth-cookie';
 import type { CognitoTokenSet } from './cognito-oauth';
+import { logAuthDiagnostic } from './auth-diagnostics';
 import type { OAuthTransaction } from './oauth-transaction';
 
 const CORE_ONBOARDING_TIMEOUT_MS = 10_000;
@@ -64,16 +64,6 @@ function coreOnboardingUrl(): URL {
   return target;
 }
 
-function coreMeUrl(): URL {
-  const coreBase = safeHttpUrl(process.env.CORE_API_INTERNAL_URL);
-  if (!coreBase || coreBase.search || coreBase.hash) {
-    throw new Error('Core API endpoint is unavailable');
-  }
-  const target = new URL('/api/v1/me', coreBase);
-  if (target.origin !== coreBase.origin) throw new Error('Core API endpoint is unavailable');
-  return target;
-}
-
 /**
  * Resolve a new elder or invited family member in Core. It deliberately
  * receives the ID token only in this server-side call and never stores it.
@@ -111,31 +101,11 @@ export async function redeemCoreOnboarding(
   });
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as unknown;
-    console.error('[auth] Core onboarding rejected', {
+    logAuthDiagnostic('Core onboarding rejected', {
       status: response.status,
       reason_code: safeReasonCode(payload),
       ...idTokenClaimDiagnostics(tokenSet.idToken),
     });
     throw new Error('Core onboarding redemption failed');
-  }
-}
-
-/**
- * LINE sign-in is allowed only for a Cognito subject that Core already maps
- * to an active Actor. This endpoint never creates or merges Actor records.
- */
-export async function requireExistingCoreActor(rawAccessToken: unknown): Promise<void> {
-  const accessToken = normalizeAccessToken(rawAccessToken);
-  if (!accessToken) throw new Error('Cognito access token is unavailable');
-  const response = await fetch(coreMeUrl(), {
-    method: 'GET',
-    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-    redirect: 'error',
-    signal: AbortSignal.timeout(CORE_ONBOARDING_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    console.error('[auth] Existing Core Actor check rejected', { status: response.status });
-    throw new Error('Existing Core Actor is required');
   }
 }

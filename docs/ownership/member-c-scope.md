@@ -24,7 +24,7 @@
 | Prompt Registry | 未開始 |
 | OpenSearch Retrieval | 第一版 staging adapter／contract；AWS staging 實跑尚未完成 |
 | Neptune Graph Projection | 未開始 |
-| Agent／RAG／Graph Evaluation | 未開始（`evals/` 尚無內容） |
+| Agent／RAG／Graph Evaluation | 未開始（原 `evals/` 空骨架已於 2026-08-06 移除；要做時再建立） |
 
 程式在 [`services/agent-runtime/`](../../services/agent-runtime/)，
 契約在 [`contracts/schemas/agent/`](../../contracts/schemas/agent/) 與

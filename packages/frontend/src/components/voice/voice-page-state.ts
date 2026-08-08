@@ -1,7 +1,7 @@
 import type { RecordingState } from '@elderly-care/shared';
 
 /**
- * The 9 states design-system/MASTER.md §10.1 requires of the elder voice page.
+ * The 9 states docs/design-system/MASTER.md §10.1 requires of the elder voice page.
  * `RecordingState` (shared) is the wire protocol the backend sends — only 4 of
  * these. The rest are resolved client-side: `offline` from navigator.onLine,
  * `timeout` from a local timer, `permissionDenied` from the recorder, and

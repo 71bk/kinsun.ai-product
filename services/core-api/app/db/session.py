@@ -7,13 +7,17 @@ ServiceUnavailableError (503) when the database engine is not ready.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncGenerator
 
 from fastapi import Depends
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ServiceUnavailableError
 from app.db.engine import DatabaseEngine
+
+logger = logging.getLogger(__name__)
 
 # Module-level reference set during application startup.
 _db_engine: DatabaseEngine | None = None
@@ -44,10 +48,12 @@ async def get_db_session(
 ) -> AsyncGenerator[AsyncSession, None]:
     """Yield a request-scoped async session.
 
-    - Checks ``db_engine.is_ready`` before yielding — raises
-      ``ServiceUnavailableError`` (HTTP 503) if the database is unavailable.
+    - If the engine is not ready, performs one bounded single-flight recovery
+      check before raising ``ServiceUnavailableError`` (HTTP 503).
     - Auto-commits on success.
     - Auto-rolls back on exception, then re-raises.
+    - Converts an invalidated database connection to a controlled 503 without
+      retrying the request transaction.
 
     Usage as a FastAPI dependency::
 
@@ -56,12 +62,31 @@ async def get_db_session(
             ...
     """
     if not db_engine.is_ready:
-        raise ServiceUnavailableError("Database is unavailable")
+        try:
+            recovered = await db_engine.recover_connectivity()
+        except Exception:
+            # Keep unexpected dependency failures out of request logs; exception
+            # values from database libraries can contain connection metadata.
+            logger.warning("Database readiness recovery failed")
+            recovered = False
+        if not recovered:
+            raise ServiceUnavailableError("Database is unavailable")
 
     async with db_engine.session_factory() as session:
         try:
             yield session
             await session.commit()
-        except Exception:
-            await session.rollback()
+        except Exception as exc:
+            try:
+                await session.rollback()
+            except Exception:
+                # A disconnected session often cannot roll back. Preserve the
+                # original failure and avoid logging driver text, which can
+                # contain connection metadata.
+                logger.warning("Database session rollback failed")
+
+            if isinstance(exc, DBAPIError) and exc.connection_invalidated:
+                db_engine.mark_unready()
+                logger.warning("Database connection invalidated during request")
+                raise ServiceUnavailableError("Database is unavailable") from None
             raise

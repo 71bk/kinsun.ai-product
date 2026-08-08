@@ -1,5 +1,11 @@
+import { fileURLToPath } from 'node:url';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  // The frontend imports the shared workspace package, so standalone tracing
+  // must start at the monorepo root rather than the frontend package directory.
+  outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
   reactStrictMode: true,
   transpilePackages: ['@elderly-care/shared'],
   headers: async () => [

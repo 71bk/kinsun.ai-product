@@ -1,4 +1,4 @@
-/* CompanionCharacter — design-system/MASTER.md §2 (colour never signals health),
+/* CompanionCharacter — docs/design-system/MASTER.md §2 (colour never signals health),
    §9 (the voice surface allows ONE animated element), §14 (no raw hex in components).
    The glow is recoloured from the tokens and no longer runs its own timeline, so it
    cannot compete with the record button's breathing ring — the ring is the animation

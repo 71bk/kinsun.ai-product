@@ -93,7 +93,7 @@ function toEventView(event: CoreCareEvent): EventView {
   };
 }
 
-/** Core supports status/cursor server-side; date and type are safe client-side view filters. */
+/** Core applies every filter before opaque-cursor pagination. */
 export async function listEvents(
   config: ApiConfig,
   elderId: string,
@@ -101,6 +101,9 @@ export async function listEvents(
 ): Promise<ListEventsResult> {
   const params = new URLSearchParams();
   if (filters.status) params.append('status', filters.status);
+  if (filters.eventType) params.set('event_type', filters.eventType);
+  if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+  if (filters.dateTo) params.set('date_to', filters.dateTo);
   if (filters.cursor) params.set('cursor', filters.cursor);
   params.set('limit', '100');
 
@@ -108,13 +111,45 @@ export async function listEvents(
     config,
     `/api/v1/elders/${elderId}/care-events?${params.toString()}`,
   );
-  const items = result.items
-    .map(toEventView)
-    .filter((event) => !filters.eventType || event.eventType === filters.eventType)
-    .filter((event) => !filters.dateFrom || event.eventDate >= filters.dateFrom)
-    .filter((event) => !filters.dateTo || event.eventDate <= filters.dateTo);
+  return {
+    items: result.items.map(toEventView),
+    nextCursor: result.next_cursor,
+  };
+}
 
-  return { items, nextCursor: result.next_cursor };
+export interface NeedsReviewSummary {
+  count: number;
+  /**
+   * True when Core returned a further page, so `count` is a floor rather than a
+   * total. Pagination is opaque-cursor only and deliberately exposes no `total`
+   * (AGENTS.md §8.1), so an exact figure is not available — and displaying one
+   * anyway would state an unknown as a fact (§4).
+   */
+  atLeast: boolean;
+  /** Why they need review, from the band Core already assigns. */
+  byConfidence: Record<ConfidenceBand, number>;
+}
+
+/**
+ * Counts the care events waiting on this caregiver, for MASTER.md §10.2's
+ * Needs Review state ("顯示數量與原因").
+ *
+ * Requests only the review status: date and type filters are valid server-side
+ * view filters, but applying them here would undercount the whole review queue.
+ */
+export async function summariseNeedsReview(
+  config: ApiConfig,
+  elderId: string,
+): Promise<NeedsReviewSummary> {
+  const result = await listEvents(config, elderId, { status: 'NEEDS_REVIEW' });
+  const byConfidence: Record<ConfidenceBand, number> = { LOW: 0, MEDIUM: 0, HIGH: 0 };
+  for (const event of result.items) byConfidence[event.confidenceBand] += 1;
+
+  return {
+    count: result.items.length,
+    atLeast: result.nextCursor !== null,
+    byConfidence,
+  };
 }
 
 function correctedPayload(event: EventView, content: string): Record<string, unknown> {

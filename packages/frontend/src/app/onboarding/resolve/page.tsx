@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { SignOutButton } from '@/components/SignOutButton';
 import { ApiRequestError, apiFetch } from '@/lib/api/client';
 
 interface ActorProfile {
@@ -67,11 +68,22 @@ export default function ResolveOnboardingPage() {
   }, [router]);
 
   return (
-    <main style={{ margin: '80px auto', maxWidth: 520, padding: 24, textAlign: 'center' }}>
-      <p aria-live="polite">{message}</p>
-      <p>
-        <a href="/sign-in">返回登入入口</a>
+    /* Role is unknown while this resolves, so it stays on the inherited elder
+       scale — see the note in app/layout.tsx. */
+    <main
+      style={{
+        margin: '80px auto',
+        maxWidth: 560,
+        padding: 'var(--space-6)',
+        textAlign: 'center',
+      }}
+    >
+      <p aria-live="polite" style={{ fontSize: 'var(--text-base)' }}>
+        {message}
       </p>
+      <div style={{ marginTop: 'var(--space-4)' }}>
+        <SignOutButton label="登出並返回登入" />
+      </div>
     </main>
   );
 }

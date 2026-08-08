@@ -1,4 +1,4 @@
-/* RecordButton — design-system/MASTER.md §7.3 (sizing), §8.1 (buttons),
+/* RecordButton — docs/design-system/MASTER.md §7.3 (sizing), §8.1 (buttons),
    §8.4 (Phosphor icons), §9 (exactly one animated element on the voice surface).
    Keyframes live here, not in a <style> tag inside render: an inline <style>
    re-injects on every render and cannot be de-duplicated by the browser. */

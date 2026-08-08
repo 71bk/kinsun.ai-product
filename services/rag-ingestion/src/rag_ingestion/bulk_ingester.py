@@ -200,7 +200,17 @@ def build_index_document(chunk: ValidatedChunk, vector: Sequence[float]) -> dict
     page_end = _first_positive_int(
         data, metadata, "page_end", "printed_page_end", "physical_page_end"
     )
-    source_url = _first_string(data, metadata, "official_source_url", "source_url")
+    # official_source_page_url is the official page hosting the document, used
+    # when a source publishes no direct file link. Ordered last so a direct link
+    # still wins, but accepted rather than dropping the citation entirely: a
+    # source with a real page URL is citable, and refusing it fails the run.
+    source_url = _first_string(
+        data,
+        metadata,
+        "official_source_url",
+        "source_url",
+        "official_source_page_url",
+    )
     source_version = (
         _first_string(
             data,
@@ -215,7 +225,11 @@ def build_index_document(chunk: ValidatedChunk, vector: Sequence[float]) -> dict
     section = _first_string(data, metadata, "section")
     if section is None:
         raise BulkIngestionError(f"section is unavailable for {chunk.chunk_id}")
-    if page_start is None or page_end is None or page_start < 1 or page_end < page_start:
+    # A web page has no pagination, and source_locator carries the position
+    # instead. Both or neither: a half-populated range points nowhere.
+    if (page_start is None) != (page_end is None):
+        raise BulkIngestionError(f"page range is half-populated for {chunk.chunk_id}")
+    if page_start is not None and page_end is not None and page_end < page_start:
         raise BulkIngestionError(f"page range is invalid for {chunk.chunk_id}")
     if source_url is None:
         raise BulkIngestionError(f"source URL is unavailable for {chunk.chunk_id}")

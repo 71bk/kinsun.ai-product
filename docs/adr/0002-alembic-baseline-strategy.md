@@ -8,7 +8,7 @@
 
 ## 背景
 
-`docs/smart_eldercare_schema_v0_1.sql` 是手寫的完整 schema：48 張表、10 個 ENUM、
+`docs/project/smart_eldercare_schema_v0_1.sql` 是手寫的完整 schema：48 張表、10 個 ENUM、
 54 個 index、131 個 FK、46 個 trigger，以及每張表、每個欄位的中文 `COMMENT ON`。
 該檔案自身第 4 行即建議「作為一次性初始化或 Alembic baseline」。
 
@@ -31,7 +31,7 @@
 採用**凍結 SQL 快照**。
 
 - 快照位置：`services/core-api/alembic/versions/sql/20260730_1502_baseline_eldercare_ai_schema_v0_1.sql`
-- 內容與 `docs/smart_eldercare_schema_v0_1.sql` 逐位元相同
+- 內容與 `docs/project/smart_eldercare_schema_v0_1.sql` 逐位元相同
   （SHA-256 `2ed62d87…87def`）。
 - migration `f393b4452ce8` 在執行前驗證該 SHA-256，不符即中止。
   已套用的 migration 必須不可變；schema 要改就新增 revision。
@@ -60,7 +60,7 @@
   `op.execute()` 或 `op.create_table()`。`env.py` 的 `target_metadata` 已預留，
   日後補上 models 即可啟用。
 - 文件 8 §八要求 Database 變更採 Expand → Migrate → Contract，此原則對後續 revision 仍然適用。
-- `docs/smart_eldercare_schema_v0_1.sql` 保留為設計產出物與 ER 圖匯入來源；
+- `docs/project/smart_eldercare_schema_v0_1.sql` 保留為設計產出物與 ER 圖匯入來源；
   **實際套用到資料庫的權威版本是 versions/sql/ 底下的快照**。
   兩者若要同步更新，必須連帶更新 migration 內的 `EXPECTED_SHA256`，
   且僅限於「這個 baseline 尚未被任何環境套用」的情況。

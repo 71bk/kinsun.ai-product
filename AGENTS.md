@@ -6,15 +6,57 @@
 
 - 本專案是 AWS Hackathon 的 Voice-first 智慧長照 AI 陪伴系統。
 - 目前 repository 具備文件 12 定義的 Monorepo 目錄骨架、本機 PostgreSQL／Docker Compose 基礎設施，
-  以及兩個有程式碼的服務：
+  以及以下有程式碼的單元：
   - `services/core-api`：第一個垂直切片——Identity、Elder 授權 policy、tenant 隔離的
     repository 層與 transactional outbox。
   - `services/agent-runtime`：M0 Foundation——contract 驗證、單輪 Orchestrator、
-    Companion Agent、deterministic Safety Evaluator，模型走 Mock Provider，
-    **不呼叫任何外部 LLM、不接 Bedrock／OpenSearch／Neptune**（[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
-  其餘服務目錄（`speech-gateway`、`projection-worker`、`notification-worker`、
-  `report-worker`）與 `apps/` 仍是空殼。
-- 尚未建立 CI quality gate。
+    Companion Agent、deterministic Safety Evaluator；主要回答仍走 Mock Provider，
+    staging-only RAG adapter 可呼叫 Bedrock embedding／OpenSearch，但不接 Neptune，
+    不得描述成 production runtime（[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
+  - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
+    agent-runtime 的 **staging-only** RAG 路徑，尚未對真實 AWS／OpenSearch 環境驗證，
+    不得描述成可用於 production（見 `services/agent-runtime/AGENTS.md`）。
+  - `packages/frontend`：**唯一的前端**，單一 multi-role PWA，Next.js 16 App Router + React 19，
+    同時是 BFF（Cognito OAuth 與 access token 留在伺服器端，反向代理 core-api）
+    （[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
+    前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
+    `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
+    ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
+    2026-08-06 移除，警告改由本檔承載。要拆成獨立部署單元請先寫 ADR 推翻 0006。
+  - `packages/shared`：前端使用的 TypeScript 型別（原本也被已刪除的 legacy backend 共用，
+    現在只剩前端一個 consumer，可能有未使用的型別）；不是 Domain authority，
+    跨服務形狀以 `contracts/` 為準。
+  - `services/speech-gateway`：ASR／TTS adapter 骨架（`asr.py`、`tts.py`、`sagemaker_asr.py`，
+    自帶 `pyproject.toml`／`uv.lock`／Dockerfile 與一個 contract boundary 測試）。**尚未接入
+    主線**，不得描述成可用的語音路徑。
+  `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
+  2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
+- **ADR 0007 判定為 legacy 的那一整套已於 2026-08-06 刪除**（原 `packages/backend`
+  → `legacy/backend` 的 TypeScript 後端 155 檔、`infra/bin/app.ts`、`cdk.legacy.json`、
+  `infra/lib/elderly-care-stack.ts` 與其專屬 constructs `api`／`data-store`／
+  `voice-workflow`、`infra/lambda-stubs/`）。
+  [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 的決策不變，
+  只是被判死的程式碼不再留在工作樹；要查歷史用 `git log --follow`。
+  **唯一保留的是 `infra/lib/constructs/auth.ts`**——`.kiro/specs/backend-authentication/`
+  （Proposed）指名它是 Cognito resource 的擁有者。它目前沒有任何 stack import，是等待該
+  提案定案的獨立 construct，由 `infra/test/auth.test.ts` 直接測試。
+  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL`
+  的舊語音路徑僅是預設關閉、限期至 2026-08-16 的 synthetic staging/demo 例外，不得進
+  production。AWS CDK v2 已定為 canonical IaC 工具；`kinsun-staging-foundation-v1` 已建立 VPC、ECS
+  cluster、ECR、Aurora、Secrets、Logs 與 IAM foundation。四個 runtime／migration image 與
+  `kinsun-staging-application-v1` template 已可在本機建立／驗證，但 AWS 尚未建立 canonical
+  ECS application task／service，不能描述成 application runtime 已上線。Frontend 已依
+  [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
+  production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
+  不代表 ECR push、Cognito callback、application deploy 或公開流量 gate 已完成。
+- 尚未建立 CI quality gate。`.github/workflows-disabled/pr.yml` 是**未啟用的草稿**，GitHub
+  不會讀 `workflows-disabled/` 這個目錄名。它已知有問題：`infra/package-lock.json` 不存在
+  （`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）、
+  `verify_contract_live.py` 未先啟動服務就呼叫。啟用前必須先修這些，否則一定紅。
+  （`working-directory: infra` 曾經是錯的，2026-08-06 目錄由 `infrastructure/` 改名為
+  `infra/` 後已正確。）原 `deploy-dev.yml`／`deploy-staging.yml`
+  指向 ADR 0007 廢棄的 legacy stack 與錯誤 region（`ap-northeast-1`，staging 應為
+  `us-west-2`），已於 2026-08-06 移除。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
 - 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
 
@@ -22,12 +64,20 @@
 
 需求解讀依下列順序：
 
-1. `docs/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.docx`：產品範圍、成功條件與非目標。
-2. `docs/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.docx`：Persona、情境與證據邊界。
-3. `docs/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.docx`：User Story 與 Acceptance Criteria。
-4. `docs/03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx`：Wave、Gate、Backlog 狀態與 Demo Traceability。
-5. `docs/06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
-6. 其他 `docs/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
+1. `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`：產品範圍、成功條件與非目標。
+2. `docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md`：Persona、情境與證據邊界。
+3. `docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md`：User Story 與 Acceptance Criteria。
+4. `docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md`：Wave、Gate、Backlog 狀態與 Demo
+   Traceability（原 .xlsx 的六個工作表都保留成 markdown 表格）。
+5. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
+6. 其他 `docs/spec/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
+
+**`docs/spec/*.md` 是規格的權威版本。** 2026-08-06 之前同一份內容存在四種格式——`.md`、
+結構化 `.json`、Story Map 的 `.csv`、以及 `origin/` 的 `.docx`／`.xlsx` 原始檔，其中
+`origin/` 曾被指定為權威。四份無人同步維護，且 `.json` 沒有任何程式讀取、`.csv` 的內容
+已完整含在 Story Map 的 `.md` 裡，二進位原始檔則無法 grep 或 diff。現已只留 `.md`。
+需要原始檔時用 `git log --follow` 或 `git show <commit>:docs/spec/origin/<檔名>` 取回。
+Google Drive 上的團隊文件若與此處不一致，依下方衝突規則處理。
 
 若文件互相衝突：
 
@@ -96,6 +146,8 @@ Wave 順序：
   - resource state
   - time／purpose
 - 不信任 Client 或模型傳入的 Actor、Tenant、Elder、Assignment 或 Permission Scope。
+- 單一資源的「未授權」與「不存在」必須回一致的回應，避免以回應差異探測資源是否存在。
+- 失敗的授權不得產生資料修改、Outbox Event 或其他副作用。
 - Consent Purpose 必須分離，不得以單一總開關代替：
   - `BASIC_VOICE`
   - `TRANSCRIPT_STORAGE`
@@ -112,6 +164,8 @@ Wave 順序：
 - Neptune、OpenSearch、Cache 與 Agent Memory 是 Projection 或 Working State，必須可由正式資料重建。
 - 不從 Graph、Search 或模型輸出反推正式授權或正式狀態。
 - 正式寫入使用 Transactional Outbox；採 Outbox → EventBridge → 每個 Consumer 專屬 SQS／DLQ。
+  **正式寫入與 Outbox 寫入必須位於同一交易**，不得先 commit 再補發。
+- Projection 只接受已通過狀態、授權、同意與刪除檢查的正式資料。
 - 不使用 Database + Graph／Index／Event Bus 的無保護 Dual Write。
 - 非同步 Consumer 必須 Idempotent、可重試、可觀測，並在處理前重新檢查撤回、刪除與 Scope。
 - 長流程／人工流程使用顯式 State Machine；不得以隱含 Prompt 狀態代替 Domain State。
@@ -274,9 +328,69 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 
 ## 9. 程式與 Repository 工作方式
 
-- 在技術選型尚未核准前，不要自行決定或鎖定 Python Framework、Frontend Framework、Package Manager、IaC、AWS Region 或外部 Provider。
+- 在技術選型尚未核准前，不要自行決定或鎖定 Python Framework、Frontend Framework、Package Manager、AWS Region 或外部 Provider。IaC 已由 ADR 0007 選定 AWS CDK v2；staging region 固定 `us-west-2`，production region 仍待核准。
 - 若任務需要做出上述選擇，提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
-- Monorepo 已依文件 12 建立 `/apps`、`/services`、`/contracts`、`/infra`、`/data`、`/evals`、`/tests`、`/ops`、`/scripts`。在 Framework 與 Deployment 設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
+- Repository 結構（2026-08-06 目錄重整後的實際狀態，非文件 12 的原始骨架）：
+
+```text
+kinsun.ai/
+├── .github/               CI；workflows-disabled/pr.yml 是未啟用草稿，見 §1
+├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
+├── config/rag/            RAG 設定，agent-runtime 與 rag-ingestion 共用
+├── contracts/             OpenAPI、JSON Schema、valid/invalid examples
+├── data/                  RAG chunks、manifest、seed
+├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
+├── docs/
+│   ├── spec/              17 份規格 Markdown（唯一保留格式，見 §2）
+│   ├── design-system/     MASTER.md：視覺、RWD、無障礙規範
+│   ├── adr/               ADR
+│   ├── architecture/      架構文件
+│   ├── handover/          交接紀錄
+│   ├── ownership/         範圍與責任分工
+│   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
+│   ├── runbooks/          維運手冊
+│   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
+├── infra/                 AWS CDK v2 IaC（canonical staging stacks；ADR 0007）
+├── packages/
+│   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
+│   └── shared/            前端使用的 TypeScript 型別
+├── scripts/               Contract 與 repository 驗證腳本
+└── services/
+    ├── core-api/          正式 Domain Core 與 API
+    ├── agent-runtime/     受控 Agent Runtime
+    ├── rag-ingestion/     RAG ingestion 與 allowlist 建置
+    └── speech-gateway/    ASR／TTS adapter 骨架，未接入主線
+```
+
+- **分類軸線是 runtime／toolchain，不是 app／library。** Python 服務進 `services/`，npm
+  workspace 成員進 `packages/`（根 `package.json` 的 `workspaces` 字面上就是
+  `["packages/*", "infra"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
+  慣例**——這個 repo 從未採用它，證據是 `services/core-api` 同樣是可部署應用卻也不在
+  `apps/`。文件 12 的 `/apps` 是被 ADR 0006 廢掉的三-app 方案殘骸，已於 2026-08-06 移除。
+- 文件 12 的 `/evals`、`/tests`、`/ops` 三個目錄從建立起就只有 `.gitkeep`，已於 2026-08-06
+  移除。**空目錄讀起來是「沒做完」而不是「有規劃」**；規劃寫在文件或 Kiro Spec，不要用空
+  目錄佔位。真的要建立時再依上表的層級加。
+- **`config/rag/` 不要搬。** 路徑寫死在 `agent-runtime/src/agent_runtime/settings.py`、
+  `agent-runtime/Dockerfile`、`Dockerfile.dockerignore`、`.env.example` 與
+  `tests/unit/test_container_contract.py`（有測試在守），且由 agent-runtime 與 rag-ingestion
+  共用。搬進任一服務底下都會讓另一個服務跨目錄取用。
+- 在 Framework 與 Deployment 設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
+
+### 分層規則
+
+- API route 只處理 HTTP 邊界、呼叫 service 並包裝 envelope。
+- Service 協調 domain、policy、repository 與 outbox，不組裝 HTTP 錯誤。
+- Policy 採 deny-by-default，正式授權資料必須由 server-side context 取得。
+- Repository 查詢必須明確攜帶 tenant scope。
+- ORM model 只負責資料映射；schema 變更由新的 Alembic revision 管理。
+- 外部 Provider／SDK 只能出現在 adapter 或 provider 邊界，不散入 domain 與 orchestration。
+- Contract 只描述已實作、可實際呼叫的介面；未實作設計放在 `docs/` 或 Kiro Spec。
+
+### 變更同步
+
+- Endpoint 或 envelope 改變時同步 contract、examples、live verification 與 divergence 文件。
+- Domain state 改變時同步 migration、tests、traceability 與必要文件。
+- 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威來源。
 - 目前本機基礎設施由 `docker-compose.yml`、`.env.example` 與 `docker/postgres/init/` 定義：
   - PostgreSQL 16 是本機交易資料庫。
   - `pgcrypto`、`citext` 由初始化腳本安裝。
@@ -294,12 +408,32 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
     驗證失敗。`.gitattributes` 必須維持
     `services/core-api/alembic/versions/sql/*.sql text eol=lf`；遇到 checksum 不符時，
     先檢查並將工作樹換行正規化為 LF，不得修改凍結 SQL 內容或預期 checksum 來讓驗證通過。
+  - `docs/project/smart_eldercare_schema_v0_1.sql` 與 baseline **逐位元相同**
+    （122058 bytes），依 ADR 0002 §63 保留為設計產出物與 ER 圖匯入來源（`COMMENT ON
+    TABLE／COLUMN` 匯進 DBeaver／DataGrip 可顯示欄位說明）。它**不是** schema 權威——
+    §9「不建立第二份 schema 作為競爭權威來源」仍然適用，要改 schema 一律新增 Alembic
+    revision。2026-08-06 前它沒有 `.gitattributes` 保護，Windows 工作樹上是 CRLF
+    （123925 bytes），與 ADR 0002 宣稱的逐位元相同不符；現已補上
+    `docs/project/*.sql text eol=lf`。兩份若出現實質差異，以 Alembic baseline 為準。
   - ORM model 的 Python 屬性統一是 `id`，實際對應各表自己的 PK 欄位（`__pk_name__`）。
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
   - models 目前只涵蓋 48 張 baseline table 中的 33 張，`alembic revision --autogenerate`
     仍會把未映射 table 誤判為應刪除；產生的 migration 一律需人工檢查後才可使用。
+- 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：
+  - Next.js 16 App Router + React 19 + TypeScript。**不是 Vite，不用 Tailwind**；
+    樣式一律 CSS Modules ＋ `src/app/tokens.css` 的 CSS 變數。
+  - TypeScript 側用 npm workspaces（根 `package.json` ＋ `package-lock.json`），
+    與 Python 側的 uv 不共用。
+  - 視覺、RWD 與無障礙規範見 [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md)，
+    建立任一頁面前先讀。元件內不得出現 raw hex（MASTER.md §14）。
+  - 前端是 BFF：OAuth code exchange 與 access token 只存在伺服器端，
+    token 不得進入瀏覽器可讀的位置。`src/app/backend/core/[...path]` 以 header
+    allowlist 轉發，**不轉發 cookie**；新增轉發欄位前先確認不會夾帶憑證。
+  - 家屬端的資料紅線（MASTER.md §11）在前端也要擋一次，不得只依賴後端不回傳。
+  - UI 語言切換（`src/lib/i18n/`）只改瀏覽器偏好，**不得寫入任何 domain state**，
+    尤其不得改動長者語言偏好或 consent。新增使用者可見字串時同時補 `zh-Hant` 與 `en`。
 - 優先做最小、可測試、可回復且能貫穿 Vertical Slice 的變更。
 - 不進行與任務無關的大規模重構、格式化、依賴升級或文件重寫。
 - 保留使用者既有變更；不要以 Reset、Checkout 或大量覆寫清除未知修改。
@@ -379,9 +513,10 @@ docker compose run --rm migrate alembic current
 
 ## 11. 仍待 ADR／Owner 決策
 
-- Frontend Framework 與 PWA 技術。
-- IaC 工具。
-- AWS Region、Account／Environment 策略。
+- Production AWS Region、Account／Environment 策略；staging 已固定 `us-west-2`。
+- staging application 已限制每個 service 0／1 task、每個 task 0.5 vCPU／1 GiB；月費上限與
+  24/7 或 demo-hours 運行方式仍待決。Aurora foundation 已固定 min 0／max 1 ACU、15 分鐘
+  auto-pause；只有 CloudWatch／RDS 實測才可宣稱已成功降至 0 ACU。
 - Bedrock Model／Inference Profile 與 Fallback。
 - Neptune、OpenSearch、LINE、Email、Custom ASR／TTS 採真實服務或 Demo Adapter。
 - Production API／Event／Client 支援期限。

@@ -5,7 +5,7 @@ import { ALL_VOICE_PAGE_STATES, isVoicePageState, STATE_COPY, type VoicePageStat
 /**
  * DEV SEAM — delete or replace this file when real Cognito sign-in lands.
  *
- * Several of the 9 states design-system/MASTER.md §10.1 requires cannot be
+ * Several of the 9 states docs/design-system/MASTER.md §10.1 requires cannot be
  * produced by the backend yet (Low Confidence has no server field, Generating is
  * not reported separately), and with no auth provider there is no way to reach
  * the voice page locally at all. `?previewState=<state>` forces one state so the

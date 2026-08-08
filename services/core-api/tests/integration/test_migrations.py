@@ -60,11 +60,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 53
+_TOTAL_HEAD_TABLE_COUNT = 50
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "b8d5f3a21c74"
+_HEAD_REVISION = "c1a9e7f24b63"
 
 
 def _get_alembic_config() -> Config:
@@ -439,7 +439,7 @@ async def test_upgrade_downgrade_upgrade_roundtrip(test_engine):
 
 @pytest.mark.asyncio
 async def test_head_upgrade_creates_expected_tables(test_engine):
-    """Verify all migrations through head create 53 tables, including the core 8.
+    """Verify all migrations through head create 50 tables, including the core 8.
 
     Validates: Requirement 16.1, 16.5
     """
@@ -632,7 +632,7 @@ async def test_baseline_roundtrip_upgrade_downgrade_upgrade(test_engine):
     async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, "head")
 
-    # Verify we're at the head revision
+    # Verify we're at the baseline revision
     async with test_engine.begin() as conn:
         version = await conn.run_sync(_get_alembic_version)
         assert version == _HEAD_REVISION

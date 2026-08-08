@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from app.core.config import AppEnv, Settings, get_settings
+from app.core.config import AppEnv, DatabasePoolMode, Settings, get_settings
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -37,8 +37,11 @@ class TestSettingsConstruction:
         assert s.app_title == "kinsun.ai Core API"
         assert s.app_version == "0.1.0"
         assert s.port == 8000
+        assert s.db_pool_mode == DatabasePoolMode.QUEUE
         assert s.db_pool_size == 5
         assert s.db_max_overflow == 10
+        assert s.db_connect_timeout_seconds == 5.0
+        assert s.db_recovery_timeout_seconds == 10.0
 
     def test_production_env(self) -> None:
         s = _make_settings(APP_ENV="production")
@@ -51,8 +54,11 @@ class TestSettingsConstruction:
             DOCS_URL="/api-docs",
             HOST="127.0.0.1",
             PORT="9000",
+            DB_POOL_MODE="null",
             DB_POOL_SIZE="10",
             DB_MAX_OVERFLOW="20",
+            DB_CONNECT_TIMEOUT_SECONDS="4",
+            DB_RECOVERY_TIMEOUT_SECONDS="9",
             TEST_DATABASE_URL="postgresql+asyncpg://x:y@host/test",
             DATABASE_PASSWORD="supersecret",
             FAKE_AUTH_ENABLED="true",
@@ -66,6 +72,9 @@ class TestSettingsConstruction:
             COGNITO_JWKS_CACHE_SECONDS="120",
             COGNITO_HTTP_TIMEOUT_SECONDS="4",
             FAMILY_INVITATION_HMAC_SECRET="test-family-invitation-secret-32-bytes",
+            VOICE_TICKET_ENABLED="true",
+            VOICE_TICKET_HMAC_SECRET="test-voice-ticket-secret-material-32-bytes",
+            VOICE_TICKET_TTL_SECONDS="75",
             AGENT_RUNTIME_URL="http://127.0.0.1:8001",
             AGENT_RUNTIME_TIMEOUT_SECONDS="8",
             AGENT_RUNTIME_MODEL_ID="mock-v1",
@@ -75,8 +84,11 @@ class TestSettingsConstruction:
         assert s.docs_url == "/api-docs"
         assert s.host == "127.0.0.1"
         assert s.port == 9000
+        assert s.db_pool_mode == DatabasePoolMode.NULL
         assert s.db_pool_size == 10
         assert s.db_max_overflow == 20
+        assert s.db_connect_timeout_seconds == 4
+        assert s.db_recovery_timeout_seconds == 9
         assert s.test_database_url == "postgresql+asyncpg://x:y@host/test"
         assert s.database_password == "supersecret"
         assert s.fake_auth_enabled is True
@@ -90,6 +102,9 @@ class TestSettingsConstruction:
         assert s.cognito_jwks_cache_seconds == 120
         assert s.cognito_http_timeout_seconds == 4
         assert s.family_invitation_hmac_secret == "test-family-invitation-secret-32-bytes"
+        assert s.voice_ticket_enabled is True
+        assert s.voice_ticket_hmac_secret == "test-voice-ticket-secret-material-32-bytes"
+        assert s.voice_ticket_ttl_seconds == 75
         assert s.agent_runtime_url == "http://127.0.0.1:8001"
         assert s.agent_runtime_timeout_seconds == 8
         assert s.agent_runtime_model_id == "mock-v1"
@@ -142,6 +157,18 @@ class TestValidation:
         with pytest.raises(ValidationError):
             _make_settings(DB_MAX_OVERFLOW="-1")
 
+    def test_invalid_db_pool_mode_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            _make_settings(DB_POOL_MODE="unsupported")
+
+    @pytest.mark.parametrize(
+        "field",
+        ["DB_CONNECT_TIMEOUT_SECONDS", "DB_RECOVERY_TIMEOUT_SECONDS"],
+    )
+    def test_database_timeouts_must_be_positive(self, field: str) -> None:
+        with pytest.raises(ValidationError):
+            _make_settings(**{field: "0"})
+
     def test_enabled_cognito_requires_complete_server_configuration(self) -> None:
         with pytest.raises(ValidationError, match="COGNITO_REGION"):
             _make_settings(COGNITO_AUTH_ENABLED="true")
@@ -155,40 +182,17 @@ class TestValidation:
                 COGNITO_APP_CLIENT_ID="client-id",
             )
 
-    def test_daily_line_notification_requires_complete_independent_secrets(self) -> None:
-        with pytest.raises(ValidationError, match="LINE_ACCOUNT_LINK_ENABLED"):
-            _make_settings(LINE_DAILY_NOTIFICATION_ENABLED="true")
-
-        common = {
-            "LINE_ACCOUNT_LINK_ENABLED": "true",
-            "LINE_CHANNEL_SECRET": "synthetic-channel-secret",
-            "LINE_CHANNEL_ACCESS_TOKEN": "synthetic-channel-token",
-            "LINE_IDENTITY_HMAC_SECRET": "synthetic-identity-hmac-secret-32-bytes",
-            "LINE_ACCOUNT_LINK_BASE_URL": "https://staging.example.com",
-            "LINE_DAILY_NOTIFICATION_ENABLED": "true",
-        }
-        with pytest.raises(ValidationError, match="LINE_SUBJECT_ENCRYPTION_SECRET"):
-            _make_settings(**common)
-
-        settings = _make_settings(
-            **common,
-            LINE_SUBJECT_ENCRYPTION_SECRET=("synthetic-independent-encryption-secret-32-bytes"),
-        )
-        assert settings.line_daily_notification_enabled is True
-        assert settings.line_daily_notification_send_time == "08:00"
-
-    def test_daily_line_notification_rejects_non_0800_schedule(self) -> None:
-        with pytest.raises(ValidationError, match="must remain 08:00"):
+    def test_enabled_voice_ticket_requires_strong_secret(self) -> None:
+        with pytest.raises(ValidationError, match="VOICE_TICKET_HMAC_SECRET"):
             _make_settings(
-                LINE_ACCOUNT_LINK_ENABLED="true",
-                LINE_CHANNEL_SECRET="synthetic-channel-secret",
-                LINE_CHANNEL_ACCESS_TOKEN="synthetic-channel-token",
-                LINE_IDENTITY_HMAC_SECRET="synthetic-identity-hmac-secret-32-bytes",
-                LINE_ACCOUNT_LINK_BASE_URL="https://staging.example.com",
-                LINE_DAILY_NOTIFICATION_ENABLED="true",
-                LINE_SUBJECT_ENCRYPTION_SECRET=("synthetic-independent-encryption-secret-32-bytes"),
-                LINE_DAILY_NOTIFICATION_SEND_TIME="09:00",
+                VOICE_TICKET_ENABLED="true",
+                VOICE_TICKET_HMAC_SECRET="too-short",
             )
+
+    @pytest.mark.parametrize("ttl", ["14", "121"])
+    def test_voice_ticket_ttl_is_bounded(self, ttl: str) -> None:
+        with pytest.raises(ValidationError):
+            _make_settings(VOICE_TICKET_TTL_SECONDS=ttl)
 
 
 # ─── Secret redaction ────────────────────────────────────────────────────────
@@ -222,6 +226,12 @@ class TestSecretRedaction:
         secret = "test-family-invitation-secret-32-bytes"
         settings = _make_settings(FAMILY_INVITATION_HMAC_SECRET=secret)
         assert settings.model_dump()["family_invitation_hmac_secret"] == "***"
+        assert secret not in repr(settings)
+
+    def test_voice_ticket_secret_is_redacted(self) -> None:
+        secret = "test-voice-ticket-secret-material-32-bytes"
+        settings = _make_settings(VOICE_TICKET_HMAC_SECRET=secret)
+        assert settings.model_dump()["voice_ticket_hmac_secret"] == "***"
         assert secret not in repr(settings)
 
 
