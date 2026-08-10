@@ -67,12 +67,10 @@ export function InputModeToggle({ mode, onChange, disabled }: InputModeTogglePro
               // Selection is carried by fill and border together, not colour
               // alone, so it survives greyscale and low colour discrimination.
               border: selected
-                ? '2px solid var(--color-primary)'
-                : '2px solid var(--color-border, #d4d4d4)',
-              background: selected ? 'var(--color-primary)' : 'transparent',
-              color: selected
-                ? 'var(--color-primary-foreground, #fff)'
-                : 'var(--color-foreground)',
+                ? '2px solid var(--color-primary-strong)'
+                : '2px solid var(--color-muted-foreground)',
+              background: selected ? 'var(--color-primary-strong)' : 'transparent',
+              color: selected ? 'var(--color-on-primary)' : 'var(--color-foreground)',
               fontWeight: selected ? 600 : 400,
             }}
           >
