@@ -78,6 +78,44 @@ Core 已實作 Cognito JWT verifier，且以兩條明確分離的路徑使用：
 目前 contract 不代表 staging Cognito domain、Google provider secret、callback URL 或正式
 Refresh Token rotation 已部署／驗證；這些仍須由環境設定與部署證據確認。
 
+### LINE Login federation 與 Cognito 帳號連結
+
+Next.js BFF 已加入預設關閉的 LINE Login 應用層流程。一般 LINE sign-in 仍經 Cognito Hosted UI，
+callback 只使用 Access Token 呼叫 Core `GET /api/v1/me` 確認既有 `cognito_sub → Actor`，不呼叫
+onboarding resolver；因此未連結的 LINE 身分不能建立 Actor、取得 tenant role 或合併帳號。
+
+新增 LINE 登入方式只能由已登入且具有已驗證 Email 的 Google Cognito user 發起。流程使用獨立
+短效 HttpOnly signed transaction、state、nonce 與 PKCE S256；transaction 只保存發起者的
+domain-separated HMAC fingerprint，不保存 raw Cognito username、LINE subject 或 Email。
+callback 會重新確認登入目的地未變更、LINE verified Email 與既有 recovery Email 相符，再呼叫
+`AdminLinkProviderForUser`。LINE token 不保存、不記錄，流程結束時 best-effort revoke；subject
+已屬於其他 Cognito user、登入帳號中途切換或資料不一致時一律拒絕，不做 Email-based merge。
+
+`LINE_LOGIN_ENABLED=false` 是預設值。這次沒有加入或宣告任何 AWS/CDK、Cognito OIDC provider、
+IAM grant 或 hosting deployment；啟用前仍需依最終平台完成 provider、兩個固定 callback、runtime
+permission、Email scope 與 live sign-in 驗證。若之後改用非 AWS identity provider，必須替換目前
+Cognito-specific adapter 並重新驗證帳號唯一性與 fail-closed 規則。
+
+LINE Login Channel secret、LINE Messaging Channel secret、LINE identity HMAC secret、一般 OAuth
+transaction secret 與 LINE linking transaction secret 必須彼此獨立。LINE Login identity 與下節
+LINE Bot 的 Messaging API identity 屬於不同 channel，兩者 subject 不可比較、共用或轉換。
+
+### LINE Account Linking 與通知
+
+Core 已加入 ELDER／FAMILY_MEMBER 的 LINE Messaging API 帳號連結、簽章 Webhook 與每日家屬
+通知入口。Core 只保存獨立 HMAC 產生的 subject／nonce digest；只有排程推播需要的 LINE
+destination 會使用 authenticated encryption 保存。linkToken、nonce、replyToken、LINE user ID
+明文及聊天逐字內容不得寫入資料庫或應用程式 log。
+
+`POST /api/v1/internal/notification-jobs/line-daily` 只接受 SYSTEM_SERVICE 提供的固定排程資料，
+服務端自行計算前一個台北日。候選必須具有當日 `PUBLISHED` DAILY Report、有效 family
+relationship、`FAMILY_SHARING` Consent、分享範圍、LINE 通知偏好及 ACTIVE encrypted
+destination。通知只包含日期、更新提示及登入 Family Web 的連結，不包含長者姓名或報表內容；
+發送失敗只更新 delivery 狀態，不回滾已發布報表。
+
+這些 endpoint 目前仍由 feature flags 關閉，且不代表 LINE Channel、外部 Scheduler、SQS／DLQ、
+固定 HTTPS origin 或 secrets 已部署。LINE Login 的應用層狀態與尚未部署事項列於上一節。
+
 ### Memory confirmation authority
 
 目前 `POST /api/v1/elders/{elder_id}/memory-candidates/{memory_id}/confirm` 只有通過
@@ -102,15 +140,22 @@ Core 已實作 Voice Session metadata、受控狀態轉移，以及 dedicated Vo
 
 目前 `SYSTEM_SERVICE` guard 已可執行，但 ADR 0009 的 production service credential mechanism
 （例如 IAM 或 mTLS）仍待 Owner 核准；因此 internal consume contract 不代表 production service
-identity 已部署。WebSocket binary/audio transport、Speech Gateway、ASR Final、低信心確認與 TTS
-仍屬尚未實作的 Speech workstream。`VoiceSessionV1.transport_status` 仍明確標示
-`NOT_CONFIGURED`，Ticket 不得放在 URL；後續只能經 allowlisted header、WebSocket subprotocol
-或第一個受保護 frame 傳送。
+identity 已部署。Core 的 private ASR Final evidence 與低信心 elder confirmation 已實作：
+Speech Gateway 必須先 consume Ticket，再由 `SYSTEM_SERVICE` 送入 ASR result；Core 重新檢查
+`BASIC_VOICE`、input mode、語言與版本化 threshold，未確認不得進入 `PROCESSING`，且 Agent input
+必須與通過 Gate 的 keyed digest 完全相符。原文只在 `TRANSCRIPT_STORAGE` Consent 有效時保存，
+public decision 不回傳 confidence、ticket、digest 或 audio。
+
+目前 Browser → Speech Gateway 使用受 Voice Ticket 保護的 JSON audio upload；WebSocket binary/audio
+transport 與 production service credential mechanism 仍未完成，因此
+`VoiceSessionV1.transport_status` 仍標示 `NOT_CONFIGURED`。ASR／TTS adapter 可執行，但真實 AWS
+provider、區域、成本與 quality gate 尚未經 Owner 驗證，不得宣稱 production speech 已部署。
 
 Core 另提供已實作的單輪文字 fallback：`POST /api/v1/voice-sessions/{session_id}/companion-turns`。
 它會在 Core 重新檢查 tenant／elder scope、`BASIC_VOICE` Consent snapshot 與 Session state，
 再以 server-to-server 方式呼叫 M0 Agent Runtime，保存不含輸入文字與回覆內容的 Agent／Safety
-稽核 metadata，最後回傳 `transport_status = TEXT_ONLY`。這不代表 WebSocket、ASR 或 TTS 已完成。
+稽核 metadata，最後回傳 `transport_status = TEXT_ONLY`。文字 session 只能使用 `input_mode=text`；
+voice／voice fallback session 未通過 server-side ASR Gate 時不得呼叫 Agent。
 
 ### Deletion workflow
 

@@ -46,11 +46,12 @@ Domain、Security 與 Test 規格轉成可執行工作，不取代下列權威�
 - Agent Runtime 的單輪 Companion、Context Manifest、deterministic Safety、step ceiling、可設定
   Mock／Bedrock Model Provider、staging-only RAG，以及一次受控的
   `create_event_candidate` register → Tool → complete lifecycle。
-- Frontend Voice UI state，但 low-confidence 目前只屬 UI state，不是可信 server-side gate。
+- canonical Voice Ticket → Speech Gateway → Core ASR result 流程，以及由 Core 持有的
+  `AWAITING_CONFIRMATION` low-confidence gate；Frontend 只依可信 server outcome 顯示確認 UI。
 
-目前尚缺 canonical audio/WebSocket／ASR／TTS、server-side low-confidence confirmation、Memory
-Candidate 確認閉環、Event 人工覆核 E2E、Projection／Graph reuse、Daily Summary generation
-worker、跨服務 E2E 與 CI quality gate。
+目前尚缺 production WebSocket transport、經 Owner 核准且完成環境部署的 ASR／TTS provider、
+Synthetic 國語／臺語／國臺混語實測 baseline、Memory Candidate 確認閉環、Event 人工覆核 E2E、
+Projection／Graph reuse、Daily Summary generation worker、跨服務 E2E 與 CI quality gate。
 
 ## 4. Glossary
 

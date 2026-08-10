@@ -1,0 +1,16 @@
+{
+  "$id": "urn:kinsun:contracts:schemas:domain:CreateLineLinkChallengeRequestV1",
+  "title": "CreateLineLinkChallengeRequestV1",
+  "description": "One-time LINE linkToken accepted only by the authenticated BFF continuation. Core embeds it in the immediate official account-link redirect and never persists or logs it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["link_token"],
+  "properties": {
+    "link_token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^\\S+$"
+    }
+  }
+}

@@ -20,9 +20,7 @@
     },
     "input_mode": {
       "enum": [
-        "voice",
-        "text",
-        "voice_with_text_fallback"
+        "text"
       ],
       "title": "Input Mode",
       "type": "string"

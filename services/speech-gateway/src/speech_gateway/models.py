@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,6 +24,8 @@ class TranscribeRequest(GatewayModel):
     """Audio is base64 so the boundary stays a plain JSON contract."""
 
     audio_base64: str = Field(min_length=1)
+    session_id: UUID
+    voice_ticket: str = Field(min_length=32, max_length=128)
     language: SpeechLanguage
     # 16 kHz mono PCM is what the browser recorder produces and what Transcribe
     # expects; the field is explicit because a mismatch yields silent garbage
@@ -38,16 +42,17 @@ class TranscriptSegment(GatewayModel):
 
 
 class TranscribeResponse(GatewayModel):
+    session_id: UUID
     text: str
-    # Minimum across segments, matching the legacy implementation: one badly
-    # recognised span should not be averaged away by confident ones.
-    confidence: float
-    # False means the caller must ask the elder to repeat rather than act on
-    # `text`. The threshold lives in settings, not in the client.
-    confidence_acceptable: bool
     language: SpeechLanguage
     model_version: str
-    segments: list[TranscriptSegment]
+    gate_decision: Literal[
+        "CAN_SEND_TO_AGENT",
+        "CONFIRMATION_REQUIRED",
+        "CANNOT_SEND_TO_AGENT",
+    ]
+    confirmation_required: bool
+    gate_expires_at: datetime
 
 
 class SynthesizeRequest(GatewayModel):

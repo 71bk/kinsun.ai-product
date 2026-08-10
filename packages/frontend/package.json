@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.1101.0",
     "@elderly-care/shared": "*",
     "@phosphor-icons/react": "^2.1.7",
     "next": "16.2.12",

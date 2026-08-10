@@ -23,11 +23,15 @@ MODEL_FILES = {
     "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
     "ResolveOnboardingRequest": "domain/ResolveOnboardingRequestV1.json",
     "CreateFamilyInvitationRequest": "domain/CreateFamilyInvitationRequestV1.json",
+    "CreateLineLinkChallengeRequest": "domain/CreateLineLinkChallengeRequestV1.json",
+    "DailyLineNotificationJobRequest": "domain/DailyLineNotificationJobRequestV1.json",
     "CreateConsentRequest": "domain/CreateConsentRequestV1.json",
     "RevokeConsentRequest": "domain/RevokeConsentRequestV1.json",
     "CreateVoiceSessionRequest": "domain/CreateVoiceSessionRequestV1.json",
     "CreateVoiceTicketRequest": "domain/CreateVoiceTicketRequestV1.json",
     "ConsumeVoiceTicketRequest": "domain/ConsumeVoiceTicketRequestV1.json",
+    "SubmitAsrResultRequest": "domain/SubmitAsrResultRequestV1.json",
+    "ConfirmAsrGateRequest": "domain/ConfirmAsrGateRequestV1.json",
     "TransitionVoiceSessionRequest": "domain/TransitionVoiceSessionRequestV1.json",
     "CompanionTurnRequest": "domain/CompanionTurnRequestV1.json",
     "CreateCareEventCandidateRequest": "domain/CreateCareEventCandidateRequestV1.json",
@@ -64,6 +68,17 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__invitation_id__revoke_post": (
         "FamilyInvitationStatusEnvelopeV1"
     ),
+    "get_line_link_status_api_v1_me_line_link_get": "LineLinkStatusEnvelopeV1",
+    "unlink_line_account_api_v1_me_line_link_delete": "LineLinkStatusEnvelopeV1",
+    "create_line_link_challenge_api_v1_me_line_link_challenges_post": (
+        "LineLinkChallengeCreatedEnvelopeV1"
+    ),
+    "get_line_link_challenge_status_api_v1_me_line_link_challenges__challenge_id__get": (
+        "LineLinkChallengeStatusEnvelopeV1"
+    ),
+    "run_daily_line_notifications_api_v1_internal_notification_jobs_line_daily_post": (
+        "DailyLineNotificationJobEnvelopeV1"
+    ),
     "get_me_api_v1_me_get": "ActorProfileEnvelopeV1",
     "get_authorized_elders_api_v1_me_authorized_elders_get": (
         "AuthorizedElderListEnvelopeV1"
@@ -88,6 +103,12 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     ),
     "consume_voice_ticket_api_v1_internal_voice_tickets_consume_post": (
         "VoiceSessionEnvelopeV1"
+    ),
+    "submit_asr_result_api_v1_internal_asr_results_post": (
+        "AsrGateDecisionEnvelopeV1"
+    ),
+    "confirm_asr_gate_api_v1_voice_sessions__session_id__asr_confirmation_post": (
+        "AsrGateDecisionEnvelopeV1"
     ),
     "get_voice_session_api_v1_voice_sessions__session_id__get": "VoiceSessionEnvelopeV1",
     "cancel_voice_session_api_v1_voice_sessions__session_id__cancel_post": (
@@ -178,6 +199,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
 }
 
 HTTP_METHODS = {"get", "post", "patch", "delete"}
+LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
 
 
 def replace_model_refs(node: object) -> None:
@@ -211,14 +233,16 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.2.0",
-        "summary": "Implemented Core Domain, consent, security and outbox APIs.",
+        "version": "1.3.0",
+        "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
         "description": (
             "Current executable Core API contract. Every protected operation "
             "re-evaluates tenant, elder, relationship or assignment scope. "
             "Cognito access tokens authenticate existing actors; the onboarding "
             "resolver separately accepts a verified Cognito ID token and never "
-            "treats persona intent as authorization."
+            "treats persona intent as authorization. LINE webhooks require a "
+            "raw-body HMAC signature; Core stores keyed identity digests and, "
+            "only for scheduled push, an authenticated encrypted destination."
         ),
     }
     for path in ("/health", "/ready"):
@@ -253,6 +277,15 @@ def main() -> None:
                 "Cognito ID token accepted only by onboarding resolution. Core "
                 "verifies signature, issuer, expiry, token_use=id, audience and "
                 "verified email; claims do not directly grant any role or elder scope."
+            ),
+        },
+        "lineSignature": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Line-Signature",
+            "description": (
+                "Base64 HMAC-SHA256 over the unmodified request body using the "
+                "LINE Channel secret. It is not a bearer credential."
             ),
         },
     }
@@ -307,6 +340,40 @@ def main() -> None:
         },
     }
 
+    line_operation = document["paths"].get(LINE_WEBHOOK_PATH, {}).get("post")
+    if isinstance(line_operation, dict):
+        line_operation["description"] = (
+            "Validates the raw-body LINE signature, deduplicates durable domain "
+            "processing by webhookEventId, and consumes reply tokens at most once "
+            "only after the corresponding event transaction commits."
+        )
+        for parameter in line_operation.get("parameters", []):
+            if isinstance(parameter, dict) and parameter.get("name") == "X-Line-Signature":
+                parameter["required"] = True
+        line_operation["requestBody"] = {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "required": ["events"],
+                        "properties": {
+                            "events": {"type": "array", "items": {"type": "object"}}
+                        },
+                    }
+                }
+            },
+        }
+        line_operation["responses"]["400"] = {
+            "description": "The JSON body or webhook event collection is invalid.",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
+                }
+            },
+        }
+
     for path, path_item in document["paths"].items():
         for method, operation in path_item.items():
             if method not in HTTP_METHODS:
@@ -325,11 +392,12 @@ def main() -> None:
                         }
                 operation["responses"].pop("422", None)
             if path not in {"/health", "/ready"}:
-                operation["security"] = (
-                    [{"cognitoIdToken": []}]
-                    if path == "/api/v1/onboarding/resolve"
-                    else [{"bearerAuth": []}]
-                )
+                if path == "/api/v1/onboarding/resolve":
+                    operation["security"] = [{"cognitoIdToken": []}]
+                elif path == LINE_WEBHOOK_PATH:
+                    operation["security"] = [{"lineSignature": []}]
+                else:
+                    operation["security"] = [{"bearerAuth": []}]
                 operation["responses"].update(
                     {
                         "401": {"$ref": "#/components/responses/Unauthorized"},

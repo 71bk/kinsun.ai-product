@@ -26,9 +26,11 @@
   - `packages/shared`：前端使用的 TypeScript 型別（原本也被已刪除的 legacy backend 共用，
     現在只剩前端一個 consumer，可能有未使用的型別）；不是 Domain authority，
     跨服務形狀以 `contracts/` 為準。
-  - `services/speech-gateway`：ASR／TTS adapter 骨架（`asr.py`、`tts.py`、`sagemaker_asr.py`，
-    自帶 `pyproject.toml`／`uv.lock`／Dockerfile 與一個 contract boundary 測試）。**尚未接入
-    主線**，不得描述成可用的語音路徑。
+  - `services/speech-gateway`：ASR／TTS adapter 與 Core Voice Ticket／server-side ASR Gate
+    整合邊界（`asr.py`、`tts.py`、`sagemaker_asr.py`、`core_voice_gate.py`）。Browser audio 必須
+    帶短效 Ticket；Gateway 先 consume，再把 ASR Final 交給 Core 判定，前端不得自行 threshold。
+    這代表 canonical 程式路徑已接上，不代表 AWS provider、service credential、WebSocket、成本或
+    quality gate 已部署／驗證；未完成這些前不得描述成 production 語音路徑。
   `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
   2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
 - **ADR 0007 判定為 legacy 的那一整套已於 2026-08-06 刪除**（原 `packages/backend`
@@ -477,8 +479,17 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-兩個服務各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
-其餘服務目錄尚無程式碼。
+`services/speech-gateway`（contract boundary test 不需資料庫、AWS 憑證或網路）：
+
+```powershell
+cd services/speech-gateway
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+三個 Python runtime 各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
 
 整合測試會對 `TEST_DATABASE_URL` 指向的資料庫執行 `alembic upgrade head`，
 預設是 `kinsun_test`，不要指向 `kinsun`。測試資料全部由 fixture 產生，

@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import asyncio
 
-import boto3
-
 from speech_gateway.models import SpeakingSpeed, TranscribeLanguage
 
 # Zhiyu is Polly's Mandarin neural voice. It is Mainland-accented Mandarin rather
@@ -33,6 +31,8 @@ async def synthesize(
     speaking_speed: SpeakingSpeed,
     region: str,
 ) -> tuple[bytes, str, str]:
+    import boto3
+
     voice_id = VOICE_BY_LANGUAGE[language]
     client = boto3.client("polly", region_name=region)
 

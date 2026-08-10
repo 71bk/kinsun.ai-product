@@ -22,8 +22,6 @@ from __future__ import annotations
 import asyncio
 import json
 
-import boto3
-
 from speech_gateway.models import SageMakerLanguage, TranscriptSegment
 
 MODEL_VERSION_UNKNOWN = "sagemaker-unknown"
@@ -46,6 +44,8 @@ async def transcribe_via_sagemaker(
         raise SageMakerAsrNotConfiguredError(
             "no SageMaker ASR endpoint is configured for this language"
         )
+
+    import boto3
 
     client = boto3.client("sagemaker-runtime", region_name=region)
 

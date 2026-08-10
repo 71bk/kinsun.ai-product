@@ -8,13 +8,39 @@ The live round trip is verified separately against the real services.
 from __future__ import annotations
 
 import base64
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 
 from speech_gateway.app import create_app
+from speech_gateway.core_voice_gate import CoreGateDecision
 from speech_gateway.models import TranscriptSegment
 from speech_gateway.settings import get_settings
+
+SESSION_ID = UUID("51000000-0000-4000-8000-000000000001")
+VOICE_TICKET = "synthetic-opaque-voice-ticket-material-000000000001"
+
+
+class FakeCoreGate:
+    def __init__(self) -> None:
+        self.failed_sessions: list[UUID] = []
+
+    async def consume_ticket(self, *, session_id, voice_ticket):  # noqa: ANN001
+        assert session_id == SESSION_ID
+        assert voice_ticket == VOICE_TICKET
+
+    async def submit_asr_result(self, *, confidence, **kwargs):  # noqa: ANN001, ARG002
+        needs_confirmation = confidence < 0.6
+        return CoreGateDecision(
+            session_id=SESSION_ID,
+            decision=("CONFIRMATION_REQUIRED" if needs_confirmation else "CAN_SEND_TO_AGENT"),
+            confirmation_required=needs_confirmation,
+            expires_at="2026-08-10T12:00:00Z",
+        )
+
+    async def fail_session(self, *, session_id):  # noqa: ANN001
+        self.failed_sessions.append(session_id)
 
 
 @pytest.fixture
@@ -31,22 +57,34 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
     monkeypatch.setattr("speech_gateway.app.transcribe_pcm", fake_transcribe)
     monkeypatch.setattr("speech_gateway.app.synthesize", fake_synthesize)
-    return TestClient(create_app())
+    return TestClient(create_app(core_client=FakeCoreGate()))
 
 
 def _audio(payload: bytes = b"\x00\x01" * 800) -> str:
     return base64.b64encode(payload).decode("ascii")
 
 
-def test_transcription_returns_transcript_and_confidence(client: TestClient) -> None:
+def _transcription_payload(language: str = "zh-TW") -> dict[str, object]:
+    return {
+        "audio_base64": _audio(),
+        "session_id": str(SESSION_ID),
+        "voice_ticket": VOICE_TICKET,
+        "language": language,
+        "sample_rate": 16000,
+    }
+
+
+def test_transcription_returns_transcript_and_core_gate_decision(client: TestClient) -> None:
     response = client.post(
         "/api/v1/speech/transcriptions",
-        json={"audio_base64": _audio(), "language": "zh-TW", "sample_rate": 16000},
+        json=_transcription_payload(),
     )
     assert response.status_code == 200
     body = response.json()
     assert body["text"] == "阿嬤您好"
-    assert body["confidence_acceptable"] is True
+    assert body["gate_decision"] == "CAN_SEND_TO_AGENT"
+    assert "confidence" not in body
+    assert "voice_ticket" not in body
 
 
 def test_low_confidence_is_reported_as_not_acceptable(
@@ -65,10 +103,11 @@ def test_low_confidence_is_reported_as_not_acceptable(
 
     response = client.post(
         "/api/v1/speech/transcriptions",
-        json={"audio_base64": _audio(), "language": "zh-TW"},
+        json=_transcription_payload(),
     )
     assert response.status_code == 200
-    assert response.json()["confidence_acceptable"] is False
+    assert response.json()["gate_decision"] == "CONFIRMATION_REQUIRED"
+    assert response.json()["confirmation_required"] is True
 
 
 @pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])
@@ -84,7 +123,7 @@ def test_hokkien_and_hakka_without_an_endpoint_are_refused_not_answered_in_manda
 
     response = client.post(
         "/api/v1/speech/transcriptions",
-        json={"audio_base64": _audio(), "language": language},
+        json=_transcription_payload(language),
     )
     assert response.status_code == 501
 
@@ -111,9 +150,9 @@ def test_hokkien_and_hakka_route_to_sagemaker_when_configured(
     monkeypatch.setattr("speech_gateway.app.transcribe_pcm", unreachable_transcribe)
 
     try:
-        response = TestClient(create_app()).post(
+        response = TestClient(create_app(core_client=FakeCoreGate())).post(
             "/api/v1/speech/transcriptions",
-            json={"audio_base64": _audio(), "language": language},
+            json=_transcription_payload(language),
         )
     finally:
         get_settings.cache_clear()
@@ -138,15 +177,15 @@ def test_missing_sagemaker_confidence_is_treated_as_unverified(
     monkeypatch.setattr("speech_gateway.app.transcribe_via_sagemaker", zero_confidence)
 
     try:
-        response = TestClient(create_app()).post(
+        response = TestClient(create_app(core_client=FakeCoreGate())).post(
             "/api/v1/speech/transcriptions",
-            json={"audio_base64": _audio(), "language": "nan-TW"},
+            json=_transcription_payload("nan-TW"),
         )
     finally:
         get_settings.cache_clear()
 
     assert response.status_code == 200
-    assert response.json()["confidence_acceptable"] is False
+    assert response.json()["gate_decision"] == "CONFIRMATION_REQUIRED"
 
 
 @pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])
@@ -163,7 +202,7 @@ def test_synthesis_still_refuses_hokkien_and_hakka(client: TestClient, language:
 def test_invalid_base64_is_rejected(client: TestClient) -> None:
     response = client.post(
         "/api/v1/speech/transcriptions",
-        json={"audio_base64": "!!!not base64!!!", "language": "zh-TW"},
+        json={**_transcription_payload(), "audio_base64": "!!!not base64!!!"},
     )
     assert response.status_code == 422
 
@@ -171,9 +210,27 @@ def test_invalid_base64_is_rejected(client: TestClient) -> None:
 def test_empty_audio_is_rejected(client: TestClient) -> None:
     response = client.post(
         "/api/v1/speech/transcriptions",
-        json={"audio_base64": "", "language": "zh-TW"},
+        json={**_transcription_payload(), "audio_base64": ""},
     )
     assert response.status_code == 422
+
+
+def test_validation_error_does_not_echo_audio_or_ticket(client: TestClient) -> None:
+    restricted_audio = "restricted-audio-material"
+    restricted_ticket = "restricted-ticket-material-000000000000000001"
+    response = client.post(
+        "/api/v1/speech/transcriptions",
+        json={
+            "audio_base64": restricted_audio,
+            "session_id": str(SESSION_ID),
+            "voice_ticket": restricted_ticket,
+            "language": "not-a-language",
+        },
+    )
+
+    assert response.status_code == 422
+    assert restricted_audio not in response.text
+    assert restricted_ticket not in response.text
 
 
 def test_unexpected_field_is_refused(client: TestClient) -> None:

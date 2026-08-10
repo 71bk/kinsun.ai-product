@@ -1,14 +1,37 @@
 import { apiFetch, createIdempotencyKey, type ApiConfig } from './client';
+import { toVoiceSessionLanguagePreference } from '../voice/language-route';
+import type { SpeechLanguage } from '../voice/speech-gateway-client';
 
 export interface VoiceSession {
   session_id: string;
   elder_id: string;
   state:
-    'CREATED' | 'RECORDING' | 'PROCESSING' | 'RESPONDING' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
+    | 'CREATED'
+    | 'RECORDING'
+    | 'AWAITING_CONFIRMATION'
+    | 'PROCESSING'
+    | 'RESPONDING'
+    | 'COMPLETED'
+    | 'CANCELLED'
+    | 'FAILED';
   language_route: 'ZH_TW' | 'NAN_TW' | 'HAK_TW' | 'EN_US' | 'MIXED' | 'UNKNOWN';
   consent_version: number;
   policy_version: string | null;
   transport_status: 'NOT_CONFIGURED' | 'AVAILABLE';
+}
+
+export interface VoiceTicketIssued {
+  voice_session: VoiceSession;
+  voice_ticket: string;
+  expires_at: string;
+  transport_status: 'TICKET_ISSUED';
+}
+
+export interface AsrGateDecision {
+  session_id: string;
+  decision: 'CAN_SEND_TO_AGENT' | 'CONFIRMATION_REQUIRED' | 'CANNOT_SEND_TO_AGENT';
+  confirmation_required: boolean;
+  expires_at: string;
 }
 
 export interface CompanionTurn {
@@ -40,24 +63,40 @@ export function createTextSession(config: ApiConfig, elderId: string): Promise<V
   });
 }
 
-/**
- * Session for a spoken turn. `input_mode: 'voice'` is recorded on the session so
- * a reviewer can tell whether a turn originated from speech or typing — the
- * transcript is a recognition result, not something the elder wrote.
- *
- * Core still runs its own consent check per turn; creating a session here is not
- * what authorizes recording.
- */
-export function createVoiceSession(config: ApiConfig, elderId: string): Promise<VoiceSession> {
-  return apiFetch(config, `/api/v1/elders/${elderId}/voice-sessions`, {
+export function issueVoiceTicket(
+  config: ApiConfig,
+  elderId: string,
+  language: SpeechLanguage,
+): Promise<VoiceTicketIssued> {
+  return apiFetch(config, `/api/v1/elders/${elderId}/voice-tickets`, {
     method: 'POST',
-    headers: { 'Idempotency-Key': createIdempotencyKey('voice-session') },
+    headers: { 'Idempotency-Key': createIdempotencyKey('voice-ticket') },
     body: JSON.stringify({
-      language_preference: 'ZH_TW',
-      input_mode: 'voice',
+      language_preference: toVoiceSessionLanguagePreference(language),
+      input_mode: 'voice_with_text_fallback',
+      client_audio_format: 'audio/pcm',
       client_timezone: 'Asia/Taipei',
       purpose: 'BASIC_VOICE',
     }),
+  });
+}
+
+export function confirmAsrGate(
+  config: ApiConfig,
+  sessionId: string,
+  action: 'CONFIRM' | 'REJECT',
+): Promise<AsrGateDecision> {
+  return apiFetch(config, `/api/v1/voice-sessions/${sessionId}/asr-confirmation`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': createIdempotencyKey('asr-confirmation') },
+    body: JSON.stringify({ action }),
+  });
+}
+
+export function cancelVoiceSession(config: ApiConfig, sessionId: string): Promise<VoiceSession> {
+  return apiFetch(config, `/api/v1/voice-sessions/${sessionId}/cancel`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': createIdempotencyKey('voice-session-cancel') },
   });
 }
 

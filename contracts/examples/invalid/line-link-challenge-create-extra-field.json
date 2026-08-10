@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "The BFF may submit only the one-time link_token; actor, tenant, elder, nonce and LINE subject are server-derived.",
+  "data": {
+    "link_token": "synthetic-line-link-token-20260802",
+    "actor_id": "20000000-0000-4000-8000-000000000001"
+  }
+}

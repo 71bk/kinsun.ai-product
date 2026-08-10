@@ -28,6 +28,9 @@ class ConversationService:
     async def get(self, session_id: UUID) -> ConversationSession | None:
         return await self._repository.get_by_id(session_id)
 
+    async def get_for_update(self, session_id: UUID) -> ConversationSession | None:
+        return await self._repository.get_by_id_for_update(session_id)
+
     async def create(
         self,
         *,
@@ -54,6 +57,7 @@ class ConversationService:
             initiator_actor_id=actor_id,
             initiator_type=initiator_type,
             language_route=request.language_preference.value,
+            input_mode=request.input_mode,
             state="CREATED",
             trace_id=trace_id,
             consent_id=consent.id,
@@ -111,7 +115,11 @@ class ConversationService:
         codec: VoiceTicketCodec,
     ) -> tuple[ConversationSession, IssuedVoiceTicket]:
         conversation = await self._repository.get_by_id(session_id)
-        if conversation is None or conversation.state != "CREATED":
+        if (
+            conversation is None
+            or conversation.state != "CREATED"
+            or conversation.input_mode not in {"voice", "voice_with_text_fallback"}
+        ):
             raise AuthenticationError("Voice ticket is invalid or unavailable")
         await self._require_ticket_consent(conversation)
         return conversation, codec.issue(conversation)
@@ -129,7 +137,10 @@ class ConversationService:
         if conversation is None:
             raise AuthenticationError("Voice ticket is invalid or unavailable")
         codec.verify(value, conversation)
-        if conversation.state != "CREATED":
+        if conversation.state != "CREATED" or conversation.input_mode not in {
+            "voice",
+            "voice_with_text_fallback",
+        }:
             raise AuthenticationError("Voice ticket is invalid or unavailable")
         await self._require_ticket_consent(conversation)
         return await self.transition(

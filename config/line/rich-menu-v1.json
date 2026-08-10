@@ -1,0 +1,63 @@
+{
+  "size": {
+    "width": 2500,
+    "height": 1686
+  },
+  "selected": true,
+  "name": "kinsun-ai-elder-companion-v1",
+  "chatBarText": "開啟陪伴選單",
+  "areas": [
+    {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1200,
+        "height": 1686
+      },
+      "action": {
+        "type": "message",
+        "label": "開始陪伴",
+        "text": "我想聊天"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1200,
+        "y": 0,
+        "width": 1300,
+        "height": 562
+      },
+      "action": {
+        "type": "message",
+        "label": "連結帳號",
+        "text": "連結帳號"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1200,
+        "y": 562,
+        "width": 1300,
+        "height": 562
+      },
+      "action": {
+        "type": "uri",
+        "label": "家人共享",
+        "uri": "${FRONTEND_BASE_URL}/elder/family-access"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1200,
+        "y": 1124,
+        "width": 1300,
+        "height": 562
+      },
+      "action": {
+        "type": "uri",
+        "label": "隱私設定",
+        "uri": "${FRONTEND_BASE_URL}/consent"
+      }
+    }
+  ]
+}
