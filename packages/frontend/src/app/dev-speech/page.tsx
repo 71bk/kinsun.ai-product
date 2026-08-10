@@ -110,7 +110,7 @@ export default function DevSpeechPage() {
   return (
     <main style={{ padding: 32, maxWidth: 720, fontFamily: 'system-ui, sans-serif' }}>
       <h1 style={{ fontSize: 24, marginBottom: 4 }}>Speech gateway check</h1>
-      <p style={{ color: '#666', marginBottom: 24 }}>
+      <p style={{ color: 'var(--color-muted-foreground)', marginBottom: 24 }}>
         Browser → Core Voice Ticket → speech-gateway → Core ASR Gate. Development only.
       </p>
 
@@ -123,7 +123,9 @@ export default function DevSpeechPage() {
         />
       </label>
 
-      <fieldset style={{ marginBottom: 24, border: '1px solid #ddd', padding: 16 }}>
+      <fieldset
+        style={{ marginBottom: 24, border: '1px solid var(--color-border-strong)', padding: 16 }}
+      >
         <legend>Language</legend>
         {LANGUAGES.map((option) => (
           <label key={option.value} style={{ marginRight: 16, whiteSpace: 'nowrap' }}>
@@ -138,7 +140,7 @@ export default function DevSpeechPage() {
           </label>
         ))}
         {!canSynthesize(language) && (
-          <p style={{ margin: '12px 0 0', color: '#666', fontSize: 14 }}>
+          <p style={{ margin: '12px 0 0', color: 'var(--color-muted-foreground)', fontSize: 14 }}>
             ASR only — no TTS endpoint is deployed for this language.
           </p>
         )}
@@ -153,8 +155,8 @@ export default function DevSpeechPage() {
           style={{
             padding: '12px 24px',
             fontSize: 16,
-            background: recording ? '#c0392b' : '#2c7',
-            color: '#fff',
+            background: recording ? 'var(--color-destructive)' : 'var(--color-accent-text)',
+            color: 'var(--color-on-accent)',
             border: 'none',
             borderRadius: 6,
             cursor: busy ? 'wait' : 'pointer',
@@ -164,9 +166,16 @@ export default function DevSpeechPage() {
         </button>
 
         {transcript !== '' && (
-          <div style={{ marginTop: 16, padding: 16, background: '#f6f6f6', borderRadius: 6 }}>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 16,
+              background: 'var(--color-surface)',
+              borderRadius: 6,
+            }}
+          >
             <p style={{ margin: 0, fontSize: 18 }}>{transcript}</p>
-            <p style={{ margin: '8px 0 0', color: '#666', fontSize: 14 }}>
+            <p style={{ margin: '8px 0 0', color: 'var(--color-muted-foreground)', fontSize: 14 }}>
               trusted Core decision: {gateDecision}
             </p>
           </div>
@@ -189,8 +198,8 @@ export default function DevSpeechPage() {
             marginTop: 8,
             padding: '12px 24px',
             fontSize: 16,
-            background: '#36c',
-            color: '#fff',
+            background: 'var(--color-primary-strong)',
+            color: 'var(--color-on-primary)',
             border: 'none',
             borderRadius: 6,
             cursor: busy ? 'wait' : 'pointer',
@@ -201,7 +210,7 @@ export default function DevSpeechPage() {
       </section>
 
       {error !== '' && (
-        <p style={{ marginTop: 24, color: '#c0392b' }} role="alert">
+        <p style={{ marginTop: 24, color: 'var(--color-destructive)' }} role="alert">
           {error}
         </p>
       )}
