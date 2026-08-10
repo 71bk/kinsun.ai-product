@@ -8,18 +8,11 @@ import type { MessageKey } from '@/lib/i18n/messages';
 export interface MemoryListProps {
   candidates: MemoryView[];
   confirmed: MemoryView[];
-  onConfirm: (memory: MemoryView) => Promise<void>;
   onReject: (memory: MemoryView) => Promise<void>;
   onDelete: (memory: MemoryView) => Promise<void>;
 }
 
-export function MemoryList({
-  candidates,
-  confirmed,
-  onConfirm,
-  onReject,
-  onDelete,
-}: MemoryListProps) {
+export function MemoryList({ candidates, confirmed, onReject, onDelete }: MemoryListProps) {
   const { t, formatDateTime } = useLocale();
 
   return (
@@ -50,14 +43,9 @@ export function MemoryList({
                 version: memory.version,
               })}
               actions={
-                <>
-                  <button type="button" onClick={() => onConfirm(memory)}>
-                    {t('memory.confirm')}
-                  </button>
-                  <button type="button" onClick={() => onReject(memory)}>
-                    {t('memory.reject')}
-                  </button>
-                </>
+                <button type="button" onClick={() => onReject(memory)}>
+                  {t('memory.reject')}
+                </button>
               }
             >
               {memory.content}
