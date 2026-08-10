@@ -4,18 +4,25 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from time import perf_counter
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.agent_runtime import AgentRuntimeClient
-from app.core.exceptions import ConflictError, ServiceUnavailableError
+from app.core.config import get_settings
+from app.core.exceptions import (
+    AuthenticationError,
+    ConflictError,
+    NotFoundError,
+    ServiceUnavailableError,
+)
 from app.middleware.auth import ActorContext
 from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
 from app.schemas.conversation import CompanionTurnResponse
+from app.services.asr_gate_service import AsrGateService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
 
@@ -71,6 +78,26 @@ class CompanionService:
         self._model_route = model_route
         self._conversations = ConversationService(session, tenant_id)
 
+    async def _authorize_asr_input(
+        self,
+        *,
+        conversation: ConversationSession,
+        input_text: str,
+    ) -> None:
+        settings = get_settings()
+        if not settings.asr_gate_enabled:
+            raise AuthenticationError("ASR input is unavailable")
+        await AsrGateService(
+            self._session,
+            self._tenant_id,
+            digest_secret=settings.asr_gate_hmac_secret,
+            confidence_threshold=settings.asr_gate_confidence_threshold,
+            evidence_ttl_seconds=settings.asr_gate_evidence_ttl_seconds,
+        ).authorize_agent_input(
+            conversation=conversation,
+            input_text=input_text,
+        )
+
     async def run_turn(
         self,
         *,
@@ -81,12 +108,27 @@ class CompanionService:
         idempotency_key: str,
         latency_budget_ms: int,
     ) -> CompanionTurnResponse:
-        if conversation.state != "CREATED":
-            raise ConflictError("Companion turn requires a newly created session")
+        supplied_elder_id = conversation.elder_id
+        conversation = await self._conversations.get_for_update(conversation.id)
+        if conversation is None or conversation.elder_id != supplied_elder_id:
+            raise NotFoundError("Resource not found")
+
+        is_text_turn = conversation.input_mode == "text" and conversation.state == "CREATED"
+        is_gated_voice_turn = (
+            conversation.input_mode in {"voice", "voice_with_text_fallback"}
+            and conversation.state == "PROCESSING"
+        )
+        if not is_text_turn and not is_gated_voice_turn:
+            raise ConflictError("Companion turn is not ready for Agent Runtime")
         if not conversation.policy_version:
             raise ConflictError("Voice session has no policy version")
+        if is_gated_voice_turn:
+            await self._authorize_asr_input(
+                conversation=conversation,
+                input_text=input_text,
+            )
 
-        request_id = f"req-{uuid4()}"
+        request_id = f"req-{uuid5(NAMESPACE_URL, f'kinsun:companion:{idempotency_key}')}"
         # The Agent Runtime selects a retrieval profile from `purpose`
         # (rag_integration.RAG_PURPOSES) and does not infer intent itself, so an
         # information request has to be identified here or the knowledge base is
@@ -111,20 +153,21 @@ class CompanionService:
             "latency_budget_ms": latency_budget_ms,
         }
 
-        await self._conversations.transition(
-            conversation=conversation,
-            target_state="RECORDING",
-            actor_id=actor_context.actor_id,
-            trace_id=correlation_id,
-            idempotency_key=idempotency_key,
-        )
-        await self._conversations.transition(
-            conversation=conversation,
-            target_state="PROCESSING",
-            actor_id=actor_context.actor_id,
-            trace_id=correlation_id,
-            idempotency_key=idempotency_key,
-        )
+        if is_text_turn:
+            await self._conversations.transition(
+                conversation=conversation,
+                target_state="RECORDING",
+                actor_id=actor_context.actor_id,
+                trace_id=correlation_id,
+                idempotency_key=idempotency_key,
+            )
+            await self._conversations.transition(
+                conversation=conversation,
+                target_state="PROCESSING",
+                actor_id=actor_context.actor_id,
+                trace_id=correlation_id,
+                idempotency_key=idempotency_key,
+            )
 
         started_at = datetime.now(UTC)
         started_clock = perf_counter()

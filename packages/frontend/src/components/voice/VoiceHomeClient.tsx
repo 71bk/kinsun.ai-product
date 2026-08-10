@@ -173,6 +173,9 @@ export function VoiceHomeClient() {
         <a href="/elder/family-access" style={touchLinkStyle}>
           家屬分享
         </a>
+        <a href="/account/sign-in-methods" style={touchLinkStyle}>
+          登入方式
+        </a>
         <SignOutButton label="登出" />
       </nav>
     </main>

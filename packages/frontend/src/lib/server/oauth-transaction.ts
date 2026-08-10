@@ -5,12 +5,17 @@ const PRODUCTION_OAUTH_TRANSACTION_COOKIE = '__Host-kinsun_oauth_transaction';
 const TRANSACTION_TTL_SECONDS = 10 * 60;
 const ALLOWED_RETURN_PATHS = new Set([
   '/',
+  '/account/sign-in-methods',
   '/consent',
   '/dashboard',
   '/family',
+  '/line/account-link',
   '/onboarding/resolve',
   '/sign-in',
 ]);
+
+export type LoginProvider = 'GOOGLE' | 'LINE';
+export type OnboardingIntent = 'ELDER' | 'FAMILY' | 'STAFF';
 
 export interface OAuthTransaction {
   codeVerifier: string;
@@ -18,11 +23,10 @@ export interface OAuthTransaction {
   intent: OnboardingIntent;
   invitationCode?: string;
   nonce: string;
+  provider: LoginProvider;
   returnTo: string;
   state: string;
 }
-
-export type OnboardingIntent = 'ELDER' | 'FAMILY' | 'STAFF';
 
 function base64Url(value: Buffer): string {
   return value.toString('base64url');
@@ -34,8 +38,15 @@ function randomValue(): string {
 
 function signingSecret(): string {
   const secret = process.env.COGNITO_OAUTH_TRANSACTION_SECRET;
-  if (!secret || secret.length < 32) {
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) {
     throw new Error('OAuth transaction signing secret is unavailable');
+  }
+  if (
+    secret === process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET ||
+    secret === process.env.LINE_LOGIN_CHANNEL_SECRET ||
+    secret === process.env.LINE_CHANNEL_SECRET
+  ) {
+    throw new Error('OAuth transaction signing secret must be independent');
   }
   return secret;
 }
@@ -68,6 +79,14 @@ export function onboardingIntent(value: unknown): OnboardingIntent | null {
   return value === 'ELDER' || value === 'FAMILY' || value === 'STAFF' ? value : null;
 }
 
+export function loginProvider(value: unknown): LoginProvider | null {
+  return value === undefined || value === null || value === ''
+    ? 'GOOGLE'
+    : value === 'GOOGLE' || value === 'LINE'
+      ? value
+      : null;
+}
+
 export function normalizeInvitationCode(value: unknown): string | undefined | null {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value !== 'string') return null;
@@ -80,6 +99,7 @@ export function createOAuthTransaction(
   returnTo: string,
   intent: OnboardingIntent,
   invitationCode?: string,
+  provider: LoginProvider = 'GOOGLE',
 ): OAuthTransaction {
   return {
     codeVerifier: randomValue(),
@@ -87,6 +107,7 @@ export function createOAuthTransaction(
     intent,
     ...(invitationCode ? { invitationCode } : {}),
     nonce: randomValue(),
+    provider,
     returnTo,
     state: randomValue(),
   };
@@ -111,9 +132,11 @@ export function parseOAuthTransaction(value: string | undefined): OAuthTransacti
     const parsed = JSON.parse(
       Buffer.from(payload, 'base64url').toString('utf8'),
     ) as Partial<OAuthTransaction>;
+    const provider = loginProvider(parsed.provider);
     if (
       typeof parsed.codeVerifier !== 'string' ||
       onboardingIntent(parsed.intent) === null ||
+      !provider ||
       typeof parsed.nonce !== 'string' ||
       typeof parsed.returnTo !== 'string' ||
       typeof parsed.state !== 'string' ||
@@ -123,8 +146,11 @@ export function parseOAuthTransaction(value: string | undefined): OAuthTransacti
       Date.now() - parsed.createdAt > TRANSACTION_TTL_SECONDS * 1000 ||
       !strictRelativeReturnTo(parsed.returnTo) ||
       parsed.codeVerifier.length < 43 ||
+      parsed.codeVerifier.length > 128 ||
       parsed.state.length < 32 ||
-      parsed.nonce.length < 32
+      parsed.state.length > 128 ||
+      parsed.nonce.length < 32 ||
+      parsed.nonce.length > 128
     ) {
       return null;
     }
@@ -132,6 +158,7 @@ export function parseOAuthTransaction(value: string | undefined): OAuthTransacti
     if (parsed.invitationCode !== undefined && invitationCode === null) return null;
     return {
       ...(parsed as OAuthTransaction),
+      provider,
       ...(invitationCode ? { invitationCode } : {}),
     };
   } catch {

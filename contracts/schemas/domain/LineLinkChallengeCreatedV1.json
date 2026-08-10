@@ -1,0 +1,20 @@
+{
+  "$id": "urn:kinsun:contracts:schemas:domain:LineLinkChallengeCreatedV1",
+  "title": "LineLinkChallengeCreatedV1",
+  "description": "Short-lived challenge response. The official redirect URL is returned once; Core persists only the nonce HMAC digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["challenge_id", "status", "expires_at", "account_link_url"],
+  "properties": {
+    "challenge_id": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "const": "PENDING" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "account_link_url": {
+      "type": "string",
+      "format": "uri",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^https://access\\.line\\.me/dialog/bot/accountLink\\?"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import type { ApiConfig } from '@/lib/api/client';
-import { createVoiceSession, runCompanionTurn } from '@/lib/api/companion';
+import { cancelVoiceSession, issueVoiceTicket, runCompanionTurn } from '@/lib/api/companion';
 import { blobToPcm16Base64 } from './recorder';
 import {
   canSynthesize,
@@ -9,39 +9,17 @@ import {
   type SpeechLanguage,
 } from './speech-gateway-client';
 
-/**
- * One spoken turn on the canonical path:
- *
- *   recorded audio -> speech gateway
- *                      zh-TW / en-US  -> Amazon Transcribe
- *                      nan-TW / hak-TW -> self-hosted SageMaker ASR
- *                  -> Core companion turn (agent-runtime: multi-agent + RAG + Bedrock)
- *                  -> speech gateway (Polly) -> playable audio, when available
- *
- * The reply path is identical for every language: Hokkien and Hakka differ only
- * in which model transcribes the audio. Synthesis is the one asymmetry — no
- * Hokkien/Hakka TTS endpoint is deployed, so those replies are shown as text.
- *
- * Core sits in the middle deliberately. The gateway holds no state and makes no
- * care decisions, so consent, session state and the record of what was said are
- * established by Core on the companion-turn call, not by the fact that audio was
- * successfully transcribed.
- */
-
 export interface VoiceTurnTranscription {
+  sessionId: string;
   text: string;
-  confidence: number;
-  /** False means: ask the elder to confirm or repeat. Never act on the text. */
-  acceptable: boolean;
+  decision: 'CAN_SEND_TO_AGENT' | 'CONFIRMATION_REQUIRED' | 'CANNOT_SEND_TO_AGENT';
+  confirmationRequired: boolean;
+  expiresAt: string;
 }
 
 export interface VoiceTurnReply {
   replyText: string;
-  /** Null when synthesis is unavailable for the language or failed; the reply
-   *  text is still shown rather than the turn being lost (A03.4). */
   audioUrl: string | null;
-  /** True when the language has no synthesis model, so the UI can explain that
-   *  the reply is text rather than implying playback failed. */
   textOnlyByLanguage: boolean;
   resultStatus: string;
   safetyDecision: string;
@@ -49,7 +27,7 @@ export interface VoiceTurnReply {
 
 export class VoiceTurnError extends Error {
   constructor(
-    public readonly stage: 'transcription' | 'language' | 'session' | 'companion',
+    public readonly stage: 'transcription' | 'language' | 'session' | 'gate' | 'companion',
     message: string,
   ) {
     super(message);
@@ -58,8 +36,11 @@ export class VoiceTurnError extends Error {
 }
 
 export async function transcribeTurn(
+  apiConfig: ApiConfig,
+  elderId: string,
   audio: Blob,
   language: SpeechLanguage = 'zh-TW',
+  signal?: AbortSignal,
 ): Promise<VoiceTurnTranscription> {
   let pcmBase64: string;
   try {
@@ -68,45 +49,67 @@ export async function transcribeTurn(
     throw new VoiceTurnError('transcription', 'could not decode the recorded audio');
   }
 
+  let issued: Awaited<ReturnType<typeof issueVoiceTicket>>;
   try {
-    const result = await transcribeAudio(pcmBase64, language);
+    issued = await issueVoiceTicket(apiConfig, elderId, language);
+  } catch {
+    throw new VoiceTurnError('session', 'could not issue a trusted voice ticket');
+  }
+
+  try {
+    if (signal?.aborted) {
+      await cancelIssuedSession(apiConfig, issued.voice_session.session_id);
+      throw new VoiceTurnError('transcription', 'voice transcription was cancelled');
+    }
+    const result = await transcribeAudio(
+      pcmBase64,
+      language,
+      issued.voice_session.session_id,
+      issued.voice_ticket,
+      signal,
+    );
+    if (signal?.aborted) {
+      await cancelIssuedSession(apiConfig, issued.voice_session.session_id);
+      throw new VoiceTurnError('transcription', 'voice transcription was cancelled');
+    }
+    if (result.sessionId !== issued.voice_session.session_id) {
+      throw new VoiceTurnError('gate', 'voice gate returned a mismatched session');
+    }
     return {
+      sessionId: result.sessionId,
       text: result.text,
-      confidence: result.confidence,
-      // An empty transcript is unusable regardless of the reported score: silence
-      // must not be forwarded as if the elder had spoken.
-      acceptable: result.confidenceAcceptable && result.text.trim() !== '',
+      decision: result.gateDecision,
+      confirmationRequired: result.confirmationRequired,
+      expiresAt: result.gateExpiresAt,
     };
   } catch (cause) {
+    if (cause instanceof VoiceTurnError) throw cause;
+    if (signal?.aborted) {
+      await cancelIssuedSession(apiConfig, issued.voice_session.session_id);
+      throw new VoiceTurnError('transcription', 'voice transcription was cancelled');
+    }
     if (cause instanceof LanguageUnavailableError) {
-      // Distinguished from a failure so the elder is told this language is not
-      // available rather than being asked to repeat themselves pointlessly.
       throw new VoiceTurnError('language', 'this language is not available yet');
     }
     throw new VoiceTurnError('transcription', 'speech recognition is unavailable');
   }
 }
 
-/**
- * Sends confirmed text through Core and returns the reply, spoken when possible.
- *
- * A fresh session per turn matches what Core's state machine expects — a
- * companion turn requires a newly created session — and keeps each utterance
- * individually auditable.
- */
+async function cancelIssuedSession(apiConfig: ApiConfig, sessionId: string): Promise<void> {
+  try {
+    await cancelVoiceSession(apiConfig, sessionId);
+  } catch {
+    // The server-side evidence TTL still prevents Agent use if cancellation
+    // races a gateway failure or Core is temporarily unavailable.
+  }
+}
+
 export async function speakTurn(
   apiConfig: ApiConfig,
-  elderId: string,
+  sessionId: string,
   confirmedText: string,
-  language: SpeechLanguage = 'zh-TW',
+  language: SpeechLanguage,
 ): Promise<VoiceTurnReply> {
-  let sessionId: string;
-  try {
-    sessionId = (await createVoiceSession(apiConfig, elderId)).session_id;
-  } catch {
-    throw new VoiceTurnError('session', 'could not start a voice session');
-  }
-
   let turn: Awaited<ReturnType<typeof runCompanionTurn>>;
   try {
     turn = await runCompanionTurn(apiConfig, sessionId, confirmedText);
@@ -117,8 +120,6 @@ export async function speakTurn(
   const synthesizable = canSynthesize(language);
   let audioUrl: string | null = null;
   if (synthesizable) {
-    // Synthesis is an enhancement, not the answer. If Polly fails the elder
-    // still gets the reply on screen rather than a dead turn (A03.4).
     try {
       const audio = await synthesizeSpeech(turn.reply_text, language);
       audioUrl = audioBase64ToUrl(audio.audioBase64, audio.contentType);

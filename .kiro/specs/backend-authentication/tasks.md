@@ -392,5 +392,7 @@
 - [ ] 11.3 統一legacy TypeScript authorizer
   - 另立migration spec將DynamoDB/Cognito groups授權移入Core PostgreSQL或完全隔離。
 
-- [ ] 11.4 評估LINE federation
-  - 沿用provider-neutral trusted profile/link-review/BFF flow，不複製role/membership邏輯。
+- [x] 11.4 提供feature-gated LINE federation應用層
+  - 沿用trusted profile/link-review/BFF flow，不複製role/membership邏輯。
+  - LINE Login只允許連結到既有Google／Core Actor，未連結身分不得建立或合併帳號。
+  - identity provider、AWS/CDK與hosting deployment暫緩，待平台決策後另行驗證。

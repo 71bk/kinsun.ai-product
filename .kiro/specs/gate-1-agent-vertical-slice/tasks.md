@@ -74,13 +74,13 @@
     - 定義 Voice state、final transcript reference、confidence band、speech/model/policy version 與 bounded timeout。
     - 完整 audio／transcript 不進一般 log、metric 或 error response。
     - _Requirements: R3, R10, R12_
-  - [ ] 3.2 實作 server-side low-confidence confirmation state machine
+  - [x] 3.2 實作 server-side low-confidence confirmation state machine
     - 低於 Policy threshold 時進 `LOW_CONFIDENCE_CONFIRMATION`，要求重說或確認關鍵內容。
     - reject、再次不清楚、cancel、timeout 時安全結束；同一輪自動 retry 最多一次。
     - consent 在 ASR 或低信心確認期間撤回時，立即取消 session，停止 ASR／TTS／retry／Agent。
     - 未確認或已撤回前禁止 Event／Memory extractor、formal write 與 outbox。
     - _Requirements: R2, R3, R11_
-  - [ ] 3.3 完成 Voice UI 狀態與可恢復 fallback
+  - [x] 3.3 完成 Voice UI 狀態與可恢復 fallback
     - 將既有 lowConfidence UI state 接到可信 server outcome，而非 client 自行判斷。
     - 呈現 recording／processing／confirmation／playing／cancel／timeout／offline／permission denied。
     - TTS failure 保留安全文字，不重跑 Agent 或 Domain command。

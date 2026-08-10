@@ -257,7 +257,8 @@
 
 ## 非目標
 
-- V1 不實作 LINE federation。
+- V1 的 LINE federation 僅提供預設關閉的應用層實作；identity provider、IaC 與 deployment
+  不納入本階段完成定義，啟用前必須另行驗證。
 - V1 不做 Email-based automatic account linking。
 - Cognito groups 不取代 Core Actor/membership。
 - Core 不提供 Email/password login endpoint，亦不處理 plaintext/temporary password。

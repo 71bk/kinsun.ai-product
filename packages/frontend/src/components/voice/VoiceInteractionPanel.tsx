@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiConfig } from '@/lib/api/client';
+import { confirmAsrGate } from '@/lib/api/companion';
 import { BrowserVoiceRecorder } from '@/lib/voice/recorder';
 import { speakTurn, transcribeTurn, VoiceTurnError } from '@/lib/voice/canonical-voice-turn';
 import type { SpeechLanguage } from '@/lib/voice/speech-gateway-client';
@@ -22,7 +23,12 @@ const ASR_TIMEOUT_MS = 10_000;
 const PREVIEW_TRANSCRIPT = '我今天早上有吃藥';
 
 /** States where a turn is in flight, so the language must not be swapped. */
-const busyStates = new Set<VoicePageState>(['processingAsr', 'generating', 'playing']);
+const busyStates = new Set<VoicePageState>([
+  'processingAsr',
+  'lowConfidence',
+  'generating',
+  'playing',
+]);
 
 /** Maps the page state onto the companion's presentation states. */
 function toConversationState(state: VoicePageState): ConversationState {
@@ -62,12 +68,14 @@ export function VoiceInteractionPanel({
   const [displayText, setDisplayText] = useState('');
   const [transcript, setTranscript] = useState('');
   const [pendingTranscript, setPendingTranscript] = useState('');
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [errorText, setErrorText] = useState('');
   const [noticeText, setNoticeText] = useState('');
   const [language, setLanguage] = useState<SpeechLanguage>('zh-TW');
 
   const recorderRef = useRef<BrowserVoiceRecorder | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  const asrAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setPreviewState(readDevPreviewState());
@@ -96,7 +104,11 @@ export function VoiceInteractionPanel({
   useEffect(() => {
     if (state !== 'processingAsr') return;
     const timer = window.setTimeout(() => {
-      setState((current) => (current === 'processingAsr' ? 'timeout' : current));
+      setState((current) => {
+        if (current !== 'processingAsr') return current;
+        asrAbortRef.current?.abort();
+        return 'timeout';
+      });
     }, ASR_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
   }, [state]);
@@ -112,6 +124,7 @@ export function VoiceInteractionPanel({
   // does not accumulate audio blobs in memory.
   useEffect(
     () => () => {
+      asrAbortRef.current?.abort();
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     },
     [],
@@ -124,10 +137,10 @@ export function VoiceInteractionPanel({
    * confirmed — recognition alone never triggers this.
    */
   const runCompanion = useCallback(
-    async (confirmedText: string) => {
+    async (sessionId: string, confirmedText: string) => {
       setState('generating');
       try {
-        const reply = await speakTurn(apiConfig, elderId, confirmedText);
+        const reply = await speakTurn(apiConfig, sessionId, confirmedText, language);
         setDisplayText(reply.replyText);
 
         if (reply.textOnlyByLanguage) {
@@ -154,7 +167,7 @@ export function VoiceInteractionPanel({
         setState('idle');
       }
     },
-    [apiConfig, elderId],
+    [apiConfig, language],
   );
 
   const beginRecording = useCallback(async () => {
@@ -169,6 +182,7 @@ export function VoiceInteractionPanel({
     setDisplayText('');
     setTranscript('');
     setPendingTranscript('');
+    setPendingSessionId(null);
     setErrorText('');
     setNoticeText('');
     await recorder.startRecording();
@@ -188,24 +202,40 @@ export function VoiceInteractionPanel({
 
     const blob = await recorder.stopRecording();
     setState('processingAsr');
+    const asrController = new AbortController();
+    asrAbortRef.current?.abort();
+    asrAbortRef.current = asrController;
     try {
-      const result = await transcribeTurn(blob, language);
-      if (!result.acceptable) {
-        // ASR must not pretend it understood (AGENTS.md §3). Low confidence goes
-        // to the elder for confirmation instead of into the companion turn.
-        // An empty transcript has nothing to confirm, so that resets instead.
+      const result = await transcribeTurn(
+        apiConfig,
+        elderId,
+        blob,
+        language,
+        asrController.signal,
+      );
+      if (asrController.signal.aborted) return;
+      asrAbortRef.current = null;
+      if (result.decision === 'CONFIRMATION_REQUIRED') {
         if (result.text.trim() === '') {
           setErrorText('剛剛沒有聽到聲音，請再說一次。');
           setState('idle');
           return;
         }
         setPendingTranscript(result.text);
+        setPendingSessionId(result.sessionId);
         setState('lowConfidence');
         return;
       }
+      if (result.decision !== 'CAN_SEND_TO_AGENT') {
+        setErrorText('這次語音無法安全處理，請再說一次。');
+        setState('idle');
+        return;
+      }
       setTranscript(result.text);
-      await runCompanion(result.text);
+      await runCompanion(result.sessionId, result.text);
     } catch (cause) {
+      if (asrController.signal.aborted) return;
+      asrAbortRef.current = null;
       const stage = cause instanceof VoiceTurnError ? cause.stage : null;
       setErrorText(
         stage === 'language'
@@ -217,34 +247,61 @@ export function VoiceInteractionPanel({
       );
       setState('idle');
     }
-  }, [state, beginRecording, runCompanion, language]);
+  }, [state, beginRecording, runCompanion, language, apiConfig, elderId]);
 
   // The three handlers also drop any preview override, so the full-screen card
   // stays dismissible when a reviewer opened it via ?previewState=lowConfidence.
-  const handleConfirmTranscript = useCallback(() => {
+  const handleConfirmTranscript = useCallback(async () => {
     setPreviewState(null);
     const confirmed = pendingTranscript;
+    const sessionId = pendingSessionId;
+    if (confirmed.trim() === '' || sessionId === null) {
+      setState('idle');
+      return;
+    }
+    try {
+      const decision = await confirmAsrGate(apiConfig, sessionId, 'CONFIRM');
+      if (decision.decision !== 'CAN_SEND_TO_AGENT') {
+        setErrorText('確認已逾時，請再說一次。');
+        setState('idle');
+        return;
+      }
+    } catch {
+      setErrorText('目前無法確認這段語音，請再說一次。');
+      setState('idle');
+      return;
+    }
     setTranscript(confirmed);
     setPendingTranscript('');
-    // The elder confirming the transcript is what authorizes acting on it, so
-    // the companion turn starts here rather than when recognition returned.
-    if (confirmed.trim() !== '') void runCompanion(confirmed);
-    else setState('idle');
-  }, [pendingTranscript, runCompanion]);
+    setPendingSessionId(null);
+    await runCompanion(sessionId, confirmed);
+  }, [apiConfig, pendingSessionId, pendingTranscript, runCompanion]);
 
-  const handleRetryTranscript = useCallback(() => {
-    setPreviewState(null);
+  const rejectPendingTranscript = useCallback(async () => {
+    const sessionId = pendingSessionId;
+    if (sessionId !== null) {
+      try {
+        await confirmAsrGate(apiConfig, sessionId, 'REJECT');
+      } catch {
+        // No Agent call follows a rejection. If Core is unavailable, the short
+        // evidence TTL still prevents the pending transcript from being used.
+      }
+    }
+    setPendingSessionId(null);
     setPendingTranscript('');
     setTranscript('');
     setState('idle');
-  }, []);
+  }, [apiConfig, pendingSessionId]);
+
+  const handleRetryTranscript = useCallback(() => {
+    setPreviewState(null);
+    void rejectPendingTranscript();
+  }, [rejectPendingTranscript]);
 
   const handleDeferTranscript = useCallback(() => {
-    // Nothing is kept pending — "稍後再說" must not quietly queue the utterance.
     setPreviewState(null);
-    setPendingTranscript('');
-    setState('idle');
-  }, []);
+    void rejectPendingTranscript();
+  }, [rejectPendingTranscript]);
 
   // The consent gate exists to stop recording without consent. The dev preview
   // records nothing: the effect above returns before constructing any

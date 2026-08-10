@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.2.0",
-    "summary": "Implemented Core Domain, consent, security and outbox APIs.",
-    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Cognito access tokens authenticate existing actors; the onboarding resolver separately accepts a verified Cognito ID token and never treats persona intent as authorization."
+    "version": "1.3.0",
+    "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
+    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Cognito access tokens authenticate existing actors; the onboarding resolver separately accepts a verified Cognito ID token and never treats persona intent as authorization. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
     "/health": {
@@ -121,168 +121,299 @@
         }
       }
     },
-    "/api/v1/onboarding/resolve": {
+    "/api/v1/webhooks/line": {
       "post": {
-        "tags": ["onboarding"],
-        "summary": "Resolve Google onboarding intent",
-        "description": "Called server-to-server by the BFF after Google federation through Cognito. A verified ID token establishes external identity only. ELDER creates or replays a household actor; FAMILY must atomically redeem a valid invitation before any elder access is granted.",
-        "operationId": "resolve_onboarding_api_v1_onboarding_resolve_post",
+        "tags": [
+          "line"
+        ],
+        "summary": "Receive Line Webhook",
+        "description": "Validates the raw-body LINE signature, deduplicates durable domain processing by webhookEventId, and consumes reply tokens at most once only after the corresponding event transaction commits.",
+        "operationId": "receive_line_webhook_api_v1_webhooks_line_post",
         "parameters": [
           {
-            "name": "Idempotency-Key",
+            "name": "X-Line-Signature",
             "in": "header",
-            "required": false,
-            "schema": {"type": "string", "minLength": 1, "maxLength": 160}
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Line-Signature"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Receive Line Webhook Api V1 Webhooks Line Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "400": {
+            "description": "The JSON body or webhook event collection is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/ErrorEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "../schemas/domain/ResolveOnboardingRequestV1.json"}
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "events"
+                ],
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Identity resolved to active Core authorization state.",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "../schemas/common/ResolveOnboardingEnvelopeV1.json"}
-              }
-            }
-          },
-          "401": {"$ref": "#/components/responses/Unauthorized"},
-          "403": {"$ref": "#/components/responses/Forbidden"},
-          "404": {"$ref": "#/components/responses/NotFoundOrForbidden"},
-          "409": {"$ref": "#/components/responses/Conflict"},
-          "422": {"$ref": "#/components/responses/ValidationFailed"},
-          "503": {"$ref": "#/components/responses/Unavailable"}
-        },
-        "security": [{"cognitoIdToken": []}]
+        "security": [
+          {
+            "lineSignature": []
+          }
+        ]
       }
     },
-    "/api/v1/elders/{elder_id}/family-invitations": {
+    "/api/v1/me/line-link": {
       "get": {
-        "tags": ["family-invitations"],
-        "summary": "List safe family invitation statuses",
-        "description": "Elder-only, live tenant-scoped listing. The plaintext invitation code, token hash, email digest and redeemer identity are never returned.",
-        "operationId": "list_family_invitations_api_v1_elders__elder_id__family_invitations_get",
-        "parameters": [
-          {
-            "name": "elder_id",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string", "format": "uuid"}
-          }
+        "tags": [
+          "line-account-linking"
         ],
+        "summary": "Get Line Link Status",
+        "operationId": "get_line_link_status_api_v1_me_line_link_get",
         "responses": {
           "200": {
-            "description": "Authorized invitation status list.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../schemas/common/FamilyInvitationListEnvelopeV1.json"}
+                "schema": {
+                  "$ref": "../schemas/common/LineLinkStatusEnvelopeV1.json"
+                }
               }
             }
           },
-          "401": {"$ref": "#/components/responses/Unauthorized"},
-          "403": {"$ref": "#/components/responses/Forbidden"},
-          "404": {"$ref": "#/components/responses/NotFoundOrForbidden"},
-          "409": {"$ref": "#/components/responses/Conflict"},
-          "422": {"$ref": "#/components/responses/ValidationFailed"},
-          "503": {"$ref": "#/components/responses/Unavailable"}
-        },
-        "security": [{"bearerAuth": []}]
-      },
-      "post": {
-        "tags": ["family-invitations"],
-        "summary": "Create one-time family invitation",
-        "description": "Elder-only and consent-gated. Returns the plaintext code once; Core persists only its keyed digest.",
-        "operationId": "create_family_invitation_api_v1_elders__elder_id__family_invitations_post",
-        "parameters": [
-          {
-            "name": "elder_id",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string", "format": "uuid"}
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": {"type": "string", "minLength": 1, "maxLength": 160}
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
           }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "line-account-linking"
         ],
+        "summary": "Unlink Line Account",
+        "operationId": "unlink_line_account_api_v1_me_line_link_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/LineLinkStatusEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/line-link-challenges": {
+      "post": {
+        "tags": [
+          "line-account-linking"
+        ],
+        "summary": "Create Line Link Challenge",
+        "operationId": "create_line_link_challenge_api_v1_me_line_link_challenges_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "../schemas/domain/CreateFamilyInvitationRequestV1.json"}
+              "schema": {
+                "$ref": "../schemas/domain/CreateLineLinkChallengeRequestV1.json"
+              }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
-            "description": "Invitation issued; copy the one-time code now.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../schemas/common/FamilyInvitationCreatedEnvelopeV1.json"}
+                "schema": {
+                  "$ref": "../schemas/common/LineLinkChallengeCreatedEnvelopeV1.json"
+                }
               }
             }
           },
-          "401": {"$ref": "#/components/responses/Unauthorized"},
-          "403": {"$ref": "#/components/responses/Forbidden"},
-          "404": {"$ref": "#/components/responses/NotFoundOrForbidden"},
-          "409": {"$ref": "#/components/responses/Conflict"},
-          "422": {"$ref": "#/components/responses/ValidationFailed"},
-          "503": {"$ref": "#/components/responses/Unavailable"}
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
         },
-        "security": [{"bearerAuth": []}]
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
-    "/api/v1/elders/{elder_id}/family-invitations/{invitation_id}/revoke": {
-      "post": {
-        "tags": ["family-invitations"],
-        "summary": "Revoke an issued family invitation",
-        "description": "Elder-only, idempotent revocation. A redeemed, expired or locked invitation cannot be converted to revoked.",
-        "operationId": "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__invitation_id__revoke_post",
+    "/api/v1/me/line-link-challenges/{challenge_id}": {
+      "get": {
+        "tags": [
+          "line-account-linking"
+        ],
+        "summary": "Get Line Link Challenge Status",
+        "operationId": "get_line_link_challenge_status_api_v1_me_line_link_challenges__challenge_id__get",
         "parameters": [
           {
-            "name": "elder_id",
+            "name": "challenge_id",
             "in": "path",
             "required": true,
-            "schema": {"type": "string", "format": "uuid"}
-          },
-          {
-            "name": "invitation_id",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string", "format": "uuid"}
-          },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": {"type": "string", "minLength": 1, "maxLength": 160}
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Challenge Id"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Invitation is revoked, including a safe replay of the prior revocation.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../schemas/common/FamilyInvitationStatusEnvelopeV1.json"}
+                "schema": {
+                  "$ref": "../schemas/common/LineLinkChallengeStatusEnvelopeV1.json"
+                }
               }
             }
           },
-          "401": {"$ref": "#/components/responses/Unauthorized"},
-          "403": {"$ref": "#/components/responses/Forbidden"},
-          "404": {"$ref": "#/components/responses/NotFoundOrForbidden"},
-          "409": {"$ref": "#/components/responses/Conflict"},
-          "422": {"$ref": "#/components/responses/ValidationFailed"},
-          "503": {"$ref": "#/components/responses/Unavailable"}
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
         },
-        "security": [{"bearerAuth": []}]
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/me": {
@@ -419,6 +550,79 @@
         ]
       }
     },
+    "/api/v1/onboarding/resolve": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Resolve Onboarding",
+        "description": "Resolve a BFF callback intent into formal Core database state.",
+        "operationId": "resolve_onboarding_api_v1_onboarding_resolve_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/ResolveOnboardingRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/ResolveOnboardingEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "cognitoIdToken": []
+          }
+        ]
+      }
+    },
     "/api/v1/elders/{elder_id}": {
       "get": {
         "tags": [
@@ -507,6 +711,210 @@
               "application/json": {
                 "schema": {
                   "$ref": "../schemas/common/ElderAccessContextEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/family-invitations": {
+      "post": {
+        "tags": [
+          "family-invitations"
+        ],
+        "summary": "Create Family Invitation",
+        "operationId": "create_family_invitation_api_v1_elders__elder_id__family_invitations_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/CreateFamilyInvitationRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/FamilyInvitationCreatedEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "family-invitations"
+        ],
+        "summary": "List Family Invitations",
+        "operationId": "list_family_invitations_api_v1_elders__elder_id__family_invitations_get",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/FamilyInvitationListEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/family-invitations/{invitation_id}/revoke": {
+      "post": {
+        "tags": [
+          "family-invitations"
+        ],
+        "summary": "Revoke Family Invitation",
+        "operationId": "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__invitation_id__revoke_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/FamilyInvitationStatusEnvelopeV1.json"
                 }
               }
             }
@@ -871,6 +1279,262 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/voice-tickets": {
+      "post": {
+        "tags": [
+          "voice-sessions"
+        ],
+        "summary": "Issue Voice Ticket",
+        "description": "Issue an opaque, short-lived capability from trusted server context.",
+        "operationId": "issue_voice_ticket_api_v1_elders__elder_id__voice_tickets_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/CreateVoiceTicketRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/VoiceTicketIssuedEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/voice-tickets/consume": {
+      "post": {
+        "tags": [
+          "voice-sessions"
+        ],
+        "summary": "Consume Voice Ticket",
+        "description": "Consume a Ticket once after service identity and live-consent checks.",
+        "operationId": "consume_voice_ticket_api_v1_internal_voice_tickets_consume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/ConsumeVoiceTicketRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/VoiceSessionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/asr-results": {
+      "post": {
+        "tags": [
+          "voice-sessions"
+        ],
+        "summary": "Submit private ASR evidence to the Core safety gate",
+        "description": "Internal system-service route. Core verifies a consumed RECORDING session, live BASIC_VOICE consent, input mode and language before making the threshold decision. No transcript, confidence, ticket, digest or audio is returned.",
+        "operationId": "submit_asr_result_api_v1_internal_asr_results_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/SubmitAsrResultRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Safe Core ASR gate decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/AsrGateDecisionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/voice-sessions/{session_id}/asr-confirmation": {
+      "post": {
+        "tags": [
+          "voice-sessions"
+        ],
+        "summary": "Confirm or reject a low-confidence ASR result",
+        "description": "Only the authenticated elder who owns the session may decide. The response omits transcript, confidence, ticket, digest and audio.",
+        "operationId": "confirm_asr_gate_api_v1_voice_sessions__session_id__asr_confirmation_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/ConfirmAsrGateRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Safe Core ASR gate decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/AsrGateDecisionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFoundOrForbidden"
@@ -1310,7 +1974,7 @@
           "care-events"
         ],
         "summary": "List Care Events",
-        "description": "List tenant-scoped events with status, event_type, and inclusive UTC date filters applied before opaque-cursor pagination. Non-formal states remain reviewer-only.",
+        "description": "List scoped events with server-side filters before opaque pagination.",
         "operationId": "list_care_events_api_v1_elders__elder_id__care_events_get",
         "parameters": [
           {
@@ -1359,19 +2023,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "enum": [
-                    "MEAL",
-                    "ACTIVITY",
-                    "SLEEP",
-                    "MEDICATION_STATEMENT",
-                    "EMOTION_EXPRESSION",
-                    "SOCIAL_CONTACT",
-                    "EXPECTED_CONTACT_MISSED",
-                    "ACTIVITY_PARTICIPATION",
-                    "ACTIVITY_CANCELLED",
-                    "COMPANIONSHIP_NEED"
-                  ]
+                  "$ref": "#/components/schemas/CareEventType"
                 },
                 {
                   "type": "null"
@@ -1895,7 +2547,6 @@
           "memories"
         ],
         "summary": "Confirm Memory",
-        "description": "Only the authenticated elder self may activate a candidate with ELDER_UI. Caregiver or legal-representative confirmation attempts fail closed without creating formal state or outbox side effects.",
         "operationId": "confirm_memory_api_v1_elders__elder_id__memory_candidates__memory_id__confirm_post",
         "parameters": [
           {
@@ -2283,6 +2934,60 @@
               "application/json": {
                 "schema": {
                   "$ref": "../schemas/common/MemoryDeletionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/notification-jobs/line-daily": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Run Daily Line Notifications",
+        "operationId": "run_daily_line_notifications_api_v1_internal_notification_jobs_line_daily_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/DailyLineNotificationJobRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/DailyLineNotificationJobEnvelopeV1.json"
                 }
               }
             }
@@ -3489,7 +4194,6 @@
           "agent-runs"
         ],
         "summary": "Register Agent Run",
-        "description": "Create a Core-owned UUID AgentRun row before Tool execution. Requires an active SYSTEM_SERVICE identity with agent_run:create scope. Tenant and actor identity come only from authentication; a supplied session must belong to the same tenant and elder and carry the requested policy snapshot.",
         "operationId": "register_agent_run_api_v1_internal_agent_runs_post",
         "parameters": [
           {
@@ -3516,7 +4220,7 @@
         },
         "responses": {
           "201": {
-            "description": "AgentRun registered, or the original registration replayed for the same idempotency key.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -3557,7 +4261,6 @@
           "agent-runs"
         ],
         "summary": "Complete Agent Run",
-        "description": "Atomically transition the creator actor's Core-owned AgentRun from RUNNING to one terminal outcome. Requires an active SYSTEM_SERVICE identity and Idempotency-Key. An identical terminal replay returns the canonical state; a different terminal payload conflicts, and missing or foreign-scoped runs remain undisclosed as 404.",
         "operationId": "complete_agent_run_api_v1_internal_agent_runs__agent_run_id__complete_post",
         "parameters": [
           {
@@ -3594,7 +4297,7 @@
         },
         "responses": {
           "200": {
-            "description": "AgentRun completed, or the canonical terminal state replayed for an identical completion.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -3864,6 +4567,12 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "Cognito ID token accepted only by onboarding resolution. Core verifies signature, issuer, expiry, token_use=id, audience and verified email; claims do not directly grant any role or elder scope."
+      },
+      "lineSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Line-Signature",
+        "description": "Base64 HMAC-SHA256 over the unmodified request body using the LINE Channel secret. It is not a bearer credential."
       }
     },
     "responses": {

@@ -44,7 +44,13 @@ class ConversationRepository(BaseRepository):
                 ConversationSession.tenant_id == self._tenant_id,
                 ConversationSession.consent_id == consent_id,
                 ConversationSession.state.in_(
-                    {"CREATED", "RECORDING", "PROCESSING", "RESPONDING"}
+                    {
+                        "CREATED",
+                        "RECORDING",
+                        "AWAITING_CONFIRMATION",
+                        "PROCESSING",
+                        "RESPONDING",
+                    }
                 ),
             )
             .with_for_update()

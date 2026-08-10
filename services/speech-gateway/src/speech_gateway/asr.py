@@ -14,10 +14,6 @@ from __future__ import annotations
 
 import asyncio
 
-from amazon_transcribe.client import TranscribeStreamingClient
-from amazon_transcribe.handlers import TranscriptResultStreamHandler
-from amazon_transcribe.model import TranscriptEvent
-
 from speech_gateway.models import TranscribeLanguage, TranscriptSegment
 
 # 3200 bytes = 100 ms of 16 kHz 16-bit mono PCM. Frame size is a service limit,
@@ -32,44 +28,55 @@ LANGUAGE_CODES: dict[TranscribeLanguage, str] = {
 MODEL_VERSION = "aws-transcribe-streaming"
 
 
-class _SegmentCollector(TranscriptResultStreamHandler):
-    def __init__(self, stream) -> None:  # noqa: ANN001 - SDK type
-        super().__init__(stream)
-        self.segments: list[TranscriptSegment] = []
-
-    async def handle_transcript_event(self, transcript_event: TranscriptEvent) -> None:
-        for result in transcript_event.transcript.results:
-            if result.is_partial:
-                continue
-            alternatives = result.alternatives or []
-            if not alternatives:
-                continue
-            alternative = alternatives[0]
-            if not alternative.transcript:
-                continue
-
-            items = alternative.items or []
-            confidences = [
-                item.confidence for item in items if getattr(item, "confidence", None) is not None
-            ]
-            segment_confidence = sum(confidences) / len(confidences) if confidences else 1.0
-
-            self.segments.append(
-                TranscriptSegment(
-                    text=alternative.transcript,
-                    start_time=result.start_time or 0.0,
-                    end_time=result.end_time or 0.0,
-                    confidence=segment_confidence,
-                )
-            )
-
-
 async def transcribe_pcm(
     audio: bytes,
     language: TranscribeLanguage,
     sample_rate: int,
     region: str,
 ) -> tuple[str, float, list[TranscriptSegment]]:
+    # Keep the provider SDK inside the adapter call. Contract tests and other
+    # services can import this module without AWS packages; a real ASR request
+    # still fails clearly if the declared runtime dependency is absent.
+    from amazon_transcribe.client import TranscribeStreamingClient
+    from amazon_transcribe.handlers import TranscriptResultStreamHandler
+    from amazon_transcribe.model import TranscriptEvent
+
+    class _SegmentCollector(TranscriptResultStreamHandler):
+        def __init__(self, stream) -> None:  # noqa: ANN001 - SDK type
+            super().__init__(stream)
+            self.segments: list[TranscriptSegment] = []
+
+        async def handle_transcript_event(
+            self,
+            transcript_event: TranscriptEvent,
+        ) -> None:
+            for result in transcript_event.transcript.results:
+                if result.is_partial:
+                    continue
+                alternatives = result.alternatives or []
+                if not alternatives:
+                    continue
+                alternative = alternatives[0]
+                if not alternative.transcript:
+                    continue
+
+                items = alternative.items or []
+                confidences = [
+                    item.confidence
+                    for item in items
+                    if getattr(item, "confidence", None) is not None
+                ]
+                segment_confidence = sum(confidences) / len(confidences) if confidences else 1.0
+
+                self.segments.append(
+                    TranscriptSegment(
+                        text=alternative.transcript,
+                        start_time=result.start_time or 0.0,
+                        end_time=result.end_time or 0.0,
+                        confidence=segment_confidence,
+                    )
+                )
+
     client = TranscribeStreamingClient(region=region)
     stream = await client.start_stream_transcription(
         language_code=LANGUAGE_CODES[language],

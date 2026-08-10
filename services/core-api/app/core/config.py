@@ -7,8 +7,10 @@ Provides a singleton accessor via get_settings().
 from __future__ import annotations
 
 import os
+import re
 from enum import Enum
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -30,12 +32,14 @@ class DatabasePoolMode(str, Enum):
     NULL = "null"
 
 
-# Determine env_file BEFORE class body evaluation.
-# In production we never read .env; in development we do (env vars still take precedence).
-_env_file: str | None = ".env" if os.getenv("APP_ENV", "development") != "production" else None
+# Resolve the repository-level .env independently of the process working directory.
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+_env_file: str | None = (
+    str(_REPOSITORY_ROOT / ".env") if os.getenv("APP_ENV", "development") != "production" else None
+)
 
 # Substrings in field names that indicate sensitive data (used for redaction).
-_SENSITIVE_SUBSTRINGS: tuple[str, ...] = ("password", "secret", "key")
+_SENSITIVE_SUBSTRINGS: tuple[str, ...] = ("password", "secret", "key", "token")
 
 
 class Settings(BaseSettings):
@@ -87,10 +91,29 @@ class Settings(BaseSettings):
     cognito_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
     family_invitation_hmac_secret: str = ""
 
+    # ─── LINE Messaging API (disabled until routes and provider are approved) ─────
+    line_channel_secret: str = ""
+    line_channel_access_token: str = ""
+    line_account_link_enabled: bool = False
+    line_identity_hmac_secret: str = ""
+    line_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    line_account_link_base_url: str = Field(default="", max_length=2048)
+    line_link_challenge_ttl_seconds: int = Field(default=600, ge=60, le=600)
+    line_link_challenge_max_attempts: int = Field(default=3, ge=1, le=5)
+    line_messaging_timeout_seconds: float = Field(default=10.0, gt=0, le=30)
+    line_subject_encryption_secret: str = ""
+    line_daily_notification_enabled: bool = False
+    line_daily_notification_timezone: str = Field(default="Asia/Taipei", max_length=64)
+    line_daily_notification_send_time: str = Field(default="08:00", max_length=5)
+
     # ─── Internal service adapters ───────────────────────────────────────────────
     voice_ticket_enabled: bool = False
     voice_ticket_hmac_secret: str = ""
     voice_ticket_ttl_seconds: int = Field(default=60, ge=15, le=120)
+    asr_gate_enabled: bool = False
+    asr_gate_hmac_secret: str = ""
+    asr_gate_confidence_threshold: float = Field(default=0.85, gt=0, le=1)
+    asr_gate_evidence_ttl_seconds: int = Field(default=900, ge=60, le=86_400)
     agent_runtime_url: str = "http://127.0.0.1:8001"
     agent_runtime_timeout_seconds: float = Field(default=10.0, gt=0, le=30)
     agent_runtime_model_id: str = Field(default="mock", min_length=1, max_length=200)
@@ -105,8 +128,8 @@ class Settings(BaseSettings):
         return v
 
     @model_validator(mode="after")
-    def validate_cognito_configuration(self) -> Settings:
-        """Require a complete, server-owned Cognito configuration when enabled."""
+    def validate_service_configuration(self) -> Settings:
+        """Require complete server-owned auth and LINE settings when enabled."""
         if self.cognito_auth_enabled and not all(
             (
                 self.cognito_region.strip(),
@@ -126,13 +149,89 @@ class Settings(BaseSettings):
                 "FAMILY_INVITATION_HMAC_SECRET must contain at least 32 bytes "
                 "when COGNITO_AUTH_ENABLED=true"
             )
-        if self.voice_ticket_enabled and len(
-            self.voice_ticket_hmac_secret.encode("utf-8")
-        ) < 32:
+
+        if self.line_account_link_enabled:
+            if not self.line_channel_secret.strip() or not self.line_channel_access_token.strip():
+                raise ValueError(
+                    "LINE_CHANNEL_SECRET and LINE_CHANNEL_ACCESS_TOKEN are required "
+                    "when LINE_ACCOUNT_LINK_ENABLED=true"
+                )
+            if len(self.line_identity_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "LINE_IDENTITY_HMAC_SECRET must contain at least 32 bytes "
+                    "when LINE_ACCOUNT_LINK_ENABLED=true"
+                )
+            if self.line_identity_hmac_secret in {
+                self.line_channel_secret,
+                self.family_invitation_hmac_secret,
+            }:
+                raise ValueError(
+                    "LINE_IDENTITY_HMAC_SECRET must be independent from LINE channel "
+                    "and family invitation secrets"
+                )
+            if self.line_identity_hmac_key_version != 1:
+                raise ValueError(
+                    "LINE_IDENTITY_HMAC_KEY_VERSION must remain 1 for the MVP; "
+                    "key rotation requires an explicit identity rekey migration"
+                )
+            base_url = self.line_account_link_base_url.strip().rstrip("/")
+            authority = base_url.removeprefix("https://")
+            if (
+                not base_url.startswith("https://")
+                or not authority
+                or "/" in authority
+                or "@" in authority
+                or "?" in authority
+                or "#" in authority
+                or any(character.isspace() for character in authority)
+            ):
+                raise ValueError(
+                    "LINE_ACCOUNT_LINK_BASE_URL must be a fixed HTTPS origin "
+                    "when LINE_ACCOUNT_LINK_ENABLED=true"
+                )
+            self.line_account_link_base_url = base_url
+        if self.line_daily_notification_enabled:
+            if not self.line_account_link_enabled:
+                raise ValueError(
+                    "LINE_ACCOUNT_LINK_ENABLED must be true when "
+                    "LINE_DAILY_NOTIFICATION_ENABLED=true"
+                )
+            if len(self.line_subject_encryption_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "LINE_SUBJECT_ENCRYPTION_SECRET must contain at least 32 bytes "
+                    "when LINE_DAILY_NOTIFICATION_ENABLED=true"
+                )
+            if self.line_subject_encryption_secret in {
+                self.line_channel_secret,
+                self.line_identity_hmac_secret,
+                self.family_invitation_hmac_secret,
+            }:
+                raise ValueError(
+                    "LINE_SUBJECT_ENCRYPTION_SECRET must be independent from all other secrets"
+                )
+            if self.line_daily_notification_timezone != "Asia/Taipei":
+                raise ValueError("LINE_DAILY_NOTIFICATION_TIMEZONE must be Asia/Taipei")
+            if not re.fullmatch(
+                r"(?:[01][0-9]|2[0-3]):[0-5][0-9]",
+                self.line_daily_notification_send_time,
+            ):
+                raise ValueError("LINE_DAILY_NOTIFICATION_SEND_TIME must use HH:MM")
+            if self.line_daily_notification_send_time != "08:00":
+                raise ValueError("LINE_DAILY_NOTIFICATION_SEND_TIME must remain 08:00")
+        if self.voice_ticket_enabled and len(self.voice_ticket_hmac_secret.encode("utf-8")) < 32:
             raise ValueError(
                 "VOICE_TICKET_HMAC_SECRET must contain at least 32 bytes "
                 "when VOICE_TICKET_ENABLED=true"
             )
+        if self.asr_gate_enabled:
+            if not self.voice_ticket_enabled:
+                raise ValueError("VOICE_TICKET_ENABLED must be true when ASR_GATE_ENABLED=true")
+            if len(self.asr_gate_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError("ASR_GATE_HMAC_SECRET must contain at least 32 bytes when enabled")
+            if self.asr_gate_hmac_secret == self.voice_ticket_hmac_secret:
+                raise ValueError(
+                    "ASR_GATE_HMAC_SECRET must be independent from " "VOICE_TICKET_HMAC_SECRET"
+                )
         return self
 
     # ─── Secret redaction ────────────────────────────────────────────────────────

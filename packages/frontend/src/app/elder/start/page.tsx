@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 import { touchLinkStyle } from '@/components/touch-link';
 
 export default function ElderStartPage() {
+  const showLine = process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
   return (
     <main
       style={{
@@ -24,6 +27,7 @@ export default function ElderStartPage() {
       </p>
       <form action="/backend/auth/login" method="post">
         <input name="intent" type="hidden" value="ELDER" />
+        <input name="provider" type="hidden" value="GOOGLE" />
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         {/* §6.1 — 64px is the elder-surface minimum, and it comes from
             --touch-min rather than a hardcoded height so a 200% system font
@@ -46,6 +50,42 @@ export default function ElderStartPage() {
           使用 Google 繼續
         </button>
       </form>
+      {showLine && (
+        <form action="/backend/auth/login" method="post" style={{ marginTop: 'var(--space-3)' }}>
+          <input name="intent" type="hidden" value="ELDER" />
+          <input name="provider" type="hidden" value="LINE" />
+          <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+          <button
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--color-primary-text)',
+              cursor: 'pointer',
+              display: 'block',
+              fontSize: 'var(--text-lg)',
+              minHeight: 'var(--touch-min)',
+              padding: 'var(--space-4) var(--space-5)',
+              width: '100%',
+            }}
+            type="submit"
+          >
+            使用已連結的 LINE 登入
+          </button>
+        </form>
+      )}
+      {showLine && (
+        <p
+          style={{
+            color: 'var(--color-foreground)',
+            fontSize: 'var(--text-base)',
+            lineHeight: 'var(--leading-body)',
+            marginTop: 'var(--space-3)',
+          }}
+        >
+          LINE 只能登入已在「登入方式」完成連結的帳號，不能建立或合併新帳號。
+        </p>
+      )}
       <p
         style={{
           color: 'var(--color-foreground)',

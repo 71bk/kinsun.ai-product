@@ -16,10 +16,17 @@ import base64
 import binascii
 import logging
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from speech_gateway.asr import MODEL_VERSION, transcribe_pcm
+from speech_gateway.core_voice_gate import (
+    CoreGateRejectedError,
+    CoreGateUnavailableError,
+    CoreVoiceGateClient,
+)
 from speech_gateway.models import (
     SynthesizeRequest,
     SynthesizeResponse,
@@ -45,9 +52,34 @@ logger = logging.getLogger("speech_gateway")
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 
 
-def create_app() -> FastAPI:
+_CORE_LANGUAGE_ROUTES = {
+    "zh-TW": "ZH_TW",
+    "en-US": "EN_US",
+    "nan-TW": "NAN_TW",
+    "hak-TW": "HAK_TW",
+}
+
+
+def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
     settings = get_settings()
+    core = core_client or CoreVoiceGateClient(
+        base_url=settings.CORE_API_BASE_URL,
+        timeout_seconds=settings.CORE_API_TIMEOUT_SECONDS,
+        service_token=settings.CORE_API_SERVICE_TOKEN,
+    )
     app = FastAPI(title="kinsun-speech-gateway", version="0.1.0")
+
+    @app.exception_handler(RequestValidationError)
+    async def safe_request_validation_error(
+        request: Request,
+        exc: RequestValidationError,
+    ) -> JSONResponse:
+        """Reject malformed audio/tickets without echoing Restricted Data."""
+        logger.warning(
+            "request validation failed",
+            extra={"path": request.url.path, "error_count": len(exc.errors())},
+        )
+        return JSONResponse(status_code=422, content={"detail": "request validation failed"})
 
     # Local development only: the browser page used for manual voice checks is
     # served from a different port. A deployed gateway must be reached through
@@ -76,10 +108,20 @@ def create_app() -> FastAPI:
         if len(audio) > MAX_AUDIO_BYTES:
             raise HTTPException(status_code=413, detail="audio payload is too large")
 
+        try:
+            await core.consume_ticket(
+                session_id=payload.session_id,
+                voice_ticket=payload.voice_ticket,
+            )
+        except CoreGateRejectedError as exc:
+            raise HTTPException(status_code=403, detail="voice session unavailable") from exc
+        except CoreGateUnavailableError as exc:
+            raise HTTPException(status_code=503, detail="voice safety gate unavailable") from exc
+
         model_version = MODEL_VERSION
         try:
             if payload.language in _SAGEMAKER_LANGUAGES:
-                text, confidence, segments, model_version = await transcribe_via_sagemaker(
+                text, confidence, _segments, model_version = await transcribe_via_sagemaker(
                     audio,
                     payload.language,  # type: ignore[arg-type]
                     payload.sample_rate,
@@ -87,7 +129,7 @@ def create_app() -> FastAPI:
                     settings.SAGEMAKER_ASR_ENDPOINT,
                 )
             else:
-                text, confidence, segments = await transcribe_pcm(
+                text, confidence, _segments = await transcribe_pcm(
                     audio,
                     payload.language,  # type: ignore[arg-type]
                     payload.sample_rate,
@@ -98,20 +140,42 @@ def create_app() -> FastAPI:
             # has no model for it, which is a different thing for the caller than
             # a model that failed.
             logger.warning("no ASR endpoint configured for %s", payload.language)
+            await _fail_consumed_session(core, payload.session_id)
             raise HTTPException(
                 status_code=501, detail="this language is not available in this deployment"
             ) from exc
         except Exception as exc:
             logger.warning("transcription failed: %s", type(exc).__name__)
+            await _fail_consumed_session(core, payload.session_id)
             raise HTTPException(status_code=502, detail="speech recognition unavailable") from exc
 
+        if not text.strip():
+            await _fail_consumed_session(core, payload.session_id)
+            raise HTTPException(status_code=422, detail="speech recognition returned no text")
+
+        try:
+            decision = await core.submit_asr_result(
+                session_id=payload.session_id,
+                language_route=_CORE_LANGUAGE_ROUTES[payload.language],
+                model_version=model_version,
+                confidence=confidence,
+                transcript=text,
+            )
+        except CoreGateRejectedError as exc:
+            await _fail_consumed_session(core, payload.session_id)
+            raise HTTPException(status_code=403, detail="voice session unavailable") from exc
+        except CoreGateUnavailableError as exc:
+            await _fail_consumed_session(core, payload.session_id)
+            raise HTTPException(status_code=503, detail="voice safety gate unavailable") from exc
+
         return TranscribeResponse(
+            session_id=payload.session_id,
             text=text,
-            confidence=confidence,
-            confidence_acceptable=confidence >= settings.ASR_CONFIDENCE_THRESHOLD,
             language=payload.language,
             model_version=model_version,
-            segments=segments,
+            gate_decision=decision.decision,
+            confirmation_required=decision.confirmation_required,
+            gate_expires_at=decision.expires_at,
         )
 
     @app.post("/api/v1/speech/syntheses", response_model=SynthesizeResponse)
@@ -131,6 +195,16 @@ def create_app() -> FastAPI:
         )
 
     return app
+
+
+async def _fail_consumed_session(
+    core: CoreVoiceGateClient,
+    session_id,
+) -> None:
+    try:
+        await core.fail_session(session_id=session_id)
+    except (CoreGateRejectedError, CoreGateUnavailableError):
+        logger.warning("could not mark failed voice session")
 
 
 app = create_app()

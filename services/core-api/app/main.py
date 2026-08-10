@@ -33,7 +33,10 @@ from app.api.error_handlers import register_exception_handlers
 from app.api.family_invitations import router as family_invitations_router
 from app.api.health import router as health_router
 from app.api.identity import router as identity_router
+from app.api.line_links import router as line_links_router
+from app.api.line_webhook import router as line_webhook_router
 from app.api.memories import router as memories_router
+from app.api.notifications import router as notifications_router
 from app.api.onboarding import router as onboarding_router
 from app.api.ready import router as ready_router
 from app.api.reports import router as reports_router
@@ -165,6 +168,8 @@ def create_app() -> FastAPI:
     # ── Register routes ──────────────────────────────────────────────────────
     app.include_router(health_router)
     app.include_router(ready_router)
+    app.include_router(line_webhook_router)
+    app.include_router(line_links_router)
     app.include_router(identity_router)
     app.include_router(onboarding_router)
     app.include_router(elders_router)
@@ -174,6 +179,7 @@ def create_app() -> FastAPI:
     app.include_router(voice_sessions_router)
     app.include_router(care_events_router)
     app.include_router(memories_router)
+    app.include_router(notifications_router)
     app.include_router(summaries_router)
     app.include_router(reports_router)
     app.include_router(assignments_router)
