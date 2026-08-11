@@ -57,10 +57,9 @@ class TranscribeResponse(GatewayModel):
 
 class SynthesizeRequest(GatewayModel):
     text: str = Field(min_length=1, max_length=3000)
-    # TTS still covers Mandarin and English only: no Hokkien/Hakka synthesis
-    # endpoint is deployed yet, and the contract notes a known crash in the nan
-    # TTS model with Han-character input.
-    language: TranscribeLanguage
+    # Mandarin/English use Polly; Hokkien/Hakka require the private SageMaker
+    # endpoint and fail closed when it has not been configured.
+    language: SpeechLanguage
     speaking_speed: SpeakingSpeed = "normal"
 
 
