@@ -16,5 +16,6 @@ new CanonicalStagingFoundationStack(app, 'KinsunCanonicalStagingFoundation', {
   // This hard-fails synthesis if a future change adds a file or Docker asset. The resulting
   // template can be uploaded through CloudFormation Console without a CDK bootstrap stack.
   synthesizer: new cdk.BootstraplessSynthesizer(),
-  description: 'Kinsun canonical staging foundation (no application services and no legacy backend)',
+  description:
+    'Kinsun canonical staging foundation (no application services and no legacy backend)',
 });

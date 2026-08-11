@@ -1,0 +1,167 @@
+import { logAuthDiagnostic } from './auth-diagnostics';
+import type { GoogleOidcExchangeResult } from './google-oidc';
+import type { GoogleOidcTransaction } from './google-oidc-transaction';
+
+const HANDOFF_PATH = '/api/v1/internal/auth/google/handoff';
+const HANDOFF_TIMEOUT_MS = 10_000;
+const MAX_RESPONSE_BYTES = 64 * 1024;
+const APP_SESSION_PATTERN = /^ks1_[A-Za-z0-9_-]{43}$/;
+const PENDING_IDENTITY_PATTERN = /^kp1_[A-Za-z0-9_-]{43}$/;
+
+export interface AuthenticatedGoogleCoreHandoff {
+  status: 'AUTHENTICATED';
+  sessionToken: string;
+  idleExpiresAt: string;
+  absoluteExpiresAt: string;
+}
+
+export interface PendingGoogleCoreHandoff {
+  status: 'PENDING';
+  pendingToken: string;
+  expiresAt: string;
+}
+
+export type GoogleCoreHandoffResult = AuthenticatedGoogleCoreHandoff | PendingGoogleCoreHandoff;
+
+function safeCoreBaseUrl(): URL {
+  const value = process.env.CORE_API_INTERNAL_URL;
+  if (!value) throw new Error('Core Google handoff is unavailable');
+  try {
+    const target = new URL(value);
+    if (
+      target.username ||
+      target.password ||
+      target.search ||
+      target.hash ||
+      (target.protocol !== 'http:' && target.protocol !== 'https:')
+    ) {
+      throw new Error('invalid');
+    }
+    return target;
+  } catch {
+    throw new Error('Core Google handoff is unavailable');
+  }
+}
+
+function handoffTarget(): URL {
+  const coreBase = safeCoreBaseUrl();
+  const target = new URL(HANDOFF_PATH, coreBase);
+  if (target.origin !== coreBase.origin || target.pathname !== HANDOFF_PATH) {
+    throw new Error('Core Google handoff is unavailable');
+  }
+  return target;
+}
+
+function handoffSecret(): string {
+  const value = process.env.GOOGLE_OIDC_HANDOFF_SECRET;
+  if (
+    !value ||
+    value !== value.trim() ||
+    Buffer.byteLength(value, 'utf8') < 32 ||
+    value.length > 512 ||
+    /\s/.test(value)
+  ) {
+    throw new Error('Core Google handoff is unavailable');
+  }
+  const forbiddenReuse = [
+    process.env.GOOGLE_OIDC_CLIENT_SECRET,
+    process.env.GOOGLE_OIDC_TRANSACTION_SECRET,
+    process.env.COGNITO_OAUTH_TRANSACTION_SECRET,
+    process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET,
+  ];
+  if (forbiddenReuse.some((candidate) => candidate && candidate === value)) {
+    throw new Error('Google handoff secret must be independent');
+  }
+  return value;
+}
+
+function normalizedTimestamp(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > 64) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? value : null;
+}
+
+function parseHandoffResponse(value: unknown): GoogleCoreHandoffResult | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const data = (value as { data?: unknown }).data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const payload = data as Record<string, unknown>;
+  if (payload.status === 'AUTHENTICATED') {
+    const idleExpiresAt = normalizedTimestamp(payload.idle_expires_at);
+    const absoluteExpiresAt = normalizedTimestamp(payload.absolute_expires_at);
+    if (
+      typeof payload.session_token !== 'string' ||
+      !APP_SESSION_PATTERN.test(payload.session_token) ||
+      !idleExpiresAt ||
+      !absoluteExpiresAt
+    ) {
+      return null;
+    }
+    return {
+      status: 'AUTHENTICATED',
+      sessionToken: payload.session_token,
+      idleExpiresAt,
+      absoluteExpiresAt,
+    };
+  }
+  if (payload.status === 'PENDING') {
+    const expiresAt = normalizedTimestamp(payload.expires_at);
+    if (
+      typeof payload.pending_token !== 'string' ||
+      !PENDING_IDENTITY_PATTERN.test(payload.pending_token) ||
+      !expiresAt
+    ) {
+      return null;
+    }
+    return { status: 'PENDING', pendingToken: payload.pending_token, expiresAt };
+  }
+  return null;
+}
+
+/**
+ * Hand an ID token to Core for independent verification. This is an internal,
+ * unbound helper: no public Google callback route calls it yet.
+ */
+export async function handoffGoogleOidcToCore(
+  exchange: GoogleOidcExchangeResult,
+  transaction: GoogleOidcTransaction,
+): Promise<GoogleCoreHandoffResult> {
+  let response: Response;
+  try {
+    response = await fetch(handoffTarget(), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Kinsun-BFF-Authorization': `Bearer ${handoffSecret()}`,
+      },
+      body: JSON.stringify({
+        id_token: exchange.idToken,
+        expected_nonce: transaction.nonce,
+        intent: transaction.intent,
+      }),
+      cache: 'no-store',
+      redirect: 'error',
+      signal: AbortSignal.timeout(HANDOFF_TIMEOUT_MS),
+    });
+  } catch {
+    throw new Error('Core Google handoff failed');
+  }
+  if (!response.ok) {
+    logAuthDiagnostic('Core Google handoff rejected', { status: response.status });
+    throw new Error('Core Google handoff failed');
+  }
+  const responseBody = await response.text();
+  if (Buffer.byteLength(responseBody, 'utf8') > MAX_RESPONSE_BYTES) {
+    throw new Error('Invalid Core Google handoff response');
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(responseBody) as unknown;
+  } catch {
+    throw new Error('Invalid Core Google handoff response');
+  }
+  const result = parseHandoffResponse(parsed);
+  if (!result) throw new Error('Invalid Core Google handoff response');
+  return result;
+}

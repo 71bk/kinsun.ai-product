@@ -129,10 +129,7 @@ export async function blobToPcm16Base64(blob: Blob): Promise<string> {
     void decodeContext.close();
   }
 
-  const frameCount = Math.max(
-    1,
-    Math.ceil(decoded.duration * PCM_SAMPLE_RATE),
-  );
+  const frameCount = Math.max(1, Math.ceil(decoded.duration * PCM_SAMPLE_RATE));
   const offline = new OfflineAudioContext(1, frameCount, PCM_SAMPLE_RATE);
   const source = offline.createBufferSource();
   source.buffer = decoded;

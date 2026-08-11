@@ -66,12 +66,10 @@ export function LanguageSelect({ language, onChange, disabled }: LanguageSelectP
                 opacity: disabled ? 0.5 : 1,
                 // Fill and border together, so selection survives greyscale.
                 border: isSelected
-                  ? '2px solid var(--color-primary)'
-                  : '2px solid var(--color-border, #d4d4d4)',
-                background: isSelected ? 'var(--color-primary)' : 'transparent',
-                color: isSelected
-                  ? 'var(--color-primary-foreground, #fff)'
-                  : 'var(--color-foreground)',
+                  ? '2px solid var(--color-primary-strong)'
+                  : '2px solid var(--color-muted-foreground)',
+                background: isSelected ? 'var(--color-primary-strong)' : 'transparent',
+                color: isSelected ? 'var(--color-on-primary)' : 'var(--color-foreground)',
                 fontWeight: isSelected ? 600 : 400,
               }}
             >

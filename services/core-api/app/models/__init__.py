@@ -7,6 +7,7 @@ metadata when the application or Alembic imports this package.
 from app.models import enums  # noqa: F401
 from app.models.actor import Actor  # noqa: F401
 from app.models.agent import AgentRun, AgentToolCall  # noqa: F401
+from app.models.app_session import AppSession  # noqa: F401
 from app.models.asr_gate import AsrGateEvidence  # noqa: F401
 from app.models.care_assignment import CareAssignment  # noqa: F401
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision  # noqa: F401
@@ -37,6 +38,7 @@ from app.models.notification import (  # noqa: F401
     NotificationPreference,
 )
 from app.models.outbox import OutboxEvent  # noqa: F401
+from app.models.pending_identity import PendingExternalIdentity  # noqa: F401
 from app.models.policy import PolicyRegistry  # noqa: F401
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: F401
 from app.models.safety import SafetyEvaluation  # noqa: F401

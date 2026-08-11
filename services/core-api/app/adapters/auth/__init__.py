@@ -9,6 +9,12 @@ from app.adapters.auth.cognito import (
     DatabaseCognitoActorContextResolver,
     VerifiedCognitoIdentity,
 )
+from app.adapters.auth.google_oidc import (
+    GoogleJwksCache,
+    GoogleOidcJwtVerifier,
+    GoogleTokenVerifier,
+    VerifiedGoogleIdentity,
+)
 
 __all__ = [
     "CognitoActorContextResolver",
@@ -17,5 +23,9 @@ __all__ = [
     "CognitoJwtVerifier",
     "CognitoTokenVerifier",
     "DatabaseCognitoActorContextResolver",
+    "GoogleJwksCache",
+    "GoogleOidcJwtVerifier",
+    "GoogleTokenVerifier",
     "VerifiedCognitoIdentity",
+    "VerifiedGoogleIdentity",
 ]

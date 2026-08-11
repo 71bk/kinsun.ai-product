@@ -29,8 +29,22 @@ interface StateAppearance {
 }
 
 const APPEARANCE: Record<VoicePageState, StateAppearance> = {
-  idle: { icon: Microphone, label: '開始說話', fill: 'primary', ring: 'none', busy: false, actionable: true },
-  recording: { icon: Stop, label: '說完了，按這裡', fill: 'accent', ring: 'breathing', busy: false, actionable: true },
+  idle: {
+    icon: Microphone,
+    label: '開始說話',
+    fill: 'primary',
+    ring: 'none',
+    busy: false,
+    actionable: true,
+  },
+  recording: {
+    icon: Stop,
+    label: '說完了，按這裡',
+    fill: 'accent',
+    ring: 'breathing',
+    busy: false,
+    actionable: true,
+  },
   processingAsr: {
     icon: SpinnerGap,
     label: '請稍等一下',
@@ -39,8 +53,22 @@ const APPEARANCE: Record<VoicePageState, StateAppearance> = {
     busy: true,
     actionable: false,
   },
-  generating: { icon: SpinnerGap, label: '請稍等一下', fill: 'primary', ring: 'none', busy: true, actionable: false },
-  playing: { icon: SpeakerHigh, label: '正在說給你聽', fill: 'accent', ring: 'none', busy: true, actionable: false },
+  generating: {
+    icon: SpinnerGap,
+    label: '請稍等一下',
+    fill: 'primary',
+    ring: 'none',
+    busy: true,
+    actionable: false,
+  },
+  playing: {
+    icon: SpeakerHigh,
+    label: '正在說給你聽',
+    fill: 'accent',
+    ring: 'none',
+    busy: true,
+    actionable: false,
+  },
   lowConfidence: {
     icon: Microphone,
     label: '請先確認我聽到的話',
@@ -49,7 +77,14 @@ const APPEARANCE: Record<VoicePageState, StateAppearance> = {
     busy: false,
     actionable: false,
   },
-  timeout: { icon: ArrowClockwise, label: '再試一次', fill: 'primary', ring: 'paused', busy: false, actionable: true },
+  timeout: {
+    icon: ArrowClockwise,
+    label: '再試一次',
+    fill: 'primary',
+    ring: 'paused',
+    busy: false,
+    actionable: true,
+  },
   offline: {
     icon: WifiSlash,
     label: '等網路回來再試',

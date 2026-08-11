@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     # endpoint. When unset, those languages are refused rather than answered by
     # the Mandarin model, which would put words in an elder's mouth.
     SAGEMAKER_ASR_ENDPOINT: str | None = None
-    # No Hokkien/Hakka synthesis endpoint is deployed yet.
+    # Optional private endpoint for Hokkien/Hakka synthesis. Requests fail
+    # closed when it is unset; they never fall back to a Mandarin voice.
     SAGEMAKER_TTS_ENDPOINT: str | None = None
 
     # Core is the only threshold and formal-state authority. This bearer value

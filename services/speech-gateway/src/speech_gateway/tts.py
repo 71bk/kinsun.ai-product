@@ -1,8 +1,4 @@
-"""Amazon Polly adapter.
-
-Ported from packages/backend/src/tts/adapters.ts and verified against the live
-service with the same voices, engine and SSML shape.
-"""
+"""Canonical Amazon Polly adapter for Mandarin and English synthesis."""
 
 from __future__ import annotations
 

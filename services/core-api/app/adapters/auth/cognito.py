@@ -26,14 +26,12 @@ from jwt.exceptions import (
     InvalidTokenError,
     MissingRequiredClaimError,
 )
-from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.exceptions import AuthenticationError
 from app.middleware.auth import ActorContext, Authenticator
-from app.models.membership import ActorTenantMembership
-from app.models.tenant import Tenant
 from app.repositories.actor_repo import ActorRepository
+from app.services.actor_context_resolver import resolve_active_actor_context
 
 _AUTHENTICATION_REQUIRED = "Authentication required"
 logger = logging.getLogger(__name__)
@@ -308,39 +306,11 @@ class DatabaseCognitoActorContextResolver(CognitoActorContextResolver):
         self._session_factory = session_factory
 
     async def resolve_actor_context(self, identity: VerifiedCognitoIdentity) -> ActorContext:
-        now = datetime.now(UTC)
         async with self._session_factory() as session:
             actor = await ActorRepository(session).get_active_by_cognito_sub(identity.subject)
             if actor is None:
                 raise AuthenticationError(_AUTHENTICATION_REQUIRED)
-
-            result = await session.execute(
-                select(ActorTenantMembership)
-                .join(Tenant, Tenant.id == ActorTenantMembership.tenant_id)
-                .where(
-                    ActorTenantMembership.actor_id == actor.id,
-                    ActorTenantMembership.role_code == actor.actor_type,
-                    ActorTenantMembership.care_unit_id.is_(None),
-                    ActorTenantMembership.status == "ACTIVE",
-                    ActorTenantMembership.effective_from <= now,
-                    or_(
-                        ActorTenantMembership.effective_to.is_(None),
-                        now < ActorTenantMembership.effective_to,
-                    ),
-                    Tenant.status == "ACTIVE",
-                )
-            )
-            memberships = list(result.scalars().all())
-
-        if len(memberships) != 1:
-            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
-        membership = memberships[0]
-        return ActorContext(
-            actor_id=actor.id,
-            actor_role=actor.actor_type,
-            tenant_id=membership.tenant_id,
-            status=actor.status,
-        )
+            return await resolve_active_actor_context(session, actor)
 
 
 def _required_subject(claims: dict[str, Any]) -> str:

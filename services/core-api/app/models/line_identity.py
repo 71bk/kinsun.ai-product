@@ -1,8 +1,8 @@
-"""LINE account-linking persistence models.
+"""External identities and LINE account-linking persistence models.
 
-Raw LINE identifiers are never stored in plaintext. Lookup uses a keyed
-digest, while the optional encrypted subject exists only for controlled push
-delivery.
+Provider subjects are never stored in plaintext for lookup. Lookup uses a
+domain-separated keyed digest, while the optional encrypted LINE subject
+exists only for controlled push delivery.
 """
 
 from __future__ import annotations
@@ -19,12 +19,15 @@ from app.db.base import SCHEMA_NAME, BaseModel, TenantScopedMixin, VersionedMixi
 
 
 class ExternalIdentity(BaseModel, VersionedMixin):
-    """One active LINE identity mapped to one existing Core actor."""
+    """One verified provider identity mapped to one existing Core actor."""
 
     __tablename__ = "external_identity"
     __pk_name__ = "external_identity_id"
     __table_args__ = (
-        sa.CheckConstraint("provider = 'LINE'", name="ck_external_identity_provider"),
+        sa.CheckConstraint(
+            "provider IN ('GOOGLE','LINE')",
+            name="ck_external_identity_provider",
+        ),
         sa.CheckConstraint(
             "status IN ('ACTIVE','SUSPENDED','REVOKED')",
             name="ck_external_identity_status",
@@ -37,6 +40,11 @@ class ExternalIdentity(BaseModel, VersionedMixin):
         sa.CheckConstraint(
             "(status = 'REVOKED' AND revoked_at IS NOT NULL) OR (status <> 'REVOKED')",
             name="ck_external_identity_revoked_at",
+        ),
+        sa.UniqueConstraint(
+            "external_identity_id",
+            "actor_id",
+            name="uq_external_identity_id_actor",
         ),
         sa.Index(
             "uq_external_identity_active_subject",

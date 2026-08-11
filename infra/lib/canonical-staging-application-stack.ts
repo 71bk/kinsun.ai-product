@@ -43,7 +43,10 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     super(scope, id, props);
 
     const environmentName = props.environmentName ?? 'staging';
-    const privateSubnetAvailabilityZones = props.privateSubnetAvailabilityZones ?? ['us-west-2a', 'us-west-2b'];
+    const privateSubnetAvailabilityZones = props.privateSubnetAvailabilityZones ?? [
+      'us-west-2a',
+      'us-west-2b',
+    ];
     new cdk.CfnRule(this, 'UsWest2Only', {
       assertions: [
         {
@@ -53,7 +56,11 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       ],
     });
 
-    const owner = this.stringParameter('Owner', 'member-c', 'Operational owner tag for the staging application runtime.');
+    const owner = this.stringParameter(
+      'Owner',
+      'member-c',
+      'Operational owner tag for the staging application runtime.',
+    );
     const expiresAt = new cdk.CfnParameter(this, 'ExpiresAt', {
       type: 'String',
       default: '2026-09-01',
@@ -62,7 +69,11 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       description: 'Review or teardown date; this tag does not delete resources automatically.',
     });
 
-    const vpcId = this.requiredParameter('VpcId', 'AWS::EC2::VPC::Id', 'VpcId output from kinsun-staging-foundation-v1.');
+    const vpcId = this.requiredParameter(
+      'VpcId',
+      'AWS::EC2::VPC::Id',
+      'VpcId output from kinsun-staging-foundation-v1.',
+    );
     const privateSubnet1Id = this.requiredParameter(
       'PrivateSubnet1Id',
       'AWS::EC2::Subnet::Id',
@@ -78,7 +89,11 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     const coreSecurityGroupId = this.securityGroupParameter('CoreSecurityGroupId');
     const agentSecurityGroupId = this.securityGroupParameter('AgentSecurityGroupId');
     const migrationSecurityGroupId = this.securityGroupParameter('MigrationSecurityGroupId');
-    const clusterName = this.stringParameter('EcsClusterName', 'kinsun-staging', 'Existing foundation ECS cluster name.');
+    const clusterName = this.stringParameter(
+      'EcsClusterName',
+      'kinsun-staging',
+      'Existing foundation ECS cluster name.',
+    );
     const cloudMapNamespace = this.stringParameter(
       'CloudMapNamespace',
       'staging.kinsun.internal',
@@ -127,21 +142,27 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       type: 'Number',
       default: 0,
       allowedValues: ['0', '1'],
-      description: 'Desired count for each staging service. Staging is capped at one task; keep 0 until all deployment gates pass.',
+      description:
+        'Desired count for each staging service. Staging is capped at one task; keep 0 until all deployment gates pass.',
     });
     const consentPolicyVersion = new cdk.CfnParameter(this, 'ConsentPolicyVersion', {
       type: 'String',
       default: 'demo-consent-v1',
       allowedPattern: '^[a-z0-9][a-z0-9._-]{0,39}$',
-      description: 'Synthetic staging consent policy compiled into the exact frontend release image.',
+      description:
+        'Synthetic staging consent policy compiled into the exact frontend release image.',
     });
 
     cdk.Tags.of(this).add('Project', 'kinsun.ai');
     cdk.Tags.of(this).add('Environment', environmentName);
     cdk.Tags.of(this).add('DataClass', 'synthetic-only');
     cdk.Tags.of(this).add('ManagedBy', 'aws-cdk');
-    cdk.Tags.of(this).add('Owner', owner.valueAsString, { excludeResourceTypes: ['aws:cdk:stack'] });
-    cdk.Tags.of(this).add('ExpiresAt', expiresAt.valueAsString, { excludeResourceTypes: ['aws:cdk:stack'] });
+    cdk.Tags.of(this).add('Owner', owner.valueAsString, {
+      excludeResourceTypes: ['aws:cdk:stack'],
+    });
+    cdk.Tags.of(this).add('ExpiresAt', expiresAt.valueAsString, {
+      excludeResourceTypes: ['aws:cdk:stack'],
+    });
 
     const vpc = ec2.Vpc.fromVpcAttributes(this, 'FoundationVpc', {
       vpcId: vpcId.valueAsString,
@@ -155,10 +176,16 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       apiVpcLinkSecurityGroupId.valueAsString,
       { mutable: false },
     );
-    const frontendSecurityGroup = this.importSecurityGroup('FrontendSecurityGroup', frontendSecurityGroupId);
+    const frontendSecurityGroup = this.importSecurityGroup(
+      'FrontendSecurityGroup',
+      frontendSecurityGroupId,
+    );
     const coreSecurityGroup = this.importSecurityGroup('CoreSecurityGroup', coreSecurityGroupId);
     const agentSecurityGroup = this.importSecurityGroup('AgentSecurityGroup', agentSecurityGroupId);
-    const migrationSecurityGroup = this.importSecurityGroup('MigrationSecurityGroup', migrationSecurityGroupId);
+    const migrationSecurityGroup = this.importSecurityGroup(
+      'MigrationSecurityGroup',
+      migrationSecurityGroupId,
+    );
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'FoundationCluster', {
       clusterName: clusterName.valueAsString,
       vpc,
@@ -166,30 +193,73 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     });
 
     const repositories = {
-      frontend: ecr.Repository.fromRepositoryName(this, 'FrontendRepository', `kinsun/${environmentName}/frontend`),
-      core: ecr.Repository.fromRepositoryName(this, 'CoreRepository', `kinsun/${environmentName}/core-api`),
+      frontend: ecr.Repository.fromRepositoryName(
+        this,
+        'FrontendRepository',
+        `kinsun/${environmentName}/frontend`,
+      ),
+      core: ecr.Repository.fromRepositoryName(
+        this,
+        'CoreRepository',
+        `kinsun/${environmentName}/core-api`,
+      ),
       migration: ecr.Repository.fromRepositoryName(
         this,
         'MigrationRepository',
         `kinsun/${environmentName}/core-migration`,
       ),
-      agent: ecr.Repository.fromRepositoryName(this, 'AgentRepository', `kinsun/${environmentName}/agent-runtime`),
+      agent: ecr.Repository.fromRepositoryName(
+        this,
+        'AgentRepository',
+        `kinsun/${environmentName}/agent-runtime`,
+      ),
     };
     const logGroups = {
-      frontend: logs.LogGroup.fromLogGroupName(this, 'FrontendLogGroup', `/kinsun/${environmentName}/frontend`),
-      core: logs.LogGroup.fromLogGroupName(this, 'CoreLogGroup', `/kinsun/${environmentName}/core-api`),
-      agent: logs.LogGroup.fromLogGroupName(this, 'AgentLogGroup', `/kinsun/${environmentName}/agent-runtime`),
-      migration: logs.LogGroup.fromLogGroupName(this, 'MigrationLogGroup', `/kinsun/${environmentName}/migration`),
+      frontend: logs.LogGroup.fromLogGroupName(
+        this,
+        'FrontendLogGroup',
+        `/kinsun/${environmentName}/frontend`,
+      ),
+      core: logs.LogGroup.fromLogGroupName(
+        this,
+        'CoreLogGroup',
+        `/kinsun/${environmentName}/core-api`,
+      ),
+      agent: logs.LogGroup.fromLogGroupName(
+        this,
+        'AgentLogGroup',
+        `/kinsun/${environmentName}/agent-runtime`,
+      ),
+      migration: logs.LogGroup.fromLogGroupName(
+        this,
+        'MigrationLogGroup',
+        `/kinsun/${environmentName}/migration`,
+      ),
     };
     const roles = {
-      frontendExecution: this.importRole('FrontendExecutionRole', `kinsun-frontend-execution-${environmentName}`),
+      frontendExecution: this.importRole(
+        'FrontendExecutionRole',
+        `kinsun-frontend-execution-${environmentName}`,
+      ),
       frontendTask: this.importRole('FrontendTaskRole', `kinsun-frontend-ecs-${environmentName}`),
-      coreExecution: this.importRole('CoreExecutionRole', `kinsun-core-execution-${environmentName}`),
+      coreExecution: this.importRole(
+        'CoreExecutionRole',
+        `kinsun-core-execution-${environmentName}`,
+      ),
       coreTask: this.importRole('CoreTaskRole', `kinsun-core-ecs-${environmentName}`),
-      agentExecution: this.importRole('AgentExecutionRole', `kinsun-agent-execution-${environmentName}`),
+      agentExecution: this.importRole(
+        'AgentExecutionRole',
+        `kinsun-agent-execution-${environmentName}`,
+      ),
       agentTask: this.importRole('AgentTaskRole', `kinsun-agent-runtime-ecs-${environmentName}`),
-      migrationExecution: this.importRole('MigrationExecutionRole', `kinsun-migration-execution-${environmentName}`),
-      migrationTask: this.importRole('MigrationTaskRole', `kinsun-migration-ecs-${environmentName}`),
+      migrationExecution: this.importRole(
+        'MigrationExecutionRole',
+        `kinsun-migration-execution-${environmentName}`,
+      ),
+      migrationTask: this.importRole(
+        'MigrationTaskRole',
+        `kinsun-migration-ecs-${environmentName}`,
+      ),
     };
     const databaseAdminSecret = secretsmanager.Secret.fromSecretCompleteArn(
       this,
@@ -291,7 +361,13 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       readOnly: false,
     });
 
-    const coreTask = this.taskDefinition('CoreTask', roles.coreExecution, roles.coreTask, 512, 1024);
+    const coreTask = this.taskDefinition(
+      'CoreTask',
+      roles.coreExecution,
+      roles.coreTask,
+      512,
+      1024,
+    );
     this.runtimeContainer({
       taskDefinition: coreTask,
       name: 'core-api',
@@ -329,7 +405,13 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       healthRuntime: 'python',
     });
 
-    const agentTask = this.taskDefinition('AgentTask', roles.agentExecution, roles.agentTask, 512, 1024);
+    const agentTask = this.taskDefinition(
+      'AgentTask',
+      roles.agentExecution,
+      roles.agentTask,
+      512,
+      1024,
+    );
     this.runtimeContainer({
       taskDefinition: agentTask,
       name: 'agent-runtime',
@@ -468,13 +550,25 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       subnets: privateSubnets,
       securityGroups: [apiVpcLinkSecurityGroup],
     });
-    const frontendIntegration = new apigwv2Integrations.HttpAlbIntegration('FrontendIntegration', listener, {
-      vpcLink,
-      method: apigwv2.HttpMethod.ANY,
-      timeout: cdk.Duration.seconds(29),
+    const frontendIntegration = new apigwv2Integrations.HttpAlbIntegration(
+      'FrontendIntegration',
+      listener,
+      {
+        vpcLink,
+        method: apigwv2.HttpMethod.ANY,
+        timeout: cdk.Duration.seconds(29),
+      },
+    );
+    httpApi.addRoutes({
+      path: '/',
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: frontendIntegration,
     });
-    httpApi.addRoutes({ path: '/', methods: [apigwv2.HttpMethod.ANY], integration: frontendIntegration });
-    httpApi.addRoutes({ path: '/{proxy+}', methods: [apigwv2.HttpMethod.ANY], integration: frontendIntegration });
+    httpApi.addRoutes({
+      path: '/{proxy+}',
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: frontendIntegration,
+    });
     new apigwv2.HttpStage(this, 'DefaultStage', {
       httpApi,
       stageName: '$default',
@@ -494,14 +588,20 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     frontendService.node.addDependency(coreService);
 
     new cdk.CfnOutput(this, 'FrontendUrl', { value: publicOrigin });
-    new cdk.CfnOutput(this, 'CognitoCallbackUrl', { value: `${publicOrigin}/backend/auth/callback` });
+    new cdk.CfnOutput(this, 'CognitoCallbackUrl', {
+      value: `${publicOrigin}/backend/auth/callback`,
+    });
     new cdk.CfnOutput(this, 'CognitoLogoutUrl', { value: `${publicOrigin}/sign-in` });
-    new cdk.CfnOutput(this, 'MigrationTaskDefinitionArn', { value: migrationTask.taskDefinitionArn });
+    new cdk.CfnOutput(this, 'MigrationTaskDefinitionArn', {
+      value: migrationTask.taskDefinitionArn,
+    });
     new cdk.CfnOutput(this, 'CoreTaskDefinitionArn', { value: coreTask.taskDefinitionArn });
     new cdk.CfnOutput(this, 'ConfiguredConsentPolicyVersion', {
       value: consentPolicyVersion.valueAsString,
     });
-    new cdk.CfnOutput(this, 'MigrationNetworkSecurityGroupId', { value: migrationSecurityGroup.securityGroupId });
+    new cdk.CfnOutput(this, 'MigrationNetworkSecurityGroupId', {
+      value: migrationSecurityGroup.securityGroupId,
+    });
     new cdk.CfnOutput(this, 'PrivateSubnetIds', {
       value: `${privateSubnet1Id.valueAsString},${privateSubnet2Id.valueAsString}`,
     });
@@ -521,7 +621,11 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
   }
 
   private securityGroupParameter(id: string): cdk.CfnParameter {
-    return this.requiredParameter(id, 'AWS::EC2::SecurityGroup::Id', `${id} output from the foundation stack.`);
+    return this.requiredParameter(
+      id,
+      'AWS::EC2::SecurityGroup::Id',
+      `${id} output from the foundation stack.`,
+    );
   }
 
   private arnParameter(id: string, description: string): cdk.CfnParameter {
@@ -537,12 +641,15 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     return new cdk.CfnParameter(this, id, {
       type: 'String',
       allowedPattern: '^sha256:[a-f0-9]{64}$',
-      description: 'Immutable ECR sha256 digest. The image must already exist in the matching foundation repository.',
+      description:
+        'Immutable ECR sha256 digest. The image must already exist in the matching foundation repository.',
     });
   }
 
   private importSecurityGroup(id: string, parameter: cdk.CfnParameter): ec2.ISecurityGroup {
-    return ec2.SecurityGroup.fromSecurityGroupId(this, id, parameter.valueAsString, { mutable: false });
+    return ec2.SecurityGroup.fromSecurityGroupId(this, id, parameter.valueAsString, {
+      mutable: false,
+    });
   }
 
   private importRole(id: string, roleName: string): iam.IRole {
@@ -576,7 +683,9 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
         : `python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${props.containerPort}${props.healthPath}', timeout=4)"`;
     const container = props.taskDefinition.addContainer(`${props.name}Container`, {
       containerName: props.name,
-      image: ecs.ContainerImage.fromRegistry(`${props.repository.repositoryUri}@${props.imageDigest}`),
+      image: ecs.ContainerImage.fromRegistry(
+        `${props.repository.repositoryUri}@${props.imageDigest}`,
+      ),
       essential: true,
       readonlyRootFilesystem: true,
       environment: props.environment,

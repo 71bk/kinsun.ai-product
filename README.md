@@ -1,26 +1,44 @@
 # kinsun.ai
 
+<p align="center">
+  <img src="docs/assets/readme/kinsun-hero.png" alt="小暖陪伴角色與 kinsun.ai 使用情境" width="720" />
+</p>
+
+<p align="center"><i>「小暖陪你聊生活，也陪你安心過每一天。」</i></p>
+
 Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對話中擷取生活事件、產生每日摘要，
 供照服員覆核、家屬檢視。核心設計原則是**模型輸出只能是候選**——未經長者確認的記憶與未經
 人工覆核的事件，都不得成為正式照護事實。
 
 規則與邊界見 [`AGENTS.md`](AGENTS.md)，產品規格見 [`docs/spec/`](docs/spec/)。
 
+## 開發理念
+
+- **科技輔助而不取代照護**：AI 整理與提示候選資訊，最終判斷仍由長者與照護人員完成。
+- **語音優先、清楚可及**：以自然對話降低操作門檻，介面同時遵守大字、對比與觸控尺寸規範。
+- **安全與可追溯優先**：身份、同意、租戶隔離、人工覆核與稽核紀錄都是主流程的一部分。
+
 ## 現在能跑什麼
 
 | 單元 | 狀態 |
 | --- | --- |
-| `services/core-api` | ✅ 可跑。Identity、Elder 授權、Consent、Care Event、Memory、Daily Summary、Family Report、受控 Agent Tool、transactional outbox |
-| `services/agent-runtime` | ⚠️ M0 骨架。單輪 Agent 閉環可跑，但**模型走 `MockModelProvider`**，不是真的 LLM |
-| `packages/frontend` | ⚠️ TEXT_ONLY。PWA + BFF 可跑，但麥克風／ASR／TTS 未實作 |
-| `services/rag-ingestion` | ⚠️ staging-only。未對真實 AWS／OpenSearch 驗證 |
-| `services/speech-gateway` | ⚠️ ASR／TTS adapter 骨架，尚未接入主線 |
-| `infra` | ⚠️ canonical staging foundation 已建於 AWS；application task／service 尚未部署 |
+| `services/core-api` | ✅ 主線。Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
+| `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；本機預設使用 deterministic mock，也可依環境設定切換 Bedrock provider |
+| `packages/frontend` | ✅ Multi-role PWA + BFF；文字與語音主線、麥克風錄音、角色動畫及 LINE 帳號連結已接入 |
+| `services/rag-ingestion` | ⚠️ staging-only；治理簽章與 production gate 尚未完成，不可視為正式照護知識來源 |
+| `services/speech-gateway` | ✅ 已接入語音主線；華語／英語使用 AWS managed speech，台語／客語可接私有 SageMaker endpoint |
+| `infra` | ⚠️ AWS CDK canonical staging stacks 已定義；實際部署狀態與外部資源邊界以 `infra/README.md` 為準 |
 
-**尚未建立**：CI quality gate、type check（mypy／pyright）、跨服務 contract test、E2E test。
-`.github/workflows-disabled/pr.yml` 是未啟用且已知有路徑錯誤的草稿，見 `AGENTS.md` §1。
+CI workflow 目前仍停用；本機已有 Ruff／ESLint、TypeScript typecheck、單元測試、合約驗證與
+production build。Core integration test 與完整 E2E 仍需要 PostgreSQL 或對應的外部服務環境。
+`.github/workflows-disabled/pr.yml` 是未啟用的歷史草稿，見 `AGENTS.md` §1。
 
-現有測試共 **919** 個：core-api 587（unit）、agent-runtime 206、frontend 115、infra 11。
+## 小暖｜陪伴角色
+
+小暖不是醫療診斷機器人，而是以傾聽、鼓勵、提醒與陪伴為核心的數位角色。前端的
+[`CompanionCharacter`](packages/frontend/src/components/voice/CompanionCharacter.tsx) 會依互動狀態
+切換動畫；相關 runtime 素材保留在 [`packages/frontend/public/`](packages/frontend/public/)，
+README 主視覺則獨立放在 [`docs/assets/readme/`](docs/assets/readme/)，避免文件圖片影響產品資產。
 
 ## Repository 結構
 
@@ -67,15 +85,19 @@ docker compose run --rm migrate   # 建立 eldercare_ai schema
 | User / Password | `kinsun` / `kinsun_local_dev` |
 | 版本 | PostgreSQL 16（對齊 Aurora Serverless v2） |
 
-### 起三個服務
+### 起四個服務
 
 ```powershell
 # Core API :8000
 cd services/core-api;    uv sync --extra test --extra dev; uv run uvicorn app.main:app --reload
 
-# Agent Runtime :8001（不需資料庫、AWS 憑證或網路）
+# Agent Runtime :8001（預設 mock provider 不需 AWS 憑證或網路）
 cd services/agent-runtime; uv sync --extra test --extra dev
 uv run uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
+
+# Speech Gateway :8002（雲端 ASR／TTS 需對應 AWS 設定）
+cd services/speech-gateway; uv sync --extra test --extra dev
+uv run uvicorn speech_gateway.app:app --reload --port 8002
 
 # Frontend :3000
 npm install
@@ -106,7 +128,7 @@ docker compose --profile tools up -d                     # Adminer → localhost
 
 ```powershell
 cd services/core-api
-uv run pytest tests/unit          # 587 tests，不需資料庫
+uv run pytest tests/unit          # 不需資料庫
 uv run pytest tests/integration   # 需要 postgres 容器
 uv run ruff check .
 ```
@@ -129,13 +151,13 @@ staging-only RAG Retrieval。
 
 ```powershell
 cd services/agent-runtime
-uv run pytest              # 206 tests，不需資料庫、AWS 憑證或網路
+uv run pytest              # 預設不需資料庫、AWS 憑證或網路
 uv run ruff check .
 ```
 
 閉環是 `POST /api/v1/agent/runs` → contract 驗證 → Orchestrator → Companion Agent →
-Safety Evaluator → 回應。**模型仍走 `MockModelProvider`**——這是目前最大的缺口，整條
-RAG 鏈路要接上真實 provider 才有意義。
+Safety Evaluator → 回應。本機預設走 `MockModelProvider`，讓測試與開發可重現；需要真實推論時，
+由環境設定切換 Bedrock provider。RAG 仍受 allowlist、簽章與 production gate 約束。
 
 **安全阻擋回的是 200 不是錯誤**：`data.result_status` 為 `BLOCKED`、`data.reply_text`
 換成安全訊息，長者仍然收到回覆。Safety Evaluator 目前是 deterministic 關鍵字規則
@@ -157,14 +179,14 @@ hard gate，receipt 與 log 必須標記 `governance_status=UNSIGNED_DEVELOPMENT
 
 兩個 Python 服務各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
 
-## Frontend → Core → Agent 文字閉環
+## Frontend → Speech Gateway → Core → Agent 閉環
 
 [`packages/frontend/`](packages/frontend/) 是唯一的前端：單一 multi-role PWA，
 同時擔任 BFF（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
 
 ```powershell
 npm run dev       --workspace @elderly-care/frontend   # :3000
-npm run test      --workspace @elderly-care/frontend   # 115 tests
+npm run test      --workspace @elderly-care/frontend
 npm run typecheck --workspace @elderly-care/frontend
 ```
 
@@ -174,18 +196,33 @@ Token，在**伺服器端**轉成 Core API 的 Bearer Header。瀏覽器 JavaScr
 elder scope 與 `BASIC_VOICE` consent，建立 Voice Session 後才 server-to-server 呼叫
 Agent Runtime。
 
-這條目前是 **TEXT_ONLY fallback**——麥克風、ASR、WebSocket 與 TTS 尚未實作，前端會明確
-顯示不可用，**不會把文字輸入冒充成語音辨識結果**。設定與 E2E 證據見
-[`docs/handover/2026-08-01-frontend-core-agent-integration.md`](docs/handover/2026-08-01-frontend-core-agent-integration.md)。
+語音主線會由瀏覽器錄製 16 kHz mono PCM，交給 Speech Gateway 做 ASR；Core 驗證 voice ticket、
+身份、elder scope、consent 與 ASR gate 後，才建立 Voice Session 並呼叫 Agent Runtime，最後再由
+Speech Gateway 合成語音。華語／英語走 AWS managed services；台語／客語走設定的私有 SageMaker
+endpoint，未設定時會明確失敗，**不會靜默改用華語**。文字路徑保留為獨立的無障礙 fallback。
 
 視覺、RWD 與無障礙規範見 [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md)，
 **建立任何頁面前先讀**（元件內不得出現 raw hex，§14）。
 
+## Speech Gateway
+
+[`services/speech-gateway/`](services/speech-gateway/) 封裝 ASR／TTS、語言路由、Core voice gate 與
+SageMaker adapter。低資源語言的模型選擇、endpoint contract 與部署證據見
+[`services/speech-gateway/docs/`](services/speech-gateway/docs/)；服務在缺少必要 endpoint 時採
+fail-closed，不宣稱已提供不可用的語言能力。
+
+## LINE 整合
+
+Core API 負責 LINE webhook、帳號連結、身份解析與家屬每日摘要通知；Frontend 提供登入 callback
+與 account-link 頁面。原始 LINE user ID 不以明文持久化，查找使用 keyed digest，需要推播的目的地
+則以 authenticated encryption 保存。Rich Menu 素材位於
+[`packages/frontend/public/line/`](packages/frontend/public/line/)。
+
 ## API Contract
 
-[`contracts/`](contracts/) 放 OpenAPI 3.1、AsyncAPI 與 JSON Schema。core-api 合約涵蓋
-51 個 operations，agent-runtime 3 個。Handoff、Context Manifest、Safety Evaluation 與
-Tool schema 中仍有尚未接上 executable endpoint 的目標形狀。
+[`contracts/`](contracts/) 放 OpenAPI 3.1、AsyncAPI 與 JSON Schema。Handoff、Context Manifest、
+Safety Evaluation 與 Tool schema 中仍有尚未接上 executable endpoint 的目標形狀；實際數量由
+下列驗證指令與目前 contract 檔案決定，不在 README 固定容易過期的數字。
 
 ```powershell
 uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts

@@ -1,7 +1,7 @@
 """Amazon Transcribe streaming adapter.
 
-Ported from packages/backend/src/asr/adapters.ts, which was verified against the
-live service. Two details there were learned the hard way and are preserved:
+The canonical implementation preserves two invariants validated against the
+live service:
 
 1. Audio must be sent as a sequence of small frames. A single AudioEvent holding
    a whole utterance is rejected outright with

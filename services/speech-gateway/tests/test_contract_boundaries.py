@@ -189,14 +189,60 @@ def test_missing_sagemaker_confidence_is_treated_as_unverified(
 
 
 @pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])
-def test_synthesis_still_refuses_hokkien_and_hakka(client: TestClient, language: str) -> None:
-    """No Hokkien/Hakka TTS endpoint is deployed, so this stays a hard refusal."""
+def test_hokkien_and_hakka_synthesis_without_endpoint_fails_closed(
+    client: TestClient, language: str
+) -> None:
+    """A missing low-resource endpoint must not fall back to Mandarin Polly."""
 
     response = client.post(
         "/api/v1/speech/syntheses",
         json={"text": "汝食飽未", "language": language},
     )
-    assert response.status_code == 422
+    assert response.status_code == 501
+
+
+@pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])
+def test_hokkien_and_hakka_synthesis_routes_to_sagemaker_when_configured(
+    monkeypatch: pytest.MonkeyPatch, language: str
+) -> None:
+    called: dict[str, object] = {}
+
+    async def fake_sagemaker(text, lang, speed, region, endpoint_name):  # noqa: ANN001
+        called.update(
+            text=text,
+            language=lang,
+            speed=speed,
+            region=region,
+            endpoint=endpoint_name,
+        )
+        return b"RIFFsynthetic-wav", "audio/wav", "synthetic-low-resource-tts-v1"
+
+    async def unreachable_polly(*args, **kwargs):  # noqa: ANN002, ANN003, ARG001
+        raise AssertionError("Polly must not be used for nan-TW/hak-TW")
+
+    monkeypatch.setenv("SAGEMAKER_TTS_ENDPOINT", "kinsun-speech-tts-v1")
+    get_settings.cache_clear()
+    monkeypatch.setattr("speech_gateway.app.synthesize_via_sagemaker", fake_sagemaker)
+    monkeypatch.setattr("speech_gateway.app.synthesize", unreachable_polly)
+
+    try:
+        response = TestClient(create_app(core_client=FakeCoreGate())).post(
+            "/api/v1/speech/syntheses",
+            json={"text": "synthetic text", "language": language, "speaking_speed": "slow"},
+        )
+    finally:
+        get_settings.cache_clear()
+
+    assert response.status_code == 200
+    assert base64.b64decode(response.json()["audio_base64"]) == b"RIFFsynthetic-wav"
+    assert response.json()["voice_id"] == "synthetic-low-resource-tts-v1"
+    assert called == {
+        "text": "synthetic text",
+        "language": language,
+        "speed": "slow",
+        "region": "us-west-2",
+        "endpoint": "kinsun-speech-tts-v1",
+    }
 
 
 def test_invalid_base64_is_rejected(client: TestClient) -> None:

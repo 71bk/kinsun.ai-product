@@ -79,6 +79,31 @@ When Cognito authentication is enabled, also provide `COGNITO_REGION`,
 `COGNITO_USER_POOL_ID`, `COGNITO_APP_CLIENT_ID`, and a minimum 32-byte
 `FAMILY_INVITATION_HMAC_SECRET` at runtime.
 
+The provider-neutral authentication foundation currently has internal App
+Session issue, validation, touch, recent-auth, active-session-cap, and revocation
+services, plus an internal Google ID-token verifier. The verifier independently
+checks Google's public JWKS signature, issuer, exact audience, expiry, issued-at,
+expected nonce, authorized party when present, and immutable subject. It retains
+an email only when Google marks it verified and never uses email to link an
+Actor.
+
+Set `GOOGLE_OIDC_CLIENT_ID` for both the BFF and Core verifier. Keep
+`GOOGLE_OIDC_CLIENT_SECRET` in the BFF only; Core deliberately has no setting for
+that secret. `GOOGLE_OIDC_JWKS_CACHE_SECONDS` and
+`GOOGLE_OIDC_HTTP_TIMEOUT_SECONDS` are bounded Core verifier settings. The
+repository-level `.env.example` documents all four values, while real values
+belong only in a git-ignored local file or runtime secret store.
+
+The BFF now has unbound direct-Google transaction, callback-validation, and
+authorization-code exchange helpers. There is still no registered Google
+start/callback route, BFF-to-Core identity handoff, public App Session creation
+route, or enabled App Session authenticator. Cognito therefore remains the only
+real authentication runtime. The default App Session policy is a 7-day idle/30-day
+absolute lifetime for elder and family actors, an 8-hour idle/24-hour absolute
+lifetime for workforce actors, a five-minute touch interval, a ten-minute
+recent-auth window, and at most five live sessions per actor. Override these only
+through the bounded `APP_SESSION_*` settings documented in `.env.example`.
+
 For a local smoke test, create a git-ignored `.env.runtime.local`, then run:
 
 ```powershell

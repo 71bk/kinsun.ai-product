@@ -34,6 +34,7 @@ if config.config_file_name is not None:
 # 匯入 app.models 讓所有 model 註冊進 metadata。
 # 必須放在 fileConfig() 之後，因此不在檔案頂端。
 from app import models  # noqa: E402,F401
+from app.database_url import to_psycopg_database_url  # noqa: E402
 from app.db.base import Base  # noqa: E402
 
 target_metadata = Base.metadata
@@ -80,7 +81,7 @@ def get_database_url() -> str:
             "DATABASE_URL 未設定。請複製 .env.example 成 .env，或直接匯出環境變數，例如：\n"
             "  $env:DATABASE_URL = 'postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun'"
         )
-    return url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
+    return to_psycopg_database_url(url)
 
 
 def run_migrations_offline() -> None:

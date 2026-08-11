@@ -1,4 +1,4 @@
-schema_version: "1.0.0"
+schema_version: '1.0.0'
 embedding:
   provider: bedrock
   model_id: cohere.embed-v4:0
@@ -13,4 +13,3 @@ embedding:
     - float
   batch_size: 96
   truncate: NONE
-

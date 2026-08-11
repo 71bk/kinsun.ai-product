@@ -173,10 +173,7 @@ test('does not recreate or deploy the rejected legacy backend', () => {
 });
 
 test('canonical entrypoints pin the physical CloudFormation stack identities', () => {
-  const foundationEntry = readFileSync(
-    resolve(__dirname, '../bin/canonical-staging.ts'),
-    'utf8',
-  );
+  const foundationEntry = readFileSync(resolve(__dirname, '../bin/canonical-staging.ts'), 'utf8');
   const applicationEntry = readFileSync(
     resolve(__dirname, '../bin/canonical-staging-application.ts'),
     'utf8',

@@ -1,0 +1,18 @@
+# Governed schemas and examples are validated by scripts/validate_contracts.py.
+contracts/
+
+# Product specifications, handovers, and AI collaboration instructions are
+# reviewed as prose; avoid repository-wide reflow and blame churn.
+.kiro/**/*.md
+docs/**/*.md
+docs/demo/
+evals/**/*.md
+services/**/*.md
+services/core-api/alembic/README
+AGENTS.md
+CLAUDE.md
+README.md
+
+# Versioned evidence and the retired implementation are not formatter-owned.
+data/
+legacy/

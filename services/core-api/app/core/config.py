@@ -90,6 +90,40 @@ class Settings(BaseSettings):
     cognito_jwks_cache_seconds: int = Field(default=300, ge=30, le=3600)
     cognito_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
     family_invitation_hmac_secret: str = ""
+    google_oidc_client_id: str = Field(default="", max_length=512)
+    google_oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=3_600)
+    google_oidc_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
+    google_identity_hmac_secret: str = ""
+    google_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    google_oidc_handoff_secret: str = ""
+    google_pending_identity_ttl_seconds: int = Field(default=600, ge=60, le=900)
+
+    # Provider-neutral Core-owned browser sessions. These settings are inert
+    # until the App Session authenticator is explicitly enabled in a later
+    # rollout phase.
+    app_session_elder_family_idle_ttl_seconds: int = Field(
+        default=604_800,
+        ge=300,
+        le=7_776_000,
+    )
+    app_session_elder_family_absolute_ttl_seconds: int = Field(
+        default=2_592_000,
+        ge=300,
+        le=31_536_000,
+    )
+    app_session_workforce_idle_ttl_seconds: int = Field(
+        default=28_800,
+        ge=300,
+        le=604_800,
+    )
+    app_session_workforce_absolute_ttl_seconds: int = Field(
+        default=86_400,
+        ge=300,
+        le=2_592_000,
+    )
+    app_session_touch_interval_seconds: int = Field(default=300, ge=30, le=3_600)
+    app_session_recent_auth_window_seconds: int = Field(default=600, ge=60, le=3_600)
+    app_session_max_active_per_actor: int = Field(default=5, ge=1, le=20)
 
     # ─── LINE Messaging API (disabled until routes and provider are approved) ─────
     line_channel_secret: str = ""
@@ -148,6 +182,41 @@ class Settings(BaseSettings):
             raise ValueError(
                 "FAMILY_INVITATION_HMAC_SECRET must contain at least 32 bytes "
                 "when COGNITO_AUTH_ENABLED=true"
+            )
+
+        session_lifetimes = (
+            (
+                "elder/family",
+                self.app_session_elder_family_idle_ttl_seconds,
+                self.app_session_elder_family_absolute_ttl_seconds,
+            ),
+            (
+                "workforce",
+                self.app_session_workforce_idle_ttl_seconds,
+                self.app_session_workforce_absolute_ttl_seconds,
+            ),
+        )
+        for label, idle_seconds, absolute_seconds in session_lifetimes:
+            if idle_seconds > absolute_seconds:
+                raise ValueError(f"App Session {label} idle TTL must not exceed its absolute TTL")
+            if self.app_session_touch_interval_seconds >= idle_seconds:
+                raise ValueError(
+                    f"APP_SESSION_TOUCH_INTERVAL_SECONDS must be shorter than the {label} "
+                    "idle TTL"
+                )
+
+        if self.google_identity_hmac_key_version != 1:
+            raise ValueError(
+                "GOOGLE_IDENTITY_HMAC_KEY_VERSION must remain 1; "
+                "rotation requires an explicit identity rekey migration"
+            )
+        if (
+            self.google_identity_hmac_secret
+            and self.google_oidc_handoff_secret
+            and self.google_identity_hmac_secret == self.google_oidc_handoff_secret
+        ):
+            raise ValueError(
+                "GOOGLE_IDENTITY_HMAC_SECRET and GOOGLE_OIDC_HANDOFF_SECRET " "must be independent"
             )
 
         if self.line_account_link_enabled:

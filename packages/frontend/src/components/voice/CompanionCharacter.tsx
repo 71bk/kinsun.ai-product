@@ -27,7 +27,11 @@ const STATE_VIDEO: Partial<Record<ConversationState, string>> = {
   sleeping: '/video/comfort.mp4',
 };
 
-export function CompanionCharacter({ state = 'idle', message, characterName = '小暖' }: CompanionCharacterProps) {
+export function CompanionCharacter({
+  state = 'idle',
+  message,
+  characterName = '小暖',
+}: CompanionCharacterProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoSrc = STATE_VIDEO[state];
 
@@ -73,7 +77,13 @@ export function CompanionCharacter({ state = 'idle', message, characterName = '�
             // Plain <img>, not next/image — this is a bundled local asset, and
             // the optimizer's default sandbox CSP on /_next/image responses
             // isn't worth the tradeoff for a fixed 280x280 static PNG.
-            <img src="/mascot.png" alt={characterName} width={280} height={280} className={styles.characterImage} />
+            <img
+              src="/mascot.png"
+              alt={characterName}
+              width={280}
+              height={280}
+              className={styles.characterImage}
+            />
           )}
         </div>
       </div>
