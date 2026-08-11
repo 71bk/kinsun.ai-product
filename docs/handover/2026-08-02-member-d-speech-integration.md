@@ -1,0 +1,195 @@
+# 成員 D：ASR／TTS 與 Agent／RAG 整合交接
+
+- 日期：2026-08-02
+- 分支：`feature/member-d-speech-agent-gradio`
+- 負責範圍：台語／客語 ASR、TTS 候選評估、SageMaker BYOC、Speech 整合工作台
+- 資料限制：Demo、測試與截圖只能使用 Synthetic／完成去識別資料
+
+> 移植註記（2026-08-11）：本文件保留來源分支的歷史證據；部署狀態與 AWS 資源名稱
+> 必須在目前帳號重新驗證。正式 runtime authority 是 `services/speech-gateway/src`，
+> `evals/speech` 僅供 Synthetic 評測與人工工作台。
+
+## 1. 目前完成狀態
+
+| 項目 | 狀態 | 可驗證證據 |
+| --- | --- | --- |
+| SageMaker ASR | 已部署並實際呼叫 | `kinsun-speech-asr-v1`，`us-west-2`，回傳 JSON |
+| 台／客語 ASR 容器 | 已建立 | `services/speech-gateway/sagemaker/Dockerfile.asr` |
+| 低信心 Gate | Core 為正式權威；工作台另有 Synthetic 提示 | Gateway 把 confidence 送 Core，由 Core 回 gate decision |
+| Core → Agent／RAG 串接 | 已依現行 contract 實作 client | 工作台只呼叫 Core companion-turn，不直連 Agent |
+| Gradio 工作台 | 已實作並做瀏覽器 smoke test | `evals/speech/speech_workbench.py` |
+| 外部台／客語 TTS 評估 | Synthetic 實測成功 | `evals/speech/evaluate_external_tts.py` |
+| SageMaker TTS | 本機 image 與台／客語 WAV 已通過，Endpoint 尚未部署 | 仍需 ECR push、SageMaker 建立與 AWS invoke |
+| 正式前端語音串流 | 尚未實作 | 目前 Core response 仍是 `TEXT_ONLY` |
+
+## 2. 正式資料流
+
+```text
+Core 建立 Voice Session 與一次性 Voice Ticket
+  → Speech Gateway 消耗 Ticket
+  → Amazon Transcribe 或私有 SageMaker ASR
+  → Speech Gateway 把逐字稿與 confidence 提交 Core ASR Gate
+  → Core 回 CAN_SEND_TO_AGENT／CONFIRMATION_REQUIRED／CANNOT_SEND_TO_AGENT
+  → 通過 Gate 後呼叫 Core companion-turn
+  → Core 再驗證 Authorization／Tenant／Elder／Consent／Session
+  → Agent Runtime（需要時執行受控 RAG）
+  → reply_text + safety／trace metadata
+  → SageMaker TTS（待部署）或明確文字降級
+```
+
+不要讓 Speech Gateway 或工作台直接呼叫 Agent Runtime。`actor_id`、`tenant_id`、`elder_id`
+不能由 Gradio 或模型自報；Core 是唯一正式 Gate。
+
+## 3. 啟動 Gradio 工作台
+
+```powershell
+uv venv .\evals\speech\.venv --python 3.10
+uv pip install --python .\evals\speech\.venv\Scripts\python.exe `
+  -r .\evals\speech\requirements-workbench.txt
+
+$env:AWS_DEFAULT_REGION = "us-west-2"
+$env:KINSUN_ASR_ENDPOINT = "kinsun-speech-asr-v1"
+$env:KINSUN_TTS_ENDPOINT = "kinsun-speech-tts-v1" # 尚未部署時只顯示設定，不呼叫
+$env:KINSUN_CORE_API_URL = "http://127.0.0.1:8000"
+$env:KINSUN_ASR_CONFIRM_THRESHOLD = "0.65"
+$env:GRADIO_SERVER_PORT = "7861"
+
+.\evals\speech\.venv\Scripts\python.exe .\evals\speech\speech_workbench.py
+```
+
+開啟 `http://127.0.0.1:7861`。程式固定綁定 `127.0.0.1` 且 `share=False`，禁止
+為方便 Demo 改成公開分享連結。
+
+## 4. 工作台操作順序
+
+1. 先在「ASR 與低信心確認」上傳 Synthetic 音訊或使用 Mock。
+2. 檢查逐字稿、confidence、模型版本與延遲。
+3. 修正逐字稿並勾選「我已人工確認」。
+4. 事先由 Core 建立已授權 Voice Session；填入 Session UUID 與短效 Bearer Token。
+5. 在「Core → Agent／RAG」執行 companion turn。
+6. 檢查 `result_status`、`safety_decision`、`risk_level`、`reason_codes` 與 trace。
+7. 將安全回覆複製到 TTS 分頁。
+8. 正式內容只可呼叫私有 SageMaker TTS；外部 Space 僅允許 Synthetic 文字。
+
+Bearer Token 只存在當次 Gradio component 記憶體，不寫入報告、Git 或一般 Log。
+
+## 5. ASR SageMaker 契約
+
+請求：
+
+- Content-Type：`application/octet-stream`
+- Body：16 kHz／mono／signed 16-bit little-endian PCM
+- CustomAttributes：`{"language":"nan-TW","sampleRate":16000}`
+
+回應：
+
+```json
+{
+  "text": "模型逐字稿",
+  "confidence": 0.72
+}
+```
+
+部署資源：
+
+- Region：`us-west-2`
+- ECR：`kinsun-speech-gateway`
+- Model：`kinsun-speech-asr-v1`
+- Endpoint Config：`kinsun-speech-asr-config-v1`
+- Endpoint：`kinsun-speech-asr-v1`
+- Instance：`ml.g4dn.xlarge`
+- 模型：`adi-gov-tw/Taiwan-Tongues-ASR-CE-v2.0`
+- Revision：`853363cf70e50d9771497a1c5dc88bf17f687f30`
+
+底層模型支援 `zh`、`nan`、`hak`、`en`、`id`，但這個 endpoint contract 只接受
+`nan-TW` 與 `hak-TW`。華語／英語在目標路由走 AWS Transcribe。Gradio 預設選台語不代表
+模型或 endpoint 只有台語；同一下拉選單可切換客語。
+
+既有本機 benchmark：台語 Micro CER 76.9%、客語 Micro CER 32.3%。兩者都未達可自動
+信任的程度，尤其客語 Micro WER 仍達 91.7%，所以低信心／空結果人工確認 Gate 不得移除。
+SageMaker 目前只以 Synthetic silence 驗證 wire compatibility，不能當品質證據。
+
+## 6. Core／Agent 交接契約
+
+工作台呼叫：
+
+```http
+POST /api/v1/voice-sessions/{session_id}/companion-turns
+Authorization: Bearer <short-lived-token>
+Idempotency-Key: speech-<uuid>
+X-Correlation-ID: <uuid>
+Content-Type: application/json
+
+{"input_text":"已人工確認的逐字稿"}
+```
+
+只使用 Core 回傳 envelope 的 `data.reply_text` 做 TTS。若 `result_status` 是
+`BLOCKED` 或 `SAFE_FALLBACK`，仍應朗讀 Core 提供的安全替代文字；不得改用原模型輸出。
+
+RAG 的成功與否由 Agent Runtime 現行邏輯決定。沒有足夠來源或 provider 未設定時，
+必須保留 `SAFE_FALLBACK`，Speech 不得自行補答案。
+
+## 7. TTS 候選與限制
+
+Owner 於 2026-08-02 明確確認：台語與客語模型只用於本次非商用黑客松展示，同意在此
+範圍內使用 CC-BY-NC-4.0；不得把此決策延伸成正式商用授權。正式商用版本仍須換成允許
+商用的模型或另取得授權。
+
+本機最終容器 `kinsun-speech-tts:tts-v1` 驗證結果：
+
+| Route | Synthetic 輸出 | 冷載入延遲 | 結果 |
+| --- | ---: | ---: | --- |
+| 台語 `nan-TW` | 18,988 bytes，WAV `RIFF` | 18,003.9 ms | 通過 |
+| 客語 `hak-TW` | 248,954 bytes，WAV `RIFF` | 39,846.0 ms | 通過 |
+
+- Image ID：`sha256:03238c3dfbd25fb2f0cd5d274bfb8264703b74e8b5ab6809de8adf094375ae35`
+- 本機 image 大小：約 11.44 GB。
+- HTTP server：Gunicorn、單 worker、access log 關閉。
+- 上述數字只證明可合成與 wire compatibility，不是母語者音質評分。
+
+| 語言 | 候選 | Synthetic 實測 | 限制 |
+| --- | --- | --- | --- |
+| 客語 | `ivanusto/tw-hakka-tts` | 成功；可回傳斷詞、拼音、WAV | 第三方；底層模型授權待 Owner 確認 |
+| 台語 | `tbdavid2019/Taiwanese-tts` model6 | 成功；可回傳台羅、WAV | 轉送外部 API且保留歷史，不得傳正式內容 |
+| 台語 | `facebook/mms-tts-nan` | 漢字 tokenizer 已知不適用 | 非商用候選，不作正式選擇 |
+| 客語 | VoxHakka／YourTTS | 容器骨架存在 | 非商用候選，正式部署前需授權決策 |
+
+外部 TTS 腳本與工作台都要求明確 Synthetic 確認。不得使用客製語者錄音，因為聲紋
+屬競賽禁止匯入的生物識別資料。
+
+## 8. 測試
+
+```powershell
+.\evals\speech\.venv\Scripts\python.exe -m pytest .\evals\speech\tests -q
+
+cd services/speech-gateway
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+另外必須執行：
+
+```powershell
+docker compose config --quiet
+git diff --check
+git status --short
+```
+
+## 9. 下一位接手者的工作
+
+1. 建置並掃描已固定 revision 的 TTS 容器；授權決策已於 2026-08-02 完成。
+2. 將 immutable image digest 推到私人 ECR。
+3. 建立私有 `kinsun-speech-tts-v1` SageMaker Model／Config／Endpoint。
+4. 使用 Synthetic 句子實際 invoke，驗證 WAV、延遲與文字降級。
+5. 前端補 Voice transport；目前 Core contract 明確回傳 `TEXT_ONLY`。
+6. 建立母語者盲測表，才可宣稱台語／客語 TTS 品質通過。
+
+## 10. 回退與資源管理
+
+- ASR 失敗或 timeout：回傳重試／請使用者重說，不送 Agent。
+- TTS 失敗：顯示 `reply_text`，不得假裝已有音訊。
+- Agent／RAG 失敗：使用 Core 的安全 fallback，不由 Speech 猜測。
+- 不使用時刪除 SageMaker Endpoint 以停止 instance 持續占用；Model 與 ECR image 可保留重建。
+- 不建立公開 S3、公開 Security Group 或公開 Gradio share URL。

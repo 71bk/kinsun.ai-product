@@ -37,12 +37,16 @@ from speech_gateway.sagemaker_asr import (
     SageMakerAsrNotConfiguredError,
     transcribe_via_sagemaker,
 )
+from speech_gateway.sagemaker_tts import (
+    SageMakerTtsNotConfiguredError,
+    synthesize_via_sagemaker,
+)
 from speech_gateway.settings import get_settings
 from speech_gateway.tts import synthesize
 
-# Language routing is the single place this decision is made, mirroring
-# packages/backend/src/asr/routing.ts: Mandarin/English always go to Transcribe,
-# Hokkien/Hakka always go to SageMaker. Nothing else should branch on language.
+# Language routing is centralized here: Mandarin/English use AWS managed
+# providers, while Hokkien/Hakka use private SageMaker endpoints. Nothing else
+# in the service should make an independent provider decision.
 _SAGEMAKER_LANGUAGES = frozenset({"nan-TW", "hak-TW"})
 
 logger = logging.getLogger("speech_gateway")
@@ -181,9 +185,26 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
     @app.post("/api/v1/speech/syntheses", response_model=SynthesizeResponse)
     async def create_synthesis(payload: SynthesizeRequest) -> SynthesizeResponse:
         try:
-            audio, content_type, voice_id = await synthesize(
-                payload.text, payload.language, payload.speaking_speed, settings.AWS_REGION
-            )
+            if payload.language in _SAGEMAKER_LANGUAGES:
+                audio, content_type, voice_id = await synthesize_via_sagemaker(
+                    payload.text,
+                    payload.language,  # type: ignore[arg-type]
+                    payload.speaking_speed,
+                    settings.AWS_REGION,
+                    settings.SAGEMAKER_TTS_ENDPOINT,
+                )
+            else:
+                audio, content_type, voice_id = await synthesize(
+                    payload.text,
+                    payload.language,  # type: ignore[arg-type]
+                    payload.speaking_speed,
+                    settings.AWS_REGION,
+                )
+        except SageMakerTtsNotConfiguredError as exc:
+            logger.warning("no TTS endpoint configured for %s", payload.language)
+            raise HTTPException(
+                status_code=501, detail="this language is not available in this deployment"
+            ) from exc
         except Exception as exc:
             logger.warning("synthesis failed: %s", type(exc).__name__)
             raise HTTPException(status_code=502, detail="speech synthesis unavailable") from exc
