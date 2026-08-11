@@ -72,6 +72,13 @@ class TestSettingsConstruction:
             COGNITO_JWKS_CACHE_SECONDS="120",
             COGNITO_HTTP_TIMEOUT_SECONDS="4",
             FAMILY_INVITATION_HMAC_SECRET="test-family-invitation-secret-32-bytes",
+            APP_SESSION_ELDER_FAMILY_IDLE_TTL_SECONDS="1200",
+            APP_SESSION_ELDER_FAMILY_ABSOLUTE_TTL_SECONDS="2400",
+            APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS="600",
+            APP_SESSION_WORKFORCE_ABSOLUTE_TTL_SECONDS="1800",
+            APP_SESSION_TOUCH_INTERVAL_SECONDS="60",
+            APP_SESSION_RECENT_AUTH_WINDOW_SECONDS="120",
+            APP_SESSION_MAX_ACTIVE_PER_ACTOR="3",
             VOICE_TICKET_ENABLED="true",
             VOICE_TICKET_HMAC_SECRET="test-voice-ticket-secret-material-32-bytes",
             VOICE_TICKET_TTL_SECONDS="75",
@@ -106,6 +113,13 @@ class TestSettingsConstruction:
         assert s.cognito_jwks_cache_seconds == 120
         assert s.cognito_http_timeout_seconds == 4
         assert s.family_invitation_hmac_secret == "test-family-invitation-secret-32-bytes"
+        assert s.app_session_elder_family_idle_ttl_seconds == 1200
+        assert s.app_session_elder_family_absolute_ttl_seconds == 2400
+        assert s.app_session_workforce_idle_ttl_seconds == 600
+        assert s.app_session_workforce_absolute_ttl_seconds == 1800
+        assert s.app_session_touch_interval_seconds == 60
+        assert s.app_session_recent_auth_window_seconds == 120
+        assert s.app_session_max_active_per_actor == 3
         assert s.voice_ticket_enabled is True
         assert s.voice_ticket_hmac_secret == "test-voice-ticket-secret-material-32-bytes"
         assert s.voice_ticket_ttl_seconds == 75
@@ -187,6 +201,34 @@ class TestValidation:
                 COGNITO_REGION="us-west-2",
                 COGNITO_USER_POOL_ID="us-west-2_example",
                 COGNITO_APP_CLIENT_ID="client-id",
+            )
+
+    @pytest.mark.parametrize(
+        ("idle_field", "absolute_field"),
+        [
+            (
+                "APP_SESSION_ELDER_FAMILY_IDLE_TTL_SECONDS",
+                "APP_SESSION_ELDER_FAMILY_ABSOLUTE_TTL_SECONDS",
+            ),
+            (
+                "APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS",
+                "APP_SESSION_WORKFORCE_ABSOLUTE_TTL_SECONDS",
+            ),
+        ],
+    )
+    def test_app_session_idle_ttl_cannot_exceed_absolute_ttl(
+        self,
+        idle_field: str,
+        absolute_field: str,
+    ) -> None:
+        with pytest.raises(ValidationError, match="idle TTL"):
+            _make_settings(**{idle_field: "601", absolute_field: "600"})
+
+    def test_app_session_touch_interval_must_be_shorter_than_idle_ttls(self) -> None:
+        with pytest.raises(ValidationError, match="TOUCH_INTERVAL"):
+            _make_settings(
+                APP_SESSION_TOUCH_INTERVAL_SECONDS="300",
+                APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS="300",
             )
 
     def test_enabled_voice_ticket_requires_strong_secret(self) -> None:

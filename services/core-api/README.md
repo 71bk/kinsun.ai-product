@@ -79,6 +79,16 @@ When Cognito authentication is enabled, also provide `COGNITO_REGION`,
 `COGNITO_USER_POOL_ID`, `COGNITO_APP_CLIENT_ID`, and a minimum 32-byte
 `FAMILY_INVITATION_HMAC_SECRET` at runtime.
 
+The provider-neutral App Session foundation currently has internal issue,
+validation, touch, recent-auth, active-session-cap, and revocation services,
+but no public creation route and no enabled authenticator. Cognito therefore
+remains the only real authentication runtime. The default policy is a 7-day
+idle/30-day absolute lifetime for elder and family actors, an 8-hour idle/24-hour
+absolute lifetime for workforce actors, a five-minute touch interval, a
+ten-minute recent-auth window, and at most five live sessions per actor. Override
+these only through the bounded `APP_SESSION_*` settings documented in
+`.env.example`.
+
 For a local smoke test, create a git-ignored `.env.runtime.local`, then run:
 
 ```powershell
