@@ -173,6 +173,13 @@ voice／voice fallback session 未通過 server-side ASR Gate 時不得呼叫 Ag
 
 `AgentRunResponseV1` 是 Agent Runtime 的 HTTP 回應，不是文件 10 的 Handoff Result，不能用它代替 Handoff Result。現有 result status 只有 `SUCCESS`、`SAFE_FALLBACK`、`BLOCKED`、`FAILED`，尚未涵蓋文件 10 的 `NEEDS_CLARIFICATION`、`HUMAN_REVIEW`、`NO_DATA` 等狀態。
 
+Gate 1 Event Candidate 現採 Core-owned proposal boundary：Core 以可信 scope 與
+`CARE_EVENT_EXTRACTION` Consent 推導 optional `requested_outputs=["event_candidate"]`，Runtime
+只有在 Safety `ALLOW` 且 deterministic extraction 成功時回 optional
+`EventCandidateProposalV1`。Proposal 不含 actor、tenant、elder、session、consent 或逐字稿；
+Runtime 不再 register／complete Core AgentRun 或 callback Core Tool。舊 `allowed_tools` 欄位僅保留
+同 major 解析相容，canonical Core path 為空陣列。這仍不是文件 10 的正式 Handoff Result。
+
 ### Staging RAG retrieval
 
 Agent Runtime 已實作 `POST /api/v1/rag/retrievals` 的 staging-only HTTP boundary，並使用

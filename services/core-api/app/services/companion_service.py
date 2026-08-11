@@ -21,8 +21,13 @@ from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
+from app.schemas.care_event import CreateCareEventCandidateRequest
+from app.schemas.consent import ConsentPurpose
 from app.schemas.conversation import CompanionTurnResponse
 from app.services.asr_gate_service import AsrGateService
+from app.services.authorization_service import authorize_elder
+from app.services.care_event_service import CareEventService
+from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
 
@@ -78,6 +83,28 @@ class CompanionService:
         self._model_route = model_route
         self._conversations = ConversationService(session, tenant_id)
 
+    async def _requested_outputs(
+        self,
+        *,
+        conversation: ConversationSession,
+        actor_context: ActorContext,
+    ) -> list[str]:
+        """Derive proposal scope from current Core authorization and consent."""
+        try:
+            await authorize_elder(
+                self._session,
+                actor_context,
+                conversation.elder_id,
+                "care_event:candidate:create",
+            )
+            await ConsentService(self._session, self._tenant_id).require_active(
+                elder_id=conversation.elder_id,
+                purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
+            )
+        except NotFoundError:
+            return []
+        return ["event_candidate"]
+
     async def _authorize_asr_input(
         self,
         *,
@@ -129,6 +156,12 @@ class CompanionService:
             )
 
         request_id = f"req-{uuid5(NAMESPACE_URL, f'kinsun:companion:{idempotency_key}')}"
+        agent_run_id = uuid5(NAMESPACE_URL, f"kinsun:agent-run:{idempotency_key}")
+        agent_run_wire_id = f"run-{agent_run_id}"
+        requested_outputs = await self._requested_outputs(
+            conversation=conversation,
+            actor_context=actor_context,
+        )
         # The Agent Runtime selects a retrieval profile from `purpose`
         # (rag_integration.RAG_PURPOSES) and does not infer intent itself, so an
         # information request has to be identified here or the knowledge base is
@@ -138,6 +171,7 @@ class CompanionService:
             "schema_version": "1.0.0",
             "request_id": request_id,
             "trace_id": conversation.trace_id,
+            "agent_run_id": agent_run_wire_id,
             "session_id": str(conversation.id),
             "actor_id": str(actor_context.actor_id),
             "actor_role": _ACTOR_ROLE_MAP.get(actor_context.actor_role, "staff"),
@@ -149,6 +183,7 @@ class CompanionService:
             "language": _LANGUAGE_MAP[conversation.language_route],
             "input_text": input_text,
             "allowed_tools": [],
+            "requested_outputs": requested_outputs,
             "max_steps": 3,
             "latency_budget_ms": latency_budget_ms,
         }
@@ -170,6 +205,25 @@ class CompanionService:
             )
 
         started_at = datetime.now(UTC)
+        agent_run = AgentRun(
+            agent_run_id=agent_run_id,
+            session_id=conversation.id,
+            elder_id=conversation.elder_id,
+            tenant_id=self._tenant_id,
+            actor_id=actor_context.actor_id,
+            agent_id="companion-agent",
+            agent_version="1.0.0",
+            result_status="RUNNING",
+            model_id=self._model_route,
+            prompt_version="m0-companion-v1",
+            policy_version=conversation.policy_version,
+            token_usage={},
+            trace_id=conversation.trace_id,
+            started_at=started_at,
+        )
+        self._session.add(agent_run)
+        await self._session.flush()
+
         started_clock = perf_counter()
         runtime_result = await self._runtime_client.run(
             request_payload=request_payload,
@@ -180,6 +234,7 @@ class CompanionService:
         if (
             runtime_result.request_id != request_id
             or runtime_result.trace_id != conversation.trace_id
+            or runtime_result.agent_run_id != agent_run_wire_id
         ):
             raise ServiceUnavailableError("Agent runtime response correlation mismatch")
 
@@ -191,27 +246,14 @@ class CompanionService:
             idempotency_key=idempotency_key,
         )
 
-        agent_run_id = _runtime_uuid(runtime_result.agent_run_id, "run-")
-        agent_run = AgentRun(
-            agent_run_id=agent_run_id,
-            session_id=conversation.id,
-            elder_id=conversation.elder_id,
-            tenant_id=self._tenant_id,
-            actor_id=actor_context.actor_id,
-            agent_id=runtime_result.selected_agent,
-            agent_version=runtime_result.schema_version,
-            result_status=_RESULT_STATUS_MAP[runtime_result.result_status],
-            model_id=self._model_route,
-            prompt_version="m0-companion-v1",
-            policy_version=conversation.policy_version,
-            latency_ms=latency_ms,
-            token_usage={},
-            stop_reason=",".join(runtime_result.reason_codes)[:160] or None,
-            trace_id=runtime_result.trace_id,
-            started_at=started_at,
-            completed_at=datetime.now(UTC),
-        )
-        self._session.add(agent_run)
+        if _runtime_uuid(runtime_result.agent_run_id, "run-") != agent_run_id:
+            raise ServiceUnavailableError("Agent runtime response correlation mismatch")
+        agent_run.agent_id = runtime_result.selected_agent
+        agent_run.agent_version = runtime_result.schema_version
+        agent_run.result_status = _RESULT_STATUS_MAP[runtime_result.result_status]
+        agent_run.latency_ms = latency_ms
+        agent_run.stop_reason = ",".join(runtime_result.reason_codes)[:160] or None
+        agent_run.completed_at = datetime.now(UTC)
 
         consent = await self._session.get(ConsentGrant, conversation.consent_id)
         if consent is None:
@@ -236,6 +278,44 @@ class CompanionService:
             trace_id=correlation_id,
             idempotency_key=idempotency_key,
         )
+
+        proposal = runtime_result.event_candidate_proposal
+        if (
+            proposal is not None
+            and "event_candidate" in requested_outputs
+            and runtime_result.result_status == "SUCCESS"
+            and runtime_result.safety_result.decision == "ALLOW"
+        ):
+            try:
+                await authorize_elder(
+                    self._session,
+                    actor_context,
+                    conversation.elder_id,
+                    "care_event:candidate:create",
+                )
+            except NotFoundError:
+                pass
+            else:
+                # CareEventService rechecks live extraction consent and validates
+                # that the Core-owned source session completed successfully.
+                await CareEventService(self._session, self._tenant_id).create_candidate(
+                    elder_id=conversation.elder_id,
+                    actor_id=actor_context.actor_id,
+                    request=CreateCareEventCandidateRequest(
+                        source_type="CONVERSATION_SESSION",
+                        source_id=conversation.id,
+                        source_version=1,
+                        event_type=proposal.event_type,
+                        event_time=proposal.event_time,
+                        structured_payload=proposal.structured_payload,
+                        evidence_refs=proposal.evidence_refs,
+                        confidence_band=proposal.confidence_band,
+                        review_requirement=proposal.review_requirement,
+                        extractor_version=proposal.extractor_version,
+                    ),
+                    trace_id=correlation_id,
+                    idempotency_key=f"event-candidate:{agent_run_id}",
+                )
 
         return CompanionTurnResponse(
             session_id=conversation.id,
