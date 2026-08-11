@@ -38,6 +38,10 @@ DATA_SCHEMA_FOR = {
     "deletion-request-completed-with-pending-item.json": "domain/DeletionRequestV1.json",
     "agent-run-request.json": "agent/AgentRunRequestV1.json",
     "agent-run-response.json": "agent/AgentRunResponseV1.json",
+    "event-candidate-proposal.json": "agent/EventCandidateProposalV1.json",
+    "event-candidate-proposal-with-transcript.json": (
+        "agent/EventCandidateProposalV1.json"
+    ),
     "agent-run-request-extra-field.json": "agent/AgentRunRequestV1.json",
     "agent-run-request-missing-required.json": "agent/AgentRunRequestV1.json",
     "agent-run-registration-request.json": "domain/RegisterAgentRunRequestV1.json",
