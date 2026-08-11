@@ -206,13 +206,7 @@ export function VoiceInteractionPanel({
     asrAbortRef.current?.abort();
     asrAbortRef.current = asrController;
     try {
-      const result = await transcribeTurn(
-        apiConfig,
-        elderId,
-        blob,
-        language,
-        asrController.signal,
-      );
+      const result = await transcribeTurn(apiConfig, elderId, blob, language, asrController.signal);
       if (asrController.signal.aborted) return;
       asrAbortRef.current = null;
       if (result.decision === 'CONFIRMATION_REQUIRED') {

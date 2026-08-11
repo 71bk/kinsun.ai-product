@@ -8,7 +8,9 @@ const cachePath = '/app/packages/frontend/.next/cache';
 describe('frontend production container contract', () => {
   it('prepares the ECS cache mount before declaring its exact absolute volume path', () => {
     const createIndex = dockerfile.indexOf(`mkdir -p ${cachePath}`);
-    const ownershipIndex = dockerfile.indexOf('chown -R nextjs:nodejs /app/packages/frontend/.next');
+    const ownershipIndex = dockerfile.indexOf(
+      'chown -R nextjs:nodejs /app/packages/frontend/.next',
+    );
     const volumeIndex = dockerfile.indexOf(`VOLUME ["${cachePath}"]`);
     const userIndex = dockerfile.indexOf('USER nextjs');
 
@@ -19,7 +21,9 @@ describe('frontend production container contract', () => {
   });
 
   it('does not accept server credentials as image build arguments', () => {
-    const buildArguments = [...dockerfile.matchAll(/^ARG\s+([A-Z0-9_]+)/gm)].map((match) => match[1]);
+    const buildArguments = [...dockerfile.matchAll(/^ARG\s+([A-Z0-9_]+)/gm)].map(
+      (match) => match[1],
+    );
 
     expect(buildArguments).toEqual([
       'NODE_VERSION',

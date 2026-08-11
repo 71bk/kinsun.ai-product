@@ -21,7 +21,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -33,7 +35,5 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate' || url.pathname.startsWith('/backend/')) return;
   if (!PUBLIC_ASSETS.includes(url.pathname)) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached ?? fetch(event.request)),
-  );
+  event.respondWith(caches.match(event.request).then((cached) => cached ?? fetch(event.request)));
 });

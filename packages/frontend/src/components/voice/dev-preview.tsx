@@ -1,6 +1,11 @@
 'use client';
 
-import { ALL_VOICE_PAGE_STATES, isVoicePageState, STATE_COPY, type VoicePageState } from './voice-page-state';
+import {
+  ALL_VOICE_PAGE_STATES,
+  isVoicePageState,
+  STATE_COPY,
+  type VoicePageState,
+} from './voice-page-state';
 
 /**
  * DEV SEAM — delete or replace this file when real Cognito sign-in lands.

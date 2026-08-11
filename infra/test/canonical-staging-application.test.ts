@@ -77,7 +77,9 @@ test('uses immutable digests and runtime-only secret injection', () => {
   );
   assert.equal(taskDefinitions.length, 4);
   for (const taskDefinition of taskDefinitions) {
-    const containers = taskDefinition.Properties?.ContainerDefinitions as Array<Record<string, unknown>>;
+    const containers = taskDefinition.Properties?.ContainerDefinitions as Array<
+      Record<string, unknown>
+    >;
     assert.equal(containers.length, 1);
     const container = containers[0];
     assert.ok(container);
@@ -90,7 +92,9 @@ test('uses immutable digests and runtime-only secret injection', () => {
     JSON.stringify(taskDefinition.Properties).includes('kinsun-staging-migration'),
   );
   assert.ok(migration);
-  const migrationContainer = (migration.Properties?.ContainerDefinitions as Array<Record<string, unknown>>)[0];
+  const migrationContainer = (
+    migration.Properties?.ContainerDefinitions as Array<Record<string, unknown>>
+  )[0];
   assert.ok(migrationContainer);
   assert.equal(migrationContainer.HealthCheck, undefined);
   assert.equal(migrationContainer.PortMappings, undefined);
@@ -102,7 +106,9 @@ test('uses immutable digests and runtime-only secret injection', () => {
     JSON.stringify(taskDefinition.Properties).includes('kinsun-staging-core'),
   );
   assert.ok(core);
-  const coreContainer = (core.Properties?.ContainerDefinitions as Array<Record<string, unknown>>)[0];
+  const coreContainer = (
+    core.Properties?.ContainerDefinitions as Array<Record<string, unknown>>
+  )[0];
   assert.ok(coreContainer);
   assert.match(JSON.stringify(coreContainer.HealthCheck), /127\.0\.0\.1:8000\/health/);
   assert.doesNotMatch(JSON.stringify(coreContainer.HealthCheck), /\/ready/);
@@ -141,12 +147,18 @@ test('exposes only the BFF and does not recreate external or legacy services', (
   const document = template.toJSON() as {
     Resources: Record<string, { Type: string; Properties?: Record<string, unknown> }>;
   };
-  const services = Object.values(document.Resources).filter((resource) => resource.Type === 'AWS::ECS::Service');
-  const loadBalancedServices = services.filter((resource) => resource.Properties?.LoadBalancers !== undefined);
+  const services = Object.values(document.Resources).filter(
+    (resource) => resource.Type === 'AWS::ECS::Service',
+  );
+  const loadBalancedServices = services.filter(
+    (resource) => resource.Properties?.LoadBalancers !== undefined,
+  );
   assert.equal(loadBalancedServices.length, 1);
   assert.match(JSON.stringify(loadBalancedServices[0]), /frontend/);
 
-  const stage = Object.values(document.Resources).find((resource) => resource.Type === 'AWS::ApiGatewayV2::Stage');
+  const stage = Object.values(document.Resources).find(
+    (resource) => resource.Type === 'AWS::ApiGatewayV2::Stage',
+  );
   assert.ok(stage);
   const accessLog = JSON.stringify(stage.Properties?.AccessLogSettings);
   assert.doesNotMatch(accessLog, /authoriz|header|query|string|body|identity/i);

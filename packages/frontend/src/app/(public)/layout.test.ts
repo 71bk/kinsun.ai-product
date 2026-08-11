@@ -12,11 +12,7 @@ vi.mock('next/headers', () => ({
 }));
 
 vi.mock('@/components/public/PublicShell', () => ({
-  PublicShell: (props: {
-    initialLocale: string;
-    signedIn: boolean;
-    children: ReactNode;
-  }) => {
+  PublicShell: (props: { initialLocale: string; signedIn: boolean; children: ReactNode }) => {
     mocks.shellProps(props);
     return createElement('div', null, props.children);
   },

@@ -122,18 +122,62 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
       'ApiVpcLinkSecurityGroup',
       'API Gateway VPC Link ENIs; the application stack will attach it.',
     );
-    const frontendSecurityGroup = this.securityGroup(vpc, 'FrontendSecurityGroup', 'Next.js BFF; no Internet ingress.');
-    const coreSecurityGroup = this.securityGroup(vpc, 'CoreSecurityGroup', 'Python Core API; canonical internal peers only.');
-    const agentSecurityGroup = this.securityGroup(vpc, 'AgentSecurityGroup', 'Agent Runtime; reachable only from Core.');
-    const migrationSecurityGroup = this.securityGroup(vpc, 'MigrationSecurityGroup', 'One-off Alembic tasks; no ingress.');
-    const databaseSecurityGroup = this.securityGroup(vpc, 'DatabaseSecurityGroup', 'Aurora PostgreSQL; Core and migration tasks only.');
+    const frontendSecurityGroup = this.securityGroup(
+      vpc,
+      'FrontendSecurityGroup',
+      'Next.js BFF; no Internet ingress.',
+    );
+    const coreSecurityGroup = this.securityGroup(
+      vpc,
+      'CoreSecurityGroup',
+      'Python Core API; canonical internal peers only.',
+    );
+    const agentSecurityGroup = this.securityGroup(
+      vpc,
+      'AgentSecurityGroup',
+      'Agent Runtime; reachable only from Core.',
+    );
+    const migrationSecurityGroup = this.securityGroup(
+      vpc,
+      'MigrationSecurityGroup',
+      'One-off Alembic tasks; no ingress.',
+    );
+    const databaseSecurityGroup = this.securityGroup(
+      vpc,
+      'DatabaseSecurityGroup',
+      'Aurora PostgreSQL; Core and migration tasks only.',
+    );
 
-    frontendSecurityGroup.addIngressRule(apiVpcLinkSecurityGroup, ec2.Port.tcp(3000), 'HTTP from API Gateway VPC Link');
-    coreSecurityGroup.addIngressRule(frontendSecurityGroup, ec2.Port.tcp(8000), 'Core API from BFF');
-    coreSecurityGroup.addIngressRule(agentSecurityGroup, ec2.Port.tcp(8000), 'Core callbacks from Agent Runtime');
-    agentSecurityGroup.addIngressRule(coreSecurityGroup, ec2.Port.tcp(8001), 'Agent Runtime from Core');
-    databaseSecurityGroup.addIngressRule(coreSecurityGroup, ec2.Port.tcp(5432), 'PostgreSQL from Core');
-    databaseSecurityGroup.addIngressRule(migrationSecurityGroup, ec2.Port.tcp(5432), 'PostgreSQL from Alembic migration task');
+    frontendSecurityGroup.addIngressRule(
+      apiVpcLinkSecurityGroup,
+      ec2.Port.tcp(3000),
+      'HTTP from API Gateway VPC Link',
+    );
+    coreSecurityGroup.addIngressRule(
+      frontendSecurityGroup,
+      ec2.Port.tcp(8000),
+      'Core API from BFF',
+    );
+    coreSecurityGroup.addIngressRule(
+      agentSecurityGroup,
+      ec2.Port.tcp(8000),
+      'Core callbacks from Agent Runtime',
+    );
+    agentSecurityGroup.addIngressRule(
+      coreSecurityGroup,
+      ec2.Port.tcp(8001),
+      'Agent Runtime from Core',
+    );
+    databaseSecurityGroup.addIngressRule(
+      coreSecurityGroup,
+      ec2.Port.tcp(5432),
+      'PostgreSQL from Core',
+    );
+    databaseSecurityGroup.addIngressRule(
+      migrationSecurityGroup,
+      ec2.Port.tcp(5432),
+      'PostgreSQL from Alembic migration task',
+    );
 
     const cluster = new ecs.Cluster(this, 'Cluster', {
       vpc,
@@ -241,10 +285,16 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     });
 
     const executionRoles = {
-      frontend: this.executionRole('FrontendExecutionRole', `kinsun-frontend-execution-${environmentName}`),
+      frontend: this.executionRole(
+        'FrontendExecutionRole',
+        `kinsun-frontend-execution-${environmentName}`,
+      ),
       core: this.executionRole('CoreExecutionRole', `kinsun-core-execution-${environmentName}`),
       agent: this.executionRole('AgentExecutionRole', `kinsun-agent-execution-${environmentName}`),
-      migration: this.executionRole('MigrationExecutionRole', `kinsun-migration-execution-${environmentName}`),
+      migration: this.executionRole(
+        'MigrationExecutionRole',
+        `kinsun-migration-execution-${environmentName}`,
+      ),
     };
     oauthTransactionSecret.grantRead(executionRoles.frontend);
     familyInviteSecret.grantRead(executionRoles.core);
@@ -304,11 +354,32 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     }
 
     this.output('VpcId', vpc.vpcId);
-    this.output('PublicEdgeSubnetIds', cdk.Fn.join(',', vpc.publicSubnets.map((subnet) => subnet.subnetId)));
-    this.output('PrivateAppSubnetIds', cdk.Fn.join(',', vpc.privateSubnets.map((subnet) => subnet.subnetId)));
-    this.output('IsolatedDatabaseSubnetIds', cdk.Fn.join(',', vpc.isolatedSubnets.map((subnet) => subnet.subnetId)));
+    this.output(
+      'PublicEdgeSubnetIds',
+      cdk.Fn.join(
+        ',',
+        vpc.publicSubnets.map((subnet) => subnet.subnetId),
+      ),
+    );
+    this.output(
+      'PrivateAppSubnetIds',
+      cdk.Fn.join(
+        ',',
+        vpc.privateSubnets.map((subnet) => subnet.subnetId),
+      ),
+    );
+    this.output(
+      'IsolatedDatabaseSubnetIds',
+      cdk.Fn.join(
+        ',',
+        vpc.isolatedSubnets.map((subnet) => subnet.subnetId),
+      ),
+    );
     this.output('EcsClusterName', cluster.clusterName);
-    this.output('CloudMapNamespace', cluster.defaultCloudMapNamespace?.namespaceName ?? 'not-created');
+    this.output(
+      'CloudMapNamespace',
+      cluster.defaultCloudMapNamespace?.namespaceName ?? 'not-created',
+    );
     this.output('FrontendRepositoryUri', repositories.frontend.repositoryUri);
     this.output('CoreRepositoryUri', repositories.core.repositoryUri);
     this.output('MigrationRepositoryUri', repositories.migration.repositoryUri);
@@ -332,7 +403,13 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     this.output('AgentTaskRoleArn', taskRoles.agent.roleArn);
     this.output('MigrationTaskRoleArn', taskRoles.migration.roleArn);
     this.output('AgentRuntimeAossDataPolicyName', 'kinsun-rag-staging-data');
-    this.output('ApplicationLogGroups', cdk.Fn.join(',', logGroups.map((logGroup) => logGroup.logGroupName)));
+    this.output(
+      'ApplicationLogGroups',
+      cdk.Fn.join(
+        ',',
+        logGroups.map((logGroup) => logGroup.logGroupName),
+      ),
+    );
   }
 
   private securityGroup(vpc: ec2.IVpc, id: string, description: string): ec2.SecurityGroup {
@@ -359,7 +436,11 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     return repository;
   }
 
-  private generatedSecret(id: string, secretName: string, description: string): secretsmanager.Secret {
+  private generatedSecret(
+    id: string,
+    secretName: string,
+    description: string,
+  ): secretsmanager.Secret {
     return new secretsmanager.Secret(this, id, {
       secretName,
       description,

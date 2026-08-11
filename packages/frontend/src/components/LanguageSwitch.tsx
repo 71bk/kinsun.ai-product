@@ -16,11 +16,7 @@ export function LanguageSwitch({ compactLabel = false }: { compactLabel?: boolea
 
   return (
     <div className={styles.group}>
-      <span
-        className={styles.label}
-        id="language-switch-label"
-        data-visually-hidden={compactLabel}
-      >
+      <span className={styles.label} id="language-switch-label" data-visually-hidden={compactLabel}>
         {t('lang.label')}
       </span>
       <div className={styles.options} role="group" aria-labelledby="language-switch-label">

@@ -28,7 +28,11 @@
   width: 240px;
   height: 240px;
   border-radius: var(--radius-full);
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 28%, transparent) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 28%, transparent) 0%,
+    transparent 70%
+  );
   filter: blur(20px);
   opacity: 0.7;
   transition:
@@ -72,11 +76,19 @@
 }
 
 .listening .glow {
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 28%, transparent) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent) 28%, transparent) 0%,
+    transparent 70%
+  );
 }
 
 .processing .glow {
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 34%, transparent) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 34%, transparent) 0%,
+    transparent 70%
+  );
 }
 
 .speaking .character {
@@ -84,7 +96,11 @@
 }
 
 .speaking .glow {
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 34%, transparent) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent) 34%, transparent) 0%,
+    transparent 70%
+  );
 }
 
 .sleeping .character {

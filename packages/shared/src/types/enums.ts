@@ -7,25 +7,13 @@ export type Language = 'zh-TW' | 'nan-TW' | 'hak-TW' | 'en-US' | 'mixed';
 export type RecordingState = 'idle' | 'recording' | 'processing' | 'playing';
 
 export type EventType =
-  | 'meal'
-  | 'activity'
-  | 'sleep'
-  | 'medication_statement'
-  | 'emotion'
-  | 'important_event';
+  'meal' | 'activity' | 'sleep' | 'medication_statement' | 'emotion' | 'important_event';
 
 export type ReviewStatus =
-  | 'auto_approved'
-  | 'needs_review'
-  | 'caregiver_confirmed'
-  | 'caregiver_rejected';
+  'auto_approved' | 'needs_review' | 'caregiver_confirmed' | 'caregiver_rejected';
 
 export type MemoryCategory =
-  | 'preference'
-  | 'relationship'
-  | 'routine'
-  | 'health_condition'
-  | 'life_event';
+  'preference' | 'relationship' | 'routine' | 'health_condition' | 'life_event';
 
 export type MemoryStatus = 'pending' | 'confirmed' | 'rejected' | 'deleted';
 

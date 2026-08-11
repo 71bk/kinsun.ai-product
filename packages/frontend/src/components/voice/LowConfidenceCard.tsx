@@ -18,7 +18,12 @@ export interface LowConfidenceCardProps {
  * correctly (AGENTS.md §3 item 2) — so the elder gets three ways out, not two
  * (§1 可復原).
  */
-export function LowConfidenceCard({ transcript, onConfirm, onRetry, onDefer }: LowConfidenceCardProps) {
+export function LowConfidenceCard({
+  transcript,
+  onConfirm,
+  onRetry,
+  onDefer,
+}: LowConfidenceCardProps) {
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -26,7 +31,12 @@ export function LowConfidenceCard({ transcript, onConfirm, onRetry, onDefer }: L
   }, []);
 
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="low-confidence-question">
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="low-confidence-question"
+    >
       <div className={styles.card}>
         {/* role="alert" so the question is announced the moment it appears (§13). */}
         <div role="alert">
@@ -47,7 +57,11 @@ export function LowConfidenceCard({ transcript, onConfirm, onRetry, onDefer }: L
             <span>對，就是這樣</span>
           </button>
 
-          <button type="button" onClick={onRetry} className={`${styles.action} ${styles.secondary}`}>
+          <button
+            type="button"
+            onClick={onRetry}
+            className={`${styles.action} ${styles.secondary}`}
+          >
             <ArrowClockwise size={40} weight="fill" aria-hidden="true" />
             <span>不對，我再說一次</span>
           </button>
