@@ -90,6 +90,9 @@ class Settings(BaseSettings):
     cognito_jwks_cache_seconds: int = Field(default=300, ge=30, le=3600)
     cognito_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
     family_invitation_hmac_secret: str = ""
+    google_oidc_client_id: str = Field(default="", max_length=512)
+    google_oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=3_600)
+    google_oidc_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
 
     # Provider-neutral Core-owned browser sessions. These settings are inert
     # until the App Session authenticator is explicitly enabled in a later

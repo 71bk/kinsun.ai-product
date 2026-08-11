@@ -47,6 +47,11 @@ class TestSettingsConstruction:
         s = _make_settings(APP_ENV="production")
         assert s.app_env == AppEnv.PRODUCTION
 
+    def test_google_client_secret_is_not_a_core_setting(self) -> None:
+        s = _make_settings(GOOGLE_OIDC_CLIENT_SECRET="bff-only-secret")
+
+        assert not hasattr(s, "google_oidc_client_secret")
+
     def test_all_fields_settable(self) -> None:
         s = _make_settings(
             APP_TITLE="Custom Title",
@@ -72,6 +77,9 @@ class TestSettingsConstruction:
             COGNITO_JWKS_CACHE_SECONDS="120",
             COGNITO_HTTP_TIMEOUT_SECONDS="4",
             FAMILY_INVITATION_HMAC_SECRET="test-family-invitation-secret-32-bytes",
+            GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
+            GOOGLE_OIDC_JWKS_CACHE_SECONDS="180",
+            GOOGLE_OIDC_HTTP_TIMEOUT_SECONDS="4",
             APP_SESSION_ELDER_FAMILY_IDLE_TTL_SECONDS="1200",
             APP_SESSION_ELDER_FAMILY_ABSOLUTE_TTL_SECONDS="2400",
             APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS="600",
@@ -113,6 +121,9 @@ class TestSettingsConstruction:
         assert s.cognito_jwks_cache_seconds == 120
         assert s.cognito_http_timeout_seconds == 4
         assert s.family_invitation_hmac_secret == "test-family-invitation-secret-32-bytes"
+        assert s.google_oidc_client_id == "google-web-client.apps.googleusercontent.com"
+        assert s.google_oidc_jwks_cache_seconds == 180
+        assert s.google_oidc_http_timeout_seconds == 4
         assert s.app_session_elder_family_idle_ttl_seconds == 1200
         assert s.app_session_elder_family_absolute_ttl_seconds == 2400
         assert s.app_session_workforce_idle_ttl_seconds == 600
@@ -230,6 +241,19 @@ class TestValidation:
                 APP_SESSION_TOUCH_INTERVAL_SECONDS="300",
                 APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS="300",
             )
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("GOOGLE_OIDC_JWKS_CACHE_SECONDS", "29"),
+            ("GOOGLE_OIDC_JWKS_CACHE_SECONDS", "3601"),
+            ("GOOGLE_OIDC_HTTP_TIMEOUT_SECONDS", "0"),
+            ("GOOGLE_OIDC_HTTP_TIMEOUT_SECONDS", "16"),
+        ],
+    )
+    def test_google_oidc_network_settings_are_bounded(self, field: str, value: str) -> None:
+        with pytest.raises(ValidationError):
+            _make_settings(**{field: value})
 
     def test_enabled_voice_ticket_requires_strong_secret(self) -> None:
         with pytest.raises(ValidationError, match="VOICE_TICKET_HMAC_SECRET"):

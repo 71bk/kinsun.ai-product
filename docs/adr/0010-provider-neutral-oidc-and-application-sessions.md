@@ -1,6 +1,6 @@
 # ADR 0010：Provider-neutral OIDC 身分與 Core-owned Application Session
 
-- 狀態：Accepted for phased implementation；Phase 2A Session lifecycle 已完成，production cutover 尚未完成
+- 狀態：Accepted for phased implementation；Phase 2A Session lifecycle、Phase 2B Google verifier 與 Phase 2C unbound BFF foundation 已完成，production cutover 尚未完成
 - 日期：2026-08-11
 - Owner：Project Owner
 - 相關：[ADR 0006](0006-frontend-stack-and-app-topology.md)、
@@ -20,9 +20,10 @@ Session 與部署設定一起綁定 Cognito。專案後續由單一維護者以�
 共用，因此不能作為自動合併依據。長者、家庭關係、Consent、報告與記憶又是高敏感 domain state，
 錯誤合併的代價遠高於要求使用者再次驗證。
 
-本 ADR 定義目標架構與分階段切換規則。新增資料模型只代表 foundation 已存在；在 verifier、
-Session service、BFF callback 與 rollout gate 完成前，現行 Cognito path 仍是唯一可用的 real
-authenticator，不得把 foundation 描述成登入已切換。
+本 ADR 定義目標架構與分階段切換規則。新增資料模型、Session service 或單一 Provider verifier
+只代表 foundation 已存在；在所有必要 verifier、pending identity、App Session authenticator、BFF
+callback 與 rollout gate 完成前，現行 Cognito path 仍是唯一可用的 real authenticator，不得把
+foundation 描述成登入已切換。
 
 ## 決策
 
@@ -84,8 +85,11 @@ Provider 驗證成功但查無 `external_identity` 時，BFF／Core 建立短效
 5. 穩定期結束後才移除 Cognito SDK、環境變數、IaC 與 `actor.cognito_sub`。
 
 Phase 1 不新增可啟用的 auth mode，不接受 App Session，不改現有 callback，也不刪 Cognito。Phase 2A
-只加入 Core 內部 Session lifecycle，仍不新增公開 Session 建立 API、不註冊 App Session authenticator。
-這讓 schema／service 先行與 production auth 切換保持可區分，避免半套 verifier 被誤開。
+只加入 Core 內部 Session lifecycle。Phase 2B 只加入 Core 內部 Google ID-token verifier，仍不新增公開
+Session 建立 API、不註冊 App Session authenticator。Phase 2C 加入未綁 route 的 BFF authorization
+transaction、callback envelope validation 與 code-exchange helper，但在 Core handoff 完成前不註冊公開
+start／callback route。這讓 schema／service／verifier／BFF helper 先行與 production auth 切換保持可
+區分，避免未完成的登入流程被誤開。
 
 ## 理由
 
@@ -151,8 +155,24 @@ authorization 與 PostgreSQL，直接 OIDC 的額外工作可控。
 - Session 核發會鎖定 active ExternalIdentity／Actor、確認唯一 active tenant membership，並保證新核發
   credential 不會因同時間戳排序而被 active-session cap 誤撤銷。驗證時重新解析 Actor、role、membership
   與 Tenant；identity／actor 停權、Session revoke、idle／absolute 到期都 fail closed。
-- Phase 2A 尚未包含 Google／LINE token verifier、pending identity transaction、公開 API、Cookie adapter
-  或 runtime authenticator；現行 Cognito 路徑仍是唯一 real auth runtime。
+- Phase 2B Google verifier 固定使用 Google 公開 JWKS，且只接受 `RS256`、Google issuer、單一且完全
+  相符的 audience、有效 `exp`／`iat`、BFF 所產生且完全相符的 expected nonce、有效 `sub`，以及在
+  有值時完全相符的 `azp`。JWKS 依 `Cache-Control` bounded cache，簽章失敗時只強制 refresh 一次。
+- Google `sub` 是唯一登入識別；email 只有在 `email_verified` 為真時才保留，且永遠不得依 email
+  自動解析或連結 Actor。拒絕紀錄不得包含 token、subject、nonce、email 或其他 Provider claim。
+- `GOOGLE_OIDC_CLIENT_ID` 由 BFF 與 Core verifier 共用；`GOOGLE_OIDC_CLIENT_SECRET` 僅屬 BFF，Core
+  settings 不讀取它。
+- Phase 2C BFF foundation 固定使用 Google authorization／token endpoints，callback 由
+  `FRONTEND_ORIGIN` 與 `/backend/auth/google/callback` 組成，不接受環境變數覆寫。交易使用獨立的
+  `HttpOnly; SameSite=Lax` 短效 signed Cookie、獨立 32+ byte HMAC secret、state、nonce 與 S256 PKCE；
+  callback envelope 要求單一 `code`／`state`／`iss`、固定 Google issuer，且過期 callback 不得清除
+  較新的交易。
+- BFF code exchange 只回傳 nonce-correlated ID token 給未來 Core handoff；Google access／refresh token
+  不保留、不進 Cookie、不進 log。BFF 的 nonce check 只做 transaction correlation，ID token 在 Core
+  verifier 完成 signature／claim 驗證前仍不可信。
+- Phase 2C 仍未包含公開 Google start／callback route、BFF-to-Core handoff、pending identity transaction、
+  LINE verifier、公開 App Session API、Cookie adapter 或 runtime authenticator；現行 Cognito 路徑仍是
+  唯一 real auth runtime。
 
 ## 必要驗證
 

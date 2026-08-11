@@ -21,9 +21,11 @@
     （[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
     [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 已接受 direct
     Google／LINE OIDC＋Core-owned opaque Session 的分階段替換方向；Core 已有未公開的 Session
-    lifecycle service，但在 Provider verifier、App Session authenticator、BFF cutover 與 rollout gate
-    完成前，現行 Cognito path 仍是唯一 real auth runtime。資料模型與內部 service 不代表新登入已啟用，
-    且不得依 email 自動合併 Actor。
+    lifecycle service、Google ID-token verifier，以及未綁 route 的 BFF direct-Google transaction／callback
+    validation／code-exchange helper；但在 BFF-to-Core handoff、pending identity、LINE verifier、App
+    Session authenticator、公開 callback／cutover 與 rollout gate 完成前，現行 Cognito path 仍是唯一
+    real auth runtime。資料模型與內部 service／verifier／helper 不代表新登入已啟用，且不得依 email
+    自動合併 Actor。
     前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
     `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
     ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
