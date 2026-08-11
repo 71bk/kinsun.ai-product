@@ -93,6 +93,10 @@ class Settings(BaseSettings):
     google_oidc_client_id: str = Field(default="", max_length=512)
     google_oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=3_600)
     google_oidc_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
+    google_identity_hmac_secret: str = ""
+    google_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    google_oidc_handoff_secret: str = ""
+    google_pending_identity_ttl_seconds: int = Field(default=600, ge=60, le=900)
 
     # Provider-neutral Core-owned browser sessions. These settings are inert
     # until the App Session authenticator is explicitly enabled in a later
@@ -200,6 +204,20 @@ class Settings(BaseSettings):
                     f"APP_SESSION_TOUCH_INTERVAL_SECONDS must be shorter than the {label} "
                     "idle TTL"
                 )
+
+        if self.google_identity_hmac_key_version != 1:
+            raise ValueError(
+                "GOOGLE_IDENTITY_HMAC_KEY_VERSION must remain 1; "
+                "rotation requires an explicit identity rekey migration"
+            )
+        if (
+            self.google_identity_hmac_secret
+            and self.google_oidc_handoff_secret
+            and self.google_identity_hmac_secret == self.google_oidc_handoff_secret
+        ):
+            raise ValueError(
+                "GOOGLE_IDENTITY_HMAC_SECRET and GOOGLE_OIDC_HANDOFF_SECRET " "must be independent"
+            )
 
         if self.line_account_link_enabled:
             if not self.line_channel_secret.strip() or not self.line_channel_access_token.strip():

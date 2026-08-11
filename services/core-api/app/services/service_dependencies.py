@@ -8,6 +8,8 @@ from app.adapters.line_messaging import LineMessagingClient
 from app.core.config import get_settings
 from app.core.exceptions import ServiceUnavailableError
 from app.services.family_invitation_tokens import FamilyInvitationTokenCodec
+from app.services.google_identity_codec import GoogleIdentityCodec
+from app.services.google_oidc_handoff_auth import GoogleOidcHandoffAuthenticator
 from app.services.line_identity_codec import LineIdentityCodec
 from app.services.line_subject_cipher import LineSubjectCipher
 
@@ -23,6 +25,34 @@ def get_family_invitation_token_codec() -> FamilyInvitationTokenCodec:
         return _build_family_invitation_token_codec(secret)
     except ValueError as exc:
         raise ServiceUnavailableError("Family invitation service is unavailable") from exc
+
+
+@lru_cache(maxsize=8)
+def _build_google_identity_codec(secret: str, key_version: int) -> GoogleIdentityCodec:
+    return GoogleIdentityCodec(secret, key_version)
+
+
+def get_google_identity_codec() -> GoogleIdentityCodec:
+    settings = get_settings()
+    try:
+        return _build_google_identity_codec(
+            settings.google_identity_hmac_secret,
+            settings.google_identity_hmac_key_version,
+        )
+    except ValueError as exc:
+        raise ServiceUnavailableError("Google identity handoff is unavailable") from exc
+
+
+@lru_cache(maxsize=4)
+def _build_google_oidc_handoff_authenticator(secret: str) -> GoogleOidcHandoffAuthenticator:
+    return GoogleOidcHandoffAuthenticator(secret)
+
+
+def get_google_oidc_handoff_authenticator() -> GoogleOidcHandoffAuthenticator:
+    try:
+        return _build_google_oidc_handoff_authenticator(get_settings().google_oidc_handoff_secret)
+    except ValueError as exc:
+        raise ServiceUnavailableError("Google identity handoff is unavailable") from exc
 
 
 @lru_cache(maxsize=8)

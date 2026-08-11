@@ -80,6 +80,10 @@ class TestSettingsConstruction:
             GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
             GOOGLE_OIDC_JWKS_CACHE_SECONDS="180",
             GOOGLE_OIDC_HTTP_TIMEOUT_SECONDS="4",
+            GOOGLE_IDENTITY_HMAC_SECRET="google-identity-secret-material-at-least-32-bytes",
+            GOOGLE_IDENTITY_HMAC_KEY_VERSION="1",
+            GOOGLE_OIDC_HANDOFF_SECRET="google-handoff-secret-material-at-least-32-bytes",
+            GOOGLE_PENDING_IDENTITY_TTL_SECONDS="300",
             APP_SESSION_ELDER_FAMILY_IDLE_TTL_SECONDS="1200",
             APP_SESSION_ELDER_FAMILY_ABSOLUTE_TTL_SECONDS="2400",
             APP_SESSION_WORKFORCE_IDLE_TTL_SECONDS="600",
@@ -124,6 +128,12 @@ class TestSettingsConstruction:
         assert s.google_oidc_client_id == "google-web-client.apps.googleusercontent.com"
         assert s.google_oidc_jwks_cache_seconds == 180
         assert s.google_oidc_http_timeout_seconds == 4
+        assert s.google_identity_hmac_secret == (
+            "google-identity-secret-material-at-least-32-bytes"
+        )
+        assert s.google_identity_hmac_key_version == 1
+        assert s.google_oidc_handoff_secret == "google-handoff-secret-material-at-least-32-bytes"
+        assert s.google_pending_identity_ttl_seconds == 300
         assert s.app_session_elder_family_idle_ttl_seconds == 1200
         assert s.app_session_elder_family_absolute_ttl_seconds == 2400
         assert s.app_session_workforce_idle_ttl_seconds == 600
@@ -255,6 +265,23 @@ class TestValidation:
         with pytest.raises(ValidationError):
             _make_settings(**{field: value})
 
+    @pytest.mark.parametrize("ttl", ["59", "901"])
+    def test_google_pending_identity_ttl_is_bounded(self, ttl: str) -> None:
+        with pytest.raises(ValidationError):
+            _make_settings(GOOGLE_PENDING_IDENTITY_TTL_SECONDS=ttl)
+
+    def test_google_identity_key_version_requires_explicit_migration(self) -> None:
+        with pytest.raises(ValidationError, match="rekey migration"):
+            _make_settings(GOOGLE_IDENTITY_HMAC_KEY_VERSION="2")
+
+    def test_google_identity_and_handoff_secrets_must_be_independent(self) -> None:
+        shared = "shared-google-secret-material-at-least-32-bytes"
+        with pytest.raises(ValidationError, match="must be independent"):
+            _make_settings(
+                GOOGLE_IDENTITY_HMAC_SECRET=shared,
+                GOOGLE_OIDC_HANDOFF_SECRET=shared,
+            )
+
     def test_enabled_voice_ticket_requires_strong_secret(self) -> None:
         with pytest.raises(ValidationError, match="VOICE_TICKET_HMAC_SECRET"):
             _make_settings(
@@ -326,6 +353,20 @@ class TestSecretRedaction:
         settings = _make_settings(ASR_GATE_HMAC_SECRET=secret)
         assert settings.model_dump()["asr_gate_hmac_secret"] == "***"
         assert secret not in repr(settings)
+
+    def test_google_handoff_secrets_are_redacted(self) -> None:
+        identity_secret = "google-identity-secret-material-at-least-32-bytes"
+        handoff_secret = "google-handoff-secret-material-at-least-32-bytes"
+        settings = _make_settings(
+            GOOGLE_IDENTITY_HMAC_SECRET=identity_secret,
+            GOOGLE_OIDC_HANDOFF_SECRET=handoff_secret,
+        )
+
+        dumped = settings.model_dump()
+        assert dumped["google_identity_hmac_secret"] == "***"
+        assert dumped["google_oidc_handoff_secret"] == "***"
+        assert identity_secret not in repr(settings)
+        assert handoff_secret not in repr(settings)
 
 
 # ─── Singleton pattern ───────────────────────────────────────────────────────

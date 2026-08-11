@@ -20,10 +20,11 @@ from typing import TYPE_CHECKING
 from fastapi import Depends, Request
 
 from app.core.config import AppEnv, get_settings
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, ServiceUnavailableError
 
 if TYPE_CHECKING:
     from app.adapters.auth.cognito import CognitoTokenVerifier
+    from app.adapters.auth.google_oidc import GoogleTokenVerifier
 
 
 @dataclass(frozen=True)
@@ -174,6 +175,36 @@ def get_cognito_token_verifier() -> CognitoTokenVerifier:
     if getattr(settings, "cognito_auth_enabled", False) is not True:
         raise NoAuthenticatorConfiguredError("Cognito authentication is not enabled")
     return _get_cognito_token_verifier_from_settings(settings)
+
+
+def get_google_token_verifier() -> GoogleTokenVerifier:
+    """Return the verifier used only by the unbound Google handoff endpoint."""
+    settings = get_settings()
+    if not settings.google_oidc_client_id:
+        raise ServiceUnavailableError("Google identity handoff is unavailable")
+    try:
+        return _build_google_token_verifier(
+            settings.google_oidc_client_id,
+            settings.google_oidc_jwks_cache_seconds,
+            settings.google_oidc_http_timeout_seconds,
+        )
+    except ValueError as exc:
+        raise ServiceUnavailableError("Google identity handoff is unavailable") from exc
+
+
+@lru_cache(maxsize=16)
+def _build_google_token_verifier(
+    client_id: str,
+    jwks_cache_seconds: int,
+    http_timeout_seconds: float,
+) -> GoogleTokenVerifier:
+    from app.adapters.auth.google_oidc import GoogleOidcJwtVerifier
+
+    return GoogleOidcJwtVerifier(
+        client_id=client_id,
+        jwks_cache_seconds=jwks_cache_seconds,
+        http_timeout_seconds=http_timeout_seconds,
+    )
 
 
 @lru_cache(maxsize=16)

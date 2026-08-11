@@ -95,6 +95,7 @@ class VerifiedGoogleIdentity:
             or self.subject != self.subject.strip()
             or len(self.subject) > 255
             or not self.subject.isascii()
+            or any(character.isspace() for character in self.subject)
         ):
             raise ValueError("Google subject must be normalized ASCII of at most 255 characters")
         if self.email_verified != (self.email is not None):
@@ -333,6 +334,7 @@ class GoogleOidcJwtVerifier(GoogleTokenVerifier):
             or subject != subject.strip()
             or len(subject) > 255
             or not subject.isascii()
+            or any(character.isspace() for character in subject)
         ):
             raise _InvalidGoogleClaimError("SUBJECT")
         return subject

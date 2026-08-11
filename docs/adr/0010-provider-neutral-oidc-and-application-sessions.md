@@ -170,9 +170,13 @@ authorization 與 PostgreSQL，直接 OIDC 的額外工作可控。
 - BFF code exchange 只回傳 nonce-correlated ID token 給未來 Core handoff；Google access／refresh token
   不保留、不進 Cookie、不進 log。BFF 的 nonce check 只做 transaction correlation，ID token 在 Core
   verifier 完成 signature／claim 驗證前仍不可信。
-- Phase 2C 仍未包含公開 Google start／callback route、BFF-to-Core handoff、pending identity transaction、
-  LINE verifier、公開 App Session API、Cookie adapter 或 runtime authenticator；現行 Cognito 路徑仍是
-  唯一 real auth runtime。
+- Phase 2D 已建立未掛載的 BFF-to-Core handoff helper／internal endpoint、`pending_external_identity`
+  短效交易、Google subject keyed digest 與 existing-identity App Session issuance。Core 只持久化 subject／
+  pending token digest；舊 pending token 在重發前先失效，停權或撤銷 identity fail closed，未知 staff
+  identity 不得自行建立 pending onboarding。verified email 只供短效 onboarding 決策，永不自動 link。
+- Phase 2D 仍未包含公開 Google start／callback route、pending identity consumption、LINE verifier、公開
+  App Session API、Session Cookie adapter 或 runtime authenticator；internal router 也尚未掛入 `app.main`。
+  現行 Cognito 路徑仍是唯一 real auth runtime。
 
 ## 必要驗證
 
@@ -189,3 +193,4 @@ authorization 與 PostgreSQL，直接 OIDC 的額外工作可控。
 Phase 1 可在不存在 Google identity 與 App Session rows 時 downgrade，恢復 LINE-only provider constraint。
 若已有新 provider／session data，downgrade 必須 fail closed，先依核准的資料退場程序 revoke／清理；不得
 靜默刪除登入或稽核資料。
+Phase 2D migration 只可在 `pending_external_identity` 無資料時 downgrade；不得靜默刪除尚未完成的登入交易。

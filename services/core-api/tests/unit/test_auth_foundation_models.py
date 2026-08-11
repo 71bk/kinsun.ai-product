@@ -6,6 +6,7 @@ from sqlalchemy import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
 
 from app.models.app_session import AppSession
 from app.models.line_identity import ExternalIdentity
+from app.models.pending_identity import PendingExternalIdentity
 
 
 def _check_sql(model, name: str) -> str:
@@ -114,3 +115,41 @@ def test_app_session_has_revocation_expiry_and_lookup_constraints() -> None:
         "idx_app_session_actor_status",
         "idx_app_session_expiry",
     }
+
+
+def test_pending_identity_persists_no_raw_provider_or_pending_tokens() -> None:
+    columns = PendingExternalIdentity.__table__.columns
+
+    assert columns["token_digest"].type.length == 64
+    assert columns["external_subject_digest"].type.length == 64
+    assert "token" not in columns
+    assert "id_token" not in columns
+    assert "external_subject" not in columns
+    assert "actor_id" not in columns
+    assert "tenant_id" not in columns
+
+
+def test_pending_identity_has_short_lifecycle_and_subject_cardinality_constraints() -> None:
+    checks = {
+        constraint.name
+        for constraint in PendingExternalIdentity.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    indexes = {index.name: index for index in PendingExternalIdentity.__table__.indexes}
+
+    assert {
+        "ck_pending_external_identity_provider",
+        "ck_pending_external_identity_token_digest",
+        "ck_pending_external_identity_subject_digest",
+        "ck_pending_external_identity_intent",
+        "ck_pending_external_identity_status",
+        "ck_pending_external_identity_expiry",
+        "ck_pending_external_identity_lifecycle",
+    }.issubset(checks)
+    pending_subject = indexes["uq_pending_external_identity_pending_subject"]
+    assert pending_subject.unique is True
+    assert [column.name for column in pending_subject.columns] == [
+        "provider",
+        "digest_key_version",
+        "external_subject_digest",
+    ]
