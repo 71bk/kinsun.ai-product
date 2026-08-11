@@ -3,23 +3,21 @@
 /**
  * Local speech check page.
  *
- * Exists to verify the browser -> speech gateway -> Transcribe/Polly path with a
- * real microphone, independent of the consent gate and voice session state
- * machine. It records nothing beyond the current utterance and stores nothing:
- * this is a wiring check, not a product surface.
+ * Exists to verify the browser -> Core ticket -> speech gateway -> Core ASR
+ * gate path with a real microphone. It is a wiring check, not a product surface,
+ * and deliberately uses the same consent and session state machine as the UI.
  *
  * Returns 404 outside development so it cannot become a way to capture an
  * elder's voice without going through Core's consent gate.
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { BrowserVoiceRecorder, blobToPcm16Base64 } from '@/lib/voice/recorder';
+import { BrowserVoiceRecorder } from '@/lib/voice/recorder';
+import { transcribeTurn, VoiceTurnError } from '@/lib/voice/canonical-voice-turn';
 import {
   audioBase64ToObjectUrl,
   canSynthesize,
-  LanguageUnavailableError,
   synthesizeSpeech,
-  transcribeAudio,
   type SpeechLanguage,
 } from '@/lib/voice/speech-gateway-client';
 
@@ -37,17 +35,20 @@ export default function DevSpeechPage() {
   const [language, setLanguage] = useState<Language>('zh-TW');
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [elderId, setElderId] = useState(process.env.NEXT_PUBLIC_DEMO_ELDER_ID ?? '');
   const [transcript, setTranscript] = useState('');
-  const [confidence, setConfidence] = useState<number | null>(null);
-  const [acceptable, setAcceptable] = useState<boolean | null>(null);
+  const [gateDecision, setGateDecision] = useState('');
   const [error, setError] = useState('');
   const [ttsText, setTtsText] = useState('阿嬤您好，今天有沒有吃飯？');
 
   const start = useCallback(async () => {
     setError('');
     setTranscript('');
-    setConfidence(null);
-    setAcceptable(null);
+    setGateDecision('');
+    if (elderId.trim() === '') {
+      setError('enter a synthetic elder UUID before recording');
+      return;
+    }
     try {
       const recorder = recorderRef.current ?? new BrowserVoiceRecorder();
       recorderRef.current = recorder;
@@ -56,7 +57,7 @@ export default function DevSpeechPage() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'could not start recording');
     }
-  }, []);
+  }, [elderId]);
 
   const stop = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -65,14 +66,17 @@ export default function DevSpeechPage() {
     setBusy(true);
     try {
       const blob = await recorder.stopRecording();
-      const pcm = await blobToPcm16Base64(blob);
-      const result = await transcribeAudio(pcm, language);
+      const result = await transcribeTurn(
+        { apiBaseUrl: '/backend/core' },
+        elderId.trim(),
+        blob,
+        language,
+      );
       setTranscript(result.text);
-      setConfidence(result.confidence);
-      setAcceptable(result.confidenceAcceptable);
+      setGateDecision(result.decision);
     } catch (cause) {
       setError(
-        cause instanceof LanguageUnavailableError
+        cause instanceof VoiceTurnError && cause.stage === 'language'
           ? `${language}: no model deployed for this language`
           : cause instanceof Error
             ? cause.message
@@ -81,7 +85,7 @@ export default function DevSpeechPage() {
     } finally {
       setBusy(false);
     }
-  }, [language]);
+  }, [elderId, language]);
 
   const speak = useCallback(async () => {
     setError('');
@@ -106,11 +110,22 @@ export default function DevSpeechPage() {
   return (
     <main style={{ padding: 32, maxWidth: 720, fontFamily: 'system-ui, sans-serif' }}>
       <h1 style={{ fontSize: 24, marginBottom: 4 }}>Speech gateway check</h1>
-      <p style={{ color: '#666', marginBottom: 24 }}>
-        Browser → speech-gateway → Amazon Transcribe / Polly. Development only.
+      <p style={{ color: 'var(--color-muted-foreground)', marginBottom: 24 }}>
+        Browser → Core Voice Ticket → speech-gateway → Core ASR Gate. Development only.
       </p>
 
-      <fieldset style={{ marginBottom: 24, border: '1px solid #ddd', padding: 16 }}>
+      <label style={{ display: 'block', marginBottom: 24 }}>
+        Synthetic elder UUID
+        <input
+          value={elderId}
+          onChange={(event) => setElderId(event.target.value)}
+          style={{ display: 'block', width: '100%', marginTop: 6, padding: 8 }}
+        />
+      </label>
+
+      <fieldset
+        style={{ marginBottom: 24, border: '1px solid var(--color-border-strong)', padding: 16 }}
+      >
         <legend>Language</legend>
         {LANGUAGES.map((option) => (
           <label key={option.value} style={{ marginRight: 16, whiteSpace: 'nowrap' }}>
@@ -125,7 +140,7 @@ export default function DevSpeechPage() {
           </label>
         ))}
         {!canSynthesize(language) && (
-          <p style={{ margin: '12px 0 0', color: '#666', fontSize: 14 }}>
+          <p style={{ margin: '12px 0 0', color: 'var(--color-muted-foreground)', fontSize: 14 }}>
             ASR only — no TTS endpoint is deployed for this language.
           </p>
         )}
@@ -140,8 +155,8 @@ export default function DevSpeechPage() {
           style={{
             padding: '12px 24px',
             fontSize: 16,
-            background: recording ? '#c0392b' : '#2c7',
-            color: '#fff',
+            background: recording ? 'var(--color-destructive)' : 'var(--color-accent-text)',
+            color: 'var(--color-on-accent)',
             border: 'none',
             borderRadius: 6,
             cursor: busy ? 'wait' : 'pointer',
@@ -151,13 +166,17 @@ export default function DevSpeechPage() {
         </button>
 
         {transcript !== '' && (
-          <div style={{ marginTop: 16, padding: 16, background: '#f6f6f6', borderRadius: 6 }}>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 16,
+              background: 'var(--color-surface)',
+              borderRadius: 6,
+            }}
+          >
             <p style={{ margin: 0, fontSize: 18 }}>{transcript}</p>
-            <p style={{ margin: '8px 0 0', color: '#666', fontSize: 14 }}>
-              confidence {confidence?.toFixed(4)}
-              {acceptable === false && (
-                <strong style={{ color: '#c0392b' }}> — 低於門檻，需請長者再說一次</strong>
-              )}
+            <p style={{ margin: '8px 0 0', color: 'var(--color-muted-foreground)', fontSize: 14 }}>
+              trusted Core decision: {gateDecision}
             </p>
           </div>
         )}
@@ -179,8 +198,8 @@ export default function DevSpeechPage() {
             marginTop: 8,
             padding: '12px 24px',
             fontSize: 16,
-            background: '#36c',
-            color: '#fff',
+            background: 'var(--color-primary-strong)',
+            color: 'var(--color-on-primary)',
             border: 'none',
             borderRadius: 6,
             cursor: busy ? 'wait' : 'pointer',
@@ -191,7 +210,7 @@ export default function DevSpeechPage() {
       </section>
 
       {error !== '' && (
-        <p style={{ marginTop: 24, color: '#c0392b' }} role="alert">
+        <p style={{ marginTop: 24, color: 'var(--color-destructive)' }} role="alert">
           {error}
         </p>
       )}

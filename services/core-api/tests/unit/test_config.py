@@ -75,6 +75,10 @@ class TestSettingsConstruction:
             VOICE_TICKET_ENABLED="true",
             VOICE_TICKET_HMAC_SECRET="test-voice-ticket-secret-material-32-bytes",
             VOICE_TICKET_TTL_SECONDS="75",
+            ASR_GATE_ENABLED="true",
+            ASR_GATE_HMAC_SECRET="test-independent-asr-gate-secret-material-32-bytes",
+            ASR_GATE_CONFIDENCE_THRESHOLD="0.8",
+            ASR_GATE_EVIDENCE_TTL_SECONDS="600",
             AGENT_RUNTIME_URL="http://127.0.0.1:8001",
             AGENT_RUNTIME_TIMEOUT_SECONDS="8",
             AGENT_RUNTIME_MODEL_ID="mock-v1",
@@ -105,6 +109,9 @@ class TestSettingsConstruction:
         assert s.voice_ticket_enabled is True
         assert s.voice_ticket_hmac_secret == "test-voice-ticket-secret-material-32-bytes"
         assert s.voice_ticket_ttl_seconds == 75
+        assert s.asr_gate_enabled is True
+        assert s.asr_gate_confidence_threshold == 0.8
+        assert s.asr_gate_evidence_ttl_seconds == 600
         assert s.agent_runtime_url == "http://127.0.0.1:8001"
         assert s.agent_runtime_timeout_seconds == 8
         assert s.agent_runtime_model_id == "mock-v1"
@@ -189,6 +196,20 @@ class TestValidation:
                 VOICE_TICKET_HMAC_SECRET="too-short",
             )
 
+    def test_enabled_asr_gate_requires_voice_ticket_and_independent_secret(self) -> None:
+        with pytest.raises(ValidationError, match="VOICE_TICKET_ENABLED"):
+            _make_settings(
+                ASR_GATE_ENABLED="true",
+                ASR_GATE_HMAC_SECRET="test-independent-asr-gate-secret-material-32-bytes",
+            )
+        with pytest.raises(ValidationError, match="independent"):
+            _make_settings(
+                VOICE_TICKET_ENABLED="true",
+                VOICE_TICKET_HMAC_SECRET="shared-secret-material-at-least-32-bytes",
+                ASR_GATE_ENABLED="true",
+                ASR_GATE_HMAC_SECRET="shared-secret-material-at-least-32-bytes",
+            )
+
     @pytest.mark.parametrize("ttl", ["14", "121"])
     def test_voice_ticket_ttl_is_bounded(self, ttl: str) -> None:
         with pytest.raises(ValidationError):
@@ -232,6 +253,12 @@ class TestSecretRedaction:
         secret = "test-voice-ticket-secret-material-32-bytes"
         settings = _make_settings(VOICE_TICKET_HMAC_SECRET=secret)
         assert settings.model_dump()["voice_ticket_hmac_secret"] == "***"
+        assert secret not in repr(settings)
+
+    def test_asr_gate_secret_is_redacted(self) -> None:
+        secret = "test-independent-asr-gate-secret-material-32-bytes"
+        settings = _make_settings(ASR_GATE_HMAC_SECRET=secret)
+        assert settings.model_dump()["asr_gate_hmac_secret"] == "***"
         assert secret not in repr(settings)
 
 
@@ -296,3 +323,38 @@ class TestEnvFileLoading:
         with patch.dict(os.environ, env, clear=True):
             s = Settings(_env_file=str(env_file))
         assert s.port == 9999
+
+    def test_daily_line_notification_requires_complete_independent_secrets(self) -> None:
+        with pytest.raises(ValidationError, match="LINE_ACCOUNT_LINK_ENABLED"):
+            _make_settings(LINE_DAILY_NOTIFICATION_ENABLED="true")
+
+        common = {
+            "LINE_ACCOUNT_LINK_ENABLED": "true",
+            "LINE_CHANNEL_SECRET": "synthetic-channel-secret",
+            "LINE_CHANNEL_ACCESS_TOKEN": "synthetic-channel-token",
+            "LINE_IDENTITY_HMAC_SECRET": "synthetic-identity-hmac-secret-32-bytes",
+            "LINE_ACCOUNT_LINK_BASE_URL": "https://staging.example.com",
+            "LINE_DAILY_NOTIFICATION_ENABLED": "true",
+        }
+        with pytest.raises(ValidationError, match="LINE_SUBJECT_ENCRYPTION_SECRET"):
+            _make_settings(**common)
+
+        settings = _make_settings(
+            **common,
+            LINE_SUBJECT_ENCRYPTION_SECRET="synthetic-independent-encryption-secret-32-bytes",
+        )
+        assert settings.line_daily_notification_enabled is True
+        assert settings.line_daily_notification_send_time == "08:00"
+
+    def test_daily_line_notification_rejects_non_0800_schedule(self) -> None:
+        with pytest.raises(ValidationError, match="must remain 08:00"):
+            _make_settings(
+                LINE_ACCOUNT_LINK_ENABLED="true",
+                LINE_CHANNEL_SECRET="synthetic-channel-secret",
+                LINE_CHANNEL_ACCESS_TOKEN="synthetic-channel-token",
+                LINE_IDENTITY_HMAC_SECRET="synthetic-identity-hmac-secret-32-bytes",
+                LINE_ACCOUNT_LINK_BASE_URL="https://staging.example.com",
+                LINE_DAILY_NOTIFICATION_ENABLED="true",
+                LINE_SUBJECT_ENCRYPTION_SECRET=("synthetic-independent-encryption-secret-32-bytes"),
+                LINE_DAILY_NOTIFICATION_SEND_TIME="09:00",
+            )

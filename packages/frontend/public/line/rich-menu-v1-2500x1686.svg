@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1686" viewBox="0 0 2500 1686" role="img" aria-labelledby="title description">
+  <title id="title">kinsun.ai LINE 陪伴選單</title>
+  <description id="description">長者友善的四功能選單：開始陪伴、連結帳號、家人共享與隱私設定。</description>
+  <defs>
+    <linearGradient id="page-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ECFEFF"/>
+      <stop offset="0.52" stop-color="#F4FFFD"/>
+      <stop offset="1" stop-color="#E8FAF4"/>
+    </linearGradient>
+    <linearGradient id="hero-bg" x1="0.08" y1="0" x2="0.92" y2="1">
+      <stop offset="0" stop-color="#0891B2"/>
+      <stop offset="0.55" stop-color="#0E7490"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="orb-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#CFFAFE"/>
+    </linearGradient>
+    <linearGradient id="link-icon-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#CFFAFE"/>
+      <stop offset="1" stop-color="#A5F3FC"/>
+    </linearGradient>
+    <linearGradient id="family-icon-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DDF8EC"/>
+      <stop offset="1" stop-color="#B9EDD6"/>
+    </linearGradient>
+    <linearGradient id="privacy-icon-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9F9FC"/>
+      <stop offset="1" stop-color="#CFFAFE"/>
+    </linearGradient>
+    <filter id="card-shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#164E63" flood-opacity="0.14"/>
+    </filter>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#164E63" flood-opacity="0.17"/>
+    </filter>
+    <pattern id="hero-dots" width="76" height="76" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="5" fill="#FFFFFF" opacity="0.12"/>
+    </pattern>
+    <style>
+      .font { font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; }
+      .title { font-weight: 700; letter-spacing: 1px; }
+      .body { font-weight: 500; }
+      .muted { fill: #64748B; }
+      .card-title { fill: #164E63; font-size: 92px; font-weight: 700; }
+      .card-body { fill: #64748B; font-size: 45px; font-weight: 500; }
+      .icon-stroke { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 24; }
+    </style>
+  </defs>
+
+  <!-- Calm background -->
+  <rect width="2500" height="1686" fill="url(#page-bg)"/>
+  <circle cx="2250" cy="-100" r="430" fill="#A5F3FC" opacity="0.28"/>
+  <circle cx="1180" cy="1760" r="460" fill="#A7E8CF" opacity="0.26"/>
+  <path d="M1810 0C2010 220 2310 170 2500 55V0Z" fill="#FFFFFF" opacity="0.42"/>
+  <path d="M0 1450C260 1350 400 1430 590 1686H0Z" fill="#CFFAFE" opacity="0.45"/>
+
+  <!-- Main companion action: bounds x=0..1200, y=0..1686 -->
+  <g filter="url(#card-shadow)">
+    <rect x="50" y="50" width="1100" height="1586" rx="78" fill="url(#hero-bg)"/>
+  </g>
+  <rect x="50" y="50" width="1100" height="1586" rx="78" fill="url(#hero-dots)"/>
+  <circle cx="118" cy="150" r="122" fill="#FFFFFF" opacity="0.08"/>
+  <circle cx="1090" cy="1320" r="310" fill="#FFFFFF" opacity="0.07"/>
+  <path d="M55 1320C310 1190 690 1340 1150 1100V1636H50Z" fill="#FFFFFF" opacity="0.08"/>
+
+  <!-- Brand -->
+  <g class="font" transform="translate(138 120)">
+    <rect width="360" height="102" rx="51" fill="#FFFFFF" opacity="0.16"/>
+    <circle cx="57" cy="51" r="31" fill="#67E8F9"/>
+    <path d="M43 55c18-4 25-14 29-31 9 15 7 30-8 41-9 6-18 4-21-10Z" fill="#047857"/>
+    <text x="105" y="68" fill="#FFFFFF" font-size="47" font-weight="700" letter-spacing="1">kinsun.ai</text>
+  </g>
+
+  <!-- Original friendly companion orb -->
+  <g transform="translate(600 500)" filter="url(#soft-shadow)">
+    <circle r="282" fill="#FFFFFF" opacity="0.14"/>
+    <circle r="242" fill="url(#orb-bg)" stroke="#FFFFFF" stroke-width="18"/>
+    <path d="M-118-205C-85-286 15-312 80-250C147-266 206-220 212-150" fill="none" stroke="#A5F3FC" stroke-linecap="round" stroke-width="34"/>
+    <path d="M50-235C75-295 125-320 177-316C163-259 127-222 65-214Z" fill="#6EE7B7" stroke="#FFFFFF" stroke-width="12"/>
+    <circle cx="-78" cy="-22" r="24" fill="#164E63"/>
+    <circle cx="83" cy="-22" r="24" fill="#164E63"/>
+    <circle cx="-137" cy="43" r="31" fill="#FCA5A5" opacity="0.46"/>
+    <circle cx="142" cy="43" r="31" fill="#FCA5A5" opacity="0.46"/>
+    <path d="M-76 74C-35 124 36 126 82 70" fill="none" stroke="#0E7490" stroke-linecap="round" stroke-width="22"/>
+    <path d="M-20 198L-72 268L45 224Z" fill="#CFFAFE" stroke="#FFFFFF" stroke-linejoin="round" stroke-width="16"/>
+    <g transform="translate(184 -144)">
+      <circle r="78" fill="#059669" stroke="#FFFFFF" stroke-width="12"/>
+      <path d="M-30 3L-7 26L36-25" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+    </g>
+    <g opacity="0.9">
+      <path d="M-310-115h-72M-346-151v72" stroke="#67E8F9" stroke-linecap="round" stroke-width="17"/>
+      <path d="M311 94h-60M281 64v60" stroke="#6EE7B7" stroke-linecap="round" stroke-width="15"/>
+      <circle cx="-300" cy="180" r="12" fill="#FFFFFF"/>
+      <circle cx="299" cy="-215" r="13" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <g class="font" text-anchor="middle">
+    <text x="600" y="895" fill="#D8FAFF" font-size="48" font-weight="700" letter-spacing="8">陪伴就在這裡</text>
+    <text x="600" y="1042" fill="#FFFFFF" font-size="142" font-weight="700" letter-spacing="2">開始陪伴</text>
+    <text x="600" y="1132" fill="#D8FAFF" font-size="51" font-weight="500">想聊什麼，都可以告訴我</text>
+  </g>
+
+  <g class="font" transform="translate(150 1215)">
+    <rect width="900" height="174" rx="58" fill="#FFFFFF"/>
+    <circle cx="96" cy="87" r="53" fill="#ECFEFF"/>
+    <path d="M72 73h34c22 0 38 14 38 34s-16 34-38 34H88l-23 18 7-30c-10-6-16-17-16-30 0-10 6-20 16-26Z" fill="#0891B2" transform="translate(0 -14) scale(.65) translate(62 58)"/>
+    <text x="176" y="106" fill="#164E63" font-size="55" font-weight="700">輕觸後直接開始對話</text>
+    <circle cx="817" cy="87" r="48" fill="#059669"/>
+    <path d="M798 87h36M820 68l19 19-19 19" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+  </g>
+
+  <g class="font" transform="translate(164 1490)" opacity="0.9">
+    <path d="M22 0 44 9v18c0 18-10 31-22 38C10 58 0 45 0 27V9Z" fill="none" stroke="#D8FAFF" stroke-linejoin="round" stroke-width="7"/>
+    <path d="m12 28 8 8 14-17" fill="none" stroke="#D8FAFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+    <text x="70" y="43" fill="#D8FAFF" font-size="35" font-weight="500">安心陪伴・非緊急醫療管道</text>
+  </g>
+
+  <!-- Account link card: bounds x=1200..2500, y=0..562 -->
+  <g filter="url(#card-shadow)">
+    <rect x="1250" y="50" width="1200" height="462" rx="64" fill="#FFFFFF"/>
+  </g>
+  <circle cx="1435" cy="281" r="128" fill="url(#link-icon-bg)"/>
+  <g class="icon-stroke" stroke="#0E7490" transform="translate(1435 281) rotate(-38)">
+    <rect x="-90" y="-45" width="118" height="90" rx="45"/>
+    <rect x="-28" y="-45" width="118" height="90" rx="45"/>
+    <path d="M-25 0h50"/>
+  </g>
+  <g class="font">
+    <text x="1625" y="235" class="card-title">連結帳號</text>
+    <text x="1625" y="315" class="card-body">安全綁定 LINE 身分</text>
+    <g transform="translate(1625 357)">
+      <rect width="282" height="70" rx="35" fill="#ECFEFF"/>
+      <circle cx="36" cy="35" r="15" fill="#0891B2"/>
+      <text x="68" y="49" fill="#0E7490" font-size="34" font-weight="700">身分受保護</text>
+    </g>
+  </g>
+  <circle cx="2322" cy="281" r="55" fill="#0891B2"/>
+  <path d="M2302 281h41M2325 260l21 21-21 21" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="11"/>
+
+  <!-- Family sharing card: bounds x=1200..2500, y=562..1124 -->
+  <g filter="url(#card-shadow)">
+    <rect x="1250" y="612" width="1200" height="462" rx="64" fill="#F5FFFA"/>
+  </g>
+  <circle cx="1435" cy="843" r="128" fill="url(#family-icon-bg)"/>
+  <g transform="translate(1435 843)">
+    <circle cx="0" cy="-48" r="45" fill="#047857"/>
+    <circle cx="-78" cy="-17" r="34" fill="#059669" opacity="0.82"/>
+    <circle cx="78" cy="-17" r="34" fill="#059669" opacity="0.82"/>
+    <path d="M-72 94c0-71 31-111 72-111s72 40 72 111" fill="#059669"/>
+    <path d="M-136 89c2-48 23-77 58-77 23 0 39 13 49 37-8 17-13 38-13 63h-94Z" fill="#34D399"/>
+    <path d="M136 89c-2-48-23-77-58-77-23 0-39 13-49 37 8 17 13 38 13 63h94Z" fill="#34D399"/>
+  </g>
+  <g class="font">
+    <text x="1625" y="797" class="card-title">家人共享</text>
+    <text x="1625" y="877" class="card-body">邀請你信任的家人</text>
+    <g transform="translate(1625 919)">
+      <rect width="300" height="70" rx="35" fill="#DDF8EC"/>
+      <path d="M24 36 35 47 55 25" fill="none" stroke="#047857" stroke-linecap="round" stroke-linejoin="round" stroke-width="8"/>
+      <text x="74" y="49" fill="#047857" font-size="34" font-weight="700">一次性邀請碼</text>
+    </g>
+  </g>
+  <circle cx="2322" cy="843" r="55" fill="#059669"/>
+  <path d="M2302 843h41M2325 822l21 21-21 21" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="11"/>
+
+  <!-- Consent card: bounds x=1200..2500, y=1124..1686 -->
+  <g filter="url(#card-shadow)">
+    <rect x="1250" y="1174" width="1200" height="462" rx="64" fill="#FFFFFF"/>
+  </g>
+  <circle cx="1435" cy="1405" r="128" fill="url(#privacy-icon-bg)"/>
+  <g transform="translate(1435 1405)">
+    <path d="M0-104 88-70v77c0 74-38 126-88 151-50-25-88-77-88-151v-77Z" fill="#0891B2"/>
+    <path d="m-40 10 30 31 58-67" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/>
+  </g>
+  <g class="font">
+    <text x="1625" y="1359" class="card-title">隱私設定</text>
+    <text x="1625" y="1439" class="card-body">分享範圍由你決定</text>
+    <g transform="translate(1625 1481)">
+      <rect width="300" height="70" rx="35" fill="#ECFEFF"/>
+      <path d="M28 28v-7c0-14 9-23 22-23s22 9 22 23v7" fill="none" stroke="#0E7490" stroke-linecap="round" stroke-width="7" transform="scale(.72) translate(5 14)"/>
+      <rect x="24" y="26" width="38" height="31" rx="7" fill="#0E7490"/>
+      <text x="78" y="49" fill="#0E7490" font-size="34" font-weight="700">隨時可以調整</text>
+    </g>
+  </g>
+  <circle cx="2322" cy="1405" r="55" fill="#0E7490"/>
+  <path d="M2302 1405h41M2325 1384l21 21-21 21" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="11"/>
+
+  <!-- Subtle tap-region separators; visual only -->
+  <path d="M1200 50v1586" stroke="#164E63" stroke-dasharray="2 18" stroke-linecap="round" stroke-width="4" opacity="0.08"/>
+</svg>

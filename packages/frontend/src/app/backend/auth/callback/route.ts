@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { accessTokenCookieName, accessTokenCookieOptions } from '@/lib/server/auth-cookie';
 import { logAuthDiagnostic } from '@/lib/server/auth-diagnostics';
 import { exchangeAuthorizationCode, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
-import { redeemCoreOnboarding } from '@/lib/server/core-onboarding';
+import { redeemCoreOnboarding, requireExistingCoreActor } from '@/lib/server/core-onboarding';
 import {
   oauthTransactionCookieName,
   oauthTransactionCookieOptions,
@@ -71,9 +71,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   const transactionCookie = request.cookies.get(oauthTransactionCookieName())?.value;
   const transaction = parseOAuthTransaction(transactionCookie);
   const callbackOwnsCurrentTransaction =
-    transaction !== null &&
-    states.length === 1 &&
-    stateMatches(transaction, states[0] ?? null);
+    transaction !== null && states.length === 1 && stateMatches(transaction, states[0] ?? null);
   /* A missing/invalid cookie is safe to expire. A valid cookie is cleared only
      when this callback proves ownership with its state. Otherwise a delayed
      callback from login A could erase the newer transaction for login B. */
@@ -112,15 +110,20 @@ export async function GET(request: NextRequest): Promise<Response> {
     return failedCallback(clearCurrentTransaction);
   }
 
-  let stage: 'token_exchange' | 'core_onboarding' = 'token_exchange';
+  let stage: 'token_exchange' | 'core_onboarding' | 'core_actor_check' = 'token_exchange';
   try {
     const tokenSet = await exchangeAuthorizationCode(
       getCognitoOAuthConfig(),
       codes[0] ?? '',
       transaction,
     );
-    stage = 'core_onboarding';
-    await redeemCoreOnboarding(tokenSet, transaction);
+    if (transaction.provider === 'LINE') {
+      stage = 'core_actor_check';
+      await requireExistingCoreActor(tokenSet.accessToken);
+    } else {
+      stage = 'core_onboarding';
+      await redeemCoreOnboarding(tokenSet, transaction);
+    }
     const response = clearTransaction(noStore(sameOriginRedirect(transaction.returnTo)));
     response.cookies.set(
       accessTokenCookieName(),

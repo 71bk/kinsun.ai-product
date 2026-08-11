@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ConsumeVoiceTicketRequestV1.json",
+  "title": "ConsumeVoiceTicketRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "voice_ticket"],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Session Id"
+    },
+    "voice_ticket": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 128,
+      "title": "Voice Ticket"
+    }
+  }
+}

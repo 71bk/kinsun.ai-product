@@ -1,0 +1,20 @@
+{
+  "$id": "urn:kinsun:contracts:schemas:common:LineLinkStatusEnvelopeV1",
+  "title": "LineLinkStatusEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "meta"],
+  "properties": {
+    "data": { "$ref": "urn:kinsun:contracts:schemas:domain:LineLinkStatusV1" },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["correlation_id", "timestamp", "schema_version"],
+      "properties": {
+        "correlation_id": { "type": "string", "minLength": 1 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "schema_version": { "type": "string", "const": "1.0" }
+      }
+    }
+  }
+}

@@ -18,9 +18,12 @@ class Settings(BaseSettings):
     # No Hokkien/Hakka synthesis endpoint is deployed yet.
     SAGEMAKER_TTS_ENDPOINT: str | None = None
 
-    # Kept equal to packages/backend/src/asr/confidence.ts. Below this the caller
-    # must ask the elder to repeat instead of acting on the transcript.
-    ASR_CONFIDENCE_THRESHOLD: float = 0.6
+    # Core is the only threshold and formal-state authority. This bearer value
+    # is a service credential (for example a Cognito service access token), not
+    # a browser token, and must never be returned or logged.
+    CORE_API_BASE_URL: str = "http://127.0.0.1:8000"
+    CORE_API_SERVICE_TOKEN: str = ""
+    CORE_API_TIMEOUT_SECONDS: float = 5.0
 
     model_config = SettingsConfigDict(
         env_file=(SERVICE_ENV_FILE,),

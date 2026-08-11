@@ -249,6 +249,7 @@ dependencies = [
     { name = "amazon-transcribe" },
     { name = "boto3" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "uvicorn", extra = ["standard"] },
@@ -263,16 +264,12 @@ test = [
     { name = "pytest-asyncio" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "httpx" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "amazon-transcribe", specifier = ">=0.6.2" },
     { name = "boto3", specifier = ">=1.35.0" },
     { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic", specifier = ">=2.9.0" },
     { name = "pydantic-settings", specifier = ">=2.5.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3.0" },
@@ -281,9 +278,6 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.0" },
 ]
 provides-extras = ["test", "dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "httpx", specifier = ">=0.28.1" }]
 
 [[package]]
 name = "packaging"

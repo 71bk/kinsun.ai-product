@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
-import { buildGoogleAuthorizationUrl, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
+import { buildCognitoAuthorizationUrl, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
 import {
   createOAuthTransaction,
+  loginProvider,
   normalizeInvitationCode,
   onboardingIntent,
   oauthTransactionCookieName,
@@ -10,7 +12,6 @@ import {
   serializeOAuthTransaction,
   strictRelativeReturnTo,
 } from '@/lib/server/oauth-transaction';
-import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -22,25 +23,31 @@ function noStore(response: NextResponse): NextResponse {
 }
 
 function beginLogin(
-  request: NextRequest,
   rawReturnTo: string | null,
   rawIntent: unknown,
-  rawInvitationCode?: unknown,
+  rawInvitationCode: unknown,
+  rawProvider: unknown,
 ): Response {
   const returnTo = strictRelativeReturnTo(rawReturnTo);
   const intent = onboardingIntent(rawIntent);
   const invitationCode = normalizeInvitationCode(rawInvitationCode);
+  const provider = loginProvider(rawProvider);
   if (returnTo === null) {
     return bffError(400, 'bad_request', 'Invalid sign-in return path', 'INVALID_RETURN_TO');
   }
-  if (!intent || invitationCode === null || (intent !== 'FAMILY' && invitationCode !== undefined)) {
+  if (
+    !intent ||
+    !provider ||
+    invitationCode === null ||
+    (intent !== 'FAMILY' && invitationCode !== undefined)
+  ) {
     return bffError(400, 'bad_request', 'Invalid sign-in request', 'INVALID_SIGN_IN_REQUEST');
   }
 
   try {
-    const transaction = createOAuthTransaction(returnTo, intent, invitationCode);
+    const transaction = createOAuthTransaction(returnTo, intent, invitationCode, provider);
     const response = noStore(
-      NextResponse.redirect(buildGoogleAuthorizationUrl(getCognitoOAuthConfig(), transaction), {
+      NextResponse.redirect(buildCognitoAuthorizationUrl(getCognitoOAuthConfig(), transaction), {
         status: 303,
       }),
     );
@@ -74,12 +81,13 @@ export async function POST(request: NextRequest): Promise<Response> {
     return bffError(415, 'unsupported_media_type', 'Form request required', 'FORM_REQUIRED');
   }
   const form = await request.formData().catch(() => null);
-  if (!form)
+  if (!form) {
     return bffError(400, 'bad_request', 'Invalid sign-in request', 'INVALID_SIGN_IN_REQUEST');
+  }
   return beginLogin(
-    request,
     typeof form.get('returnTo') === 'string' ? String(form.get('returnTo')) : null,
     form.get('intent'),
     form.get('invitationCode'),
+    form.get('provider'),
   );
 }

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "provider": "LINE",
+    "linked": true,
+    "status": "ACTIVE",
+    "linked_at": "2026-08-02T05:00:00Z",
+    "can_unlink": true
+  },
+  "meta": {
+    "correlation_id": "92000000-0000-4000-8000-000000000002",
+    "timestamp": "2026-08-02T05:00:01Z",
+    "schema_version": "1.0"
+  }
+}

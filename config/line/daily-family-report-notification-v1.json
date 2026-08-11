@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "job_name": "line-daily-family-report",
+  "schedule": {
+    "timezone": "Asia/Taipei",
+    "local_time": "08:00",
+    "frequency": "DAILY",
+    "source_period": "PREVIOUS_LOCAL_CALENDAR_DAY",
+    "misfire_policy": "RETRY_SAME_SCHEDULED_FOR"
+  },
+  "target": {
+    "method": "POST",
+    "path": "/api/v1/internal/notification-jobs/line-daily",
+    "authentication": "SYSTEM_SERVICE",
+    "request_template": {
+      "schema_version": "1.0",
+      "job_name": "line-daily-family-report",
+      "scheduled_for": "${scheduled_time_with_offset}",
+      "timezone": "Asia/Taipei"
+    }
+  }
+}

@@ -10,7 +10,7 @@ Browser
     → services/core-api（唯一 Domain／Authorization／Consent／Command Gate）
       → Aurora PostgreSQL（正式狀態與 transactional outbox）
       → services/agent-runtime（private、受控 Agent Runtime）
-      → canonical speech boundary（待 Owner 決策與實作）
+      → services/speech-gateway（canonical 程式邊界；production provider 待 Owner 決策）
       → outbox relay／projection／summary workers（待實作）
 ```
 
@@ -43,10 +43,10 @@ WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent
 
 | Concern | Current baseline | Gate 1 net-new work |
 | --- | --- | --- |
-| Frontend／BFF | 單一 Next.js PWA、server-side OAuth、Core proxy、Voice UI state | canonical Voice Ticket、可信 session state、低信心確認 UI 與 failure recovery |
-| Core | Auth、tenant/elder policy、Consent、Voice metadata、AgentRun／Tool、outbox foundation | purpose-aware voice gate、review/confirm commands、formal state＋outbox、Context retrieval |
+| Frontend／BFF | 單一 Next.js PWA、server-side OAuth、Core proxy、canonical Voice Ticket flow、可信低信心確認 UI | production WebSocket transport、完整 failure matrix 與實機恢復驗證 |
+| Core | Auth、tenant/elder policy、Consent、Voice Ticket、server-side ASR Gate、AgentRun／Tool、outbox foundation | Event／Memory review/confirm commands、formal state＋outbox、Context retrieval |
 | Agent Runtime | bounded Companion、Safety、Context、Mock／Bedrock adapter、隔離測試已覆蓋 Event Candidate Tool lifecycle | voice-confirmed turn、Core↔Agent service identity、server-derived Tool scope、唯一 AgentRun authority、Memory proposal、trace/eval evidence |
-| Speech | 尚無 canonical runtime | provider-neutral adapter、ASR final／confidence、TTS fallback；先經 Owner decision |
+| Speech | canonical Gateway 程式邊界、單次 ticket consume、ASR result 回送 Core、TTS fallback | 經 Owner 核准的 production ASR／TTS route、service credential 與 WebSocket 部署 |
 | Projection | transactional outbox foundation 已存在；relay／projection consumer 尚未實作，`projection-worker` 尚未建立（空殼目錄已於 2026-08-06 移除） | idempotent Event／Memory projection、tombstone/replay suppression、authorized reuse |
 | Summary | Core contract/API 基礎，generation worker 尚缺 | verified-event-only generation、source evidence、review/rebuild |
 | Quality | service unit／contract tests | cross-service E2E、failure matrix、five-run evidence、CI gate |
@@ -84,7 +84,7 @@ WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent
 - 無資料、依賴失敗或 Safety block 時 fail closed，不猜測。
 - 保存 bounded Agent／Prompt／Model route／Policy／Tool／Context version metadata。
 
-### 5.4 Speech Boundary（Target，尚未實作）
+### 5.4 Speech Boundary（程式邊界已實作；production provider 待定）
 
 - 驗證 Core 簽發的 Voice Ticket，再接受 audio/session event；consume 時重新檢查 `BASIC_VOICE`。
 - 監聽／查核 active session consent；核發後撤回時使未使用 ticket 失效並立即取消 active session。
@@ -92,6 +92,8 @@ WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent
 - 低信心時只建立 confirmation state，不觸發 Candidate side effect。
 - 將安全文字回覆送往 TTS；TTS failure 不得重跑 Agent 或 Domain command。
 - Audio／Transcript 不進一般 log，provider SDK 只存在 adapter 邊界。
+- 目前 canonical 路徑使用 bounded JSON upload；production WebSocket、service credential 注入與
+  Owner 核准 provider 仍屬部署工作，不以本地測試宣告完成。
 
 ### 5.5 Outbox Relay, Projection and Summary Workers（Target）
 

@@ -21,16 +21,13 @@ export function canSynthesize(language: SpeechLanguage): language is SynthesisLa
 }
 
 export interface TranscriptionResult {
+  sessionId: string;
   text: string;
-  confidence: number;
-  /**
-   * False means the utterance was not recognised well enough to act on. The
-   * caller must ask the elder to confirm or repeat rather than proceeding, which
-   * is why this is a decision from the gateway and not a raw score the UI has to
-   * re-threshold.
-   */
-  confidenceAcceptable: boolean;
   language: SpeechLanguage;
+  modelVersion: string;
+  gateDecision: 'CAN_SEND_TO_AGENT' | 'CONFIRMATION_REQUIRED' | 'CANNOT_SEND_TO_AGENT';
+  confirmationRequired: boolean;
+  gateExpiresAt: string;
 }
 
 /** The gateway answers 501 when this deployment has no model for the language,
@@ -56,12 +53,18 @@ function gatewayBaseUrl(): string {
 export async function transcribeAudio(
   audioBase64: string,
   language: SpeechLanguage,
+  sessionId: string,
+  voiceTicket: string,
+  signal?: AbortSignal,
 ): Promise<TranscriptionResult> {
   const response = await fetch(`${gatewayBaseUrl()}/api/v1/speech/transcriptions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal,
     body: JSON.stringify({
       audio_base64: audioBase64,
+      session_id: sessionId,
+      voice_ticket: voiceTicket,
       language,
       sample_rate: PCM_SAMPLE_RATE,
       encoding: 'pcm',
@@ -76,17 +79,23 @@ export async function transcribeAudio(
   }
 
   const body = (await response.json()) as {
+    session_id: string;
     text: string;
-    confidence: number;
-    confidence_acceptable: boolean;
     language: SpeechLanguage;
+    model_version: string;
+    gate_decision: TranscriptionResult['gateDecision'];
+    confirmation_required: boolean;
+    gate_expires_at: string;
   };
 
   return {
+    sessionId: body.session_id,
     text: body.text,
-    confidence: body.confidence,
-    confidenceAcceptable: body.confidence_acceptable,
     language: body.language,
+    modelVersion: body.model_version,
+    gateDecision: body.gate_decision,
+    confirmationRequired: body.confirmation_required,
+    gateExpiresAt: body.gate_expires_at,
   };
 }
 

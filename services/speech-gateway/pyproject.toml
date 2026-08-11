@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.34.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.5.0",
+    "httpx>=0.28.1",
     "boto3>=1.35.0",
     "amazon-transcribe>=0.6.2",
 ]
@@ -30,8 +31,3 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "I", "UP"]
-
-[dependency-groups]
-dev = [
-    "httpx>=0.28.1",
-]

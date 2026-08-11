@@ -11,7 +11,11 @@ from pydantic import ValidationError
 from app.schemas.assignment import CreateAssignmentRequest
 from app.schemas.care_event import CreateCareEventCandidateRequest, ReviewCareEventRequest
 from app.schemas.consent import CreateConsentRequest, RevokeConsentRequest
-from app.schemas.conversation import ConsumeVoiceTicketRequest, CreateVoiceTicketRequest
+from app.schemas.conversation import (
+    ConsumeVoiceTicketRequest,
+    CreateVoiceSessionRequest,
+    CreateVoiceTicketRequest,
+)
 from app.schemas.memory import CreateMemoryCandidateRequest
 from app.schemas.report import CreateFamilyReportDraftRequest, PublishFamilyReportRequest
 from app.schemas.summary import CreateSummaryDraftRequest, ReviewSummaryRequest
@@ -30,6 +34,14 @@ def test_voice_ticket_request_rejects_text_only_and_extra_scope() -> None:
             language_preference="ZH_TW",
             input_mode="voice",
             tenant_id=uuid4(),
+        )
+
+
+def test_generic_session_request_cannot_bypass_voice_ticket_gate() -> None:
+    with pytest.raises(ValidationError):
+        CreateVoiceSessionRequest(
+            language_preference="ZH_TW",
+            input_mode="voice",
         )
 
 

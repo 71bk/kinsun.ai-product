@@ -1,0 +1,11 @@
+{
+  "_why_invalid": "A link status response must never reveal the LINE user ID or its keyed digest.",
+  "data": {
+    "provider": "LINE",
+    "linked": true,
+    "status": "ACTIVE",
+    "linked_at": "2026-08-02T05:00:00Z",
+    "can_unlink": true,
+    "line_user_id": "synthetic-prohibited-subject"
+  }
+}

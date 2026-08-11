@@ -1,0 +1,13 @@
+{
+  "data": {
+    "challenge_id": "42000000-0000-4000-8000-000000000001",
+    "status": "REDEEMED",
+    "expires_at": "2026-08-02T05:10:00Z",
+    "redeemed_at": "2026-08-02T05:03:00Z"
+  },
+  "meta": {
+    "correlation_id": "92000000-0000-4000-8000-000000000003",
+    "timestamp": "2026-08-02T05:03:01Z",
+    "schema_version": "1.0"
+  }
+}

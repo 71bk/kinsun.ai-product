@@ -207,14 +207,20 @@ const zhHant = {
   'join.alreadyBound': '已完成綁定？',
   'join.toFamilySignIn': '前往家屬登入',
   'join.backToChooser': '返回選擇服務',
+  'join.lineButton': '已有帳號：使用已連結的 LINE 登入',
+  'join.lineHint': '此按鈕不會使用上方邀請碼；首次加入家屬服務仍須使用 Google。',
   'familySignIn.title': '家屬登入',
   'familySignIn.body': '登入後只會顯示長者已同意分享、且仍在您授權範圍內的正式報表。',
+  'familySignIn.lineButton': '使用已連結的 LINE 登入',
+  'familySignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
 
   // ---- staff sign-in ----
   'staffSignIn.title': '照服員／居服員登入',
   'staffSignIn.body':
     '此帳號需要由所屬機構啟用。登入後，系統會依目前有效的機構歸屬與派案範圍顯示資料。',
   'staffSignIn.notActivated': '尚未啟用帳號？請聯絡所屬服務單位。',
+  'staffSignIn.lineButton': '使用已連結的 LINE 登入',
+  'staffSignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
 
   // ---- public surface (登入前行銷／法遵頁, MASTER.md §3 / §7.3) ----
   'a11y.skipToContent': '跳到主要內容',
@@ -271,7 +277,8 @@ const zhHant = {
   'landing.privacy.title': '我們怎麼保護長者的資料',
   'landing.privacy.subtitle': '同意、覆核與撤回機制寫在產品規則裡，不是事後補充的聲明。',
   'landing.privacy.point1': '語音、記錄、記憶、家屬分享等用途分開取得同意，長者可分別開關。',
-  'landing.privacy.point2': '對話中的候選紀錄與候選記憶，必須經明確確認或人工覆核，才會成為正式資料。',
+  'landing.privacy.point2':
+    '對話中的候選紀錄與候選記憶，必須經明確確認或人工覆核，才會成為正式資料。',
   'landing.privacy.point3': '家屬只看得到已正式發布的報表；草稿與待覆核內容不會出現在家屬畫面。',
   'landing.privacy.point4':
     '長者說「不要記」或「停止」、或撤回同意時，系統立即優先處理，不受重試或排程影響。',
@@ -307,8 +314,7 @@ const zhHant = {
     '登入與帳號資料，例如外部身分識別碼、顯示名稱、電子郵件、角色、機構歸屬與授權關係。',
   'legal.privacy.scope.item2':
     '在相對應同意與功能啟用時處理的對話、語音輸入、逐字稿與語言偏好；原始語音屬高度敏感資料。',
-  'legal.privacy.scope.item3':
-    '候選或已覆核的照護事件、已確認記憶、摘要、家屬報表及其來源與版本。',
+  'legal.privacy.scope.item3': '候選或已覆核的照護事件、已確認記憶、摘要、家屬報表及其來源與版本。',
   'legal.privacy.scope.item4':
     '同意、撤回、家屬分享範圍、刪除工作狀態，以及為安全與稽核所需的最小技術紀錄。',
   'legal.privacy.purpose.title': '用途分離與同意',
@@ -351,14 +357,19 @@ const zhHant = {
   'legal.terms.scope.body':
     '本版本用於開發、測試與展示，尚未核准處理真實照護場域資料或作為 production 服務。Demo、測試、截圖與評估只能使用合成或完成去識別化的資料。',
   'legal.terms.accounts.title': '帳號、身分與授權',
-  'legal.terms.accounts.body': '請只以自己的帳號與實際被授予的角色使用系統。知道網址、邀請碼或長者 ID 不等於取得資料權限。',
+  'legal.terms.accounts.body':
+    '請只以自己的帳號與實際被授予的角色使用系統。知道網址、邀請碼或長者 ID 不等於取得資料權限。',
   'legal.terms.accounts.item1': '不得共用帳號、冒用身分、轉交登入狀態或規避機構啟用與派案限制。',
-  'legal.terms.accounts.item2': '家屬邀請只能建立核准範圍內的關係與分享，不授予完整照護或管理權限。',
-  'legal.terms.accounts.item3': '若發現帳號、裝置或邀請碼可能遭他人使用，應停止使用並通知服務機構或專案維護者。',
+  'legal.terms.accounts.item2':
+    '家屬邀請只能建立核准範圍內的關係與分享，不授予完整照護或管理權限。',
+  'legal.terms.accounts.item3':
+    '若發現帳號、裝置或邀請碼可能遭他人使用，應停止使用並通知服務機構或專案維護者。',
   'legal.terms.use.title': '可接受使用與禁止事項',
-  'legal.terms.use.body': '使用者不得利用本系統傷害長者、取得未授權資料、干擾服務或將開發版當成正式照護依據。',
+  'legal.terms.use.body':
+    '使用者不得利用本系統傷害長者、取得未授權資料、干擾服務或將開發版當成正式照護依據。',
   'legal.terms.use.item1': '不得嘗試跨長者、跨 tenant、跨機構、跨角色或超出派案範圍讀寫資料。',
-  'legal.terms.use.item2': '不得輸入真實長者個資、醫療資料、完整對話或可重用憑證作為 Demo／測試內容。',
+  'legal.terms.use.item2':
+    '不得輸入真實長者個資、醫療資料、完整對話或可重用憑證作為 Demo／測試內容。',
   'legal.terms.use.item3': '不得上傳惡意內容、探測 Secret、繞過安全限制或故意耗盡系統資源。',
   'legal.terms.use.item4': '不得使用恐懼、內疚、壓力、欺騙或情緒依賴方式影響長者。',
   'legal.terms.safety.title': '不是醫療或緊急服務',
@@ -382,7 +393,8 @@ const zhHant = {
   'legal.dataRights.notice':
     '這是產品操作與治理說明，不是特定司法管轄區法定權利的完整清單。正式申請窗口、法定時限、Export 格式、Retention、Legal Hold 與例外處理仍待核准。',
   'legal.dataRights.rights.title': '可以提出哪些需求',
-  'legal.dataRights.rights.body': '依適用法律、身分與合理例外，資料本人可提出下列需求；系統不得要求預先放棄依法不得放棄的權利。',
+  'legal.dataRights.rights.body':
+    '依適用法律、身分與合理例外，資料本人可提出下列需求；系統不得要求預先放棄依法不得放棄的權利。',
   'legal.dataRights.rights.item1': '查詢系統是否持有自己的個人資料，或請求閱覽。',
   'legal.dataRights.rights.item2': '請求取得自己資料的複製本或經核准的安全匯出。',
   'legal.dataRights.rights.item3': '補充或更正不完整、不正確的資料。',
@@ -391,7 +403,8 @@ const zhHant = {
   'legal.dataRights.controls.title': '目前介面可操作的控制',
   'legal.dataRights.controls.body':
     '開發版只在已實作且通過授權的介面提供部分控制；看到一項權利說明，不代表自助流程已完整上線。',
-  'legal.dataRights.controls.item1': '可查看並撤回目前已實作的 BASIC_VOICE 與 FAMILY_SHARING 同意。',
+  'legal.dataRights.controls.item1':
+    '可查看並撤回目前已實作的 BASIC_VOICE 與 FAMILY_SHARING 同意。',
   'legal.dataRights.controls.item2': '可依角色與正式狀態管理家屬邀請、家屬分享或已確認記憶。',
   'legal.dataRights.controls.item3': '目前沒有公開的完整資料匯出或完整刪除申請自助入口。',
   'legal.dataRights.request.title': '如何提出需求',
@@ -400,10 +413,13 @@ const zhHant = {
   'legal.dataRights.request.body2':
     '處理前必須驗證身分、tenant、長者、代理／家屬關係、派案與請求範圍。驗證失敗或可能暴露他人資料時必須拒絕，並以不洩漏敏感內容的方式說明。',
   'legal.dataRights.withdrawal.title': '撤回、停止分享與刪除並不相同',
-  'legal.dataRights.withdrawal.body': '系統將不同目的與結果分開處理，避免使用者以為按下撤回就代表所有儲存位置已立即實體刪除。',
+  'legal.dataRights.withdrawal.body':
+    '系統將不同目的與結果分開處理，避免使用者以為按下撤回就代表所有儲存位置已立即實體刪除。',
   'legal.dataRights.withdrawal.item1': '撤回同意生效後，先停止新的處理、重試、排程、通知與分享。',
-  'legal.dataRights.withdrawal.item2': '刪除需由可追蹤的工作流處理正式儲存、物件、Graph、索引、Cache 與衍生資料。',
-  'legal.dataRights.withdrawal.item3': '為防止已刪資料因重放或還原復活，可保留不含原內容的最小 Tombstone；備份與 Legal Hold 規則仍待核准。',
+  'legal.dataRights.withdrawal.item2':
+    '刪除需由可追蹤的工作流處理正式儲存、物件、Graph、索引、Cache 與衍生資料。',
+  'legal.dataRights.withdrawal.item3':
+    '為防止已刪資料因重放或還原復活，可保留不含原內容的最小 Tombstone；備份與 Legal Hold 規則仍待核准。',
   'legal.dataRights.export.title': '安全匯出',
   'legal.dataRights.export.body':
     '匯出應是依角色、資料本人、用途與核准範圍產生的安全 Package，而不是資料庫 Dump；不得包含其他長者／tenant、未確認記憶、未覆核事件、草稿報表、完整 Prompt、Secret 或內部工作資料。正式格式、交付方式與完成時限尚未核准。',
@@ -421,21 +437,30 @@ const zhHant = {
   'legal.accessibility.commitment.body':
     '無障礙與長者可用性是產品規則的一部分，不是最後才補上的樣式。資訊應能被感知、介面可操作、內容可理解，並盡可能與不同瀏覽器及輔助科技相容。',
   'legal.accessibility.measures.title': '目前採取的措施',
-  'legal.accessibility.measures.body': '目前前端設計與程式碼已採用下列措施，仍需持續以實際裝置與使用者驗證。',
-  'legal.accessibility.measures.item1': '提供跳到主要內容連結、語意標題、landmark、可讀標籤與合理的焦點順序。',
-  'legal.accessibility.measures.item2': '所有核心操作支援可見鍵盤焦點，不以移除 focus ring 換取視覺效果。',
+  'legal.accessibility.measures.body':
+    '目前前端設計與程式碼已採用下列措施，仍需持續以實際裝置與使用者驗證。',
+  'legal.accessibility.measures.item1':
+    '提供跳到主要內容連結、語意標題、landmark、可讀標籤與合理的焦點順序。',
+  'legal.accessibility.measures.item2':
+    '所有核心操作支援可見鍵盤焦點，不以移除 focus ring 換取視覺效果。',
   'legal.accessibility.measures.item3': '狀態不只靠顏色表達，搭配文字、圖示或不同形狀。',
-  'legal.accessibility.measures.item4': '公共頁面使用至少 20px 內文與 56px 觸控目標；長者語音介面採更大的字級與觸控區。',
-  'legal.accessibility.measures.item5': '不限制 pinch zoom，文字容器不以固定高度或裁切方式阻止放大與換行。',
-  'legal.accessibility.measures.item6': '提供中英文介面；動畫尊重 reduced-motion 偏好，且資訊不只由動畫傳達。',
+  'legal.accessibility.measures.item4':
+    '公共頁面使用至少 20px 內文與 56px 觸控目標；長者語音介面採更大的字級與觸控區。',
+  'legal.accessibility.measures.item5':
+    '不限制 pinch zoom，文字容器不以固定高度或裁切方式阻止放大與換行。',
+  'legal.accessibility.measures.item6':
+    '提供中英文介面；動畫尊重 reduced-motion 偏好，且資訊不只由動畫傳達。',
   'legal.accessibility.status.title': '評估狀態',
   'legal.accessibility.status.body':
     '目前已有自動化色彩對比測試與部分元件測試；完整鍵盤、螢幕閱讀器、系統字級 200%、平板橫直式與 390／768／1024／1280 寬度的人工驗收尚未全部完成。',
   'legal.accessibility.limitations.title': '已知限制',
-  'legal.accessibility.limitations.body': '若遇到下列限制，請改用文字流程、重新整理或由現場人員協助，並回報發生情境。',
-  'legal.accessibility.limitations.item1': '尚未完成各主要瀏覽器、作業系統、螢幕閱讀器與語音控制組合的相容性矩陣。',
+  'legal.accessibility.limitations.body':
+    '若遇到下列限制，請改用文字流程、重新整理或由現場人員協助，並回報發生情境。',
+  'legal.accessibility.limitations.item1':
+    '尚未完成各主要瀏覽器、作業系統、螢幕閱讀器與語音控制組合的相容性矩陣。',
   'legal.accessibility.limitations.item2': '部分頁面的 200% 系統字級與所有斷點人工檢查仍在進行。',
-  'legal.accessibility.limitations.item3': '完整 ASR、TTS 與每個長者語音狀態的音訊提示尚未成為 production 可用功能。',
+  'legal.accessibility.limitations.item3':
+    '完整 ASR、TTS 與每個長者語音狀態的音訊提示尚未成為 production 可用功能。',
   'legal.accessibility.technology.title': '所使用的技術',
   'legal.accessibility.technology.body':
     '介面依賴現代瀏覽器的 HTML、CSS、JavaScript、SVG 與必要的 WAI-ARIA。一般法遵內容可直接閱讀；語音互動另需可用網路、麥克風權限與受支援的瀏覽器能力。',
@@ -625,14 +650,21 @@ const en: Record<MessageKey, string> = {
   'join.alreadyBound': 'Already linked?',
   'join.toFamilySignIn': 'Go to family sign-in',
   'join.backToChooser': 'Back to service selection',
+  'join.lineButton': 'Already have an account? Sign in with linked LINE',
+  'join.lineHint':
+    "This button doesn't use the invitation code above; first-time family access still requires Google.",
   'familySignIn.title': 'Family sign-in',
   'familySignIn.body':
     'After signing in you will only see formal reports the elder has consented to share and that remain within your authorization.',
+  'familySignIn.lineButton': 'Sign in with linked LINE',
+  'familySignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
 
   'staffSignIn.title': 'Care worker sign-in',
   'staffSignIn.body':
     'This account must be activated by your organization. After signing in, data is shown according to your current organization membership and assignments.',
   'staffSignIn.notActivated': 'Account not activated yet? Please contact your service provider.',
+  'staffSignIn.lineButton': 'Sign in with linked LINE',
+  'staffSignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
 
   // ---- public surface ----
   'a11y.skipToContent': 'Skip to main content',
@@ -690,7 +722,8 @@ const en: Record<MessageKey, string> = {
   'landing.roles.staff.cta': 'Care worker sign-in',
 
   'landing.privacy.title': 'How we protect elders’ data',
-  'landing.privacy.subtitle': 'Consent, review, and revocation are built into the product rules — not an afterthought.',
+  'landing.privacy.subtitle':
+    'Consent, review, and revocation are built into the product rules — not an afterthought.',
   'landing.privacy.point1':
     'Consent is split by purpose — voice, recording, memory, family sharing and more — and the elder can toggle each one independently.',
   'landing.privacy.point2':
@@ -707,14 +740,16 @@ const en: Record<MessageKey, string> = {
     'No medical diagnosis or treatment advice, and no replacing professional care or medical judgment.',
   'landing.boundaries.item2':
     'Model inferences, missing data, or unreviewed content are never presented as confirmed fact.',
-  'landing.boundaries.item3': 'No fear, guilt, pressure, or emotional-dependency tactics to drive usage.',
+  'landing.boundaries.item3':
+    'No fear, guilt, pressure, or emotional-dependency tactics to drive usage.',
   'landing.boundaries.item4':
     'No health-status indicators, risk scores, or cross-elder rankings that could mislead.',
   'landing.boundaries.item5':
     'All demos and tests use synthetic or de-identified data — never a real elder’s data.',
 
   'landing.closing.title': 'Ready to begin?',
-  'landing.closing.body': 'Choose a role above, or read our privacy policy and data-rights page first.',
+  'landing.closing.body':
+    'Choose a role above, or read our privacy policy and data-rights page first.',
   'landing.closing.cta': 'Go to sign-in →',
 
   // ---- public legal / compliance information ----
@@ -742,7 +777,8 @@ const en: Record<MessageKey, string> = {
   'legal.privacy.purpose.title': 'Separate purposes and consent',
   'legal.privacy.purpose.body':
     'Voice companionship, transcript storage, care-event extraction, long-term memory, companion-signal analysis, proactive companionship, and family sharing are separate purposes; one blanket switch must not replace them.',
-  'legal.privacy.purpose.item1': 'Processing for a purpose must not begin or continue without valid consent for that purpose.',
+  'legal.privacy.purpose.item1':
+    'Processing for a purpose must not begin or continue without valid consent for that purpose.',
   'legal.privacy.purpose.item2':
     'Once revocation takes effect, new processing, schedules, retries, and sharing stop first; existing data then follows an approved retention and deletion workflow.',
   'legal.privacy.purpose.item3':
@@ -750,7 +786,8 @@ const en: Record<MessageKey, string> = {
   'legal.privacy.access.title': 'Who may access data',
   'legal.privacy.access.body':
     'Every formal read and write must re-check identity, role, tenant, elder, assignment, relationship, consent, purpose, resource state, and time scope. The default is deny.',
-  'legal.privacy.access.item1': 'Elders may act only on their own currently permitted consent, memory, sharing, and interaction data.',
+  'legal.privacy.access.item1':
+    'Elders may act only on their own currently permitted consent, memory, sharing, and interaction data.',
   'legal.privacy.access.item2':
     'Care workers may view or review data only within an active organization membership, assignment, and permission scope.',
   'legal.privacy.access.item3':
@@ -781,16 +818,23 @@ const en: Record<MessageKey, string> = {
   'legal.terms.accounts.title': 'Accounts, identity, and authorization',
   'legal.terms.accounts.body':
     'Use only your own account and the role actually granted to you. Knowing a URL, invitation code, or elder ID does not create permission to access data.',
-  'legal.terms.accounts.item1': 'Do not share accounts, impersonate another person, transfer a session, or bypass organization activation and assignment limits.',
-  'legal.terms.accounts.item2': 'A family invitation establishes only the approved relationship and sharing scope; it does not grant full care or administration rights.',
-  'legal.terms.accounts.item3': 'If an account, device, or invitation code may be in someone else’s hands, stop using it and notify the service organization or project maintainer.',
+  'legal.terms.accounts.item1':
+    'Do not share accounts, impersonate another person, transfer a session, or bypass organization activation and assignment limits.',
+  'legal.terms.accounts.item2':
+    'A family invitation establishes only the approved relationship and sharing scope; it does not grant full care or administration rights.',
+  'legal.terms.accounts.item3':
+    'If an account, device, or invitation code may be in someone else’s hands, stop using it and notify the service organization or project maintainer.',
   'legal.terms.use.title': 'Acceptable use and prohibited conduct',
   'legal.terms.use.body':
     'Do not use the system to harm elders, obtain unauthorized data, disrupt service, or treat a development build as an authoritative care system.',
-  'legal.terms.use.item1': 'Do not attempt cross-elder, cross-tenant, cross-organization, cross-role, or out-of-assignment data access.',
-  'legal.terms.use.item2': 'Do not enter real elder personal data, medical data, full conversations, or reusable credentials into demos or tests.',
-  'legal.terms.use.item3': 'Do not upload malicious content, probe secrets, bypass safeguards, or deliberately exhaust system resources.',
-  'legal.terms.use.item4': 'Do not use fear, guilt, pressure, deception, or emotional-dependency tactics to influence an elder.',
+  'legal.terms.use.item1':
+    'Do not attempt cross-elder, cross-tenant, cross-organization, cross-role, or out-of-assignment data access.',
+  'legal.terms.use.item2':
+    'Do not enter real elder personal data, medical data, full conversations, or reusable credentials into demos or tests.',
+  'legal.terms.use.item3':
+    'Do not upload malicious content, probe secrets, bypass safeguards, or deliberately exhaust system resources.',
+  'legal.terms.use.item4':
+    'Do not use fear, guilt, pressure, deception, or emotional-dependency tactics to influence an elder.',
   'legal.terms.safety.title': 'Not a medical or emergency service',
   'legal.terms.safety.body1':
     'The system does not provide diagnoses, disease probabilities, medication changes, treatment advice, or a substitute for clinicians, care workers, family, or other professionals.',
@@ -814,17 +858,22 @@ const en: Record<MessageKey, string> = {
   'legal.dataRights.rights.title': 'Requests you may make',
   'legal.dataRights.rights.body':
     'Subject to applicable law, verified identity, and reasonable exceptions, a data subject may make the following requests. The system must not require advance waiver of rights that the law makes non-waivable.',
-  'legal.dataRights.rights.item1': 'Ask whether the system holds your personal data and request access to it.',
+  'legal.dataRights.rights.item1':
+    'Ask whether the system holds your personal data and request access to it.',
   'legal.dataRights.rights.item2': 'Request a copy of your data or an approved secure export.',
   'legal.dataRights.rights.item3': 'Supplement or correct incomplete or inaccurate data.',
-  'legal.dataRights.rights.item4': 'Ask to stop collection, processing, or use for a purpose, or withdraw the corresponding consent.',
+  'legal.dataRights.rights.item4':
+    'Ask to stop collection, processing, or use for a purpose, or withdraw the corresponding consent.',
   'legal.dataRights.rights.item5': 'Request deletion within the applicable scope.',
   'legal.dataRights.controls.title': 'Controls available in the current interface',
   'legal.dataRights.controls.body':
     'The development version exposes only some controls through implemented, authorized screens. A right described on this page does not mean that its self-service workflow is complete.',
-  'legal.dataRights.controls.item1': 'Review and revoke the currently implemented BASIC_VOICE and FAMILY_SHARING consents.',
-  'legal.dataRights.controls.item2': 'Manage family invitations, family sharing, or confirmed memories where the relevant role-specific interface exists.',
-  'legal.dataRights.controls.item3': 'There is currently no public self-service flow for a complete data export or complete deletion request.',
+  'legal.dataRights.controls.item1':
+    'Review and revoke the currently implemented BASIC_VOICE and FAMILY_SHARING consents.',
+  'legal.dataRights.controls.item2':
+    'Manage family invitations, family sharing, or confirmed memories where the relevant role-specific interface exists.',
+  'legal.dataRights.controls.item3':
+    'There is currently no public self-service flow for a complete data export or complete deletion request.',
   'legal.dataRights.request.title': 'How to make a request',
   'legal.dataRights.request.body1':
     'Until a formal channel exists, contact the organization providing the service or the project-maintenance channel with your identity, role, requested data scope, and request type. Do not post full conversations, identity documents, tokens, or other sensitive data publicly.',
@@ -833,9 +882,12 @@ const en: Record<MessageKey, string> = {
   'legal.dataRights.withdrawal.title': 'Revocation, stopping sharing, and deletion are different',
   'legal.dataRights.withdrawal.body':
     'The system separates purposes and outcomes so that pressing revoke is not mistaken for immediate physical deletion from every storage location.',
-  'legal.dataRights.withdrawal.item1': 'Once consent revocation takes effect, new processing, retries, schedules, notifications, and sharing stop first.',
-  'legal.dataRights.withdrawal.item2': 'Deletion requires a traceable workflow across authoritative stores, objects, graphs, indexes, caches, and derived data.',
-  'legal.dataRights.withdrawal.item3': 'A minimal tombstone without original content may remain to prevent replay or restore from reviving data; backup and legal-hold rules are not yet approved.',
+  'legal.dataRights.withdrawal.item1':
+    'Once consent revocation takes effect, new processing, retries, schedules, notifications, and sharing stop first.',
+  'legal.dataRights.withdrawal.item2':
+    'Deletion requires a traceable workflow across authoritative stores, objects, graphs, indexes, caches, and derived data.',
+  'legal.dataRights.withdrawal.item3':
+    'A minimal tombstone without original content may remain to prevent replay or restore from reviving data; backup and legal-hold rules are not yet approved.',
   'legal.dataRights.export.title': 'Secure export',
   'legal.dataRights.export.body':
     'An export should be a secure package limited by role, data subject, purpose, and approved scope—not a database dump. It must exclude other elders or tenants, unconfirmed memories, unreviewed events, draft reports, full prompts, secrets, and internal working data. The final format, delivery method, and completion timeline are not yet approved.',
@@ -855,21 +907,30 @@ const en: Record<MessageKey, string> = {
   'legal.accessibility.measures.title': 'Measures currently in place',
   'legal.accessibility.measures.body':
     'The current frontend design and code use the following measures, which still require ongoing validation on real devices and with users.',
-  'legal.accessibility.measures.item1': 'A skip-to-content link, semantic headings, landmarks, readable labels, and a logical focus order.',
-  'legal.accessibility.measures.item2': 'Visible keyboard focus for core controls; focus rings are not removed for visual styling.',
-  'legal.accessibility.measures.item3': 'State is not conveyed by color alone; text, icons, or distinct shapes accompany it.',
-  'legal.accessibility.measures.item4': 'Public pages use at least 20px body text and 56px touch targets; the elder voice interface uses larger type and controls.',
-  'legal.accessibility.measures.item5': 'Pinch zoom is not restricted, and text containers avoid fixed heights and clipping that would block enlargement or wrapping.',
-  'legal.accessibility.measures.item6': 'Chinese and English interfaces are available; motion respects reduced-motion preferences, and information is not carried by animation alone.',
+  'legal.accessibility.measures.item1':
+    'A skip-to-content link, semantic headings, landmarks, readable labels, and a logical focus order.',
+  'legal.accessibility.measures.item2':
+    'Visible keyboard focus for core controls; focus rings are not removed for visual styling.',
+  'legal.accessibility.measures.item3':
+    'State is not conveyed by color alone; text, icons, or distinct shapes accompany it.',
+  'legal.accessibility.measures.item4':
+    'Public pages use at least 20px body text and 56px touch targets; the elder voice interface uses larger type and controls.',
+  'legal.accessibility.measures.item5':
+    'Pinch zoom is not restricted, and text containers avoid fixed heights and clipping that would block enlargement or wrapping.',
+  'legal.accessibility.measures.item6':
+    'Chinese and English interfaces are available; motion respects reduced-motion preferences, and information is not carried by animation alone.',
   'legal.accessibility.status.title': 'Assessment status',
   'legal.accessibility.status.body':
     'Automated color-contrast tests and some component tests exist. Full keyboard, screen-reader, 200% system-text, tablet-orientation, and 390/768/1024/1280-width manual acceptance testing is not yet complete.',
   'legal.accessibility.limitations.title': 'Known limitations',
   'legal.accessibility.limitations.body':
     'If you encounter one of these limitations, use the text-based path, refresh, or ask on-site staff for help, and report the context in which it occurred.',
-  'legal.accessibility.limitations.item1': 'A compatibility matrix across major browsers, operating systems, screen readers, and voice-control tools is not complete.',
-  'legal.accessibility.limitations.item2': 'Manual checks for 200% system text and every supported breakpoint are still in progress on some pages.',
-  'legal.accessibility.limitations.item3': 'Complete ASR, TTS, and audio cues for every elder voice state are not yet production-ready features.',
+  'legal.accessibility.limitations.item1':
+    'A compatibility matrix across major browsers, operating systems, screen readers, and voice-control tools is not complete.',
+  'legal.accessibility.limitations.item2':
+    'Manual checks for 200% system text and every supported breakpoint are still in progress on some pages.',
+  'legal.accessibility.limitations.item3':
+    'Complete ASR, TTS, and audio cues for every elder voice state are not yet production-ready features.',
   'legal.accessibility.technology.title': 'Technologies used',
   'legal.accessibility.technology.body':
     'The interface relies on modern-browser support for HTML, CSS, JavaScript, SVG, and necessary WAI-ARIA. General legal content can be read directly; voice interaction also requires a working network, microphone permission, and supported browser capabilities.',

@@ -41,6 +41,11 @@ class ConversationSession(BaseModel, TenantScopedMixin):
     )
     initiator_type: Mapped[str] = mapped_column(String(24), nullable=False)
     language_route: Mapped[str] = mapped_column(LANGUAGE_CODE_ENUM, nullable=False)
+    input_mode: Mapped[str] = mapped_column(
+        String(32),
+        server_default=sa.text("'text'"),
+        nullable=False,
+    )
     state: Mapped[str] = mapped_column(
         String(24),
         server_default=sa.text("'CREATED'"),

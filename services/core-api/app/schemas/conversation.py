@@ -23,7 +23,7 @@ class CreateVoiceSessionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     language_preference: LanguageRoute
-    input_mode: Literal["voice", "text", "voice_with_text_fallback"]
+    input_mode: Literal["text"]
     client_audio_format: str | None = Field(default=None, max_length=80)
     client_timezone: str = Field(default="Asia/Taipei", min_length=1, max_length=64)
     purpose: Literal["BASIC_VOICE"] = "BASIC_VOICE"
@@ -51,6 +51,7 @@ class TransitionVoiceSessionRequest(BaseModel):
 
     target_state: Literal[
         "RECORDING",
+        "AWAITING_CONFIRMATION",
         "PROCESSING",
         "RESPONDING",
         "COMPLETED",
@@ -100,6 +101,7 @@ class VoiceSessionResponse(BaseModel):
     state: Literal[
         "CREATED",
         "RECORDING",
+        "AWAITING_CONFIRMATION",
         "PROCESSING",
         "RESPONDING",
         "COMPLETED",
