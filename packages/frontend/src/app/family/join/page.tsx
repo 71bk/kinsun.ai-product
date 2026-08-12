@@ -9,6 +9,6 @@ import { FamilyJoinView } from './FamilyJoinView';
  * needs a client component, so the real markup lives in FamilyJoinView.
  */
 export default function FamilyJoinPage() {
-  const showLine = process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
+  const showLine = process.env.LINE_DIRECT_OIDC_ENABLED?.trim().toLowerCase() === 'true';
   return <FamilyJoinView showLine={showLine} />;
 }

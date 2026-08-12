@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -16,7 +17,9 @@ from app.models.actor import Actor
 from app.models.care_relationship import CareRelationship
 from app.models.elder import Elder
 from app.models.family_invitation import FamilyInvitation
+from app.models.line_identity import ExternalIdentity
 from app.models.membership import ActorTenantMembership
+from app.models.pending_identity import PendingExternalIdentity
 from app.models.report import FamilyRelationship
 from app.models.tenant import Tenant
 from app.repositories.consent_repo import ConsentRepository
@@ -223,6 +226,125 @@ class FamilyInvitationService:
             family_relationship_id=family_relationship.id,
         )
 
+    async def redeem_pending_external_identity(
+        self,
+        *,
+        pending: PendingExternalIdentity,
+        invitation_code: str,
+        trace_id: str,
+        idempotency_key: str,
+    ) -> tuple[FamilyInvitationRedeemedResponse, ExternalIdentity]:
+        """Redeem an invitation for a verified, not-yet-linked external identity.
+
+        Pending identity consumption remains the caller's responsibility so
+        account creation, invitation redemption, and App Session issuance can
+        commit as one transaction.
+        """
+        now = self._now()
+        if (
+            pending.provider not in {"GOOGLE", "LINE"}
+            or pending.intent != "FAMILY"
+            or pending.status != "PENDING"
+            or pending.expires_at <= now
+        ):
+            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
+
+        email = pending.verified_email.strip().casefold() if pending.verified_email else None
+        token_hash = self._codec.hash_code(invitation_code)
+        invitation = await self._invitations.get_by_token_hash_for_update(token_hash)
+        if invitation is None or invitation.status != "ISSUED" or now >= invitation.expires_at:
+            self._invalid_invitation()
+        if invitation.invitee_email_hmac is not None and (
+            email is None
+            or not self._codec.matches(
+                invitation.invitee_email_hmac,
+                self._codec.hash_email(email),
+            )
+        ):
+            self._invalid_invitation()
+
+        elder, consent = await self._require_live_invitation_authority(invitation, now)
+        actor, external_identity = await self._create_external_family_actor(
+            pending=pending,
+            email=email,
+        )
+        membership = await self._ensure_single_household_membership(
+            actor=actor,
+            tenant_id=invitation.tenant_id,
+            now=now,
+        )
+        relationship = await self._ensure_care_relationship(
+            actor_id=actor.id,
+            invitation=invitation,
+            now=now,
+        )
+        family_relationship = await self._ensure_family_relationship(
+            actor_id=actor.id,
+            invitation=invitation,
+            now=now,
+        )
+
+        invitation.status = "REDEEMED"
+        invitation.redeemed_by_actor_id = actor.id
+        invitation.redeemed_at = now
+        invitation.version += 1
+        await self._session.flush()
+        await write_outbox_entry(
+            self._session,
+            event_type="family_invitation.redeemed.v1",
+            aggregate_type="family_invitation",
+            aggregate_id=invitation.id,
+            aggregate_version=invitation.version,
+            tenant_id=invitation.tenant_id,
+            elder_id=elder.id,
+            actor_id=actor.id,
+            purpose="FAMILY_SHARING",
+            consent_version=consent.version,
+            payload={
+                "invitation_id": str(invitation.id),
+                "elder_id": str(elder.id),
+                "family_actor_id": str(actor.id),
+                "membership_id": str(membership.id),
+                "relationship_id": str(relationship.id),
+                "family_relationship_id": str(family_relationship.id),
+                "status": invitation.status,
+            },
+            trace_id=trace_id,
+            correlation_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
+        await write_outbox_entry(
+            self._session,
+            event_type="external_identity.linked.v1",
+            aggregate_type="external_identity",
+            aggregate_id=external_identity.id,
+            aggregate_version=external_identity.version,
+            tenant_id=invitation.tenant_id,
+            elder_id=elder.id,
+            actor_id=actor.id,
+            purpose="AUTHENTICATION",
+            payload={
+                "external_identity_id": str(external_identity.id),
+                "actor_id": str(actor.id),
+                "provider": external_identity.provider,
+                "status": external_identity.status,
+            },
+            trace_id=trace_id,
+            correlation_id=trace_id,
+            idempotency_key=f"{idempotency_key}:external-identity",
+        )
+        return (
+            FamilyInvitationRedeemedResponse(
+                invitation_id=invitation.id,
+                actor_id=actor.id,
+                tenant_id=invitation.tenant_id,
+                elder_id=invitation.elder_id,
+                relationship_id=relationship.id,
+                family_relationship_id=family_relationship.id,
+            ),
+            external_identity,
+        )
+
     async def list_for_elder(
         self,
         *,
@@ -381,6 +503,61 @@ class FamilyInvitationService:
         self._session.add(actor)
         await self._session.flush()
         return actor
+
+    async def _create_external_family_actor(
+        self,
+        *,
+        pending: PendingExternalIdentity,
+        email: str | None,
+    ) -> tuple[Actor, ExternalIdentity]:
+        identities = list(
+            (
+                await self._session.execute(
+                    select(ExternalIdentity).where(
+                        ExternalIdentity.provider == pending.provider,
+                        ExternalIdentity.external_subject_digest == pending.external_subject_digest,
+                        ExternalIdentity.digest_key_version == pending.digest_key_version,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        if identities:
+            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
+        if email is not None:
+            email_digest = hashlib.sha256(email.encode("utf-8")).hexdigest()
+            await self._session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+                {"lock_key": f"external-email:{email_digest}"},
+            )
+            email_owner = await self._session.scalar(
+                select(Actor).where(func.lower(Actor.email) == email)
+            )
+            if email_owner is not None:
+                raise ConflictError("This identity requires administrator review")
+
+        display_name = pending.display_name or (email.partition("@")[0] if email else None)
+        actor = Actor(
+            actor_type="FAMILY_MEMBER",
+            cognito_sub=None,
+            display_name=(display_name or "Family member")[:120],
+            email=email,
+            status="ACTIVE",
+        )
+        self._session.add(actor)
+        await self._session.flush()
+        external_identity = ExternalIdentity(
+            provider=pending.provider,
+            external_subject_digest=pending.external_subject_digest,
+            digest_key_version=pending.digest_key_version,
+            actor_id=actor.id,
+            status="ACTIVE",
+            version=1,
+        )
+        self._session.add(external_identity)
+        await self._session.flush()
+        return actor, external_identity
 
     async def _ensure_single_household_membership(
         self,

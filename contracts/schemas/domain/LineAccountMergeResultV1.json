@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/LineAccountMergeResultV1.json",
+  "title": "LineAccountMergeResultV1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "session_token", "idle_expires_at", "absolute_expires_at"],
+      "properties": {
+        "status": { "const": "MERGED" },
+        "session_token": { "type": "string", "pattern": "^ks1_[A-Za-z0-9_-]{43}$" },
+        "idle_expires_at": { "type": "string", "format": "date-time" },
+        "absolute_expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": { "status": { "const": "MANUAL_REVIEW_REQUIRED" } }
+    }
+  ]
+}

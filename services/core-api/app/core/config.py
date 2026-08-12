@@ -97,10 +97,11 @@ class Settings(BaseSettings):
     google_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
     google_oidc_handoff_secret: str = ""
     google_pending_identity_ttl_seconds: int = Field(default=600, ge=60, le=900)
+    google_oidc_handoff_enabled: bool = False
 
-    # Provider-neutral Core-owned browser sessions. These settings are inert
-    # until the App Session authenticator is explicitly enabled in a later
-    # rollout phase.
+    # Provider-neutral Core-owned browser sessions. The authenticator remains
+    # fail-closed until this explicit rollout gate is enabled.
+    app_session_auth_enabled: bool = False
     app_session_elder_family_idle_ttl_seconds: int = Field(
         default=604_800,
         ge=300,
@@ -131,6 +132,12 @@ class Settings(BaseSettings):
     line_account_link_enabled: bool = False
     line_identity_hmac_secret: str = ""
     line_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    line_login_channel_id: str = Field(default="", max_length=32)
+    line_oidc_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
+    line_oidc_handoff_secret: str = ""
+    line_pending_identity_ttl_seconds: int = Field(default=600, ge=60, le=900)
+    line_account_merge_ttl_seconds: int = Field(default=600, ge=60, le=900)
+    line_oidc_handoff_enabled: bool = False
     line_account_link_base_url: str = Field(default="", max_length=2048)
     line_link_challenge_ttl_seconds: int = Field(default=600, ge=60, le=600)
     line_link_challenge_max_attempts: int = Field(default=3, ge=1, le=5)
@@ -218,30 +225,50 @@ class Settings(BaseSettings):
             raise ValueError(
                 "GOOGLE_IDENTITY_HMAC_SECRET and GOOGLE_OIDC_HANDOFF_SECRET " "must be independent"
             )
+        if self.google_oidc_handoff_enabled:
+            if not self.app_session_auth_enabled:
+                raise ValueError(
+                    "APP_SESSION_AUTH_ENABLED must be true when " "GOOGLE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if not self.google_oidc_client_id.strip():
+                raise ValueError(
+                    "GOOGLE_OIDC_CLIENT_ID is required when " "GOOGLE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if len(self.google_identity_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "GOOGLE_IDENTITY_HMAC_SECRET must contain at least 32 bytes when "
+                    "GOOGLE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if len(self.google_oidc_handoff_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "GOOGLE_OIDC_HANDOFF_SECRET must contain at least 32 bytes when "
+                    "GOOGLE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if len(self.family_invitation_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "FAMILY_INVITATION_HMAC_SECRET must contain at least 32 bytes when "
+                    "GOOGLE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if (
+                len(
+                    {
+                        self.google_identity_hmac_secret,
+                        self.google_oidc_handoff_secret,
+                        self.family_invitation_hmac_secret,
+                    }
+                )
+                != 3
+            ):
+                raise ValueError(
+                    "Google identity, Google handoff, and family invitation secrets "
+                    "must be independent"
+                )
 
         if self.line_account_link_enabled:
             if not self.line_channel_secret.strip() or not self.line_channel_access_token.strip():
                 raise ValueError(
                     "LINE_CHANNEL_SECRET and LINE_CHANNEL_ACCESS_TOKEN are required "
                     "when LINE_ACCOUNT_LINK_ENABLED=true"
-                )
-            if len(self.line_identity_hmac_secret.encode("utf-8")) < 32:
-                raise ValueError(
-                    "LINE_IDENTITY_HMAC_SECRET must contain at least 32 bytes "
-                    "when LINE_ACCOUNT_LINK_ENABLED=true"
-                )
-            if self.line_identity_hmac_secret in {
-                self.line_channel_secret,
-                self.family_invitation_hmac_secret,
-            }:
-                raise ValueError(
-                    "LINE_IDENTITY_HMAC_SECRET must be independent from LINE channel "
-                    "and family invitation secrets"
-                )
-            if self.line_identity_hmac_key_version != 1:
-                raise ValueError(
-                    "LINE_IDENTITY_HMAC_KEY_VERSION must remain 1 for the MVP; "
-                    "key rotation requires an explicit identity rekey migration"
                 )
             base_url = self.line_account_link_base_url.strip().rstrip("/")
             authority = base_url.removeprefix("https://")
@@ -259,6 +286,49 @@ class Settings(BaseSettings):
                     "when LINE_ACCOUNT_LINK_ENABLED=true"
                 )
             self.line_account_link_base_url = base_url
+        if self.line_account_link_enabled or self.line_oidc_handoff_enabled:
+            if len(self.line_identity_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "LINE_IDENTITY_HMAC_SECRET must contain at least 32 bytes when "
+                    "a LINE identity flow is enabled"
+                )
+            if self.line_identity_hmac_key_version != 1:
+                raise ValueError(
+                    "LINE_IDENTITY_HMAC_KEY_VERSION must remain 1 for the MVP; "
+                    "key rotation requires an explicit identity rekey migration"
+                )
+        if self.line_oidc_handoff_enabled:
+            if not self.app_session_auth_enabled:
+                raise ValueError(
+                    "APP_SESSION_AUTH_ENABLED must be true when " "LINE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if not re.fullmatch(r"[0-9]{5,32}", self.line_login_channel_id):
+                raise ValueError(
+                    "LINE_LOGIN_CHANNEL_ID is required when " "LINE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if len(self.line_oidc_handoff_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "LINE_OIDC_HANDOFF_SECRET must contain at least 32 bytes when "
+                    "LINE_OIDC_HANDOFF_ENABLED=true"
+                )
+            if len(self.family_invitation_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "FAMILY_INVITATION_HMAC_SECRET must contain at least 32 bytes when "
+                    "LINE_OIDC_HANDOFF_ENABLED=true"
+                )
+            line_secrets = {
+                self.line_identity_hmac_secret,
+                self.line_oidc_handoff_secret,
+                self.family_invitation_hmac_secret,
+            }
+            if len(line_secrets) != 3 or self.line_oidc_handoff_secret in {
+                self.line_channel_secret,
+                self.google_oidc_handoff_secret,
+            }:
+                raise ValueError(
+                    "LINE identity, LINE handoff, and family invitation secrets "
+                    "must be independent"
+                )
         if self.line_daily_notification_enabled:
             if not self.line_account_link_enabled:
                 raise ValueError(

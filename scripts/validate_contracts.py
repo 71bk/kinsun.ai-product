@@ -140,6 +140,38 @@ DATA_SCHEMA_FOR = {
     "line-daily-notification-job-leaks-content.json": (
         "domain/DailyLineNotificationJobRequestV1.json"
     ),
+    "google-oidc-handoff-request.json": "domain/GoogleOidcHandoffRequestV1.json",
+    "google-oidc-handoff-request-extra-token.json": (
+        "domain/GoogleOidcHandoffRequestV1.json"
+    ),
+    "google-onboarding-complete-request.json": (
+        "domain/CompleteGoogleOnboardingRequestV1.json"
+    ),
+    "google-onboarding-complete-bad-token.json": (
+        "domain/CompleteGoogleOnboardingRequestV1.json"
+    ),
+    "line-oidc-handoff-request.json": "domain/LineOidcHandoffRequestV1.json",
+    "line-oidc-handoff-request-extra-token.json": (
+        "domain/LineOidcHandoffRequestV1.json"
+    ),
+    "line-onboarding-complete-request.json": (
+        "domain/CompleteLineOnboardingRequestV1.json"
+    ),
+    "line-onboarding-complete-bad-token.json": (
+        "domain/CompleteLineOnboardingRequestV1.json"
+    ),
+    "line-identity-link-request.json": "domain/LinkLineIdentityRequestV1.json",
+    "line-identity-link-request-with-session.json": "domain/LinkLineIdentityRequestV1.json",
+    "line-account-merge-confirm-request.json": (
+        "domain/ConfirmLineAccountMergeRequestV1.json"
+    ),
+    "line-account-merge-confirm-raw-subject.json": (
+        "domain/ConfirmLineAccountMergeRequestV1.json"
+    ),
+    "app-session-logout-response.json": "domain/AppSessionLogoutV1.json",
+    "app-session-logout-response-leaks-token.json": (
+        "domain/AppSessionLogoutV1.json"
+    ),
 }
 
 failures: list[str] = []

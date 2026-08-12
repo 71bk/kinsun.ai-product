@@ -1,11 +1,17 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import {
+  appSessionCookieName,
+  appSessionCookieOptions,
+  normalizeBrowserAuthCredential,
+} from '@/lib/server/app-session-cookie';
+import {
   accessTokenCookieName,
   accessTokenCookieOptions,
   isTrustedRequestOrigin,
   normalizeAccessToken,
 } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
+import { revokeCoreAppSession } from '@/lib/server/core-app-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +28,11 @@ function noStore(response: NextResponse): NextResponse {
 }
 
 export function GET(request: NextRequest): Response {
-  const accessToken = normalizeAccessToken(request.cookies.get(accessTokenCookieName())?.value);
-  return noStore(NextResponse.json({ credential_present: accessToken !== null }));
+  const credential = normalizeBrowserAuthCredential(
+    request.cookies.get(appSessionCookieName())?.value,
+    request.cookies.get(accessTokenCookieName())?.value,
+  );
+  return noStore(NextResponse.json({ credential_present: credential !== null }));
 }
 
 /**
@@ -53,15 +62,35 @@ export async function POST(request: NextRequest): Promise<Response> {
   return response;
 }
 
-export function DELETE(request: NextRequest): Response {
+export async function DELETE(request: NextRequest): Promise<Response> {
   if (!isTrustedRequestOrigin(request)) {
     return bffError(403, 'forbidden', 'Request origin rejected', 'CSRF_ORIGIN_REJECTED');
   }
 
+  const appSession = request.cookies.get(appSessionCookieName())?.value;
+  if (appSession !== undefined) {
+    try {
+      await revokeCoreAppSession(appSession);
+    } catch {
+      return bffError(
+        503,
+        'service_unavailable',
+        'Sign-out is temporarily unavailable',
+        'APP_SESSION_LOGOUT_UNAVAILABLE',
+        true,
+      );
+    }
+  }
   const response = noStore(NextResponse.json({ credential_present: false }));
+  response.cookies.set(appSessionCookieName(), '', {
+    ...appSessionCookieOptions(),
+    expires: new Date(0),
+    maxAge: 0,
+  });
   response.cookies.set(accessTokenCookieName(), '', {
     ...accessTokenCookieOptions(),
     expires: new Date(0),
+    maxAge: 0,
   });
   return response;
 }

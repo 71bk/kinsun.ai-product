@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/GoogleOidcHandoffRequestV1.json",
+  "title": "GoogleOidcHandoffRequestV1",
+  "description": "Private BFF handoff of a direct Google ID token for independent Core verification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id_token", "expected_nonce", "intent"],
+  "properties": {
+    "id_token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384,
+      "pattern": "^[^\\s]+$"
+    },
+    "expected_nonce": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 512,
+      "pattern": "^[^\\s]+$"
+    },
+    "intent": {
+      "type": "string",
+      "enum": ["ELDER", "FAMILY", "STAFF"]
+    }
+  }
+}

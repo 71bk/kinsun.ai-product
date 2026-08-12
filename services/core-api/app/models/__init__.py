@@ -5,6 +5,7 @@ metadata when the application or Alembic imports this package.
 """
 
 from app.models import enums  # noqa: F401
+from app.models.account_merge import AccountMergeRequest  # noqa: F401
 from app.models.actor import Actor  # noqa: F401
 from app.models.agent import AgentRun, AgentToolCall  # noqa: F401
 from app.models.app_session import AppSession  # noqa: F401

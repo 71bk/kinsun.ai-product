@@ -3,9 +3,10 @@ import type { GoogleOidcExchangeResult } from './google-oidc';
 import type { GoogleOidcTransaction } from './google-oidc-transaction';
 
 const HANDOFF_PATH = '/api/v1/internal/auth/google/handoff';
+export const GOOGLE_ONBOARDING_PATH = '/api/v1/internal/auth/google/onboarding';
 const HANDOFF_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 64 * 1024;
-const APP_SESSION_PATTERN = /^ks1_[A-Za-z0-9_-]{43}$/;
+export const APP_SESSION_PATTERN = /^ks1_[A-Za-z0-9_-]{43}$/;
 const PENDING_IDENTITY_PATTERN = /^kp1_[A-Za-z0-9_-]{43}$/;
 
 export interface AuthenticatedGoogleCoreHandoff {
@@ -43,16 +44,19 @@ function safeCoreBaseUrl(): URL {
   }
 }
 
-function handoffTarget(): URL {
+export function googleOidcCoreTarget(path = HANDOFF_PATH): URL {
+  if (path !== HANDOFF_PATH && path !== GOOGLE_ONBOARDING_PATH) {
+    throw new Error('Core Google handoff is unavailable');
+  }
   const coreBase = safeCoreBaseUrl();
-  const target = new URL(HANDOFF_PATH, coreBase);
-  if (target.origin !== coreBase.origin || target.pathname !== HANDOFF_PATH) {
+  const target = new URL(path, coreBase);
+  if (target.origin !== coreBase.origin || target.pathname !== path) {
     throw new Error('Core Google handoff is unavailable');
   }
   return target;
 }
 
-function handoffSecret(): string {
+export function googleOidcCoreAuthorization(): string {
   const value = process.env.GOOGLE_OIDC_HANDOFF_SECRET;
   if (
     !value ||
@@ -67,12 +71,13 @@ function handoffSecret(): string {
     process.env.GOOGLE_OIDC_CLIENT_SECRET,
     process.env.GOOGLE_OIDC_TRANSACTION_SECRET,
     process.env.COGNITO_OAUTH_TRANSACTION_SECRET,
+    process.env.FAMILY_INVITATION_HMAC_SECRET,
     process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET,
   ];
   if (forbiddenReuse.some((candidate) => candidate && candidate === value)) {
     throw new Error('Google handoff secret must be independent');
   }
-  return value;
+  return `Bearer ${value}`;
 }
 
 function normalizedTimestamp(value: unknown): string | null {
@@ -128,12 +133,12 @@ export async function handoffGoogleOidcToCore(
 ): Promise<GoogleCoreHandoffResult> {
   let response: Response;
   try {
-    response = await fetch(handoffTarget(), {
+    response = await fetch(googleOidcCoreTarget(), {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'X-Kinsun-BFF-Authorization': `Bearer ${handoffSecret()}`,
+        'X-Kinsun-BFF-Authorization': googleOidcCoreAuthorization(),
       },
       body: JSON.stringify({
         id_token: exchange.idToken,

@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { accessTokenCookieName, isTrustedRequestOrigin, normalizeAccessToken } from './auth-cookie';
+import { appSessionCookieName, normalizeBrowserAuthCredential } from './app-session-cookie';
+import { accessTokenCookieName, isTrustedRequestOrigin } from './auth-cookie';
 import { bffError } from './bff-response';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD']);
@@ -75,8 +76,11 @@ async function requestBody(request: NextRequest): Promise<ArrayBuffer | undefine
 }
 
 export async function proxyCoreRequest(request: NextRequest, path: string[]): Promise<Response> {
-  const accessToken = normalizeAccessToken(request.cookies.get(accessTokenCookieName())?.value);
-  if (!accessToken) {
+  const credential = normalizeBrowserAuthCredential(
+    request.cookies.get(appSessionCookieName())?.value,
+    request.cookies.get(accessTokenCookieName())?.value,
+  );
+  if (!credential) {
     return bffError(401, 'unauthorized', 'Authentication required', 'AUTHENTICATION_REQUIRED');
   }
 
@@ -97,7 +101,7 @@ export async function proxyCoreRequest(request: NextRequest, path: string[]): Pr
   try {
     const upstream = await fetch(target, {
       method: request.method,
-      headers: requestHeaders(request, accessToken),
+      headers: requestHeaders(request, credential),
       body,
       cache: 'no-store',
       redirect: 'manual',

@@ -61,40 +61,57 @@
 
 ### Authentication
 
-Core 已實作 Cognito JWT verifier，且以兩條明確分離的路徑使用：
+Core 已實作 Cognito JWT verifier與 gate-controlled Core App Session authenticator：
 
-- 一般 protected endpoint 只接受 Cognito Access Token，驗證 RS256／JWKS、issuer、expiry、
-  `token_use=access` 與 `client_id`，再以 live Core DB 解析 actor、tenant 與 role；JWT claim
-  不直接授權 elder scope。
+- 一般 protected endpoint 在 migration gate 開啟時以 token prefix 嚴格分流。`ks1_` 只走 Core-owned
+  opaque App Session；其他 token 只在 Cognito gate 仍開啟時走 Cognito Access Token verifier。任何
+  App Session 驗證失敗都不會 downgrade。兩條路徑都以 live Core DB 解析 actor、tenant 與 role；
+  Cookie 或 JWT claim 不直接授權 elder scope。
 - `POST /api/v1/onboarding/resolve` 只接受 Cognito ID Token，驗證 audience、
   `token_use=id` 與 verified email，再依 ELDER／FAMILY intent 建立或兌換正式 Core state。
   FAMILY intent 沒有有效一次性邀請碼時不會取得任何 elder access。
-- Browser 透過 Next.js BFF 的 HttpOnly Cookie 傳遞 Access Token；OAuth callback 使用
-  Authorization Code + PKCE，ID Token 只在 callback server-side 呼叫 onboarding resolver，
-  不寫入 browser cookie。
+- Direct Google flow 使用 BFF-owned Authorization Code + PKCE、state、nonce 與 signed transaction
+  Cookie；Core 會獨立重驗 Google ID Token。既有 identity 直接核發 App Session，未知 ELDER／FAMILY
+  identity 則只核發短效 pending credential，經明確確認／邀請兌換後才建立 Core state。Google access／
+  refresh token 與 ID Token 都不寫入 browser Cookie。
+- Direct LINE flow 使用相同的 provider-neutral handoff／pending onboarding／App Session 邊界，但有獨立
+  transaction 與 BFF-to-Core secret。BFF 使用 Authorization Code + PKCE、state、nonce；Core 再透過
+  LINE 官方 verify endpoint 驗證 ID Token、issuer、audience、expiry、nonce 與 subject。LINE email
+  為 optional，且不會用來自動連結既有 Actor；暫時 access token 在 callback 結束時 best-effort revoke。
+- Browser transition 期間使用分離的 Cognito Access Token Cookie 與 App Session Cookie；Core App Session
+  登出會先 server-side revoke，成功後 BFF 才清 Cookie。Direct Google、LINE 與 App Session gates 預設關閉。
 - Development 仍只有在 `FAKE_AUTH_ENABLED=true` 時使用明確 fake actor；Cognito 關閉或
   設定不完整時 fail closed。
 
-目前 contract 不代表 staging Cognito domain、Google provider secret、callback URL 或正式
-Refresh Token rotation 已部署／驗證；這些仍須由環境設定與部署證據確認。
+目前 contract 包含 direct Google／LINE handoff、pending onboarding 與 App Session logout 的已實作邊界，
+但不代表 staging provider secret、callback URL、既有 Cognito Actor migration／explicit linking 或 browser
+E2E 已部署驗證；這些仍須由環境設定與部署證據確認。Cognito refresh-token rotation 也仍不在本契約內。
 
-### LINE Login federation 與 Cognito 帳號連結
+### LINE Login 與帳號連結
 
-Next.js BFF 已加入預設關閉的 LINE Login 應用層流程。一般 LINE sign-in 仍經 Cognito Hosted UI，
-callback 只使用 Access Token 呼叫 Core `GET /api/v1/me` 確認既有 `cognito_sub → Actor`，不呼叫
-onboarding resolver；因此未連結的 LINE 身分不能建立 Actor、取得 tenant role 或合併帳號。
+Next.js BFF 與 Core 已加入預設關閉的 direct LINE Login 應用層流程。一般 LINE sign-in 不必經
+Cognito Hosted UI；既有 active LINE identity 會取得 Core-owned App Session，未知 ELDER identity 可經
+明確確認建立 Core state，未知 FAMILY identity 仍須兌換有效 Family Invitation，未知 STAFF 一律拒絕。
+相同 verified email 只會觸發衝突檢查，不會自動合併或連結既有 Actor。
 
-新增 LINE 登入方式只能由已登入且具有已驗證 Email 的 Google Cognito user 發起。流程使用獨立
+舊的 Cognito 帳號連結流程仍只允許由已登入且具有已驗證 Email 的 Google Cognito user 發起。它使用獨立
 短效 HttpOnly signed transaction、state、nonce 與 PKCE S256；transaction 只保存發起者的
 domain-separated HMAC fingerprint，不保存 raw Cognito username、LINE subject 或 Email。
 callback 會重新確認登入目的地未變更、LINE verified Email 與既有 recovery Email 相符，再呼叫
 `AdminLinkProviderForUser`。LINE token 不保存、不記錄，流程結束時 best-effort revoke；subject
 已屬於其他 Cognito user、登入帳號中途切換或資料不一致時一律拒絕，不做 Email-based merge。
 
-`LINE_LOGIN_ENABLED=false` 是預設值。這次沒有加入或宣告任何 AWS/CDK、Cognito OIDC provider、
-IAM grant 或 hosting deployment；啟用前仍需依最終平台完成 provider、兩個固定 callback、runtime
-permission、Email scope 與 live sign-in 驗證。若之後改用非 AWS identity provider，必須替換目前
-Cognito-specific adapter 並重新驗證帳號唯一性與 fail-closed 規則。
+`LINE_DIRECT_OIDC_ENABLED=false`、`LINE_OIDC_HANDOFF_ENABLED=false` 是 direct flow 預設值；舊流程的
+`LINE_LOGIN_ENABLED=false` 也維持關閉。這次沒有加入或宣告 hosting deployment；啟用 direct flow 前
+仍需設定 LINE Login Channel ID／secret、固定 callback、獨立 transaction／handoff／identity secrets、
+必要 scope 與 live sign-in 驗證。若要讓同一 Actor 新增 LINE 登入方式，仍必須完成同時驗證兩個
+Provider 的 Core-native explicit linking，不得以 email 取代。
+
+Core-native explicit linking 現包含 App Session 綁定的 LINE 重新驗證、linked-method status、direct
+link 與 bounded empty-account consolidation。來源 Actor 只要存在 onboarding 骨架以外的任何正式
+domain row，就只建立 `PENDING_REVIEW` 證據並回 `MANUAL_REVIEW_REQUIRED`，不自動搬移資料。空帳號
+確認會撤銷兩邊舊 Session，保留歷史 identity／Session 外鍵，另在主要 Actor 建立新 LINE identity；
+完整雙邊資料 merge tool、人工審核後台與 rollback UI 仍未實作。
 
 LINE Login Channel secret、LINE Messaging Channel secret、LINE identity HMAC secret、一般 OAuth
 transaction secret 與 LINE linking transaction secret 必須彼此獨立。LINE Login identity 與下節

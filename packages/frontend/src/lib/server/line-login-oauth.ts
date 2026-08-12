@@ -8,6 +8,7 @@ const LINE_REVOKE_ENDPOINT = 'https://api.line.me/oauth2/v2.1/revoke';
 const LINE_ISSUER = 'https://access.line.me';
 const HTTP_TIMEOUT_MS = 10_000;
 const MAX_TOKEN_LENGTH = 8_192;
+const MAX_RESPONSE_BYTES = 64 * 1024;
 
 export interface LineLoginOAuthConfig {
   callbackUrl: URL;
@@ -20,8 +21,21 @@ export interface VerifiedLineLoginIdentity {
   subject: string;
 }
 
+export interface VerifiedLineOidcIdentity {
+  displayName: string | null;
+  email: string | null;
+  subject: string;
+}
+
 interface LineLoginTokenSet {
   accessToken: string;
+  idToken: string;
+}
+
+interface LinePkceTransaction {
+  codeVerifier: string;
+  nonce: string;
+  state: string;
 }
 
 function safeAbsoluteUrl(rawValue: string | undefined, name: string): URL {
@@ -67,16 +81,37 @@ export function lineLoginEnabled(): boolean {
   return process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
 }
 
-export function getLineLoginOAuthConfig(): LineLoginOAuthConfig {
-  if (!lineLoginEnabled()) throw new Error('LINE Login is disabled');
+export function lineDirectOidcEnabled(): boolean {
+  return process.env.LINE_DIRECT_OIDC_ENABLED?.trim().toLowerCase() === 'true';
+}
+
+export function getLineLoginOAuthConfig(
+  purpose: 'link' | 'login' | 'direct-link' = 'link',
+): LineLoginOAuthConfig {
+  if (purpose === 'link' ? !lineLoginEnabled() : !lineDirectOidcEnabled()) {
+    throw new Error('LINE Login is disabled');
+  }
   const callbackUrl = safeAbsoluteUrl(
-    process.env.LINE_LOGIN_LINK_CALLBACK_URL,
-    'LINE_LOGIN_LINK_CALLBACK_URL',
+    purpose === 'login'
+      ? process.env.LINE_OIDC_CALLBACK_URL
+      : purpose === 'direct-link'
+        ? process.env.LINE_ACCOUNT_LINK_CALLBACK_URL
+        : process.env.LINE_LOGIN_LINK_CALLBACK_URL,
+    purpose === 'login'
+      ? 'LINE_OIDC_CALLBACK_URL'
+      : purpose === 'direct-link'
+        ? 'LINE_ACCOUNT_LINK_CALLBACK_URL'
+        : 'LINE_LOGIN_LINK_CALLBACK_URL',
   );
   const frontendOrigin = safeAbsoluteUrl(process.env.FRONTEND_ORIGIN, 'FRONTEND_ORIGIN');
   if (
     callbackUrl.origin !== frontendOrigin.origin ||
-    callbackUrl.pathname !== '/backend/auth/identities/line/callback' ||
+    callbackUrl.pathname !==
+      (purpose === 'login'
+        ? '/backend/auth/line/callback'
+        : purpose === 'direct-link'
+          ? '/backend/auth/identities/line/callback'
+          : '/backend/auth/identities/line/callback') ||
     callbackUrl.search ||
     callbackUrl.hash
   ) {
@@ -87,7 +122,7 @@ export function getLineLoginOAuthConfig(): LineLoginOAuthConfig {
 
 export function buildLineLoginLinkAuthorizationUrl(
   config: LineLoginOAuthConfig,
-  transaction: LineLoginLinkTransaction,
+  transaction: LinePkceTransaction,
 ): URL {
   const target = new URL(LINE_AUTHORIZATION_ENDPOINT);
   target.searchParams.set('response_type', 'code');
@@ -111,11 +146,11 @@ function normalizedEmail(value: unknown): string | null {
   return email;
 }
 
-export async function exchangeAndVerifyLineLoginCode(
+async function exchangeAndVerifyLineOidcCode(
   config: LineLoginOAuthConfig,
   code: string,
-  transaction: LineLoginLinkTransaction,
-): Promise<{ identity: VerifiedLineLoginIdentity; tokenSet: LineLoginTokenSet }> {
+  transaction: LinePkceTransaction,
+): Promise<{ identity: VerifiedLineOidcIdentity; tokenSet: LineLoginTokenSet }> {
   if (!code || code.length > 4_096 || /\s/.test(code)) {
     throw new Error('Invalid LINE authorization code');
   }
@@ -135,7 +170,20 @@ export async function exchangeAndVerifyLineLoginCode(
     signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
   });
   if (!tokenResponse.ok) throw new Error('LINE token exchange failed');
-  const tokenBody = (await tokenResponse.json().catch(() => null)) as {
+  const rawTokenBody = await tokenResponse.text();
+  if (Buffer.byteLength(rawTokenBody, 'utf8') > MAX_RESPONSE_BYTES) {
+    throw new Error('Invalid LINE token response');
+  }
+  const tokenBody = (() => {
+    try {
+      return JSON.parse(rawTokenBody) as {
+        access_token?: unknown;
+        id_token?: unknown;
+      };
+    } catch {
+      return null;
+    }
+  })() as {
     access_token?: unknown;
     id_token?: unknown;
   } | null;
@@ -170,15 +218,38 @@ export async function exchangeAndVerifyLineLoginCode(
       signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
     });
     if (!verifyResponse.ok) throw new Error('LINE ID token verification failed');
-    const verified = (await verifyResponse.json().catch(() => null)) as {
+    const rawVerified = await verifyResponse.text();
+    if (Buffer.byteLength(rawVerified, 'utf8') > MAX_RESPONSE_BYTES) {
+      throw new Error('Invalid LINE verification response');
+    }
+    const verified = (() => {
+      try {
+        return JSON.parse(rawVerified) as {
+          aud?: unknown;
+          email?: unknown;
+          exp?: unknown;
+          iss?: unknown;
+          name?: unknown;
+          nonce?: unknown;
+          sub?: unknown;
+        };
+      } catch {
+        return null;
+      }
+    })() as {
       aud?: unknown;
       email?: unknown;
       exp?: unknown;
       iss?: unknown;
+      name?: unknown;
       nonce?: unknown;
       sub?: unknown;
     } | null;
     const email = normalizedEmail(verified?.email);
+    const displayName =
+      typeof verified?.name === 'string' && verified.name.trim().length <= 120
+        ? verified.name.trim() || null
+        : null;
     if (
       !verified ||
       verified.iss !== LINE_ISSUER ||
@@ -190,19 +261,42 @@ export async function exchangeAndVerifyLineLoginCode(
       typeof verified.sub !== 'string' ||
       !verified.sub ||
       verified.sub.length > 255 ||
-      /\s/.test(verified.sub) ||
-      !email
+      /\s/.test(verified.sub)
     ) {
       throw new Error('Invalid verified LINE identity');
     }
     return {
-      identity: { email, subject: verified.sub },
-      tokenSet: { accessToken: temporaryAccessToken },
+      identity: { displayName, email, subject: verified.sub },
+      tokenSet: { accessToken: temporaryAccessToken, idToken: tokenBody.id_token },
     };
   } catch (error) {
     await revokeLineLoginToken(config, temporaryAccessToken);
     throw error;
   }
+}
+
+export async function exchangeLineOidcAuthorizationCode(
+  config: LineLoginOAuthConfig,
+  code: string,
+  transaction: LinePkceTransaction,
+): Promise<{ identity: VerifiedLineOidcIdentity; tokenSet: LineLoginTokenSet }> {
+  return exchangeAndVerifyLineOidcCode(config, code, transaction);
+}
+
+export async function exchangeAndVerifyLineLoginCode(
+  config: LineLoginOAuthConfig,
+  code: string,
+  transaction: LineLoginLinkTransaction,
+): Promise<{ identity: VerifiedLineLoginIdentity; tokenSet: LineLoginTokenSet }> {
+  const result = await exchangeAndVerifyLineOidcCode(config, code, transaction);
+  if (!result.identity.email) {
+    await revokeLineLoginToken(config, result.tokenSet.accessToken);
+    throw new Error('LINE email is unavailable');
+  }
+  return {
+    identity: { email: result.identity.email, subject: result.identity.subject },
+    tokenSet: result.tokenSet,
+  };
 }
 
 export async function revokeLineLoginToken(

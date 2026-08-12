@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "The raw Google subject or an unversioned token must not replace the opaque one-time kp1 credential.",
+  "data": {
+    "pending_token": "raw-google-subject",
+    "display_name": "Synthetic Elder"
+  }
+}

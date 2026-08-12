@@ -1,0 +1,6 @@
+{
+  "data": {
+    "merge_token": "U1234567890abcdef"
+  },
+  "_why_invalid": "Merge confirmation requires the opaque one-time credential, never a raw LINE subject."
+}

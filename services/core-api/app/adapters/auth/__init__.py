@@ -1,5 +1,6 @@
 """Authentication provider adapter boundaries."""
 
+from app.adapters.auth.app_session import DatabaseAppSessionAuthenticator
 from app.adapters.auth.cognito import (
     CognitoActorContextResolver,
     CognitoAuthenticator,
@@ -17,6 +18,7 @@ from app.adapters.auth.google_oidc import (
 )
 
 __all__ = [
+    "DatabaseAppSessionAuthenticator",
     "CognitoActorContextResolver",
     "CognitoAuthenticator",
     "CognitoJwksCache",

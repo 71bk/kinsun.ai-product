@@ -3,7 +3,7 @@ import { Landing } from '@/components/landing/Landing';
 import { PublicShell } from '@/components/public/PublicShell';
 import { VoiceHomeClient } from '@/components/voice/VoiceHomeClient';
 import { LOCALE_COOKIE, parseLocaleCookie } from '@/lib/i18n/locale-cookie';
-import { accessTokenCookieName } from '@/lib/server/auth-cookie';
+import { browserAuthCookieNames } from '@/lib/server/app-session-cookie';
 
 /**
  * Forks on session-cookie presence only — never an authorization signal, Core
@@ -13,7 +13,7 @@ import { accessTokenCookieName } from '@/lib/server/auth-cookie';
  */
 export default async function HomePage() {
   const cookieStore = await cookies();
-  const signedIn = Boolean(cookieStore.get(accessTokenCookieName())?.value);
+  const signedIn = browserAuthCookieNames().some((name) => Boolean(cookieStore.get(name)?.value));
 
   if (signedIn) {
     return <VoiceHomeClient />;

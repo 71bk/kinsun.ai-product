@@ -73,7 +73,7 @@ export function lineLoginLinkDestinationMatches(
   }
 }
 
-export function lineLoginCodeChallenge(transaction: LineLoginLinkTransaction): string {
+export function lineLoginCodeChallenge(transaction: { codeVerifier: string }): string {
   return codeChallenge(transaction.codeVerifier);
 }
 

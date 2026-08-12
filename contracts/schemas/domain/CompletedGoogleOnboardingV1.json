@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CompletedGoogleOnboardingV1.json",
+  "title": "CompletedGoogleOnboardingV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "intent",
+    "actor_id",
+    "tenant_id",
+    "elder_id",
+    "session_token",
+    "idle_expires_at",
+    "absolute_expires_at"
+  ],
+  "properties": {
+    "status": { "type": "string", "enum": ["ACTIVE", "REDEEMED"] },
+    "intent": { "type": "string", "enum": ["ELDER", "FAMILY"] },
+    "actor_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "elder_id": { "type": "string", "format": "uuid" },
+    "session_token": {
+      "type": "string",
+      "pattern": "^ks1_[A-Za-z0-9_-]{43}$"
+    },
+    "idle_expires_at": { "type": "string", "format": "date-time" },
+    "absolute_expires_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "intent": { "const": "ELDER" } }, "required": ["intent"] },
+      "then": { "properties": { "status": { "const": "ACTIVE" } } }
+    },
+    {
+      "if": { "properties": { "intent": { "const": "FAMILY" } }, "required": ["intent"] },
+      "then": { "properties": { "status": { "const": "REDEEMED" } } }
+    }
+  ]
+}

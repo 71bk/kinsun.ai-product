@@ -6,6 +6,7 @@ type SignInMethodStatus = {
   googleLinked: boolean;
   lineLinked: boolean;
   lineLoginEnabled: boolean;
+  recentlyAuthenticated: boolean;
 };
 
 export function SignInMethodsClient() {
@@ -26,7 +27,8 @@ export function SignInMethodsClient() {
         if (
           typeof payload.data?.googleLinked !== 'boolean' ||
           typeof payload.data.lineLinked !== 'boolean' ||
-          typeof payload.data.lineLoginEnabled !== 'boolean'
+          typeof payload.data.lineLoginEnabled !== 'boolean' ||
+          typeof payload.data.recentlyAuthenticated !== 'boolean'
         ) {
           throw new Error('UNAVAILABLE');
         }
@@ -74,15 +76,17 @@ export function SignInMethodsClient() {
         {status.lineLoginEnabled && !status.lineLinked && (
           <form action="/backend/auth/identities/line/start" method="post">
             <button
-              disabled={!status.googleLinked}
+              disabled={!status.googleLinked || !status.recentlyAuthenticated}
               style={{
-                background: status.googleLinked
-                  ? 'var(--color-accent-text)'
-                  : 'var(--color-muted-foreground)',
+                background:
+                  status.googleLinked && status.recentlyAuthenticated
+                    ? 'var(--color-accent-text)'
+                    : 'var(--color-muted-foreground)',
                 border: 0,
                 borderRadius: 8,
                 color: 'var(--color-on-accent)',
-                cursor: status.googleLinked ? 'pointer' : 'not-allowed',
+                cursor:
+                  status.googleLinked && status.recentlyAuthenticated ? 'pointer' : 'not-allowed',
                 fontSize: 17,
                 padding: '12px 16px',
               }}
@@ -95,6 +99,10 @@ export function SignInMethodsClient() {
         {status.lineLoginEnabled && !status.googleLinked && !status.lineLinked && (
           <p>請先使用已連結的 Google 帳號登入，再新增 LINE Login。</p>
         )}
+        {status.lineLoginEnabled &&
+          status.googleLinked &&
+          !status.lineLinked &&
+          !status.recentlyAuthenticated && <p>請先重新使用 Google 登入，再新增 LINE Login。</p>}
       </section>
     </div>
   );

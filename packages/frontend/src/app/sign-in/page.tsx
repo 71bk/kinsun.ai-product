@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ClearBrowserSessionState } from '@/components/ClearBrowserSessionState';
-import { accessTokenCookieName } from '@/lib/server/auth-cookie';
+import { browserAuthCookieNames } from '@/lib/server/app-session-cookie';
 
 /* The role chooser is the one page whose audience is unknown — an elder, a
    family member and a care worker all land here before anything is known about
@@ -27,7 +27,9 @@ export default async function SignInPage({
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
   const [{ error }, cookieStore] = await Promise.all([searchParams, cookies()]);
-  const sessionCookiePresent = Boolean(cookieStore.get(accessTokenCookieName())?.value);
+  const sessionCookiePresent = browserAuthCookieNames().some((name) =>
+    Boolean(cookieStore.get(name)?.value),
+  );
   return (
     <main style={{ margin: '0 auto', maxWidth: 680, padding: 'var(--space-6)' }}>
       {/* Cookie presence is only a cleanup guard, never authorization. When a

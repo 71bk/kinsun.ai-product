@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/LineIdentityMethodStatusV1.json",
+  "title": "LineIdentityMethodStatusV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["google_linked", "line_linked", "recently_authenticated"],
+  "properties": {
+    "google_linked": { "type": "boolean" },
+    "line_linked": { "type": "boolean" },
+    "recently_authenticated": { "type": "boolean" }
+  }
+}

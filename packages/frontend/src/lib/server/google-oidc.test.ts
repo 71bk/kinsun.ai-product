@@ -6,6 +6,13 @@ import {
 } from './google-oidc';
 import { GoogleOidcCallbackError, validateGoogleOidcCallback } from './google-oidc-callback';
 import {
+  createGooglePendingOnboarding,
+  googlePendingOnboardingCookieName,
+  googlePendingOnboardingCookieOptions,
+  parseGooglePendingOnboarding,
+  serializeGooglePendingOnboarding,
+} from './google-pending-onboarding';
+import {
   createGoogleOidcTransaction,
   googleOidcStateMatches,
   googleOidcTransactionCookieName,
@@ -95,6 +102,57 @@ describe('direct Google OIDC BFF transaction', () => {
     vi.stubEnv('GOOGLE_OIDC_TRANSACTION_SECRET', clientSecret);
     const transaction = createGoogleOidcTransaction('/onboarding/resolve', 'ELDER');
     expect(() => serializeGoogleOidcTransaction(transaction)).toThrow('must be independent');
+  });
+});
+
+describe('pending Google onboarding cookie', () => {
+  it('round-trips a bounded signed one-time pending credential', () => {
+    configureGoogleOidc();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-12T00:00:00Z'));
+    const transaction = createGoogleOidcTransaction(
+      '/onboarding/resolve',
+      'FAMILY',
+      'ABCD-2345-EFGH-6789',
+    );
+    const pending = createGooglePendingOnboarding(
+      {
+        status: 'PENDING',
+        pendingToken: `kp1_${'a'.repeat(43)}`,
+        expiresAt: '2026-08-12T00:10:00.000Z',
+      },
+      transaction,
+    );
+    const serialized = serializeGooglePendingOnboarding(pending);
+
+    expect(parseGooglePendingOnboarding(serialized)).toEqual(pending);
+    expect(parseGooglePendingOnboarding(`${serialized}tampered`)).toBeNull();
+  });
+
+  it('expires and uses a distinct host-only production cookie name', () => {
+    configureGoogleOidc();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-12T00:00:00Z'));
+    const pending = createGooglePendingOnboarding(
+      {
+        status: 'PENDING',
+        pendingToken: `kp1_${'a'.repeat(43)}`,
+        expiresAt: '2026-08-12T00:10:00.000Z',
+      },
+      createGoogleOidcTransaction('/onboarding/resolve', 'ELDER'),
+    );
+    const serialized = serializeGooglePendingOnboarding(pending);
+
+    vi.advanceTimersByTime(10 * 60 * 1000 + 1);
+    expect(parseGooglePendingOnboarding(serialized)).toBeNull();
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(googlePendingOnboardingCookieName()).toBe('__Host-kinsun_google_pending_onboarding');
+    expect(googlePendingOnboardingCookieOptions()).toMatchObject({
+      httpOnly: true,
+      maxAge: 600,
+      secure: true,
+      sameSite: 'lax',
+    });
   });
 });
 

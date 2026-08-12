@@ -1,0 +1,7 @@
+{
+  "data": {
+    "id_token": "synthetic.header.signature",
+    "expected_nonce": "synthetic-nonce-value-at-least-32-characters",
+    "intent": "ELDER"
+  }
+}

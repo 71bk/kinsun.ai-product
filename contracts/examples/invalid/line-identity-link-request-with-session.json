@@ -1,0 +1,8 @@
+{
+  "data": {
+    "id_token": "synthetic.header.signature",
+    "expected_nonce": "synthetic_nonce_value_at_least_32_chars",
+    "session_token": "ks1_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  "_why_invalid": "The browser App Session belongs only in the Authorization header and must never enter the identity proof body."
+}

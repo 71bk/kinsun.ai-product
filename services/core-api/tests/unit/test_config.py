@@ -282,6 +282,68 @@ class TestValidation:
                 GOOGLE_OIDC_HANDOFF_SECRET=shared,
             )
 
+    def test_google_handoff_requires_app_session_auth_gate(self) -> None:
+        with pytest.raises(ValidationError, match="APP_SESSION_AUTH_ENABLED"):
+            _make_settings(
+                GOOGLE_OIDC_HANDOFF_ENABLED="true",
+                GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
+                GOOGLE_IDENTITY_HMAC_SECRET=("google-identity-secret-material-at-least-32-bytes"),
+                GOOGLE_OIDC_HANDOFF_SECRET=("google-handoff-secret-material-at-least-32-bytes"),
+                FAMILY_INVITATION_HMAC_SECRET=(
+                    "test-family-invitation-secret-material-at-least-32-bytes"
+                ),
+            )
+
+    def test_enabled_google_handoff_requires_independent_purpose_secrets(self) -> None:
+        shared = "shared-google-and-family-secret-material-at-least-32-bytes"
+        with pytest.raises(ValidationError, match="must be independent"):
+            _make_settings(
+                APP_SESSION_AUTH_ENABLED="true",
+                GOOGLE_OIDC_HANDOFF_ENABLED="true",
+                GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
+                GOOGLE_IDENTITY_HMAC_SECRET=shared,
+                GOOGLE_OIDC_HANDOFF_SECRET=("google-handoff-secret-material-at-least-32-bytes"),
+                FAMILY_INVITATION_HMAC_SECRET=shared,
+            )
+
+    def test_enabled_google_handoff_accepts_complete_independent_configuration(self) -> None:
+        settings = _make_settings(
+            APP_SESSION_AUTH_ENABLED="true",
+            GOOGLE_OIDC_HANDOFF_ENABLED="true",
+            GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
+            GOOGLE_IDENTITY_HMAC_SECRET=("google-identity-secret-material-at-least-32-bytes"),
+            GOOGLE_OIDC_HANDOFF_SECRET=("google-handoff-secret-material-at-least-32-bytes"),
+            FAMILY_INVITATION_HMAC_SECRET=(
+                "test-family-invitation-secret-material-at-least-32-bytes"
+            ),
+        )
+
+        assert settings.app_session_auth_enabled is True
+        assert settings.google_oidc_handoff_enabled is True
+
+    def test_enabled_line_handoff_requires_app_session_auth(self) -> None:
+        with pytest.raises(ValidationError, match="APP_SESSION_AUTH_ENABLED"):
+            _make_settings(
+                LINE_OIDC_HANDOFF_ENABLED="true",
+                LINE_LOGIN_CHANNEL_ID="1234567890",
+                LINE_IDENTITY_HMAC_SECRET=("line-identity-secret-material-at-least-32-bytes"),
+                LINE_OIDC_HANDOFF_SECRET=("line-handoff-secret-material-at-least-32-bytes"),
+                FAMILY_INVITATION_HMAC_SECRET=("line-family-secret-material-at-least-32-bytes"),
+            )
+
+    def test_enabled_line_handoff_accepts_complete_independent_configuration(self) -> None:
+        settings = _make_settings(
+            APP_SESSION_AUTH_ENABLED="true",
+            LINE_OIDC_HANDOFF_ENABLED="true",
+            LINE_LOGIN_CHANNEL_ID="1234567890",
+            LINE_IDENTITY_HMAC_SECRET=("line-identity-secret-material-at-least-32-bytes"),
+            LINE_OIDC_HANDOFF_SECRET=("line-handoff-secret-material-at-least-32-bytes"),
+            FAMILY_INVITATION_HMAC_SECRET=("line-family-secret-material-at-least-32-bytes"),
+        )
+
+        assert settings.line_oidc_handoff_enabled is True
+        assert settings.line_login_channel_id == "1234567890"
+
     def test_enabled_voice_ticket_requires_strong_secret(self) -> None:
         with pytest.raises(ValidationError, match="VOICE_TICKET_HMAC_SECRET"):
             _make_settings(
@@ -367,6 +429,13 @@ class TestSecretRedaction:
         assert dumped["google_oidc_handoff_secret"] == "***"
         assert identity_secret not in repr(settings)
         assert handoff_secret not in repr(settings)
+
+    def test_line_handoff_secret_is_redacted(self) -> None:
+        secret = "line-handoff-secret-material-at-least-32-bytes"
+        settings = _make_settings(LINE_OIDC_HANDOFF_SECRET=secret)
+
+        assert settings.model_dump()["line_oidc_handoff_secret"] == "***"
+        assert secret not in repr(settings)
 
 
 # ─── Singleton pattern ───────────────────────────────────────────────────────

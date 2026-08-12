@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -49,3 +50,24 @@ class PendingGoogleOidcHandoffResponse(BaseModel):
     status: Literal["PENDING"] = "PENDING"
     pending_token: str
     expires_at: datetime
+
+
+class CompleteGoogleOnboardingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    pending_token: str = Field(pattern=r"^kp1_[A-Za-z0-9_-]{43}$")
+    invitation_code: str | None = Field(default=None, min_length=16, max_length=24)
+    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+
+
+class CompletedGoogleOnboardingResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ACTIVE", "REDEEMED"]
+    intent: Literal["ELDER", "FAMILY"]
+    actor_id: UUID
+    tenant_id: UUID
+    elder_id: UUID
+    session_token: str
+    idle_expires_at: datetime
+    absolute_expires_at: datetime

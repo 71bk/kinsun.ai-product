@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CompleteGoogleOnboardingRequestV1.json",
+  "title": "CompleteGoogleOnboardingRequestV1",
+  "description": "Private BFF request consuming one pending Google identity after an explicit onboarding decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pending_token"],
+  "properties": {
+    "pending_token": {
+      "type": "string",
+      "pattern": "^kp1_[A-Za-z0-9_-]{43}$"
+    },
+    "invitation_code": {
+      "anyOf": [
+        { "type": "string", "minLength": 16, "maxLength": 24 },
+        { "type": "null" }
+      ],
+      "default": null
+    },
+    "display_name": {
+      "anyOf": [
+        { "type": "string", "minLength": 1, "maxLength": 120 },
+        { "type": "null" }
+      ],
+      "default": null
+    }
+  }
+}

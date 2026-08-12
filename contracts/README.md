@@ -8,7 +8,7 @@
 ```
 contracts/
 ├── openapi/
-│   ├── core-api.v1.yaml              OpenAPI 3.1，54 個已實作的 path
+│   ├── core-api.v1.yaml              OpenAPI 3.1，64 個已實作的 path
 │   └── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 endpoint
 ├── asyncapi/
 │   └── core-events.v1.yaml           AsyncAPI 3.x，Core Domain Event channel

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ConfirmLineAccountMergeRequestV1.json",
+  "title": "ConfirmLineAccountMergeRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["merge_token"],
+  "properties": {
+    "merge_token": { "type": "string", "pattern": "^km1_[A-Za-z0-9_-]{43}$" }
+  }
+}

@@ -13,6 +13,10 @@ import {
 import { exchangeAndVerifyLineLoginCode, getLineLoginOAuthConfig } from './line-login-oauth';
 import { CognitoIdentityError, linkLineLoginIdentity } from './cognito-identities';
 import {
+  googleOidcTransactionCookieName,
+  parseGoogleOidcTransaction,
+} from './google-oidc-transaction';
+import {
   createOAuthTransaction,
   oauthTransactionCookieName,
   parseOAuthTransaction,
@@ -63,6 +67,46 @@ afterEach(() => {
 });
 
 describe('Cognito OAuth transaction', () => {
+  it('routes Google to direct OIDC only when its explicit gate is enabled', async () => {
+    configureOAuth();
+    vi.stubEnv('GOOGLE_DIRECT_OIDC_ENABLED', 'true');
+    vi.stubEnv('GOOGLE_OIDC_CLIENT_ID', 'synthetic-google-web-client-id');
+    vi.stubEnv('GOOGLE_OIDC_CLIENT_SECRET', 'synthetic-google-client-secret');
+    vi.stubEnv(
+      'GOOGLE_OIDC_HANDOFF_SECRET',
+      'synthetic-independent-google-handoff-secret-32-bytes',
+    );
+    vi.stubEnv(
+      'GOOGLE_OIDC_TRANSACTION_SECRET',
+      'synthetic-independent-google-transaction-secret-32-bytes',
+    );
+
+    const response = await login(
+      request('/backend/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Origin: 'http://localhost:3000',
+        },
+        body: new URLSearchParams({
+          intent: 'ELDER',
+          provider: 'GOOGLE',
+          returnTo: '/onboarding/resolve',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(303);
+    expect(new URL(response.headers.get('location') ?? '').origin).toBe(
+      'https://accounts.google.com',
+    );
+    const transaction = parseGoogleOidcTransaction(
+      cookieValue(response, googleOidcTransactionCookieName()),
+    );
+    expect(transaction).toMatchObject({ intent: 'ELDER', returnTo: '/onboarding/resolve' });
+    expect(cookieValue(response, oauthTransactionCookieName())).toBeUndefined();
+  });
+
   it('only accepts a strict relative return path', () => {
     expect(strictRelativeReturnTo('/family')).toBe('/family');
     expect(strictRelativeReturnTo('/family?next=https://attacker.example')).toBeNull();
@@ -242,7 +286,7 @@ describe('Cognito OAuth BFF routes', () => {
     );
     expect(firstTransaction).not.toBeNull();
 
-    const logoutResponse = logout(
+    const logoutResponse = await logout(
       request('/backend/auth/logout', {
         method: 'POST',
         headers: { Origin: 'http://localhost:3000' },
@@ -509,9 +553,9 @@ describe('Cognito OAuth BFF routes', () => {
     );
   });
 
-  it('clears the local session before redirecting through Cognito logout', () => {
+  it('clears the local session before redirecting through Cognito logout', async () => {
     configureOAuth();
-    const response = logout(
+    const response = await logout(
       request('/backend/auth/logout', {
         method: 'POST',
         headers: { Origin: 'http://localhost:3000' },

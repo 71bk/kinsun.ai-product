@@ -26,8 +26,30 @@ sys.path.insert(0, str(REPO_ROOT / "services" / "core-api"))
 # deterministic even when the developer's local .env enables synthetic auth.
 os.environ["FAKE_AUTH_ENABLED"] = "false"
 # Live contract verification must never fetch Cognito JWKS or require a real
-# Google/Cognito token. These probes exercise the implemented fail-closed edge.
+# Google/LINE/Cognito token. These probes exercise the implemented fail-closed edge.
 os.environ["COGNITO_AUTH_ENABLED"] = "false"
+# Include the gated direct-OIDC/App-Session routes while keeping every live
+# probe synthetic and fail-closed before any provider network request.
+os.environ["APP_SESSION_AUTH_ENABLED"] = "true"
+os.environ["GOOGLE_OIDC_HANDOFF_ENABLED"] = "true"
+os.environ["GOOGLE_OIDC_CLIENT_ID"] = "live-contract-google-client-id"
+os.environ["GOOGLE_IDENTITY_HMAC_SECRET"] = (
+    "live-contract-google-identity-secret-material-32-bytes"
+)
+os.environ["GOOGLE_OIDC_HANDOFF_SECRET"] = (
+    "live-contract-google-handoff-secret-material-32-bytes"
+)
+os.environ["LINE_OIDC_HANDOFF_ENABLED"] = "true"
+os.environ["LINE_LOGIN_CHANNEL_ID"] = "1234567890"
+os.environ["LINE_IDENTITY_HMAC_SECRET"] = (
+    "live-contract-line-identity-secret-material-32-bytes"
+)
+os.environ["LINE_OIDC_HANDOFF_SECRET"] = (
+    "live-contract-line-handoff-secret-material-32-bytes"
+)
+os.environ["FAMILY_INVITATION_HMAC_SECRET"] = (
+    "live-contract-family-invitation-secret-material-32-bytes"
+)
 # Keep Voice Ticket dependencies deterministic while probing their unauthenticated
 # fail-closed edge; this synthetic secret is verifier-only and not a deployment credential.
 os.environ["VOICE_TICKET_ENABLED"] = "true"
@@ -304,6 +326,173 @@ async def main() -> int:
             print("ok    POST /api/v1/onboarding/resolve fails closed with 401")
         check(
             "POST /api/v1/onboarding/resolve 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/auth/logout",
+            headers={"Authorization": "Bearer not-an-app-session"},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/auth/logout returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST /api/v1/auth/logout rejects malformed session: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST /api/v1/auth/logout rejects malformed session with 401")
+        check(
+            "POST /api/v1/auth/logout 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/google/handoff",
+            json={
+                "id_token": "synthetic.header.signature",
+                "expected_nonce": "synthetic-nonce-value-at-least-32-characters",
+                "intent": "ELDER",
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/google/handoff returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST /api/v1/internal/auth/google/handoff fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST Google handoff fails closed with 401")
+        check(
+            "POST Google handoff 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/google/onboarding",
+            json={"pending_token": "kp1_" + "a" * 43, "display_name": "Synthetic"},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/google/onboarding returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST Google onboarding fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST Google onboarding fails closed with 401")
+        check(
+            "POST Google onboarding 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/line/handoff",
+            json={
+                "id_token": "synthetic.header.signature",
+                "expected_nonce": "synthetic-nonce-value-at-least-32-characters",
+                "intent": "ELDER",
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/line/handoff returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST LINE handoff fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST LINE handoff fails closed with 401")
+        check(
+            "POST LINE handoff 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/line/onboarding",
+            json={"pending_token": "kp1_" + "a" * 43, "display_name": "Synthetic"},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/line/onboarding returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST LINE onboarding fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST LINE onboarding fails closed with 401")
+        check(
+            "POST LINE onboarding 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.get("/api/v1/internal/auth/line/status")
+        if response.status_code != 401:
+            failures.append(
+                "GET /api/v1/internal/auth/line/status returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(f"FAIL  GET LINE identity status fails closed: {response.status_code}")
+        else:
+            print("ok    GET LINE identity status fails closed with 401")
+        check(
+            "GET LINE identity status 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/line/link",
+            json={
+                "id_token": "synthetic.header.signature",
+                "expected_nonce": "synthetic-nonce-value-at-least-32-characters",
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/line/link returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(f"FAIL  POST LINE identity link fails closed: {response.status_code}")
+        else:
+            print("ok    POST LINE identity link fails closed with 401")
+        check(
+            "POST LINE identity link 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/auth/line/merge/confirm",
+            json={"merge_token": "km1_" + "a" * 43},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/auth/line/merge/confirm returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(f"FAIL  POST LINE account merge fails closed: {response.status_code}")
+        else:
+            print("ok    POST LINE account merge fails closed with 401")
+        check(
+            "POST LINE account merge 401 body vs ErrorEnvelopeV1",
             response.json(),
             load("common/ErrorEnvelopeV1.json"),
         )

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/CompletedGoogleOnboardingEnvelopeV1.json",
+  "title": "CompletedGoogleOnboardingEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "meta"],
+  "properties": {
+    "data": { "$ref": "https://kinsun.ai/contracts/schemas/domain/CompletedGoogleOnboardingV1.json" },
+    "meta": { "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json" }
+  }
+}

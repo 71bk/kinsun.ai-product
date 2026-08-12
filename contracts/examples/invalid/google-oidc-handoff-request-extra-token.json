@@ -1,0 +1,9 @@
+{
+  "_why_invalid": "The handoff accepts only the Google ID token, expected nonce, and intent; a refresh token must never cross this boundary.",
+  "data": {
+    "id_token": "synthetic.header.signature",
+    "expected_nonce": "synthetic-nonce-value-at-least-32-characters",
+    "intent": "ELDER",
+    "refresh_token": "must-not-be-accepted"
+  }
+}

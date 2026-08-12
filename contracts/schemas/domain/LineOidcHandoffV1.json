@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/LineOidcHandoffV1.json",
+  "title": "LineOidcHandoffV1",
+  "description": "Either a Core App Session for a mapped LINE identity or a one-time pending onboarding credential.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "session_token", "idle_expires_at", "absolute_expires_at"],
+      "properties": {
+        "status": { "const": "AUTHENTICATED" },
+        "session_token": { "type": "string", "pattern": "^ks1_[A-Za-z0-9_-]{43}$" },
+        "idle_expires_at": { "type": "string", "format": "date-time" },
+        "absolute_expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "pending_token", "expires_at"],
+      "properties": {
+        "status": { "const": "PENDING" },
+        "pending_token": { "type": "string", "pattern": "^kp1_[A-Za-z0-9_-]{43}$" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  ]
+}

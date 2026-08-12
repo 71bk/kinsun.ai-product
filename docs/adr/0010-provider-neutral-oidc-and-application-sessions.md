@@ -1,6 +1,6 @@
 # ADR 0010：Provider-neutral OIDC 身分與 Core-owned Application Session
 
-- 狀態：Accepted for phased implementation；Phase 2A Session lifecycle、Phase 2B Google verifier 與 Phase 2C unbound BFF foundation 已完成，production cutover 尚未完成
+- 狀態：Accepted for phased implementation；Google／LINE direct OIDC 與 Core App Session application flow 已完成，production cutover 與 explicit cross-provider linking 尚未完成
 - 日期：2026-08-11
 - Owner：Project Owner
 - 相關：[ADR 0006](0006-frontend-stack-and-app-topology.md)、
@@ -170,13 +170,36 @@ authorization 與 PostgreSQL，直接 OIDC 的額外工作可控。
 - BFF code exchange 只回傳 nonce-correlated ID token 給未來 Core handoff；Google access／refresh token
   不保留、不進 Cookie、不進 log。BFF 的 nonce check 只做 transaction correlation，ID token 在 Core
   verifier 完成 signature／claim 驗證前仍不可信。
-- Phase 2D 已建立未掛載的 BFF-to-Core handoff helper／internal endpoint、`pending_external_identity`
-  短效交易、Google subject keyed digest 與 existing-identity App Session issuance。Core 只持久化 subject／
-  pending token digest；舊 pending token 在重發前先失效，停權或撤銷 identity fail closed，未知 staff
-  identity 不得自行建立 pending onboarding。verified email 只供短效 onboarding 決策，永不自動 link。
-- Phase 2D 仍未包含公開 Google start／callback route、pending identity consumption、LINE verifier、公開
-  App Session API、Session Cookie adapter 或 runtime authenticator；internal router 也尚未掛入 `app.main`。
-  現行 Cognito 路徑仍是唯一 real auth runtime。
+- Phase 2D application flow 已完成並由三個明確 gate 控制：BFF 的 `GOOGLE_DIRECT_OIDC_ENABLED`、Core
+  的 `GOOGLE_OIDC_HANDOFF_ENABLED` 與 `APP_SESSION_AUTH_ENABLED`。Google start 共用
+  `/backend/auth/login`，direct callback 固定為 `/backend/auth/google/callback`；BFF-to-Core handoff、
+  `pending_external_identity` 短效交易與 router 均已掛載在 gate 後。
+- Existing active Google identity 會取得 Core-owned App Session；未知 ELDER／FAMILY identity 必須先到
+  明確確認頁，並在單一 database transaction 內完成 pending token consumption、Actor／Tenant／Membership／
+  ExternalIdentity 建立、ELDER onboarding 或 FAMILY invitation redemption，再核發第一個 App Session。
+  未知 STAFF 不得自行註冊；verified email 只供衝突與 invitation recipient 檢查，永不自動 link 舊 Actor。
+- BFF 使用獨立 `__Host-kinsun_session`（development 為 `kinsun_session`）HttpOnly Cookie；Core runtime
+  以 `ks1_` 前綴嚴格分流 App Session 與過渡期 Cognito token，App Session 驗證失敗後不會 downgrade。
+  登出先呼叫 `POST /api/v1/auth/logout` 撤銷 server-side Session，成功後才清 Cookie。
+- 三個 gate 預設仍為 false，因此目前部署設定不會自動切離 Cognito。正式啟用前仍須完成既有 Cognito
+  Actor 的明確 Google identity linking／provisioning、Google console callback 與 secret 注入，以及 staging
+  browser E2E；不得用相同 email 取代上述 migration。
+- LINE direct application flow 使用獨立的 `LINE_DIRECT_OIDC_ENABLED`、`LINE_OIDC_HANDOFF_ENABLED` 與
+  共用的 `APP_SESSION_AUTH_ENABLED` gate。BFF 固定使用 LINE Login v2.1 Authorization／Token endpoint、
+  PKCE、state、nonce 與 signed transaction；Core 透過 LINE 官方 verify endpoint 獨立驗證 ID Token。
+  既有 LINE identity、ELDER pending onboarding、FAMILY invitation redemption 與 STAFF fail-closed 規則
+  均共用 provider-neutral service；LINE email 維持 optional，且不作為自動連結依據。
+- LINE direct flow 的 Channel ID／secret、callback 與三組獨立 secrets 尚未注入目前 runtime，因此 gate
+  維持 false。Direct sign-in 不等於 cross-provider account linking；同一 Actor 新增 LINE identity 仍須
+  完成同時驗證兩個 Provider 的 Core-native explicit linking flow。
+- Core-native Google→LINE explicit linking 現已實作：發起者必須持有 recent Core App Session，callback
+  交易綁定該 Session 的不可逆 digest，Core 再獨立驗證新的 LINE ID Token。未綁 LINE subject 可直接
+  加入目前 Actor；若 subject 已屬另一 Actor，絕不依 email 搬移或合併。
+- 已存在的兩個 Actor 只在來源是單一 LINE identity、單一 ELDER membership、單一 HOUSEHOLD／Elder
+  onboarding 骨架，且沒有 Consent、關係、事件、報告、記憶、對話、邀請或其他正式 domain rows 時，
+  才可經第二次明確確認完成 consolidation。確認時重新檢查資料、撤銷兩邊所有 Session、撤銷來源
+  identity、停用來源 Actor／Elder／Membership／Tenant，並在主要 Actor 建立新的 LINE identity 與
+  Session；歷史 identity／Session 不改 actor_id。任何正式資料一律回 `MANUAL_REVIEW_REQUIRED`。
 
 ## 必要驗證
 

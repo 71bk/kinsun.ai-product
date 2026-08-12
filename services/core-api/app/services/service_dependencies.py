@@ -11,6 +11,7 @@ from app.services.family_invitation_tokens import FamilyInvitationTokenCodec
 from app.services.google_identity_codec import GoogleIdentityCodec
 from app.services.google_oidc_handoff_auth import GoogleOidcHandoffAuthenticator
 from app.services.line_identity_codec import LineIdentityCodec
+from app.services.line_oidc_handoff_auth import LineOidcHandoffAuthenticator
 from app.services.line_subject_cipher import LineSubjectCipher
 
 
@@ -69,6 +70,18 @@ def get_line_identity_codec() -> LineIdentityCodec:
         )
     except ValueError as exc:
         raise ServiceUnavailableError("LINE account linking is unavailable") from exc
+
+
+@lru_cache(maxsize=4)
+def _build_line_oidc_handoff_authenticator(secret: str) -> LineOidcHandoffAuthenticator:
+    return LineOidcHandoffAuthenticator(secret)
+
+
+def get_line_oidc_handoff_authenticator() -> LineOidcHandoffAuthenticator:
+    try:
+        return _build_line_oidc_handoff_authenticator(get_settings().line_oidc_handoff_secret)
+    except ValueError as exc:
+        raise ServiceUnavailableError("LINE identity handoff is unavailable") from exc
 
 
 @lru_cache(maxsize=8)

@@ -24,6 +24,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.agent_runs import router as agent_runs_router
+from app.api.app_sessions import router as app_sessions_router
 from app.api.assignments import router as assignments_router
 from app.api.care_events import router as care_events_router
 from app.api.consents import router as consents_router
@@ -31,9 +32,11 @@ from app.api.deletions import router as deletions_router
 from app.api.elders import router as elders_router
 from app.api.error_handlers import register_exception_handlers
 from app.api.family_invitations import router as family_invitations_router
+from app.api.google_oidc_handoff import router as google_oidc_handoff_router
 from app.api.health import router as health_router
 from app.api.identity import router as identity_router
 from app.api.line_links import router as line_links_router
+from app.api.line_oidc_handoff import router as line_oidc_handoff_router
 from app.api.line_webhook import router as line_webhook_router
 from app.api.memories import router as memories_router
 from app.api.notifications import router as notifications_router
@@ -185,6 +188,12 @@ def create_app() -> FastAPI:
     app.include_router(assignments_router)
     app.include_router(agent_runs_router)
     app.include_router(tools_router)
+    if settings.app_session_auth_enabled:
+        app.include_router(app_sessions_router)
+    if settings.google_oidc_handoff_enabled:
+        app.include_router(google_oidc_handoff_router)
+    if settings.line_oidc_handoff_enabled:
+        app.include_router(line_oidc_handoff_router)
 
     # ── Register exception handlers ──────────────────────────────────────────
     register_exception_handlers(app)

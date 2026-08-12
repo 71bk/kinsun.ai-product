@@ -1,0 +1,6 @@
+{
+  "data": {
+    "id_token": "synthetic.header.signature",
+    "expected_nonce": "synthetic_nonce_value_at_least_32_chars"
+  }
+}

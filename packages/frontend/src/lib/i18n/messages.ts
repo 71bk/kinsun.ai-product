@@ -213,6 +213,29 @@ const zhHant = {
   'familySignIn.body': '登入後只會顯示長者已同意分享、且仍在您授權範圍內的正式報表。',
   'familySignIn.lineButton': '使用已連結的 LINE 登入',
   'familySignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
+  'googleComplete.elderTitle': '建立長者帳號',
+  'googleComplete.elderBody': 'Google 已確認您的身分。請確認顯示名稱後，明確建立您的個人家庭帳號。',
+  'googleComplete.familyTitle': '完成家屬加入',
+  'googleComplete.familyBody':
+    'Google 已確認您的身分。繼續後，系統會再次檢查邀請、長者同意與分享範圍。',
+  'googleComplete.nameLabel': '顯示名稱',
+  'googleComplete.submit': '確認並建立帳號',
+  'googleComplete.familySubmit': '確認並加入家屬服務',
+  'googleComplete.expiry': '這個確認步驟只會短暫保留；若已逾時，請重新使用 Google 登入。',
+  'googleComplete.missingInvitation': '此 Google 帳號尚未綁定，首次加入家屬服務需要有效邀請碼。',
+  'googleComplete.retryJoin': '返回輸入邀請碼',
+  'googleComplete.error': '目前無法完成帳號建立。請確認資料後再試一次。',
+  'lineComplete.elderTitle': '建立您的長者帳號',
+  'lineComplete.elderBody': 'LINE 已確認您的身分。確認顯示名稱後，系統才會建立您的個人家庭帳號。',
+  'lineComplete.familyTitle': '完成家屬存取設定',
+  'lineComplete.familyBody': 'LINE 已確認您的身分。繼續後仍會重新檢查邀請、長者同意與分享範圍。',
+  'lineComplete.nameLabel': '顯示名稱',
+  'lineComplete.submit': '確認並建立帳號',
+  'lineComplete.familySubmit': '確認並加入家屬存取',
+  'lineComplete.expiry': '此確認只會短暫保留；若已逾時，請重新使用 LINE 登入。',
+  'lineComplete.missingInvitation': '首次建立家屬存取需要有效的邀請碼。',
+  'lineComplete.retryJoin': '返回輸入邀請碼',
+  'lineComplete.error': '目前無法完成帳號建立。請確認資料後再試一次。',
 
   // ---- staff sign-in ----
   'staffSignIn.title': '照服員／居服員登入',
@@ -658,6 +681,36 @@ const en: Record<MessageKey, string> = {
     'After signing in you will only see formal reports the elder has consented to share and that remain within your authorization.',
   'familySignIn.lineButton': 'Sign in with linked LINE',
   'familySignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
+  'googleComplete.elderTitle': 'Create your elder account',
+  'googleComplete.elderBody':
+    'Google has confirmed your identity. Confirm your display name to explicitly create your personal household account.',
+  'googleComplete.familyTitle': 'Complete family access',
+  'googleComplete.familyBody':
+    'Google has confirmed your identity. Continuing will re-check the invitation, elder consent, and sharing scope.',
+  'googleComplete.nameLabel': 'Display name',
+  'googleComplete.submit': 'Confirm and create account',
+  'googleComplete.familySubmit': 'Confirm and join family access',
+  'googleComplete.expiry':
+    'This confirmation is retained only briefly. If it expires, start Google sign-in again.',
+  'googleComplete.missingInvitation':
+    'This Google account is not linked yet. First-time family access requires a valid invitation code.',
+  'googleComplete.retryJoin': 'Return to invitation entry',
+  'googleComplete.error':
+    'We could not complete account creation. Check the details and try again.',
+  'lineComplete.elderTitle': 'Create your elder account',
+  'lineComplete.elderBody':
+    'LINE has confirmed your identity. Confirm your display name to explicitly create your personal household account.',
+  'lineComplete.familyTitle': 'Complete family access',
+  'lineComplete.familyBody':
+    'LINE has confirmed your identity. Continuing will re-check the invitation, elder consent, and sharing scope.',
+  'lineComplete.nameLabel': 'Display name',
+  'lineComplete.submit': 'Confirm and create account',
+  'lineComplete.familySubmit': 'Confirm and join family access',
+  'lineComplete.expiry':
+    'This confirmation is retained only briefly. If it expires, start LINE sign-in again.',
+  'lineComplete.missingInvitation': 'First-time family access requires a valid invitation code.',
+  'lineComplete.retryJoin': 'Return to invitation entry',
+  'lineComplete.error': 'We could not complete account creation. Check the details and try again.',
 
   'staffSignIn.title': 'Care worker sign-in',
   'staffSignIn.body':

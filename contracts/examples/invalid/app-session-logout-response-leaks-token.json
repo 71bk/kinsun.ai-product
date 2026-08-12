@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "Logout responses must not echo or otherwise expose the revoked bearer credential.",
+  "data": {
+    "status": "SIGNED_OUT",
+    "session_token": "ks1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

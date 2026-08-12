@@ -3,6 +3,33 @@ import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
 import { buildCognitoAuthorizationUrl, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
 import {
+  buildGoogleOidcAuthorizationUrl,
+  getGoogleOidcBffConfig,
+  googleDirectOidcEnabled,
+} from '@/lib/server/google-oidc';
+import {
+  googleOidcCoreAuthorization,
+  googleOidcCoreTarget,
+} from '@/lib/server/google-oidc-core-handoff';
+import {
+  createGoogleOidcTransaction,
+  googleOidcTransactionCookieName,
+  googleOidcTransactionCookieOptions,
+  serializeGoogleOidcTransaction,
+} from '@/lib/server/google-oidc-transaction';
+import {
+  buildLineLoginLinkAuthorizationUrl,
+  getLineLoginOAuthConfig,
+  lineDirectOidcEnabled,
+} from '@/lib/server/line-login-oauth';
+import { lineOidcCoreAuthorization, lineOidcCoreTarget } from '@/lib/server/line-oidc-core-handoff';
+import {
+  createLineOidcTransaction,
+  lineOidcTransactionCookieName,
+  lineOidcTransactionCookieOptions,
+  serializeLineOidcTransaction,
+} from '@/lib/server/line-oidc-transaction';
+import {
   createOAuthTransaction,
   loginProvider,
   normalizeInvitationCode,
@@ -45,6 +72,42 @@ function beginLogin(
   }
 
   try {
+    if (provider === 'GOOGLE' && googleDirectOidcEnabled()) {
+      // Fail before redirecting the user to Google if the callback could not
+      // complete its private Core handoff in this deployment.
+      googleOidcCoreTarget();
+      googleOidcCoreAuthorization();
+      const transaction = createGoogleOidcTransaction(returnTo, intent, invitationCode);
+      const response = noStore(
+        NextResponse.redirect(
+          buildGoogleOidcAuthorizationUrl(getGoogleOidcBffConfig(), transaction),
+          { status: 303 },
+        ),
+      );
+      response.cookies.set(
+        googleOidcTransactionCookieName(),
+        serializeGoogleOidcTransaction(transaction),
+        googleOidcTransactionCookieOptions(),
+      );
+      return response;
+    }
+    if (provider === 'LINE' && lineDirectOidcEnabled()) {
+      lineOidcCoreTarget();
+      lineOidcCoreAuthorization();
+      const transaction = createLineOidcTransaction(returnTo, intent, invitationCode);
+      const response = noStore(
+        NextResponse.redirect(
+          buildLineLoginLinkAuthorizationUrl(getLineLoginOAuthConfig('login'), transaction),
+          { status: 303 },
+        ),
+      );
+      response.cookies.set(
+        lineOidcTransactionCookieName(),
+        serializeLineOidcTransaction(transaction),
+        lineOidcTransactionCookieOptions(),
+      );
+      return response;
+    }
     const transaction = createOAuthTransaction(returnTo, intent, invitationCode, provider);
     const response = noStore(
       NextResponse.redirect(buildCognitoAuthorizationUrl(getCognitoOAuthConfig(), transaction), {

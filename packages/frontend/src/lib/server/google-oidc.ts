@@ -24,6 +24,10 @@ export interface GoogleOidcExchangeResult {
   idToken: string;
 }
 
+export function googleDirectOidcEnabled(): boolean {
+  return process.env.GOOGLE_DIRECT_OIDC_ENABLED?.trim().toLowerCase() === 'true';
+}
+
 function normalizedCredential(
   value: string | undefined,
   name: string,

@@ -1,6 +1,8 @@
-"""Persistence boundary for Google sign-in handoff resolution."""
+"""Persistence boundary for external-provider sign-in handoff resolution."""
 
 from __future__ import annotations
+
+from typing import Literal
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,13 +12,23 @@ from app.models.pending_identity import PendingExternalIdentity
 
 
 class GoogleIdentityRepository:
-    """Serialize subject handoffs and store only keyed/token digests."""
+    """Serialize provider-subject handoffs and store only keyed/token digests.
 
-    def __init__(self, session: AsyncSession) -> None:
+    The historical class name remains for import compatibility while the
+    repository now serves both approved direct OIDC providers.
+    """
+
+    def __init__(
+        self,
+        session: AsyncSession,
+        *,
+        provider: Literal["GOOGLE", "LINE"] = "GOOGLE",
+    ) -> None:
         self._session = session
+        self._provider = provider
 
     async def acquire_subject_lock(self, *, subject_digest: str, key_version: int) -> None:
-        lock_key = f"google-subject:v{key_version}:{subject_digest}"
+        lock_key = f"{self._provider.casefold()}-subject:v{key_version}:{subject_digest}"
         await self._session.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
             {"lock_key": lock_key},
@@ -32,7 +44,7 @@ class GoogleIdentityRepository:
         statement = (
             select(ExternalIdentity)
             .where(
-                ExternalIdentity.provider == "GOOGLE",
+                ExternalIdentity.provider == self._provider,
                 ExternalIdentity.external_subject_digest == subject_digest,
                 ExternalIdentity.digest_key_version == key_version,
             )
@@ -51,7 +63,7 @@ class GoogleIdentityRepository:
         for_update: bool = False,
     ) -> PendingExternalIdentity | None:
         statement = select(PendingExternalIdentity).where(
-            PendingExternalIdentity.provider == "GOOGLE",
+            PendingExternalIdentity.provider == self._provider,
             PendingExternalIdentity.external_subject_digest == subject_digest,
             PendingExternalIdentity.digest_key_version == key_version,
             PendingExternalIdentity.status == "PENDING",
@@ -59,6 +71,22 @@ class GoogleIdentityRepository:
         if for_update:
             statement = statement.with_for_update()
         return await self._session.scalar(statement)
+
+    async def get_pending_by_token_digest(
+        self,
+        token_digest: str,
+        *,
+        for_update: bool = False,
+    ) -> PendingExternalIdentity | None:
+        statement = select(PendingExternalIdentity).where(
+            PendingExternalIdentity.token_digest == token_digest,
+        )
+        if for_update:
+            statement = statement.with_for_update()
+        return await self._session.scalar(statement)
+
+    def add_identity(self, identity: ExternalIdentity) -> None:
+        self._session.add(identity)
 
     def add_pending(self, pending: PendingExternalIdentity) -> None:
         self._session.add(pending)
