@@ -33,11 +33,23 @@ const zhHant = {
   'common.signIn': '前往登入 →',
   'common.signOut': '登出',
   'common.continueWithGoogle': '使用 Google 繼續',
+  'common.skipToContent': '跳到主要內容',
+  'common.search': '搜尋',
+  'common.searchPlaceholder': '輸入關鍵字',
+  'common.clearSearch': '清除搜尋內容',
+  'common.confirm': '確認',
+  'common.cancel': '取消',
+  'common.emptyTitle': '目前沒有資料',
+  'common.errorTitle': '目前無法顯示內容',
   'common.empty': '—',
   'common.version': '版本 {version}',
   /* Includes its own brackets: it always follows an item's text, and the
      bracket glyph itself differs between the two locales. */
   'common.sources': '（來源 {count} 筆）',
+
+  // ---- shared surface shell ----
+  'surface.careLabel': '照護工作台',
+  'surface.familyLabel': '家屬安心報',
 
   // ---- workflow states (MASTER.md §4.2) — the text half of colour+icon+text.
   //      Same wording on every surface: a state must read as the same state. ----
@@ -511,9 +523,20 @@ const en: Record<MessageKey, string> = {
   'common.signIn': 'Go to sign-in →',
   'common.signOut': 'Sign out',
   'common.continueWithGoogle': 'Continue with Google',
+  'common.skipToContent': 'Skip to main content',
+  'common.search': 'Search',
+  'common.searchPlaceholder': 'Enter keywords',
+  'common.clearSearch': 'Clear search',
+  'common.confirm': 'Confirm',
+  'common.cancel': 'Cancel',
+  'common.emptyTitle': 'No data yet',
+  'common.errorTitle': 'Content is unavailable',
   'common.empty': '—',
   'common.version': 'Version {version}',
   'common.sources': ' (sources: {count})',
+
+  'surface.careLabel': 'Care workspace',
+  'surface.familyLabel': 'Family updates',
 
   'state.candidate': 'Candidate',
   'state.needsReview': 'Needs review',

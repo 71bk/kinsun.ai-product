@@ -1,5 +1,8 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { careEventState, familyReportState, summaryState } from './StateCard';
+import { LocaleProvider } from '@/lib/i18n/locale-context';
+import { StateCard, careEventState, familyReportState, summaryState } from './StateCard';
 
 /* MASTER.md §4.2 standardises the *shape*, so what matters here is that no
    domain value can be drawn as more settled than it is. Every default branch
@@ -51,5 +54,25 @@ describe('familyReportState', () => {
     expect(familyReportState('NEEDS_REVIEW')).not.toBe('published');
     expect(familyReportState('STALE')).not.toBe('published');
     expect(DASHED).toContain(familyReportState('DRAFT'));
+  });
+});
+
+describe('StateCard markup', () => {
+  it('supports precise domain wording without changing the workflow shape', () => {
+    const markup = renderToStaticMarkup(
+      createElement(LocaleProvider, {
+        initialLocale: 'en',
+        children: createElement(StateCard, {
+          state: 'confirmed',
+          stateLabel: 'Corrected',
+          title: 'Synthetic event',
+          children: 'Synthetic evidence-backed content',
+        }),
+      }),
+    );
+
+    expect(markup).toContain('data-state="confirmed"');
+    expect(markup).toContain('Corrected');
+    expect(markup).toContain('Synthetic evidence-backed content');
   });
 });

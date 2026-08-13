@@ -27,4 +27,20 @@ describe('SurfaceShell session affordance', () => {
     expect(signedIn).toContain('Sign out');
     expect(signedOut).not.toContain('/backend/auth/logout');
   });
+
+  it('provides a localized skip link and stable main-content target', () => {
+    const markup = renderToStaticMarkup(
+      createElement(SurfaceShell, {
+        surface: 'care',
+        initialLocale: 'en',
+        signedIn: false,
+        children: createElement('main', null, 'Synthetic care content'),
+      }),
+    );
+
+    expect(markup).toContain('href="#surface-main-content"');
+    expect(markup).toContain('Skip to main content');
+    expect(markup).toContain('id="surface-main-content"');
+    expect(markup).toContain('Care workspace');
+  });
 });

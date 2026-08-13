@@ -22,7 +22,10 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 23rem;
+  min-height: var(--touch-min);
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-foreground);

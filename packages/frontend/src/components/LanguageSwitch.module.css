@@ -9,10 +9,11 @@
 
 .label {
   flex: none;
-  inline-size: 8ch;
+  min-inline-size: 8ch;
   text-align: end;
   color: var(--color-muted-foreground);
   font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .label[data-visually-hidden='true'] {

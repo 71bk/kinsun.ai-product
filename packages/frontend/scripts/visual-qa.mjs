@@ -38,7 +38,9 @@ const ROUTES = [
   { path: '/elder/start', surface: 'voice' },
   { path: '/consent', surface: 'voice' },
   { path: '/onboarding/resolve', surface: 'voice' },
-  { path: '/', surface: 'voice' },
+  // Signed-out landing is the dedicated public surface (MASTER.md §3), not
+  // the Chinese-only elder voice surface.
+  { path: '/', surface: 'public' },
   { path: '/family/join', surface: 'family' },
   { path: '/family/sign-in', surface: 'family' },
   { path: '/family', surface: 'family' },
@@ -47,7 +49,7 @@ const ROUTES = [
 ];
 
 /** §6.1 minimums. The page is checked against the surface it actually renders. */
-const TOUCH_MIN = { voice: 64, care: 48, family: 48 };
+const TOUCH_MIN = { voice: 64, care: 48, family: 48, public: 56 };
 
 /** Runs in the page. Returns everything a static read of the source cannot. */
 function audit() {
@@ -220,3 +222,7 @@ for (const row of rows) {
 }
 console.log(`\n${failures} failing page/viewport combination(s) of ${rows.length}`);
 console.log(`screenshots: ${OUT}`);
+
+// A printed FAIL must fail CI and local verification too. Otherwise the table
+// looks authoritative while the calling command still reports success.
+if (failures > 0) process.exitCode = 1;

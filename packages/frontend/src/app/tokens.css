@@ -26,6 +26,7 @@
   --slate-25: #f6fafb;
   --cyan-25: #f8fdfe;
   --white: #ffffff;
+  --cyan-900-channels: 22 78 99;
 
   /* ---- semantic: colour ---- */
   --color-primary: var(--cyan-600);
@@ -48,6 +49,11 @@
   --color-ring: var(--cyan-600);
   --color-on-primary: var(--white);
   --color-on-accent: var(--white);
+  --color-surface-subtle: var(--slate-100);
+  /* Interactive outlines need at least 3:1 against a white card. The regular
+     cyan borders are separators only and are too light to define a control. */
+  --color-interactive-border: var(--cyan-700);
+  --color-scrim: rgb(var(--cyan-900-channels) / 0.48);
 
   /* ---- semantic: workflow state (§4.2) — colour + icon + text always together ---- */
   --state-candidate-fg: var(--slate-500);
@@ -113,6 +119,8 @@
   --touch-rec: 56px;
   --card-pad: var(--space-4);
   --block-gap: var(--space-6);
+  --page-gutter: var(--space-6);
+  --content-max: 1280px;
 }
 
 /* ---- surface: voice (elder). 22px base is a FLOOR, not a choice (§5.1) ---- */
@@ -130,6 +138,8 @@
   --touch-rec: 72px;
   --card-pad: var(--space-8);
   --block-gap: var(--space-12);
+  --page-gutter: var(--space-8);
+  --content-max: 640px;
 }
 
 /* ---- surface: care (professional). Deliberately more neutral background —
@@ -148,6 +158,8 @@
   --touch-rec: 56px;
   --card-pad: var(--space-4);
   --block-gap: var(--space-6);
+  --page-gutter: var(--space-6);
+  --content-max: 1280px;
 }
 
 /* ---- surface: family ---- */
@@ -165,6 +177,8 @@
   --touch-rec: 48px;
   --card-pad: var(--space-6);
   --block-gap: var(--space-8);
+  --page-gutter: var(--space-6);
+  --content-max: 720px;
 }
 
 /* ---- surface: public (signed-out landing + legal pages). Audience is
@@ -185,4 +199,6 @@
   --touch-rec: 56px;
   --card-pad: var(--space-6);
   --block-gap: var(--space-10);
+  --page-gutter: var(--space-6);
+  --content-max: 1200px;
 }

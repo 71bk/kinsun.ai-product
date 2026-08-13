@@ -137,20 +137,22 @@ export function StateBadge({ state, label }: StateBadgeProps) {
 export interface StateCardProps {
   state: WorkflowState;
   title?: ReactNode;
+  /** Precise domain wording when several enum values share one state shape. */
+  stateLabel?: ReactNode;
   /** Secondary line — version, source counts, timestamps. */
   meta?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
 }
 
-export function StateCard({ state, title, meta, actions, children }: StateCardProps) {
+export function StateCard({ state, title, stateLabel, meta, actions, children }: StateCardProps) {
   return (
     <section className={styles.card} data-state={state}>
       <div className={styles.header}>
-        <span className={styles.title}>{title}</span>
-        <StateBadge state={state} />
+        {title && <span className={styles.title}>{title}</span>}
+        <StateBadge state={state} label={stateLabel} />
       </div>
-      <div className={styles.body}>{children}</div>
+      {children && <div className={styles.body}>{children}</div>}
       {meta && <div className={styles.meta}>{meta}</div>}
       {actions && <div className={styles.actions}>{actions}</div>}
     </section>

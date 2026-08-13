@@ -15,6 +15,29 @@
   box-sizing: border-box;
 }
 
+/* Text and form controls inherit the active surface scale. Fixed heights and
+   clipped labels would fail the 200% text-size acceptance gate. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  max-inline-size: 100%;
+}
+
+img,
+svg,
+video {
+  max-inline-size: 100%;
+}
+
 html,
 body {
   margin: 0;
@@ -29,6 +52,7 @@ body {
 /* §7.4 — use dvh, never 100vh */
 body {
   min-height: 100dvh;
+  overflow-wrap: anywhere;
 }
 
 /* Tabular digits for numeric columns (§5) */

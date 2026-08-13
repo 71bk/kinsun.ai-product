@@ -2,6 +2,7 @@
    and the language switch slot (§5.2). */
 
 .shell {
+  container-type: inline-size;
   min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-foreground);
@@ -11,11 +12,71 @@
 
 .header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
+}
+
+.surfaceLabel {
+  color: var(--color-foreground);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.utilities {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.content {
+  width: min(100%, var(--content-max));
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.content:focus {
+  outline: none;
+}
+
+.content:focus-visible {
+  outline: 3px solid var(--color-ring);
+  outline-offset: -3px;
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 100;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  transform: translateY(calc(-100% - var(--space-4)));
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+
+.skipLink:focus-visible {
+  transform: translateY(0);
+}
+
+@container (max-width: 47.99rem) {
+  .header,
+  .utilities {
+    align-items: stretch;
+  }
+
+  .utilities {
+    width: 100%;
+    justify-content: space-between;
+  }
 }

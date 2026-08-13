@@ -50,11 +50,21 @@ function SurfaceFrame({
     // `lang` is set here rather than on <html>: the root layout is shared with
     // the Chinese-only voice surface, so the switch must scope to this subtree.
     <div className={styles.shell} data-surface={surface} lang={localeTag(locale)}>
+      <a className={styles.skipLink} href="#surface-main-content">
+        {t('common.skipToContent')}
+      </a>
       <header className={styles.header}>
-        <LanguageSwitch />
-        {signedIn && <SignOutButton label={t('common.signOut')} />}
+        <span className={styles.surfaceLabel}>
+          {t(surface === 'care' ? 'surface.careLabel' : 'surface.familyLabel')}
+        </span>
+        <div className={styles.utilities}>
+          <LanguageSwitch />
+          {signedIn && <SignOutButton label={t('common.signOut')} />}
+        </div>
       </header>
-      {children}
+      <div className={styles.content} id="surface-main-content" tabIndex={-1}>
+        {children}
+      </div>
     </div>
   );
 }

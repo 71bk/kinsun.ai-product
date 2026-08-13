@@ -29,12 +29,17 @@
   margin-bottom: var(--space-2);
 }
 
+.header:only-child {
+  margin-bottom: 0;
+}
+
 .title {
   font-weight: 700;
 }
 
 .body {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .meta {
