@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ApiRequestError, type ApiConfig } from '@/lib/api/client';
 import { createTextSession, runCompanionTurn, type CompanionTurn } from '@/lib/api/companion';
 import { CompanionCharacter } from '@/components/voice/CompanionCharacter';
+import styles from './CompanionTextPanel.module.css';
 
 interface CompanionTextPanelProps {
   apiConfig: ApiConfig;
@@ -52,29 +53,9 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
     : (turn?.reply_text ?? '你好啊！今天想聊什麼呢？');
 
   return (
-    <section
-      aria-labelledby="companion-title"
-      style={{
-        display: 'flex',
-        width: 'min(100%, 680px)',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        gap: 'var(--space-5)',
-      }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            padding: 'var(--space-2) var(--space-3)',
-            borderRadius: 999,
-            background: 'var(--state-review-bg)',
-            color: 'var(--state-review-fg)',
-            fontSize: 'var(--text-sm)',
-          }}
-        >
-          目前是文字陪伴；麥克風、ASR 與 TTS 尚未啟用
-        </span>
+    <section aria-labelledby="companion-title" className={styles.panel}>
+      <div className={styles.modeNotice}>
+        <span>目前是文字陪伴，不會開啟麥克風</span>
       </div>
 
       <CompanionCharacter
@@ -82,19 +63,8 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
         message={message}
       />
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-3)',
-          padding: 'var(--space-5)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-surface)',
-        }}
-      >
-        <label id="companion-title" htmlFor="companion-input" style={{ fontWeight: 700 }}>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <label className={styles.label} id="companion-title" htmlFor="companion-input">
           想和小暖說什麼？
         </label>
         <textarea
@@ -105,55 +75,26 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
           rows={4}
           disabled={busy}
           placeholder="例如：我今天早餐吃了粥。"
-          style={{
-            width: '100%',
-            resize: 'vertical',
-            padding: 'var(--space-4)',
-            border: '2px solid var(--color-border-strong)',
-            borderRadius: 'var(--radius-md)',
-            font: 'inherit',
-            lineHeight: 'var(--leading-body)',
-          }}
+          className={styles.textarea}
         />
         <button
           type="submit"
           disabled={busy || inputText.trim().length === 0}
-          style={{
-            minHeight: 'var(--touch-min)',
-            padding: 'var(--space-3) var(--space-5)',
-            border: 0,
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--color-primary)',
-            color: 'var(--color-on-primary)',
-            font: 'inherit',
-            fontWeight: 700,
-            cursor: busy ? 'wait' : 'pointer',
-          }}
+          className={styles.submit}
         >
           {busy ? '正在安全處理…' : '送出文字'}
         </button>
-        <small style={{ color: 'var(--color-muted-foreground)' }}>
+        <small className={styles.hint}>
           文字只用於本輪產生回覆；目前不會寫入長期記憶、照護事件或逐字稿。
         </small>
       </form>
 
-      <div aria-live="polite">
-        {submittedText && turn && (
-          <p style={{ color: 'var(--color-muted-foreground)' }}>您剛才輸入：「{submittedText}」</p>
-        )}
+      <div aria-live="polite" className={styles.result}>
+        {submittedText && turn && <p className={styles.hint}>您剛才輸入：「{submittedText}」</p>}
         {turn && turn.safety_decision !== 'ALLOW' && (
-          <p
-            style={{
-              padding: 'var(--space-3)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--state-review-bg)',
-              color: 'var(--state-review-fg)',
-            }}
-          >
-            系統已套用安全回覆，沒有把高風險內容當成醫療建議。
-          </p>
+          <p className={styles.safetyMessage}>系統已套用安全回覆，沒有把高風險內容當成醫療建議。</p>
         )}
-        {error && <p style={{ color: 'var(--color-destructive)' }}>{error}</p>}
+        {error && <p className={styles.error}>{error}</p>}
       </div>
     </section>
   );

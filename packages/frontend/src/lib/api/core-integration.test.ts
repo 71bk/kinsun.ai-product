@@ -4,10 +4,14 @@ import { createTextSession, runCompanionTurn } from './companion';
 import {
   activeBasicVoiceConsent,
   activeFamilySharingConsent,
+  activeLongTermMemoryConsent,
   grantFamilySharingConsent,
+  grantLongTermMemoryConsent,
   listConsents,
+  revokeLongTermMemoryConsent,
 } from './consent';
 import { createFamilyInvitation } from './family-invitations';
+import { confirmMemoryAsElder, deferMemoryAsElder, type MemoryView } from './memories';
 
 const config: ApiConfig = {
   apiBaseUrl: '/backend/core/',
@@ -138,6 +142,109 @@ describe('Core API integration clients', () => {
       actor_confirmation: true,
       policy_version: 'demo-consent-v1',
     });
+  });
+
+  it('grants and revokes LONG_TERM_MEMORY without inventing share scopes', async () => {
+    vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000004' });
+    const memoryConsent = {
+      consent_id: '81000000-0000-4000-8000-000000000004',
+      purpose_code: 'LONG_TERM_MEMORY' as const,
+      consent_version: 4,
+      status: 'GRANTED' as const,
+      policy_version: 'demo-consent-v1',
+      effective_at: '2026-08-01T00:00:00Z',
+      expires_at: null,
+      revoked_at: null,
+      affected_capabilities: ['long_term_memory'],
+      deletion_request_id: null,
+    };
+    const revokedConsent = { ...memoryConsent, status: 'REVOKED' as const };
+    const fetchMock = vi
+      .fn(async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => success({}))
+      .mockResolvedValueOnce(success({ items: [memoryConsent] }))
+      .mockResolvedValueOnce(success(revokedConsent));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const granted = await grantLongTermMemoryConsent(
+      config,
+      '40000000-0000-4000-8000-000000000001',
+      'demo-consent-v1',
+    );
+    await revokeLongTermMemoryConsent(
+      config,
+      '40000000-0000-4000-8000-000000000001',
+      granted.consent_id,
+    );
+
+    expect(activeLongTermMemoryConsent([granted])).toEqual(memoryConsent);
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      purposes: ['LONG_TERM_MEMORY'],
+      share_scopes: [],
+      actor_confirmation: true,
+      policy_version: 'demo-consent-v1',
+    });
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      reason_code: 'ELDER_REQUESTED_LONG_TERM_MEMORY_STOP',
+      revoke_scope: [],
+      request_deletion: false,
+    });
+  });
+
+  it('confirms and defers memory candidates only through elder-self contract fields', async () => {
+    vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000005' });
+    const memory: MemoryView = {
+      memoryId: '83000000-0000-4000-8000-000000000001',
+      elderId: '40000000-0000-4000-8000-000000000001',
+      memoryType: 'PREFERENCE',
+      content: '喜歡在下午聽音樂',
+      status: 'CANDIDATE',
+      sourceEventIds: ['opaque-event-reference'],
+      confirmedBy: null,
+      confirmedAt: null,
+      version: 7,
+      consentVersion: 4,
+      createdAt: '2026-08-01T00:00:00Z',
+      updatedAt: '2026-08-01T00:00:00Z',
+    };
+    const coreMemory = {
+      memory_id: memory.memoryId,
+      elder_id: memory.elderId,
+      memory_type: memory.memoryType,
+      content: memory.content,
+      status: memory.status,
+      source_event_ids: memory.sourceEventIds,
+      confirmed_by: null,
+      confirmed_at: null,
+      version: memory.version,
+      active_from: null,
+      inactive_at: null,
+      consent_version: memory.consentVersion,
+      created_at: memory.createdAt,
+      updated_at: memory.updatedAt,
+    };
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      success(coreMemory),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await confirmMemoryAsElder(config, memory.elderId, memory);
+    await deferMemoryAsElder(config, memory.elderId, memory);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `/backend/core/api/v1/elders/${memory.elderId}/memory-candidates/${memory.memoryId}/confirm`,
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      confirmation_method: 'ELDER_UI',
+      expected_candidate_version: 7,
+      consent_version: 4,
+    });
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      reason_code: 'ELDER_DEFERRED_MEMORY_CANDIDATE',
+      expected_version: 7,
+    });
+    expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Idempotency-Key')).toContain(
+      'elder-memory-confirm-',
+    );
   });
 
   it('creates a one-time family invitation through the authenticated BFF', async () => {

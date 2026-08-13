@@ -1,12 +1,12 @@
 'use client';
 
-import { HourglassMedium } from '@phosphor-icons/react';
+import { HourglassMedium, ShieldCheck } from '@phosphor-icons/react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CompanionTextPanel } from '@/components/companion/CompanionTextPanel';
+import { ElderShell } from '@/components/elder/ElderShell';
 import { InputModeToggle, type InputMode } from '@/components/InputModeToggle';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
-import { SignOutButton } from '@/components/SignOutButton';
-import { touchLinkStyle } from '@/components/touch-link';
 import { activeBasicVoiceConsent, listConsents } from '@/lib/api/consent';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import { readDevPreviewState } from './dev-preview';
@@ -67,22 +67,8 @@ export function VoiceHomeClient() {
   // gates below should block it.
   if (isDevPreview) {
     return (
-      <main
-        data-surface="voice"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          minHeight: '100dvh',
-          gap: 'var(--block-gap)',
-          padding: 'var(--space-6)',
-          paddingBottom: 'calc(var(--space-6) + env(safe-area-inset-bottom))',
-          background: 'var(--color-background)',
-        }}
-      >
-        <h1 style={{ fontSize: 'var(--text-xl)', color: 'var(--color-foreground)', margin: 0 }}>
-          智慧長照 AI 陪伴系統
-        </h1>
+      <main className={styles.previewPage} data-surface="voice">
+        <h1 className={styles.title}>小暖陪伴</h1>
         <VoiceInteractionPanel apiConfig={{ apiBaseUrl: '' }} elderId="" consentGranted />
       </main>
     );
@@ -112,72 +98,57 @@ export function VoiceHomeClient() {
   }
 
   return (
-    <main
-      data-surface="voice"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        minHeight: '100dvh',
-        gap: 'var(--block-gap)',
-        padding: 'var(--space-6)',
-        paddingBottom: 'calc(var(--space-6) + env(safe-area-inset-bottom))',
-        background: 'var(--color-background)',
-      }}
-    >
-      <h1 style={{ fontSize: 'var(--text-xl)', color: 'var(--color-foreground)', margin: 0 }}>
-        智慧長照 AI 陪伴系統
-      </h1>
+    <ElderShell>
+      <main className={styles.page}>
+        <header className={styles.header}>
+          <span className={styles.eyebrow}>語音與文字陪伴</span>
+          <h1 className={styles.title}>想和小暖聊什麼？</h1>
+          <p className={styles.description}>
+            只有在您按下開始後才會使用麥克風。聽不清楚時，小暖一定會先請您確認。
+          </p>
+        </header>
 
-      {consentError && (
-        <p style={{ color: 'var(--color-destructive)' }}>
-          無法向 Core API 確認同意狀態，系統不會開始陪伴。
-        </p>
-      )}
-      {!consentError && consentGranted === null && <p>正在向 Core API 確認同意狀態…</p>}
-      {!consentError && consentGranted === false && (
-        <p>
-          尚未取得 BASIC_VOICE 同意。<a href="/consent">前往同意設定</a>
-        </p>
-      )}
-      {!consentError && consentGranted === true && (
-        <>
-          <InputModeToggle mode={inputMode} onChange={setInputMode} />
-          {inputMode === 'voice' ? (
-            <VoiceInteractionPanel
-              apiConfig={config}
-              elderId={config.elderId}
-              consentGranted={consentGranted}
-            />
-          ) : (
-            <CompanionTextPanel apiConfig={config} elderId={config.elderId} />
-          )}
-        </>
-      )}
+        {consentError && (
+          <section className={styles.blockedCard} role="alert">
+            <ShieldCheck aria-hidden="true" size={40} weight="fill" />
+            <h2>目前無法確認同意狀態</h2>
+            <p>系統不會開始錄音或送出文字，請稍後重新整理。</p>
+          </section>
+        )}
+        {!consentError && consentGranted === null && (
+          <p aria-live="polite" className={styles.statusMessage}>
+            正在向 Core API 確認陪伴同意…
+          </p>
+        )}
+        {!consentError && consentGranted === false && (
+          <section className={styles.blockedCard}>
+            <ShieldCheck aria-hidden="true" size={40} weight="fill" />
+            <h2>請先決定是否開啟陪伴</h2>
+            <p>在您明確同意前，小暖不會開啟麥克風或建立陪伴 Session。</p>
+            <Link className={styles.consentLink} href="/consent">
+              前往同意設定
+            </Link>
+          </section>
+        )}
+        {!consentError && consentGranted === true && (
+          <section className={styles.workspace} aria-label="陪伴互動">
+            <InputModeToggle mode={inputMode} onChange={setInputMode} />
+            {inputMode === 'voice' ? (
+              <VoiceInteractionPanel
+                apiConfig={config}
+                elderId={config.elderId}
+                consentGranted={consentGranted}
+              />
+            ) : (
+              <CompanionTextPanel apiConfig={config} elderId={config.elderId} />
+            )}
+          </section>
+        )}
 
-      {/* Everything below this point renders only when credentialStatus is
-          'present', so the elder is signed in. The link here used to be an
-          unconditional "登入", which told a signed-in elder to sign in again and
-          left no way to sign out at all. */}
-      <nav
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: 'var(--space-4)',
-        }}
-      >
-        <a href="/consent" style={touchLinkStyle}>
-          同意設定
-        </a>
-        <a href="/elder/family-access" style={touchLinkStyle}>
-          家屬分享
-        </a>
-        <a href="/account/sign-in-methods" style={touchLinkStyle}>
-          登入方式
-        </a>
-        <SignOutButton label="登出" />
-      </nav>
-    </main>
+        <aside className={styles.safetyNote}>
+          小暖提供陪伴與資料整理，不會診斷、改藥、停藥或代替醫療與緊急服務。
+        </aside>
+      </main>
+    </ElderShell>
   );
 }

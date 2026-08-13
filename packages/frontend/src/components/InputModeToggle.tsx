@@ -1,6 +1,7 @@
 'use client';
 
 import { Keyboard, Microphone } from '@phosphor-icons/react';
+import styles from './InputModeToggle.module.css';
 
 export type InputMode = 'voice' | 'text';
 
@@ -28,16 +29,7 @@ const OPTIONS: { mode: InputMode; label: string; icon: typeof Microphone; hint: 
  */
 export function InputModeToggle({ mode, onChange, disabled }: InputModeToggleProps) {
   return (
-    <div
-      role="radiogroup"
-      aria-label="選擇和我聊天的方式"
-      style={{
-        display: 'flex',
-        gap: 'var(--space-3)',
-        width: '100%',
-        maxWidth: '24rem',
-      }}
-    >
+    <div aria-label="選擇和我聊天的方式" className={styles.group} role="radiogroup">
       {OPTIONS.map((option) => {
         const selected = mode === option.mode;
         const IconComponent = option.icon;
@@ -48,31 +40,10 @@ export function InputModeToggle({ mode, onChange, disabled }: InputModeTogglePro
             role="radio"
             aria-checked={selected}
             aria-label={option.hint}
+            className={styles.option}
+            data-selected={selected}
             disabled={disabled}
             onClick={() => onChange(option.mode)}
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--space-2)',
-              // Comfortably above the 44px minimum touch target.
-              minHeight: '3.5rem',
-              padding: 'var(--space-3) var(--space-4)',
-              fontSize: 'var(--text-base)',
-              fontFamily: 'inherit',
-              borderRadius: 'var(--radius-lg, 0.75rem)',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              opacity: disabled ? 0.5 : 1,
-              // Selection is carried by fill and border together, not colour
-              // alone, so it survives greyscale and low colour discrimination.
-              border: selected
-                ? '2px solid var(--color-primary-strong)'
-                : '2px solid var(--color-muted-foreground)',
-              background: selected ? 'var(--color-primary-strong)' : 'transparent',
-              color: selected ? 'var(--color-on-primary)' : 'var(--color-foreground)',
-              fontWeight: selected ? 600 : 400,
-            }}
           >
             <IconComponent size={28} weight={selected ? 'fill' : 'regular'} aria-hidden="true" />
             <span>{option.label}</span>

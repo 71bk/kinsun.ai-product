@@ -1,0 +1,66 @@
+.panel {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-2);
+}
+
+.companionArea,
+.controlArea {
+  display: grid;
+  justify-items: center;
+}
+
+.controlArea {
+  width: 100%;
+  align-content: center;
+  gap: var(--space-5);
+}
+
+.stateMessage,
+.error,
+.notice,
+.transcript,
+.muted {
+  max-width: 32ch;
+  margin: 0;
+  line-height: var(--leading-body);
+  text-align: center;
+}
+
+.stateMessage {
+  color: var(--color-foreground);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.error {
+  color: var(--color-destructive);
+  font-size: var(--text-base);
+}
+
+.notice,
+.transcript,
+.muted {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 75rem) {
+  .panel {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-8);
+  }
+}
+
+@media (max-width: 31rem) {
+  .panel {
+    padding: var(--space-4);
+  }
+}

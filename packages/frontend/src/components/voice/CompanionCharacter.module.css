@@ -9,7 +9,24 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-6);
+  padding: var(--space-4);
+}
+
+@media (max-width: 31rem) {
+  .characterWrapper {
+    width: 230px;
+    height: 230px;
+  }
+
+  .glow {
+    width: 200px;
+    height: 200px;
+  }
+
+  .characterImage {
+    width: 220px;
+    height: 220px;
+  }
 }
 
 .characterWrapper {

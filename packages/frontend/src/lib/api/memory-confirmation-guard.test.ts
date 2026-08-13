@@ -8,12 +8,18 @@ function source(relativeUrl: string): string {
 }
 
 describe('caregiver memory confirmation guard', () => {
-  it('does not export or implement a memory-confirmation API', () => {
+  it('exports only the explicit elder-self confirmation contract', () => {
     expect(memoriesApi).not.toHaveProperty('confirmMemory');
+    expect(memoriesApi).toHaveProperty('confirmMemoryAsElder');
 
     const apiSource = source('./memories.ts');
-    expect(apiSource).not.toContain('/confirm');
+    expect(apiSource).toContain('/confirm');
+    expect(apiSource).toContain("confirmation_method: 'ELDER_UI'");
+    expect(apiSource).toContain('expected_candidate_version: memory.version');
+    expect(apiSource).toContain('consent_version: memory.consentVersion');
     expect(apiSource).not.toContain('CAREGIVER_REVIEW');
+    expect(apiSource).not.toContain('LEGAL_REPRESENTATIVE');
+    expect(apiSource).not.toContain("confirmation_method: 'VOICE'");
   });
 
   it('does not render or wire a confirmation action on the caregiver dashboard', () => {
@@ -21,8 +27,8 @@ describe('caregiver memory confirmation guard', () => {
     const dashboardSource = source('../../app/dashboard/[elderId]/page.tsx');
 
     expect(memoryListSource).not.toContain("t('memory.confirm')");
-    expect(memoryListSource).not.toContain('confirmMemory');
-    expect(dashboardSource).not.toContain('confirmMemory');
+    expect(memoryListSource).not.toContain('confirmMemoryAsElder');
+    expect(dashboardSource).not.toContain('confirmMemoryAsElder');
     expect(dashboardSource).not.toContain('handleConfirmMemory');
   });
 });

@@ -75,7 +75,12 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   const [tab, setTab] = useState<Tab>('events');
   const [events, setEvents] = useState<EventView[]>([]);
   const [eventFilters, setEventFilters] = useState<ListEventsFilters>({});
-  const [memories, setMemories] = useState<MemoryListView>({ candidates: [], confirmed: [] });
+  const [memories, setMemories] = useState<MemoryListView>({
+    candidates: [],
+    confirmed: [],
+    candidateHasMore: false,
+    confirmedHasMore: false,
+  });
   const [summaries, setSummaries] = useState<SummaryView[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewSummary | null>(null);
   const [loading, setLoading] = useState(false);

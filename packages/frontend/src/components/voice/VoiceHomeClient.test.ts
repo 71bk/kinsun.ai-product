@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  activeBasicVoiceConsent: vi.fn(),
   companionPanel: vi.fn(),
   getRuntimeConfig: vi.fn(),
   listConsents: vi.fn(),
@@ -16,8 +17,12 @@ vi.mock('@/components/companion/CompanionTextPanel', () => ({
 }));
 
 vi.mock('@/lib/api/consent', () => ({
-  activeBasicVoiceConsent: vi.fn(),
+  activeBasicVoiceConsent: mocks.activeBasicVoiceConsent,
   listConsents: mocks.listConsents,
+}));
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
 }));
 
 vi.mock('@/lib/runtime-config', () => ({
@@ -42,7 +47,16 @@ const unavailableConfig = {
   credentialStatus: 'unavailable' as const,
 };
 
+const presentConfig = {
+  apiBaseUrl: '/backend/core',
+  elderId: '40000000-0000-4000-8000-000000000001',
+  caregiverId: '',
+  consentPolicyVersion: 'synthetic-policy-v1',
+  credentialStatus: 'present' as const,
+};
+
 beforeEach(() => {
+  mocks.activeBasicVoiceConsent.mockReset().mockReturnValue(null);
   mocks.companionPanel.mockReset().mockReturnValue(null);
   mocks.getRuntimeConfig.mockReset();
   mocks.listConsents.mockReset();
@@ -90,5 +104,34 @@ describe('VoiceHomeClient startup state', () => {
     expect(mocks.listConsents).not.toHaveBeenCalled();
     expect(mocks.companionPanel).not.toHaveBeenCalled();
     expect(mocks.voicePanel).not.toHaveBeenCalled();
+  });
+
+  it('does not mount either interaction mode before BASIC_VOICE consent', async () => {
+    mocks.getRuntimeConfig.mockResolvedValue(presentConfig);
+    mocks.listConsents.mockResolvedValue([]);
+
+    render(createElement(VoiceHomeClient));
+
+    await screen.findByText('請先決定是否開啟陪伴');
+    expect(screen.getByRole('link', { name: '前往同意設定' }).getAttribute('href')).toBe(
+      '/consent',
+    );
+    expect(mocks.companionPanel).not.toHaveBeenCalled();
+    expect(mocks.voicePanel).not.toHaveBeenCalled();
+  });
+
+  it('mounts voice interaction only after Core reports active consent', async () => {
+    mocks.getRuntimeConfig.mockResolvedValue(presentConfig);
+    mocks.listConsents.mockResolvedValue([{ purpose_code: 'BASIC_VOICE', status: 'GRANTED' }]);
+    mocks.activeBasicVoiceConsent.mockReturnValue({
+      purpose_code: 'BASIC_VOICE',
+      status: 'GRANTED',
+    });
+
+    render(createElement(VoiceHomeClient));
+
+    await waitFor(() => expect(mocks.voicePanel).toHaveBeenCalled());
+    expect(screen.getByText(/不會診斷、改藥、停藥/)).toBeTruthy();
+    expect(mocks.companionPanel).not.toHaveBeenCalled();
   });
 });

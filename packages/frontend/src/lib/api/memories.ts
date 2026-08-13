@@ -51,6 +51,8 @@ export interface MemoryView {
 export interface MemoryListView {
   candidates: MemoryView[];
   confirmed: MemoryView[];
+  candidateHasMore: boolean;
+  confirmedHasMore: boolean;
 }
 
 function toMemoryView(memory: CoreMemory): MemoryView {
@@ -79,7 +81,70 @@ export async function listMemories(config: ApiConfig, elderId: string): Promise<
   return {
     candidates: candidateResult.items.map(toMemoryView),
     confirmed: confirmedResult.items.map(toMemoryView),
+    candidateHasMore: candidateResult.has_more,
+    confirmedHasMore: confirmedResult.has_more,
   };
+}
+
+export async function confirmMemoryAsElder(
+  config: ApiConfig,
+  elderId: string,
+  memory: MemoryView,
+): Promise<MemoryView> {
+  const result = await apiFetch<CoreMemory>(
+    config,
+    `/api/v1/elders/${elderId}/memory-candidates/${memory.memoryId}/confirm`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('elder-memory-confirm') },
+      body: JSON.stringify({
+        confirmation_method: 'ELDER_UI',
+        expected_candidate_version: memory.version,
+        consent_version: memory.consentVersion,
+      }),
+    },
+  );
+  return toMemoryView(result);
+}
+
+async function decideMemoryAsElder(
+  config: ApiConfig,
+  elderId: string,
+  memory: MemoryView,
+  decision: 'defer' | 'reject',
+): Promise<MemoryView> {
+  const result = await apiFetch<CoreMemory>(
+    config,
+    `/api/v1/elders/${elderId}/memory-candidates/${memory.memoryId}/${decision}`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey(`elder-memory-${decision}`) },
+      body: JSON.stringify({
+        reason_code:
+          decision === 'defer'
+            ? 'ELDER_DEFERRED_MEMORY_CANDIDATE'
+            : 'ELDER_REJECTED_MEMORY_CANDIDATE',
+        expected_version: memory.version,
+      }),
+    },
+  );
+  return toMemoryView(result);
+}
+
+export function deferMemoryAsElder(
+  config: ApiConfig,
+  elderId: string,
+  memory: MemoryView,
+): Promise<MemoryView> {
+  return decideMemoryAsElder(config, elderId, memory, 'defer');
+}
+
+export function rejectMemoryAsElder(
+  config: ApiConfig,
+  elderId: string,
+  memory: MemoryView,
+): Promise<MemoryView> {
+  return decideMemoryAsElder(config, elderId, memory, 'reject');
 }
 
 export function rejectMemory(
@@ -107,6 +172,21 @@ export function deleteMemory(
     headers: { 'Idempotency-Key': createIdempotencyKey('memory-delete') },
     body: JSON.stringify({
       reason_code: 'CAREGIVER_REQUESTED_DELETION',
+      expected_version: memory.version,
+    }),
+  });
+}
+
+export function deleteMemoryAsElder(
+  config: ApiConfig,
+  elderId: string,
+  memory: MemoryView,
+): Promise<{ memory_id: string; status: 'DELETED' }> {
+  return apiFetch(config, `/api/v1/elders/${elderId}/memories/${memory.memoryId}`, {
+    method: 'DELETE',
+    headers: { 'Idempotency-Key': createIdempotencyKey('elder-memory-delete') },
+    body: JSON.stringify({
+      reason_code: 'ELDER_REQUESTED_MEMORY_DELETION',
       expected_version: memory.version,
     }),
   });

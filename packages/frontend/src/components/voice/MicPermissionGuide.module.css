@@ -1,0 +1,41 @@
+.guide {
+  display: flex;
+  max-width: 36ch;
+  margin: 0 auto;
+  align-items: center;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--card-pad);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  text-align: center;
+  box-shadow: var(--shadow-1);
+}
+
+.guide > p {
+  margin: 0;
+}
+
+.icon {
+  color: var(--color-primary-text);
+}
+
+.retry {
+  display: flex;
+  min-height: var(--touch-rec);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+}

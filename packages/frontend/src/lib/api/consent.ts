@@ -1,15 +1,17 @@
 import { apiFetch, createIdempotencyKey, type ApiConfig } from './client';
 
+export type ConsentPurpose =
+  | 'BASIC_VOICE'
+  | 'TRANSCRIPT_STORAGE'
+  | 'CARE_EVENT_EXTRACTION'
+  | 'LONG_TERM_MEMORY'
+  | 'COMPANION_SIGNAL_ANALYSIS'
+  | 'PROACTIVE_COMPANION'
+  | 'FAMILY_SHARING';
+
 export interface ConsentRecord {
   consent_id: string;
-  purpose_code:
-    | 'BASIC_VOICE'
-    | 'TRANSCRIPT_STORAGE'
-    | 'CARE_EVENT_EXTRACTION'
-    | 'LONG_TERM_MEMORY'
-    | 'COMPANION_SIGNAL_ANALYSIS'
-    | 'PROACTIVE_COMPANION'
-    | 'FAMILY_SHARING';
+  purpose_code: ConsentPurpose;
   consent_version: number;
   status: 'PENDING' | 'GRANTED' | 'REVOKED' | 'EXPIRED' | 'REJECTED';
   policy_version: string;
@@ -31,17 +33,45 @@ export async function listConsents(config: ApiConfig, elderId: string): Promise<
   return result.items;
 }
 
+export function activeConsentForPurpose(
+  items: ConsentRecord[],
+  purpose: ConsentPurpose,
+): ConsentRecord | null {
+  return items.find((item) => item.purpose_code === purpose && item.status === 'GRANTED') ?? null;
+}
+
 export function activeBasicVoiceConsent(items: ConsentRecord[]): ConsentRecord | null {
-  return (
-    items.find((item) => item.purpose_code === 'BASIC_VOICE' && item.status === 'GRANTED') ?? null
-  );
+  return activeConsentForPurpose(items, 'BASIC_VOICE');
+}
+
+export function activeLongTermMemoryConsent(items: ConsentRecord[]): ConsentRecord | null {
+  return activeConsentForPurpose(items, 'LONG_TERM_MEMORY');
 }
 
 export function activeFamilySharingConsent(items: ConsentRecord[]): ConsentRecord | null {
-  return (
-    items.find((item) => item.purpose_code === 'FAMILY_SHARING' && item.status === 'GRANTED') ??
-    null
-  );
+  return activeConsentForPurpose(items, 'FAMILY_SHARING');
+}
+
+async function grantConsentPurpose(
+  config: ApiConfig,
+  elderId: string,
+  policyVersion: string,
+  purpose: ConsentPurpose,
+  shareScopes: string[] = [],
+): Promise<ConsentRecord> {
+  const result = await apiFetch<ConsentList>(config, `/api/v1/elders/${elderId}/consents`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': createIdempotencyKey(`consent-${purpose.toLowerCase()}`) },
+    body: JSON.stringify({
+      purposes: [purpose],
+      share_scopes: shareScopes,
+      actor_confirmation: true,
+      policy_version: policyVersion,
+    }),
+  });
+  const consent = activeConsentForPurpose(result.items, purpose);
+  if (!consent) throw new Error(`CORE_CONSENT_RESPONSE_MISSING_${purpose}`);
+  return consent;
 }
 
 export async function grantBasicVoiceConsent(
@@ -49,19 +79,31 @@ export async function grantBasicVoiceConsent(
   elderId: string,
   policyVersion: string,
 ): Promise<ConsentRecord> {
-  const result = await apiFetch<ConsentList>(config, `/api/v1/elders/${elderId}/consents`, {
+  return grantConsentPurpose(config, elderId, policyVersion, 'BASIC_VOICE');
+}
+
+export function grantLongTermMemoryConsent(
+  config: ApiConfig,
+  elderId: string,
+  policyVersion: string,
+): Promise<ConsentRecord> {
+  return grantConsentPurpose(config, elderId, policyVersion, 'LONG_TERM_MEMORY');
+}
+
+export function revokeLongTermMemoryConsent(
+  config: ApiConfig,
+  elderId: string,
+  consentId: string,
+): Promise<ConsentRecord> {
+  return apiFetch(config, `/api/v1/elders/${elderId}/consents/${consentId}/revoke`, {
     method: 'POST',
-    headers: { 'Idempotency-Key': createIdempotencyKey('consent-grant') },
+    headers: { 'Idempotency-Key': createIdempotencyKey('long-term-memory-revoke') },
     body: JSON.stringify({
-      purposes: ['BASIC_VOICE'],
-      share_scopes: [],
-      actor_confirmation: true,
-      policy_version: policyVersion,
+      reason_code: 'ELDER_REQUESTED_LONG_TERM_MEMORY_STOP',
+      revoke_scope: [],
+      request_deletion: false,
     }),
   });
-  const consent = activeBasicVoiceConsent(result.items);
-  if (!consent) throw new Error('CORE_CONSENT_RESPONSE_MISSING_BASIC_VOICE');
-  return consent;
 }
 
 export function revokeBasicVoiceConsent(
@@ -85,19 +127,11 @@ export async function grantFamilySharingConsent(
   elderId: string,
   policyVersion: string,
 ): Promise<ConsentRecord> {
-  const result = await apiFetch<ConsentList>(config, `/api/v1/elders/${elderId}/consents`, {
-    method: 'POST',
-    headers: { 'Idempotency-Key': createIdempotencyKey('family-sharing-consent') },
-    body: JSON.stringify({
-      purposes: ['FAMILY_SHARING'],
-      share_scopes: ['REPORT_DAILY', 'REPORT_WEEKLY', 'REPORT_MONTHLY'],
-      actor_confirmation: true,
-      policy_version: policyVersion,
-    }),
-  });
-  const consent = activeFamilySharingConsent(result.items);
-  if (!consent) throw new Error('CORE_CONSENT_RESPONSE_MISSING_FAMILY_SHARING');
-  return consent;
+  return grantConsentPurpose(config, elderId, policyVersion, 'FAMILY_SHARING', [
+    'REPORT_DAILY',
+    'REPORT_WEEKLY',
+    'REPORT_MONTHLY',
+  ]);
 }
 
 export function revokeFamilySharingConsent(

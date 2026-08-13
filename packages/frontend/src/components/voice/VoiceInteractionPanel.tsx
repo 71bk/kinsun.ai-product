@@ -13,6 +13,7 @@ import { LowConfidenceCard } from './LowConfidenceCard';
 import { MicPermissionGuide } from './MicPermissionGuide';
 import { RecordButton } from './RecordButton';
 import { STATE_COPY, type VoicePageState } from './voice-page-state';
+import styles from './VoiceInteractionPanel.module.css';
 
 const DEFAULT_GREETING = '你好啊！今天想聊什麼呢？';
 
@@ -305,18 +306,7 @@ export function VoiceInteractionPanel({
   // non-preview render (and to all of production, where isPreview is always
   // false — see dev-preview.tsx).
   if (!consentGranted && !isPreview) {
-    return (
-      <p
-        style={{
-          textAlign: 'center',
-          fontSize: 'var(--text-base)',
-          lineHeight: 'var(--leading-body)',
-          color: 'var(--color-muted-foreground)',
-        }}
-      >
-        請先完成錄音同意設定，才能開始使用語音功能。
-      </p>
-    );
+    return <p className={styles.muted}>請先完成錄音同意設定，才能開始使用語音功能。</p>;
   }
 
   const companionMessage =
@@ -327,90 +317,47 @@ export function VoiceInteractionPanel({
   const cardTranscript = pendingTranscript || (isPreview ? PREVIEW_TRANSCRIPT : '');
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 'var(--block-gap)',
-        width: '100%',
-      }}
-    >
-      <CompanionCharacter state={toConversationState(effectiveState)} message={companionMessage} />
+    <section className={styles.panel} aria-label="語音陪伴">
+      <div className={styles.companionArea}>
+        <CompanionCharacter
+          state={toConversationState(effectiveState)}
+          message={companionMessage}
+        />
+      </div>
 
-      <LanguageSelect
-        language={language}
-        onChange={setLanguage}
-        // Changing language mid-turn would leave an utterance being transcribed
-        // by one model and attributed to another.
-        disabled={effectiveState === 'recording' || busyStates.has(effectiveState)}
-      />
+      <div className={styles.controlArea}>
+        <LanguageSelect
+          language={language}
+          onChange={setLanguage}
+          // Changing language mid-turn would leave an utterance being transcribed
+          // by one model and attributed to another.
+          disabled={effectiveState === 'recording' || busyStates.has(effectiveState)}
+        />
 
-      <RecordButton state={effectiveState} onPress={handlePress} />
+        <RecordButton state={effectiveState} onPress={handlePress} />
 
-      {/* §1 狀態可感知 / §13 — the state is text, not only motion, and it is announced. */}
-      <p
-        aria-live="polite"
-        style={{
-          margin: 0,
-          maxWidth: '32ch',
-          textAlign: 'center',
-          fontSize: 'var(--text-base)',
-          lineHeight: 'var(--leading-body)',
-          color: 'var(--color-foreground)',
-        }}
-      >
-        {STATE_COPY[effectiveState]}
-      </p>
-
-      {effectiveState === 'permissionDenied' && <MicPermissionGuide onRetry={handlePress} />}
-
-      {errorText !== '' && (
-        <p
-          role="alert"
-          style={{
-            margin: 0,
-            maxWidth: '32ch',
-            textAlign: 'center',
-            fontSize: 'var(--text-base)',
-            lineHeight: 'var(--leading-body)',
-            color: 'var(--color-destructive)',
-          }}
-        >
-          {errorText}
+        {/* §1 狀態可感知 / §13 — the state is text, not only motion, and it is announced. */}
+        <p aria-live="polite" className={styles.stateMessage}>
+          {STATE_COPY[effectiveState]}
         </p>
-      )}
 
-      {/* Not an error — the reply arrived, it just cannot be spoken yet. */}
-      {noticeText !== '' && errorText === '' && (
-        <p
-          aria-live="polite"
-          style={{
-            margin: 0,
-            maxWidth: '32ch',
-            textAlign: 'center',
-            fontSize: 'var(--text-sm)',
-            lineHeight: 'var(--leading-body)',
-            color: 'var(--color-muted-foreground)',
-          }}
-        >
-          {noticeText}
-        </p>
-      )}
+        {effectiveState === 'permissionDenied' && <MicPermissionGuide onRetry={handlePress} />}
 
-      {transcript && (
-        <p
-          style={{
-            maxWidth: '32ch',
-            textAlign: 'center',
-            fontSize: 'var(--text-sm)',
-            lineHeight: 'var(--leading-body)',
-            color: 'var(--color-muted-foreground)',
-          }}
-        >
-          您說：「{transcript}」
-        </p>
-      )}
+        {errorText !== '' && (
+          <p className={styles.error} role="alert">
+            {errorText}
+          </p>
+        )}
+
+        {/* Not an error — the reply arrived, it just cannot be spoken yet. */}
+        {noticeText !== '' && errorText === '' && (
+          <p aria-live="polite" className={styles.notice}>
+            {noticeText}
+          </p>
+        )}
+
+        {transcript && <p className={styles.transcript}>您說：「{transcript}」</p>}
+      </div>
 
       {effectiveState === 'lowConfidence' && cardTranscript !== '' && (
         <LowConfidenceCard
@@ -420,6 +367,6 @@ export function VoiceInteractionPanel({
           onDefer={handleDeferTranscript}
         />
       )}
-    </div>
+    </section>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import type { SpeechLanguage } from '@/lib/voice/speech-gateway-client';
+import styles from './LanguageSelect.module.css';
 
 export interface LanguageOption {
   language: SpeechLanguage;
@@ -37,12 +38,8 @@ export function LanguageSelect({ language, onChange, disabled }: LanguageSelectP
   const selected = LANGUAGE_OPTIONS.find((option) => option.language === language);
 
   return (
-    <div style={{ width: '100%', maxWidth: '24rem' }}>
-      <div
-        role="radiogroup"
-        aria-label="選擇您要說的語言"
-        style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}
-      >
+    <div className={styles.wrapper}>
+      <div aria-label="選擇您要說的語言" className={styles.group} role="radiogroup">
         {LANGUAGE_OPTIONS.map((option) => {
           const isSelected = option.language === language;
           return (
@@ -51,27 +48,10 @@ export function LanguageSelect({ language, onChange, disabled }: LanguageSelectP
               type="button"
               role="radio"
               aria-checked={isSelected}
+              className={styles.option}
+              data-selected={isSelected}
               disabled={disabled}
               onClick={() => onChange(option.language)}
-              style={{
-                flex: '1 1 auto',
-                // Comfortably above the 44px minimum touch target.
-                minHeight: '3rem',
-                minWidth: '5rem',
-                padding: 'var(--space-2) var(--space-3)',
-                fontSize: 'var(--text-base)',
-                fontFamily: 'inherit',
-                borderRadius: 'var(--radius-lg, 0.75rem)',
-                cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled ? 0.5 : 1,
-                // Fill and border together, so selection survives greyscale.
-                border: isSelected
-                  ? '2px solid var(--color-primary-strong)'
-                  : '2px solid var(--color-muted-foreground)',
-                background: isSelected ? 'var(--color-primary-strong)' : 'transparent',
-                color: isSelected ? 'var(--color-on-primary)' : 'var(--color-foreground)',
-                fontWeight: isSelected ? 600 : 400,
-              }}
             >
               {option.label}
             </button>
@@ -80,14 +60,7 @@ export function LanguageSelect({ language, onChange, disabled }: LanguageSelectP
       </div>
 
       {selected?.replyIsTextOnly === true && (
-        <p
-          style={{
-            margin: 'var(--space-2) 0 0',
-            fontSize: 'var(--text-sm)',
-            lineHeight: 'var(--leading-body)',
-            color: 'var(--color-muted-foreground)',
-          }}
-        >
+        <p className={styles.hint}>
           {selected.label}目前可以聽懂您說的話，回答會用文字顯示，還沒辦法唸出來。
         </p>
       )}

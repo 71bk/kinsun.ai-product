@@ -16,9 +16,8 @@ import { touchLinkStyle } from './touch-link';
  * only place that happens: `/sign-in` clears it again after the server confirms
  * that no access-token cookie remains, so the form still works before hydration.
  *
- * `label` is passed in rather than read from the i18n context: the elder surface
- * has no LocaleProvider by design (MASTER.md §5.2), and `useLocale` throws
- * outside one.
+ * `label` is passed in rather than read from the i18n context so this control
+ * remains reusable in authenticated shells that do not expose a locale switch.
  *
  * Deliberately secondary, never a filled primary button — §1 allows one filled
  * primary action per screen, and on the voice surface that is the record button.
