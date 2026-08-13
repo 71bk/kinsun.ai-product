@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { EvidenceBlock } from '@/components/care/EvidenceBlock';
+import { EventReviewControls } from '@/components/care/EventReviewControls';
+import { ReviewCard } from '@/components/care/ReviewCard';
 import { careEventState, StateBadge } from '@/components/StateCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { CareEventDecision, EventView } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
-
-const DECISIONS: CareEventDecision[] = ['VERIFY', 'CORRECT', 'REJECT', 'EXCLUDE'];
+import styles from './EventTable.module.css';
 
 export interface EventTableProps {
   events: EventView[];
@@ -19,108 +21,59 @@ export interface EventTableProps {
 
 export function EventTable({ events, onReview }: EventTableProps) {
   const { t } = useLocale();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draftContent, setDraftContent] = useState('');
-  const [decision, setDecision] = useState<CareEventDecision>('VERIFY');
-  const [saving, setSaving] = useState(false);
-
-  function startReview(event: EventView) {
-    setEditingId(event.eventId);
-    setDraftContent(event.content);
-    setDecision('VERIFY');
-  }
-
-  async function save(event: EventView) {
-    setSaving(true);
-    try {
-      await onReview(event, decision, decision === 'CORRECT' ? draftContent : undefined);
-      setEditingId(null);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   if (events.length === 0) {
-    return <p style={{ color: 'var(--color-muted-foreground)' }}>{t('eventTable.empty')}</p>;
+    return <EmptyState description={t('eventTable.empty')} title={t('eventTable.emptyTitle')} />;
   }
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
-      <thead>
-        <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--color-border-strong)' }}>
-          <th style={{ padding: 8 }}>{t('eventTable.colDate')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colType')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colContent')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colConfidence')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colStatus')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colEvidence')}</th>
-          <th style={{ padding: 8 }}>{t('eventTable.colActions')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {events.map((event) => (
-          <tr key={event.eventId} style={{ borderBottom: '1px solid var(--color-border)' }}>
-            <td style={{ padding: 8 }}>{event.eventDate}</td>
-            <td style={{ padding: 8 }}>{t(`eventType.${event.eventType}` as MessageKey)}</td>
-            <td style={{ padding: 8, maxWidth: 280 }}>
-              {editingId === event.eventId && decision === 'CORRECT' ? (
-                <textarea
-                  value={draftContent}
-                  onChange={(changeEvent) => setDraftContent(changeEvent.target.value)}
-                  style={{ width: '100%' }}
-                />
-              ) : (
-                event.content
-              )}
-            </td>
-            <td style={{ padding: 8 }}>{t(`confidence.${event.confidenceBand}` as MessageKey)}</td>
-            {/* A table cell has no room for the full card, so the status column
-                carries the colour+icon+text half of §4.2. The dashed-outline
-                shape lives on the card components. */}
-            <td style={{ padding: 8 }}>
-              <StateBadge
-                state={careEventState(event.status)}
-                label={t(`eventStatus.${event.status}` as MessageKey)}
-              />
-            </td>
-            <td style={{ padding: 8, fontSize: 12, color: 'var(--color-muted-foreground)' }}>
-              {t('eventTable.evidenceVersion', {
-                evidence: event.evidenceRefs.length,
-                version: event.version,
-              })}
-            </td>
-            <td style={{ padding: 8 }}>
-              {editingId === event.eventId ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <select
-                    value={decision}
-                    onChange={(changeEvent) =>
-                      setDecision(changeEvent.target.value as CareEventDecision)
-                    }
-                  >
-                    {/* option value stays the Core enum; only the label is translated */}
-                    {DECISIONS.map((item) => (
-                      <option key={item} value={item}>
-                        {t(`decision.${item}` as MessageKey)}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" disabled={saving} onClick={() => save(event)}>
-                    {t('eventTable.submit')}
-                  </button>
-                  <button type="button" disabled={saving} onClick={() => setEditingId(null)}>
-                    {t('eventTable.cancel')}
-                  </button>
-                </div>
-              ) : (
-                <button type="button" onClick={() => startReview(event)}>
-                  {t('eventTable.review')}
-                </button>
-              )}
-            </td>
+    <section aria-label={t('eventTable.caption')} className={styles.region}>
+      <table className={styles.table}>
+        <caption className={styles.srOnly}>{t('eventTable.caption')}</caption>
+        <thead>
+          <tr>
+            <th>{t('eventTable.colDate')}</th>
+            <th>{t('eventTable.colType')}</th>
+            <th>{t('eventTable.colContent')}</th>
+            <th>{t('eventTable.colConfidence')}</th>
+            <th>{t('eventTable.colStatus')}</th>
+            <th>{t('eventTable.colEvidence')}</th>
+            <th>{t('eventTable.colActions')}</th>
           </tr>
+        </thead>
+        <tbody>
+          {events.map((event) => (
+            <tr key={event.eventId}>
+              <td className={styles.nowrap}>{event.eventDate}</td>
+              <td>{t(`eventType.${event.eventType}` as MessageKey)}</td>
+              <td className={styles.content}>{event.content}</td>
+              <td>{t(`confidence.${event.confidenceBand}` as MessageKey)}</td>
+              <td>
+                <StateBadge
+                  label={t(`eventStatus.${event.status}` as MessageKey)}
+                  state={careEventState(event.status)}
+                />
+              </td>
+              <td>
+                <EvidenceBlock
+                  compact
+                  consentVersion={event.consentVersion}
+                  sourceCount={event.evidenceRefs.length}
+                  version={event.version}
+                />
+              </td>
+              <td>
+                <EventReviewControls event={event} onReview={onReview} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className={styles.cards}>
+        {events.map((event) => (
+          <ReviewCard event={event} key={event.eventId} onReview={onReview} />
         ))}
-      </tbody>
-    </table>
+      </div>
+    </section>
   );
 }

@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "qa:care": "node scripts/care-visual-qa.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run"
   },

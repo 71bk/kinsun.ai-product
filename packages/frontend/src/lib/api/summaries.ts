@@ -1,4 +1,4 @@
-import { apiFetch, type ApiConfig } from './client';
+import { apiFetch, createIdempotencyKey, type ApiConfig } from './client';
 
 export type CoreSummaryStatus =
   'DRAFT' | 'READY' | 'NEEDS_REVIEW' | 'PUBLISHED' | 'STALE' | 'WITHDRAWN';
@@ -54,6 +54,8 @@ export interface ListSummaryFilters {
   statuses?: CoreSummaryStatus[];
 }
 
+export type ReviewSummaryDecision = 'VERIFY' | 'REJECT';
+
 function toSummaryView(summary: CoreSummary): SummaryView {
   return {
     summaryId: summary.summary_id,
@@ -89,4 +91,26 @@ export async function listSummaries(
     `/api/v1/elders/${elderId}/summaries${query ? `?${query}` : ''}`,
   );
   return { items: result.items.map(toSummaryView) };
+}
+
+export async function reviewSummary(
+  config: ApiConfig,
+  elderId: string,
+  summary: SummaryView,
+  decision: ReviewSummaryDecision,
+): Promise<SummaryView> {
+  const result = await apiFetch<CoreSummary & { review_record_id: string }>(
+    config,
+    `/api/v1/elders/${elderId}/summaries/${summary.summaryId}/review`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('summary-review') },
+      body: JSON.stringify({
+        decision,
+        reason_code: 'CAREGIVER_UI_REVIEW',
+        expected_version: summary.version,
+      }),
+    },
+  );
+  return toSummaryView(result);
 }

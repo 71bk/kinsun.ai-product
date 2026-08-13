@@ -3,6 +3,7 @@
 import type { CoreCareEventStatus, CoreCareEventType, ListEventsFilters } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
+import styles from './EventFilterBar.module.css';
 
 export interface EventFilterBarProps {
   filters: ListEventsFilters;
@@ -34,27 +35,26 @@ export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
   const { t } = useLocale();
 
   return (
-    <div
-      style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}
-    >
-      <label>
-        {t('eventFilter.dateFrom')}{' '}
+    <fieldset className={styles.filters}>
+      <legend className={styles.legend}>{t('eventFilter.legend')}</legend>
+      <label className={styles.field}>
+        <span>{t('eventFilter.dateFrom')}</span>
         <input
           type="date"
           value={filters.dateFrom ?? ''}
           onChange={(event) => onChange({ ...filters, dateFrom: event.target.value || undefined })}
         />
       </label>
-      <label>
-        {t('eventFilter.dateTo')}{' '}
+      <label className={styles.field}>
+        <span>{t('eventFilter.dateTo')}</span>
         <input
           type="date"
           value={filters.dateTo ?? ''}
           onChange={(event) => onChange({ ...filters, dateTo: event.target.value || undefined })}
         />
       </label>
-      <label>
-        {t('eventFilter.type')}{' '}
+      <label className={styles.field}>
+        <span>{t('eventFilter.type')}</span>
         <select
           value={filters.eventType ?? ''}
           onChange={(event) =>
@@ -73,8 +73,8 @@ export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
           ))}
         </select>
       </label>
-      <label>
-        {t('eventFilter.status')}{' '}
+      <label className={styles.field}>
+        <span>{t('eventFilter.status')}</span>
         <select
           value={filters.status ?? ''}
           onChange={(event) =>
@@ -92,6 +92,9 @@ export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
           ))}
         </select>
       </label>
-    </div>
+      <button className={styles.reset} onClick={() => onChange({})} type="button">
+        {t('eventFilter.reset')}
+      </button>
+    </fieldset>
   );
 }

@@ -1,8 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { ElderCard } from '@/components/care/ElderCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SearchField } from '@/components/ui/SearchField';
 import type { DashboardElder } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
+import styles from './ElderOverviewList.module.css';
 
 export interface ElderOverviewListProps {
   elders: DashboardElder[];
@@ -10,40 +14,52 @@ export interface ElderOverviewListProps {
 
 export function ElderOverviewList({ elders }: ElderOverviewListProps) {
   const { t } = useLocale();
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return elders;
+    return elders.filter((elder) =>
+      [elder.elderName, elder.careUnitName, elder.authorizationSummary]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLocaleLowerCase().includes(normalized)),
+    );
+  }, [elders, query]);
 
   if (elders.length === 0) {
-    return <p style={{ color: 'var(--color-muted-foreground)' }}>{t('dashboard.empty')}</p>;
+    return <EmptyState description={t('dashboard.empty')} title={t('dashboard.emptyTitle')} />;
   }
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <thead>
-        <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--color-border-strong)' }}>
-          <th style={{ padding: 8 }}>{t('dashboard.colElder')}</th>
-          <th style={{ padding: 8 }}>{t('dashboard.colCareUnit')}</th>
-          <th style={{ padding: 8 }}>{t('dashboard.colAuthorization')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {elders.map((elder) => (
-          <tr key={elder.elderId} style={{ borderBottom: '1px solid var(--color-border)' }}>
-            <td style={{ padding: 8 }}>
-              <Link
-                href={`/dashboard/${elder.elderId}`}
-                style={{ color: 'var(--color-primary-text)' }}
-              >
-                {elder.elderName}
-              </Link>
-            </td>
-            <td style={{ padding: 8 }}>{elder.careUnitName ?? t('common.empty')}</td>
-            {/* `authorizationSummary` is prose from the Core API and is not
-                translated here — it is data, not UI copy. */}
-            <td style={{ padding: 8 }}>
-              {elder.authorizationSummary ?? t('dashboard.authorized')}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <section aria-labelledby="elder-list-title" className={styles.section}>
+      <div className={styles.toolbar}>
+        <div>
+          <h2 className={styles.title} id="elder-list-title">
+            {t('dashboard.elderListTitle')}
+          </h2>
+          <p aria-live="polite" className={styles.resultCount}>
+            {t('dashboard.filteredCount', { count: filtered.length })}
+          </p>
+        </div>
+        <SearchField
+          hideLabel
+          label={t('dashboard.searchLabel')}
+          onChange={setQuery}
+          placeholder={t('dashboard.searchPlaceholder')}
+          value={query}
+        />
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState
+          description={t('dashboard.noSearchResults')}
+          title={t('dashboard.noSearchResultsTitle')}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {filtered.map((elder) => (
+            <ElderCard elder={elder} key={elder.elderId} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

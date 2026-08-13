@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CareSidebar } from '@/components/care/CareSidebar';
 import { SurfaceShell } from '@/components/SurfaceShell';
 import { LOCALE_COOKIE, parseLocaleCookie } from '@/lib/i18n/locale-cookie';
 import { browserAuthCookieNames } from '@/lib/server/app-session-cookie';
@@ -14,7 +15,7 @@ export default async function CaregiverDashboardLayout({ children }: { children:
   const signedIn = browserAuthCookieNames().some((name) => Boolean(cookieStore.get(name)?.value));
   return (
     <SurfaceShell surface="care" initialLocale={locale} signedIn={signedIn}>
-      {children}
+      <CareSidebar>{children}</CareSidebar>
     </SurfaceShell>
   );
 }

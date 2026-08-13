@@ -1,0 +1,30 @@
+.block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.block[data-compact='true'] {
+  display: grid;
+  padding: var(--space-2);
+}
+
+.item,
+.item dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.item dd {
+  margin: 0;
+  color: var(--color-foreground);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}

@@ -1,10 +1,11 @@
 import { ApiRequestError, apiFetch, type ApiConfig } from './client';
 
-type ActorRole = 'DAYCARE_CARE_WORKER' | 'HOME_CARE_WORKER' | 'FAMILY_MEMBER' | string;
+export type ActorRole = 'DAYCARE_CARE_WORKER' | 'HOME_CARE_WORKER' | 'FAMILY_MEMBER' | string;
 type ElderMode = 'daycare' | 'home-care' | 'family';
 
 interface ActorProfile {
   role: ActorRole;
+  display_name: string;
 }
 
 interface AuthorizedElderItem {
@@ -32,6 +33,9 @@ export interface DashboardElder {
 
 export interface CaregiverDashboard {
   elders: DashboardElder[];
+  actorRole: ActorRole;
+  actorName: string;
+  hasMore: boolean;
 }
 
 function modeForRole(role: ActorRole): ElderMode {
@@ -54,6 +58,9 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
   );
 
   return {
+    actorRole: profile.role,
+    actorName: profile.display_name,
+    hasMore: result.page.has_more,
     elders: result.items.map((item) => ({
       elderId: item.elder_id,
       elderName: item.display_name,

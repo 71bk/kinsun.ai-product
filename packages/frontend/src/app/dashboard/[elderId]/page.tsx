@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { EvidenceBlock } from '@/components/care/EvidenceBlock';
 import { EventFilterBar } from '@/components/dashboard/EventFilterBar';
 import { EventTable } from '@/components/dashboard/EventTable';
 import { MemoryList } from '@/components/dashboard/MemoryList';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
-import { StateCard } from '@/components/StateCard';
+import { StateCard, summaryState } from '@/components/StateCard';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ApiRequestError } from '@/lib/api/client';
+import { getElderWorkspace, type ElderWorkspaceView } from '@/lib/api/elders';
 import {
   listEvents,
   reviewEvent,
@@ -25,10 +31,16 @@ import {
   type MemoryListView,
   type MemoryView,
 } from '@/lib/api/memories';
-import { listSummaries, type SummaryView } from '@/lib/api/summaries';
+import {
+  listSummaries,
+  reviewSummary,
+  type ReviewSummaryDecision,
+  type SummaryView,
+} from '@/lib/api/summaries';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
+import styles from './ElderDetailPage.module.css';
 
 type Tab = 'events' | 'memories' | 'summaries';
 
@@ -38,8 +50,8 @@ const TAB_LABEL: Record<Tab, MessageKey> = {
   summaries: 'elderDetail.tabSummaries',
 };
 
-/** Returns a key rather than a string so a stored error re-renders in the
- *  language selected *now*, not the one active when it was raised. */
+const REVIEWABLE_SUMMARY_STATUSES = ['DRAFT', 'NEEDS_REVIEW'] as const;
+
 function describeError(error: unknown, fallback: MessageKey): MessageKey {
   if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404)) {
     return 'error.noElderDataPermission';
@@ -52,23 +64,27 @@ function describeError(error: unknown, fallback: MessageKey): MessageKey {
 
 export default function ElderDetailPage({ params }: { params: Promise<{ elderId: string }> }) {
   const { elderId } = use(params);
-  const { t, locale } = useLocale();
+  const { t, locale, formatDateTime } = useLocale();
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(null);
   const apiConfig = useMemo(
     () => ({ apiBaseUrl: runtimeConfig?.apiBaseUrl ?? '/backend/core' }),
     [runtimeConfig?.apiBaseUrl],
   );
+  const [workspace, setWorkspace] = useState<ElderWorkspaceView | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('events');
   const [events, setEvents] = useState<EventView[]>([]);
   const [eventFilters, setEventFilters] = useState<ListEventsFilters>({});
   const [memories, setMemories] = useState<MemoryListView>({ candidates: [], confirmed: [] });
   const [summaries, setSummaries] = useState<SummaryView[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewSummary | null>(null);
-  /* Distinguishes Loading from Empty (§10.2). Without it an in-flight fetch
-     renders the empty-state copy — "沒有符合條件的事件紀錄" — which asserts
-     something the page does not yet know. */
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
+  const [pendingSummary, setPendingSummary] = useState<{
+    summary: SummaryView;
+    decision: ReviewSummaryDecision;
+  } | null>(null);
+  const [summaryBusy, setSummaryBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,12 +96,33 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     };
   }, []);
 
+  useEffect(() => {
+    if (runtimeConfig?.credentialStatus !== 'present') return;
+    let cancelled = false;
+    setWorkspace(null);
+    setWorkspaceLoading(true);
+    setErrorKey(null);
+    getElderWorkspace(apiConfig, elderId)
+      .then((view) => {
+        if (!cancelled) setWorkspace(view);
+      })
+      .catch((error) => {
+        if (!cancelled) setErrorKey(describeError(error, 'error.loadElderFailed'));
+      })
+      .finally(() => {
+        if (!cancelled) setWorkspaceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiConfig, elderId, runtimeConfig?.credentialStatus]);
+
   const loadEvents = useCallback(() => {
     setErrorKey(null);
     setLoading(true);
     listEvents(apiConfig, elderId, eventFilters)
       .then((response) => setEvents(response.items))
-      .catch((caught) => setErrorKey(describeError(caught, 'error.loadEventsFailed')))
+      .catch((error) => setErrorKey(describeError(error, 'error.loadEventsFailed')))
       .finally(() => setLoading(false));
   }, [apiConfig, elderId, eventFilters]);
 
@@ -94,23 +131,29 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     setLoading(true);
     listMemories(apiConfig, elderId)
       .then(setMemories)
-      .catch((caught) => setErrorKey(describeError(caught, 'error.loadMemoriesFailed')))
+      .catch((error) => setErrorKey(describeError(error, 'error.loadMemoriesFailed')))
       .finally(() => setLoading(false));
   }, [apiConfig, elderId]);
+
+  const canReviewSummaries = workspace?.allowedActions.includes('summary:review') ?? false;
 
   const loadSummaries = useCallback(() => {
     setErrorKey(null);
     setLoading(true);
-    listSummaries(apiConfig, elderId)
+    listSummaries(
+      apiConfig,
+      elderId,
+      canReviewSummaries
+        ? {
+            statuses: ['DRAFT', 'READY', 'NEEDS_REVIEW', 'PUBLISHED', 'STALE', 'WITHDRAWN'],
+          }
+        : {},
+    )
       .then((response) => setSummaries(response.items))
-      .catch((caught) => setErrorKey(describeError(caught, 'error.loadSummariesFailed')))
+      .catch((error) => setErrorKey(describeError(error, 'error.loadSummariesFailed')))
       .finally(() => setLoading(false));
-  }, [apiConfig, elderId]);
+  }, [apiConfig, canReviewSummaries, elderId]);
 
-  /* Independent of the active tab: §10.2 requires the review queue to be
-     visible whichever tab the caregiver is on, not only inside the events one.
-     A failure here is deliberately swallowed — the queue count is secondary,
-     and blanking the page over it would be worse than not showing it. */
   const loadNeedsReview = useCallback(() => {
     summariseNeedsReview(apiConfig, elderId)
       .then(setNeedsReview)
@@ -118,16 +161,15 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   }, [apiConfig, elderId]);
 
   useEffect(() => {
-    if (runtimeConfig?.credentialStatus !== 'present') return;
+    if (!workspace) return;
     if (tab === 'events') loadEvents();
     if (tab === 'memories') loadMemories();
     if (tab === 'summaries') loadSummaries();
-  }, [tab, runtimeConfig?.credentialStatus, loadEvents, loadMemories, loadSummaries]);
+  }, [loadEvents, loadMemories, loadSummaries, tab, workspace]);
 
   useEffect(() => {
-    if (runtimeConfig?.credentialStatus !== 'present') return;
-    loadNeedsReview();
-  }, [runtimeConfig?.credentialStatus, loadNeedsReview]);
+    if (workspace) loadNeedsReview();
+  }, [loadNeedsReview, workspace]);
 
   if (!runtimeConfig) return null;
   if (runtimeConfig.credentialStatus === 'unavailable') {
@@ -145,82 +187,107 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     try {
       await reviewEvent(apiConfig, elderId, event, decision, correctedContent);
       loadEvents();
-      // The queue just shrank; leaving the banner stale would send the reviewer
-      // looking for work that is already done.
       loadNeedsReview();
-    } catch (caught) {
-      setErrorKey(describeError(caught, 'error.reviewEventFailed'));
-      throw caught;
+    } catch (error) {
+      setErrorKey(describeError(error, 'error.reviewEventFailed'));
+      throw error;
     }
   }
 
   async function handleRejectMemory(memory: MemoryView) {
-    await rejectMemory(apiConfig, elderId, memory);
-    loadMemories();
+    try {
+      await rejectMemory(apiConfig, elderId, memory);
+      loadMemories();
+    } catch (error) {
+      setErrorKey(describeError(error, 'error.updateMemoryFailed'));
+      throw error;
+    }
   }
 
   async function handleDeleteMemory(memory: MemoryView) {
-    await deleteMemory(apiConfig, elderId, memory);
-    loadMemories();
+    try {
+      await deleteMemory(apiConfig, elderId, memory);
+      loadMemories();
+    } catch (error) {
+      setErrorKey(describeError(error, 'error.updateMemoryFailed'));
+      throw error;
+    }
   }
 
-  const listSeparator = locale === 'en' ? ', ' : '、';
+  async function handleSummaryReview() {
+    if (!pendingSummary) return;
+    setSummaryBusy(true);
+    try {
+      await reviewSummary(apiConfig, elderId, pendingSummary.summary, pendingSummary.decision);
+      setPendingSummary(null);
+      loadSummaries();
+    } catch (error) {
+      setErrorKey(describeError(error, 'error.reviewSummaryFailed'));
+    } finally {
+      setSummaryBusy(false);
+    }
+  }
 
-  /* §10.2 Permission Denied. A denial replaces the page rather than being
-     appended to it (§1 "不得先畫再遮"), and it carries no elder identity — not
-     the name, and not the id either, even though the caller already has the id
-     from the URL.
-
-     Deliberately NOT a StateCard: §2 reserves that colour vocabulary for
-     workflow state. A denial is not a state the record is in, and dressing it
-     as one would teach the palette a second, conflicting meaning. */
   if (errorKey === 'error.noElderDataPermission') {
     return (
-      <main
-        style={{
-          maxWidth: 480,
-          margin: '80px auto',
-          padding: 'var(--space-6)',
-          textAlign: 'center',
-        }}
-      >
-        <h1 style={{ fontSize: 'var(--text-xl)', color: 'var(--color-foreground)' }}>
-          {t('denied.title')}
-        </h1>
-        <p style={{ color: 'var(--color-muted-foreground)', margin: 'var(--space-5) 0' }}>
-          {t('error.noElderDataPermission')}
-        </p>
-        <Link href="/dashboard">{t('denied.back')}</Link>
+      <main className={styles.denied}>
+        <ErrorState
+          action={
+            <Link className={styles.backLink} href="/dashboard">
+              {t('denied.back')}
+            </Link>
+          }
+          description={t('error.noElderDataPermission')}
+          title={t('denied.title')}
+        />
       </main>
     );
   }
 
-  return (
-    <main style={{ maxWidth: 960, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>{t('elderDetail.title')}</h1>
-      <p style={{ color: 'var(--color-muted-foreground)', marginBottom: 20 }}>
-        Elder ID: {elderId}
-      </p>
+  if (workspaceLoading || !workspace) {
+    return (
+      <main className={styles.page}>
+        {errorKey ? <ErrorState description={t(errorKey)} /> : <Skeleton rows={6} />}
+      </main>
+    );
+  }
 
-      {/* §10.2 Needs Review: the count and the reason, on every tab. */}
+  const listSeparator = locale === 'en' ? ', ' : '、';
+
+  return (
+    <main className={styles.page}>
+      <PageHeader
+        description={t(`careSetting.${workspace.primaryCareSetting}` as MessageKey)}
+        meta={
+          <span>
+            {workspace.sourceSummary}
+            {workspace.expiresAt
+              ? ` · ${t('elderDetail.accessExpires', { at: formatDateTime(workspace.expiresAt) })}`
+              : ''}
+          </span>
+        }
+        title={workspace.displayName}
+      />
+
       {needsReview && needsReview.count > 0 && (
-        <div style={{ marginBottom: 'var(--space-5)' }}>
+        <div className={styles.reviewSummary}>
           <StateCard
-            state="needsReview"
-            title={t(needsReview.atLeast ? 'needsReview.countAtLeast' : 'needsReview.count', {
-              count: needsReview.count,
-            })}
             actions={
               <button
-                type="button"
+                className={styles.primaryButton}
                 onClick={() => {
                   setEventFilters({ status: 'NEEDS_REVIEW' });
                   setTab('events');
                 }}
+                type="button"
               >
                 {t('needsReview.reviewNow')}
               </button>
             }
+            state="needsReview"
+            title={t(needsReview.atLeast ? 'needsReview.countAtLeast' : 'needsReview.count', {
+              count: needsReview.count,
+            })}
           >
             {t('needsReview.byConfidence', {
               low: needsReview.byConfidence.LOW,
@@ -231,114 +298,169 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
         </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          marginBottom: 20,
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
+      <div aria-label={t('elderDetail.tabsLabel')} className={styles.tabs} role="tablist">
         {(['events', 'memories', 'summaries'] as Tab[]).map((item) => (
           <button
+            aria-controls={`elder-panel-${item}`}
+            aria-selected={tab === item}
+            className={styles.tab}
+            id={`elder-tab-${item}`}
             key={item}
-            type="button"
             onClick={() => setTab(item)}
-            aria-pressed={tab === item}
-            style={{
-              padding: '8px 16px',
-              border: 'none',
-              borderBottom:
-                tab === item ? '2px solid var(--color-primary)' : '2px solid transparent',
-              background: 'none',
-              fontWeight: tab === item ? 700 : 400,
-              cursor: 'pointer',
-            }}
+            role="tab"
+            tabIndex={tab === item ? 0 : -1}
+            type="button"
           >
             {t(TAB_LABEL[item])}
           </button>
         ))}
       </div>
 
-      {errorKey && <p style={{ color: 'var(--color-destructive)' }}>{t(errorKey)}</p>}
+      {errorKey && (
+        <div className={styles.error}>
+          <ErrorState description={t(errorKey)} />
+        </div>
+      )}
 
       {tab === 'events' && (
-        <>
+        <section
+          aria-labelledby="elder-tab-events"
+          id="elder-panel-events"
+          role="tabpanel"
+          tabIndex={0}
+        >
           <EventFilterBar filters={eventFilters} onChange={setEventFilters} />
-          {/* Skeleton replaces the previous rows rather than sitting beside
-              them: on a care dashboard, rows belonging to a previous filter or
-              a previous elder are worse than a visibly empty panel (§10.2). */}
           {loading ? (
             <Skeleton rows={5} />
           ) : (
             <EventTable events={events} onReview={handleReviewEvent} />
           )}
-        </>
+        </section>
       )}
 
-      {tab === 'memories' &&
-        (loading ? (
-          <Skeleton rows={4} />
-        ) : (
-          <MemoryList
-            candidates={memories.candidates}
-            confirmed={memories.confirmed}
-            onReject={handleRejectMemory}
-            onDelete={handleDeleteMemory}
-          />
-        ))}
-
-      {tab === 'summaries' && loading && <Skeleton rows={3} />}
-
-      {tab === 'summaries' && !loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ color: 'var(--color-muted-foreground)' }}>{t('elderDetail.summaryNotice')}</p>
-          {summaries.length === 0 && (
-            <p style={{ color: 'var(--color-muted-foreground)' }}>
-              {t('elderDetail.summaryEmpty')}
-            </p>
+      {tab === 'memories' && (
+        <section
+          aria-labelledby="elder-tab-memories"
+          id="elder-panel-memories"
+          role="tabpanel"
+          tabIndex={0}
+        >
+          {loading ? (
+            <Skeleton rows={4} />
+          ) : (
+            <MemoryList
+              candidates={memories.candidates}
+              confirmed={memories.confirmed}
+              onDelete={handleDeleteMemory}
+              onReject={handleRejectMemory}
+            />
           )}
-          {summaries.map((summary) => (
-            <section
-              key={summary.summaryId}
-              style={{
-                padding: 'var(--space-3)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <strong>{summary.date}</strong>
-                <span>{t(`summaryStatus.${summary.status}` as MessageKey)}</span>
-                <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
-                  {t('common.version', { version: summary.version })}
-                </span>
-              </div>
-              {summary.items.length === 0 ? (
-                <p style={{ color: 'var(--color-muted-foreground)' }}>
-                  {t('elderDetail.summaryNoItems')}
-                </p>
-              ) : (
-                <ul>
-                  {summary.items.map((item, index) => (
-                    <li key={`${item.category}-${index}`}>
-                      [{item.category}] {item.text}
-                      {t('common.sources', { count: item.sourceEventIds.length })}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {summary.missingFields.length > 0 && (
-                <p style={{ color: 'var(--color-muted-foreground)' }}>
-                  {t('elderDetail.dataGaps', {
-                    fields: summary.missingFields.join(listSeparator),
-                  })}
-                </p>
-              )}
-            </section>
-          ))}
-        </div>
+        </section>
       )}
+
+      {tab === 'summaries' && (
+        <section
+          aria-labelledby="elder-tab-summaries"
+          id="elder-panel-summaries"
+          role="tabpanel"
+          tabIndex={0}
+        >
+          {loading ? (
+            <Skeleton rows={4} />
+          ) : (
+            <div className={styles.summaryList}>
+              <p className={styles.notice}>{t('elderDetail.summaryNotice')}</p>
+              {summaries.length === 0 && (
+                <EmptyState
+                  description={t('elderDetail.summaryEmpty')}
+                  title={t('elderDetail.summaryEmptyTitle')}
+                />
+              )}
+              {summaries.map((summary) => {
+                const sourceCount = summary.items.reduce(
+                  (count, item) => count + item.sourceEventIds.length,
+                  0,
+                );
+                const reviewable =
+                  canReviewSummaries &&
+                  REVIEWABLE_SUMMARY_STATUSES.some((status) => status === summary.status);
+                return (
+                  <StateCard
+                    actions={
+                      reviewable ? (
+                        <>
+                          <button
+                            className={styles.secondaryButton}
+                            onClick={() => setPendingSummary({ summary, decision: 'REJECT' })}
+                            type="button"
+                          >
+                            {t('summaryReview.reject')}
+                          </button>
+                          <button
+                            className={styles.primaryButton}
+                            onClick={() => setPendingSummary({ summary, decision: 'VERIFY' })}
+                            type="button"
+                          >
+                            {t('summaryReview.verify')}
+                          </button>
+                        </>
+                      ) : undefined
+                    }
+                    key={summary.summaryId}
+                    meta={<EvidenceBlock sourceCount={sourceCount} version={summary.version} />}
+                    state={summaryState(summary.status)}
+                    stateLabel={t(`summaryStatus.${summary.status}` as MessageKey)}
+                    title={summary.date}
+                  >
+                    {summary.items.length === 0 ? (
+                      <p className={styles.notice}>{t('elderDetail.summaryNoItems')}</p>
+                    ) : (
+                      <ul className={styles.summaryItems}>
+                        {summary.items.map((item, index) => (
+                          <li key={`${item.category}-${index}`}>
+                            <strong>{t(`summaryCategory.${item.category}` as MessageKey)}</strong>
+                            <span>{item.text}</span>
+                            <span className={styles.dataStatus}>
+                              {t(`dataStatus.${item.dataStatus}` as MessageKey)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {summary.missingFields.length > 0 && (
+                      <p className={styles.notice}>
+                        {t('elderDetail.dataGaps', {
+                          fields: summary.missingFields.join(listSeparator),
+                        })}
+                      </p>
+                    )}
+                    {summary.conflictFlags.length > 0 && (
+                      <p className={styles.notice}>
+                        {t('elderDetail.conflictCount', { count: summary.conflictFlags.length })}
+                      </p>
+                    )}
+                  </StateCard>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      <ConfirmationDialog
+        busy={summaryBusy}
+        confirmLabel={
+          pendingSummary?.decision === 'REJECT'
+            ? t('summaryReview.reject')
+            : t('summaryReview.verify')
+        }
+        description={t('summaryReview.confirmDescription')}
+        onCancel={() => setPendingSummary(null)}
+        onConfirm={() => void handleSummaryReview()}
+        open={pendingSummary !== null}
+        title={t('summaryReview.confirmTitle')}
+        tone={pendingSummary?.decision === 'REJECT' ? 'destructive' : 'default'}
+      />
     </main>
   );
 }

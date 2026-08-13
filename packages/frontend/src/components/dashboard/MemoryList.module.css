@@ -1,0 +1,40 @@
+.list,
+.cards,
+.memoryMeta {
+  display: grid;
+}
+
+.list {
+  gap: var(--block-gap);
+}
+
+.cards,
+.memoryMeta {
+  gap: var(--space-3);
+}
+
+.heading {
+  margin: 0 0 var(--space-3);
+  color: var(--color-foreground);
+  font-size: var(--text-lg);
+}
+
+.memoryMeta {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.destructiveButton {
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-destructive);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-destructive);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.destructiveButton:hover {
+  background: var(--state-withdrawn-bg);
+}

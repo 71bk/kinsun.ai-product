@@ -1,19 +1,24 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { ElderOverviewList } from '@/components/dashboard/ElderOverviewList';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { SummaryMetricCard } from '@/components/ui/SummaryMetricCard';
 import { ApiRequestError } from '@/lib/api/client';
-import { getCaregiverDashboard, type DashboardElder } from '@/lib/api/dashboard';
+import { getCaregiverDashboard, type CaregiverDashboard } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import type { MessageKey } from '@/lib/i18n/messages';
+import styles from './DashboardPage.module.css';
 
 export default function CaregiverDashboardPage() {
   const { t } = useLocale();
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
-  const [elders, setElders] = useState<DashboardElder[] | null>(null);
+  const [dashboard, setDashboard] = useState<CaregiverDashboard | null>(null);
   // Stored as a key, not a rendered string: an error raised before the switch is
   // used must re-render in the new language, not stay frozen in the old one.
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
@@ -33,9 +38,9 @@ export default function CaregiverDashboardPage() {
     setErrorKey(null);
     // §10.2: drop the previous result before refetching. Leaving it on screen
     // would present a stale list as a finished load.
-    setElders(null);
+    setDashboard(null);
     getCaregiverDashboard(config)
-      .then((response) => setElders(response.elders))
+      .then(setDashboard)
       .catch((caught) => {
         setErrorKey(
           caught instanceof ApiRequestError && (caught.status === 403 || caught.status === 404)
@@ -58,14 +63,46 @@ export default function CaregiverDashboardPage() {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ fontSize: 22, marginBottom: 16 }}>{t('dashboard.title')}</h1>
-      <p style={{ color: 'var(--color-muted-foreground)', marginBottom: 16 }}>
-        {t('dashboard.subtitle')}
-      </p>
-      {errorKey && <p style={{ color: 'var(--color-destructive)' }}>{t(errorKey)}</p>}
-      {!elders && !errorKey && <Skeleton rows={4} />}
-      {elders && <ElderOverviewList elders={elders} />}
+    <main className={styles.page}>
+      <PageHeader
+        actions={
+          dashboard?.actorRole === 'HOME_CARE_WORKER' ? (
+            <Link className={styles.assignmentLink} href="/dashboard/assignments">
+              {t('dashboard.viewAssignments')}
+            </Link>
+          ) : undefined
+        }
+        description={t('dashboard.subtitle')}
+        meta={dashboard ? t('dashboard.actorMeta', { name: dashboard.actorName }) : undefined}
+        title={t('dashboard.title')}
+      />
+      {errorKey && (
+        <ErrorState
+          action={
+            <button className={styles.retryButton} onClick={load} type="button">
+              {t('common.retry')}
+            </button>
+          }
+          description={t(errorKey)}
+        />
+      )}
+      {!dashboard && !errorKey && <Skeleton rows={5} />}
+      {dashboard && (
+        <>
+          <div className={styles.metrics}>
+            <SummaryMetricCard
+              description={
+                dashboard.hasMore
+                  ? t('dashboard.loadedCountAtLeast')
+                  : t('dashboard.loadedCountComplete')
+              }
+              label={t('dashboard.loadedCount')}
+              value={dashboard.hasMore ? `${dashboard.elders.length}+` : dashboard.elders.length}
+            />
+          </div>
+          <ElderOverviewList elders={dashboard.elders} />
+        </>
+      )}
     </main>
   );
 }

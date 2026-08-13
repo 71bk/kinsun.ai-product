@@ -20,8 +20,8 @@ describe('caregiver memory confirmation guard', () => {
     const memoryListSource = source('../../components/dashboard/MemoryList.tsx');
     const dashboardSource = source('../../app/dashboard/[elderId]/page.tsx');
 
-    expect(memoryListSource).not.toContain('onConfirm');
     expect(memoryListSource).not.toContain("t('memory.confirm')");
+    expect(memoryListSource).not.toContain('confirmMemory');
     expect(dashboardSource).not.toContain('confirmMemory');
     expect(dashboardSource).not.toContain('handleConfirmMemory');
   });
