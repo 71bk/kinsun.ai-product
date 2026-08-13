@@ -11,6 +11,8 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 人工覆核的事件，都不得成為正式照護事實。
 
 規則與邊界見 [`AGENTS.md`](AGENTS.md)，產品規格見 [`docs/spec/`](docs/spec/)。
+新協作者請先依 [`docs/project/COLLABORATOR_SETUP.md`](docs/project/COLLABORATOR_SETUP.md)
+完成工具、ENV、資料庫與本機服務建置。
 
 ## 開發理念
 
@@ -309,6 +311,7 @@ npm run diff
 | 想知道 | 看哪裡 |
 | --- | --- |
 | 開發規則與不可違反的邊界 | [`AGENTS.md`](AGENTS.md) |
+| 新協作者工具、ENV 與本機建置 | [`docs/project/COLLABORATOR_SETUP.md`](docs/project/COLLABORATOR_SETUP.md) |
 | 產品規格（17 份） | [`docs/spec/`](docs/spec/) |
 | 技術決策與理由 | [`docs/adr/`](docs/adr/) |
 | Agent Runtime 架構 | [`docs/architecture/`](docs/architecture/) |
