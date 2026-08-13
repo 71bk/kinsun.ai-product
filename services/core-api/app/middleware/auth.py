@@ -23,7 +23,6 @@ from app.core.config import AppEnv, get_settings
 from app.core.exceptions import AuthenticationError, ServiceUnavailableError
 
 if TYPE_CHECKING:
-    from app.adapters.auth.cognito import CognitoTokenVerifier
     from app.adapters.auth.google_oidc import GoogleTokenVerifier
     from app.adapters.auth.line_oidc import LineTokenVerifier
 
@@ -47,7 +46,7 @@ class Authenticator(ABC):
 
     Concrete implementations:
     - FakeAuthenticator (tests + explicit local dev)
-    - CognitoAuthenticator (future production spec)
+    - DatabaseAppSessionAuthenticator (production browser sessions)
     """
 
     @abstractmethod
@@ -89,29 +88,6 @@ class FakeAuthenticator(Authenticator):
             tenant_id=self._tenant_id,
             status=self._status,
         )
-
-
-class RoutedAuthenticator(Authenticator):
-    """Route versioned App Session credentials without downgrade fallback."""
-
-    def __init__(
-        self,
-        *,
-        app_session: Authenticator | None,
-        cognito: Authenticator | None,
-    ) -> None:
-        self._app_session = app_session
-        self._cognito = cognito
-
-    async def authenticate(self, request: Request) -> ActorContext:
-        token = _peek_bearer_token(request)
-        if token.startswith("ks1_"):
-            if self._app_session is None:
-                raise AuthenticationError("Authentication required")
-            return await self._app_session.authenticate(request)
-        if self._cognito is None:
-            raise AuthenticationError("Authentication required")
-        return await self._cognito.authenticate(request)
 
 
 class NoAuthenticatorConfiguredError(Exception):
@@ -173,68 +149,13 @@ def get_authenticator() -> Authenticator:
 
 
 def _resolve_production_authenticator(settings) -> Authenticator | None:
-    """Build explicitly enabled auth runtimes without downgrade fallback."""
+    """Build the explicitly enabled Core-owned App Session authenticator."""
+    if getattr(settings, "app_session_auth_enabled", False) is not True:
+        return None
+    from app.adapters.auth.app_session import DatabaseAppSessionAuthenticator
     from app.db.session import get_db_engine
 
-    app_session_authenticator: Authenticator | None = None
-    if getattr(settings, "app_session_auth_enabled", False) is True:
-        from app.adapters.auth.app_session import DatabaseAppSessionAuthenticator
-
-        app_session_authenticator = DatabaseAppSessionAuthenticator(get_db_engine(), settings)
-
-    cognito_authenticator: Authenticator | None = None
-    if getattr(settings, "cognito_auth_enabled", False) is True:
-        from app.adapters.auth.cognito import (
-            CognitoAuthenticator,
-            DatabaseCognitoActorContextResolver,
-        )
-
-        verifier = _get_cognito_token_verifier_from_settings(settings)
-        cognito_authenticator = CognitoAuthenticator(
-            verifier,
-            DatabaseCognitoActorContextResolver(get_db_engine().session_factory),
-        )
-
-    if app_session_authenticator is None and cognito_authenticator is None:
-        return None
-    if app_session_authenticator is None:
-        return cognito_authenticator
-    if cognito_authenticator is None:
-        return app_session_authenticator
-    return RoutedAuthenticator(
-        app_session=app_session_authenticator,
-        cognito=cognito_authenticator,
-    )
-
-
-def _peek_bearer_token(request: Request) -> str:
-    values = request.headers.getlist("authorization")
-    if len(values) != 1:
-        raise AuthenticationError("Authentication required")
-    scheme, separator, token = values[0].partition(" ")
-    if (
-        separator != " "
-        or scheme.casefold() != "bearer"
-        or not token
-        or len(token) > 16_384
-        or any(character.isspace() for character in token)
-    ):
-        raise AuthenticationError("Authentication required")
-    return token
-
-
-def get_cognito_token_verifier() -> CognitoTokenVerifier:
-    """FastAPI-overridable dependency for onboarding's separately supplied ID token.
-
-    The protected Core API continues to obtain an ``ActorContext`` through
-    ``get_authenticator`` and Cognito *access* tokens.  An onboarding handler
-    may instead depend on this verifier and call ``verify_id_token``; it gets
-    only a verified subject/email and still cannot mint a role or tenant.
-    """
-    settings = get_settings()
-    if getattr(settings, "cognito_auth_enabled", False) is not True:
-        raise NoAuthenticatorConfiguredError("Cognito authentication is not enabled")
-    return _get_cognito_token_verifier_from_settings(settings)
+    return DatabaseAppSessionAuthenticator(get_db_engine(), settings)
 
 
 def get_google_token_verifier() -> GoogleTokenVerifier:
@@ -291,36 +212,6 @@ def _build_google_token_verifier(
         client_id=client_id,
         jwks_cache_seconds=jwks_cache_seconds,
         http_timeout_seconds=http_timeout_seconds,
-    )
-
-
-@lru_cache(maxsize=16)
-def _build_cognito_token_verifier(
-    region: str,
-    user_pool_id: str,
-    app_client_id: str,
-    jwks_cache_seconds: int,
-    http_timeout_seconds: float,
-) -> CognitoTokenVerifier:
-    """Keep one JWKS cache per immutable Cognito configuration in this process."""
-    from app.adapters.auth.cognito import CognitoJwtVerifier
-
-    return CognitoJwtVerifier(
-        region=region,
-        user_pool_id=user_pool_id,
-        app_client_id=app_client_id,
-        jwks_cache_seconds=jwks_cache_seconds,
-        http_timeout_seconds=http_timeout_seconds,
-    )
-
-
-def _get_cognito_token_verifier_from_settings(settings) -> CognitoTokenVerifier:
-    return _build_cognito_token_verifier(
-        settings.cognito_region,
-        settings.cognito_user_pool_id,
-        settings.cognito_app_client_id,
-        settings.cognito_jwks_cache_seconds,
-        settings.cognito_http_timeout_seconds,
     )
 
 

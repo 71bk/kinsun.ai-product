@@ -65,7 +65,6 @@ test('uses immutable digests and runtime-only secret injection', () => {
   for (const name of [
     'DatabaseAdminSecretArn',
     'DatabaseRuntimeSecretArn',
-    'OauthTransactionSecretArn',
     'FamilyInviteSecretArn',
   ]) {
     assert.equal(document.Parameters[name]?.NoEcho, true);
@@ -155,6 +154,7 @@ test('exposes only the BFF and does not recreate external or legacy services', (
   );
   assert.equal(loadBalancedServices.length, 1);
   assert.match(JSON.stringify(loadBalancedServices[0]), /frontend/);
+  assert.doesNotMatch(JSON.stringify(template.toJSON()), /cognito/i);
 
   const stage = Object.values(document.Resources).find(
     (resource) => resource.Type === 'AWS::ApiGatewayV2::Stage',

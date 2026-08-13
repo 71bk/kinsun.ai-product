@@ -66,8 +66,7 @@ build_one() {
 build_one frontend packages/frontend/Dockerfile . \
   "kinsun-staging-frontend:${release_id}" \
   --label "io.kinsun.consent-policy-version=${consent_policy_version}" \
-  --build-arg "NEXT_PUBLIC_CONSENT_POLICY_VERSION=${consent_policy_version}" \
-  --build-arg "NEXT_PUBLIC_WS_URL="
+  --build-arg "NEXT_PUBLIC_CONSENT_POLICY_VERSION=${consent_policy_version}"
 
 build_one core-api services/core-api/Dockerfile.api services/core-api \
   "kinsun-staging-core-api:${release_id}"

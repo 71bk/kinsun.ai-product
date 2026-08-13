@@ -44,7 +44,7 @@ Staging RAG Request
 | Contract | Pydantic model；對應 `contracts/schemas/{agent,tools}/` 的 JSON Schema | `src/agent_runtime/contracts/models.py` |
 | Orchestration | Agent 選擇、step 控制、RAG、Safety gate、受控 Candidate Tool lifecycle、狀態組裝 | `src/agent_runtime/orchestration/` |
 | Agent | Companion Agent、deterministic Event Extractor、Safety Evaluator | `src/agent_runtime/agents/` |
-| Context | Context Manifest 建構（僅記憶體，無持久化） | `src/agent_runtime/context/` |
+| Context | Context Manifest 建構（本輪輸入、Core 授權的 Confirmed Memory、可選 RAG；僅記憶體，無持久化） | `src/agent_runtime/context/` |
 | Model | Provider 介面、預設 Mock、可設定 Bedrock Converse adapter | `src/agent_runtime/models/` |
 | Core integration | Core-owned AgentRun register／complete adapter | `src/agent_runtime/core/` |
 | Tool | Allowlisted Core Tool request builder 與 executor；目前只接 `create_event_candidate` | `src/agent_runtime/tools/` |
@@ -107,8 +107,11 @@ SDK 呼叫散進 orchestration 或 agent 層**，否則之後無法在沒有 AWS
 
 ## Context Manifest 的資料敏感度
 
-`ContextManifestV1` 的 `items[].content` 目前直接放使用者輸入（逐字稿）。現況下 manifest
-只存在於記憶體，API 回應只帶 `context_manifest_id`，不回傳 manifest 本體。
+`ContextManifestV1` 的 `items[].content` 目前直接放使用者輸入（逐字稿）；`BASIC_VOICE` 也可放
+最多 5 筆由 Core 重驗 `memory:read`、active `LONG_TERM_MEMORY` Consent、tenant／elder、status、
+current version 與 consent version 後提供的 Confirmed Memory。這些項目以 `confirmed-memory`
+標記並明示為資料而非指令；Knowledge／RAG purpose 由 request contract 禁止攜帶。
+現況下 manifest 只存在於記憶體，API 回應只帶 `context_manifest_id`，不回傳 manifest 本體。
 
 但 executable `AgentRunRequest.input_text` 已能在 Core→Agent 呼叫中攜帶 current turn。正式
 canonical path 在啟用前必須採 reference，或建立經核准的 private Restricted Data service
@@ -122,7 +125,8 @@ handoff 前，必須先決定 manifest 改成只帶 reference，或建立明確�
 
 ## 目前不存在的東西
 
-目前尚未實作：通用多 Tool 執行迴圈、Memory Candidate 與長者確認閉環、Graph／Neptune
+目前尚未實作：通用多 Tool 執行迴圈、Memory Candidate 自動擷取、Confirmed Memory 語意相關性
+排序、Graph／Neptune
 實際查詢、Prompt Registry、Model Router、cross-agent handoff、完整 Agent Trace 持久化、
 Evaluation runner，以及 production RAG／Guardrails。
 

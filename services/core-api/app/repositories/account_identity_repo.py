@@ -186,7 +186,6 @@ class AccountIdentityRepository:
             actor is None
             or actor.status != "ACTIVE"
             or actor.actor_type != "ELDER"
-            or actor.cognito_sub is not None
             or identity is None
             or identity.actor_id != actor.id
             or identity.provider != "LINE"

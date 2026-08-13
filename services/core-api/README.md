@@ -45,7 +45,12 @@ The shared Python entrypoint supports two database configuration paths:
 
 The entrypoint never prints the URL or component values. This lets ECS inject
 Aurora username/password fields directly from Secrets Manager without making
-IaC reconstruct or expose a credential-bearing URL.
+   IaC reconstruct or expose a credential-bearing URL.
+
+The currently configured external provider is Supabase PostgreSQL. Core uses it
+through the standard `DATABASE_URL` path only; it does not depend on Supabase
+Auth or a Supabase-specific data API. The Aurora notes below describe the
+retained AWS deployment profile, not the current database provider.
 
 Staging ECS tasks must set `DB_SSLMODE=require`. The entrypoint emits the
 driver-specific query option (`ssl=require` for SQLAlchemy/asyncpg and
@@ -75,13 +80,11 @@ overlapping requests await that same attempt. A later request may retry after a
 failure. There is no background or periodic recovery probe, and `/health`
 remains database-independent.
 
-When Cognito authentication is enabled, also provide `COGNITO_REGION`,
-`COGNITO_USER_POOL_ID`, `COGNITO_APP_CLIENT_ID`, and a minimum 32-byte
-`FAMILY_INVITATION_HMAC_SECRET` at runtime.
-
-The provider-neutral authentication foundation currently has internal App
-Session issue, validation, touch, recent-auth, active-session-cap, and revocation
-services, plus an internal Google ID-token verifier. The verifier independently
+Authentication uses direct Google and/or LINE OIDC plus Core-owned opaque App
+Sessions. Cognito is no longer a supported authenticator. The authentication
+runtime includes App Session issue, validation, touch, recent-auth,
+active-session-cap, and revocation services, plus Google and LINE ID-token
+verifiers. The Google verifier independently
 checks Google's public JWKS signature, issuer, exact audience, expiry, issued-at,
 expected nonce, authorized party when present, and immutable subject. It retains
 an email only when Google marks it verified and never uses email to link an
@@ -94,11 +97,11 @@ that secret. `GOOGLE_OIDC_JWKS_CACHE_SECONDS` and
 repository-level `.env.example` documents all four values, while real values
 belong only in a git-ignored local file or runtime secret store.
 
-The BFF now has unbound direct-Google transaction, callback-validation, and
-authorization-code exchange helpers. There is still no registered Google
-start/callback route, BFF-to-Core identity handoff, public App Session creation
-route, or enabled App Session authenticator. Cognito therefore remains the only
-real authentication runtime. The default App Session policy is a 7-day idle/30-day
+The BFF has direct Google and LINE start/callback/onboarding routes and exchanges
+verified provider identity with Core through a signed server-to-server handoff.
+Existing external identities receive an App Session; unknown identities enter a
+short-lived pending flow subject to role and invitation rules. The default App
+Session policy is a 7-day idle/30-day
 absolute lifetime for elder and family actors, an 8-hour idle/24-hour absolute
 lifetime for workforce actors, a five-minute touch interval, a ten-minute
 recent-auth window, and at most five live sessions per actor. Override these only

@@ -4,7 +4,6 @@ import { GET as googleCallback } from '../../app/backend/auth/google/callback/ro
 import { POST as completeGoogleOnboarding } from '../../app/backend/auth/google/onboarding/route';
 import { POST as logout } from '../../app/backend/auth/logout/route';
 import { appSessionCookieName } from './app-session-cookie';
-import { accessTokenCookieName } from './auth-cookie';
 import {
   createGooglePendingOnboarding,
   googlePendingOnboardingCookieName,
@@ -28,8 +27,6 @@ function configure(): void {
     'synthetic-google-transaction-secret-material-32-bytes',
   );
   vi.stubEnv('GOOGLE_OIDC_HANDOFF_SECRET', 'synthetic-google-handoff-secret-material-32-bytes');
-  vi.stubEnv('COGNITO_OAUTH_TRANSACTION_SECRET', 'independent-cognito-secret-32-bytes');
-  vi.stubEnv('LINE_LOGIN_LINK_TRANSACTION_SECRET', 'independent-line-secret-32-bytes');
   vi.stubEnv('CORE_API_INTERNAL_URL', 'http://127.0.0.1:8000');
 }
 
@@ -96,7 +93,6 @@ describe('direct Google authentication routes', () => {
     expect(response.headers.get('location')).toBe('/onboarding/resolve');
     expect(cookieValue(response, appSessionCookieName())).toBe(`ks1_${'a'.repeat(43)}`);
     expect(cookieValue(response, googleOidcTransactionCookieName())).toBe('');
-    expect(cookieValue(response, accessTokenCookieName())).toBe('');
     expect(await response.text()).not.toContain(`ks1_${'a'.repeat(43)}`);
   });
 
@@ -144,7 +140,7 @@ describe('direct Google authentication routes', () => {
     expect(cookieValue(response, appSessionCookieName())).toBeUndefined();
   });
 
-  it('completes pending onboarding and replaces legacy credentials', async () => {
+  it('completes pending onboarding and sets the Core App Session', async () => {
     configure();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-12T00:00:00Z'));
@@ -179,7 +175,7 @@ describe('direct Google authentication routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          Cookie: `${googlePendingOnboardingCookieName()}=${serializeGooglePendingOnboarding(pending)}; ${accessTokenCookieName()}=legacy-token`,
+          Cookie: `${googlePendingOnboardingCookieName()}=${serializeGooglePendingOnboarding(pending)}`,
           Origin: 'http://localhost:3000',
         },
         body: new URLSearchParams({ displayName: '合成長者' }),
@@ -190,7 +186,6 @@ describe('direct Google authentication routes', () => {
     expect(response.headers.get('location')).toBe('/onboarding/resolve');
     expect(cookieValue(response, appSessionCookieName())).toBe(`ks1_${'c'.repeat(43)}`);
     expect(cookieValue(response, googlePendingOnboardingCookieName())).toBe('');
-    expect(cookieValue(response, accessTokenCookieName())).toBe('');
   });
 
   it('revokes the Core session before clearing the direct-login cookie', async () => {

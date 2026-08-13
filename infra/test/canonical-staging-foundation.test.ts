@@ -156,20 +156,10 @@ test('does not recreate or deploy the rejected legacy backend', () => {
     string,
     { AllowedValues?: string[]; Default?: string }
   >;
-  assert.ok(parameters.CognitoUserPoolId);
   assert.ok(parameters.OpenSearchCollectionId);
-  const cognitoWebBffClientId = parameters.CognitoWebBffClientId;
-  assert.ok(cognitoWebBffClientId);
-  assert.equal(cognitoWebBffClientId.Default, '5gqrkek6hfn8ub2ba5nsdtup81');
-  assert.deepEqual(cognitoWebBffClientId.AllowedValues, ['5gqrkek6hfn8ub2ba5nsdtup81']);
-  template.hasResourceProperties(
-    'AWS::SSM::Parameter',
-    Match.objectLike({ Name: '/kinsun/staging/external/cognito-user-pool-id' }),
-  );
-  template.hasResourceProperties('AWS::SSM::Parameter', {
-    Name: '/kinsun/staging/external/cognito-web-bff-client-id',
-    Value: { Ref: 'CognitoWebBffClientId' },
-  });
+  assert.equal(parameters.CognitoUserPoolId, undefined);
+  assert.equal(parameters.CognitoWebBffClientId, undefined);
+  assert.doesNotMatch(JSON.stringify(template.toJSON()), /cognito/i);
 });
 
 test('canonical entrypoints pin the physical CloudFormation stack identities', () => {

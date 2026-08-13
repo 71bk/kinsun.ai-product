@@ -1,34 +1,47 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateFamilyInvitationRequestV1.json",
-  "title": "CreateFamilyInvitationRequestV1",
-  "description": "Elder-selected family sharing scope. The optional email is retained only as a keyed digest by Core.",
-  "type": "object",
   "additionalProperties": false,
   "properties": {
     "invitee_email": {
       "anyOf": [
-        { "type": "string", "format": "email", "minLength": 3, "maxLength": 254 },
-        { "type": "null" }
+        {
+          "maxLength": 254,
+          "minLength": 3,
+          "type": "string",
+          "format": "email"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "default": null
+      "default": null,
+      "title": "Invitee Email"
     },
     "share_scope": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 4,
-      "uniqueItems": true,
       "items": {
-        "type": "string",
-        "enum": ["REPORT_DAILY", "REPORT_WEEKLY", "REPORT_MONTHLY", "REPORT_IMPORTANT_EVENT"]
+        "enum": [
+          "REPORT_DAILY",
+          "REPORT_WEEKLY",
+          "REPORT_MONTHLY",
+          "REPORT_IMPORTANT_EVENT"
+        ],
+        "type": "string"
       },
-      "default": ["REPORT_DAILY", "REPORT_WEEKLY", "REPORT_MONTHLY"]
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Share Scope",
+      "type": "array",
+      "uniqueItems": true
     },
     "expires_in_hours": {
-      "type": "integer",
-      "minimum": 1,
+      "default": 24,
       "maximum": 168,
-      "default": 24
+      "minimum": 1,
+      "title": "Expires In Hours",
+      "type": "integer"
     }
-  }
+  },
+  "title": "CreateFamilyInvitationRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateFamilyInvitationRequestV1.json"
 }

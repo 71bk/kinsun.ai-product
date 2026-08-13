@@ -22,12 +22,12 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 
 | 單元 | 狀態 |
 | --- | --- |
-| `services/core-api` | ✅ 主線。Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
+| `services/core-api` | ✅ 主線。Direct Google／LINE OIDC、Core App Session、Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
 | `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；本機預設使用 deterministic mock，也可依環境設定切換 Bedrock provider |
 | `packages/frontend` | ✅ Multi-role PWA + BFF；文字與語音主線、麥克風錄音、角色動畫及 LINE 帳號連結已接入 |
 | `services/rag-ingestion` | ⚠️ staging-only；治理簽章與 production gate 尚未完成，不可視為正式照護知識來源 |
 | `services/speech-gateway` | ✅ 已接入語音主線；華語／英語使用 AWS managed speech，台語／客語可接私有 SageMaker endpoint |
-| `infra` | ⚠️ AWS CDK canonical staging stacks 已定義；實際部署狀態與外部資源邊界以 `infra/README.md` 為準 |
+| `infra` | ⚠️ 保留 AWS CDK deployment profile；黑客松 AWS 帳號目前無法操作，不能視為可部署或仍在使用的環境 |
 
 CI workflow 目前仍停用；本機已有 Ruff／ESLint、TypeScript typecheck、單元測試、合約驗證與
 production build。Core integration test 與完整 E2E 仍需要 PostgreSQL 或對應的外部服務環境。
@@ -77,6 +77,9 @@ docker compose run --rm migrate   # 建立 eldercare_ai schema
 ```
 
 本機 5432 被占用時，改 `.env` 的 `POSTGRES_PORT`（例如 `15432`）再重跑。
+
+目前外部資料庫 provider 是 **Supabase PostgreSQL**，但程式只依賴標準 PostgreSQL／asyncpg
+連線字串與 Alembic，不使用 Supabase Auth 或專有資料 API。本節的 Docker PostgreSQL 是可替換的本機環境。
 
 | 項目 | 值 |
 | --- | --- |
@@ -157,7 +160,9 @@ uv run ruff check .
 
 閉環是 `POST /api/v1/agent/runs` → contract 驗證 → Orchestrator → Companion Agent →
 Safety Evaluator → 回應。本機預設走 `MockModelProvider`，讓測試與開發可重現；需要真實推論時，
-由環境設定切換 Bedrock provider。RAG 仍受 allowlist、簽章與 production gate 約束。
+由環境設定切換 Bedrock provider。Core 的 `BASIC_VOICE` 路徑可在重驗授權與長期記憶 Consent 後，
+帶入最多 5 筆 current ACTIVE Confirmed Memory；Knowledge／RAG purpose 不會混入私人記憶。
+目前只按更新時間做有界選取，尚未有語意相關性排序。RAG 仍受 allowlist、簽章與 production gate 約束。
 
 **安全阻擋回的是 200 不是錯誤**：`data.result_status` 為 `BLOCKED`、`data.reply_text`
 換成安全訊息，長者仍然收到回覆。Safety Evaluator 目前是 deterministic 關鍵字規則
@@ -190,8 +195,8 @@ npm run test      --workspace @elderly-care/frontend
 npm run typecheck --workspace @elderly-care/frontend
 ```
 
-瀏覽器只呼叫 Next.js 的同源 `/backend/core/*`；BFF 從 `HttpOnly` Cookie 取得 Access
-Token，在**伺服器端**轉成 Core API 的 Bearer Header。瀏覽器 JavaScript 讀不到 token，
+瀏覽器只呼叫 Next.js 的同源 `/backend/core/*`；BFF 從 `HttpOnly` Cookie 取得 Core-owned opaque
+App Session，在**伺服器端**轉成 Core API 的 Bearer Header。瀏覽器 JavaScript 讀不到 credential，
 寫入請求另有同源 Origin／CSRF gate。Core 從可信認證 context 取得 actor／tenant，重新檢查
 elder scope 與 `BASIC_VOICE` consent，建立 Voice Session 後才 server-to-server 呼叫
 Agent Runtime。
@@ -268,18 +273,21 @@ uv run alembic revision -m "PROJ-123 add xxx table"
 upgrade 前驗證 SHA-256。注意檔名叫 `smart_eldercare_schema_v0_1`，但它建立的 PostgreSQL
 schema 名稱是 `eldercare_ai`。
 
-## AWS Infrastructure
+## Infrastructure
 
-[`infra/`](infra/)：AWS CDK v2，canonical staging stacks（[ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md)）。
+[`infra/`](infra/) 保留 AWS CDK v2 deployment profile（[ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md)）。
+黑客松 AWS 帳號目前已無法操作；repository 內的 stack 只能代表可 synth 的 IaC，不代表資源仍存在、
+可存取或正在計費。Cognito 已從 runtime、前端與 IaC 移除，登入改走 direct Google／LINE OIDC +
+Core App Session。現行資料庫是 Supabase PostgreSQL；未來 deployment provider 必須透過環境變數與
+adapter 邊界接入，不把 Domain Core 綁在單一雲端服務。
 
 ```powershell
 cd infra
-npm run test      # 11 tests
+npm run test      # 7 tests
 npm run synth     # foundation stack
 npm run diff
 ```
 
-Cognito 是**外部管理**的既有 user pool，stack 只透過 CfnParameter／SSM 引用，不自己建立。
 目前狀態與邊界見 [`infra/README.md`](infra/README.md)。
 
 ## Kiro 開發紀錄

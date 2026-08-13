@@ -39,8 +39,6 @@ function signingSecret(): string {
 
   const forbiddenReuse = [
     process.env.GOOGLE_OIDC_CLIENT_SECRET,
-    process.env.COGNITO_OAUTH_TRANSACTION_SECRET,
-    process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET,
     process.env.LINE_LOGIN_CHANNEL_SECRET,
     process.env.LINE_CHANNEL_SECRET,
     process.env.FAMILY_INVITATION_HMAC_SECRET,

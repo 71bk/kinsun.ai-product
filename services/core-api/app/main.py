@@ -40,7 +40,6 @@ from app.api.line_oidc_handoff import router as line_oidc_handoff_router
 from app.api.line_webhook import router as line_webhook_router
 from app.api.memories import router as memories_router
 from app.api.notifications import router as notifications_router
-from app.api.onboarding import router as onboarding_router
 from app.api.ready import router as ready_router
 from app.api.reports import router as reports_router
 from app.api.summaries import router as summaries_router
@@ -174,7 +173,6 @@ def create_app() -> FastAPI:
     app.include_router(line_webhook_router)
     app.include_router(line_links_router)
     app.include_router(identity_router)
-    app.include_router(onboarding_router)
     app.include_router(elders_router)
     app.include_router(family_invitations_router)
     app.include_router(consents_router)

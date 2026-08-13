@@ -1,4 +1,4 @@
-import { normalizeAccessToken } from './auth-cookie';
+import { normalizeAppSession } from './app-session-cookie';
 
 const DEVELOPMENT_LINE_LINK_COOKIE = 'kinsun_line_link';
 const PRODUCTION_LINE_LINK_COOKIE = '__Host-kinsun_line_link';
@@ -92,20 +92,20 @@ function officialAccountLinkUrl(value: unknown): string | null {
 }
 
 export async function createCoreLineLinkChallenge(
-  rawAccessToken: unknown,
+  rawAppSession: unknown,
   rawLinkToken: unknown,
 ): Promise<CoreLineLinkChallengeResult> {
-  const accessToken = normalizeAccessToken(rawAccessToken);
+  const appSession = normalizeAppSession(rawAppSession);
   const linkToken = normalizeLineLinkToken(rawLinkToken);
   const baseUrl = coreApiBaseUrl();
-  if (!accessToken || !linkToken || !baseUrl) return { status: 503 };
+  if (!appSession || !linkToken || !baseUrl) return { status: 503 };
 
   try {
     const response = await fetch(new URL('api/v1/me/line-link-challenges', baseUrl), {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${appSession}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ link_token: linkToken }),

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     SAGEMAKER_TTS_ENDPOINT: str | None = None
 
     # Core is the only threshold and formal-state authority. This bearer value
-    # is a service credential (for example a Cognito service access token), not
+    # is a Core-issued service credential, not
     # a browser token, and must never be returned or logged.
     CORE_API_BASE_URL: str = "http://127.0.0.1:8000"
     CORE_API_SERVICE_TOKEN: str = ""

@@ -1,8 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { POST as createSession } from '../../app/backend/auth/session/route';
 import { appSessionCookieName, appSessionCookieOptions } from './app-session-cookie';
-import { accessTokenCookieName, accessTokenCookieOptions } from './auth-cookie';
 import { proxyCoreRequest } from './core-proxy';
 
 afterEach(() => {
@@ -19,60 +17,7 @@ function request(
 }
 
 describe('HttpOnly authentication session', () => {
-  it('sets a development credential with hardened cookie attributes', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const response = await createSession(
-      request('/backend/auth/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: 'http://localhost',
-        },
-        body: JSON.stringify({ access_token: 'synthetic-test-token' }),
-      }),
-    );
-
-    expect(response.status).toBe(201);
-    const setCookie = response.headers.get('set-cookie') ?? '';
-    expect(setCookie).toContain('kinsun_access_token=synthetic-test-token');
-    expect(setCookie).toContain('Path=/');
-    expect(setCookie).toContain('HttpOnly');
-    expect(setCookie).toContain('SameSite=lax');
-    expect(setCookie).not.toContain('Secure');
-    expect(await response.text()).not.toContain('synthetic-test-token');
-  });
-
-  it('does not expose the arbitrary token setter in production', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('FRONTEND_ORIGIN', 'https://care.example');
-    const response = await createSession(
-      request('/backend/auth/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: 'http://localhost',
-        },
-        body: JSON.stringify({ access_token: 'synthetic-test-token' }),
-      }),
-    );
-
-    expect(response.status).toBe(404);
-    expect(response.headers.get('set-cookie')).toBeNull();
-  });
-
-  it('uses the Secure __Host cookie profile in production', () => {
-    vi.stubEnv('NODE_ENV', 'production');
-
-    expect(accessTokenCookieName()).toBe('__Host-kinsun_access_token');
-    expect(accessTokenCookieOptions()).toMatchObject({
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-    });
-  });
-
-  it('uses a separate Secure host-only App Session cookie in production', () => {
+  it('uses a Secure host-only App Session cookie in production', () => {
     vi.stubEnv('NODE_ENV', 'production');
 
     expect(appSessionCookieName()).toBe('__Host-kinsun_session');
@@ -86,32 +31,6 @@ describe('HttpOnly authentication session', () => {
 });
 
 describe('Core BFF proxy', () => {
-  it('turns the HttpOnly cookie into a server-side Bearer header', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    vi.stubEnv('CORE_API_INTERNAL_URL', 'http://127.0.0.1:8000');
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      Response.json({ data: { ok: true }, meta: {} }, { status: 200 }),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-
-    const response = await proxyCoreRequest(
-      request('/backend/core/api/v1/example?cursor=opaque', {
-        headers: {
-          Cookie: 'kinsun_access_token=synthetic-test-token',
-          Authorization: 'Bearer browser-supplied-token',
-        },
-      }),
-      ['api', 'v1', 'example'],
-    );
-
-    expect(response.status).toBe(200);
-    const [target, init] = fetchMock.mock.calls[0];
-    expect(String(target)).toBe('http://127.0.0.1:8000/api/v1/example?cursor=opaque');
-    const headers = new Headers(init?.headers);
-    expect(headers.get('Authorization')).toBe('Bearer synthetic-test-token');
-    expect(headers.has('Cookie')).toBe(false);
-  });
-
   it('forwards a valid App Session as the Core bearer credential', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('CORE_API_INTERNAL_URL', 'http://127.0.0.1:8000');
@@ -129,25 +48,11 @@ describe('Core BFF proxy', () => {
     );
 
     expect(response.status).toBe(200);
-    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    const [target, init] = fetchMock.mock.calls[0];
+    expect(String(target)).toBe('http://127.0.0.1:8000/api/v1/me');
+    const headers = new Headers(init?.headers);
     expect(headers.get('Authorization')).toBe(`Bearer ${token}`);
-  });
-
-  it('does not downgrade a malformed App Session to a legacy access token', async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-
-    const response = await proxyCoreRequest(
-      request('/backend/core/api/v1/me', {
-        headers: {
-          Cookie: 'kinsun_session=malformed; kinsun_access_token=synthetic-valid-legacy-token',
-        },
-      }),
-      ['api', 'v1', 'me'],
-    );
-
-    expect(response.status).toBe(401);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(headers.has('Cookie')).toBe(false);
   });
 
   it('fails closed before contacting Core when the cookie is missing', async () => {
@@ -170,7 +75,7 @@ describe('Core BFF proxy', () => {
 
     const response = await proxyCoreRequest(
       request('/backend/core/api/v1/example', {
-        headers: { Cookie: `kinsun_access_token=${'a'.repeat(3073)}` },
+        headers: { Cookie: 'kinsun_session=malformed' },
       }),
       ['api', 'v1', 'example'],
     );
@@ -188,7 +93,7 @@ describe('Core BFF proxy', () => {
       request('/backend/core/api/v1/example', {
         method: 'POST',
         headers: {
-          Cookie: 'kinsun_access_token=synthetic-test-token',
+          Cookie: `kinsun_session=ks1_${'a'.repeat(43)}`,
           Origin: 'https://attacker.example',
           'Content-Type': 'application/json',
         },
@@ -208,7 +113,7 @@ describe('Core BFF proxy', () => {
 
     const response = await proxyCoreRequest(
       request('/backend/core/api/v1/example?access_token=leak', {
-        headers: { Cookie: 'kinsun_access_token=synthetic-test-token' },
+        headers: { Cookie: `kinsun_session=ks1_${'a'.repeat(43)}` },
       }),
       ['api', 'v1', 'example'],
     );

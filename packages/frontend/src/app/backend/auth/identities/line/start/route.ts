@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { appSessionCookieName, normalizeAppSession } from '@/lib/server/app-session-cookie';
-import { accessTokenCookieName, isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
+import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
-import { CognitoIdentityError, getLineLoginLinkDestination } from '@/lib/server/cognito-identities';
 import { getLineIdentityMethodStatus } from '@/lib/server/line-account-link-core';
 import {
   createLineAccountLinkTransaction,
@@ -11,16 +10,9 @@ import {
   serializeLineAccountLinkTransaction,
 } from '@/lib/server/line-account-link-transaction';
 import {
-  createLineLoginLinkTransaction,
-  lineLoginLinkCookieName,
-  lineLoginLinkCookieOptions,
-  serializeLineLoginLinkTransaction,
-} from '@/lib/server/line-login-link-transaction';
-import {
   buildLineLoginLinkAuthorizationUrl,
   getLineLoginOAuthConfig,
   lineDirectOidcEnabled,
-  lineLoginEnabled,
 } from '@/lib/server/line-login-oauth';
 
 export const dynamic = 'force-dynamic';
@@ -45,65 +37,17 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!isTrustedRequestOrigin(request)) {
     return bffError(403, 'forbidden', 'Request origin rejected', 'CSRF_ORIGIN_REJECTED');
   }
-  if (!lineDirectOidcEnabled() && !lineLoginEnabled()) {
+  if (!lineDirectOidcEnabled()) {
     return bffError(404, 'not_found', 'LINE Login is unavailable', 'LINE_LOGIN_DISABLED');
   }
   const appSession = normalizeAppSession(request.cookies.get(appSessionCookieName())?.value);
   if (!appSession) {
-    if (!lineLoginEnabled()) {
-      return bffError(
-        401,
-        'authentication_required',
-        'Authentication required',
-        'AUTHENTICATION_REQUIRED',
-      );
-    }
-    try {
-      const destination = await getLineLoginLinkDestination(
-        request.cookies.get(accessTokenCookieName())?.value,
-      );
-      if (!destination.googleLinked) {
-        return bffError(
-          409,
-          'conflict',
-          'Google sign-in is required before linking LINE',
-          'GOOGLE_IDENTITY_REQUIRED',
-        );
-      }
-      if (destination.lineLinked) return accountRedirect('already_linked');
-      const transaction = createLineLoginLinkTransaction(destination.cognitoUsername);
-      const response = noStore(
-        NextResponse.redirect(
-          buildLineLoginLinkAuthorizationUrl(getLineLoginOAuthConfig(), transaction),
-          { status: 303 },
-        ),
-      );
-      response.cookies.set(
-        lineLoginLinkCookieName(),
-        serializeLineLoginLinkTransaction(transaction),
-        lineLoginLinkCookieOptions(),
-      );
-      return response;
-    } catch (error) {
-      if (error instanceof CognitoIdentityError && error.reason === 'AUTHENTICATION_REQUIRED') {
-        return bffError(
-          401,
-          'authentication_required',
-          'Authentication required',
-          'AUTHENTICATION_REQUIRED',
-        );
-      }
-      return bffError(
-        503,
-        'service_unavailable',
-        'LINE linking is temporarily unavailable',
-        'LINE_LINK_UNAVAILABLE',
-        true,
-      );
-    }
-  }
-  if (!lineDirectOidcEnabled()) {
-    return bffError(404, 'not_found', 'LINE Login is unavailable', 'LINE_LOGIN_DISABLED');
+    return bffError(
+      401,
+      'authentication_required',
+      'Authentication required',
+      'AUTHENTICATION_REQUIRED',
+    );
   }
 
   try {

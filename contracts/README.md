@@ -8,7 +8,7 @@
 ```
 contracts/
 ├── openapi/
-│   ├── core-api.v1.yaml              OpenAPI 3.1，64 個已實作的 path
+│   ├── core-api.v1.yaml              OpenAPI 3.1，63 個已實作的 path
 │   └── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 endpoint
 ├── asyncapi/
 │   └── core-events.v1.yaml           AsyncAPI 3.x，Core Domain Event channel
@@ -64,7 +64,7 @@ adapter 串起 register → Tool → complete；通用多 Tool 迴圈仍未實�
 
 **Executable contract 只涵蓋已實作的 endpoint。** WebSocket audio transport、Care Action、
 Email notification delivery、LINE queue／DLQ 與 Scheduler deployment、正式 Agent Handoff／多步 Tool 迴圈、Graph／OpenSearch production projection
-與 Cognito verifier 尚未完成；完整差異以 [DIVERGENCE.md](DIVERGENCE.md) 為準。
+尚未完成；完整差異以 [DIVERGENCE.md](DIVERGENCE.md) 為準。
 
 ## invalid/ 範例的用途
 

@@ -64,7 +64,7 @@ _TOTAL_HEAD_TABLE_COUNT = 55
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "a4c7e9b2d610"
+_HEAD_REVISION = "f2c6d8a1e490"
 
 
 def _get_alembic_config() -> Config:
@@ -152,6 +152,19 @@ def _get_tables(connection) -> list[str]:
             "WHERE table_schema = :schema ORDER BY table_name"
         ),
         {"schema": SCHEMA_NAME},
+    )
+    return [row[0] for row in result]
+
+
+def _get_columns(connection, table_name: str) -> list[str]:
+    """Get column names for one current-head table."""
+    result = connection.execute(
+        text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = :schema AND table_name = :table_name "
+            "ORDER BY ordinal_position"
+        ),
+        {"schema": SCHEMA_NAME, "table_name": table_name},
     )
     return [row[0] for row in result]
 
@@ -542,13 +555,13 @@ async def test_baseline_upgrade_creates_check_constraints(test_engine):
 
 
 @pytest.mark.asyncio
-async def test_baseline_upgrade_creates_unique_constraints(test_engine):
-    """Verify the baseline migration creates all expected UNIQUE constraints
-    on the identity & elder assignment tables.
+async def test_head_upgrade_creates_expected_unique_constraints(test_engine):
+    """Verify current head has only the expected UNIQUE constraints.
 
     Note: uq_actor_email and uq_membership_scope are stand-alone unique
     indexes (see test_baseline_upgrade_creates_all_indexes), not table
-    constraints, so they are intentionally not asserted here.
+    constraints, so they are intentionally not asserted here. The retired
+    Cognito subject column and its table constraint must not survive at head.
 
     Validates: Requirement 16.5
     """
@@ -559,7 +572,6 @@ async def test_baseline_upgrade_creates_unique_constraints(test_engine):
         await conn.run_sync(_run_upgrade, "head")
 
     expected_unique = [
-        "uq_actor_cognito_sub",
         "uq_care_unit_name",
         "outbox_event_event_id_key",
     ]
@@ -572,6 +584,11 @@ async def test_baseline_upgrade_creates_unique_constraints(test_engine):
 
     for uq in expected_unique:
         assert uq in all_unique, f"Expected UNIQUE constraint '{uq}' not found. Found: {all_unique}"
+
+    assert "uq_actor_cognito_sub" not in all_unique
+    async with test_engine.begin() as conn:
+        actor_columns = await conn.run_sync(_get_columns, "actor")
+    assert "cognito_sub" not in actor_columns
 
 
 @pytest.mark.asyncio

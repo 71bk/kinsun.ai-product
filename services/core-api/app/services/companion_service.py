@@ -21,6 +21,7 @@ from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
+from app.repositories.memory_repo import MemoryRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
 from app.schemas.consent import ConsentPurpose
 from app.schemas.conversation import CompanionTurnResponse
@@ -30,6 +31,8 @@ from app.services.care_event_service import CareEventService
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
+
+_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS = 5
 
 _ACTOR_ROLE_MAP = {
     "ELDER": "elder",
@@ -82,6 +85,49 @@ class CompanionService:
         self._runtime_client = runtime_client
         self._model_route = model_route
         self._conversations = ConversationService(session, tenant_id)
+
+    async def _confirmed_memory_context(
+        self,
+        *,
+        conversation: ConversationSession,
+        actor_context: ActorContext,
+        turn_purpose: str,
+    ) -> list[dict[str, object]]:
+        """Load only currently authorized, consented, confirmed memory context."""
+        if turn_purpose != "BASIC_VOICE":
+            return []
+        try:
+            await authorize_elder(
+                self._session,
+                actor_context,
+                conversation.elder_id,
+                "memory:read",
+            )
+            consent = await ConsentService(self._session, self._tenant_id).require_active(
+                elder_id=conversation.elder_id,
+                purpose=ConsentPurpose.LONG_TERM_MEMORY,
+            )
+        except NotFoundError:
+            return []
+
+        records = await MemoryRepository(
+            self._session,
+            self._tenant_id,
+        ).list_active_context_for_elder(
+            elder_id=conversation.elder_id,
+            max_consent_version=consent.version,
+            limit=_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS,
+        )
+        return [
+            {
+                "memory_id": str(record.memory_id),
+                "version": record.version,
+                "memory_type": record.memory_type,
+                "content": record.content,
+                "consent_version": record.consent_version,
+            }
+            for record in records
+        ]
 
     async def _requested_outputs(
         self,
@@ -167,6 +213,11 @@ class CompanionService:
         # information request has to be identified here or the knowledge base is
         # never consulted. Everyday conversation keeps BASIC_VOICE.
         turn_purpose = resolve_turn_purpose(input_text)
+        confirmed_memories = await self._confirmed_memory_context(
+            conversation=conversation,
+            actor_context=actor_context,
+            turn_purpose=turn_purpose,
+        )
         request_payload: dict[str, object] = {
             "schema_version": "1.0.0",
             "request_id": request_id,
@@ -182,6 +233,7 @@ class CompanionService:
             "policy_version": conversation.policy_version,
             "language": _LANGUAGE_MAP[conversation.language_route],
             "input_text": input_text,
+            "confirmed_memories": confirmed_memories,
             "allowed_tools": [],
             "requested_outputs": requested_outputs,
             "max_steps": 3,

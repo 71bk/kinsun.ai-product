@@ -31,8 +31,6 @@ function configureGoogleOidc(): void {
   vi.stubEnv('GOOGLE_OIDC_CLIENT_ID', clientId);
   vi.stubEnv('GOOGLE_OIDC_CLIENT_SECRET', clientSecret);
   vi.stubEnv('GOOGLE_OIDC_TRANSACTION_SECRET', transactionSecret);
-  vi.stubEnv('COGNITO_OAUTH_TRANSACTION_SECRET', 'independent-cognito-secret-at-least-32-bytes');
-  vi.stubEnv('LINE_LOGIN_LINK_TRANSACTION_SECRET', 'independent-line-secret-at-least-32-bytes');
 }
 
 function idToken(nonce: string, claims: Record<string, unknown> = {}): string {

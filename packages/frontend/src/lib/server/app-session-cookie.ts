@@ -31,18 +31,6 @@ export function appSessionMaxAge(idleExpiresAt: string, absoluteExpiresAt: strin
   return seconds;
 }
 
-export function normalizeBrowserAuthCredential(
-  rawAppSession: unknown,
-  rawAccessToken: unknown,
-): string | null {
-  // Cookie presence selects the validator. A malformed App Session must never
-  // fall back to a simultaneously present legacy Cognito credential.
-  return rawAppSession === undefined
-    ? normalizeAccessToken(rawAccessToken)
-    : normalizeAppSession(rawAppSession);
-}
-
 export function browserAuthCookieNames(): readonly string[] {
-  return [appSessionCookieName(), accessTokenCookieName()];
+  return [appSessionCookieName()];
 }
-import { accessTokenCookieName, normalizeAccessToken } from './auth-cookie';

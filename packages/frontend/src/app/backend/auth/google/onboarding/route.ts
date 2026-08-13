@@ -4,11 +4,7 @@ import {
   appSessionCookieOptions,
   appSessionMaxAge,
 } from '@/lib/server/app-session-cookie';
-import {
-  accessTokenCookieName,
-  accessTokenCookieOptions,
-  isTrustedRequestOrigin,
-} from '@/lib/server/auth-cookie';
+import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
 import { completeGoogleOnboardingWithCore } from '@/lib/server/google-oidc-core-onboarding';
 import {
@@ -25,14 +21,6 @@ function noStore(response: NextResponse): NextResponse {
   response.headers.set('Cache-Control', 'no-store');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   return response;
-}
-
-function clearCookie(
-  response: NextResponse,
-  name: string,
-  options: ReturnType<typeof accessTokenCookieOptions>,
-): void {
-  response.cookies.set(name, '', { ...options, expires: new Date(0), maxAge: 0 });
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -83,12 +71,11 @@ export async function POST(request: NextRequest): Promise<Response> {
         appSessionMaxAge(completed.idleExpiresAt, completed.absoluteExpiresAt),
       ),
     );
-    clearCookie(response, accessTokenCookieName(), accessTokenCookieOptions());
-    clearCookie(
-      response,
-      googlePendingOnboardingCookieName(),
-      googlePendingOnboardingCookieOptions(),
-    );
+    response.cookies.set(googlePendingOnboardingCookieName(), '', {
+      ...googlePendingOnboardingCookieOptions(),
+      expires: new Date(0),
+      maxAge: 0,
+    });
     return response;
   } catch {
     return noStore(

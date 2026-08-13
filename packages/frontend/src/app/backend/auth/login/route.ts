@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
-import { buildCognitoAuthorizationUrl, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
 import {
   buildGoogleOidcAuthorizationUrl,
   getGoogleOidcBffConfig,
@@ -30,13 +29,9 @@ import {
   serializeLineOidcTransaction,
 } from '@/lib/server/line-oidc-transaction';
 import {
-  createOAuthTransaction,
   loginProvider,
   normalizeInvitationCode,
   onboardingIntent,
-  oauthTransactionCookieName,
-  oauthTransactionCookieOptions,
-  serializeOAuthTransaction,
   strictRelativeReturnTo,
 } from '@/lib/server/oauth-transaction';
 
@@ -72,7 +67,8 @@ function beginLogin(
   }
 
   try {
-    if (provider === 'GOOGLE' && googleDirectOidcEnabled()) {
+    if (provider === 'GOOGLE') {
+      if (!googleDirectOidcEnabled()) throw new Error('Google sign-in is disabled');
       // Fail before redirecting the user to Google if the callback could not
       // complete its private Core handoff in this deployment.
       googleOidcCoreTarget();
@@ -91,7 +87,8 @@ function beginLogin(
       );
       return response;
     }
-    if (provider === 'LINE' && lineDirectOidcEnabled()) {
+    if (provider === 'LINE') {
+      if (!lineDirectOidcEnabled()) throw new Error('LINE sign-in is disabled');
       lineOidcCoreTarget();
       lineOidcCoreAuthorization();
       const transaction = createLineOidcTransaction(returnTo, intent, invitationCode);
@@ -108,18 +105,7 @@ function beginLogin(
       );
       return response;
     }
-    const transaction = createOAuthTransaction(returnTo, intent, invitationCode, provider);
-    const response = noStore(
-      NextResponse.redirect(buildCognitoAuthorizationUrl(getCognitoOAuthConfig(), transaction), {
-        status: 303,
-      }),
-    );
-    response.cookies.set(
-      oauthTransactionCookieName(),
-      serializeOAuthTransaction(transaction),
-      oauthTransactionCookieOptions(),
-    );
-    return response;
+    throw new Error('Sign-in provider is unavailable');
   } catch {
     return bffError(
       503,

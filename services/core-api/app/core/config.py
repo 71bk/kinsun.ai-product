@@ -83,12 +83,6 @@ class Settings(BaseSettings):
     fake_auth_actor_id: UUID | None = None
     fake_auth_tenant_id: UUID | None = None
     fake_auth_actor_role: str = Field(default="ELDER", min_length=1, max_length=64)
-    cognito_auth_enabled: bool = False
-    cognito_region: str = Field(default="", max_length=64)
-    cognito_user_pool_id: str = Field(default="", max_length=256)
-    cognito_app_client_id: str = Field(default="", max_length=256)
-    cognito_jwks_cache_seconds: int = Field(default=300, ge=30, le=3600)
-    cognito_http_timeout_seconds: float = Field(default=5.0, gt=0, le=15)
     family_invitation_hmac_secret: str = ""
     google_oidc_client_id: str = Field(default="", max_length=512)
     google_oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=3_600)
@@ -171,26 +165,6 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_service_configuration(self) -> Settings:
         """Require complete server-owned auth and LINE settings when enabled."""
-        if self.cognito_auth_enabled and not all(
-            (
-                self.cognito_region.strip(),
-                self.cognito_user_pool_id.strip(),
-                self.cognito_app_client_id.strip(),
-            )
-        ):
-            raise ValueError(
-                "COGNITO_REGION, COGNITO_USER_POOL_ID, and COGNITO_APP_CLIENT_ID "
-                "are required when COGNITO_AUTH_ENABLED=true"
-            )
-        if (
-            self.cognito_auth_enabled
-            and len(self.family_invitation_hmac_secret.encode("utf-8")) < 32
-        ):
-            raise ValueError(
-                "FAMILY_INVITATION_HMAC_SECRET must contain at least 32 bytes "
-                "when COGNITO_AUTH_ENABLED=true"
-            )
-
         session_lifetimes = (
             (
                 "elder/family",

@@ -123,7 +123,6 @@ def _identity_and_actor(
 ) -> tuple[ExternalIdentity, Actor]:
     actor = Actor(
         actor_type=actor_type,
-        cognito_sub=None,
         display_name="Test actor",
         status=actor_status,
     )

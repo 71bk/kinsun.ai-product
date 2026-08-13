@@ -19,9 +19,7 @@
       "$ref": "#/$defs/LanguageRoute"
     },
     "input_mode": {
-      "enum": [
-        "text"
-      ],
+      "const": "text",
       "title": "Input Mode",
       "type": "string"
     },

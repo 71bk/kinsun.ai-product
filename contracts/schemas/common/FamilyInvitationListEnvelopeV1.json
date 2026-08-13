@@ -4,9 +4,16 @@
   "title": "FamilyInvitationListEnvelopeV1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["data", "meta"],
+  "required": [
+    "data",
+    "meta"
+  ],
   "properties": {
-    "data": { "$ref": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationListV1.json" },
-    "meta": { "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json" }
+    "data": {
+      "$ref": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationListV1.json"
+    },
+    "meta": {
+      "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json"
+    }
   }
 }

@@ -1,7 +1,8 @@
 # ADR 0010：Provider-neutral OIDC 身分與 Core-owned Application Session
 
-- 狀態：Accepted for phased implementation；Google／LINE direct OIDC 與 Core App Session application flow 已完成，production cutover 與 explicit cross-provider linking 尚未完成
+- 狀態：Implemented；Google／LINE direct OIDC、Core App Session、explicit linking 與 Cognito repository retirement 已完成
 - 日期：2026-08-11
+- 完成日期：2026-08-13
 - Owner：Project Owner
 - 相關：[ADR 0006](0006-frontend-stack-and-app-topology.md)、
   [ADR 0007](0007-canonical-backend-and-aws-deployment-authority.md)、
@@ -10,8 +11,8 @@
 
 ## 背景
 
-目前 Frontend BFF 經 Cognito Hosted UI 取得 access token，Core 再以 Cognito `sub` 解析正式
-Actor、Tenant membership 與角色。這個實作在黑客松期間能快速接入 AWS，但會讓登入、帳號連結、
+黑客松期間 Frontend BFF 曾經由 Cognito Hosted UI 取得 access token，Core 再以 Cognito `sub` 解析正式
+Actor、Tenant membership 與角色。這個做法當時能快速接入 AWS，但會讓登入、帳號連結、
 Session 與部署設定一起綁定 Cognito。專案後續由單一維護者以低成本環境完成，不應為了保留登入
 而被迫保留整套 Cognito runtime。
 
@@ -20,10 +21,8 @@ Session 與部署設定一起綁定 Cognito。專案後續由單一維護者以�
 共用，因此不能作為自動合併依據。長者、家庭關係、Consent、報告與記憶又是高敏感 domain state，
 錯誤合併的代價遠高於要求使用者再次驗證。
 
-本 ADR 定義目標架構與分階段切換規則。新增資料模型、Session service 或單一 Provider verifier
-只代表 foundation 已存在；在所有必要 verifier、pending identity、App Session authenticator、BFF
-callback 與 rollout gate 完成前，現行 Cognito path 仍是唯一可用的 real authenticator，不得把
-foundation 描述成登入已切換。
+本 ADR 原先定義目標架構與分階段切換規則。2026-08-13 Owner 確認沒有需要遷移的 Cognito 帳號，
+且黑客松 AWS 帳號已無法操作；repository 因此直接完成最後退場，不再維持雙 authenticator。
 
 ## 決策
 
@@ -82,14 +81,15 @@ Provider 驗證成功但查無 `external_identity` 時，BFF／Core 建立短效
 2. 實作 Core verifier、pending identity、Session service 與完整 failure-path tests。
 3. 先切 Google direct OIDC，再切 LINE direct OIDC／identity linking。
 4. BFF、Core、onboarding、logout 與 account settings 全部通過後才將 runtime 切為 App Session。
-5. 穩定期結束後才移除 Cognito SDK、環境變數、IaC 與 `actor.cognito_sub`。
+5. Owner 確認沒有既有 Cognito 帳號後，移除 Cognito SDK、環境變數、IaC 與
+   `actor.cognito_sub`；migration 若意外發現非空值會 fail closed。
 
-Phase 1 不新增可啟用的 auth mode，不接受 App Session，不改現有 callback，也不刪 Cognito。Phase 2A
+Phase 1 不新增可啟用的 auth mode，不接受 App Session，不改當時的 callback，也不刪 Cognito。Phase 2A
 只加入 Core 內部 Session lifecycle。Phase 2B 只加入 Core 內部 Google ID-token verifier，仍不新增公開
 Session 建立 API、不註冊 App Session authenticator。Phase 2C 加入未綁 route 的 BFF authorization
 transaction、callback envelope validation 與 code-exchange helper，但在 Core handoff 完成前不註冊公開
-start／callback route。這讓 schema／service／verifier／BFF helper 先行與 production auth 切換保持可
-區分，避免未完成的登入流程被誤開。
+start／callback route。這讓 schema／service／verifier／BFF helper 先行與 runtime auth 切換保持可
+區分，避免未完成的登入流程被誤開。Phase 2D/3/4 已完成；Phase 5 於 2026-08-13 完成。
 
 ## 理由
 
@@ -106,7 +106,8 @@ start／callback route。這讓 schema／service／verifier／BFF helper 先行�
 
 正面：
 
-- Cognito 可在完成 gate 後移除，Supabase 只需作為 PostgreSQL provider，不綁 Supabase Auth。
+- Cognito 已從 repository runtime、前端、契約與 IaC 移除；Supabase 只作為目前的 PostgreSQL
+  provider，不使用 Supabase Auth。
 - Google、LINE 可登入同一 Actor，且未來可增加其他 OIDC Provider。
 - Logout、停權、membership 失效與 identity revoke 可由 Core 即時生效。
 - LINE Login 與 Messaging API 可共用同一 Provider user ID，但仍保有不同 Channel secret 與用途邊界。
@@ -118,7 +119,7 @@ start／callback route。這讓 schema／service／verifier／BFF helper 先行�
 - 沒有實名驗證時無法保證一個真人絕不故意建立兩個 Actor；接受此限制，MVP 保證的是一個外部
   identity 只屬於一個 Actor，並用 pending／link UX 降低誤建。
 - 已形成兩個正式 Actor 的資料合併涉及 Consent 與稽核；MVP 接受人工處理，不做自動 merge。
-- Cognito 與 App Session 過渡期間會有兩套程式碼；以 feature gate、分離 Cookie 名稱與限期移除緩解。
+- Direct OIDC provider 設定仍需由部署環境安全注入；範例設定預設關閉，避免未完整設定時半啟用。
 
 ## 替代方案
 
@@ -179,18 +180,18 @@ authorization 與 PostgreSQL，直接 OIDC 的額外工作可控。
   ExternalIdentity 建立、ELDER onboarding 或 FAMILY invitation redemption，再核發第一個 App Session。
   未知 STAFF 不得自行註冊；verified email 只供衝突與 invitation recipient 檢查，永不自動 link 舊 Actor。
 - BFF 使用獨立 `__Host-kinsun_session`（development 為 `kinsun_session`）HttpOnly Cookie；Core runtime
-  以 `ks1_` 前綴嚴格分流 App Session 與過渡期 Cognito token，App Session 驗證失敗後不會 downgrade。
+  只接受 `ks1_` Core App Session；驗證失敗後不會 fallback 到其他 bearer token。
   登出先呼叫 `POST /api/v1/auth/logout` 撤銷 server-side Session，成功後才清 Cookie。
-- 三個 gate 預設仍為 false，因此目前部署設定不會自動切離 Cognito。正式啟用前仍須完成既有 Cognito
-  Actor 的明確 Google identity linking／provisioning、Google console callback 與 secret 注入，以及 staging
-  browser E2E；不得用相同 email 取代上述 migration。
+- 三個 gate 的 committed example 預設仍為 false；實際環境要同時提供 Google console callback、
+  provider secret、handoff secret 與 identity HMAC secret。沒有 Cognito Actor 需要 migration，且不得用
+  相同 email 取代 explicit linking。
 - LINE direct application flow 使用獨立的 `LINE_DIRECT_OIDC_ENABLED`、`LINE_OIDC_HANDOFF_ENABLED` 與
   共用的 `APP_SESSION_AUTH_ENABLED` gate。BFF 固定使用 LINE Login v2.1 Authorization／Token endpoint、
   PKCE、state、nonce 與 signed transaction；Core 透過 LINE 官方 verify endpoint 獨立驗證 ID Token。
   既有 LINE identity、ELDER pending onboarding、FAMILY invitation redemption 與 STAFF fail-closed 規則
   均共用 provider-neutral service；LINE email 維持 optional，且不作為自動連結依據。
-- LINE direct flow 的 Channel ID／secret、callback 與三組獨立 secrets 尚未注入目前 runtime，因此 gate
-  維持 false。Direct sign-in 不等於 cross-provider account linking；同一 Actor 新增 LINE identity 仍須
+- LINE direct flow 的 Channel ID／secret、callback 與獨立 secrets 必須由各 runtime 注入；committed
+  example gates 維持 false。Direct sign-in 不等於 cross-provider account linking；同一 Actor 新增 LINE identity 仍須
   完成同時驗證兩個 Provider 的 Core-native explicit linking flow。
 - Core-native Google→LINE explicit linking 現已實作：發起者必須持有 recent Core App Session，callback
   交易綁定該 Session 的不可逆 digest，Core 再獨立驗證新的 LINE ID Token。未綁 LINE subject 可直接
@@ -217,3 +218,5 @@ Phase 1 可在不存在 Google identity 與 App Session rows 時 downgrade，恢
 若已有新 provider／session data，downgrade 必須 fail closed，先依核准的資料退場程序 revoke／清理；不得
 靜默刪除登入或稽核資料。
 Phase 2D migration 只可在 `pending_external_identity` 無資料時 downgrade；不得靜默刪除尚未完成的登入交易。
+Cognito retirement revision 只會在 `actor.cognito_sub` 全為 null 時 upgrade；若意外存在資料會拒絕執行。
+Downgrade 只恢復 nullable legacy 欄位與 constraint，不會恢復已刪除的 Cognito runtime。

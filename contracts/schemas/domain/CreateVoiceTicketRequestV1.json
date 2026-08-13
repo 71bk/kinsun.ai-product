@@ -1,36 +1,64 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateVoiceTicketRequestV1.json",
-  "title": "CreateVoiceTicketRequestV1",
-  "type": "object",
+  "$defs": {
+    "LanguageRoute": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "LanguageRoute",
+      "type": "string"
+    }
+  },
   "additionalProperties": false,
-  "required": ["language_preference", "input_mode"],
   "properties": {
     "language_preference": {
-      "type": "string",
-      "enum": ["ZH_TW", "NAN_TW", "HAK_TW", "EN_US", "MIXED", "UNKNOWN"]
+      "$ref": "#/$defs/LanguageRoute"
     },
     "input_mode": {
-      "type": "string",
-      "enum": ["voice", "voice_with_text_fallback"]
+      "enum": [
+        "voice",
+        "voice_with_text_fallback"
+      ],
+      "title": "Input Mode",
+      "type": "string"
     },
     "client_audio_format": {
       "anyOf": [
-        { "type": "string", "maxLength": 80 },
-        { "type": "null" }
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "default": null
+      "default": null,
+      "title": "Client Audio Format"
     },
     "client_timezone": {
-      "type": "string",
-      "minLength": 1,
+      "default": "Asia/Taipei",
       "maxLength": 64,
-      "default": "Asia/Taipei"
+      "minLength": 1,
+      "title": "Client Timezone",
+      "type": "string"
     },
     "purpose": {
-      "type": "string",
       "const": "BASIC_VOICE",
-      "default": "BASIC_VOICE"
+      "default": "BASIC_VOICE",
+      "title": "Purpose",
+      "type": "string"
     }
-  }
+  },
+  "required": [
+    "language_preference",
+    "input_mode"
+  ],
+  "title": "CreateVoiceTicketRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateVoiceTicketRequestV1.json"
 }

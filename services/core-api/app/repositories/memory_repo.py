@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 
 from app.models.memory import Memory, MemoryVersion
 from app.repositories.base import BaseRepository
+
+
+@dataclass(frozen=True)
+class ConfirmedMemoryContextRecord:
+    """Minimal current memory data that may cross the private Agent boundary."""
+
+    memory_id: UUID
+    version: int
+    memory_type: str
+    content: str
+    consent_version: int
 
 
 class MemoryRepository(BaseRepository):
@@ -92,3 +104,51 @@ class MemoryRepository(BaseRepository):
             stmt.order_by(Memory.created_at.desc(), Memory.id.desc()).limit(limit + 1)
         )
         return list(result.scalars().all())
+
+    async def list_active_context_for_elder(
+        self,
+        *,
+        elder_id: UUID,
+        max_consent_version: int,
+        limit: int,
+    ) -> list[ConfirmedMemoryContextRecord]:
+        """Return only bounded, current, active memory versions for Agent context."""
+        result = await self._session.execute(
+            select(
+                Memory.id,
+                Memory.current_version,
+                Memory.memory_type,
+                MemoryVersion.content,
+                Memory.consent_version,
+            )
+            .join(
+                MemoryVersion,
+                and_(
+                    MemoryVersion.memory_id == Memory.id,
+                    MemoryVersion.version == Memory.current_version,
+                ),
+            )
+            .where(
+                Memory.elder_id == elder_id,
+                Memory.tenant_id == self._tenant_id,
+                Memory.status == "ACTIVE",
+                Memory.deleted_at.is_(None),
+                Memory.consent_version > 0,
+                Memory.consent_version <= max_consent_version,
+                MemoryVersion.version_status == "ACTIVE",
+                MemoryVersion.valid_to.is_(None),
+                func.char_length(MemoryVersion.content).between(1, 500),
+            )
+            .order_by(Memory.updated_at.desc(), Memory.id.desc())
+            .limit(limit)
+        )
+        return [
+            ConfirmedMemoryContextRecord(
+                memory_id=row[0],
+                version=row[1],
+                memory_type=row[2],
+                content=row[3],
+                consent_version=row[4],
+            )
+            for row in result.all()
+        ]

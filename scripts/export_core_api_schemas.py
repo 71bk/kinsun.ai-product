@@ -61,10 +61,6 @@ from app.schemas.memory import (  # noqa: E402
     MemoryResponse,
     UpdateMemoryRequest,
 )
-from app.schemas.onboarding import (  # noqa: E402
-    ResolveOnboardingRequest,
-    ResolveOnboardingResponse,
-)
 from app.schemas.report import (  # noqa: E402
     CreateFamilyReportDraftRequest,
     FamilyReportListResponse,
@@ -88,8 +84,6 @@ EXPORTS = {
         "AgentRunRegistrationV1": AgentRunRegistrationResponse,
         "CompleteAgentRunRequestV1": CompleteAgentRunRequest,
         "AgentRunCompletionV1": AgentRunCompletionResponse,
-        "ResolveOnboardingRequestV1": ResolveOnboardingRequest,
-        "ResolveOnboardingV1": ResolveOnboardingResponse,
         "CreateFamilyInvitationRequestV1": CreateFamilyInvitationRequest,
         "FamilyInvitationCreatedV1": FamilyInvitationCreatedResponse,
         "FamilyInvitationListV1": FamilyInvitationListResponse,
@@ -148,7 +142,6 @@ SUCCESS_ENVELOPES = {
     "ElderAccessContextEnvelopeV1": "domain/ElderAccessContextV1.json",
     "AgentRunRegistrationEnvelopeV1": "domain/AgentRunRegistrationV1.json",
     "AgentRunCompletionEnvelopeV1": "domain/AgentRunCompletionV1.json",
-    "ResolveOnboardingEnvelopeV1": "domain/ResolveOnboardingV1.json",
     "FamilyInvitationCreatedEnvelopeV1": "domain/FamilyInvitationCreatedV1.json",
     "FamilyInvitationListEnvelopeV1": "domain/FamilyInvitationListV1.json",
     "FamilyInvitationStatusEnvelopeV1": "domain/FamilyInvitationStatusV1.json",
@@ -199,6 +192,25 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
     if title == "CreateConsentRequestV1":
         properties["actor_confirmation"]["const"] = True
         properties["purposes"]["uniqueItems"] = True
+    elif title == "CreateFamilyInvitationRequestV1":
+        properties["invitee_email"]["anyOf"][0]["format"] = "email"
+        properties["share_scope"]["uniqueItems"] = True
+    elif title == "FamilyInvitationCreatedV1":
+        properties["invitation_code"]["pattern"] = (
+            r"^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$"
+        )
+        properties["share_scope"].update(
+            {"minItems": 1, "maxItems": 4, "uniqueItems": True}
+        )
+    elif title == "FamilyInvitationStatusV1":
+        properties["share_scope"].update(
+            {"minItems": 1, "maxItems": 4, "uniqueItems": True}
+        )
+    elif title == "FamilyInvitationListV1":
+        status = schema["$defs"]["FamilyInvitationStatusResponse"]
+        status["properties"]["share_scope"].update(
+            {"minItems": 1, "maxItems": 4, "uniqueItems": True}
+        )
     elif title == "VoiceTicketIssuedV1":
         schema.pop("$defs", None)
         properties["voice_session"] = {

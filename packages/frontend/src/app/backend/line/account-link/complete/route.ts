@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import {
-  accessTokenCookieName,
-  isTrustedRequestOrigin,
-  normalizeAccessToken,
-} from '@/lib/server/auth-cookie';
+import { appSessionCookieName, normalizeAppSession } from '@/lib/server/app-session-cookie';
+import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
 import {
   createCoreLineLinkChallenge,
@@ -40,8 +37,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!isTrustedRequestOrigin(request)) {
     return bffError(403, 'forbidden', 'Request origin rejected', 'CSRF_ORIGIN_REJECTED');
   }
-  const accessToken = normalizeAccessToken(request.cookies.get(accessTokenCookieName())?.value);
-  if (!accessToken) {
+  const appSession = normalizeAppSession(request.cookies.get(appSessionCookieName())?.value);
+  if (!appSession) {
     return bffError(401, 'unauthorized', 'Authentication required', 'AUTHENTICATION_REQUIRED');
   }
   const linkToken = normalizeLineLinkToken(request.cookies.get(lineLinkCookieName())?.value);
@@ -49,7 +46,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     return clearLineLinkCookie(redirect('/line/account-link?error=link_expired'));
   }
 
-  const result = await createCoreLineLinkChallenge(accessToken, linkToken);
+  const result = await createCoreLineLinkChallenge(appSession, linkToken);
   if (result.accountLinkUrl) {
     return clearLineLinkCookie(redirect(result.accountLinkUrl));
   }

@@ -28,9 +28,9 @@
           "type": "string"
         },
         "attempt_count": {
-          "minimum": 0,
           "title": "Attempt Count",
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "started_at": {
           "anyOf": [
@@ -47,9 +47,9 @@
         "failure_code": {
           "anyOf": [
             {
-              "maxLength": 120,
+              "type": "string",
               "minLength": 1,
-              "type": "string"
+              "maxLength": 120
             },
             {
               "type": "null"
@@ -85,72 +85,6 @@
     }
   },
   "additionalProperties": false,
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "status": {
-            "const": "COMPLETED"
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "then": {
-        "properties": {
-          "completed_at": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "items": {
-            "items": {
-              "properties": {
-                "status": {
-                  "enum": [
-                    "COMPLETED",
-                    "SKIPPED"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "status": {
-            "const": "PARTIAL_FAILED"
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "then": {
-        "properties": {
-          "completed_at": {
-            "type": "null"
-          },
-          "items": {
-            "contains": {
-              "properties": {
-                "status": {
-                  "const": "FAILED"
-                }
-              },
-              "required": [
-                "status"
-              ]
-            },
-            "minContains": 1
-          }
-        }
-      }
-    }
-  ],
   "properties": {
     "deletion_request_id": {
       "format": "uuid",
@@ -248,5 +182,71 @@
   "title": "DeletionRequestV1",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/DeletionRequestV1.json"
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DeletionRequestV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "COMPLETED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "completed_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "COMPLETED",
+                    "SKIPPED"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PARTIAL_FAILED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "completed_at": {
+            "type": "null"
+          },
+          "items": {
+            "contains": {
+              "properties": {
+                "status": {
+                  "const": "FAILED"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "minContains": 1
+          }
+        }
+      }
+    }
+  ]
 }

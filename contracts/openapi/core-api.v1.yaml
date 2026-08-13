@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.5.0",
-    "summary": "Implemented Core Domain, direct Google and LINE identity linking, consent, security and outbox APIs.",
-    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Direct Google and LINE sign-in exchange provider ID tokens only across private BFF handoff boundaries, then use Core-owned opaque App Sessions. Explicit Google-to-LINE linking requires recent authentication; consolidation is limited to a confirmed, unused ELDER onboarding skeleton and otherwise fails closed to manual review. LINE webhooks separately require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
+    "version": "1.4.0",
+    "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
+    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after direct Google or LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
     "/health": {
@@ -546,341 +546,6 @@
         "security": [
           {
             "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "tags": ["auth"],
-        "summary": "Revoke App Session",
-        "description": "Idempotently revoke one well-formed Core-owned opaque App Session.",
-        "operationId": "logout_app_session_api_v1_auth_logout_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/AppSessionLogoutEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/google/handoff": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Direct Google OIDC Handoff",
-        "description": "Verify a direct Google ID token and return either an App Session or a short-lived pending onboarding credential.",
-        "operationId": "handoff_google_oidc_api_v1_internal_auth_google_handoff_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "../schemas/domain/GoogleOidcHandoffRequestV1.json"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/GoogleOidcHandoffEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "googleBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/google/onboarding": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Complete Pending Google Onboarding",
-        "description": "Atomically consume a pending Google identity, create formal Core state, and issue its first App Session.",
-        "operationId": "complete_google_onboarding_api_v1_internal_auth_google_onboarding_post",
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "schema": { "type": ["string", "null"], "maxLength": 160 }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "../schemas/domain/CompleteGoogleOnboardingRequestV1.json"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/CompletedGoogleOnboardingEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "googleBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/line/handoff": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Direct LINE OIDC Handoff",
-        "description": "Independently verify a direct LINE ID token and return either an App Session or a short-lived pending onboarding credential.",
-        "operationId": "handoff_line_oidc_api_v1_internal_auth_line_handoff_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "../schemas/domain/LineOidcHandoffRequestV1.json"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/LineOidcHandoffEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "lineBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/line/status": {
-      "get": {
-        "tags": ["internal-auth"],
-        "summary": "Get Linked OIDC Methods",
-        "description": "Resolve the exact Core App Session and return only provider-link booleans plus the recent-authentication gate.",
-        "operationId": "line_identity_method_status_api_v1_internal_auth_line_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "../schemas/common/LineIdentityMethodStatusEnvelopeV1.json" }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "bearerAuth": [], "lineBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/line/link": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Link Freshly Verified LINE Identity",
-        "description": "Bind a newly verified LINE identity to the recently authenticated Google Actor, or return a bounded merge/manual-review result when it already belongs to another Actor.",
-        "operationId": "link_line_identity_api_v1_internal_auth_line_link_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "../schemas/domain/LinkLineIdentityRequestV1.json" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "../schemas/common/LineIdentityLinkResultEnvelopeV1.json" }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "bearerAuth": [], "lineBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/line/merge/confirm": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Confirm Empty LINE Account Consolidation",
-        "description": "Consume a short-lived merge credential, recheck that the source remains an empty elder onboarding skeleton, revoke both Actors' old Sessions, and issue a new target-Actor Session.",
-        "operationId": "confirm_line_account_merge_api_v1_internal_auth_line_merge_confirm_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "../schemas/domain/ConfirmLineAccountMergeRequestV1.json" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "../schemas/common/LineAccountMergeResultEnvelopeV1.json" }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "bearerAuth": [], "lineBffAuth": [] }]
-      }
-    },
-    "/api/v1/internal/auth/line/onboarding": {
-      "post": {
-        "tags": ["internal-auth"],
-        "summary": "Complete Pending LINE Onboarding",
-        "description": "Atomically consume a pending LINE identity, create formal Core state, and issue its first App Session.",
-        "operationId": "complete_line_onboarding_api_v1_internal_auth_line_onboarding_post",
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "schema": { "type": ["string", "null"], "maxLength": 160 }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "../schemas/domain/CompleteLineOnboardingRequestV1.json"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/CompletedLineOnboardingEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationFailed" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        },
-        "security": [{ "lineBffAuth": [] }]
-      }
-    },
-    "/api/v1/onboarding/resolve": {
-      "post": {
-        "tags": [
-          "onboarding"
-        ],
-        "summary": "Resolve Onboarding",
-        "description": "Resolve a BFF callback intent into formal Core database state.",
-        "operationId": "resolve_onboarding_api_v1_onboarding_resolve_post",
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Idempotency-Key"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "../schemas/domain/ResolveOnboardingRequestV1.json"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "../schemas/common/ResolveOnboardingEnvelopeV1.json"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFoundOrForbidden"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "503": {
-            "$ref": "#/components/responses/Unavailable"
-          }
-        },
-        "security": [
-          {
-            "cognitoIdToken": []
           }
         ]
       }
@@ -1698,22 +1363,22 @@
         "tags": [
           "voice-sessions"
         ],
-        "summary": "Submit private ASR evidence to the Core safety gate",
-        "description": "Internal system-service route. Core verifies a consumed RECORDING session, live BASIC_VOICE consent, input mode and language before making the threshold decision. No transcript, confidence, ticket, digest or audio is returned.",
+        "summary": "Submit Asr Result",
+        "description": "Accept ASR Final only for a consumed, recording voice session.",
         "operationId": "submit_asr_result_api_v1_internal_asr_results_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "../schemas/domain/SubmitAsrResultRequestV1.json"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Safe Core ASR gate decision.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1724,6 +1389,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "$ref": "#/components/responses/NotFoundOrForbidden"
@@ -1750,8 +1418,8 @@
         "tags": [
           "voice-sessions"
         ],
-        "summary": "Confirm or reject a low-confidence ASR result",
-        "description": "Only the authenticated elder who owns the session may decide. The response omits transcript, confidence, ticket, digest and audio.",
+        "summary": "Confirm Asr Gate",
+        "description": "Allow only the authenticated elder to decide a low-confidence result.",
         "operationId": "confirm_asr_gate_api_v1_voice_sessions__session_id__asr_confirmation_post",
         "parameters": [
           {
@@ -1760,7 +1428,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "title": "Session Id"
             }
           },
           {
@@ -1769,8 +1438,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1,
-              "maxLength": 160
+              "title": "Idempotency-Key"
             }
           }
         ],
@@ -1786,7 +1454,7 @@
         },
         "responses": {
           "200": {
-            "description": "Safe Core ASR gate decision.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1797,6 +1465,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "$ref": "#/components/responses/NotFoundOrForbidden"
@@ -4647,6 +4318,473 @@
           }
         ]
       }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout App Session",
+        "description": "Idempotently revoke one well-formed App Session credential.",
+        "operationId": "logout_app_session_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Logout App Session Api V1 Auth Logout Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/google/handoff": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Handoff Google Oidc",
+        "description": "Exchange a verified Google identity for one Core-owned credential.",
+        "operationId": "handoff_google_oidc_api_v1_internal_auth_google_handoff_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleOidcHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Handoff Google Oidc Api V1 Internal Auth Google Handoff Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/google/onboarding": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Complete Google Onboarding",
+        "description": "Atomically consume a pending identity and issue its first App Session.",
+        "operationId": "complete_google_onboarding_api_v1_internal_auth_google_onboarding_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteGoogleOnboardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Complete Google Onboarding Api V1 Internal Auth Google Onboarding Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/line/status": {
+      "get": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Line Identity Method Status",
+        "operationId": "line_identity_method_status_api_v1_internal_auth_line_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Line Identity Method Status Api V1 Internal Auth Line Status Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/line/link": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Link Line Identity",
+        "operationId": "link_line_identity_api_v1_internal_auth_line_link_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkLineIdentityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Link Line Identity Api V1 Internal Auth Line Link Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/line/merge/confirm": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Confirm Line Account Merge",
+        "operationId": "confirm_line_account_merge_api_v1_internal_auth_line_merge_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmLineAccountMergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Confirm Line Account Merge Api V1 Internal Auth Line Merge Confirm Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/line/handoff": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Handoff Line Oidc",
+        "operationId": "handoff_line_oidc_api_v1_internal_auth_line_handoff_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LineOidcHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Handoff Line Oidc Api V1 Internal Auth Line Handoff Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/line/onboarding": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Complete Line Onboarding",
+        "operationId": "complete_line_onboarding_api_v1_internal_auth_line_onboarding_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLineOnboardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Complete Line Onboarding Api V1 Internal Auth Line Onboarding Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4667,6 +4805,88 @@
         ],
         "title": "CareEventType"
       },
+      "CompleteGoogleOnboardingRequest": {
+        "properties": {
+          "pending_token": {
+            "type": "string",
+            "pattern": "^kp1_[A-Za-z0-9_-]{43}$",
+            "title": "Pending Token"
+          },
+          "invitation_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24,
+                "minLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Code"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pending_token"
+        ],
+        "title": "CompleteGoogleOnboardingRequest"
+      },
+      "CompleteLineOnboardingRequest": {
+        "properties": {
+          "pending_token": {
+            "type": "string",
+            "pattern": "^kp1_[A-Za-z0-9_-]{43}$",
+            "title": "Pending Token"
+          },
+          "invitation_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24,
+                "minLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Code"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pending_token"
+        ],
+        "title": "CompleteLineOnboardingRequest"
+      },
       "ConfidenceBand": {
         "type": "string",
         "enum": [
@@ -4675,6 +4895,21 @@
           "HIGH"
         ],
         "title": "ConfidenceBand"
+      },
+      "ConfirmLineAccountMergeRequest": {
+        "properties": {
+          "merge_token": {
+            "type": "string",
+            "pattern": "^km1_[A-Za-z0-9_-]{43}$",
+            "title": "Merge Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "merge_token"
+        ],
+        "title": "ConfirmLineAccountMergeRequest"
       },
       "ConsentPurpose": {
         "type": "string",
@@ -4733,6 +4968,39 @@
         ],
         "title": "FamilyReportItem"
       },
+      "GoogleOidcHandoffRequest": {
+        "properties": {
+          "id_token": {
+            "type": "string",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Id Token"
+          },
+          "expected_nonce": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 32,
+            "title": "Expected Nonce"
+          },
+          "intent": {
+            "type": "string",
+            "enum": [
+              "ELDER",
+              "FAMILY",
+              "STAFF"
+            ],
+            "title": "Intent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id_token",
+          "expected_nonce",
+          "intent"
+        ],
+        "title": "GoogleOidcHandoffRequest"
+      },
       "LanguageRoute": {
         "type": "string",
         "enum": [
@@ -4744,6 +5012,62 @@
           "UNKNOWN"
         ],
         "title": "LanguageRoute"
+      },
+      "LineOidcHandoffRequest": {
+        "properties": {
+          "id_token": {
+            "type": "string",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Id Token"
+          },
+          "expected_nonce": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 32,
+            "title": "Expected Nonce"
+          },
+          "intent": {
+            "type": "string",
+            "enum": [
+              "ELDER",
+              "FAMILY",
+              "STAFF"
+            ],
+            "title": "Intent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id_token",
+          "expected_nonce",
+          "intent"
+        ],
+        "title": "LineOidcHandoffRequest"
+      },
+      "LinkLineIdentityRequest": {
+        "properties": {
+          "id_token": {
+            "type": "string",
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Id Token"
+          },
+          "expected_nonce": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 32,
+            "title": "Expected Nonce"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id_token",
+          "expected_nonce"
+        ],
+        "title": "LinkLineIdentityRequest"
       },
       "MemoryType": {
         "type": "string",
@@ -4821,26 +5145,8 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "Opaque App Session or JWT",
-        "description": "A versioned ks1_ Core App Session or, during the gated migration, a Cognito access token. Prefix routing is strict and never falls back after failed App Session validation. Core resolves actor, tenant and role from live database state."
-      },
-      "googleBffAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-Kinsun-BFF-Authorization",
-        "description": "Dedicated server-to-server bearer secret shared only by the Next.js BFF and Core Google handoff boundary."
-      },
-      "lineBffAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-Kinsun-BFF-Authorization",
-        "description": "Dedicated server-to-server bearer secret shared only by the Next.js BFF and Core LINE handoff boundary."
-      },
-      "cognitoIdToken": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Cognito ID token accepted only by onboarding resolution. Core verifies signature, issuer, expiry, token_use=id, audience and verified email; claims do not directly grant any role or elder scope."
+        "bearerFormat": "ks1_ opaque session",
+        "description": "Versioned ks1_ Core App Session. Core resolves the session, actor, tenant and role from live database state on each request. Development fake auth requires the explicit FAKE_AUTH_ENABLED flag."
       },
       "lineSignature": {
         "type": "apiKey",

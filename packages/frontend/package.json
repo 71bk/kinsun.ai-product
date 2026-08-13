@@ -6,12 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:e2e:auth": "node scripts/auth-relogin-e2e.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "3.1101.0",
     "@elderly-care/shared": "*",
     "@phosphor-icons/react": "^2.1.7",
     "next": "16.2.12",

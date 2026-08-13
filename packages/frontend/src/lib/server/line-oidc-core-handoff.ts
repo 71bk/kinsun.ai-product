@@ -69,7 +69,6 @@ export function lineOidcCoreAuthorization(): string {
   const forbiddenReuse = [
     process.env.LINE_LOGIN_CHANNEL_SECRET,
     process.env.LINE_OIDC_TRANSACTION_SECRET,
-    process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET,
     process.env.LINE_CHANNEL_SECRET,
     process.env.GOOGLE_OIDC_HANDOFF_SECRET,
     process.env.FAMILY_INVITATION_HMAC_SECRET,

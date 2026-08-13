@@ -1,7 +1,7 @@
 """Smoke-test externally deployed kinsun.ai service endpoints.
 
 This script validates only interfaces that currently exist in the repository.
-It does not infer that AWS resources, Cognito, Bedrock, EventBridge, or other
+It does not infer that AWS resources, Bedrock, EventBridge, or other
 parts of the target architecture have been deployed.
 """
 

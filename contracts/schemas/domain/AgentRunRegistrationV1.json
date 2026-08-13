@@ -1,9 +1,51 @@
 {
-  "$id": "https://kinsun.ai/contracts/schemas/domain/AgentRunRegistrationV1.json",
-  "title": "AgentRunRegistrationV1",
-  "description": "Core-owned AgentRun identity and immutable registration scope returned to the calling system service.",
-  "type": "object",
   "additionalProperties": false,
+  "description": "Original registration result returned to the calling system service.",
+  "properties": {
+    "agent_run_id": {
+      "format": "uuid",
+      "title": "Agent Run Id",
+      "type": "string"
+    },
+    "session_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Session Id"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "agent_id": {
+      "title": "Agent Id",
+      "type": "string"
+    },
+    "agent_version": {
+      "title": "Agent Version",
+      "type": "string"
+    },
+    "result_status": {
+      "const": "RUNNING",
+      "title": "Result Status",
+      "type": "string"
+    },
+    "policy_version": {
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
   "required": [
     "agent_run_id",
     "session_id",
@@ -14,49 +56,8 @@
     "policy_version",
     "trace_id"
   ],
-  "properties": {
-    "agent_run_id": {
-      "type": "string",
-      "format": "uuid"
-    },
-    "session_id": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "uuid"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "elder_id": {
-      "type": "string",
-      "format": "uuid"
-    },
-    "agent_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 120
-    },
-    "agent_version": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 64
-    },
-    "result_status": {
-      "type": "string",
-      "const": "RUNNING"
-    },
-    "policy_version": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80
-    },
-    "trace_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80
-    }
-  }
+  "title": "AgentRunRegistrationV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AgentRunRegistrationV1.json"
 }

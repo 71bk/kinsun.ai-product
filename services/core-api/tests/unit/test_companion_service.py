@@ -17,6 +17,7 @@ from app.core.exceptions import ConflictError, NotFoundError, ServiceUnavailable
 from app.middleware.auth import ActorContext
 from app.models.agent import AgentRun
 from app.models.safety import SafetyEvaluation
+from app.repositories.memory_repo import ConfirmedMemoryContextRecord
 from app.services import companion_service
 from app.services.companion_service import CompanionService
 
@@ -133,6 +134,15 @@ def _install_candidate_capability(
         "ConsentService",
         MagicMock(return_value=SimpleNamespace(require_active=require_active)),
     )
+    monkeypatch.setattr(
+        companion_service,
+        "MemoryRepository",
+        MagicMock(
+            return_value=SimpleNamespace(
+                list_active_context_for_elder=AsyncMock(return_value=[]),
+            )
+        ),
+    )
     return authorize, require_active
 
 
@@ -189,6 +199,7 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request_payload["elder_id"] == str(conversation.elder_id)
         assert request_payload["allowed_tools"] == []
         assert request_payload["requested_outputs"] == ["event_candidate"]
+        assert request_payload["confirmed_memories"] == []
         assert request_payload["request_id"] == (
             f"req-{uuid5(NAMESPACE_URL, 'kinsun:companion:turn-1')}"
         )
@@ -235,8 +246,8 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         "RESPONDING",
         "COMPLETED",
     ]
-    assert authorize.await_count == 2
-    require_active.assert_awaited_once()
+    assert authorize.await_count == 3
+    assert require_active.await_count == 2
     create_candidate.assert_awaited_once()
     added = [item.args[0] for item in session.add.call_args_list]
     agent_run = next(item for item in added if isinstance(item, AgentRun))
@@ -324,7 +335,7 @@ async def test_revoked_scope_during_turn_drops_proposal_before_candidate_write(
     conversation = _conversation()
     _install_conversation_service(monkeypatch, conversation)
     authorize, _require_active = _install_candidate_capability(monkeypatch)
-    authorize.side_effect = [None, NotFoundError("Resource not found")]
+    authorize.side_effect = [None, None, NotFoundError("Resource not found")]
     create_candidate = _install_care_event_service(monkeypatch)
     session = _session()
 
@@ -346,8 +357,119 @@ async def test_revoked_scope_during_turn_drops_proposal_before_candidate_write(
         latency_budget_ms=3000,
     )
 
-    assert authorize.await_count == 2
+    assert authorize.await_count == 3
     create_candidate.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = uuid4()
+    actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
+    conversation = _conversation()
+    _install_conversation_service(monkeypatch, conversation)
+    authorize, require_active = _install_candidate_capability(monkeypatch)
+    memory_id = uuid4()
+    list_context = AsyncMock(
+        return_value=[
+            ConfirmedMemoryContextRecord(
+                memory_id=memory_id,
+                version=3,
+                memory_type="PREFERENCE",
+                content="喜歡在下午聽老歌。",
+                consent_version=2,
+            )
+        ]
+    )
+    monkeypatch.setattr(
+        companion_service,
+        "MemoryRepository",
+        MagicMock(
+            return_value=SimpleNamespace(
+                list_active_context_for_elder=list_context,
+            )
+        ),
+    )
+    session = _session()
+
+    async def run_runtime(*, request_payload, **_kwargs):
+        assert request_payload["confirmed_memories"] == [
+            {
+                "memory_id": str(memory_id),
+                "version": 3,
+                "memory_type": "PREFERENCE",
+                "content": "喜歡在下午聽老歌。",
+                "consent_version": 2,
+            }
+        ]
+        return _runtime_result(
+            request_id=request_payload["request_id"],
+            trace_id=conversation.trace_id,
+            agent_run_id=request_payload["agent_run_id"],
+        )
+
+    await CompanionService(
+        session,
+        tenant_id,
+        SimpleNamespace(run=AsyncMock(side_effect=run_runtime)),
+        "mock",
+    ).run_turn(
+        conversation=conversation,
+        actor_context=actor,
+        input_text="今天想聽音樂。",
+        correlation_id="correlation-memory",
+        idempotency_key="turn-memory",
+        latency_budget_ms=3000,
+    )
+
+    assert [call.args[3] for call in authorize.await_args_list] == [
+        "care_event:candidate:create",
+        "memory:read",
+    ]
+    assert require_active.await_count == 2
+    list_context.assert_awaited_once_with(
+        elder_id=conversation.elder_id,
+        max_consent_version=4,
+        limit=5,
+    )
+
+
+@pytest.mark.asyncio
+async def test_knowledge_turn_does_not_mix_personal_memory_into_rag_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = uuid4()
+    actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
+    conversation = _conversation()
+    _install_conversation_service(monkeypatch, conversation)
+    authorize, _require_active = _install_candidate_capability(monkeypatch)
+    session = _session()
+
+    async def run_runtime(*, request_payload, **_kwargs):
+        assert request_payload["purpose"] == "general_information"
+        assert request_payload["confirmed_memories"] == []
+        return _runtime_result(
+            request_id=request_payload["request_id"],
+            trace_id=conversation.trace_id,
+            agent_run_id=request_payload["agent_run_id"],
+        )
+
+    await CompanionService(
+        session,
+        tenant_id,
+        SimpleNamespace(run=AsyncMock(side_effect=run_runtime)),
+        "mock",
+    ).run_turn(
+        conversation=conversation,
+        actor_context=actor,
+        input_text="長照服務要怎麼申請？",
+        correlation_id="correlation-rag-no-memory",
+        idempotency_key="turn-rag-no-memory",
+        latency_budget_ms=3000,
+    )
+
+    assert [call.args[3] for call in authorize.await_args_list] == ["care_event:candidate:create"]
 
 
 @pytest.mark.asyncio

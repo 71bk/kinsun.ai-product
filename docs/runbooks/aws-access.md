@@ -8,7 +8,10 @@
 2. 外部部署的 Core API／Agent Runtime 回應 repository **目前已實作**的介面。
 3. 未帶認證的 Core protected route 仍 fail closed，Agent 高風險輸入仍由 deterministic safety gate 阻擋。
 
-本流程**不會部署 AWS resource，也不證明 Target Architecture 已完成**。目前尚未在 repository 綁定 Cognito、ECS/Fargate、API Gateway、Aurora、Bedrock、EventBridge、SQS/DLQ、Neptune、OpenSearch、SES 或 LINE；AWS Region、Account／Environment 策略與 IaC 工具也仍待 Owner／ADR 決策。`services/agent-runtime` 目前仍使用本機 deterministic `MockModelProvider`，通過 smoke test 不代表 Bedrock 已接入。
+本流程**不會部署 AWS resource，也不證明 deployment architecture 已完成**。Repository 保留 AWS CDK
+profile，但黑客松帳號目前無法操作；沒有可用的遠端 runtime 證據。Cognito 已退場，Core 認證改為
+direct Google／LINE OIDC + Core App Session。`services/agent-runtime` 本機仍可使用 deterministic
+`MockModelProvider`，通過 smoke test 不代表 Bedrock 已接入。
 
 ## 2. 安全規則
 
@@ -30,7 +33,7 @@
 | AWS Region | `ap-northeast-1` | 仍待正式 ADR；每次執行都明確指定 |
 | Core base URL | `https://api.example.test/stage` | 選填；URL 可包含 API Gateway stage path |
 | Agent base URL | `https://agent.example.test/stage` | 選填；URL 可包含 stage path |
-| 短效 Core bearer token | 由核准流程取得 | 選填；只有 Cognito/JWT adapter 已實作並部署後才使用 |
+| 短效 Core App Session | 由核准流程取得 | 選填；只用於已核准的測試帳號與環境 |
 | 短效 Agent bearer token | 由核准流程取得 | 選填；依核准的 gateway policy 決定 |
 | Change／release reference | release ID | 用於保存 smoke evidence，不放 Secret |
 
@@ -110,7 +113,9 @@ uv run python scripts/smoke_test_aws.py --agent-base-url $AgentBaseUrl
 
 ### 6.2 選填：短效 bearer token
 
-目前 Core Cognito/JWT verification 尚未實作。只有認證 adapter 已經過獨立審查、部署且 Owner 要求驗證 authenticated path 時，才注入 token。Token 只存在目前 process environment，執行後立即移除。
+Core 只接受 `ks1_` opaque App Session，不接受 Provider token 或 JWT。只有 direct OIDC、Core App
+Session 與測試帳號已在目標環境驗證，且 Owner 要求測 authenticated path 時，才注入 Session。
+Session 只存在目前 process environment，執行後立即移除。
 
 PowerShell 5.1 可用 masked prompt，避免 token 進入 shell history：
 
@@ -182,7 +187,7 @@ git rev-parse HEAD
 
 下列項目在 resource、policy、IaC 與 adapter 實作完成前，不得加入「已通過」結論：
 
-- Cognito issuer／audience／JWKS 驗證與 role mapping。
+- Direct Google／LINE callback、Core App Session 與 external identity 的部署驗證。
 - ECS/Fargate task、service、load balancer 與 deployment rollback。
 - Aurora production migration、backup／restore、retention 與 legal hold。
 - EventBridge、每 consumer 專屬 SQS／DLQ、redrive、replay suppression。

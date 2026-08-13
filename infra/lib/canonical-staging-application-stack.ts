@@ -35,8 +35,8 @@ interface RuntimeContainerProps {
  * Asset-free staging application runtime.
  *
  * Images must already exist in the retained foundation ECR repositories. The
- * stack defaults every service to desiredCount=0 so schema migration and the
- * external Cognito callback update can finish before traffic is enabled.
+ * stack defaults every service to desiredCount=0 so schema migration and
+ * provider-neutral authentication configuration can finish before traffic is enabled.
  */
 export class CanonicalStagingApplicationStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: CanonicalStagingApplicationStackProps = {}) {
@@ -118,10 +118,6 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     const databaseRuntimeSecretArn = this.arnParameter(
       'DatabaseRuntimeSecretArn',
       'Foundation least-privilege Core runtime Secret ARN.',
-    );
-    const oauthTransactionSecretArn = this.arnParameter(
-      'OauthTransactionSecretArn',
-      'Foundation frontend OAuth transaction secret ARN.',
     );
     const familyInviteSecretArn = this.arnParameter(
       'FamilyInviteSecretArn',
@@ -271,29 +267,12 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
       'DatabaseRuntimeSecret',
       databaseRuntimeSecretArn.valueAsString,
     );
-    const oauthTransactionSecret = secretsmanager.Secret.fromSecretCompleteArn(
-      this,
-      'OauthTransactionSecret',
-      oauthTransactionSecretArn.valueAsString,
-    );
     const familyInviteSecret = secretsmanager.Secret.fromSecretCompleteArn(
       this,
       'FamilyInviteSecret',
       familyInviteSecretArn.valueAsString,
     );
 
-    const cognitoUserPoolId = ssm.StringParameter.valueForStringParameter(
-      this,
-      `/kinsun/${environmentName}/external/cognito-user-pool-id`,
-    );
-    const cognitoWebClientId = ssm.StringParameter.valueForStringParameter(
-      this,
-      `/kinsun/${environmentName}/external/cognito-web-bff-client-id`,
-    );
-    const cognitoDomain = ssm.StringParameter.valueForStringParameter(
-      this,
-      `/kinsun/${environmentName}/external/cognito-domain`,
-    );
     const openSearchEndpoint = ssm.StringParameter.valueForStringParameter(
       this,
       `/kinsun/${environmentName}/external/opensearch-endpoint`,
@@ -340,18 +319,10 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
         PORT: '3000',
         HOSTNAME: '0.0.0.0',
         CORE_API_INTERNAL_URL: 'http://core-api:8000',
-        CORE_ONBOARDING_REDEEM_URL: 'http://core-api:8000/api/v1/onboarding/resolve',
         FRONTEND_ORIGIN: publicOrigin,
-        COGNITO_OAUTH_DOMAIN: cognitoDomain,
-        COGNITO_WEB_CLIENT_ID: cognitoWebClientId,
-        COGNITO_CALLBACK_URL: `${publicOrigin}/backend/auth/callback`,
-        COGNITO_LOGOUT_URL: `${publicOrigin}/sign-in`,
         NEXT_PUBLIC_CONSENT_POLICY_VERSION: consentPolicyVersion.valueAsString,
-        NEXT_PUBLIC_WS_URL: '',
       },
-      secrets: {
-        COGNITO_OAUTH_TRANSACTION_SECRET: ecs.Secret.fromSecretsManager(oauthTransactionSecret),
-      },
+      secrets: {},
       healthPath: '/health',
       healthRuntime: 'node',
     });
@@ -387,10 +358,6 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
         DB_POOL_MODE: 'null',
         DB_CONNECT_TIMEOUT_SECONDS: '5',
         DB_RECOVERY_TIMEOUT_SECONDS: '10',
-        COGNITO_AUTH_ENABLED: 'true',
-        COGNITO_REGION: cdk.Aws.REGION,
-        COGNITO_USER_POOL_ID: cognitoUserPoolId,
-        COGNITO_APP_CLIENT_ID: cognitoWebClientId,
         AGENT_RUNTIME_URL: 'http://agent-runtime:8001',
         AGENT_RUNTIME_MODEL_ID: 'mock',
       },
@@ -588,10 +555,6 @@ export class CanonicalStagingApplicationStack extends cdk.Stack {
     frontendService.node.addDependency(coreService);
 
     new cdk.CfnOutput(this, 'FrontendUrl', { value: publicOrigin });
-    new cdk.CfnOutput(this, 'CognitoCallbackUrl', {
-      value: `${publicOrigin}/backend/auth/callback`,
-    });
-    new cdk.CfnOutput(this, 'CognitoLogoutUrl', { value: `${publicOrigin}/sign-in` });
     new cdk.CfnOutput(this, 'MigrationTaskDefinitionArn', {
       value: migrationTask.taskDefinitionArn,
     });

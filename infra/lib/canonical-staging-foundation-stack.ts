@@ -17,7 +17,7 @@ export interface CanonicalStagingFoundationStackProps extends cdk.StackProps {
  * Asset-free foundation for the canonical Next.js BFF -> Python Core -> Agent Runtime topology.
  *
  * It deliberately creates no ECS service or task definition until all three deployable images
- * exist. Existing Cognito and OpenSearch Serverless resources remain externally managed.
+ * exist. The existing OpenSearch Serverless resource remains externally managed.
  */
 export class CanonicalStagingFoundationStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: CanonicalStagingFoundationStackProps = {}) {
@@ -45,25 +45,6 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
       allowedPattern: '^20[0-9]{2}-[0-9]{2}-[0-9]{2}$',
       constraintDescription: 'Use an ISO calendar date such as 2026-09-01.',
       description: 'Review or teardown date; this tag does not delete resources automatically.',
-    });
-    const cognitoUserPoolId = new cdk.CfnParameter(this, 'CognitoUserPoolId', {
-      type: 'String',
-      default: 'us-west-2_wJJJXdstg',
-      allowedPattern: '^us-west-2_[A-Za-z0-9]+$',
-      description: 'Existing externally managed Cognito user pool. This stack does not create it.',
-    });
-    const cognitoWebBffClientId = new cdk.CfnParameter(this, 'CognitoWebBffClientId', {
-      type: 'String',
-      default: '5gqrkek6hfn8ub2ba5nsdtup81',
-      allowedValues: ['5gqrkek6hfn8ub2ba5nsdtup81'],
-      minLength: 1,
-      description: 'Existing kinsun-web-bff-staging Cognito app client ID.',
-    });
-    const cognitoDomain = new cdk.CfnParameter(this, 'CognitoDomain', {
-      type: 'String',
-      default: 'https://kinsun-ai-staging-0919-472612.auth.us-west-2.amazoncognito.com',
-      allowedPattern: '^https://[a-z0-9-]+\\.auth\\.us-west-2\\.amazoncognito\\.com$',
-      description: 'Existing Cognito managed-login origin without a trailing slash.',
     });
     const openSearchCollectionId = new cdk.CfnParameter(this, 'OpenSearchCollectionId', {
       type: 'String',
@@ -262,11 +243,6 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     }
     generatedDatabaseSecret.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
-    const oauthTransactionSecret = this.generatedSecret(
-      'OauthTransactionSecret',
-      `kinsun/${environmentName}/frontend/oauth-transaction`,
-      'Next.js BFF OAuth transaction signing secret',
-    );
     const familyInviteSecret = this.generatedSecret(
       'FamilyInviteSecret',
       `kinsun/${environmentName}/core/family-invite-hmac`,
@@ -296,7 +272,6 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
         `kinsun-migration-execution-${environmentName}`,
       ),
     };
-    oauthTransactionSecret.grantRead(executionRoles.frontend);
     familyInviteSecret.grantRead(executionRoles.core);
     // The long-lived Core task must never receive the Aurora administrator credential.
     databaseRuntimeSecret.grantRead(executionRoles.core);
@@ -336,9 +311,6 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     );
 
     const externalConfiguration: Record<string, string> = {
-      'cognito-user-pool-id': cognitoUserPoolId.valueAsString,
-      'cognito-web-bff-client-id': cognitoWebBffClientId.valueAsString,
-      'cognito-domain': cognitoDomain.valueAsString,
       'opensearch-collection-id': openSearchCollectionId.valueAsString,
       'opensearch-endpoint': openSearchEndpoint.valueAsString,
       'opensearch-index': openSearchIndex.valueAsString,
@@ -390,7 +362,6 @@ export class CanonicalStagingFoundationStack extends cdk.Stack {
     this.output('DatabaseSecretArn', database.secret?.secretArn ?? 'not-created');
     this.output('DatabaseAdminSecretArn', database.secret?.secretArn ?? 'not-created');
     this.output('DatabaseRuntimeSecretArn', databaseRuntimeSecret.secretArn);
-    this.output('OauthTransactionSecretArn', oauthTransactionSecret.secretArn);
     this.output('FamilyInviteSecretArn', familyInviteSecret.secretArn);
     this.output('ApiVpcLinkSecurityGroupId', apiVpcLinkSecurityGroup.securityGroupId);
     this.output('FrontendSecurityGroupId', frontendSecurityGroup.securityGroupId);

@@ -4,7 +4,6 @@ import {
   appSessionCookieOptions,
   appSessionMaxAge,
 } from '@/lib/server/app-session-cookie';
-import { accessTokenCookieName, accessTokenCookieOptions } from '@/lib/server/auth-cookie';
 import { logAuthDiagnostic } from '@/lib/server/auth-diagnostics';
 import {
   createGooglePendingOnboarding,
@@ -48,14 +47,6 @@ function clearGoogleTransaction(response: NextResponse): void {
   });
 }
 
-function clearCognitoCredential(response: NextResponse): void {
-  response.cookies.set(accessTokenCookieName(), '', {
-    ...accessTokenCookieOptions(),
-    expires: new Date(0),
-    maxAge: 0,
-  });
-}
-
 function failedCallback(clearCurrentTransaction = true): Response {
   const response = redirect('/sign-in?error=oauth_failed');
   if (clearCurrentTransaction) clearGoogleTransaction(response);
@@ -85,7 +76,6 @@ export async function GET(request: NextRequest): Promise<Response> {
     if (handoff.status === 'AUTHENTICATED') {
       const response = redirect(validated.transaction.returnTo);
       clearGoogleTransaction(response);
-      clearCognitoCredential(response);
       response.cookies.set(
         appSessionCookieName(),
         handoff.sessionToken,

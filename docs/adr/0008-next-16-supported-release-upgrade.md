@@ -5,9 +5,12 @@
 - 相關：[ADR 0006](0006-frontend-stack-and-app-topology.md)、
   [ADR 0007](0007-canonical-backend-and-aws-deployment-authority.md)
 
+> 2026-08-13：本 ADR 的 framework／dependency 決策仍有效；Cognito 與 AWS rollout 敘述是當時背景，
+> 現行 authentication 以 [ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md) 為準。
+
 ## 背景
 
-`packages/frontend` 同時是 multi-role PWA 與 Cognito/Core API BFF。原本的
+`packages/frontend` 同時是 multi-role PWA 與 authentication/Core API BFF。原本的
 `next@14.2.35` 已不在 upstream 支援線，且 production dependency audit 有 high severity
 結果，因此 ADR 0006 禁止把該版本暴露為公開 OAuth 入口。
 

@@ -28,7 +28,6 @@ describe('frontend production container contract', () => {
     expect(buildArguments).toEqual([
       'NODE_VERSION',
       'NEXT_PUBLIC_CONSENT_POLICY_VERSION',
-      'NEXT_PUBLIC_WS_URL',
     ]);
   });
 });

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://kinsun.ai/contracts/schemas/common/AgentRunRegistrationEnvelopeV1.json",
   "title": "AgentRunRegistrationEnvelopeV1",
   "type": "object",

@@ -25,7 +25,7 @@ Core 提供 explicit linking 與「空白帳號受限合併」，但不提供一
 
 只有下列條件全部成立才可自動合併：
 
-- 來源 Actor 是 active ELDER，且沒有 Cognito 身分。
+- 來源 Actor 是 active ELDER。
 - 來源 Actor 恰好只有一個 active LINE identity。
 - 來源 Actor 恰好只有一個 active ELDER membership、一個 active Elder 與一個 active HOUSEHOLD tenant。
 - 該 tenant 沒有其他 membership 或 Elder。

@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { normalizeAppSession } from './app-session-cookie';
-import { lineLoginCodeChallenge } from './line-login-link-transaction';
+import { codeChallenge } from './oauth-transaction';
 
 const DEVELOPMENT_COOKIE = 'kinsun_line_account_link';
 const PRODUCTION_COOKIE = '__Host-kinsun_line_account_link';
@@ -121,7 +121,7 @@ export function lineAccountLinkStateMatches(
 }
 
 export function lineAccountLinkCodeChallenge(transaction: LineAccountLinkTransaction): string {
-  return lineLoginCodeChallenge(transaction);
+  return codeChallenge(transaction.codeVerifier);
 }
 
 export function lineAccountLinkCookieName(): string {

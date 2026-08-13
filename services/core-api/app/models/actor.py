@@ -41,10 +41,6 @@ class Actor(BaseModel):
         ACTOR_TYPE_ENUM,
         nullable=False,
     )
-    cognito_sub: Mapped[str | None] = mapped_column(
-        sa.String(200),
-        nullable=True,
-    )
     display_name: Mapped[str] = mapped_column(
         sa.String(120),
         nullable=False,

@@ -8,6 +8,10 @@
 - Framework major/version 與 2026-08-02 dependency gate 已由
   [ADR 0008](0008-next-16-supported-release-upgrade.md) 取代；本 ADR 的單一 PWA、BFF 與樣式決策仍有效。
 
+> 2026-08-13：本 ADR 內的 Cognito route／cookie 是歷史實作；現行 BFF authentication 已由
+> [ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md) 取代為 direct Google／LINE OIDC +
+> Core-owned App Session。單一 PWA 與 server-side BFF 邊界不變。
+
 ## 背景
 
 `design-system/MASTER.md` §0 列了兩項待決，兩項的敘述都與 repository 的實際內容不符。

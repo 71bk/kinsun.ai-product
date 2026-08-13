@@ -26,8 +26,6 @@ afterEach(() => {
 describe('clearBrowserSessionState', () => {
   it('removes every browser session value while preserving unrelated preferences', () => {
     const localStorage = memoryStorage({
-      elderly_care_id_token: 'synthetic-legacy-token',
-      elderly_care_voice_ws_token: 'synthetic-voice-token',
       [AUTH_STORAGE_KEYS.elderId]: 'synthetic-elder-id',
       [AUTH_STORAGE_KEYS.caregiverId]: 'synthetic-caregiver-id',
       elderly_care_locale: 'en',
@@ -36,8 +34,6 @@ describe('clearBrowserSessionState', () => {
 
     clearBrowserSessionState();
 
-    expect(localStorage.getItem('elderly_care_id_token')).toBeNull();
-    expect(localStorage.getItem('elderly_care_voice_ws_token')).toBeNull();
     expect(localStorage.getItem(AUTH_STORAGE_KEYS.elderId)).toBeNull();
     expect(localStorage.getItem(AUTH_STORAGE_KEYS.caregiverId)).toBeNull();
     expect(localStorage.getItem('elderly_care_locale')).toBe('en');

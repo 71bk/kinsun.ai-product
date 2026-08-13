@@ -81,6 +81,33 @@
       "minLength": 1,
       "maxLength": 4000
     },
+    "confirmed_memories": {
+      "description": "Core-authorized current ACTIVE memory versions. Candidates, inactive/deleted memories, and superseded versions are forbidden.",
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["memory_id", "version", "memory_type", "content", "consent_version"],
+        "properties": {
+          "memory_id": { "type": "string", "format": "uuid" },
+          "version": { "type": "integer", "minimum": 1 },
+          "memory_type": {
+            "type": "string",
+            "enum": [
+              "PREFERENCE",
+              "IMPORTANT_RELATIONSHIP",
+              "ROUTINE",
+              "COMMUNICATION_PREFERENCE",
+              "PERSONAL_HISTORY"
+            ]
+          },
+          "content": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "consent_version": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "default": []
+    },
     "allowed_tools": {
       "description": "Legacy per-run Tool allowlist retained for wire compatibility. The canonical Core companion path sends an empty list; Runtime does not use this field to write Core domain state.",
       "type": "array",
@@ -111,5 +138,20 @@
       "minimum": 100,
       "maximum": 300000
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["confirmed_memories"],
+        "properties": {
+          "confirmed_memories": { "minItems": 1 }
+        }
+      },
+      "then": {
+        "properties": {
+          "purpose": { "const": "BASIC_VOICE" }
+        }
+      }
+    }
+  ]
 }

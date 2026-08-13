@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { appSessionCookieName, appSessionCookieOptions } from '@/lib/server/app-session-cookie';
 import {
-  accessTokenCookieName,
-  accessTokenCookieOptions,
-  isTrustedRequestOrigin,
-} from '@/lib/server/auth-cookie';
+  appSessionCookieName,
+  appSessionCookieOptions,
+  normalizeAppSession,
+} from '@/lib/server/app-session-cookie';
+import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
-import { buildCognitoLogoutUrl, getCognitoOAuthConfig } from '@/lib/server/cognito-oauth';
 import { revokeCoreAppSession } from '@/lib/server/core-app-session';
 import {
   googlePendingOnboardingCookieName,
@@ -17,9 +16,13 @@ import {
   googleOidcTransactionCookieOptions,
 } from '@/lib/server/google-oidc-transaction';
 import {
-  oauthTransactionCookieName,
-  oauthTransactionCookieOptions,
-} from '@/lib/server/oauth-transaction';
+  lineOidcTransactionCookieName,
+  lineOidcTransactionCookieOptions,
+} from '@/lib/server/line-oidc-transaction';
+import {
+  linePendingOnboardingCookieName,
+  linePendingOnboardingCookieOptions,
+} from '@/lib/server/line-pending-onboarding';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,9 +38,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     return bffError(403, 'forbidden', 'Request origin rejected', 'CSRF_ORIGIN_REJECTED');
   }
 
-  const appSession = request.cookies.get(appSessionCookieName())?.value;
-  let response: NextResponse;
-  if (appSession !== undefined) {
+  const appSession = normalizeAppSession(request.cookies.get(appSessionCookieName())?.value);
+  if (appSession !== null) {
     try {
       await revokeCoreAppSession(appSession);
     } catch {
@@ -49,28 +51,10 @@ export async function POST(request: NextRequest): Promise<Response> {
         true,
       );
     }
-    response = new NextResponse(null, { status: 303, headers: { Location: '/sign-in' } });
-  } else {
-    try {
-      response = NextResponse.redirect(buildCognitoLogoutUrl(getCognitoOAuthConfig()), {
-        status: 303,
-      });
-    } catch {
-      response = new NextResponse(null, { status: 303, headers: { Location: '/sign-in' } });
-    }
   }
+  const response = new NextResponse(null, { status: 303, headers: { Location: '/sign-in' } });
   response.cookies.set(appSessionCookieName(), '', {
     ...appSessionCookieOptions(),
-    expires: new Date(0),
-    maxAge: 0,
-  });
-  response.cookies.set(accessTokenCookieName(), '', {
-    ...accessTokenCookieOptions(),
-    expires: new Date(0),
-    maxAge: 0,
-  });
-  response.cookies.set(oauthTransactionCookieName(), '', {
-    ...oauthTransactionCookieOptions(),
     expires: new Date(0),
     maxAge: 0,
   });
@@ -81,6 +65,16 @@ export async function POST(request: NextRequest): Promise<Response> {
   });
   response.cookies.set(googlePendingOnboardingCookieName(), '', {
     ...googlePendingOnboardingCookieOptions(),
+    expires: new Date(0),
+    maxAge: 0,
+  });
+  response.cookies.set(lineOidcTransactionCookieName(), '', {
+    ...lineOidcTransactionCookieOptions(),
+    expires: new Date(0),
+    maxAge: 0,
+  });
+  response.cookies.set(linePendingOnboardingCookieName(), '', {
+    ...linePendingOnboardingCookieOptions(),
     expires: new Date(0),
     maxAge: 0,
   });

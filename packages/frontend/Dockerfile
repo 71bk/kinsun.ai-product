@@ -24,9 +24,7 @@ COPY packages/frontend ./packages/frontend
 # NEXT_PUBLIC values are public by definition and are compiled into browser
 # assets. Never add OAuth secrets, tokens, or server credentials as build args.
 ARG NEXT_PUBLIC_CONSENT_POLICY_VERSION=""
-ARG NEXT_PUBLIC_WS_URL=""
-ENV NEXT_PUBLIC_CONSENT_POLICY_VERSION=${NEXT_PUBLIC_CONSENT_POLICY_VERSION} \
-    NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+ENV NEXT_PUBLIC_CONSENT_POLICY_VERSION=${NEXT_PUBLIC_CONSENT_POLICY_VERSION}
 
 RUN npm run build --workspace @elderly-care/frontend
 

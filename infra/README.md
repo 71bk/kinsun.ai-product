@@ -1,69 +1,44 @@
-# AWS infrastructure status
+# AWS infrastructure profile
 
-ADR 0007 選定 AWS CDK v2 作為 canonical IaC 工具。本目錄曾同時存在一套凍結的
-Lambda／DynamoDB legacy stack（`ElderlyCareStack`，會建立另一套 Cognito，與目前
-Next.js BFF → Python Core／Aurora → Agent Runtime 主線不相容）；該 stack、其專屬
-constructs 與 `bin/app.ts`／`cdk.legacy.json` 已於 2026-08-06 連同 `legacy/backend`
-一併刪除。要查歷史用 `git log --follow`。
+`infra/` 是保留的 AWS CDK v2 deployment profile。黑客松 AWS 帳號目前已無法操作，因此本目錄的
+CloudFormation template 只代表 repository 中可測試、可 synth 的部署設計；不能據此宣稱任何 AWS
+resource 仍存在、可存取或正在計費。不要在沒有新的 AWS 帳號、Owner 授權與部署前檢查時執行 deploy。
 
-現在只剩 canonical staging 那一套。`infra/lib/constructs/auth.ts` 是唯一保留的舊
-construct，目前沒有任何 stack import——見 `AGENTS.md` §1。
+## Repository 現況
 
-`cdk.json` 的預設 app 已切到 asset-free 的 canonical staging foundation；它只建立
-VPC、ECR、ECS cluster、Aurora、Secrets、Logs、IAM roles 與 external-resource references，
-不建立 task／service，也不建立 Cognito／OpenSearch。Frontend、Core API、Core migration 與
-Agent Runtime 的 deployable container image 已可在本機建立；獨立的 application stack 也已完成
-asset-free synth，但尚未部署至 AWS。
+- `canonical-staging-foundation-stack.ts` 定義 VPC、ECR、ECS cluster、Aurora、Secrets、Logs、IAM
+  roles 與 OpenSearch external reference。
+- `canonical-staging-application-stack.ts` 定義 Frontend、Core API、Core migration、Agent Runtime 與
+  Speech Gateway 的 ECS/Fargate application topology，`ServiceDesiredCount` 預設為 `0`。
+- Cognito construct、parameter、SSM reference、secret injection 與 output 已移除。登入由 application
+  code 的 direct Google／LINE OIDC + Core-owned App Session 負責。
+- 目前實際資料庫 provider 是 Supabase PostgreSQL；本 AWS profile 內的 Aurora 不是現行資料來源。
+- OpenSearch、Bedrock、managed speech 與 SageMaker adapter 仍存在於程式或 IaC 邊界，但沒有目前帳號的
+  live deployment 證據，不得描述為可用服務。
 
-目前 canonical template 是已套用的穩定保護狀態：Aurora
-`deletionProtection=true`，`DeletionPolicy` 與 `UpdateReplacePolicy` 皆為 `Snapshot`，且
-Aurora admin Secret 採 `Retain`，foundation stack 已啟用 termination protection。首次
-bootstrap 曾使用經 change set 稽核的
-create-only template（`Delete`／`false`），避免其他資源失敗時，尚未 available 的空 cluster
-因無法拍 snapshot 而卡在 `ROLLBACK_FAILED`；stack 到 `CREATE_COMPLETE` 後已立即用第二階段
-update 切回本檔所代表的保護狀態。新環境若需要同樣的兩階段 bootstrap，必須留下 change set
-證據並在 create 完成後立即套用 canonical template，不得把 create-only 例外保留為 steady state。
+## 可安全執行的本機檢查
 
-既有 `kinsun-rag-staging-data` OpenSearch Serverless data policy 已保留 ingestion 與原 runtime
-principals，並只把 canonical Agent ECS task role 追加到 read-only statement；Cognito 與
-OpenSearch 本身仍由外部管理，本 stack 不重建它們。
+```powershell
+npm run test --workspace @elderly-care/infrastructure
+npm run typecheck --workspace @elderly-care/infrastructure
+npm run synth --workspace @elderly-care/infrastructure
+npm run synth:application --workspace @elderly-care/infrastructure
+```
 
-External Cognito app-client reference 已指向 `kinsun-web-bff-staging`；
-`CognitoWebBffClientId` 以單值 `AllowedValues` fail closed，避免 stack update 誤用 legacy client。
+以上只驗證 TypeScript 與 CloudFormation 形狀，不會確認遠端資源。application profile 目前也沒有注入
+direct OIDC 的 provider credentials；若未來重新採 AWS，必須先設計 provider-neutral 的 runtime secret
+注入、重新做 database migration/preflight、image digest、內部 smoke 與公開流量 gate，不能直接把
+`desiredCount` 調成 `1`。
 
-兩個 physical CloudFormation stack name 已固定，避免 CDK 因 construct ID 建立第二套：
+## 邊界
 
-- foundation：`kinsun-staging-foundation-v1`
-- application：`kinsun-staging-application-v1`
+- 不恢復 Cognito 或另一套 Identity Provider；Core Actor／ExternalIdentity／App Session 是身份權威。
+- 不建立第二套 Domain backend、DynamoDB source of truth 或 legacy Lambda backend。
+- AWS-specific construct 不得滲入 Domain service；Core 只透過 PostgreSQL、HTTP、model、speech、event
+  等 adapter contract 使用外部能力。
+- 是否保留、改寫或刪除其餘 AWS profile，應在盤點可替代服務與實際部署目標後另立 ADR。
 
-目前允許：
-
-- `npm run synth`／`npm run deploy` 操作 canonical staging foundation。
-- `npm run synth:application` 產生初始 `desiredCount=0` 的 application template。
-- `scripts/build_staging_images.ps1` 建立四個 Linux/amd64、non-root 本機 image；Frontend 的
-  consent policy version 必須在 `next build` 時傳入並記錄於 OCI label。
-- `scripts/validate_ecr_release.ps1` 在部署前驗證每個 digest 的 repository、tag、ECR scan、
-  Linux/amd64 與 artifact/provenance label。
-- 為遷移盤點既有 resource dependencies。
-
-目前禁止：
-
-- 對任何環境執行現有 stack 的 `cdk deploy`。
-- 建立第二套 Cognito、OpenSearch、DynamoDB Domain Store 或 Legacy Lambda backend。
-- 把 foundation 的成功部署當成 application runtime 已完成；目前 AWS 尚未建立 canonical
-  application task／service。
-- 未完成 ECR digest、Cognito callback、migration 與內部 smoke gates 就把 service 從
-  `desiredCount=0` 調為 `1`。Frontend framework blocker 已由 ADR 0008 在本機解除，
-  但尚未推送候選 image，也不因此自動取得公開流量授權。
-
-Application rollout 必須依序完成：foundation runtime DB Secret／migration repository update、
-四個 ECR digest preflight、`desiredCount=0` change set、Cognito callback 複驗、one-shot migration
-與 runtime principal reconciliation、unsigned synthetic staging consent bootstrap、內部 smoke，
-最後才可 scale 到 `1`。Core 長期 task 只讀 `kinsun_app` runtime Secret；Aurora admin Secret
-只注入 one-shot migration。Staging Core 使用 `NullPool` 與 request-triggered bounded recovery，
-避免健康檢查或 idle connection 永久喚醒 Aurora；是否真的降至 0 ACU 仍須以 CloudWatch/RDS
-實測，不以設定值推定。
-
-新的 canonical constructs 必須重建 application topology，並以 externally managed reference
-重用既有 staging Cognito 與 OpenSearch。詳見
-[`docs/adr/0007-canonical-backend-and-aws-deployment-authority.md`](../docs/adr/0007-canonical-backend-and-aws-deployment-authority.md)。
+歷史 AWS canonical 決策見
+[`docs/adr/0007-canonical-backend-and-aws-deployment-authority.md`](../docs/adr/0007-canonical-backend-and-aws-deployment-authority.md)；
+現行身份決策見
+[`docs/adr/0010-provider-neutral-oidc-and-application-sessions.md`](../docs/adr/0010-provider-neutral-oidc-and-application-sessions.md)。

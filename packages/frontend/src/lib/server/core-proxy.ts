@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { appSessionCookieName, normalizeBrowserAuthCredential } from './app-session-cookie';
-import { accessTokenCookieName, isTrustedRequestOrigin } from './auth-cookie';
+import { appSessionCookieName, normalizeAppSession } from './app-session-cookie';
+import { isTrustedRequestOrigin } from './auth-cookie';
 import { bffError } from './bff-response';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD']);
@@ -45,13 +45,13 @@ function targetUrl(request: NextRequest, path: string[]): URL | null {
   return target;
 }
 
-function requestHeaders(request: NextRequest, accessToken: string): Headers {
+function requestHeaders(request: NextRequest, appSession: string): Headers {
   const headers = new Headers();
   for (const name of REQUEST_HEADERS) {
     const value = request.headers.get(name);
     if (value !== null) headers.set(name, value);
   }
-  headers.set('Authorization', `Bearer ${accessToken}`);
+  headers.set('Authorization', `Bearer ${appSession}`);
   return headers;
 }
 
@@ -76,10 +76,7 @@ async function requestBody(request: NextRequest): Promise<ArrayBuffer | undefine
 }
 
 export async function proxyCoreRequest(request: NextRequest, path: string[]): Promise<Response> {
-  const credential = normalizeBrowserAuthCredential(
-    request.cookies.get(appSessionCookieName())?.value,
-    request.cookies.get(accessTokenCookieName())?.value,
-  );
+  const credential = normalizeAppSession(request.cookies.get(appSessionCookieName())?.value);
   if (!credential) {
     return bffError(401, 'unauthorized', 'Authentication required', 'AUTHENTICATION_REQUIRED');
   }

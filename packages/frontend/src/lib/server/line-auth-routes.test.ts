@@ -4,7 +4,6 @@ import { POST as beginLogin } from '../../app/backend/auth/login/route';
 import { GET as lineCallback } from '../../app/backend/auth/line/callback/route';
 import { POST as completeLineOnboarding } from '../../app/backend/auth/line/onboarding/route';
 import { appSessionCookieName } from './app-session-cookie';
-import { accessTokenCookieName } from './auth-cookie';
 import {
   createLineOidcTransaction,
   lineOidcTransactionCookieName,
@@ -26,7 +25,6 @@ function configure(): void {
   vi.stubEnv('LINE_OIDC_CALLBACK_URL', 'http://localhost:3000/backend/auth/line/callback');
   vi.stubEnv('LINE_OIDC_TRANSACTION_SECRET', 'synthetic-line-transaction-secret-material-32-bytes');
   vi.stubEnv('LINE_OIDC_HANDOFF_SECRET', 'synthetic-line-handoff-secret-material-32-bytes');
-  vi.stubEnv('LINE_LOGIN_LINK_TRANSACTION_SECRET', 'independent-line-link-secret-32-bytes');
   vi.stubEnv('LINE_CHANNEL_SECRET', 'independent-line-messaging-secret');
   vi.stubEnv('GOOGLE_OIDC_TRANSACTION_SECRET', 'independent-google-transaction-secret-32-bytes');
   vi.stubEnv('GOOGLE_OIDC_HANDOFF_SECRET', 'independent-google-handoff-secret-32-bytes');
@@ -140,7 +138,6 @@ describe('direct LINE authentication routes', () => {
     expect(response.headers.get('location')).toBe('/onboarding/resolve');
     expect(cookieValue(response, appSessionCookieName())).toBe(`ks1_${'a'.repeat(43)}`);
     expect(cookieValue(response, lineOidcTransactionCookieName())).toBe('');
-    expect(cookieValue(response, accessTokenCookieName())).toBe('');
     expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(await response.text()).not.toContain('temporary-line-access-token');
   });

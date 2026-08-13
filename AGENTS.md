@@ -1,31 +1,42 @@
 # AGENTS.md
 
-本文件適用於整個 `kinsun.ai` repository。所有代理在分析、設計、實作、測試與文件更新時，都必須遵守本文件及 `docs/` 中的產品規格。
+- 更新日期：2026-08-13
+- 校準基準：`main` at `4f6b4ae`
+- 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
+- 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
+
+所有代理在分析、設計、實作、測試與文件更新時，都必須遵守本文件及 `docs/` 中的產品規格。描述進度時以可執行程式、contract、migration、測試與部署證據為準，不以 README、舊 handover 或 commit 標題單獨判定完成。
 
 ## 1. 專案狀態
 
-- 本專案是 AWS Hackathon 的 Voice-first 智慧長照 AI 陪伴系統。
-- 目前 repository 具備文件 12 定義的 Monorepo 目錄骨架、本機 PostgreSQL／Docker Compose 基礎設施，
-  以及以下有程式碼的單元：
-  - `services/core-api`：第一個垂直切片——Identity、Elder 授權 policy、tenant 隔離的
-    repository 層與 transactional outbox。
-  - `services/agent-runtime`：M0 Foundation——contract 驗證、單輪 Orchestrator、
-    Companion Agent、deterministic Safety Evaluator；主要回答仍走 Mock Provider，
-    staging-only RAG adapter 可呼叫 Bedrock embedding／OpenSearch，但不接 Neptune，
-    不得描述成 production runtime（[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
+- 本專案源自 AWS Hackathon，現為可獨立維護、可替換雲端 provider 的 Voice-first 智慧長照 AI 陪伴系統。
+- 目前 repository 是可在本機執行與測試的 Monorepo，不只是文件 12 的空骨架；主要單元如下：
+  - `services/core-api`：正式 Domain Core。已有 Identity／Actor、Core App Session
+    authentication、direct Google／LINE OIDC handoff、受限帳號連結、Elder scope、Consent、Voice
+    Ticket／ASR Gate、Care Event、Memory、Daily Summary、Family Report、Assignment、Deletion、Agent
+    Run、受控 Tool、LINE Messaging／通知，以及 transactional outbox 與 provider-neutral event
+    publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
+  - `services/agent-runtime`：M0 單輪閉環——contract 驗證、受控 Orchestrator、Companion Agent、
+    deterministic Safety Evaluator 與 Event Candidate proposal。`MODEL_PROVIDER=mock` 是本機及目前
+    staging application template 的預設；程式另有 `BedrockModelProvider`，可使用受控 Context／RAG
+    chunk 生成回答，但尚無真實 staging／production 連線證據。staging-only RAG adapter 可呼叫
+    Bedrock embedding／OpenSearch，不接 Neptune，不得描述成 production runtime
+    （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
     agent-runtime 的 **staging-only** RAG 路徑，尚未對真實 AWS／OpenSearch 環境驗證，
     不得描述成可用於 production（見 `services/agent-runtime/AGENTS.md`）。
   - `packages/frontend`：**唯一的前端**，單一 multi-role PWA，Next.js 16 App Router + React 19，
-    同時是 BFF（Cognito OAuth 與 access token 留在伺服器端，反向代理 core-api）
+    同時是 BFF（direct Google／LINE OIDC exchange 與 Core App Session 留在伺服器端，反向代理 core-api）
     （[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
-    [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 已接受 direct
-    Google／LINE OIDC＋Core-owned opaque Session 的分階段替換方向；Core 已有未公開的 Session
-    lifecycle service、Google ID-token verifier，以及未綁 route 的 BFF direct-Google transaction／callback
-    validation／code-exchange helper；但在 BFF-to-Core handoff、pending identity、LINE verifier、App
-    Session authenticator、公開 callback／cutover 與 rollout gate 完成前，現行 Cognito path 仍是唯一
-    real auth runtime。資料模型與內部 service／verifier／helper 不代表新登入已啟用，且不得依 email
-    自動合併 Actor。
+    [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 的 direct Google／LINE
+    OIDC＋Core-owned opaque Session application flow 已實作：BFF start／callback／onboarding routes、Core
+    verifier／handoff／pending identity、App Session authenticator／logout，以及 Google→LINE explicit
+    linking 都已存在。[ADR 0011](docs/adr/0011-bounded-empty-account-consolidation.md) 只允許對沒有正式
+    domain data 的 ELDER onboarding 骨架做二次確認後的受限合併；其他情況一律人工覆核，不得依 email
+    自動合併 Actor。Cognito runtime、Hosted UI callback、SDK、IaC reference 與 `actor.cognito_sub` 已
+    從目前 repository 移除；committed example 的 direct OIDC／App Session gates 仍預設關閉，實際環境
+    必須明確注入 provider、transaction、handoff 與 identity secrets。不得把本機可登入描述成雲端 E2E
+    已部署驗證。
     前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
     `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
     ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
@@ -34,30 +45,28 @@
     現在只剩前端一個 consumer，可能有未使用的型別）；不是 Domain authority，
     跨服務形狀以 `contracts/` 為準。
   - `services/speech-gateway`：ASR／TTS adapter 與 Core Voice Ticket／server-side ASR Gate
-    整合邊界（`asr.py`、`tts.py`、`sagemaker_asr.py`、`core_voice_gate.py`）。Browser audio 必須
-    帶短效 Ticket；Gateway 先 consume，再把 ASR Final 交給 Core 判定，前端不得自行 threshold。
-    這代表 canonical 程式路徑已接上，不代表 AWS provider、service credential、WebSocket、成本或
-    quality gate 已部署／驗證；未完成這些前不得描述成 production 語音路徑。
-  `projection-worker`、`notification-worker`、`report-worker` 三個純空殼目錄已於
-  2026-08-06 目錄重整移除；需要時再依 §9 的結構建立。
+    整合邊界（`asr.py`、`tts.py`、`sagemaker_asr.py`、`core_voice_gate.py`）。Browser 已有受 Voice
+    Ticket 保護的 JSON audio upload 與低信心確認 UI；Gateway 先 consume，再把
+    ASR Final 交給 Core 判定，前端不得自行 threshold。華語／英語 managed adapter 與台語／客語
+    SageMaker adapter 已有程式與本機測試；WebSocket binary transport、production service credential、
+    真實 endpoint、成本與 quality gate 尚未部署／驗證，不得描述成 production 語音路徑。
+  - `services/notification-worker`：只有 LINE Daily Notification 的 scheduler boundary README；可執行
+    job 邏輯仍在 Core。沒有 Worker framework，也沒有 Scheduler／SQS／DLQ deployment。
+  `projection-worker` 與 `report-worker` 目前不存在；需要時依 §9 的結構與 ADR 建立，不要先放空殼。
 - **ADR 0007 判定為 legacy 的那一整套已於 2026-08-06 刪除**（原 `packages/backend`
   → `legacy/backend` 的 TypeScript 後端 155 檔、`infra/bin/app.ts`、`cdk.legacy.json`、
   `infra/lib/elderly-care-stack.ts` 與其專屬 constructs `api`／`data-store`／
   `voice-workflow`、`infra/lambda-stubs/`）。
   [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 的決策不變，
   只是被判死的程式碼不再留在工作樹；要查歷史用 `git log --follow`。
-  **唯一保留的是 `infra/lib/constructs/auth.ts`**——`.kiro/specs/backend-authentication/`
-  （Proposed）指名它是 Cognito resource 的擁有者。它目前沒有任何 stack import，是等待該
-  提案定案的獨立 construct，由 `infra/test/auth.test.ts` 直接測試。
-  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime；`NEXT_PUBLIC_WS_URL`
-  的舊語音路徑僅是預設關閉、限期至 2026-08-16 的 synthetic staging/demo 例外，不得進
-  production。AWS CDK v2 已定為 canonical IaC 工具；`kinsun-staging-foundation-v1` 已建立 VPC、ECS
-  cluster、ECR、Aurora、Secrets、Logs 與 IAM foundation。四個 runtime／migration image 與
-  `kinsun-staging-application-v1` template 已可在本機建立／驗證，但 AWS 尚未建立 canonical
-  ECS application task／service，不能描述成 application runtime 已上線。Frontend 已依
+  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime。AWS CDK v2 profile 仍保留；歷史
+  紀錄顯示 `kinsun-staging-foundation-v1` 曾建立 VPC、ECS cluster、ECR、Aurora、Secrets、Logs 與
+  IAM foundation，但黑客松 AWS 帳號目前無法操作，不能由 repository 推定資源仍存在或可用。
+  四個 runtime／migration image 與 `kinsun-staging-application-v1` template 可在本機建立／驗證，
+  但沒有可操作的 AWS application runtime。Frontend 已依
   [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
   production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
-  不代表 ECR push、Cognito callback、application deploy 或公開流量 gate 已完成。
+  不代表 ECR push、provider callback、application deploy 或公開流量 gate 已完成。
 - 尚未建立 CI quality gate。`.github/workflows-disabled/pr.yml` 是**未啟用的草稿**，GitHub
   不會讀 `workflows-disabled/` 這個目錄名。它已知有問題：`infra/package-lock.json` 不存在
   （`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）、
@@ -68,6 +77,16 @@
   `us-west-2`），已於 2026-08-06 移除。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
 - 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
+
+### 技術棧與刻意未採用項目
+
+| 範圍 | 已採用 | 不要自行引入／誤判 |
+| --- | --- | --- |
+| Core | Python 3.12、FastAPI、SQLAlchemy 2 async、Alembic、PostgreSQL 16、uv | Django、Flask、同步 ORM、第二套 schema 管理器 |
+| Agent／RAG／Speech | Python 3.12、FastAPI、Pydantic、boto3、OpenSearch adapter、uv | 自由 Agent loop、直接 SQL／DSL、未受控 SDK 呼叫 |
+| Frontend／BFF | Next.js 16 App Router、React 19、TypeScript、CSS Modules、npm workspaces | Vite、Tailwind、獨立 elder／care／family apps、browser-held access token |
+| IaC | 保留的 AWS CDK v2 deployment profile；runtime 以環境變數／adapter 解耦 | 未經 ADR 換 IaC、legacy Lambda／DynamoDB backend、恢復 Cognito |
+| Contract | OpenAPI 3.1、AsyncAPI、JSON Schema、Pydantic | 未實作先寫 executable contract、相對 `$ref`、寬鬆額外欄位 |
 
 ## 2. 規格來源與優先順序
 
@@ -104,7 +123,7 @@ Google Drive 上的團隊文件若與此處不一致，依下方衝突規則處�
 3. Orchestrator 產生安全、簡短且符合語言偏好的回覆。
 4. Event／Memory 只能先成為 Candidate。
 5. 長期記憶必須由長者明確確認；照護事件依規格完成人工覆核。
-6. 正式狀態寫入 Aurora，並透過 Transactional Outbox 發布。
+6. 正式狀態寫入 PostgreSQL，並透過 Transactional Outbox 發布。
 7. Neptune／OpenSearch 完成可追蹤、可重建的 Projection。
 8. 後續對話只能重用已確認、未撤回且仍在有效 Scope 內的資料。
 9. 產生有來源連結的 Daily Summary，供照服員覆核。
@@ -169,7 +188,8 @@ Wave 順序：
 
 ## 6. 架構不變量
 
-- Aurora PostgreSQL／Domain Core 是正式交易資料與狀態的 Source of Truth。
+- PostgreSQL／Domain Core 是正式交易資料與狀態的 Source of Truth；目前 provider 是 Supabase
+  PostgreSQL，不使用 Supabase Auth 或專有 Data API。
 - Neptune、OpenSearch、Cache 與 Agent Memory 是 Projection 或 Working State，必須可由正式資料重建。
 - 不從 Graph、Search 或模型輸出反推正式授權或正式狀態。
 - 正式寫入使用 Transactional Outbox；採 Outbox → EventBridge → 每個 Consumer 專屬 SQS／DLQ。
@@ -180,25 +200,33 @@ Wave 順序：
 - 長流程／人工流程使用顯式 State Machine；不得以隱含 Prompt 狀態代替 Domain State。
 - 正式刪除使用 Tombstone 防止 DLQ Replay、Backfill、Graph rebuild、Index rebuild 或 Backup restore 復活資料。
 
-Target AWS Architecture 目前包含：
+保留的 AWS deployment profile／原 Target Architecture 包含：
 
 - Single multi-role PWA。
 - Python modular monolith on ECS/Fargate。
-- API Gateway HTTP／WebSocket、Cognito。
+- API Gateway HTTP／WebSocket；身份驗證為 direct Google／LINE OIDC＋Core App Session。
 - Bedrock AgentCore Runtime、Bedrock Models／Guardrails。
 - Aurora PostgreSQL、Neptune Serverless、OpenSearch Serverless、S3。
 - EventBridge、SQS／DLQ、Step Functions、Scheduler。
 - SES／LINE Notification Adapter。
 
-以上是目標規劃，不代表服務已建立。
+以上是可替換的部署規劃，不代表服務已建立；黑客松 AWS 帳號目前不可操作。
 
 ## 7. Agent 與 AI 實作規則
 
 - 採受控 Orchestrator，不建立 Agent Debate、無限遞迴或自由互相呼叫。
 - 同步流程上限依 Agent 規格：最多 3 次模型決策、2 輪 Tool、5 次 Tool Call，以及 1 次 Rewrite／Context rebuild；若規格更新則依新版本執行。
+- 上述是安全上限，不代表目前都已實作。現行 runtime 只有一次模型決策、optional RAG 與
+  deterministic Event Candidate proposal；沒有通用 Tool loop，也不會從 `allowed_tools` callback Core。
+  Canonical path 由 Core 以 `requested_outputs` 要求最小 proposal，再由 Core 重驗授權與 Consent 後寫入。
 - Agent 只能呼叫 Allowlist 中且有版本的 Tool。
 - 高風險 Tool 即使由 Agent 選擇，也必須由 Python Core 重新執行 Authorization、Consent、State 與 Idempotency 檢查。
-- Context 依層次組合：Policy → Auth → Consent → Current turn → Session → Active confirmed memory → Verified care data → Graph → RAG → Tool results → Output constraints。
+- Context 目標層次是 Policy → Auth → Consent → Current turn → Session → Active confirmed memory →
+  Verified care data → Graph → RAG → Tool results → Output constraints。`BASIC_VOICE` canonical path
+  已能在 Core 重驗 `memory:read` 與 active `LONG_TERM_MEMORY` Consent 後，帶入同 tenant／elder、
+  current version、`ACTIVE`、未刪除且不超過目前 Consent version 的最近 5 筆 Confirmed Memory；
+  Knowledge／RAG purpose 不得夾帶私人記憶。這是 bounded first slice，尚未有語意相關性排序；
+  Verified care data／Graph 仍未接入 Agent Context。
 - 每次重要 Agent 執行需能追溯實際的 Agent、Prompt、Model route、Policy、Guardrail、Tool schema、Context manifest 與 Release Version。
 - RAG 必須保存來源、版本、有效日期、覆核狀態與 Metadata Filter；沒有可靠來源時明確回覆資料不足。
 - LLM-as-Judge 不得覆蓋 Deterministic Security／Schema／Permission Gate。
@@ -220,8 +248,13 @@ Target AWS Architecture 目前包含：
 ### 目前狀態
 
 `contracts/` **以目前實作為準，不是以文件 10 為準**。兩者在 envelope 結構、錯誤欄位與
-狀態碼對應上有實質差異，全部列在 [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md)，
-尚未決定收斂方向。**改動 contract 或 API 之前先讀那份清單**，不要以為文件 10 就是現況。
+狀態碼對應上有實質差異，以 [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 追蹤。
+**改動 contract 或 API 之前先讀那份清單並跑 validator**；其更新日期與末段「尚未實作」摘要可能
+落後於 2026-08-10 之後的 Voice／LINE／Auth 變更，不能只看單一段落判定現況。
+
+2026-08-13 靜態驗證基準：Core OpenAPI 63 paths、Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；
+Core app 實際有 68 operations（同一路徑可含多個 method）。數字會隨實作變更，應以
+`scripts/validate_contracts.py` 與 live verifier 的當次輸出為準，不要手動維護第二份 operation 清單。
 
 若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
 
@@ -230,11 +263,12 @@ Target AWS Architecture 目前包含：
 ```
 contracts/
 ├── openapi/<service>.v<major>.yaml   REST，一個服務一份
-├── asyncapi/<service>.v<major>.yaml  Domain Event（尚未建立）
+├── asyncapi/<service>.v<major>.yaml  Domain Event；目前有 core-events.v1.yaml
 ├── schemas/
 │   ├── common/    跨領域共用：envelope、分頁、錯誤
 │   ├── domain/    業務 DTO
-│   ├── events/    Domain Event payload（尚未建立）
+│   ├── events/    Domain Event envelope／failure payload
+│   ├── rag/       RAG ingestion／retrieval
 │   ├── tools/     Agent Tool request／result
 │   └── agent/     Agent Run、Handoff、Context Manifest、Safety Evaluation
 └── examples/{valid,invalid}/
@@ -258,8 +292,8 @@ contracts/
 - **不得包含 Restricted Data**：逐字稿、ASR 信心值、內部筆記、未覆核事件、
   診斷式分數、Secret、完整 Prompt。家屬版尤其要對照 §4 的零容忍清單。
 - 錯誤訊息欄位不得回填被拒絕的原值，若該值本身是敏感資料。
-- `security` 區塊描述的是**目標形狀**；若驗證器尚未實作，必須在 description 明說，
-  不得讓讀者以為 JWT 已經會被驗證。
+- `security` 區塊描述的是目前 executable authentication；若 verifier 尚未實作，必須在 description
+  明說，不得讓讀者誤以為 credential 已被驗證。
 
 ### 範例
 
@@ -335,20 +369,36 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 - 錯誤訊息在 production 會經 `_sanitize_message()` 過濾；不要依賴訊息內容傳遞
   結構化資訊，那是 `code` 與（待補的）`reason_code` 的職責。
 
+### 跨層 mapping（不要自行猜）
+
+| 邊界 | 外部／Runtime 值 | Core／DB 值 |
+| --- | --- | --- |
+| ORM 主鍵 | Python 一律 `model.id` | 實體欄位如 `actor_id`／`elder_id`，由 `__pk_name__` 對應 |
+| Agent actor role | `elder`／`family`／`system`，其他可信角色映成 `staff` | `ELDER`／`FAMILY_MEMBER`／`SYSTEM_SERVICE` 等正式 actor role |
+| 語言 | `zh-TW`／`nan-TW`／`hak-TW`／`en-US` | `ZH_TW`／`NAN_TW`／`HAK_TW`／`EN_US`；`MIXED`、`UNKNOWN` 暫映 `zh-TW` |
+| Agent result | `SUCCESS`／`BLOCKED`／`SAFE_FALLBACK`／`FAILED` | AgentRun 保存 `SUCCESS`／`BLOCKED`／`HUMAN_REVIEW`／`DEPENDENCY_FAILED` |
+| Auth credential | `ks1_` Core App Session；不接受其他 bearer token | Session／Actor／Membership 每次由 live DB 重查；失敗不得 fallback |
+
+上述 mapping 的 executable authority 分別位於 `services/core-api/app/services/companion_service.py`、
+`services/core-api/app/middleware/auth.py` 與各 ORM model；跨層改值時要同時更新 contract、migration、
+adapter、前端 label 與測試，不能只改其中一層。
+
 ## 9. 程式與 Repository 工作方式
 
-- 在技術選型尚未核准前，不要自行決定或鎖定 Python Framework、Frontend Framework、Package Manager、AWS Region 或外部 Provider。IaC 已由 ADR 0007 選定 AWS CDK v2；staging region 固定 `us-west-2`，production region 仍待核准。
-- 若任務需要做出上述選擇，提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
-- Repository 結構（2026-08-06 目錄重整後的實際狀態，非文件 12 的原始骨架）：
+- 已核准的主線不得自行替換：Core／Agent／Speech 用 Python＋FastAPI＋uv，Frontend 用 Next.js＋npm
+  workspaces，IaC 用 AWS CDK v2；staging region 固定 `us-west-2`。新服務的 framework、production
+  region 或尚未定案的外部 Provider 若需選擇，先提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
+- Repository 結構（2026-08-13 實際狀態，非文件 12 的原始骨架）：
 
 ```text
 kinsun.ai/
 ├── .github/               CI；workflows-disabled/pr.yml 是未啟用草稿，見 §1
 ├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
-├── config/rag/            RAG 設定，agent-runtime 與 rag-ingestion 共用
-├── contracts/             OpenAPI、JSON Schema、valid/invalid examples
+├── config/                RAG 與 LINE 設定；config/rag 由 agent-runtime、rag-ingestion 共用
+├── contracts/             OpenAPI、AsyncAPI、JSON Schema、valid/invalid examples
 ├── data/                  RAG chunks、manifest、seed
 ├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
+├── evals/speech/          Synthetic speech evaluation 工具、fixtures 與結果
 ├── docs/
 │   ├── spec/              17 份規格 Markdown（唯一保留格式，見 §2）
 │   ├── design-system/     MASTER.md：視覺、RWD、無障礙規範
@@ -368,7 +418,8 @@ kinsun.ai/
     ├── core-api/          正式 Domain Core 與 API
     ├── agent-runtime/     受控 Agent Runtime
     ├── rag-ingestion/     RAG ingestion 與 allowlist 建置
-    └── speech-gateway/    ASR／TTS adapter 骨架，未接入主線
+    ├── speech-gateway/    ASR／TTS、Core Voice Gate 與 SageMaker adapter
+    └── notification-worker/ 只有 scheduler boundary；job 邏輯仍在 Core
 ```
 
 - **分類軸線是 runtime／toolchain，不是 app／library。** Python 服務進 `services/`，npm
@@ -376,9 +427,9 @@ kinsun.ai/
   `["packages/*", "infra"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
   慣例**——這個 repo 從未採用它，證據是 `services/core-api` 同樣是可部署應用卻也不在
   `apps/`。文件 12 的 `/apps` 是被 ADR 0006 廢掉的三-app 方案殘骸，已於 2026-08-06 移除。
-- 文件 12 的 `/evals`、`/tests`、`/ops` 三個目錄從建立起就只有 `.gitkeep`，已於 2026-08-06
-  移除。**空目錄讀起來是「沒做完」而不是「有規劃」**；規劃寫在文件或 Kiro Spec，不要用空
-  目錄佔位。真的要建立時再依上表的層級加。
+- 文件 12 原本只有 `.gitkeep` 的 `/tests`、`/ops` 已移除；`evals/` 後來因 multilingual speech
+  evaluation 重新建立，現在只有 `evals/speech/` 有實質內容。**不要用空目錄表達規劃**；真的有
+  executable evaluation／test／ops artifact 時才建立對應目錄。
 - **`config/rag/` 不要搬。** 路徑寫死在 `agent-runtime/src/agent_runtime/settings.py`、
   `agent-runtime/Dockerfile`、`Dockerfile.dockerignore`、`.env.example` 與
   `tests/unit/test_container_contract.py`（有測試在守），且由 agent-runtime 與 rag-ingestion
@@ -428,7 +479,7 @@ kinsun.ai/
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - models 目前只涵蓋 48 張 baseline table 中的 33 張，`alembic revision --autogenerate`
+  - models 目前涵蓋 48 張 baseline table 中的 43 張，`alembic revision --autogenerate`
     仍會把未映射 table 誤判為應刪除；產生的 migration 一律需人工檢查後才可使用。
 - 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：
   - Next.js 16 App Router + React 19 + TypeScript。**不是 Vite，不用 Tailwind**；
@@ -449,6 +500,21 @@ kinsun.ai/
 - 任何變更需要 Push 到遠端時，必須先從最新的 `origin/main` 建立新的工作分支；
   禁止直接 Push `main`，也不得沿用混有其他任務變更的既有分支。
 - 任何狀態或契約變更都同步更新相關 Schema、Test、Traceability 與必要文件。
+
+### 常用檔案位置
+
+| 工作 | 位置 |
+| --- | --- |
+| Core routes／services／repositories | `services/core-api/app/api/`、`app/services/`、`app/repositories/` |
+| Authentication／Session | `services/core-api/app/middleware/auth.py`、`app/adapters/auth/`、`app/services/*identity*`、`*session*` |
+| DB models／migration | `services/core-api/app/models/`、`services/core-api/alembic/versions/` |
+| Agent request／orchestration／provider | `services/agent-runtime/src/agent_runtime/contracts/`、`orchestration/`、`models/` |
+| RAG config／runtime／ingestion | `config/rag/`、`services/agent-runtime/src/agent_runtime/rag/`、`services/rag-ingestion/` |
+| Speech boundary | `services/speech-gateway/src/speech_gateway/`；低資源模型在 `services/speech-gateway/sagemaker/` |
+| Frontend pages／BFF／API client | `packages/frontend/src/app/`、`src/lib/server/`、`src/lib/api/` |
+| UI tokens／translations | `packages/frontend/src/app/tokens.css`、`packages/frontend/src/lib/i18n/messages.ts` |
+| Contracts／差異／驗證 | `contracts/`、`contracts/DIVERGENCE.md`、`scripts/validate_contracts.py`、`scripts/verify_*_live.py` |
+| Staging IaC／rollout | `infra/lib/canonical-staging-*-stack.ts`、`infra/README.md`、`scripts/build_staging_images.ps1` |
 
 ## 10. 驗證與完成條件
 
@@ -496,19 +562,52 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-三個 Python runtime 各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
+`services/rag-ingestion`（本機測試不需真實 AWS）：
+
+```powershell
+cd services/rag-ingestion
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+四個 Python component 各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
+
+Frontend 與 IaC：
+
+```powershell
+npm run test --workspace @elderly-care/frontend
+npm run typecheck --workspace @elderly-care/frontend
+npm run build --workspace @elderly-care/frontend
+npm run lint
+
+npm run typecheck --workspace @elderly-care/infrastructure
+npm run test --workspace @elderly-care/infrastructure
+npm run synth --workspace @elderly-care/infrastructure
+npm run synth:application --workspace @elderly-care/infrastructure
+```
 
 整合測試會對 `TEST_DATABASE_URL` 指向的資料庫執行 `alembic upgrade head`，
 預設是 `kinsun_test`，不要指向 `kinsun`。測試資料全部由 fixture 產生，
 均為 Synthetic，不得改用任何真實長者資料。
 
-尚未建立的項目（不要描述成已完成）：Type Check（mypy／pyright）、跨服務 Contract Test、
-E2E Test、CI Quality Gate。
+尚未建立的項目（不要描述成已完成）：Python Type Check（mypy／pyright）、自動化 browser E2E、
+真實 AWS staging 跨服務 E2E、CI Quality Gate。Frontend／IaC TypeScript typecheck、靜態 Contract
+validator 與兩支 live contract verifier 已存在，但不能取代上述 E2E。
 
 Contract 驗證分三支：`scripts/validate_contracts.py` 驗 schema 與範例的自我一致性
 （會掃 `contracts/openapi/` 底下所有文件）；`scripts/verify_contract_live.py` 對執行中的
 core-api 驗證；`scripts/verify_agent_contract_live.py` 對執行中的 agent-runtime 驗證
 （不需資料庫、憑證或網路）。新增 endpoint 時要同步在對應那支加檢查，否則它永遠只驗舊的。
+
+2026-08-13 Cognito retirement 後的本機校準結果：Core unit `752 passed`、Frontend `135 passed`、
+Infra `7 passed`；Core Ruff lint、Frontend ESLint／typecheck／production build、Infra typecheck／兩個
+synth、靜態 Contract 與 Core live verifier（68 operations）通過。較早且未受本次身份變更影響的
+Agent Runtime `259 passed`、RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立
+`TEST_DATABASE_URL`，所以未對遠端 Supabase 執行破壞性的 integration rebuild；只在確認
+`actor.cognito_sub` 非空筆數為 0 後套用 fail-closed migration 至 `f2c6d8a1e490`。完整 Core Ruff
+format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 format check 已通過。
 
 每次變更至少執行：
 
@@ -531,10 +630,10 @@ docker compose run --rm migrate alembic current
 
 ## 11. 仍待 ADR／Owner 決策
 
-- Production AWS Region、Account／Environment 策略；staging 已固定 `us-west-2`。
-- staging application 已限制每個 service 0／1 task、每個 task 0.5 vCPU／1 GiB；月費上限與
-  24/7 或 demo-hours 運行方式仍待決。Aurora foundation 已固定 min 0／max 1 ACU、15 分鐘
-  auto-pause；只有 CloudWatch／RDS 實測才可宣稱已成功降至 0 ACU。
+- Production hosting provider、Region、Account／Environment 與成本上限；AWS profile 曾固定
+  `us-west-2`，但目前帳號不可操作，不構成未來 provider 決策。
+- 若未來重用 AWS application profile，service 規模、Aurora auto-pause 與費用都必須在新帳號重新
+  實測；舊 template 或歷史紀錄不能當成現在的運行證據。
 - Bedrock Model／Inference Profile 與 Fallback。
 - Neptune、OpenSearch、LINE、Email、Custom ASR／TTS 採真實服務或 Demo Adapter。
 - Production API／Event／Client 支援期限。
@@ -542,12 +641,3 @@ docker compose run --rm migrate alembic current
 - 統一的 Voice／Agent／TTS Performance Gate。
 
 不要用暫時實作偷偷取代這些決策；暫時方案必須標示 Owner、Expiry、Fallback 與移除條件。
-
-## API 回應與錯誤處理建議
-
-- 對外 API 請維持使用 `SuccessEnvelope` / `ErrorEnvelope` 作為統一回應格式。
-- 服務層可保留像 `AuthorizedEldersResult` 這類明確資料容器（例如 dataclass）
-  來表達方法回傳結果。
-- 不要在 service 層手工組裝 HTTP 錯誤 payload；統一拋 `DomainException`，
-  由全域 exception handler 轉為 `ErrorEnvelope`。
-- 例外流程統一為：`DomainException -> error_handlers -> ErrorEnvelope`，避免在每個 endpoint 重複錯誤轉換邏輯。

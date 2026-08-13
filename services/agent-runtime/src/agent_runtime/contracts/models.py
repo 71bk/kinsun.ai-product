@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
 
 from agent_runtime.common.enums import ActorRole, ResultStatus, RiskLevel, SafetyDecision
 
@@ -58,6 +58,7 @@ ActorRoleField = Annotated[ActorRole, Field(strict=False)]
 ResultStatusField = Annotated[ResultStatus, Field(strict=False)]
 RiskLevelField = Annotated[RiskLevel, Field(strict=False)]
 SafetyDecisionField = Annotated[SafetyDecision, Field(strict=False)]
+UUIDField = Annotated[UUID, Field(strict=False)]
 
 
 def _now_utc() -> datetime:
@@ -205,6 +206,22 @@ class HandoffEnvelope(ContractBaseModel):
     expires_at: datetime = Field(default_factory=lambda: _now_utc() + timedelta(minutes=30))
 
 
+class ConfirmedMemoryContext(ContractBaseModel):
+    """Core-authorized current memory version; never a candidate or instruction."""
+
+    memory_id: UUIDField
+    version: int = Field(ge=1)
+    memory_type: Literal[
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY",
+    ]
+    content: str = Field(min_length=1, max_length=500)
+    consent_version: int = Field(ge=1)
+
+
 class AgentRunRequest(ContractBaseModel):
     schema_version: SchemaVersion = Field(default=SCHEMA_VERSION)
     request_id: str = Field(pattern=ID_REGEX, min_length=2, max_length=128)
@@ -225,10 +242,20 @@ class AgentRunRequest(ContractBaseModel):
     policy_version: str = Field(min_length=1, max_length=64)
     language: str = Field(pattern=LANGUAGE_REGEX, min_length=2, max_length=10)
     input_text: str = Field(min_length=1, max_length=4000)
+    confirmed_memories: list[ConfirmedMemoryContext] = Field(
+        default_factory=list,
+        max_length=5,
+    )
     allowed_tools: list[ToolName] = Field(default_factory=list)
     requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=1)
     max_steps: int = Field(default=3, ge=1, le=20)
     latency_budget_ms: int = Field(ge=100, le=300000)
+
+    @model_validator(mode="after")
+    def restrict_confirmed_memories_to_companion_turns(self) -> "AgentRunRequest":
+        if self.confirmed_memories and self.purpose != "BASIC_VOICE":
+            raise ValueError("confirmed_memories are allowed only for BASIC_VOICE")
+        return self
 
 
 class EventCandidateProposal(ContractBaseModel):

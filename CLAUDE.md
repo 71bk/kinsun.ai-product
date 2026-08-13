@@ -1,210 +1,212 @@
-# 智慧長照 AI 陪伴系統 — 專案參考文件
-
-> 此文件是競賽命題與規格文件的精簡索引。
-> 規格全文見 [`docs/spec/`](docs/spec/)（17 份 Markdown）。原始 `.docx`／`.xlsx`、
-> 結構化 `.json` 與 Story Map `.csv` 已於 2026-08-06 移除——同內容四種格式無人維護，
-> 只有 `.md` 可 grep、可 diff、可在 GitHub 直接閱讀。需要原始檔用 `git log --follow`。
-
----
-
-## 競賽命題文件 (hackathon_challenge_ai_readable.json)
-
-### 基本資訊
-
-- **競賽名稱**：2026 雲湧智生：臺灣生成式 AI 應用黑客松競賽
-- **命題單位**：數位發展部數位產業署（數產署）
-- **類別**：數位創生
-- **主題**：智慧長照陪伴—以 AI 縮短長照資源落差
-- **聯絡方式**：hackathon@digitimes.com
-
-### 命題單位介紹
-
-數產署自 2022 年 8 月 27 日正式成立以來，作為數位發展部轄下主導經濟發展之專責機關，主要任務為推動數位經濟發展、辦理數位經濟相關產業之輔導、獎勵與合作管理。核心業務涵蓋數位經濟產業政策規劃及法規研擬，以及前瞻數位技術的應用推廣，包含 AI、大數據、平台技術、系統整合與場域應用、軟體產品及數位服務、數位內容與資料經濟，以及數位經濟相關人才培訓。
-
-### 背景與問題
-
-- **問題脈絡**：臺灣城鄉之間在長照、醫療與社會支持等領域長期存在資源不對等的結構性問題。
-- **目標區域**：臺灣醫療與照護資源匱乏地區、偏鄉或資源不足社區。
-
-#### 長者面臨的挑戰
-
-1. 子女外出工作導致獨居比例偏高，缺乏即時情感支持。
-2. 當地醫療資源稀缺，難以進行持續性健康追蹤。
-3. 部分長者使用族語或臺語，且數位識能有限，難以使用現有科技產品。
-4. 家庭照護者或機構人員需同時照顧多位長者，資訊傳遞效率低落。
-
-#### AI 機會
-
-透過大型語言模型（LLM）的自然語言理解與生成能力，生成式 AI 有潛力成為在地長者觸手可及的數位服務平權化工具。
-
-#### 核心精神
-
-人機協作，生活支持陪伴。強調 AI 協助照護人員或家屬提升長者生活品質、滿足社交互動等需求，而非取代既有人性關懷。
-
-### 應用目標
-
-打造能夠實際落地並對長者社區產生正面影響的智慧陪伴系統。
-
----
-
-## 必做核心模組
-
-### Module A：語音互動陪伴（必做）
-
-驅動對話生成，結合語音辨識與語音合成，以自然對話方式與長者互動。
-
-**需求：**
-- 系統須至少支援中文及臺語之一進行即時語音對話
-- 長者能以口語方式與系統互動，無需文字輸入或觸控操作
-- 對話內容應具情境感知能力，例如根據時間、天氣、過往對話記憶調整回應
-- 不得只是固定腳本式回覆
-
-**輸入**：長者語音、時間/天氣/記憶等情境資訊
-**輸出**：自然語音或文字回應、可供後續摘要使用的對話紀錄
-
-### Module B：生活記錄與智慧摘要（必做）
-
-從對話內容中自動辨識並擷取長者日常生活資訊，並每日自動生成結構化生活摘要。
-
-**需求：**
-- 自動擷取飲食、活動、睡眠、用藥等日常生活資訊
-- 每日自動生成結構化生活摘要
-- 摘要供照護人員快速掌握長者近況
-- 摘要需由 AI 自動歸納生成，非人工填寫
-
-**輸入**：對話紀錄、互動事件、生活資訊片段
-**輸出**：每日結構化生活摘要、可查詢的生活紀錄
-
-### Module C：照護者資訊介面（必做）
-
-提供照護者或家屬可查看的後台頁面。
-
-**需求：**
-- 至少包含長者基本資料
-- 至少包含 AI 生成之每日摘要紀錄
-- 至少包含互動次數等資訊
-
-**輸入**：長者資料、AI 摘要、互動統計
-**輸出**：照護者/家屬後台頁面、長者近況視圖
-
----
-
-## 選做進階模組
-
-| 模組名稱 | 說明 |
-|---------|------|
-| 知識庫建置 | 收錄照護與衛教相關資料（PDF、文本等），讓 AI 回應具備專業照護知識基礎 |
-| 家屬推播通知 | 系統能定時將 AI 生成之每日摘要推播給家屬，縮短家屬資訊斷層 |
-| 事件時間軸 | 以時間軸方式檢視長者每日互動事件與重要紀錄 |
-
----
-
-## 隱私與合規
-
-### 個資規則
-
-- 參賽作品中不得使用真實長者之個人資料
-- 所有展示資料應為模擬或去識別化資料
-- 系統設計需說明資料蒐集、儲存、傳輸之加密與存取控制機制
-- 涉及語音或對話記錄之功能，需具備明確的使用者同意機制與資料保留政策說明
-
-### 醫療限制
-
-- 應用僅供生活陪伴與健康資訊參考
-- 非提供醫療診斷之參酌
-- 不得作為醫療診斷、治療建議或取代專業醫療人員判斷之依據
-
----
-
-## 建議資料與資源
-
-| 資源 | 用途 |
-|------|------|
-| 照護衛教資料 | 收集長照相關衛教文件（PDF、文本），作為知識庫資料來源 |
-| 長者語音資料集 | 建議使用或自行收集臺語、客語、原住民族語等在地語言語音樣本，用於語音辨識模型微調 |
-| 長者健康狀態資料 | 可參考公開統計資料，包含失能等級、照護需求分布等 |
-| 情境對話腳本 | 建議自行設計模擬對話腳本，涵蓋服藥提醒、家人問候、節日祝福、天氣閒聊、飲食分享等情境 |
-| 模擬長者 Persona | 建議自行設計 2-3 位虛擬長者角色，包含基本資料、健康狀況、語言偏好、日常作息 |
-
-> 命題單位不另提供資料集，參賽者需自行準備或運用公開資源。所有展示資料須為模擬或去識別化資料。
-
----
-
-## 決賽交付項目
-
-> 最終交付內容以 8/1 競賽現場公告為主。
-
-1. Live Demo（網址或錄製影片）：須演示一個完整使用者情境
-2. 生成式 AI 技術應用說明
-3. 數據及資料應用說明
-4. 使用者旅程說明：至少描述一個長者＋照護者的端到端使用場景
-5. 系統功能說明：各核心及進階模組之用途、輸入/輸出說明及操作流程
-6. AWS 部署架構設計圖
-7. GitHub 連結：含完整原始碼與 README 說明
-
----
-
-## 評分標準
-
-| 權重 | 評分項目 | 說明 |
-|------|---------|------|
-| 30% | 完成度與 Demo 體驗 | 核心/進階模組的完成程度、端到端體驗是否流暢 |
-| 25% | 技術可行性 | 提案具有技術上的可實現性和落地能力 |
-| 25% | 創意度 | 全新和原創的構想。特別鼓勵在 AI 記憶系統、多語言支援、個人化互動體驗等面向的創新突破 |
-| 20% | 社會應用性 | 切合長照資源落差主題、使用者旅程設計是否貼近真實需求、具備推廣至其他長照機構或偏遠地區社區關懷據點的潛力 |
-
-### 加分項目
-
-| 加分 | 項目 | 說明 |
-|------|------|------|
-| +5% | 支援本土低資源語言互動 | 系統具備臺灣原住民族語或客語之語音辨識或文字互動能力，促進語言文化保存與數位平權 |
-| +5% | 使用 Kiro 進行開發或架構設計 | 使用 Kiro 進行開發或架構設計可加分 |
-
----
-
-## AI 策略重點摘要
-
-### 硬性要求
-
-- 必做 Module A、Module B、Module C
-- 展示資料必須模擬或去識別化
-- 不得作醫療診斷、治療建議或取代專業醫療人員判斷
-- 需說明資料蒐集、儲存、傳輸之加密與存取控制
-- 涉及語音/對話紀錄需有使用者同意機制與資料保留政策
-- 決賽交付至少要有 Live Demo、AI 技術說明、資料應用說明、使用者旅程、系統功能說明、AWS 架構圖、GitHub/README
-
-### 高價值策略信號
-
-- 評分創意度明確鼓勵 AI 記憶系統、多語言支援、個人化互動體驗
-- 加分項鼓勵臺灣原住民族語或客語的語音辨識或文字互動能力
-- Kiro 使用可作為加分項
-- 題目重視端到端流暢 Demo、技術落地性與社會應用性
-
----
-
-## docs/spec/ 檔案清單
-
-`.md` 是規格的唯一保留格式，也是權威版本（`AGENTS.md` §2）。
-
-| # | 規格文件 |
-|---|---------|
-| 1 | [docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md](docs/spec/01A智慧長照%20AI%20陪伴系統－使用者研究與%20Demo%20Persona%20v0.2.md) |
-| 2 | [docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md](docs/spec/01智慧長照%20AI%20陪伴系統－產品方向與範圍基準%20v1.2.md) |
-| 3 | [docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md](docs/spec/02智慧長照%20AI%20陪伴系統－使用者故事與驗收條件%20v1.3.2.md) |
-| 4 | [docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md](docs/spec/03智慧長照%20AI%20陪伴系統－Story%20Map%20v1.2.md) |
-| 5 | [docs/spec/04智慧長照 AI 陪伴系統－資訊架構、UX 與 User Flow v0.1.md](docs/spec/04智慧長照%20AI%20陪伴系統－資訊架構、UX%20與%20User%20Flow%20v0.1.md) |
-| 6 | [docs/spec/05智慧長照 AI 陪伴系統－核心工作流、狀態機與錯誤恢復 v0.1.md](docs/spec/05智慧長照%20AI%20陪伴系統－核心工作流、狀態機與錯誤恢復%20v0.1.md) |
-| 7 | [docs/spec/06智慧長照 AI 陪伴系統－Domain Model、商業規則與資料生命週期 v0.1.md](docs/spec/06智慧長照%20AI%20陪伴系統－Domain%20Model、商業規則與資料生命週期%20v0.1.md) |
-| 8 | [docs/spec/07智慧長照 AI 陪伴系統－Security、Privacy、NFR 與 Threat Model v0.1.md](docs/spec/07智慧長照%20AI%20陪伴系統－Security、Privacy、NFR%20與%20Threat%20Model%20v0.1.md) |
-| 9 | [docs/spec/08智慧長照 AI 陪伴系統－AWS 系統架構、服務選型與 ADR v0.1.md](docs/spec/08智慧長照%20AI%20陪伴系統－AWS%20系統架構、服務選型與%20ADR%20v0.1.md) |
-| 10 | [docs/spec/09智慧長照 AI 陪伴系統－Multi-Agent、Agentic Workflow 與 Context Engineering v0.1.md](docs/spec/09智慧長照%20AI%20陪伴系統－Multi-Agent、Agentic%20Workflow%20與%20Context%20Engineering%20v0.1.md) |
-| 11 | [docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md](docs/spec/10智慧長照%20AI%20陪伴系統－API、Event、Tool%20與%20Data%20Contracts%20v0.1.md) |
-| 12 | [docs/spec/11智慧長照 AI 陪伴系統－測試策略、Agent Evaluation 與品質門檻 v0.1.md](docs/spec/11智慧長照%20AI%20陪伴系統－測試策略、Agent%20Evaluation%20與品質門檻%20v0.1.md) |
-| 13 | [docs/spec/12智慧長照 AI 陪伴系統－實作計畫、環境、團隊分工與交付路線 v0.1.md](docs/spec/12智慧長照%20AI%20陪伴系統－實作計畫、環境、團隊分工與交付路線%20v0.1.md) |
-| 14 | [docs/spec/13智慧長照 AI 陪伴系統－Database Migration、Release 與 Rollback v0.1.md](docs/spec/13智慧長照%20AI%20陪伴系統－Database%20Migration、Release%20與%20Rollback%20v0.1.md) |
-| 15 | [docs/spec/14智慧長照 AI 陪伴系統－Observability、營運與 Incident Response v0.1.md](docs/spec/14智慧長照%20AI%20陪伴系統－Observability、營運與%20Incident%20Response%20v0.1.md) |
-| 16 | [docs/spec/15智慧長照 AI 陪伴系統－成功指標、Feedback、實驗與迭代 v0.1.md](docs/spec/15智慧長照%20AI%20陪伴系統－成功指標、Feedback、實驗與迭代%20v0.1.md) |
-| 17 | [docs/spec/16智慧長照 AI 陪伴系統－相容性、Deprecation、資料匯出與退場策略 v0.1.md](docs/spec/16智慧長照%20AI%20陪伴系統－相容性、Deprecation、資料匯出與退場策略%20v0.1.md) |
-
-競賽命題（原 `hackathon_challenge_ai_readable.json`）已整合進本文件上方各節。
-本文件維持精簡索引，不內嵌完整逐字內容——需要細節請開對應的 `docs/spec/*.md`。
+# CLAUDE.md
+
+- 更新日期：2026-08-13
+- 校準基準：`main` at `4f6b4ae`
+- 適用範圍：整個 `kinsun.ai` repository
+
+本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
+資料庫與測試規則以根目錄 [`AGENTS.md`](AGENTS.md) 為準；進入
+`services/agent-runtime/` 時還要讀取該目錄的 [`AGENTS.md`](services/agent-runtime/AGENTS.md)。
+競賽題目、Persona、Story Map 與各領域規格在 [`docs/spec/`](docs/spec/)；不要把本檔當產品規格。
+
+## 每次工作固定流程
+
+1. 先確認工作區，不覆蓋使用者既有變更。
+
+   ```powershell
+   git -c safe.directory=D:/Hackthon/kinsun.ai status --short
+   git -c safe.directory=D:/Hackthon/kinsun.ai log -5 --oneline
+   ```
+
+2. 讀根目錄 `AGENTS.md`、目前目錄適用的巢狀 `AGENTS.md`，再讀與需求直接相關的 spec、ADR、
+   contract、migration、測試與實作。若文件和程式衝突，先以可執行 contract、migration、測試與
+   code path 建立證據，再修正文件；不要靠 README 或檔名猜進度。
+3. 把需求拆成 Persona、User Story、Acceptance Criteria、Domain State、Security Gate、Test Gate。
+   明確區分「目標架構」、「程式已實作」、「測試已通過」與「環境已部署」。
+4. 追完整資料流：Browser/BFF → Core Command Gate → DB/Outbox → Agent、Speech、RAG 或通知邊界。
+   涉及寫入時，一併檢查授權、Consent、狀態機、idempotency、audit 與 failure path。
+5. 先做最小、可回復的變更，再跑受影響元件測試；跨 contract、migration 或共用套件時擴大驗證。
+6. 交付前檢查 diff、更新必要文件，並清楚列出已驗證與因環境限制未驗證的項目。
+
+```text
+需求 → 實作證據 → Contract／State／Security 影響 → 最小修改 → 目標測試 → 跨層檢查 → 交付
+```
+
+## 實作時的對齊規則
+
+### Core API 與資料庫
+
+- `services/core-api` 是 Domain authority。Route 只處理傳輸；authorization、Consent、state transition
+  與 business rule 放 service；資料存取經 repository；跨系統通知先寫 transactional outbox。
+- 以解析後的 `Identity`／`Actor` 為權限依據，不信任 Client 傳入的 tenant、elder、role、assignment
+  或 permission scope。email 不是 Actor authority，也不得用 email 自動合併帳號。
+- Direct Google／LINE OIDC、Core App Session、pending onboarding、explicit Google→LINE linking 與
+  bounded empty-account consolidation 已有 application code。Cognito runtime、SDK、Hosted UI callback、
+  IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
+  寫成「雲端環境已部署驗證」。
+- Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
+  2026-08-13 基準為 15 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
+  model attribute `id` 常透過 `__pk_name__` 對應 DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
+- 不用未經檢查的 autogenerate。migration SQL 維持 LF、可重建、可升級，並保留 RLS、grant、trigger、
+  constraint 與 state-machine 規則。
+
+### Agent Runtime
+
+- Runtime 只產生不可信 proposal；Core 重新授權、重驗 Consent 並建立 review-required Candidate。
+  canonical flow 由 Core 傳 `requested_outputs`，`allowed_tools` 固定空陣列；Runtime 不 callback Core、
+  不完成 AgentRun、也不寫 Domain DB。
+- 預設與 staging application template 使用 mock。`BedrockModelProvider` 已存在並可接收 RAG context，
+  但真實 Bedrock／OpenSearch 環境尚未驗證。
+- 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
+  `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
+  Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
+  仍未做語意相關性排序；Verified Care Data、Graph、Neptune、通用 Tool loop、Prompt Registry、
+  Model Router 與完整 trace 仍未完成。
+- 保留 deterministic Safety Evaluator、step 上限、typed outputs、Pydantic／JSON Schema 一致性與
+  no-guess fallback。不得讓 LLM 判斷取代 deterministic security gate。
+
+### Frontend 與身份驗證
+
+- 前端是 `packages/frontend` 的單一 multi-role Next.js 16 App Router PWA；不要重建已移除的
+  `apps/elder-web`、`apps/care-web`、`apps/family-web`。
+- Browser 只透過同源 BFF 呼叫後端；token、provider secret 與 session credential 不進 client bundle、
+  URL、log 或錯誤訊息。新環境變數必須同步 `.env.example`，只放安全假值。
+- 使用既有 CSS Modules、design tokens 與 components；不要引入 Tailwind 或第二套 UI framework。
+  使用者可見文字同步 `zh-TW` 與 `en`，至少檢查 375／390／430 px。
+- 功能旗標預設關閉；未經明確授權，不啟用 direct OIDC、ASR、通知或其他 staging／production 功能。
+
+### Speech、RAG 與通知
+
+- Canonical voice flow 是 Browser JSON audio upload → Core Voice Ticket → Speech Gateway consume →
+  Core server-side ASR Gate。低信心結果必須要求確認，不可直接成為 verified event 或 memory。
+- Managed zh/en 與 SageMaker nan/hak adapters 已有 code/tests；真實 endpoint、service credential、
+  WebSocket binary transport、quality／cost gate 尚未完成，不得宣稱 production-ready。
+- `services/rag-ingestion` 與 Agent RAG 都是 staging-only。Allowlist、hash、來源、chunk 數、receipt 與
+  human review 規則不得被繞過；unsigned development override 不是 production approval。
+- `services/notification-worker` 目前只有 scheduler boundary README；工作邏輯仍在 Core，尚無獨立
+  worker framework、Scheduler、SQS 或 DLQ deployment。`projection-worker`、`report-worker` 也不存在。
+
+### Contract 與 IaC
+
+- OpenAPI、AsyncAPI、JSON Schema、Pydantic model、實際 route 與 live verifier 必須一起演進。
+  不可實作未登記 API；不相容變更必須有新 major version 或正式 migration plan。
+- [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 是差異說明，不是 executable truth，而且局部摘要
+  可能落後；改動前後都跑 validator。2026-08-13 快照：Core OpenAPI 63 paths、Agent 3 paths、
+  AsyncAPI 1 channel，Core app 實際 68 operations。
+- `infra` 保留 AWS CDK v2 deployment profile；application stack 的 `desiredCount` 預設 0。黑客松 AWS
+  帳號目前無法操作，Cognito 已從 IaC 移除，OpenSearch 仍是 external reference。沒有使用者明確要求
+  與新的可操作帳號，不部署、不 push image、不變更 AWS resource，也不把 synth 結果描述成已上線。
+- `.github/workflows-disabled/pr.yml` 代表 CI 目前停用；本機通過不等於 PR gate 已啟用。
+
+## 驗證矩陣
+
+只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
+
+### Core API
+
+```powershell
+cd services/core-api
+uv sync --extra test --extra dev
+uv run pytest tests/unit
+uv run ruff check .
+uv run ruff format --check .
+```
+
+需要 Docker／PostgreSQL 時再跑 integration、migration rebuild 與 Core live contract verifier；資料庫未啟動
+時，不要把 `/ready` 失敗混寫成 contract regression。
+
+### Agent Runtime
+
+```powershell
+cd services/agent-runtime
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/verify_agent_contract_live.py ../../contracts
+```
+
+### RAG Ingestion 與 Speech Gateway
+
+```powershell
+cd services/rag-ingestion
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+
+cd ../speech-gateway
+uv sync --extra test --extra dev
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+### Frontend
+
+```powershell
+npm run test --workspace @elderly-care/frontend
+npm run lint
+npm run typecheck --workspace @elderly-care/frontend
+npm run build --workspace @elderly-care/frontend
+```
+
+有畫面或互動改動時，再做 375／390／430 px、keyboard、loading／empty／error、`prefers-reduced-motion`
+與 feature-on／feature-off 視覺驗證。
+
+### IaC 與 contracts
+
+```powershell
+npm run test --workspace @elderly-care/infrastructure
+npm run typecheck --workspace @elderly-care/infrastructure
+npm run synth --workspace @elderly-care/infrastructure
+npm run synth:application --workspace @elderly-care/infrastructure
+
+uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts
+```
+
+2026-08-13 Cognito retirement 當次結果：Core unit 752、Frontend 135、Infra 7 tests passed；Core Ruff
+lint、本次 Core 檔案 format、Frontend lint／typecheck／build、Infra typecheck／兩個 synth、static
+contract 與 Core live verifier 均通過。Agent 259、RAG ingestion 138、Speech 22 是較早且未受本次變更
+影響的結果。沒有獨立 `TEST_DATABASE_URL`，因此未重建 integration DB；Supabase 只在唯讀確認 legacy
+欄位非空筆數為 0 後，套用 migration 至 `f2c6d8a1e490`。完整 Core format check 仍會指出兩個本次未
+修改的既有檔案。這個快照只供回歸比較，不可取代當次驗證。
+
+## 交付前自我審查
+
+- `git diff` 只包含本次需求；沒有重寫或刪除使用者既有變更。
+- 實作、contract、migration、測試、文件與 feature flag 敘述一致。
+- 每個 write path 都有 actor、scope、Consent、state、idempotency、audit 與失敗路徑。
+- 沒有真實長者資料、逐字稿、音訊、token、secret、endpoint credential 或敏感 log。
+- 沒有把 mock、adapter、synth、disabled gate 或本機測試誤稱為已部署能力。
+- 新增 API 有 schema 與 verifier；新增 state 有 migration 與 transition test；新增 UI 有雙語與 RWD。
+- `git diff --check` 通過，必要測試已跑；未跑項目附具體原因與風險。
+- 若這次踩到文件沒有記錄的坑，補回 `AGENTS.md` 或本檔，避免下一位重複踩坑。
+
+## 常見誤判與禁止事項
+
+- 不因 route、provider 或 CDK construct 存在，就宣稱功能已啟用、已部署或 production-ready。
+- 不把 Memory API 當成 Agent Context、不把 RAG retrieval 當成 projection、不把 notification README
+  當成 worker deployment。
+- 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
+- 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
+- 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
+- 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
+- 不為了 Windows Git ownership 問題改 repository owner 或全域安全設定；命令使用 scoped
+  `git -c safe.directory=D:/Hackthon/kinsun.ai ...`。若 Docker、網路、AWS 或沙箱受限，記錄限制，
+  不以關閉安全檢查繞過。
+
+## 尚待產品／平台決策
+
+以下仍是 `TODO(待確認)`，不得自行選定：production hosting provider／region 與成本上限、正式 Bedrock model／fallback、
+ASR/TTS endpoint 與 quality gate、LINE／email service credential、scheduler frequency、資料 retention／
+legal hold／offboarding、production API／event client、voice／agent／TTS performance gate。
+
+## 回報格式
+
+完成工作時用精簡四段：
+
+1. 結果：實際完成什麼。
+2. 變更：關鍵檔案與行為。
+3. 驗證：執行的命令與結果。
+4. 未驗證／風險：只列真實存在的環境限制或待決事項。

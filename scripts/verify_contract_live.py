@@ -25,9 +25,8 @@ sys.path.insert(0, str(REPO_ROOT / "services" / "core-api"))
 # This verifier is specifically a no-authenticator fail-closed check. Make it
 # deterministic even when the developer's local .env enables synthetic auth.
 os.environ["FAKE_AUTH_ENABLED"] = "false"
-# Live contract verification must never fetch Cognito JWKS or require a real
-# Google/LINE/Cognito token. These probes exercise the implemented fail-closed edge.
-os.environ["COGNITO_AUTH_ENABLED"] = "false"
+# Live contract verification never requires a real Google/LINE token or App Session.
+# These probes exercise the implemented fail-closed edge.
 # Include the gated direct-OIDC/App-Session routes while keeping every live
 # probe synthetic and fail-closed before any provider network request.
 os.environ["APP_SESSION_AUTH_ENABLED"] = "true"
@@ -304,28 +303,6 @@ async def main() -> int:
         check(
             "POST /api/v1/internal/agent-runs/{agent_run_id}/complete 401 body "
             "vs ErrorEnvelopeV1",
-            response.json(),
-            load("common/ErrorEnvelopeV1.json"),
-        )
-
-        response = await client.post(
-            "/api/v1/onboarding/resolve",
-            headers={"Idempotency-Key": "live-contract-onboarding-resolve"},
-            json={"intent": "ELDER"},
-        )
-        if response.status_code != 401:
-            failures.append(
-                "POST /api/v1/onboarding/resolve returned "
-                f"{response.status_code}, expected 401"
-            )
-            print(
-                "FAIL  POST /api/v1/onboarding/resolve fails closed: "
-                f"{response.status_code}"
-            )
-        else:
-            print("ok    POST /api/v1/onboarding/resolve fails closed with 401")
-        check(
-            "POST /api/v1/onboarding/resolve 401 body vs ErrorEnvelopeV1",
             response.json(),
             load("common/ErrorEnvelopeV1.json"),
         )

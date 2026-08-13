@@ -17,7 +17,7 @@ describe('frontend health route', () => {
 
   it('never exposes server-side configuration or credentials', async () => {
     const marker = 'must-not-appear-in-health-response';
-    vi.stubEnv('COGNITO_OAUTH_TRANSACTION_SECRET', marker);
+    vi.stubEnv('GOOGLE_OIDC_TRANSACTION_SECRET', marker);
     vi.stubEnv('CORE_API_INTERNAL_URL', `https://${marker}.invalid`);
 
     const body = await GET().text();

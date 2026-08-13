@@ -8,7 +8,7 @@ import {
 } from './voice-page-state';
 
 /**
- * DEV SEAM — delete or replace this file when real Cognito sign-in lands.
+ * DEV SEAM — visual state preview only; direct OIDC is the real sign-in path.
  *
  * Several of the 9 states docs/design-system/MASTER.md §10.1 requires cannot be
  * produced by the backend yet (Low Confidence has no server field, Generating is

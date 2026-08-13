@@ -1,5 +1,8 @@
 # AGENTS.md — agent-runtime
 
+- 更新日期：2026-08-13
+- 校準基準：`main` at `4f6b4ae`
+
 本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
 根目錄那份的規則一律適用；兩者衝突時以根目錄為準。
 
@@ -8,7 +11,10 @@
 ## 目前狀態
 
 M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證 → Orchestrator
-→ Companion Agent → Safety Evaluator → 回應。Agent 模型仍走 `MockModelProvider`。
+→ Companion Agent → Safety Evaluator → 回應。預設與目前 staging application template 都走
+`MockModelProvider`；程式碼另有 `models/bedrock_provider.py`，設定
+`MODEL_PROVIDER=bedrock`、`AWS_REGION` 與 `BEDROCK_TEXT_MODEL_ID` 後才會選用。Bedrock provider
+能接收已通過 RAG 治理的 context，但尚未用真實 AWS 憑證與模型端點驗證，不得描述成已部署。
 
 另有第一版 **staging-only** RAG endpoint、Bedrock query embedding 與 OpenSearch Hybrid
 Retrieval adapter，以及正式 Agent Run 的最小安全整合。只有明確標示
@@ -30,7 +36,13 @@ Runtime 只回傳不含 actor／tenant／elder／session／consent／逐字稿�
 重驗 Consent 並完成 conversation session 後建立 review-required Candidate。舊 `allowed_tools`
 欄位保留解析相容，但 canonical Core path 固定傳空陣列。尚未實作（不要描述成已完成）：
 Memory Candidate、Model Router、Prompt Registry、完整 Agent Trace、Neptune、通用 Tool 執行
-迴圈、RAG／Graph Evaluation，以及能實際使用 RAG context 生成回答的外部 Model Provider。
+迴圈與 RAG／Graph Evaluation。`BASIC_VOICE` request 現可接收 Core 已重驗授權／Consent 的最多
+5 筆 current ACTIVE Confirmed Memory；Runtime 以獨立 `confirmed-memory` context item 標記，並把
+內容當資料而非指令。Knowledge／RAG purpose 的 request 不得帶這個欄位。現行 selection 仍只是
+Core 依更新時間做 bounded first slice，尚未有語意相關性排序；Verified Care Data 與 Graph 仍未
+進入 Runtime Context。Repository 內仍有早期
+Core Tool client／request 相容程式，但 canonical orchestrator 不會依 `allowed_tools` 呼叫 Core；
+若 README 或舊測試敘述相反，以目前 orchestrator、Core companion service 與本檔為準。
 
 ## 硬性規則
 
@@ -51,9 +63,10 @@ Memory Candidate、Model Router、Prompt Registry、完整 Agent Trace、Neptune
   與 `src/agent_runtime/contracts/models.py` 的 Pydantic model 必須一致，由
   `tests/unit/test_contract_schema_consistency.py` 守著（含 `additionalProperties: false`
   對應 `extra="forbid"`）。
-- **外部服務只在 Provider／Adapter 邊界出現**。目前只有 `models/provider.py` 的
-  `ModelProvider` 介面與 `models/mock_provider.py`。接 Bedrock、OpenSearch、Neptune 時
-  新增實作，不要把 SDK 呼叫散進 orchestration 或 agent 層。
+- **外部服務只在 Provider／Adapter 邊界出現**。模型邊界包含 `models/provider.py` 的
+  `ModelProvider` 介面、`models/mock_provider.py` 與 `models/bedrock_provider.py`；RAG 邊界位於
+  `rag/`。新增或調整 Bedrock、OpenSearch、Neptune 整合時，不要把 SDK 呼叫散進
+  orchestration 或 agent 層。
 - Step／Tool 上限來自 `settings.py`：`MAX_AGENT_DECISIONS`、`MAX_TOOL_ROUNDS`、
   `MAX_TOTAL_TOOLS`、`MAX_REWRITE`。目前 companion 仍只有單一模型決策；Event proposal 是
   deterministic output，不是 Tool call。`MAX_TOOL_ROUNDS`／`MAX_TOTAL_TOOLS` 保留供未來
@@ -88,6 +101,9 @@ uv run ruff format --check .
 ```
 
 不需要資料庫、不需要 AWS 憑證、不需要網路。
+
+2026-08-13 本機基準：259 tests passed；Ruff check、Ruff format check 與 Agent live contract
+verifier 均通過。這是本機程式與 contract 驗證，不代表 Bedrock／OpenSearch staging 已驗證。
 
 `tests/unit/test_contract_schema_consistency.py` 掃的是 repository 根目錄的
 `contracts/schemas/`，因此它同時會驗證 core-api 的 schema 是否為合法的 JSON Schema。

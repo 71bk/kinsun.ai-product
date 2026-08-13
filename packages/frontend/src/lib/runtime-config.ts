@@ -19,57 +19,20 @@ export const AUTH_STORAGE_KEYS = {
   caregiverId: 'elderly_care_caregiver_id',
 } as const;
 
-const LEGACY_TOKEN_STORAGE_KEY = 'elderly_care_id_token';
-
-export function clearLegacyBrowserCredential(): void {
-  if (typeof window !== 'undefined') window.localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
-}
-
 /**
  * Everything sign-out has to remove from the browser itself.
  *
  * `POST /backend/auth/logout` runs on the server, so it can only expire the
  * HttpOnly cookies. Without this, signing out left the previous session's elder
- * and caregiver ids behind — and, worse, the legacy voice Cognito ID token,
- * which is a reusable credential. The deployment target is a shared tablet in a
- * care setting, so "the next person inherits the last person's selection and a
- * live token" is the realistic failure, not a hypothetical one.
+ * and caregiver ids behind. The deployment target can be a shared tablet in a
+ * care setting, so the next person must never inherit the last person's scope.
  *
  * Safe to call when already signed out; `removeItem` on a missing key is a no-op.
  */
 export function clearBrowserSessionState(): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
-  window.localStorage.removeItem(VOICE_WS_TOKEN_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_STORAGE_KEYS.elderId);
   window.localStorage.removeItem(AUTH_STORAGE_KEYS.caregiverId);
-}
-
-/**
- * Voice is a separate backend (packages/backend's WebSocket API, Cognito
- * JWT verified in workflow/handlers/connect.ts) from the Core API this file
- * otherwise configures — different auth realm, different credential. Kept
- * under its own storage key precisely so getRuntimeConfig()'s legacy-token
- * cleanup above never touches it.
- */
-const VOICE_WS_TOKEN_STORAGE_KEY = 'elderly_care_voice_ws_token';
-
-export interface VoiceSessionConfig {
-  wsUrl: string;
-  token: string;
-}
-
-/** Non-empty only when both a deploy target and a token have been set via /dev-login. */
-export function getVoiceSessionConfig(): VoiceSessionConfig {
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? '';
-  if (typeof window === 'undefined') return { wsUrl, token: '' };
-  return { wsUrl, token: window.localStorage.getItem(VOICE_WS_TOKEN_STORAGE_KEY) ?? '' };
-}
-
-export function setVoiceWsToken(token: string): void {
-  if (typeof window === 'undefined') return;
-  if (token) window.localStorage.setItem(VOICE_WS_TOKEN_STORAGE_KEY, token);
-  else window.localStorage.removeItem(VOICE_WS_TOKEN_STORAGE_KEY);
 }
 
 /**
@@ -91,9 +54,6 @@ export async function getRuntimeConfig(): Promise<RuntimeConfig> {
     };
   }
 
-  // Do not silently migrate a JavaScript-readable credential into the new
-  // session. Remove the legacy copy and require an explicit new login.
-  clearLegacyBrowserCredential();
   const elderId = window.localStorage.getItem(AUTH_STORAGE_KEYS.elderId) ?? '';
   const caregiverId = window.localStorage.getItem(AUTH_STORAGE_KEYS.caregiverId) ?? '';
   let credentialStatus: RuntimeConfig['credentialStatus'] = 'unavailable';

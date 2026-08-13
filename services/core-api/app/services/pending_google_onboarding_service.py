@@ -200,7 +200,6 @@ class PendingGoogleOnboardingService:
         )
         actor = Actor(
             actor_type="ELDER",
-            cognito_sub=None,
             display_name=display_name,
             email=email,
             status="ACTIVE",

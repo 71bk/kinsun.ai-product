@@ -29,7 +29,7 @@ describe('public legal-page layout', () => {
   it('passes the saved locale and signed-in affordance to PublicShell', async () => {
     mocks.cookieGet.mockImplementation((name: string) => {
       if (name === 'kinsun_ui_locale') return { value: 'en' };
-      if (name.includes('kinsun_access_token')) return { value: 'synthetic-access-token' };
+      if (name.includes('kinsun_session')) return { value: `ks1_${'a'.repeat(43)}` };
       return undefined;
     });
 

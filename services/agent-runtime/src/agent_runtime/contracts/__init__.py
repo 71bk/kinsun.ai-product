@@ -3,6 +3,7 @@
 from .models import (
     AgentRunRequest,
     AgentRunResponse,
+    ConfirmedMemoryContext,
     ContextManifest,
     HandoffEnvelope,
     SafetyEvaluation,
@@ -11,6 +12,7 @@ from .models import (
 __all__ = [
     "AgentRunRequest",
     "AgentRunResponse",
+    "ConfirmedMemoryContext",
     "ContextManifest",
     "SafetyEvaluation",
     "HandoffEnvelope",

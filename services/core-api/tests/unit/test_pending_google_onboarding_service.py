@@ -160,7 +160,6 @@ async def test_elder_completion_creates_identity_consumes_pending_and_issues_ses
     assert result.intent == "ELDER"
     assert result.status == "ACTIVE"
     assert result.actor_id == actor.id
-    assert actor.cognito_sub is None
     assert external_identity.external_subject_digest == "b" * 64
     assert app_sessions.calls == [external_identity.id]
     assert pending.status == "CONSUMED"

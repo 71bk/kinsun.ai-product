@@ -21,7 +21,6 @@ from app.main import create_app  # noqa: E402
 MODEL_FILES = {
     "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
     "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
-    "ResolveOnboardingRequest": "domain/ResolveOnboardingRequestV1.json",
     "CreateFamilyInvitationRequest": "domain/CreateFamilyInvitationRequestV1.json",
     "CreateLineLinkChallengeRequest": "domain/CreateLineLinkChallengeRequestV1.json",
     "DailyLineNotificationJobRequest": "domain/DailyLineNotificationJobRequestV1.json",
@@ -58,7 +57,6 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "complete_agent_run_api_v1_internal_agent_runs__agent_run_id__complete_post": (
         "AgentRunCompletionEnvelopeV1"
     ),
-    "resolve_onboarding_api_v1_onboarding_resolve_post": "ResolveOnboardingEnvelopeV1",
     "create_family_invitation_api_v1_elders__elder_id__family_invitations_post": (
         "FamilyInvitationCreatedEnvelopeV1"
     ),
@@ -233,14 +231,13 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
         "description": (
             "Current executable Core API contract. Every protected operation "
             "re-evaluates tenant, elder, relationship or assignment scope. "
-            "Cognito access tokens authenticate existing actors; the onboarding "
-            "resolver separately accepts a verified Cognito ID token and never "
-            "treats persona intent as authorization. LINE webhooks require a "
+            "Core-owned opaque App Sessions authenticate browser actors after "
+            "direct Google or LINE OIDC. LINE webhooks require a "
             "raw-body HMAC signature; Core stores keyed identity digests and, "
             "only for scheduled push, an authenticated encrypted destination."
         ),
@@ -261,22 +258,11 @@ def main() -> None:
         "bearerAuth": {
             "type": "http",
             "scheme": "bearer",
-            "bearerFormat": "JWT",
+            "bearerFormat": "ks1_ opaque session",
             "description": (
-                "Cognito access token. Core verifies signature, issuer, expiry, "
-                "token_use=access and client_id, then resolves actor, tenant and "
-                "role from live Core database state. Development fake auth requires "
-                "the explicit FAKE_AUTH_ENABLED flag."
-            ),
-        },
-        "cognitoIdToken": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-            "description": (
-                "Cognito ID token accepted only by onboarding resolution. Core "
-                "verifies signature, issuer, expiry, token_use=id, audience and "
-                "verified email; claims do not directly grant any role or elder scope."
+                "Versioned ks1_ Core App Session. Core resolves the session, actor, "
+                "tenant and role from live database state on each request. "
+                "Development fake auth requires the explicit FAKE_AUTH_ENABLED flag."
             ),
         },
         "lineSignature": {
@@ -392,9 +378,7 @@ def main() -> None:
                         }
                 operation["responses"].pop("422", None)
             if path not in {"/health", "/ready"}:
-                if path == "/api/v1/onboarding/resolve":
-                    operation["security"] = [{"cognitoIdToken": []}]
-                elif path == LINE_WEBHOOK_PATH:
+                if path == LINE_WEBHOOK_PATH:
                     operation["security"] = [{"lineSignature": []}]
                 else:
                     operation["security"] = [{"bearerAuth": []}]

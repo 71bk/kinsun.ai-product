@@ -60,7 +60,6 @@ class _AppSessions:
 def _actor(actor_type: str = "ELDER") -> Actor:
     value = Actor(
         actor_type=actor_type,
-        cognito_sub=None,
         display_name="Synthetic",
         status="ACTIVE",
     )

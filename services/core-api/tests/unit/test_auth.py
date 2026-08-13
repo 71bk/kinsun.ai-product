@@ -20,70 +20,9 @@ from app.middleware.auth import (
     Authenticator,
     FakeAuthenticator,
     NoAuthenticatorConfiguredError,
-    RoutedAuthenticator,
     get_actor_context,
     get_authenticator,
 )
-
-
-def _request_with_bearer(token: str) -> Request:
-    return Request(
-        {
-            "type": "http",
-            "method": "GET",
-            "path": "/",
-            "headers": [(b"authorization", f"Bearer {token}".encode("ascii"))],
-        }
-    )
-
-
-class _RecordingAuthenticator(Authenticator):
-    def __init__(self, result: ActorContext | None = None, *, reject: bool = False) -> None:
-        self.calls = 0
-        self.result = result or ActorContext(
-            actor_id=uuid.uuid4(),
-            actor_role="ELDER",
-            tenant_id=uuid.uuid4(),
-        )
-        self.reject = reject
-
-    async def authenticate(self, request: Request) -> ActorContext:
-        del request
-        self.calls += 1
-        if self.reject:
-            raise AuthenticationError("Authentication required")
-        return self.result
-
-
-@pytest.mark.asyncio
-async def test_routed_authenticator_routes_versioned_app_session_prefix() -> None:
-    app_session = _RecordingAuthenticator()
-    cognito = _RecordingAuthenticator()
-
-    result = await RoutedAuthenticator(
-        app_session=app_session,
-        cognito=cognito,
-    ).authenticate(_request_with_bearer("ks1_" + "a" * 43))
-
-    assert result == app_session.result
-    assert app_session.calls == 1
-    assert cognito.calls == 0
-
-
-@pytest.mark.asyncio
-async def test_routed_authenticator_never_downgrades_rejected_app_session() -> None:
-    app_session = _RecordingAuthenticator(reject=True)
-    cognito = _RecordingAuthenticator()
-
-    with pytest.raises(AuthenticationError):
-        await RoutedAuthenticator(
-            app_session=app_session,
-            cognito=cognito,
-        ).authenticate(_request_with_bearer("ks1_" + "a" * 43))
-
-    assert app_session.calls == 1
-    assert cognito.calls == 0
-
 
 # ─── ActorContext Tests ──────────────────────────────────────────────────────
 

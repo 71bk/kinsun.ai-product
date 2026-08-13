@@ -70,12 +70,6 @@ class TestSettingsConstruction:
             FAKE_AUTH_ACTOR_ID="20000000-0000-4000-8000-000000000001",
             FAKE_AUTH_TENANT_ID="10000000-0000-4000-8000-000000000001",
             FAKE_AUTH_ACTOR_ROLE="ELDER",
-            COGNITO_AUTH_ENABLED="true",
-            COGNITO_REGION="ap-northeast-1",
-            COGNITO_USER_POOL_ID="ap-northeast-1_example",
-            COGNITO_APP_CLIENT_ID="client-id",
-            COGNITO_JWKS_CACHE_SECONDS="120",
-            COGNITO_HTTP_TIMEOUT_SECONDS="4",
             FAMILY_INVITATION_HMAC_SECRET="test-family-invitation-secret-32-bytes",
             GOOGLE_OIDC_CLIENT_ID="google-web-client.apps.googleusercontent.com",
             GOOGLE_OIDC_JWKS_CACHE_SECONDS="180",
@@ -118,12 +112,6 @@ class TestSettingsConstruction:
         assert str(s.fake_auth_actor_id) == "20000000-0000-4000-8000-000000000001"
         assert str(s.fake_auth_tenant_id) == "10000000-0000-4000-8000-000000000001"
         assert s.fake_auth_actor_role == "ELDER"
-        assert s.cognito_auth_enabled is True
-        assert s.cognito_region == "ap-northeast-1"
-        assert s.cognito_user_pool_id == "ap-northeast-1_example"
-        assert s.cognito_app_client_id == "client-id"
-        assert s.cognito_jwks_cache_seconds == 120
-        assert s.cognito_http_timeout_seconds == 4
         assert s.family_invitation_hmac_secret == "test-family-invitation-secret-32-bytes"
         assert s.google_oidc_client_id == "google-web-client.apps.googleusercontent.com"
         assert s.google_oidc_jwks_cache_seconds == 180
@@ -210,19 +198,6 @@ class TestValidation:
     def test_database_timeouts_must_be_positive(self, field: str) -> None:
         with pytest.raises(ValidationError):
             _make_settings(**{field: "0"})
-
-    def test_enabled_cognito_requires_complete_server_configuration(self) -> None:
-        with pytest.raises(ValidationError, match="COGNITO_REGION"):
-            _make_settings(COGNITO_AUTH_ENABLED="true")
-
-    def test_enabled_cognito_requires_family_invitation_secret(self) -> None:
-        with pytest.raises(ValidationError, match="FAMILY_INVITATION_HMAC_SECRET"):
-            _make_settings(
-                COGNITO_AUTH_ENABLED="true",
-                COGNITO_REGION="us-west-2",
-                COGNITO_USER_POOL_ID="us-west-2_example",
-                COGNITO_APP_CLIENT_ID="client-id",
-            )
 
     @pytest.mark.parametrize(
         ("idle_field", "absolute_field"),

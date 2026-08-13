@@ -8,6 +8,11 @@
   [ADR 0006](0006-frontend-stack-and-app-topology.md)
 - 解除：`AGENTS.md` §11「兩套後端去留」與「IaC 工具」待決項
 
+> 2026-08-13 現況：本 ADR 保留後端單一主線與 AWS profile 的歷史決策；身份部分已由
+> [ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md) 取代，Cognito 已從 repository
+> 退場。目前資料庫 provider 是 Supabase PostgreSQL，黑客松 AWS 帳號不可操作，以下 AWS 盤點
+> 與部署狀態不得當成現在仍可存取的證據。
+
 ## 背景
 
 Repository 目前同時存在兩種互不相容的後端方向：

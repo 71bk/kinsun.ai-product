@@ -25,18 +25,6 @@ beforeEach(() => {
 });
 
 describe('sign-in browser-state cleanup guard', () => {
-  it('preserves browser state while an access-token cookie remains', async () => {
-    mocks.cookieGet.mockImplementation((name: string) =>
-      name === 'kinsun_access_token' ? { value: 'synthetic-access-token' } : undefined,
-    );
-
-    const page = await SignInPage({ searchParams: Promise.resolve({}) });
-    renderToStaticMarkup(page);
-
-    expect(mocks.cookieGet).toHaveBeenCalledWith('kinsun_access_token');
-    expect(mocks.clearBrowserStateRender).not.toHaveBeenCalled();
-  });
-
   it('preserves browser state while an App Session cookie remains', async () => {
     mocks.cookieGet.mockImplementation((name: string) =>
       name === 'kinsun_session' ? { value: `ks1_${'a'.repeat(43)}` } : undefined,

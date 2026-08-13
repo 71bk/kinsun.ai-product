@@ -124,7 +124,12 @@ def test_invalid_rag_examples_are_rejected_by_pydantic(example_name, model):
 
 @pytest.mark.parametrize(
     "example_name",
-    ["agent-run-request-extra-field.json", "agent-run-request-missing-required.json"],
+    [
+        "agent-run-request-extra-field.json",
+        "agent-run-request-missing-required.json",
+        "agent-run-request-memory-with-status.json",
+        "agent-run-request-knowledge-with-memory.json",
+    ],
 )
 def test_invalid_examples_rejected_by_json_schema(example_name):
     validator = validator_for("agent/AgentRunRequestV1.json")
@@ -134,7 +139,12 @@ def test_invalid_examples_rejected_by_json_schema(example_name):
 
 @pytest.mark.parametrize(
     "example_name",
-    ["agent-run-request-extra-field.json", "agent-run-request-missing-required.json"],
+    [
+        "agent-run-request-extra-field.json",
+        "agent-run-request-missing-required.json",
+        "agent-run-request-memory-with-status.json",
+        "agent-run-request-knowledge-with-memory.json",
+    ],
 )
 def test_invalid_examples_rejected_by_pydantic(example_name):
     """`additionalProperties: false` must be mirrored by `extra="forbid"` on the model."""

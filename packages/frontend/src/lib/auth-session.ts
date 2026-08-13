@@ -18,16 +18,6 @@ export async function hasAuthCredential(): Promise<boolean> {
   return parseStatus(response);
 }
 
-export async function createDevelopmentAuthSession(accessToken: string): Promise<void> {
-  const response = await fetch(SESSION_ENDPOINT, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ access_token: accessToken }),
-  });
-  await parseStatus(response);
-}
-
 export async function clearAuthSession(): Promise<void> {
   const response = await fetch(SESSION_ENDPOINT, {
     method: 'DELETE',

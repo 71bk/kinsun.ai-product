@@ -1,6 +1,6 @@
 # Contract 與文件 10 差異清單
 
-- 更新日期：2026-08-02
+- 更新日期：2026-08-13
 - 文件基準：`docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
 - 執行基準：目前 `services/core-api` 與 `services/agent-runtime`
 
@@ -61,15 +61,11 @@
 
 ### Authentication
 
-Core 已實作 Cognito JWT verifier與 gate-controlled Core App Session authenticator：
+Core 只接受 Core-owned opaque App Session：
 
-- 一般 protected endpoint 在 migration gate 開啟時以 token prefix 嚴格分流。`ks1_` 只走 Core-owned
-  opaque App Session；其他 token 只在 Cognito gate 仍開啟時走 Cognito Access Token verifier。任何
-  App Session 驗證失敗都不會 downgrade。兩條路徑都以 live Core DB 解析 actor、tenant 與 role；
-  Cookie 或 JWT claim 不直接授權 elder scope。
-- `POST /api/v1/onboarding/resolve` 只接受 Cognito ID Token，驗證 audience、
-  `token_use=id` 與 verified email，再依 ELDER／FAMILY intent 建立或兌換正式 Core state。
-  FAMILY intent 沒有有效一次性邀請碼時不會取得任何 elder access。
+- 一般 protected endpoint 的 bearer credential 必須是 `ks1_` App Session。Core 每次由 live DB 重查
+  Session、Actor、Tenant membership 與 role；Cookie 或 Provider claim 不直接授權 elder scope。
+- Cognito verifier、Hosted UI callback、舊 onboarding resolver、雙 Cookie 過渡與 SDK 已移除。
 - Direct Google flow 使用 BFF-owned Authorization Code + PKCE、state、nonce 與 signed transaction
   Cookie；Core 會獨立重驗 Google ID Token。既有 identity 直接核發 App Session，未知 ELDER／FAMILY
   identity 則只核發短效 pending credential，經明確確認／邀請兌換後才建立 Core state。Google access／
@@ -78,31 +74,24 @@ Core 已實作 Cognito JWT verifier與 gate-controlled Core App Session authenti
   transaction 與 BFF-to-Core secret。BFF 使用 Authorization Code + PKCE、state、nonce；Core 再透過
   LINE 官方 verify endpoint 驗證 ID Token、issuer、audience、expiry、nonce 與 subject。LINE email
   為 optional，且不會用來自動連結既有 Actor；暫時 access token 在 callback 結束時 best-effort revoke。
-- Browser transition 期間使用分離的 Cognito Access Token Cookie 與 App Session Cookie；Core App Session
-  登出會先 server-side revoke，成功後 BFF 才清 Cookie。Direct Google、LINE 與 App Session gates 預設關閉。
-- Development 仍只有在 `FAKE_AUTH_ENABLED=true` 時使用明確 fake actor；Cognito 關閉或
-  設定不完整時 fail closed。
+- Core App Session 登出會先 server-side revoke，再由 BFF 清 Cookie。Direct Google、LINE 與 App
+  Session gates 的 committed examples 預設關閉。
+- Development 仍只有在 `FAKE_AUTH_ENABLED=true` 時使用明確 fake actor；App Session 未啟用或設定
+  不完整時 fail closed。
 
 目前 contract 包含 direct Google／LINE handoff、pending onboarding 與 App Session logout 的已實作邊界，
-但不代表 staging provider secret、callback URL、既有 Cognito Actor migration／explicit linking 或 browser
-E2E 已部署驗證；這些仍須由環境設定與部署證據確認。Cognito refresh-token rotation 也仍不在本契約內。
+但不代表 provider secret、callback URL 或 browser E2E 已在任何雲端環境部署驗證；這些仍須由環境
+設定與部署證據確認。Owner 已確認沒有既有 Cognito Actor 需要遷移。
 
 ### LINE Login 與帳號連結
 
-Next.js BFF 與 Core 已加入預設關閉的 direct LINE Login 應用層流程。一般 LINE sign-in 不必經
-Cognito Hosted UI；既有 active LINE identity 會取得 Core-owned App Session，未知 ELDER identity 可經
+Next.js BFF 與 Core 已加入預設關閉的 direct LINE Login 應用層流程。既有 active LINE identity 會取得
+Core-owned App Session，未知 ELDER identity 可經
 明確確認建立 Core state，未知 FAMILY identity 仍須兌換有效 Family Invitation，未知 STAFF 一律拒絕。
 相同 verified email 只會觸發衝突檢查，不會自動合併或連結既有 Actor。
 
-舊的 Cognito 帳號連結流程仍只允許由已登入且具有已驗證 Email 的 Google Cognito user 發起。它使用獨立
-短效 HttpOnly signed transaction、state、nonce 與 PKCE S256；transaction 只保存發起者的
-domain-separated HMAC fingerprint，不保存 raw Cognito username、LINE subject 或 Email。
-callback 會重新確認登入目的地未變更、LINE verified Email 與既有 recovery Email 相符，再呼叫
-`AdminLinkProviderForUser`。LINE token 不保存、不記錄，流程結束時 best-effort revoke；subject
-已屬於其他 Cognito user、登入帳號中途切換或資料不一致時一律拒絕，不做 Email-based merge。
-
-`LINE_DIRECT_OIDC_ENABLED=false`、`LINE_OIDC_HANDOFF_ENABLED=false` 是 direct flow 預設值；舊流程的
-`LINE_LOGIN_ENABLED=false` 也維持關閉。這次沒有加入或宣告 hosting deployment；啟用 direct flow 前
+`LINE_DIRECT_OIDC_ENABLED=false`、`LINE_OIDC_HANDOFF_ENABLED=false` 是 committed example 預設值。
+這次沒有加入或宣告 hosting deployment；啟用 direct flow 前
 仍需設定 LINE Login Channel ID／secret、固定 callback、獨立 transaction／handoff／identity secrets、
 必要 scope 與 live sign-in 驗證。若要讓同一 Actor 新增 LINE 登入方式，仍必須完成同時驗證兩個
 Provider 的 Core-native explicit linking，不得以 email 取代。
@@ -196,6 +185,13 @@ Gate 1 Event Candidate 現採 Core-owned proposal boundary：Core 以可信 scop
 `EventCandidateProposalV1`。Proposal 不含 actor、tenant、elder、session、consent 或逐字稿；
 Runtime 不再 register／complete Core AgentRun 或 callback Core Tool。舊 `allowed_tools` 欄位僅保留
 同 major 解析相容，canonical Core path 為空陣列。這仍不是文件 10 的正式 Handoff Result。
+
+`AgentRunRequestV1.confirmed_memories` 是已接上的 bounded private context：只有
+`BASIC_VOICE` 可攜帶，最多 5 筆，且每筆只含 memory UUID、current version、type、最長 500 字
+content 與 consent version。Core 在呼叫 Runtime 前重驗 `memory:read`、active
+`LONG_TERM_MEMORY` Consent、tenant／elder、`ACTIVE`／未刪除狀態與 current active version；
+Candidate、Inactive、Deleted、superseded version 及 Knowledge／RAG turn 均不得進入。Runtime
+把內容標記成資料而非指令。現行只依更新時間取 bounded set，尚未完成語意相關性排序。
 
 ### Staging RAG retrieval
 

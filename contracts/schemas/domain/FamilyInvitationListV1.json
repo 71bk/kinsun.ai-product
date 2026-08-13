@@ -1,16 +1,77 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationListV1.json",
-  "title": "FamilyInvitationListV1",
-  "type": "object",
+  "$defs": {
+    "FamilyInvitationStatusResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "invitation_id": {
+          "format": "uuid",
+          "title": "Invitation Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ISSUED",
+            "REDEEMED",
+            "EXPIRED",
+            "REVOKED",
+            "LOCKED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "share_scope": {
+          "items": {
+            "enum": [
+              "REPORT_DAILY",
+              "REPORT_WEEKLY",
+              "REPORT_MONTHLY",
+              "REPORT_IMPORTANT_EVENT"
+            ],
+            "type": "string"
+          },
+          "title": "Share Scope",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "invitation_id",
+        "status",
+        "share_scope",
+        "expires_at",
+        "created_at"
+      ],
+      "title": "FamilyInvitationStatusResponse",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
-  "required": ["items"],
   "properties": {
     "items": {
-      "type": "array",
       "items": {
-        "$ref": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationStatusV1.json"
-      }
+        "$ref": "#/$defs/FamilyInvitationStatusResponse"
+      },
+      "title": "Items",
+      "type": "array"
     }
-  }
+  },
+  "required": [
+    "items"
+  ],
+  "title": "FamilyInvitationListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationListV1.json"
 }

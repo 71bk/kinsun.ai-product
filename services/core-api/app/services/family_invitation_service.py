@@ -10,7 +10,6 @@ from uuid import UUID
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.auth.cognito import VerifiedCognitoIdentity
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.events.outbox_writer import write_outbox_entry
 from app.models.actor import Actor
@@ -134,96 +133,6 @@ class FamilyInvitationService:
             invitation_code=code,
             share_scope=invitation.share_scope,
             expires_at=invitation.expires_at,
-        )
-
-    async def redeem(
-        self,
-        *,
-        identity: VerifiedCognitoIdentity,
-        invitation_code: str,
-        trace_id: str,
-        idempotency_key: str,
-    ) -> FamilyInvitationRedeemedResponse:
-        email = self._verified_email(identity)
-        token_hash = self._codec.hash_code(invitation_code)
-        invitation = await self._invitations.get_by_token_hash_for_update(token_hash)
-        if invitation is None:
-            self._invalid_invitation()
-
-        # Callback retries after a successful database commit are safe for the
-        # same verified Cognito subject, while every other identity sees the
-        # same generic unavailable response.
-        if invitation.status == "REDEEMED":
-            return await self._replayed_redemption(invitation, identity.subject)
-        now = self._now()
-        if invitation.status != "ISSUED" or now >= invitation.expires_at:
-            self._invalid_invitation()
-        if invitation.invitee_email_hmac is not None and not self._codec.matches(
-            invitation.invitee_email_hmac,
-            self._codec.hash_email(email),
-        ):
-            self._invalid_invitation()
-
-        # Serialize two simultaneous invitation redemptions for one Cognito
-        # identity before checking e-mail uniqueness or memberships.
-        await self._session.execute(
-            text("SELECT pg_advisory_xact_lock(hashtextextended(:subject, 0))"),
-            {"subject": identity.subject},
-        )
-        elder, consent = await self._require_live_invitation_authority(invitation, now)
-        actor = await self._resolve_or_create_family_actor(identity, email)
-        membership = await self._ensure_single_household_membership(
-            actor=actor,
-            tenant_id=invitation.tenant_id,
-            now=now,
-        )
-        relationship = await self._ensure_care_relationship(
-            actor_id=actor.id,
-            invitation=invitation,
-            now=now,
-        )
-        family_relationship = await self._ensure_family_relationship(
-            actor_id=actor.id,
-            invitation=invitation,
-            now=now,
-        )
-
-        invitation.status = "REDEEMED"
-        invitation.redeemed_by_actor_id = actor.id
-        invitation.redeemed_at = now
-        invitation.version += 1
-        await self._session.flush()
-        await write_outbox_entry(
-            self._session,
-            event_type="family_invitation.redeemed.v1",
-            aggregate_type="family_invitation",
-            aggregate_id=invitation.id,
-            aggregate_version=invitation.version,
-            tenant_id=invitation.tenant_id,
-            elder_id=elder.id,
-            actor_id=actor.id,
-            purpose="FAMILY_SHARING",
-            consent_version=consent.version,
-            payload={
-                "invitation_id": str(invitation.id),
-                "elder_id": str(elder.id),
-                "family_actor_id": str(actor.id),
-                "membership_id": str(membership.id),
-                "relationship_id": str(relationship.id),
-                "family_relationship_id": str(family_relationship.id),
-                "status": invitation.status,
-            },
-            trace_id=trace_id,
-            correlation_id=trace_id,
-            idempotency_key=idempotency_key,
-        )
-        return FamilyInvitationRedeemedResponse(
-            invitation_id=invitation.id,
-            actor_id=actor.id,
-            tenant_id=invitation.tenant_id,
-            elder_id=invitation.elder_id,
-            relationship_id=relationship.id,
-            family_relationship_id=family_relationship.id,
         )
 
     async def redeem_pending_external_identity(
@@ -475,35 +384,6 @@ class FamilyInvitationService:
             self._invalid_invitation()
         return elder, consent
 
-    async def _resolve_or_create_family_actor(
-        self,
-        identity: VerifiedCognitoIdentity,
-        email: str,
-    ) -> Actor:
-        actor = await self._session.scalar(
-            select(Actor).where(Actor.cognito_sub == identity.subject)
-        )
-        if actor is not None:
-            if actor.actor_type != "FAMILY_MEMBER" or actor.status != "ACTIVE":
-                raise ConflictError("This identity is already registered with another role")
-            return actor
-        email_owner = await self._session.scalar(
-            select(Actor).where(func.lower(Actor.email) == email)
-        )
-        if email_owner is not None:
-            raise ConflictError("This identity requires administrator review")
-        display_name = identity.display_name or email.partition("@")[0]
-        actor = Actor(
-            actor_type="FAMILY_MEMBER",
-            cognito_sub=identity.subject,
-            display_name=display_name[:120],
-            email=email,
-            status="ACTIVE",
-        )
-        self._session.add(actor)
-        await self._session.flush()
-        return actor
-
     async def _create_external_family_actor(
         self,
         *,
@@ -540,7 +420,6 @@ class FamilyInvitationService:
         display_name = pending.display_name or (email.partition("@")[0] if email else None)
         actor = Actor(
             actor_type="FAMILY_MEMBER",
-            cognito_sub=None,
             display_name=(display_name or "Family member")[:120],
             email=email,
             status="ACTIVE",
@@ -691,53 +570,6 @@ class FamilyInvitationService:
         relationship.effective_from = now
         relationship.effective_to = None
         return relationship
-
-    async def _replayed_redemption(
-        self,
-        invitation: FamilyInvitation,
-        subject: str,
-    ) -> FamilyInvitationRedeemedResponse:
-        actor = await self._session.scalar(select(Actor).where(Actor.cognito_sub == subject))
-        if actor is None or actor.id != invitation.redeemed_by_actor_id:
-            self._invalid_invitation()
-        relationship = await self._session.scalar(
-            select(CareRelationship)
-            .where(
-                CareRelationship.actor_id == actor.id,
-                CareRelationship.elder_id == invitation.elder_id,
-                CareRelationship.tenant_id == invitation.tenant_id,
-                CareRelationship.relationship_type == "FAMILY_SHARE",
-            )
-            .order_by(CareRelationship.created_at.desc())
-            .limit(1)
-        )
-        family_relationship = await self._session.scalar(
-            select(FamilyRelationship).where(
-                FamilyRelationship.elder_id == invitation.elder_id,
-                FamilyRelationship.family_actor_id == actor.id,
-                FamilyRelationship.consent_id == invitation.consent_id,
-            )
-        )
-        if relationship is None or family_relationship is None:
-            raise ConflictError("Existing invitation redemption requires administrator review")
-        return FamilyInvitationRedeemedResponse(
-            invitation_id=invitation.id,
-            actor_id=actor.id,
-            tenant_id=invitation.tenant_id,
-            elder_id=invitation.elder_id,
-            relationship_id=relationship.id,
-            family_relationship_id=family_relationship.id,
-            replayed=True,
-        )
-
-    @staticmethod
-    def _verified_email(identity: VerifiedCognitoIdentity) -> str:
-        if not identity.email_verified or identity.email is None:
-            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
-        email = identity.email.strip().casefold()
-        if not email:
-            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
-        return email
 
     @staticmethod
     def _invalid_invitation() -> None:

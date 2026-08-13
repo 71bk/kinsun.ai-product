@@ -44,6 +44,8 @@ DATA_SCHEMA_FOR = {
     ),
     "agent-run-request-extra-field.json": "agent/AgentRunRequestV1.json",
     "agent-run-request-missing-required.json": "agent/AgentRunRequestV1.json",
+    "agent-run-request-memory-with-status.json": "agent/AgentRunRequestV1.json",
+    "agent-run-request-knowledge-with-memory.json": "agent/AgentRunRequestV1.json",
     "agent-run-registration-request.json": "domain/RegisterAgentRunRequestV1.json",
     "agent-run-registration-response.json": "domain/AgentRunRegistrationV1.json",
     "agent-run-registration-with-identity.json": "domain/RegisterAgentRunRequestV1.json",
@@ -107,14 +109,6 @@ DATA_SCHEMA_FOR = {
     "retrieval-response.json": "rag/retrieval-response.schema.json",
     "retrieval-response-missing-source-url.json": "rag/retrieval-response.schema.json",
     "retrieval-response-half-populated-page-range.json": "rag/retrieval-response.schema.json",
-    "onboarding-resolve-elder-request.json": "domain/ResolveOnboardingRequestV1.json",
-    "onboarding-resolve-family-request.json": "domain/ResolveOnboardingRequestV1.json",
-    "onboarding-resolve-response.json": "domain/ResolveOnboardingV1.json",
-    "onboarding-resolve-family-response.json": "domain/ResolveOnboardingV1.json",
-    "onboarding-family-without-invitation-code.json": (
-        "domain/ResolveOnboardingRequestV1.json"
-    ),
-    "onboarding-response-mismatched-status.json": "domain/ResolveOnboardingV1.json",
     "family-invitation-create-request.json": (
         "domain/CreateFamilyInvitationRequestV1.json"
     ),

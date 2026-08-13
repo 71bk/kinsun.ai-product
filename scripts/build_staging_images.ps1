@@ -25,8 +25,7 @@ $images = @(
         Context = "."
         Tag = "kinsun-staging-frontend:$ReleaseId"
         Extra = @(
-            "--build-arg", "NEXT_PUBLIC_CONSENT_POLICY_VERSION=$ConsentPolicyVersion",
-            "--build-arg", "NEXT_PUBLIC_WS_URL="
+            "--build-arg", "NEXT_PUBLIC_CONSENT_POLICY_VERSION=$ConsentPolicyVersion"
         )
     },
     @{

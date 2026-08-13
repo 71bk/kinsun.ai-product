@@ -1,5 +1,4 @@
-import type { LineLoginLinkTransaction } from './line-login-link-transaction';
-import { lineLoginCodeChallenge } from './line-login-link-transaction';
+import { codeChallenge } from './oauth-transaction';
 
 const LINE_AUTHORIZATION_ENDPOINT = 'https://access.line.me/oauth2/v2.1/authorize';
 const LINE_TOKEN_ENDPOINT = 'https://api.line.me/oauth2/v2.1/token';
@@ -14,11 +13,6 @@ export interface LineLoginOAuthConfig {
   callbackUrl: URL;
   channelId: string;
   channelSecret: string;
-}
-
-export interface VerifiedLineLoginIdentity {
-  email: string;
-  subject: string;
 }
 
 export interface VerifiedLineOidcIdentity {
@@ -69,16 +63,11 @@ function channelSecret(): string {
   }
   if (
     value === process.env.LINE_CHANNEL_SECRET ||
-    value === process.env.LINE_IDENTITY_HMAC_SECRET ||
-    value === process.env.LINE_LOGIN_LINK_TRANSACTION_SECRET
+    value === process.env.LINE_IDENTITY_HMAC_SECRET
   ) {
     throw new Error('LINE Login channel secret must be independent');
   }
   return value;
-}
-
-export function lineLoginEnabled(): boolean {
-  return process.env.LINE_LOGIN_ENABLED?.trim().toLowerCase() === 'true';
 }
 
 export function lineDirectOidcEnabled(): boolean {
@@ -86,22 +75,18 @@ export function lineDirectOidcEnabled(): boolean {
 }
 
 export function getLineLoginOAuthConfig(
-  purpose: 'link' | 'login' | 'direct-link' = 'link',
+  purpose: 'login' | 'direct-link',
 ): LineLoginOAuthConfig {
-  if (purpose === 'link' ? !lineLoginEnabled() : !lineDirectOidcEnabled()) {
+  if (!lineDirectOidcEnabled()) {
     throw new Error('LINE Login is disabled');
   }
   const callbackUrl = safeAbsoluteUrl(
     purpose === 'login'
       ? process.env.LINE_OIDC_CALLBACK_URL
-      : purpose === 'direct-link'
-        ? process.env.LINE_ACCOUNT_LINK_CALLBACK_URL
-        : process.env.LINE_LOGIN_LINK_CALLBACK_URL,
+      : process.env.LINE_ACCOUNT_LINK_CALLBACK_URL,
     purpose === 'login'
       ? 'LINE_OIDC_CALLBACK_URL'
-      : purpose === 'direct-link'
-        ? 'LINE_ACCOUNT_LINK_CALLBACK_URL'
-        : 'LINE_LOGIN_LINK_CALLBACK_URL',
+      : 'LINE_ACCOUNT_LINK_CALLBACK_URL',
   );
   const frontendOrigin = safeAbsoluteUrl(process.env.FRONTEND_ORIGIN, 'FRONTEND_ORIGIN');
   if (
@@ -109,9 +94,7 @@ export function getLineLoginOAuthConfig(
     callbackUrl.pathname !==
       (purpose === 'login'
         ? '/backend/auth/line/callback'
-        : purpose === 'direct-link'
-          ? '/backend/auth/identities/line/callback'
-          : '/backend/auth/identities/line/callback') ||
+        : '/backend/auth/identities/line/callback') ||
     callbackUrl.search ||
     callbackUrl.hash
   ) {
@@ -131,7 +114,7 @@ export function buildLineLoginLinkAuthorizationUrl(
   target.searchParams.set('state', transaction.state);
   target.searchParams.set('scope', 'openid profile email');
   target.searchParams.set('nonce', transaction.nonce);
-  target.searchParams.set('code_challenge', lineLoginCodeChallenge(transaction));
+  target.searchParams.set('code_challenge', codeChallenge(transaction.codeVerifier));
   target.searchParams.set('code_challenge_method', 'S256');
   target.searchParams.set('max_age', '300');
   return target;
@@ -281,22 +264,6 @@ export async function exchangeLineOidcAuthorizationCode(
   transaction: LinePkceTransaction,
 ): Promise<{ identity: VerifiedLineOidcIdentity; tokenSet: LineLoginTokenSet }> {
   return exchangeAndVerifyLineOidcCode(config, code, transaction);
-}
-
-export async function exchangeAndVerifyLineLoginCode(
-  config: LineLoginOAuthConfig,
-  code: string,
-  transaction: LineLoginLinkTransaction,
-): Promise<{ identity: VerifiedLineLoginIdentity; tokenSet: LineLoginTokenSet }> {
-  const result = await exchangeAndVerifyLineOidcCode(config, code, transaction);
-  if (!result.identity.email) {
-    await revokeLineLoginToken(config, result.tokenSet.accessToken);
-    throw new Error('LINE email is unavailable');
-  }
-  return {
-    identity: { email: result.identity.email, subject: result.identity.subject },
-    tokenSet: result.tokenSet,
-  };
 }
 
 export async function revokeLineLoginToken(

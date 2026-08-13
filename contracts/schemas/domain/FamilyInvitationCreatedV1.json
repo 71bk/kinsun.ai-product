@@ -1,28 +1,52 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationCreatedV1.json",
-  "title": "FamilyInvitationCreatedV1",
-  "description": "One-time plaintext invitation code returned only by the successful create call. It is never returned by list or revoke.",
-  "type": "object",
   "additionalProperties": false,
-  "required": ["invitation_id", "invitation_code", "status", "share_scope", "expires_at"],
   "properties": {
-    "invitation_id": { "type": "string", "format": "uuid" },
+    "invitation_id": {
+      "format": "uuid",
+      "title": "Invitation Id",
+      "type": "string"
+    },
     "invitation_code": {
+      "title": "Invitation Code",
       "type": "string",
       "pattern": "^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$"
     },
-    "status": { "type": "string", "const": "ISSUED" },
+    "status": {
+      "const": "ISSUED",
+      "default": "ISSUED",
+      "title": "Status",
+      "type": "string"
+    },
     "share_scope": {
+      "items": {
+        "enum": [
+          "REPORT_DAILY",
+          "REPORT_WEEKLY",
+          "REPORT_MONTHLY",
+          "REPORT_IMPORTANT_EVENT"
+        ],
+        "type": "string"
+      },
+      "title": "Share Scope",
       "type": "array",
       "minItems": 1,
       "maxItems": 4,
-      "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "enum": ["REPORT_DAILY", "REPORT_WEEKLY", "REPORT_MONTHLY", "REPORT_IMPORTANT_EVENT"]
-      }
+      "uniqueItems": true
     },
-    "expires_at": { "type": "string", "format": "date-time" }
-  }
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "invitation_id",
+    "invitation_code",
+    "share_scope",
+    "expires_at"
+  ],
+  "title": "FamilyInvitationCreatedV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyInvitationCreatedV1.json"
 }
