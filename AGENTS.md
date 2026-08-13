@@ -18,8 +18,11 @@
     publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
   - `services/agent-runtime`：M0 單輪閉環——contract 驗證、受控 Orchestrator、Companion Agent、
     deterministic Safety Evaluator 與 Event Candidate proposal。`MODEL_PROVIDER=mock` 是本機及目前
-    staging application template 的預設；程式另有 `BedrockModelProvider`，可使用受控 Context／RAG
-    chunk 生成回答，但尚無真實 staging／production 連線證據。staging-only RAG adapter 可呼叫
+    staging application template 的預設；程式另有 `BedrockModelProvider`，以及只依 runtime
+    URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`。後者可接
+    相容本機服務或 Google Gemini API，不使用供應商 SDK、不跟隨 redirect、設定錯誤時不會
+    fallback 到 mock。兩者都可使用受控 Context／RAG chunk 生成回答，但尚無真實
+    staging／production 連線證據。staging-only RAG adapter 可呼叫
     Bedrock embedding／OpenSearch，不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
@@ -601,10 +604,11 @@ Contract 驗證分三支：`scripts/validate_contracts.py` 驗 schema 與範例�
 core-api 驗證；`scripts/verify_agent_contract_live.py` 對執行中的 agent-runtime 驗證
 （不需資料庫、憑證或網路）。新增 endpoint 時要同步在對應那支加檢查，否則它永遠只驗舊的。
 
-2026-08-13 Cognito retirement 後的本機校準結果：Core unit `752 passed`、Frontend `135 passed`、
-Infra `7 passed`；Core Ruff lint、Frontend ESLint／typecheck／production build、Infra typecheck／兩個
+2026-08-13 provider-neutral text adapter 完成後的本機校準結果：Core unit `755 passed`、
+Agent Runtime `274 passed`、Frontend `135 passed`、Infra `7 passed`；Core／Agent Runtime Ruff lint、
+Frontend ESLint／typecheck／production build、Infra typecheck／兩個
 synth、靜態 Contract 與 Core live verifier（68 operations）通過。較早且未受本次身份變更影響的
-Agent Runtime `259 passed`、RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立
+RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立
 `TEST_DATABASE_URL`，所以未對遠端 Supabase 執行破壞性的 integration rebuild；只在確認
 `actor.cognito_sub` 非空筆數為 0 後套用 fail-closed migration 至 `f2c6d8a1e490`。完整 Core Ruff
 format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 format check 已通過。

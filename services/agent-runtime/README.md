@@ -27,6 +27,44 @@ provider 時，retrieval endpoint 會明確回傳 `FAILED` fallback 與空結果
 要啟用真實檢索時，依根目錄 `.env.example` 設定 Bedrock、OpenSearch 與四個 RAG config
 路徑。
 
+## 無 AWS 的模型設定
+
+`MODEL_PROVIDER=openai-compatible` 會啟用 provider-neutral Chat Completions adapter。
+商業流程只依賴 `ModelProvider` 介面，URL、模型 ID 與 credential 都是 runtime 設定；adapter
+不使用特定供應商 SDK，也不跟隨 redirect。遠端有 API key 的端點必須是 HTTPS；無驗證的
+本機相容端點可以使用 HTTP。
+
+Google Gemini API 提供 OpenAI-compatible endpoint；模型名稱仍應依建立 key 時可用的官方清單
+選擇，不在 repository 寫死：
+
+```dotenv
+MODEL_PROVIDER=openai-compatible
+OPENAI_COMPATIBLE_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+OPENAI_COMPATIBLE_API_KEY=<runtime-secret>
+OPENAI_COMPATIBLE_MODEL_ID=<compatible-model-id>
+OPENAI_COMPATIBLE_MAX_TOKENS=512
+OPENAI_COMPATIBLE_TEMPERATURE=0.2
+OPENAI_COMPATIBLE_TIMEOUT_SECONDS=30
+```
+
+Google 的 endpoint 與 Bearer 規格以
+[Gemini API OpenAI compatibility 官方文件](https://ai.google.dev/gemini-api/docs/openai)為準。
+這條路徑只使用文字 Chat Completions，不假設相容層支援供應商專屬 Tool、Grounding 或 File API。
+
+無驗證的本機相容服務可改為：
+
+```dotenv
+MODEL_PROVIDER=openai-compatible
+OPENAI_COMPATIBLE_BASE_URL=http://127.0.0.1:<port>/v1
+OPENAI_COMPATIBLE_API_KEY=
+OPENAI_COMPATIBLE_MODEL_ID=<local-model-id>
+```
+
+Core 的 `AGENT_RUNTIME_MODEL_ID` 是 audit label，部署時應同步設成實際 model ID。API key 只可由
+本機未版控 `.env` 或部署平台 secret store 注入，不得放進 image、前端或 log。一般陪伴與
+Confirmed Memory 已可走這個 adapter；目前 knowledge RAG 仍依賴 staging Bedrock／OpenSearch，
+不會因換文字模型而自動脫離 AWS。
+
 若 `allowed_tools` 明確包含 `create_event_candidate`，Safety 允許且 Event Extractor 真的產生
 Candidate，Runtime 才會要求 `CORE_API_BASE_URL`，向 Core 註冊正式 UUID AgentRun、以同一
 UUID 執行 Core Tool，並同步完成該 AgentRun。Tool `SUCCESS`／`NO_DATA`／`BLOCKED` 對應同名
@@ -101,7 +139,8 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 - **Contract first**：Pydantic model 與 `contracts/schemas/` 的 JSON Schema 必須一致，
   由 `tests/unit/test_contract_schema_consistency.py` 守著。
 - **一般 M0 對話不持久化**；只有實際執行 allowlisted Candidate Tool 時，才先建立
-  Core-owned AgentRun。模型仍走 `MockModelProvider`，規則式輸出，不是語言模型。
+  Core-owned AgentRun。模型預設走 `MockModelProvider`；可明確切換 Bedrock 或
+  provider-neutral OpenAI-compatible adapter，不會靜默 fallback。
 - **RAG 外部依賴只在 adapter 邊界**：查詢 embedding 使用 Bedrock，hybrid retrieval 使用
   OpenSearch；設定不完整或 provider 失敗都回 no-guess fallback。
 - **Safety 是第一版 deterministic 關鍵字規則**，不是完整安全機制。命中時回 200、
@@ -119,7 +158,8 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 
 通用多 Tool 執行迴圈、Memory Candidate、Graph 查詢、Prompt Registry、Model Router、
 完整 Agent Trace 持久化（Core AgentRun register／complete lifecycle 以外）、RAG Evaluation、
-能實際使用 RAG context 生成回答的外部 Model Provider，以及 production index。
+production index。OpenAI-compatible text provider 已完成，但 RAG retrieval 本身仍是 staging-only
+AWS adapter，尚未 provider-neutral 化。
 
 `contracts/schemas/agent/HandoffEnvelopeV1` 仍是目標形狀；`contracts/schemas/tools/` 現已由
 受控的 Core Tool adapter 使用，但目前只接通 `create_event_candidate`。

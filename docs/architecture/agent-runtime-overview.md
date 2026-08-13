@@ -2,7 +2,7 @@
 
 `services/agent-runtime/` 目前是 M0 Foundation，加上一條受控的 Event Candidate Core Tool
 路徑。預設本機設定使用 `MockModelProvider`，可在沒有 AWS 服務的環境驗證主要邊界；程式另有
-可設定的 Bedrock Converse provider 與 staging-only RAG adapter，但尚無真實 AWS staging 或
+可設定的 Bedrock Converse／OpenAI-compatible text provider 與 staging-only RAG adapter，但尚無真實外部 staging 或
 production runtime 驗證，不能把 adapter 存在描述成服務已部署。
 
 ```text
@@ -45,7 +45,7 @@ Staging RAG Request
 | Orchestration | Agent 選擇、step 控制、RAG、Safety gate、受控 Candidate Tool lifecycle、狀態組裝 | `src/agent_runtime/orchestration/` |
 | Agent | Companion Agent、deterministic Event Extractor、Safety Evaluator | `src/agent_runtime/agents/` |
 | Context | Context Manifest 建構（本輪輸入、Core 授權的 Confirmed Memory、可選 RAG；僅記憶體，無持久化） | `src/agent_runtime/context/` |
-| Model | Provider 介面、預設 Mock、可設定 Bedrock Converse adapter | `src/agent_runtime/models/` |
+| Model | Provider 介面、共用安全 Prompt、預設 Mock、可設定 Bedrock Converse 或 OpenAI-compatible HTTP adapter | `src/agent_runtime/models/` |
 | Core integration | Core-owned AgentRun register／complete adapter | `src/agent_runtime/core/` |
 | Tool | Allowlisted Core Tool request builder 與 executor；目前只接 `create_event_candidate` | `src/agent_runtime/tools/` |
 | Tracing | `trace_id`、本地識別碼工具；正式 Candidate run ID 由 Core 建立 | `src/agent_runtime/tracing/` |
@@ -53,8 +53,8 @@ Staging RAG Request
 
 Agent Run 的 RAG intent gate 目前只接受明確的 `general_information` 或 `legal_reference`
 purpose，不以自由文字猜測意圖。這讓一般 `conversation` 維持原流程，也讓知識檢索不可用時
-能明確 fail closed。預設 Mock provider 不理解 RAG context；設定式
-`BedrockModelProvider` 會讀取 Context Manifest 中的 approved excerpts，仍須經 deterministic
+能明確 fail closed。預設 Mock provider 不理解 RAG context；設定式 `BedrockModelProvider` 與
+`OpenAICompatibleModelProvider` 都會讀取 Context Manifest 中的 approved excerpts，仍須經 deterministic
 Safety 與 citation 後處理。這只證明 adapter 與離線測試邊界存在，不代表真實 Bedrock、
 OpenSearch 或 production Guardrails 已驗證。
 
@@ -97,12 +97,15 @@ canonical Candidate 閉環，也不得讓 browser credential 被 Runtime 轉送�
 - `models/provider.py` — `ModelProvider` 介面
 - `models/mock_provider.py` — 預設本機規則式實作，不呼叫外部 LLM
 - `models/bedrock_provider.py` — 可設定 Bedrock Converse adapter；model ID 仍是 Owner 決策
+- `models/openai_compatible_provider.py` — provider-neutral 文字 Chat Completions adapter；URL、
+  model 與 optional Bearer key 由 runtime 注入，可接相容本機服務或 Google Gemini API
+- `models/prompting.py` — 所有文字模型共用的 Companion／RAG 安全 prompt 建構
 - `core/` — Core AgentRun register／complete adapter
 - `tools/` — allowlisted Core Tool request／result adapter
 - `rag/query_embedder.py` — Bedrock query embedding adapter
 - `rag/client.py` — SigV4 OpenSearch adapter
 
-接其他 Bedrock／AgentCore 模型或 Neptune 時新增 Provider／Adapter 實作，由設定切換。**不要把
+接其他文字模型或 Neptune 時新增 Provider／Adapter 實作，由設定切換。**不要把
 SDK 呼叫散進 orchestration 或 agent 層**，否則之後無法在沒有 AWS 憑證的環境跑測試。
 
 ## Context Manifest 的資料敏感度

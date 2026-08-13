@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 AGENT_RUNTIME_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     BEDROCK_TEXT_MODEL_ID: str | None = None
     BEDROCK_TEXT_MAX_TOKENS: int = Field(default=512, gt=0, le=4096)
     BEDROCK_TEXT_TEMPERATURE: float = Field(default=0.2, ge=0.0, le=1.0)
+    OPENAI_COMPATIBLE_BASE_URL: AnyHttpUrl | None = None
+    OPENAI_COMPATIBLE_API_KEY: SecretStr | None = None
+    OPENAI_COMPATIBLE_MODEL_ID: str | None = None
+    OPENAI_COMPATIBLE_MAX_TOKENS: int = Field(default=512, gt=0, le=4096)
+    OPENAI_COMPATIBLE_TEMPERATURE: float = Field(default=0.2, ge=0.0, le=1.0)
+    OPENAI_COMPATIBLE_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0.0, le=120.0)
     OPENSEARCH_HOST: str | None = None
     OPENSEARCH_INDEX: str | None = None
     OPENSEARCH_ALIAS: str | None = None

@@ -12,3 +12,6 @@ class ModelProvider(ABC):
     async def generate_reply(
         self, request: AgentRunRequest, context_manifest: ContextManifest, language: str
     ) -> str: ...
+
+    async def aclose(self) -> None:
+        """Release optional provider resources during application shutdown."""

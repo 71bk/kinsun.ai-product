@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -10,6 +11,8 @@ from agent_runtime.api.rag_retrievals import router as rag_retrievals_router
 from agent_runtime.middleware.correlation import CorrelationIdMiddleware
 from agent_runtime.models.bedrock_provider import build_bedrock_model_provider
 from agent_runtime.models.mock_provider import MockModelProvider
+from agent_runtime.models.openai_compatible_provider import OpenAICompatibleModelProvider
+from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
 from agent_runtime.rag.models import RagRuntimeSettings
 from agent_runtime.rag.retriever import build_retriever
@@ -19,9 +22,9 @@ logger = logging.getLogger(__name__)
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
 
-def build_provider():
+def build_provider() -> ModelProvider:
     settings = get_settings()
-    provider_key = settings.MODEL_PROVIDER.lower()
+    provider_key = settings.MODEL_PROVIDER.strip().casefold().replace("_", "-")
     if provider_key == "mock":
         return MockModelProvider()
     if provider_key == "bedrock":
@@ -35,6 +38,25 @@ def build_provider():
             model_id=settings.BEDROCK_TEXT_MODEL_ID,
             max_tokens=settings.BEDROCK_TEXT_MAX_TOKENS,
             temperature=settings.BEDROCK_TEXT_TEMPERATURE,
+        )
+    if provider_key == "openai-compatible":
+        if not settings.OPENAI_COMPATIBLE_BASE_URL or not settings.OPENAI_COMPATIBLE_MODEL_ID:
+            raise ValueError(
+                "MODEL_PROVIDER=openai-compatible requires "
+                "OPENAI_COMPATIBLE_BASE_URL and OPENAI_COMPATIBLE_MODEL_ID"
+            )
+        api_key = (
+            settings.OPENAI_COMPATIBLE_API_KEY.get_secret_value()
+            if settings.OPENAI_COMPATIBLE_API_KEY
+            else None
+        )
+        return OpenAICompatibleModelProvider(
+            base_url=str(settings.OPENAI_COMPATIBLE_BASE_URL),
+            model_id=settings.OPENAI_COMPATIBLE_MODEL_ID,
+            api_key=api_key,
+            max_tokens=settings.OPENAI_COMPATIBLE_MAX_TOKENS,
+            temperature=settings.OPENAI_COMPATIBLE_TEMPERATURE,
+            timeout_seconds=settings.OPENAI_COMPATIBLE_TIMEOUT_SECONDS,
         )
     raise ValueError(f"Unsupported MODEL_PROVIDER: {settings.MODEL_PROVIDER}")
 
@@ -88,9 +110,21 @@ def _resolve_config_path(configured_path: str) -> Path:
     return (REPOSITORY_ROOT / path).resolve()
 
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    try:
+        yield
+    finally:
+        await app.state.provider.aclose()
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="Eldercare Agent Runtime", version=settings.API_VERSION)
+    app = FastAPI(
+        title="Eldercare Agent Runtime",
+        version=settings.API_VERSION,
+        lifespan=_lifespan,
+    )
     app.add_middleware(CorrelationIdMiddleware)
     register_exception_handlers(app)
     app.include_router(health_router)

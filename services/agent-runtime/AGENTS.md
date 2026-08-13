@@ -15,6 +15,10 @@ M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證
 `MockModelProvider`；程式碼另有 `models/bedrock_provider.py`，設定
 `MODEL_PROVIDER=bedrock`、`AWS_REGION` 與 `BEDROCK_TEXT_MODEL_ID` 後才會選用。Bedrock provider
 能接收已通過 RAG 治理的 context，但尚未用真實 AWS 憑證與模型端點驗證，不得描述成已部署。
+`MODEL_PROVIDER=openai-compatible` 則使用 provider-neutral text adapter；base URL、model ID 與
+optional Bearer key 全由 runtime 設定，可接相容本機服務或 Google Gemini API。它只支援文字
+Chat Completions、不跟隨 redirect、錯誤時不會 fallback 到 mock，且帶 key 的遠端 HTTP 會在
+啟動時被拒絕。這不會改變 staging RAG 仍綁 Bedrock／OpenSearch 的現況。
 
 另有第一版 **staging-only** RAG endpoint、Bedrock query embedding 與 OpenSearch Hybrid
 Retrieval adapter，以及正式 Agent Run 的最小安全整合。只有明確標示
@@ -64,7 +68,8 @@ Core Tool client／request 相容程式，但 canonical orchestrator 不會依 `
   `tests/unit/test_contract_schema_consistency.py` 守著（含 `additionalProperties: false`
   對應 `extra="forbid"`）。
 - **外部服務只在 Provider／Adapter 邊界出現**。模型邊界包含 `models/provider.py` 的
-  `ModelProvider` 介面、`models/mock_provider.py` 與 `models/bedrock_provider.py`；RAG 邊界位於
+  `ModelProvider` 介面、`models/mock_provider.py`、`models/bedrock_provider.py` 與
+  `models/openai_compatible_provider.py`；共用安全 prompt 位於 `models/prompting.py`。RAG 邊界位於
   `rag/`。新增或調整 Bedrock、OpenSearch、Neptune 整合時，不要把 SDK 呼叫散進
   orchestration 或 agent 層。
 - Step／Tool 上限來自 `settings.py`：`MAX_AGENT_DECISIONS`、`MAX_TOOL_ROUNDS`、

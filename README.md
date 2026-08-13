@@ -23,7 +23,7 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 | 單元 | 狀態 |
 | --- | --- |
 | `services/core-api` | ✅ 主線。Direct Google／LINE OIDC、Core App Session、Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
-| `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；本機預設使用 deterministic mock，也可依環境設定切換 Bedrock provider |
+| `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；預設 deterministic mock，也可切換 Bedrock 或 provider-neutral OpenAI-compatible provider |
 | `packages/frontend` | ✅ Multi-role PWA + BFF；文字與語音主線、麥克風錄音、角色動畫及 LINE 帳號連結已接入 |
 | `services/rag-ingestion` | ⚠️ staging-only；治理簽章與 production gate 尚未完成，不可視為正式照護知識來源 |
 | `services/speech-gateway` | ✅ 已接入語音主線；華語／英語使用 AWS managed speech，台語／客語可接私有 SageMaker endpoint |
@@ -160,7 +160,8 @@ uv run ruff check .
 
 閉環是 `POST /api/v1/agent/runs` → contract 驗證 → Orchestrator → Companion Agent →
 Safety Evaluator → 回應。本機預設走 `MockModelProvider`，讓測試與開發可重現；需要真實推論時，
-由環境設定切換 Bedrock provider。Core 的 `BASIC_VOICE` 路徑可在重驗授權與長期記憶 Consent 後，
+可由環境設定切換 Bedrock，或以 provider-neutral OpenAI-compatible adapter 連到相容的本機服務／
+Google Gemini API。Core 的 `BASIC_VOICE` 路徑可在重驗授權與長期記憶 Consent 後，
 帶入最多 5 筆 current ACTIVE Confirmed Memory；Knowledge／RAG purpose 不會混入私人記憶。
 目前只按更新時間做有界選取，尚未有語意相關性排序。RAG 仍受 allowlist、簽章與 production gate 約束。
 

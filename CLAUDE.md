@@ -55,8 +55,10 @@
 - Runtime 只產生不可信 proposal；Core 重新授權、重驗 Consent 並建立 review-required Candidate。
   canonical flow 由 Core 傳 `requested_outputs`，`allowed_tools` 固定空陣列；Runtime 不 callback Core、
   不完成 AgentRun、也不寫 Domain DB。
-- 預設與 staging application template 使用 mock。`BedrockModelProvider` 已存在並可接收 RAG context，
-  但真實 Bedrock／OpenSearch 環境尚未驗證。
+- 預設與 staging application template 使用 mock。文字生成可明確選 `bedrock` 或
+  `openai-compatible`；後者只依 runtime URL／model／optional Bearer key，可接相容本機服務或
+  Google Gemini API，錯誤時不會 fallback 到 mock。真實 Bedrock／OpenSearch 仍未驗證，且
+  RAG retrieval 尚未 provider-neutral 化。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

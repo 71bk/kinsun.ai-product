@@ -6,11 +6,10 @@ import pytest
 
 from agent_runtime.contracts.models import AgentRunRequest, ContextItem, ContextManifest
 from agent_runtime.models.bedrock_provider import (
-    COMPANION_SYSTEM_PROMPT,
-    KNOWLEDGE_SYSTEM_PROMPT,
     BedrockModelProvider,
     ModelDependencyError,
 )
+from agent_runtime.models.prompting import COMPANION_SYSTEM_PROMPT, KNOWLEDGE_SYSTEM_PROMPT
 
 ELDER_ID = "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
 TENANT_ID = "6f1d2c44-9b3e-4a71-8c25-1de4f7a90b33"
