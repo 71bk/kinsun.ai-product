@@ -1,6 +1,6 @@
 # Contract 與文件 10 差異清單
 
-- 更新日期：2026-08-13
+- 更新日期：2026-08-14
 - 文件基準：`docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
 - 執行基準：目前 `services/core-api` 與 `services/agent-runtime`
 
@@ -185,6 +185,14 @@ Gate 1 Event Candidate 現採 Core-owned proposal boundary：Core 以可信 scop
 `EventCandidateProposalV1`。Proposal 不含 actor、tenant、elder、session、consent 或逐字稿；
 Runtime 不再 register／complete Core AgentRun 或 callback Core Tool。舊 `allowed_tools` 欄位僅保留
 同 major 解析相容，canonical Core path 為空陣列。這仍不是文件 10 的正式 Handoff Result。
+
+Gate 1 Memory Candidate 現有 bounded first slice：只有 Event proposal 已產生，且 Core 另外通過
+`memory:candidate:create` 與 active `LONG_TERM_MEMORY` Consent 時，才會要求 optional
+`MemoryCandidateProposalV1`。Runtime 目前只 deterministic 擷取明確固定早餐習慣；proposal 不含
+scope 或 source ID。Core 將它私下綁在 `CareEventVersion`，不立即建立 Memory；照護者 VERIFY
+來源事件後，Core 重驗當下 memory authorization／Consent 與 verified source，再建立 `CANDIDATE`。
+只有長者本人後續 `ELDER_UI` confirmation 能使它 ACTIVE。其他 Memory 類型、conflict detection、
+自動問答 E2E 與 production extraction quality gate 仍未完成。
 
 `AgentRunRequestV1.confirmed_memories` 是已接上的 bounded private context：只有
 `BASIC_VOICE` 可攜帶，最多 5 筆，且每筆只含 memory UUID、current version、type、最長 500 字

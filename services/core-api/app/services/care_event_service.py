@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import json
+import logging
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.domain.state_machine import CARE_EVENT_REVIEW_STATES
 from app.events.outbox_writer import write_outbox_entry
+from app.middleware.auth import ActorContext
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
 from app.repositories.care_event_repo import CareEventRepository
@@ -22,7 +26,12 @@ from app.schemas.care_event import (
     ReviewCareEventRequest,
 )
 from app.schemas.consent import ConsentPurpose
+from app.schemas.memory import CreateMemoryCandidateRequest
+from app.services.authorization_service import authorize_elder
 from app.services.consent_service import ConsentService
+from app.services.memory_service import MemoryService
+
+logger = logging.getLogger(__name__)
 
 CONFIDENCE_VALUES = {
     ConfidenceBand.LOW: Decimal("0.3000"),
@@ -62,6 +71,7 @@ class CareEventService:
         request: CreateCareEventCandidateRequest,
         trace_id: str,
         idempotency_key: str,
+        memory_candidate_proposal: dict[str, Any] | None = None,
     ) -> CareEvent:
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
@@ -96,6 +106,7 @@ class CareEventService:
                 event_id=event.id,
                 version=1,
                 structured_payload=request.structured_payload,
+                memory_candidate_proposal=memory_candidate_proposal,
                 evidence_text_ref=json.dumps(request.evidence_refs),
                 confidence=CONFIDENCE_VALUES[request.confidence_band],
                 created_by_actor_id=actor_id,
@@ -131,7 +142,7 @@ class CareEventService:
         self,
         *,
         event: CareEvent,
-        actor_id: UUID,
+        actor_context: ActorContext,
         request: ReviewCareEventRequest,
         trace_id: str,
         idempotency_key: str,
@@ -145,15 +156,17 @@ class CareEventService:
             purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
         )
 
+        actor_id = actor_context.actor_id
         before_version = event.current_version
+        current = await self._events.get_current_version(event)
         if request.decision == "CORRECT":
-            current = await self._events.get_current_version(event)
             event.current_version += 1
             self._events.add_version(
                 CareEventVersion(
                     event_id=event.id,
                     version=event.current_version,
                     structured_payload=request.corrected_payload,
+                    memory_candidate_proposal=None,
                     evidence_text_ref=current.evidence_text_ref,
                     confidence=current.confidence,
                     created_by_actor_id=actor_id,
@@ -189,6 +202,14 @@ class CareEventService:
             rebuild_required = ["DAILY_SUMMARY"]
 
         await self._session.flush()
+        if request.decision == "VERIFY" and current.memory_candidate_proposal is not None:
+            await self._promote_memory_candidate(
+                event=event,
+                actor_context=actor_context,
+                proposal=current.memory_candidate_proposal,
+                trace_id=trace_id,
+                idempotency_key=f"memory-candidate:{event.id}:{before_version}",
+            )
         event_name = {
             "VERIFY": "verified",
             "CORRECT": "corrected",
@@ -217,3 +238,48 @@ class CareEventService:
             idempotency_key=idempotency_key,
         )
         return review, rebuild_required
+
+    async def _promote_memory_candidate(
+        self,
+        *,
+        event: CareEvent,
+        actor_context: ActorContext,
+        proposal: dict[str, Any],
+        trace_id: str,
+        idempotency_key: str,
+    ) -> None:
+        """Create only a Candidate after live authorization, consent, and source checks."""
+        try:
+            await authorize_elder(
+                self._session,
+                actor_context,
+                event.elder_id,
+                "memory:candidate:create",
+            )
+            candidate_request = CreateMemoryCandidateRequest.model_validate(
+                {
+                    **proposal,
+                    "source_event_ids": [event.id],
+                    "possible_conflict": False,
+                    "conflict_with_memory_ids": [],
+                }
+            )
+            await MemoryService(self._session, self._tenant_id).create_candidate(
+                elder_id=event.elder_id,
+                actor_id=actor_context.actor_id,
+                request=candidate_request,
+                trace_id=trace_id,
+                idempotency_key=idempotency_key,
+            )
+        except NotFoundError:
+            # Event review remains valid even if memory authority or consent was revoked.
+            logger.info(
+                "memory candidate promotion skipped",
+                extra={"care_event_id": str(event.id), "reason_code": "MEMORY_GATE_CLOSED"},
+            )
+        except (PydanticValidationError, ValidationError):
+            # A malformed stale proposal must never block the human event review.
+            logger.warning(
+                "memory candidate promotion skipped",
+                extra={"care_event_id": str(event.id), "reason_code": "INVALID_PROPOSAL"},
+            )

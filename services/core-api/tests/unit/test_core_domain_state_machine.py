@@ -53,7 +53,8 @@ def test_voice_session_rejects_skipped_or_terminal_transitions(
 def test_memory_candidate_must_be_confirmed_before_active() -> None:
     with pytest.raises(ConflictError):
         require_memory_transition("CANDIDATE", "ACTIVE")
-    require_memory_transition("CANDIDATE", "CONFIRMED")
+    require_memory_transition("CANDIDATE", "PENDING_CONFIRMATION")
+    require_memory_transition("PENDING_CONFIRMATION", "CONFIRMED")
     require_memory_transition("CONFIRMED", "ACTIVE")
 
 

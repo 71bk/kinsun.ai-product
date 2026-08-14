@@ -163,7 +163,7 @@ async def list_memory_candidates(
     await authorize_elder(session, actor_context, elder_id, "memory:candidate:read")
     return await _list_memories(
         elder_id=elder_id,
-        statuses=["CANDIDATE", "DEFERRED"],
+        statuses=["CANDIDATE", "PENDING_CONFIRMATION", "DEFERRED"],
         cursor=cursor,
         limit=limit,
         actor_context=actor_context,

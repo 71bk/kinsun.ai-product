@@ -21,18 +21,22 @@ from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
+from app.repositories.care_event_repo import CareEventRepository
+from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
 from app.schemas.consent import ConsentPurpose
 from app.schemas.conversation import CompanionTurnResponse
 from app.services.asr_gate_service import AsrGateService
 from app.services.authorization_service import authorize_elder
+from app.services.care_event_rendering import render_reviewed_event
 from app.services.care_event_service import CareEventService
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
 
 _MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS = 5
+_MAX_VERIFIED_EVENT_CONTEXT_ITEMS = 5
 
 _ACTOR_ROLE_MAP = {
     "ELDER": "elder",
@@ -85,6 +89,13 @@ class CompanionService:
         self._runtime_client = runtime_client
         self._model_route = model_route
         self._conversations = ConversationService(session, tenant_id)
+
+    async def _trusted_profile(self, elder_id: UUID) -> tuple[str | None, str]:
+        elder = await ElderRepository(self._session, self._tenant_id).get_by_id(elder_id)
+        if elder is None:
+            raise NotFoundError("Resource not found")
+        preferred_address = elder.preferred_name.strip() if elder.preferred_name else None
+        return preferred_address or None, elder.response_length_preference
 
     async def _confirmed_memory_context(
         self,
@@ -149,7 +160,66 @@ class CompanionService:
             )
         except NotFoundError:
             return []
-        return ["event_candidate"]
+        requested_outputs = ["event_candidate"]
+        try:
+            await authorize_elder(
+                self._session,
+                actor_context,
+                conversation.elder_id,
+                "memory:candidate:create",
+            )
+            await ConsentService(self._session, self._tenant_id).require_active(
+                elder_id=conversation.elder_id,
+                purpose=ConsentPurpose.LONG_TERM_MEMORY,
+            )
+        except NotFoundError:
+            return requested_outputs
+        requested_outputs.append("memory_candidate")
+        return requested_outputs
+
+    async def _verified_event_context(
+        self,
+        *,
+        conversation: ConversationSession,
+        actor_context: ActorContext,
+        turn_purpose: str,
+    ) -> list[dict[str, object]]:
+        if turn_purpose != "BASIC_VOICE":
+            return []
+        try:
+            await authorize_elder(
+                self._session,
+                actor_context,
+                conversation.elder_id,
+                "care_event:read",
+            )
+            consent = await ConsentService(self._session, self._tenant_id).require_active(
+                elder_id=conversation.elder_id,
+                purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
+            )
+        except NotFoundError:
+            return []
+        records = await CareEventRepository(
+            self._session,
+            self._tenant_id,
+        ).list_projected_verified_context_for_elder(
+            elder_id=conversation.elder_id,
+            max_consent_version=consent.version,
+            limit=_MAX_VERIFIED_EVENT_CONTEXT_ITEMS,
+        )
+        return [
+            {
+                "event_id": str(record.event_id),
+                "version": record.version,
+                "event_type": record.event_type,
+                "summary_text": render_reviewed_event(
+                    record.event_type,
+                    record.structured_payload,
+                ),
+                "consent_version": record.consent_version,
+            }
+            for record in records
+        ]
 
     async def _authorize_asr_input(
         self,
@@ -218,6 +288,12 @@ class CompanionService:
             actor_context=actor_context,
             turn_purpose=turn_purpose,
         )
+        verified_care_events = await self._verified_event_context(
+            conversation=conversation,
+            actor_context=actor_context,
+            turn_purpose=turn_purpose,
+        )
+        preferred_address, response_length = await self._trusted_profile(conversation.elder_id)
         request_payload: dict[str, object] = {
             "schema_version": "1.0.0",
             "request_id": request_id,
@@ -232,8 +308,11 @@ class CompanionService:
             "consent_version": str(conversation.consent_version),
             "policy_version": conversation.policy_version,
             "language": _LANGUAGE_MAP[conversation.language_route],
+            "preferred_address": preferred_address,
+            "response_length": response_length,
             "input_text": input_text,
             "confirmed_memories": confirmed_memories,
+            "verified_care_events": verified_care_events,
             "allowed_tools": [],
             "requested_outputs": requested_outputs,
             "max_steps": 3,
@@ -332,6 +411,7 @@ class CompanionService:
         )
 
         proposal = runtime_result.event_candidate_proposal
+        memory_proposal = runtime_result.memory_candidate_proposal
         if (
             proposal is not None
             and "event_candidate" in requested_outputs
@@ -367,6 +447,11 @@ class CompanionService:
                     ),
                     trace_id=correlation_id,
                     idempotency_key=f"event-candidate:{agent_run_id}",
+                    memory_candidate_proposal=(
+                        memory_proposal.model_dump(mode="json")
+                        if memory_proposal is not None and "memory_candidate" in requested_outputs
+                        else None
+                    ),
                 )
 
         return CompanionTurnResponse(

@@ -18,6 +18,12 @@ class MemoryType(str, Enum):
     PERSONAL_HISTORY = "PERSONAL_HISTORY"
 
 
+class ConfidenceBand(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
 class CreateMemoryCandidateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -28,6 +34,7 @@ class CreateMemoryCandidateRequest(BaseModel):
     conflict_with_memory_ids: list[UUID] = Field(default_factory=list, max_length=16)
     confirmation_question: str = Field(min_length=1, max_length=300)
     extractor_version: str = Field(min_length=1, max_length=80)
+    confidence_band: ConfidenceBand = ConfidenceBand.MEDIUM
 
 
 class ConfirmMemoryRequest(BaseModel):
@@ -69,6 +76,7 @@ class MemoryResponse(BaseModel):
     content: str
     status: Literal[
         "CANDIDATE",
+        "PENDING_CONFIRMATION",
         "CONFIRMED",
         "ACTIVE",
         "DEFERRED",

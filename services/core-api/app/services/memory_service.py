@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -18,11 +19,18 @@ from app.models.memory import Memory, MemoryVersion
 from app.repositories.memory_repo import MemoryRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
+    ConfidenceBand,
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,
     UpdateMemoryRequest,
 )
 from app.services.consent_service import ConsentService
+
+CONFIDENCE_VALUES = {
+    ConfidenceBand.LOW: Decimal("0.3000"),
+    ConfidenceBand.MEDIUM: Decimal("0.6000"),
+    ConfidenceBand.HIGH: Decimal("0.9000"),
+}
 
 
 class MemoryService:
@@ -77,7 +85,7 @@ class MemoryService:
             elder_id=elder_id,
             tenant_id=self._tenant_id,
             memory_type=request.memory_type.value,
-            status="CANDIDATE",
+            status="PENDING_CONFIRMATION",
             current_version=1,
             consent_version=consent.version,
         )
@@ -88,6 +96,9 @@ class MemoryService:
                 memory_id=memory.id,
                 version=1,
                 content=request.normalized_content,
+                confirmation_question=request.confirmation_question,
+                extractor_version=request.extractor_version,
+                extraction_confidence=CONFIDENCE_VALUES[request.confidence_band],
                 source_event_ids=request.source_event_ids,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,
@@ -132,6 +143,10 @@ class MemoryService:
         )
         if consent.version != request.consent_version or consent.version != memory.consent_version:
             raise ConflictError("Consent version changed; create a new candidate confirmation")
+
+        if memory.status == "DEFERRED":
+            require_memory_transition(memory.status, "PENDING_CONFIRMATION")
+            memory.status = "PENDING_CONFIRMATION"
 
         await self._validate_confirmation_authority(
             memory=memory,
@@ -235,6 +250,9 @@ class MemoryService:
                 memory_id=memory.id,
                 version=memory.current_version,
                 content=request.content,
+                confirmation_question=None,
+                extractor_version=None,
+                extraction_confidence=None,
                 source_event_ids=current.source_event_ids,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,

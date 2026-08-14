@@ -28,10 +28,11 @@ CARE_EVENT_REVIEW_STATES: dict[str, str] = {
 }
 
 MEMORY_TRANSITIONS: dict[str, frozenset[str]] = {
-    "CANDIDATE": frozenset({"CONFIRMED", "DEFERRED", "REJECTED", "DELETED"}),
+    "CANDIDATE": frozenset({"PENDING_CONFIRMATION", "REJECTED", "DELETED"}),
+    "PENDING_CONFIRMATION": frozenset({"CONFIRMED", "DEFERRED", "REJECTED", "DELETED"}),
     "CONFIRMED": frozenset({"ACTIVE", "INACTIVE", "DELETED"}),
     "ACTIVE": frozenset({"INACTIVE", "DELETED"}),
-    "DEFERRED": frozenset({"CONFIRMED", "REJECTED", "DELETED"}),
+    "DEFERRED": frozenset({"PENDING_CONFIRMATION", "REJECTED", "DELETED"}),
     "REJECTED": frozenset({"DELETED"}),
     "INACTIVE": frozenset({"ACTIVE", "DELETED"}),
     "DELETED": frozenset(),

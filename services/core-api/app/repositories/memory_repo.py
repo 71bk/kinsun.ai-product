@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select
 
+from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryVersion
 from app.repositories.base import BaseRepository
 
@@ -126,6 +127,16 @@ class MemoryRepository(BaseRepository):
                 and_(
                     MemoryVersion.memory_id == Memory.id,
                     MemoryVersion.version == Memory.current_version,
+                ),
+            )
+            .join(
+                GraphProjectionRecord,
+                and_(
+                    GraphProjectionRecord.source_type == "memory",
+                    GraphProjectionRecord.source_id == Memory.id,
+                    GraphProjectionRecord.source_version == Memory.current_version,
+                    GraphProjectionRecord.projection_status == "SYNCED",
+                    GraphProjectionRecord.graph_key.is_not(None),
                 ),
             )
             .where(

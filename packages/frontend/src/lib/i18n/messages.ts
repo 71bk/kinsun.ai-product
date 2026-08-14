@@ -139,6 +139,8 @@ const zhHant = {
   'elderDetail.summaryNoItems': '沒有可顯示的來源支持項目。',
   'elderDetail.dataGaps': '資料缺口：{fields}',
   'elderDetail.conflictCount': '有 {count} 筆來源衝突標記，請由照護人員覆核。',
+  'error.generateSummaryFailed': '每日摘要產生失敗，請重新整理後再試一次。',
+  'toast.summaryGenerated': '已產生今日待覆核摘要。',
   'careSetting.DAYCARE': '日間照護',
   'careSetting.COMMUNITY': '社區照護',
   'careSetting.HOME_CARE': '居家照護',
@@ -263,6 +265,8 @@ const zhHant = {
   'summaryReview.confirmTitle': '確認摘要覆核？',
   'summaryReview.confirmDescription':
     '驗證只會把摘要移至 READY；不會直接發布家屬報表。撤回後摘要內容不再成立。',
+  'summaryReview.generateToday': '產生今日摘要',
+  'summaryReview.sourceRefs': '來源事件：{refs}',
 
   // ---- home-care assignments ----
   'assignments.title': '派案行程',
@@ -741,6 +745,8 @@ const en: Record<MessageKey, string> = {
   'elderDetail.dataGaps': 'Data gaps: {fields}',
   'elderDetail.conflictCount':
     '{count} source conflict marker(s) require review by a care professional.',
+  'error.generateSummaryFailed': 'The daily summary could not be generated. Reload and try again.',
+  'toast.summaryGenerated': "Today's review draft was generated.",
   'careSetting.DAYCARE': 'Day care',
   'careSetting.COMMUNITY': 'Community care',
   'careSetting.HOME_CARE': 'Home care',
@@ -856,6 +862,8 @@ const en: Record<MessageKey, string> = {
   'summaryReview.confirmTitle': 'Confirm this summary review?',
   'summaryReview.confirmDescription':
     'Verification moves the summary to READY only; it does not publish a family report. A withdrawn summary no longer stands.',
+  'summaryReview.generateToday': "Generate today's summary",
+  'summaryReview.sourceRefs': 'Source events: {refs}',
 
   'assignments.title': 'Assignments',
   'assignments.description':

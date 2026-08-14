@@ -77,7 +77,7 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence() 
         elder_id=uuid4(),
         current_version=2,
         consent_version=3,
-        status="CANDIDATE",
+        status="PENDING_CONFIRMATION",
         confirmed_by_actor_id=None,
         confirmed_at=None,
         confirmation_method=None,

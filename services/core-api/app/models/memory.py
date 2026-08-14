@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -65,6 +66,9 @@ class MemoryVersion(Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    confirmation_question: Mapped[str | None] = mapped_column(String(300))
+    extractor_version: Mapped[str | None] = mapped_column(String(80))
+    extraction_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     source_event_ids: Mapped[list[uuid.UUID]] = mapped_column(
         ARRAY(UUID(as_uuid=True)),
         server_default=sa.text("'{}'"),

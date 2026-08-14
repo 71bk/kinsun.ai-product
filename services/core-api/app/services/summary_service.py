@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,11 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictError, ValidationError
 from app.domain.state_machine import require_summary_transition
 from app.events.outbox_writer import write_outbox_entry
-from app.models.care_event import CareEvent, ReviewDecision
+from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
 from app.repositories.summary_repo import SummaryRepository
 from app.schemas.consent import ConsentPurpose
-from app.schemas.summary import CreateSummaryDraftRequest, ReviewSummaryRequest
+from app.schemas.summary import CreateSummaryDraftRequest, ReviewSummaryRequest, SummaryItem
+from app.services.care_event_rendering import (
+    SUMMARY_CATEGORY_BY_EVENT_TYPE,
+    render_reviewed_event,
+)
 from app.services.consent_service import ConsentService
 
 
@@ -41,6 +46,76 @@ class SummaryService:
 
     async def list_for_date(self, **kwargs) -> list[DailySummary]:
         return await self._summaries.list_for_date(**kwargs)
+
+    async def generate_from_verified_events(
+        self,
+        *,
+        elder_id: UUID,
+        actor_id: UUID,
+        summary_date: date,
+        trace_id: str,
+        idempotency_key: str,
+    ) -> DailySummary:
+        """Create a non-inferential draft from current reviewed event versions."""
+
+        taipei = ZoneInfo("Asia/Taipei")
+        starts_at = datetime.combine(summary_date, time.min, taipei).astimezone(UTC)
+        ends_at = datetime.combine(summary_date, time.max, taipei).astimezone(UTC)
+        effective_time = func.coalesce(CareEvent.event_time, CareEvent.created_at)
+        rows = (
+            await self._session.execute(
+                select(CareEvent, CareEventVersion)
+                .join(
+                    CareEventVersion,
+                    (CareEventVersion.event_id == CareEvent.id)
+                    & (CareEventVersion.version == CareEvent.current_version),
+                )
+                .where(
+                    CareEvent.elder_id == elder_id,
+                    CareEvent.tenant_id == self._tenant_id,
+                    CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
+                    effective_time >= starts_at,
+                    effective_time <= ends_at,
+                )
+                .order_by(effective_time, CareEvent.id)
+                .limit(32)
+            )
+        ).all()
+        items = [
+            SummaryItem(
+                category=SUMMARY_CATEGORY_BY_EVENT_TYPE.get(
+                    event.event_type,
+                    "IMPORTANT_EVENT",
+                ),
+                text=render_reviewed_event(event.event_type, version.structured_payload),
+                source_event_ids=[event.id],
+                data_status="PRESENT",
+            )
+            for event, version in rows
+        ]
+        present_categories = {item.category for item in items}
+        expected_categories = {
+            "MEAL",
+            "ACTIVITY",
+            "SLEEP",
+            "MEDICATION_STATEMENT",
+            "SOCIAL",
+        }
+        request = CreateSummaryDraftRequest(
+            summary_date=summary_date,
+            items=items,
+            missing_fields=sorted(expected_categories - present_categories),
+            conflict_flags=[],
+            model_version="deterministic-summary-v1",
+            prompt_version=None,
+        )
+        return await self.create_draft(
+            elder_id=elder_id,
+            actor_id=actor_id,
+            request=request,
+            trace_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
 
     async def create_draft(
         self,

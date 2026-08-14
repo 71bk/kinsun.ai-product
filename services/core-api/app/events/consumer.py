@@ -64,7 +64,10 @@ class DomainEvent(BaseModel):
 
     event_id: UUID
     event_type: str = Field(
-        pattern=r"^[a-z][a-z0-9.-]+\.v[1-9][0-9]*$",
+        # Underscore remains accepted for immutable legacy
+        # ``family_invitation.*`` events. New producers use dot-separated
+        # names, but consumers must be able to replay the historical alias.
+        pattern=r"^[a-z][a-z0-9._-]+\.v[1-9][0-9]*$",
         max_length=160,
     )
     event_version: Literal[1]

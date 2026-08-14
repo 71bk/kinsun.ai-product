@@ -107,7 +107,7 @@ class FamilyInvitationService:
         await self._session.flush()
         await write_outbox_entry(
             self._session,
-            event_type="family_invitation.issued.v1",
+            event_type="family.invitation.issued.v1",
             aggregate_type="family_invitation",
             aggregate_id=invitation.id,
             aggregate_version=invitation.version,
@@ -200,7 +200,7 @@ class FamilyInvitationService:
         await self._session.flush()
         await write_outbox_entry(
             self._session,
-            event_type="family_invitation.redeemed.v1",
+            event_type="family.invitation.redeemed.v1",
             aggregate_type="family_invitation",
             aggregate_id=invitation.id,
             aggregate_version=invitation.version,
@@ -313,7 +313,7 @@ class FamilyInvitationService:
         await self._session.flush()
         await write_outbox_entry(
             self._session,
-            event_type="family_invitation.revoked.v1",
+            event_type="family.invitation.revoked.v1",
             aggregate_type="family_invitation",
             aggregate_id=invitation.id,
             aggregate_version=invitation.version,

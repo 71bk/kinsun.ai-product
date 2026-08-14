@@ -20,6 +20,7 @@ from app.middleware.auth import ActorContext
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.summary import (
     CreateSummaryDraftRequest,
+    GenerateSummaryRequest,
     RebuildSummaryRequest,
     ReviewSummaryRequest,
     SummaryListResponse,
@@ -102,6 +103,53 @@ async def create_summary_draft(
             elder_id=elder_id,
             actor_id=actor_context.actor_id,
             request=request,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+        )
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="daily_summary",
+            resource_id=summary.id,
+            response_status=status.HTTP_201_CREATED,
+            response_body={"summary_id": str(summary.id), "version": summary.current_version},
+        )
+    return success((await _response(service, summary)).model_dump(mode="json"))
+
+
+@router.post(
+    "/elders/{elder_id}/summaries/generate",
+    status_code=status.HTTP_201_CREATED,
+)
+async def generate_summary(
+    request: GenerateSummaryRequest,
+    elder_id: UUID = Path(...),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    actor_context: ActorContext = Depends(require_active_actor),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """Human-triggered deterministic draft; it never publishes a family report."""
+
+    await authorize_elder(session, actor_context, elder_id, "summary:review")
+    idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="generate_daily_summary",
+        payload={"elder_id": elder_id, **request.model_dump(mode="json")},
+    )
+    service = SummaryService(session, actor_context.tenant_id)
+    if replay.replayed:
+        summary = (
+            await service.get(elder_id, replay.resource_id)
+            if replay.resource_id is not None
+            else None
+        )
+        if summary is None:
+            raise NotFoundError("Resource not found")
+    else:
+        summary = await service.generate_from_verified_events(
+            elder_id=elder_id,
+            actor_id=actor_context.actor_id,
+            summary_date=request.summary_date,
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )

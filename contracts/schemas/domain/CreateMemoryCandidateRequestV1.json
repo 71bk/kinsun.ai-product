@@ -1,5 +1,14 @@
 {
   "$defs": {
+    "ConfidenceBand": {
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "ConfidenceBand",
+      "type": "string"
+    },
     "MemoryType": {
       "enum": [
         "PREFERENCE",
@@ -58,6 +67,10 @@
       "minLength": 1,
       "title": "Extractor Version",
       "type": "string"
+    },
+    "confidence_band": {
+      "$ref": "#/$defs/ConfidenceBand",
+      "default": "MEDIUM"
     }
   },
   "required": [

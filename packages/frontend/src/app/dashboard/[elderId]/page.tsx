@@ -33,6 +33,7 @@ import {
   type MemoryView,
 } from '@/lib/api/memories';
 import {
+  generateSummary,
   listSummaries,
   reviewSummary,
   type ReviewSummaryDecision,
@@ -239,6 +240,28 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     }
   }
 
+  async function handleGenerateSummary() {
+    setSummaryBusy(true);
+    try {
+      const dateParts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(new Date());
+      const part = (type: 'year' | 'month' | 'day') =>
+        dateParts.find((item) => item.type === type)?.value ?? '';
+      const summaryDate = `${part('year')}-${part('month')}-${part('day')}`;
+      await generateSummary(apiConfig, elderId, summaryDate);
+      loadSummaries();
+      setToastKey('toast.summaryGenerated');
+    } catch (error) {
+      setErrorKey(describeError(error, 'error.generateSummaryFailed'));
+    } finally {
+      setSummaryBusy(false);
+    }
+  }
+
   if (errorKey === 'error.noElderDataPermission') {
     return (
       <main className={styles.denied}>
@@ -381,6 +404,16 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
           ) : (
             <div className={styles.summaryList}>
               <p className={styles.notice}>{t('elderDetail.summaryNotice')}</p>
+              {canReviewSummaries && (
+                <button
+                  className={styles.primaryButton}
+                  disabled={summaryBusy}
+                  onClick={() => void handleGenerateSummary()}
+                  type="button"
+                >
+                  {t('summaryReview.generateToday')}
+                </button>
+              )}
               {summaries.length === 0 && (
                 <EmptyState
                   description={t('elderDetail.summaryEmpty')}
@@ -433,6 +466,13 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
                             <span>{item.text}</span>
                             <span className={styles.dataStatus}>
                               {t(`dataStatus.${item.dataStatus}` as MessageKey)}
+                            </span>
+                            <span className={styles.dataStatus}>
+                              {t('summaryReview.sourceRefs', {
+                                refs: item.sourceEventIds
+                                  .map((sourceId) => sourceId.slice(0, 8))
+                                  .join(listSeparator),
+                              })}
                             </span>
                           </li>
                         ))}

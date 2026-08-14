@@ -70,6 +70,7 @@ class CareEventVersion(Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     structured_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    memory_candidate_proposal: Mapped[dict | None] = mapped_column(JSONB)
     evidence_text_ref: Mapped[str | None] = mapped_column(Text)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     created_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(

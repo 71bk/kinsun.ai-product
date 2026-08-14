@@ -34,6 +34,7 @@
     "status": {
       "enum": [
         "CANDIDATE",
+        "PENDING_CONFIRMATION",
         "CONFIRMED",
         "ACTIVE",
         "DEFERRED",

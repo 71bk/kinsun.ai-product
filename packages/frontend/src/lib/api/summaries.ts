@@ -114,3 +114,20 @@ export async function reviewSummary(
   );
   return toSummaryView(result);
 }
+
+export async function generateSummary(
+  config: ApiConfig,
+  elderId: string,
+  summaryDate: string,
+): Promise<SummaryView> {
+  const result = await apiFetch<CoreSummary>(
+    config,
+    `/api/v1/elders/${elderId}/summaries/generate`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('summary-generate') },
+      body: JSON.stringify({ summary_date: summaryDate }),
+    },
+  );
+  return toSummaryView(result);
+}

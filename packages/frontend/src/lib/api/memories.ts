@@ -8,7 +8,7 @@ export type CoreMemoryType =
   | 'PERSONAL_HISTORY';
 
 export type CoreMemoryStatus =
-  'CANDIDATE' | 'CONFIRMED' | 'ACTIVE' | 'DEFERRED' | 'REJECTED' | 'INACTIVE' | 'DELETED';
+  'CANDIDATE' | 'PENDING_CONFIRMATION' | 'CONFIRMED' | 'ACTIVE' | 'DEFERRED' | 'REJECTED' | 'INACTIVE' | 'DELETED';
 
 interface CoreMemory {
   memory_id: string;

@@ -40,4 +40,7 @@ async def test_active_context_query_is_tenant_scoped_and_bounded() -> None:
     assert "memory_version.valid_to IS NULL" in compiled
     assert "char_length(" in compiled
     assert "memory_version.content" in compiled
+    assert "graph_projection_record" in compiled
+    assert "graph_projection_record.projection_status" in compiled
+    assert "graph_projection_record.source_version = eldercare_ai.memory.current_version" in compiled
     assert statement._limit_clause.value == 5

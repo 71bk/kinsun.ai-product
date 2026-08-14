@@ -3026,6 +3026,84 @@
         ]
       }
     },
+    "/api/v1/elders/{elder_id}/summaries/generate": {
+      "post": {
+        "tags": [
+          "summaries"
+        ],
+        "summary": "Generate Summary",
+        "description": "Human-triggered deterministic draft; it never publishes a family report.",
+        "operationId": "generate_summary_api_v1_elders__elder_id__summaries_generate_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateSummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Generate Summary Api V1 Elders  Elder Id  Summaries Generate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/elders/{elder_id}/summaries": {
       "get": {
         "tags": [
@@ -4967,6 +5045,21 @@
           "source_ids"
         ],
         "title": "FamilyReportItem"
+      },
+      "GenerateSummaryRequest": {
+        "properties": {
+          "summary_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Summary Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary_date"
+        ],
+        "title": "GenerateSummaryRequest"
       },
       "GoogleOidcHandoffRequest": {
         "properties": {

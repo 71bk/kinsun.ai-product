@@ -50,6 +50,12 @@ class RebuildSummaryRequest(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class GenerateSummaryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    summary_date: date
+
+
 class ReviewSummaryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

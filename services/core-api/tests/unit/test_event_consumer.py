@@ -42,6 +42,12 @@ def test_domain_event_rejects_nested_restricted_data() -> None:
         _event(payload={"context": {"transcript": "restricted"}})
 
 
+def test_domain_event_accepts_immutable_legacy_family_invitation_name() -> None:
+    legacy = _event(event_type="family_invitation.issued.v1")
+
+    assert legacy.event_type == "family_invitation.issued.v1"
+
+
 def test_consumer_name_is_stable_and_bounded() -> None:
     with pytest.raises(ValueError):
         IdempotentEventConsumer(AsyncMock(), "Projection Consumer!")

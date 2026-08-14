@@ -277,7 +277,7 @@ async def review_care_event(
     else:
         review, rebuild_required = await service.review(
             event=event,
-            actor_id=actor_context.actor_id,
+            actor_context=actor_context,
             request=request,
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,

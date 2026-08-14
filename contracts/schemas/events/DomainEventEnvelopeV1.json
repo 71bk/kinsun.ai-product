@@ -30,7 +30,7 @@
     },
     "event_type": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9.-]+\\.v[1-9][0-9]*$",
+      "pattern": "^[a-z][a-z0-9._-]+\\.v[1-9][0-9]*$",
       "maxLength": 160
     },
     "event_version": {
