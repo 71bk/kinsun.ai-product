@@ -2,6 +2,7 @@ import { logAuthDiagnostic } from './auth-diagnostics';
 
 const START_PATH = '/api/v1/internal/auth/kinsun/email/start';
 const COMPLETE_PATH = '/api/v1/internal/auth/kinsun/email/complete';
+const PASSWORD_LOGIN_PATH = '/api/v1/internal/auth/kinsun/password/login';
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 64 * 1024;
 const CHALLENGE_PATTERN = /^ke1_[A-Za-z0-9_-]{43}$/;
@@ -29,7 +30,9 @@ export function kinsunNativeAuthEnabled(): boolean {
   return process.env.KINSUN_NATIVE_AUTH_ENABLED?.trim().toLowerCase() === 'true';
 }
 
-function coreTarget(path: typeof START_PATH | typeof COMPLETE_PATH): URL {
+type CoreAuthPath = typeof START_PATH | typeof COMPLETE_PATH | typeof PASSWORD_LOGIN_PATH;
+
+function coreTarget(path: CoreAuthPath): URL {
   const value = process.env.CORE_API_INTERNAL_URL;
   if (!value) throw new Error('Kinsun authentication is unavailable');
   const base = new URL(value);
@@ -68,7 +71,7 @@ function timestamp(value: unknown): string | null {
   return Number.isFinite(Date.parse(value)) ? value : null;
 }
 
-async function postCore(path: typeof START_PATH | typeof COMPLETE_PATH, body: unknown) {
+async function postCore(path: CoreAuthPath, body: unknown) {
   let response: Response;
   try {
     response = await fetch(coreTarget(path), {
@@ -136,13 +139,39 @@ export async function startKinsunEmailAuth(input: {
 export async function completeKinsunEmailAuth(input: {
   challengeToken: string;
   verificationCode: string;
+  password: string;
   invitationCode?: string;
 }): Promise<CompletedKinsunEmailAuth> {
   const data = dataRecord(
     await postCore(COMPLETE_PATH, {
       challenge_token: input.challengeToken,
       verification_code: input.verificationCode,
+      password: input.password,
       ...(input.invitationCode ? { invitation_code: input.invitationCode } : {}),
+    }),
+  );
+  const idleExpiresAt = timestamp(data?.idle_expires_at);
+  const absoluteExpiresAt = timestamp(data?.absolute_expires_at);
+  if (
+    data?.status !== 'AUTHENTICATED' ||
+    typeof data.session_token !== 'string' ||
+    !APP_SESSION_PATTERN.test(data.session_token) ||
+    !idleExpiresAt ||
+    !absoluteExpiresAt
+  ) {
+    throw new KinsunCoreAuthError(502);
+  }
+  return { sessionToken: data.session_token, idleExpiresAt, absoluteExpiresAt };
+}
+
+export async function loginWithKinsunPassword(input: {
+  email: string;
+  password: string;
+}): Promise<CompletedKinsunEmailAuth> {
+  const data = dataRecord(
+    await postCore(PASSWORD_LOGIN_PATH, {
+      email: input.email,
+      password: input.password,
     }),
   );
   const idleExpiresAt = timestamp(data?.idle_expires_at);

@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CORE_API_ROOT = REPO_ROOT / "services" / "core-api"
 sys.path.insert(0, str(CORE_API_ROOT))
 
+from app.core.config import get_settings  # noqa: E402
 from app.models.actor import Actor  # noqa: E402
 from app.models.care_assignment import CareAssignment  # noqa: E402
 from app.models.care_event import CareEvent, CareEventVersion  # noqa: E402
@@ -25,15 +26,19 @@ from app.models.care_relationship import CareRelationship  # noqa: E402
 from app.models.care_unit import CareUnit  # noqa: E402
 from app.models.consent import ConsentGrant  # noqa: E402
 from app.models.elder import Elder  # noqa: E402
+from app.models.line_identity import ExternalIdentity  # noqa: E402
 from app.models.membership import ActorTenantMembership  # noqa: E402
 from app.models.memory import Memory, MemoryVersion  # noqa: E402
 from app.models.outbox import OutboxEvent  # noqa: E402
+from app.models.password_credential import PasswordCredential  # noqa: E402
 from app.models.policy import PolicyRegistry  # noqa: E402
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: E402
 from app.models.summary import DailySummary, SummaryVersion  # noqa: E402
 from app.models.tenant import Tenant  # noqa: E402
+from app.services.kinsun_identity_codec import KinsunIdentityCodec  # noqa: E402
+from app.services.password_hasher import Argon2idPolicy, PasswordHasher  # noqa: E402
 
-EXPECTED_REVISION = "9b2e4c6d8f10"
+EXPECTED_REVISION = "b8d0e4f6a213"
 MANIFEST_PATH = REPO_ROOT / "data" / "seed" / "demo_ids.json"
 ALLOWED_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 E2E_DATABASE_PREFIX = "kinsun_frontend_e2e_"
@@ -63,19 +68,117 @@ def _database_url() -> str:
         raise RuntimeError("DATABASE_URL must use postgresql+asyncpg")
     database_name = parsed.path.removeprefix("/")
     allow_e2e = os.getenv("KINSUN_ALLOW_SYNTHETIC_E2E_SEED", "false").lower() == "true"
-    allowed_database = database_name == "kinsun" or (
-        allow_e2e and database_name.startswith(E2E_DATABASE_PREFIX)
+    allowed_local_database = parsed.hostname in ALLOWED_LOCAL_HOSTS and (
+        database_name == "kinsun"
+        or (
+            allow_e2e
+            and database_name.startswith(E2E_DATABASE_PREFIX)
+        )
     )
-    if parsed.hostname not in ALLOWED_LOCAL_HOSTS or not allowed_database:
+    allow_remote = os.getenv("KINSUN_ALLOW_REMOTE_DEMO_SEED", "false").lower() == "true"
+    allowed_supabase_database = (
+        allow_remote
+        and (parsed.hostname or "").endswith(".supabase.com")
+        and database_name == "postgres"
+    )
+    allowed_database = allowed_local_database or allowed_supabase_database
+    if not allowed_database:
         raise RuntimeError(
-            "Demo seed is restricted to local kinsun; synthetic E2E databases require "
-            "KINSUN_ALLOW_SYNTHETIC_E2E_SEED=true and the kinsun_frontend_e2e_ prefix"
+            "Demo seed requires local kinsun, an opted-in synthetic E2E database, or an "
+            "explicitly opted-in Supabase development database"
         )
     return value
 
 
 def _id(value: str) -> UUID:
     return UUID(value)
+
+
+async def _seed_demo_accounts(
+    session: AsyncSession,
+    *,
+    actors: dict[str, Actor],
+    now: datetime,
+) -> list[str]:
+    password = os.getenv("DEMO_ACCOUNT_PASSWORD", "")
+    if not password:
+        return []
+    settings = get_settings()
+    if not settings.kinsun_native_auth_enabled:
+        raise RuntimeError(
+            "KINSUN_NATIVE_AUTH_ENABLED must be true when DEMO_ACCOUNT_PASSWORD is set"
+        )
+    identity_codec = KinsunIdentityCodec(
+        settings.kinsun_identity_hmac_secret,
+        settings.kinsun_identity_hmac_key_version,
+    )
+    password_hasher = PasswordHasher(
+        Argon2idPolicy(
+            parameter_version=settings.kinsun_password_parameter_version,
+            memory_cost_kib=settings.kinsun_password_memory_cost_kib,
+            iterations=settings.kinsun_password_iterations,
+            lanes=settings.kinsun_password_lanes,
+        )
+    )
+    specifications = [
+        (
+            "elder.demo@kinsun.local",
+            "lin_elder",
+            "29000000-0000-4000-8000-000000000001",
+            "2a000000-0000-4000-8000-000000000001",
+        ),
+        (
+            "staff.demo@kinsun.local",
+            "daycare_worker",
+            "29000000-0000-4000-8000-000000000010",
+            "2a000000-0000-4000-8000-000000000010",
+        ),
+        (
+            "family.demo@kinsun.local",
+            "chen_family",
+            "29000000-0000-4000-8000-000000000012",
+            "2a000000-0000-4000-8000-000000000012",
+        ),
+    ]
+    emails: list[str] = []
+    for email, actor_key, identity_id, credential_id in specifications:
+        actor = actors[actor_key]
+        normalized_email = identity_codec.normalize_email(email)
+        actor.email = normalized_email
+        session.add(
+            ExternalIdentity(
+                id=_id(identity_id),
+                provider="KINSUN",
+                external_subject_digest=identity_codec.digest_email(normalized_email),
+                digest_key_version=identity_codec.key_version,
+                actor_id=actor.id,
+                status="ACTIVE",
+                linked_at=now,
+                last_seen_at=None,
+                encrypted_external_subject=None,
+                revoked_at=None,
+                version=1,
+            )
+        )
+        session.add(
+            PasswordCredential(
+                id=_id(credential_id),
+                actor_id=actor.id,
+                password_hash=password_hasher.hash(password),
+                algorithm="ARGON2ID",
+                parameter_version=password_hasher.policy.parameter_version,
+                status="ACTIVE",
+                failed_attempt_count=0,
+                locked_until=None,
+                password_changed_at=now,
+                last_verified_at=None,
+                revoked_at=None,
+                version=1,
+            )
+        )
+        emails.append(normalized_email)
+    await session.flush()
+    return emails
 
 
 async def _assert_empty_and_current(
@@ -99,7 +202,7 @@ async def _assert_empty_and_current(
         )
 
 
-async def _seed(session: AsyncSession, manifest: dict) -> None:
+async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
     now = datetime.now(UTC).replace(microsecond=0)
     today = date.today()
 
@@ -154,6 +257,12 @@ async def _seed(session: AsyncSession, manifest: dict) -> None:
     ]
     session.add_all([*tenants, *actors])
     await session.flush()
+    actors_by_key = dict(zip(actor_ids, actors, strict=True))
+    demo_accounts = await _seed_demo_accounts(
+        session,
+        actors=actors_by_key,
+        now=now,
+    )
 
     units = [
         CareUnit(
@@ -191,7 +300,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> None:
         ),
         Elder(
             id=elder_ids["張阿姨"],
-            actor_id=actor_ids["zhang_elder"],
+            actor_id=None,
             tenant_id=daycare_tenant_id,
             primary_care_unit_id=unit_ids["幸福日照中心"],
             display_name="張阿姨",
@@ -731,6 +840,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> None:
             "elder_id": elder_ids["陳伯伯"],
         },
     )
+    return demo_accounts
     notification_ids = {
         key: _id(value) for key, value in manifest["notifications"].items()
     }
@@ -796,7 +906,7 @@ async def main() -> None:
     try:
         async with session_factory() as session:
             async with session.begin():
-                await _seed(session, manifest)
+                demo_accounts = await _seed(session, manifest)
     finally:
         await engine.dispose()
     print(
@@ -807,6 +917,7 @@ async def main() -> None:
                 "manifest": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
                 "elder_ids": manifest["elders"],
                 "report_ids": manifest["reports"],
+                "demo_accounts": demo_accounts,
             },
             ensure_ascii=False,
         )

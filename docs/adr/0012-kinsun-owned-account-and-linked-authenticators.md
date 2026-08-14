@@ -5,7 +5,8 @@
 - Owner: Project owner
 - Supersedes: ADR 0010 only where it selected third-party OIDC as the primary account-creation entry point
 - Partially superseded by: ADR 0013, only where this ADR treated the domain profile／`ELDER` role as part of every account and used `elder registration` as the canonical rollout
-- Still valid: Kinsun-owned accounts, optional linked authenticators, verified Email OTP, Core-owned opaque App Session, no automatic email linking, and the development-only synthetic reset policy
+- Superseded by: ADR 0015 only where this ADR selected passwordless Email OTP as the primary Kinsun authenticator
+- Still valid: Kinsun-owned accounts, optional linked authenticators, Core-owned opaque App Session, no automatic email linking, and the development-only synthetic reset policy
 
 ## Context
 

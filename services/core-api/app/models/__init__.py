@@ -40,6 +40,7 @@ from app.models.notification import (  # noqa: F401
     NotificationPreference,
 )
 from app.models.outbox import OutboxEvent  # noqa: F401
+from app.models.password_credential import PasswordCredential  # noqa: F401
 from app.models.pending_identity import PendingExternalIdentity  # noqa: F401
 from app.models.policy import PolicyRegistry  # noqa: F401
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: F401

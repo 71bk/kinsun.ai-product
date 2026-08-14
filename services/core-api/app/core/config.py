@@ -105,6 +105,12 @@ class Settings(BaseSettings):
     kinsun_synthetic_email_code_secret: str = ""
     kinsun_email_challenge_ttl_seconds: int = Field(default=600, ge=120, le=900)
     kinsun_email_challenge_max_attempts: int = Field(default=5, ge=1, le=5)
+    kinsun_password_parameter_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    kinsun_password_memory_cost_kib: int = Field(default=65_536, ge=8_192, le=1_048_576)
+    kinsun_password_iterations: int = Field(default=3, ge=1, le=10)
+    kinsun_password_lanes: int = Field(default=4, ge=1, le=16)
+    kinsun_password_max_attempts: int = Field(default=5, ge=3, le=20)
+    kinsun_password_lockout_seconds: int = Field(default=900, ge=30, le=86_400)
 
     # Provider-neutral Core-owned browser sessions. The authenticator remains
     # fail-closed until this explicit rollout gate is enabled.
@@ -249,6 +255,11 @@ class Settings(BaseSettings):
                 )
             if len(kinsun_secrets) != 4:
                 raise ValueError("Kinsun authentication secrets must be independent")
+            if self.kinsun_password_parameter_version != 1:
+                raise ValueError(
+                    "KINSUN_PASSWORD_PARAMETER_VERSION must remain 1; "
+                    "a change requires an explicit credential rehash rollout"
+                )
         if (
             self.google_identity_hmac_secret
             and self.google_oidc_handoff_secret

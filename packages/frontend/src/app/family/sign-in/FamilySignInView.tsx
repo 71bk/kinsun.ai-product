@@ -1,7 +1,16 @@
 'use client';
 
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
+import { touchLinkStyle } from '@/components/touch-link';
 import { useLocale } from '@/lib/i18n/locale-context';
+
+const inputStyle = {
+  boxSizing: 'border-box' as const,
+  fontSize: 18,
+  marginBottom: 16,
+  padding: 12,
+  width: '100%',
+};
 
 export function FamilySignInView({
   nativeEnabled,
@@ -18,25 +27,50 @@ export function FamilySignInView({
       <p style={{ color: 'var(--color-foreground)', lineHeight: 1.7, margin: '20px 0' }}>
         {t('familySignIn.body')}
       </p>
-      <form action={nativeEnabled ? '/backend/auth/kinsun/start' : '/backend/auth/login'} method="post">
-        <input name="intent" type="hidden" value="FAMILY" />
+      <form
+        action={nativeEnabled ? '/backend/auth/kinsun/login' : '/backend/auth/login'}
+        method="post"
+      >
+        {!nativeEnabled && <input name="intent" type="hidden" value="FAMILY" />}
         {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         {nativeEnabled && (
-          <input
-            autoComplete="email"
-            maxLength={254}
-            name="email"
-            placeholder="Email"
-            required
-            style={{ boxSizing: 'border-box', fontSize: 18, marginBottom: 16, padding: 12, width: '100%' }}
-            type="email"
-          />
+          <>
+            <input
+              aria-label="Email"
+              autoComplete="email"
+              maxLength={254}
+              name="email"
+              placeholder="Email"
+              required
+              style={inputStyle}
+              type="email"
+            />
+            <input
+              aria-label="密碼"
+              autoComplete="current-password"
+              maxLength={128}
+              minLength={12}
+              name="password"
+              placeholder="密碼 / Password"
+              required
+              style={inputStyle}
+              type="password"
+            />
+          </>
         )}
         <AuthSubmitButton>
-          {nativeEnabled ? '傳送 Email 驗證碼' : t('common.continueWithGoogle')}
+          {nativeEnabled ? '登入 / Sign in' : t('common.continueWithGoogle')}
         </AuthSubmitButton>
       </form>
+      {nativeEnabled && (
+        <p style={{ marginTop: 'var(--space-4)' }}>
+          尚未建立帳號？請使用家屬邀請碼{' '}
+          <a href="/family/join" style={touchLinkStyle}>
+            建立家屬帳號 / Join
+          </a>
+        </p>
+      )}
       {showLine && (
         <form action="/backend/auth/login" method="post" style={{ marginTop: 'var(--space-4)' }}>
           <input name="intent" type="hidden" value="FAMILY" />

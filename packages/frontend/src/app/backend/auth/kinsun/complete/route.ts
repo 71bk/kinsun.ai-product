@@ -39,6 +39,12 @@ export async function POST(request: NextRequest): Promise<Response> {
     form && typeof form.get('verificationCode') === 'string'
       ? String(form.get('verificationCode')).trim()
       : '';
+  const password =
+    form && typeof form.get('password') === 'string' ? String(form.get('password')) : '';
+  const passwordConfirmation =
+    form && typeof form.get('passwordConfirmation') === 'string'
+      ? String(form.get('passwordConfirmation'))
+      : '';
   const challengeToken = normalizeKinsunChallenge(
     request.cookies.get(kinsunChallengeCookieName())?.value,
   );
@@ -48,7 +54,17 @@ export async function POST(request: NextRequest): Promise<Response> {
   const returnTo = strictRelativeReturnTo(
     request.cookies.get(kinsunReturnToCookieName())?.value ?? null,
   );
-  if (!challengeToken || !returnTo || invitationCode === null || !/^[0-9]{6}$/.test(verificationCode)) {
+  if (
+    !challengeToken ||
+    !returnTo ||
+    invitationCode === null ||
+    !/^[0-9]{6}$/.test(verificationCode) ||
+    password !== passwordConfirmation ||
+    password.length < 12 ||
+    password.length > 128 ||
+    Buffer.byteLength(password, 'utf8') > 1024 ||
+    password.includes('\0')
+  ) {
     return redirect('/auth/kinsun/verify?error=invalid');
   }
 
@@ -56,6 +72,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const completed = await completeKinsunEmailAuth({
       challengeToken,
       verificationCode,
+      password,
       ...(invitationCode ? { invitationCode } : {}),
     });
     const response = redirect(returnTo);

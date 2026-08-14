@@ -4,7 +4,7 @@
 - 日期：2026-08-14
 - Owner：Project Owner
 - 部分取代：ADR 0012 的 Decision 1、`ELDER` 帳號角色假設與 elder registration rollout 用語
-- 不取代：ADR 0012 的 Kinsun 自有帳號、可綁第三方 Authenticator、Email OTP 與 Core App Session 決策
+- 不取代：ADR 0012／0015 的 Kinsun 自有帳號、可綁第三方 Authenticator、Email＋Password 與 Core App Session 決策
 - 相關：[ADR 0003](0003-core-api-framework-and-schema-authority.md)、[ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md)、[ADR 0011](0011-bounded-empty-account-consolidation.md)、[ADR 0012](0012-kinsun-owned-account-and-linked-authenticators.md)
 
 ## 背景
@@ -145,7 +145,7 @@ MVP 重用 `care_relationship` 與 `care_assignment` 表達 family、legal repre
 - `elder_access_grant`：先驗證 relationship／assignment 是否足夠。
 - `family_link`：先重用 `care_relationship(FAMILY_SHARE／LEGAL_REPRESENTATIVE)`。
 - `elder_user_link`：先重用 nullable `elder.actor_id`；需要歷史或複數連結時再拆。
-- Password credential：Email OTP 已定案；Passkey 另期處理。
+- Password credential：Email＋Password 與 Argon2id 已由 ADR 0015 定案；Email OTP 僅作註冊驗證／未來復原，Passkey 另期處理。
 
 ## 遷移原則
 

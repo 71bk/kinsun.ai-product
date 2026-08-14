@@ -18,6 +18,7 @@ from app.services.kinsun_identity_codec import (
 from app.services.line_identity_codec import LineIdentityCodec
 from app.services.line_oidc_handoff_auth import LineOidcHandoffAuthenticator
 from app.services.line_subject_cipher import LineSubjectCipher
+from app.services.password_hasher import Argon2idPolicy, PasswordHasher
 
 
 @lru_cache(maxsize=4)
@@ -72,6 +73,36 @@ def get_kinsun_auth_handoff_authenticator() -> KinsunAuthHandoffAuthenticator:
     try:
         return _build_kinsun_auth_handoff_authenticator(
             get_settings().kinsun_auth_handoff_secret
+        )
+    except ValueError as exc:
+        raise ServiceUnavailableError("Kinsun authentication is unavailable") from exc
+
+
+@lru_cache(maxsize=4)
+def _build_password_hasher(
+    parameter_version: int,
+    memory_cost_kib: int,
+    iterations: int,
+    lanes: int,
+) -> PasswordHasher:
+    return PasswordHasher(
+        Argon2idPolicy(
+            parameter_version=parameter_version,
+            memory_cost_kib=memory_cost_kib,
+            iterations=iterations,
+            lanes=lanes,
+        )
+    )
+
+
+def get_password_hasher() -> PasswordHasher:
+    settings = get_settings()
+    try:
+        return _build_password_hasher(
+            settings.kinsun_password_parameter_version,
+            settings.kinsun_password_memory_cost_kib,
+            settings.kinsun_password_iterations,
+            settings.kinsun_password_lanes,
         )
     except ValueError as exc:
         raise ServiceUnavailableError("Kinsun authentication is unavailable") from exc

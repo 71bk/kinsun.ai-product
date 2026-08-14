@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  appSessionCookieName,
+  appSessionCookieOptions,
+  appSessionMaxAge,
+} from '@/lib/server/app-session-cookie';
 import { isTrustedRequestOrigin } from '@/lib/server/auth-cookie';
 import { bffError } from '@/lib/server/bff-response';
 import {
-  kinsunAuthCookieOptions,
-  kinsunChallengeCookieName,
-  kinsunInvitationCookieName,
-  kinsunReturnToCookieName,
-} from '@/lib/server/kinsun-auth-cookie';
-import {
+  KinsunCoreAuthError,
   kinsunNativeAuthEnabled,
-  startKinsunEmailAuth,
+  loginWithKinsunPassword,
 } from '@/lib/server/kinsun-auth-core';
-import {
-  normalizeInvitationCode,
-  onboardingIntent,
-  strictRelativeReturnTo,
-} from '@/lib/server/oauth-transaction';
+import { strictRelativeReturnTo } from '@/lib/server/oauth-transaction';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -26,6 +22,7 @@ function redirect(location: string): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   return response;
 }
+
 export async function POST(request: NextRequest): Promise<Response> {
   if (!kinsunNativeAuthEnabled()) return new Response(null, { status: 404 });
   if (!isTrustedRequestOrigin(request)) {
@@ -36,50 +33,38 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
   const form = await request.formData().catch(() => null);
   if (!form) return redirect('/sign-in?error=invalid_request');
-  const intent = onboardingIntent(form.get('intent'));
+  const email = typeof form.get('email') === 'string' ? String(form.get('email')).trim() : '';
+  const password = typeof form.get('password') === 'string' ? String(form.get('password')) : '';
   const returnTo = strictRelativeReturnTo(
     typeof form.get('returnTo') === 'string' ? String(form.get('returnTo')) : null,
   );
-  const invitationCode = normalizeInvitationCode(form.get('invitationCode'));
-  const email = typeof form.get('email') === 'string' ? String(form.get('email')).trim() : '';
-  const displayName =
-    typeof form.get('displayName') === 'string' ? String(form.get('displayName')).trim() : '';
   if (
-    !intent ||
-    intent === 'STAFF' ||
     !returnTo ||
-    invitationCode === null ||
     email.length < 3 ||
     email.length > 254 ||
-    displayName.length > 120 ||
-    (intent !== 'FAMILY' && invitationCode !== undefined)
+    password.length < 12 ||
+    password.length > 128 ||
+    Buffer.byteLength(password, 'utf8') > 1024 ||
+    password.includes('\0')
   ) {
-    return redirect('/sign-in?error=invalid_request');
+    return redirect('/sign-in?error=invalid_credentials');
   }
 
   try {
-    const started = await startKinsunEmailAuth({
-      email,
-      intent,
-      ...(displayName ? { displayName } : {}),
-    });
-    const maxAge = Math.max(1, Math.floor((Date.parse(started.expiresAt) - Date.now()) / 1000));
-    const response = redirect('/auth/kinsun/verify');
+    const completed = await loginWithKinsunPassword({ email, password });
+    const response = redirect(returnTo);
     response.cookies.set(
-      kinsunChallengeCookieName(),
-      started.challengeToken,
-      kinsunAuthCookieOptions(maxAge),
+      appSessionCookieName(),
+      completed.sessionToken,
+      appSessionCookieOptions(
+        appSessionMaxAge(completed.idleExpiresAt, completed.absoluteExpiresAt),
+      ),
     );
-    response.cookies.set(kinsunReturnToCookieName(), returnTo, kinsunAuthCookieOptions(maxAge));
-    if (invitationCode) {
-      response.cookies.set(
-        kinsunInvitationCookieName(),
-        invitationCode,
-        kinsunAuthCookieOptions(maxAge),
-      );
-    }
     return response;
-  } catch {
+  } catch (error) {
+    if (error instanceof KinsunCoreAuthError && error.status === 401) {
+      return redirect('/sign-in?error=invalid_credentials');
+    }
     return redirect('/sign-in?error=auth_unavailable');
   }
 }

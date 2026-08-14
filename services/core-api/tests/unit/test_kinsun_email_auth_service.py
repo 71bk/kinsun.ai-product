@@ -65,6 +65,7 @@ def _service(repository: _Repository) -> KinsunEmailAuthService:
         challenge_codec=_CHALLENGE_CODEC,
         app_session_service=_Unused(),  # type: ignore[arg-type]
         family_invitation_service=_Unused(),  # type: ignore[arg-type]
+        password_auth_service=_Unused(),  # type: ignore[arg-type]
         policy=KinsunEmailChallengePolicy(ttl=timedelta(minutes=10), max_attempts=3),
         verification_code="246810",
         repository=repository,  # type: ignore[arg-type]
@@ -106,6 +107,7 @@ async def test_wrong_code_increments_attempt_and_locks_at_limit() -> None:
     result = await service.complete(
         challenge_token=started.token,
         verification_code="000000",
+        password="a-valid-demo-password",
         invitation_code=None,
         trace_id="trace",
         idempotency_key="operation",

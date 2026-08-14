@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 
 class StartKinsunEmailAuthRequest(BaseModel):
@@ -29,6 +29,7 @@ class CompleteKinsunEmailAuthRequest(BaseModel):
 
     challenge_token: str = Field(pattern=r"^ke1_[A-Za-z0-9_-]{43}$")
     verification_code: str
+    password: SecretStr
     invitation_code: str | None = Field(default=None, min_length=16, max_length=24)
 
     @field_validator("verification_code")
@@ -37,6 +38,28 @@ class CompleteKinsunEmailAuthRequest(BaseModel):
         if len(value) != 6 or not value.isdecimal() or not value.isascii():
             raise ValueError("verification_code must contain exactly six ASCII digits")
         return value
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: SecretStr) -> SecretStr:
+        password = value.get_secret_value()
+        if not 12 <= len(password) <= 128 or len(password.encode("utf-8")) > 1024:
+            raise ValueError("password must contain between 12 and 128 characters")
+        if "\x00" in password:
+            raise ValueError("password contains an invalid character")
+        return value
+
+
+class PasswordLoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    email: str = Field(min_length=3, max_length=254)
+    password: SecretStr
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: SecretStr) -> SecretStr:
+        return CompleteKinsunEmailAuthRequest.validate_password(value)
 
 
 class CompletedKinsunEmailAuthResponse(BaseModel):

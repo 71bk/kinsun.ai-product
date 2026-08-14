@@ -97,7 +97,7 @@ Elder
 
 - Account status
 - Auth identities／Authenticators
-- Email OTP、未來 Passkey、Google、LINE
+- Email＋Password（Email OTP 僅作註冊驗證／未來復原）、未來 Passkey、Google、LINE
 - App Sessions
 - Login／security audit
 - Tenant memberships

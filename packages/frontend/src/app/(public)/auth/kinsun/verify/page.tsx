@@ -1,9 +1,21 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { kinsunChallengeCookieName, normalizeKinsunChallenge } from '@/lib/server/kinsun-auth-cookie';
+import {
+  kinsunChallengeCookieName,
+  normalizeKinsunChallenge,
+} from '@/lib/server/kinsun-auth-cookie';
 import { kinsunNativeAuthEnabled } from '@/lib/server/kinsun-auth-core';
 
 export const dynamic = 'force-dynamic';
+
+const inputStyle = {
+  boxSizing: 'border-box' as const,
+  fontSize: 'var(--text-base)',
+  marginTop: 8,
+  minHeight: 'var(--touch-min)',
+  padding: 14,
+  width: '100%',
+};
 
 export default async function KinsunEmailVerifyPage({
   searchParams,
@@ -18,20 +30,21 @@ export default async function KinsunEmailVerifyPage({
 
   return (
     <main style={{ margin: '0 auto', maxWidth: 560, padding: 'var(--space-6)' }}>
-      <h1 style={{ fontSize: 'var(--text-2xl)' }}>輸入 Email 驗證碼</h1>
+      <h1 style={{ fontSize: 'var(--text-2xl)' }}>驗證 Email 並設定密碼</h1>
       <p style={{ lineHeight: 1.7 }}>
-        驗證碼有效 10 分鐘。本機 QA 請使用專案環境設定中的測試碼；系統不會在網頁或 API 回傳測試碼。
+        請輸入收到的六位數驗證碼，再設定您的 Kinsun 密碼。This code verifies your email;
+        future sign-ins use your password.
       </p>
       {params.error && (
         <p role="alert" style={{ color: 'var(--color-destructive)' }}>
           {params.error === 'invalid'
-            ? '驗證碼不正確或已失效，請再試一次。'
-            : '登入服務暫時無法使用，請稍後再試。'}
+            ? '驗證碼或密碼格式不正確，請重新確認。'
+            : '註冊服務暫時無法使用，請稍後再試。'}
         </p>
       )}
       <form action="/backend/auth/kinsun/complete" method="post">
         <label htmlFor="verificationCode" style={{ display: 'block', fontWeight: 700 }}>
-          六位數驗證碼
+          Email 驗證碼 / Verification code
         </label>
         <input
           autoComplete="one-time-code"
@@ -42,7 +55,42 @@ export default async function KinsunEmailVerifyPage({
           name="verificationCode"
           pattern="[0-9]{6}"
           required
-          style={{ boxSizing: 'border-box', fontSize: 24, marginTop: 8, padding: 14, width: '100%' }}
+          style={{ ...inputStyle, fontSize: 24 }}
+        />
+        <label
+          htmlFor="password"
+          style={{ display: 'block', fontWeight: 700, marginTop: 'var(--space-4)' }}
+        >
+          密碼 / Password
+        </label>
+        <input
+          autoComplete="new-password"
+          id="password"
+          maxLength={128}
+          minLength={12}
+          name="password"
+          required
+          style={inputStyle}
+          type="password"
+        />
+        <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+          至少 12 個字元。Use at least 12 characters.
+        </p>
+        <label
+          htmlFor="passwordConfirmation"
+          style={{ display: 'block', fontWeight: 700, marginTop: 'var(--space-4)' }}
+        >
+          再輸入一次密碼 / Confirm password
+        </label>
+        <input
+          autoComplete="new-password"
+          id="passwordConfirmation"
+          maxLength={128}
+          minLength={12}
+          name="passwordConfirmation"
+          required
+          style={inputStyle}
+          type="password"
         />
         <button
           style={{
@@ -58,7 +106,7 @@ export default async function KinsunEmailVerifyPage({
           }}
           type="submit"
         >
-          驗證並登入
+          建立帳號並登入 / Create account
         </button>
       </form>
     </main>

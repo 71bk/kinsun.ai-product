@@ -21,6 +21,7 @@ from app.services.kinsun_identity_codec import (
     KinsunEmailChallengeCodec,
     KinsunIdentityCodec,
 )
+from app.services.password_auth_service import PasswordAuthService
 from app.services.pending_google_onboarding_service import PendingGoogleOnboardingService
 from app.services.pending_identity_tokens import PendingIdentityTokenCodec
 
@@ -67,6 +68,7 @@ class KinsunEmailAuthService:
         challenge_codec: KinsunEmailChallengeCodec,
         app_session_service: AppSessionService,
         family_invitation_service: FamilyInvitationService,
+        password_auth_service: PasswordAuthService,
         policy: KinsunEmailChallengePolicy,
         verification_code: str,
         repository: KinsunIdentityRepository | None = None,
@@ -79,6 +81,7 @@ class KinsunEmailAuthService:
         self._challenge_codec = challenge_codec
         self._app_sessions = app_session_service
         self._family_invitations = family_invitation_service
+        self._password_auth = password_auth_service
         self._policy = policy
         self._verification_code = verification_code
         self._repository = repository or KinsunIdentityRepository(session)
@@ -140,6 +143,7 @@ class KinsunEmailAuthService:
         *,
         challenge_token: str,
         verification_code: str,
+        password: str,
         invitation_code: str | None,
         trace_id: str,
         idempotency_key: str,
@@ -193,9 +197,12 @@ class KinsunEmailAuthService:
             return RejectedKinsunEmailAuthentication()
 
         if active:
-            active[0].last_seen_at = now
-            active[0].version = (active[0].version or 0) + 1
-            issued_session = await self._app_sessions.issue(external_identity_id=active[0].id)
+            # Email verification is registration proof, not a passwordless
+            # alternate login route for an existing account.
+            challenge.status = "REVOKED"
+            challenge.invalidated_at = now
+            await self._repository.flush()
+            return RejectedKinsunEmailAuthentication()
         else:
             if challenge.intent == "STAFF":
                 challenge.status = "REVOKED"
@@ -235,6 +242,10 @@ class KinsunEmailAuthService:
                 display_name=challenge.display_name,
                 trace_id=trace_id,
                 idempotency_key=idempotency_key,
+            )
+            await self._password_auth.create_credential(
+                actor_id=onboarding.actor_id,
+                password=password,
             )
             issued_session = onboarding.session
 

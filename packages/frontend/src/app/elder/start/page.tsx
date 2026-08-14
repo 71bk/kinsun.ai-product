@@ -10,6 +10,18 @@ const inputStyle = {
   width: '100%',
 };
 
+const primaryButtonStyle = {
+  background: 'var(--color-primary-strong)',
+  border: 0,
+  borderRadius: 'var(--radius-md)',
+  color: 'var(--color-on-primary)',
+  fontSize: 'var(--text-lg)',
+  marginTop: 'var(--space-4)',
+  minHeight: 'var(--touch-min)',
+  padding: 'var(--space-4) var(--space-5)',
+  width: '100%',
+};
+
 export default function ElderStartPage() {
   const nativeEnabled =
     process.env.KINSUN_NATIVE_AUTH_ENABLED?.trim().toLowerCase() === 'true';
@@ -18,53 +30,95 @@ export default function ElderStartPage() {
 
   return (
     <main style={{ margin: '0 auto', maxWidth: 640, padding: 'var(--space-6)' }}>
-      <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.4 }}>建立或登入 Kinsun 帳號</h1>
+      <h1 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.4 }}>
+        登入 Kinsun / Sign in
+      </h1>
       <p style={{ lineHeight: 'var(--leading-body)', margin: 'var(--space-4) 0' }}>
-        使用您的 Email 接收驗證碼，不需要設定密碼。第一次驗證會建立您的 Kinsun 帳號。
+        已有自行使用帳號的長者可在這裡登入；日照中心建立的長者不需要另外申請帳號。
       </p>
       {nativeEnabled && (
-        <form action="/backend/auth/kinsun/start" method="post">
-          <input name="intent" type="hidden" value="ELDER" />
-          <input name="returnTo" type="hidden" value="/onboarding/resolve" />
-          <label htmlFor="displayName" style={{ display: 'block', fontWeight: 700 }}>
-            稱呼（第一次註冊時使用）
-          </label>
-          <input id="displayName" maxLength={120} name="displayName" style={inputStyle} />
-          <label
-            htmlFor="email"
-            style={{ display: 'block', fontWeight: 700, marginTop: 'var(--space-4)' }}
-          >
-            Email
-          </label>
-          <input
-            autoComplete="email"
-            id="email"
-            maxLength={254}
-            name="email"
-            required
-            style={inputStyle}
-            type="email"
-          />
-          <button
+        <>
+          <form action="/backend/auth/kinsun/login" method="post">
+            <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+            <label htmlFor="loginEmail" style={{ display: 'block', fontWeight: 700 }}>
+              Email
+            </label>
+            <input
+              autoComplete="email"
+              id="loginEmail"
+              maxLength={254}
+              name="email"
+              required
+              style={inputStyle}
+              type="email"
+            />
+            <label
+              htmlFor="loginPassword"
+              style={{ display: 'block', fontWeight: 700, marginTop: 'var(--space-4)' }}
+            >
+              密碼 / Password
+            </label>
+            <input
+              autoComplete="current-password"
+              id="loginPassword"
+              maxLength={128}
+              minLength={12}
+              name="password"
+              required
+              style={inputStyle}
+              type="password"
+            />
+            <button style={primaryButtonStyle} type="submit">
+              登入 / Sign in
+            </button>
+          </form>
+
+          <section
             style={{
-              background: 'var(--color-primary-strong)',
-              border: 0,
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--color-on-primary)',
-              fontSize: 'var(--text-lg)',
-              marginTop: 'var(--space-4)',
-              minHeight: 'var(--touch-min)',
-              padding: 'var(--space-4) var(--space-5)',
-              width: '100%',
+              borderTop: '1px solid var(--color-border-strong)',
+              marginTop: 32,
+              paddingTop: 24,
             }}
-            type="submit"
           >
-            傳送驗證碼
-          </button>
-        </form>
+            <h2 style={{ fontSize: 'var(--text-xl)' }}>第一次自行使用？建立帳號</h2>
+            <p>完成一次 Email 驗證後設定密碼。Create an account after email verification.</p>
+            <form action="/backend/auth/kinsun/start" method="post">
+              <input name="intent" type="hidden" value="ELDER" />
+              <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+              <label htmlFor="displayName" style={{ display: 'block', fontWeight: 700 }}>
+                稱呼 / Display name
+              </label>
+              <input id="displayName" maxLength={120} name="displayName" style={inputStyle} />
+              <label
+                htmlFor="registerEmail"
+                style={{ display: 'block', fontWeight: 700, marginTop: 'var(--space-4)' }}
+              >
+                Email
+              </label>
+              <input
+                autoComplete="email"
+                id="registerEmail"
+                maxLength={254}
+                name="email"
+                required
+                style={inputStyle}
+                type="email"
+              />
+              <button style={primaryButtonStyle} type="submit">
+                傳送註冊驗證碼 / Send verification code
+              </button>
+            </form>
+          </section>
+        </>
       )}
       {(showGoogle || showLine) && (
-        <section style={{ borderTop: '1px solid var(--color-border-strong)', marginTop: 28, paddingTop: 20 }}>
+        <section
+          style={{
+            borderTop: '1px solid var(--color-border-strong)',
+            marginTop: 28,
+            paddingTop: 20,
+          }}
+        >
           <p>已綁定第三方登入方式的帳號，也可以繼續使用：</p>
           {showGoogle && (
             <form action="/backend/auth/login" method="post">
@@ -89,7 +143,7 @@ export default function ElderStartPage() {
         </section>
       )}
       <a href="/sign-in" style={touchLinkStyle}>
-        返回角色選擇
+        返回身分選擇 / Back
       </a>
     </main>
   );

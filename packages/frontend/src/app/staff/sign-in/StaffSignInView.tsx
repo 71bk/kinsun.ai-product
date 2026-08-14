@@ -3,6 +3,14 @@
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
 import { useLocale } from '@/lib/i18n/locale-context';
 
+const inputStyle = {
+  boxSizing: 'border-box' as const,
+  fontSize: 18,
+  marginBottom: 16,
+  padding: 12,
+  width: '100%',
+};
+
 export function StaffSignInView({
   nativeEnabled,
   showLine,
@@ -18,23 +26,40 @@ export function StaffSignInView({
       <p style={{ color: 'var(--color-foreground)', lineHeight: 1.7, margin: '20px 0' }}>
         {t('staffSignIn.body')}
       </p>
-      <form action={nativeEnabled ? '/backend/auth/kinsun/start' : '/backend/auth/login'} method="post">
-        <input name="intent" type="hidden" value="STAFF" />
+      <form
+        action={nativeEnabled ? '/backend/auth/kinsun/login' : '/backend/auth/login'}
+        method="post"
+      >
+        {!nativeEnabled && <input name="intent" type="hidden" value="STAFF" />}
         {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         {nativeEnabled && (
-          <input
-            autoComplete="email"
-            maxLength={254}
-            name="email"
-            placeholder="工作 Email"
-            required
-            style={{ boxSizing: 'border-box', fontSize: 18, marginBottom: 16, padding: 12, width: '100%' }}
-            type="email"
-          />
+          <>
+            <input
+              aria-label="工作 Email"
+              autoComplete="email"
+              maxLength={254}
+              name="email"
+              placeholder="工作 Email / Work email"
+              required
+              style={inputStyle}
+              type="email"
+            />
+            <input
+              aria-label="密碼"
+              autoComplete="current-password"
+              maxLength={128}
+              minLength={12}
+              name="password"
+              placeholder="密碼 / Password"
+              required
+              style={inputStyle}
+              type="password"
+            />
+          </>
         )}
         <AuthSubmitButton>
-          {nativeEnabled ? '傳送 Email 驗證碼' : t('common.continueWithGoogle')}
+          {nativeEnabled ? '登入 / Sign in' : t('common.continueWithGoogle')}
         </AuthSubmitButton>
       </form>
       {showLine && (
@@ -67,6 +92,9 @@ export function StaffSignInView({
       )}
       <p style={{ color: 'var(--color-foreground)', marginTop: 24 }}>
         {t('staffSignIn.notActivated')}
+      </p>
+      <p style={{ color: 'var(--color-foreground)', marginTop: 12 }}>
+        工作人員帳號由機構建立，不開放自行註冊。Staff accounts are organization-provisioned.
       </p>
     </main>
   );

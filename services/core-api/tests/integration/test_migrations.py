@@ -56,15 +56,16 @@ _CORE_TABLES = sorted(
         "care_relationship",
         "care_assignment",
         "outbox_event",
+        "password_credential",
     ]
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 55
+_TOTAL_HEAD_TABLE_COUNT = 56
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "f2c6d8a1e490"
+_HEAD_REVISION = "b8d0e4f6a213"
 
 
 def _get_alembic_config() -> Config:
