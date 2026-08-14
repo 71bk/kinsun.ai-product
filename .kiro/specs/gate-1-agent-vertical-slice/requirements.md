@@ -68,7 +68,10 @@ Projection／Graph reuse、Daily Summary generation worker、跨服務 E2E 與 C
 - **Agent_Runtime**：`services/agent-runtime`；受控模型、Safety、Context 與 allowlisted Tool 選擇。
 - **Voice_Ticket**：Core 核發、短效、單次、綁 actor／tenant／elder／purpose 的語音連線憑證。
 - **Event_Candidate**：模型或 deterministic extractor 提出的事件候選，尚不是 Verified Event。
-- **Memory_Candidate**：等待長者明確確認的長期記憶候選，尚不可進入長期 Context。
+- **Memory_Proposal**：Agent／Extractor 提出的不可信長期記憶建議；Core 尚未完成風險與 Speaker Policy 決策。
+- **Memory_Candidate**：Core 將 MEDIUM proposal 固定成等待長者確認的版本，尚不可進入長期 Context。
+- **Trusted_Memory**：每次重新通過 Consent、Speaker、風險 verification、current version、validity 與 scope
+  Gate 的 `ACTIVE` Memory。
 - **Formal_State**：由 Core Command Gate 驗證後寫入 Aurora 的正式狀態。
 - **Projection**：由正式事件重建的 Graph／Search working state，不是授權或正式狀態來源。
 - **Restricted_Data**：完整逐字稿、音訊、完整 Prompt、Token、內部照護筆記及其他受限資料。
@@ -183,27 +186,38 @@ Projection／Graph reuse、Daily Summary generation worker、跨服務 E2E 與 C
 8. IF authorization、consent、scope、state、service identity 或 version 驗證失敗，THEN Core SHALL
    使用與不存在資源一致的回應，且 SHALL NOT 寫入 Event 或 outbox。
 
-### Requirement 6: Memory Candidate and Explicit Confirmation Gate
+### Requirement 6: Risk-tiered Memory, Speaker Gate, and Version-bound Confirmation
 
-**User Story:** 身為林阿嬤，我希望 AI 在記住穩定偏好或重要關係前先問我。
+**User Story:** 身為林阿嬤，我希望低風險且由我明確說出的偏好可以不打斷對話地保存，而重要事項只在我
+確認精確版本後保存，敏感推測則不成為長期記憶。
 
 #### Acceptance Criteria
 
-1. WHEN `LONG_TERM_MEMORY` 有效且內容屬穩定偏好、重要關係或固定作息，Agent MAY 提出
-   Memory Candidate；一般閒聊、一次性事件、敏感健康推測與陪伴需求推估 SHALL NOT 成為候選。
-2. THE SYSTEM SHALL 使用顯式 Memory State：`CANDIDATE → PENDING_CONFIRMATION`，再分支為
-   `CONFIRMED → ACTIVE`、`REJECTED` 或 `DEFERRED`；`ACTIVE` MAY 後續轉為 `INACTIVE → DELETED`。
-3. WHEN Memory Candidate 建立，THE SYSTEM SHALL 以簡短問題詢問長者是否保存，且 SHALL 保存
-   source reference、schema/model/policy version 與 bounded confidence metadata。
-4. UNTIL 長者明確確認，Memory Candidate SHALL NOT 成為 `ACTIVE`，也 SHALL NOT 進入 Context、
-   Graph、摘要、Family response 或後續對話事實。
-5. WHEN 長者拒絕、延後、說「不要記」或 consent 已撤回，Core SHALL 阻止 ACTIVE transition，
-   SHALL NOT 建立 ACTIVE Memory 或 activation outbox，並 SHALL 只保存防止重問、支援 idempotency
-   與稽核所需的最小化 `REJECTED／DEFERRED` transition evidence。
-6. WHEN 授權照服員修正或處理候選，Core SHALL 仍依規格保留長者明確確認 Gate，不得由模型、
-   Hook、retry、scheduler 或資料修復程序宣告確認完成。
-7. WHEN Memory 被停用、刪除或撤回，THE SYSTEM SHALL 立即停止檢索，並以 tombstone 阻止 replay、
-   projection rebuild 或 restore 使其復活。
+1. WHEN `LONG_TERM_MEMORY` Consent 有效，Agent MAY 提出 Memory Proposal；Core SHALL 不信任 Agent
+   的 risk hint，並 SHALL 依 versioned allowlist、Speaker state、第一人稱／否定／時間語意、confidence、
+   source、tenant／elder scope 與 Consent 導出 LOW／MEDIUM／HIGH／NO_MEMORY 決策。
+2. WHEN proposal 同時符合 verified Elder speaker、明確第一人稱、allowlisted LOW `memory_kind`、
+   confidence threshold、無否定／時間歧義及有效 scope，Core MAY 在同一 formal transaction 直接建立
+   `ACTIVE` Memory 與 outbox；任一條件失敗 SHALL NOT auto-activate。
+3. WHEN proposal 為 MEDIUM，Core SHALL 建立 immutable `PENDING_CONFIRMATION` Memory version，保存
+   content digest、source、Speaker evidence、Consent／policy version 與 bounded confidence；只有長者本人
+   對該 version 明確確認後才能 `ACTIVE`。
+4. WHEN Candidate 內容被修改，Core SHALL 建立新 version 並使舊 confirmation 無法啟用新內容；確認命令
+   SHALL 綁 memory ID、expected version、content digest、Consent version 與 policy version。
+5. WHEN 使用 `ELDER_VOICE`／`WITNESSED_VOICE`，Elder SHALL 親自回答 candidate-specific 問題；Staff／
+   Family 只 MAY 見證 Speaker 與回答，不得代為 consent。低 ASR confidence、含糊、timeout 或 witness
+   代答 SHALL 保持 non-active。
+6. WHEN proposal 為 HIGH／敏感／未知內容，Core SHALL NOT 建立 Memory row、content、embedding 或
+   projection；MAY 只保存不含敏感原文的 minimal policy audit 與 bounded reason code。
+7. THE SYSTEM SHALL 分離 Care Event 與 Memory：一次性／帶時間 Event 不得推成永久 Memory，Event
+   VERIFIED SHALL NOT 自動 promotion 成 Memory。
+8. WHEN 長者拒絕、延後、說「不要記」或 Consent 已撤回，Core SHALL 阻止 ACTIVE transition；只保存
+   idempotency、避免重問與稽核所需的最小 non-active evidence。
+9. WHEN Core 組合 Context，THE SYSTEM SHALL 每次重新檢查 current `ACTIVE` version、有效 Consent、
+   Speaker ownership、risk verification、version-bound confirmation（如需要）、validity、scope 與 tombstone；
+   legacy row、Graph／Search／cache SHALL NOT 繞過此 Gate。
+10. WHEN Memory 被停用、刪除、過期或撤回，THE SYSTEM SHALL 立即停止檢索，並阻止 retry、replay、
+    projection rebuild 或 restore 使其復活。
 
 ### Requirement 7: Transactional Formal State and Outbox
 
@@ -231,8 +245,9 @@ Projection／Graph reuse、Daily Summary generation worker、跨服務 E2E 與 C
    PROCESSING → SYNCED` 或 `FAILED → RETRYING → SYNCED／DEAD_LETTER`。
 2. Projection consumer SHALL idempotent，並在每次處理前重新檢查 tenant、elder、formal state、
    consent、revocation、deletion 與 tombstone。
-3. WHEN Core 組合下一輪 Context，THE SYSTEM SHALL 只讀取同 tenant／elder、`ACTIVE` Memory 與
-   `VERIFIED／CORRECTED` Event，並記錄實際使用的 memory/event IDs。
+3. WHEN Core 組合下一輪 Context，THE SYSTEM SHALL 只讀取同 tenant／elder、每次通過 Requirement 6
+   final retrieval gate 的 Trusted Memory 與 `VERIFIED／CORRECTED` Event，並記錄實際使用的
+   memory／event IDs 與 versions。
 4. IF Graph／Search 不可用、lagging 或資料不足，THEN THE SYSTEM SHALL 安全降級且不得從模型或
    projection 反推正式狀態。
 5. WHEN duplicate、out-of-order、DLQ replay、rebuild 或 restore 發生，THE SYSTEM SHALL NOT 使
@@ -246,7 +261,7 @@ Projection／Graph reuse、Daily Summary generation worker、跨服務 E2E 與 C
 #### Acceptance Criteria
 
 1. WHEN Daily Summary 產生，THE SYSTEM SHALL 只使用 `VERIFIED／CORRECTED` Event，不得使用
-   Candidate、`NEEDS_REVIEW`、`REJECTED` 或未確認 Memory。
+   Candidate、`NEEDS_REVIEW`、`REJECTED` 或未通過 Requirement 6 final gate 的 Memory。
 2. EACH summary item SHALL 至少包含可回查的 `source_event_id` 與 bounded evidence reference；
    Family response 不得包含 Restricted Data。
 3. WHEN 某類資料不存在，THE SYSTEM SHALL 顯示「未提及」或「資料不足」，不得補出診斷或推論。

@@ -140,7 +140,8 @@ A. 長者完成有效陪伴互動 → 產生有用回覆 → 使用者未拒絕�
 
 B. 對話產生事件候選 → 專業照護者覆核 → 成為 Verified Event 或正確拒絕。
 
-C. 記憶候選 → 長者確認 → 成為 ACTIVE Memory → 後續被正確引用。
+C. Verified-speaker Memory Proposal → Core Policy（LOW all-of 或 MEDIUM exact-version Elder confirmation）
+→ 成為 Trusted ACTIVE Memory → 後續通過 final retrieval gate 並被正確引用。
 
 D. Verified Event／Summary → 家屬報表 PUBLISHED → 有效家屬安全讀取。
 
@@ -180,7 +181,11 @@ D. Verified Event／Summary → 家屬報表 PUBLISHED → 有效家屬安全讀
 
 • elder_comprehension_pass_rate：長者能用自己的話說明系統剛剛做了什麼。
 
-• memory_confirmation_accept_rate：候選記憶被確認比例；不能追求越高越好，需搭配候選精準度。
+• medium_memory_confirmation_accept_rate：MEDIUM Candidate 被長者確認比例；不能追求越高越好，需搭配
+proposal precision、comprehension 與 correction rate。
+
+• low_memory_auto_activation_precision：LOW 自動啟用後被長者保留且無更正的比例；必須搭配
+unverified_speaker_activation、policy false-positive 與「不要記」率，不能只追求數量。
 
 • memory_correction_rate：長者修正或停用記憶的比例。
 
@@ -1576,7 +1581,8 @@ E5｜Production 多期證據。
 
 • 事件候選可由照服員覆核。
 
-• 記憶經確認後才進下一輪與 Graph。
+• LOW 通過 all-of 或 MEDIUM 綁定版本確認後，仍須通過 final retrieval gate 才進下一輪與 Graph；
+  HIGH、unverified Speaker、stale confirmation 與失效 Consent 為零放行。
 
 • 家屬只看到 PUBLISHED 報表。
 

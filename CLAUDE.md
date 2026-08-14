@@ -57,7 +57,10 @@
   不完成 AgentRun、也不寫 Domain DB。
 - bounded Memory first slice 只擷取明確固定早餐習慣：Runtime proposal 不含 scope／source ID；Core
   先把它私下綁在 Care Event version，照護者 VERIFY 事件後再重驗 `memory:candidate:create` 與
-  `LONG_TERM_MEMORY` Consent，建立仍須長者本人以 `ELDER_UI` 確認才可 ACTIVE 的 Candidate。
+  `LONG_TERM_MEMORY` Consent，建立仍須長者本人以 `ELDER_UI` 確認才可 ACTIVE 的 Candidate。這是
+  Current first slice；Target 依 Spec 18／ADR 0014 改為 Agent proposal＋Core deterministic policy＋
+  Speaker Gate：LOW all-of 可自動保存、MEDIUM 對固定 version／digest 由 Elder UI／Voice 確認、HIGH
+  零 Memory row。Staff witness 不能取代 Elder consent，且 Care Event 與 Memory 不再硬性綁定。
 - 預設與 staging application template 使用 mock。文字生成可明確選 `bedrock`、`gemini` 或
   `openai-compatible`。原生 `gemini` provider 使用 Google Gen AI SDK，`AQ.` 開頭的 Vertex AI
   Express key 走 Vertex AI，其他 key 走 Gemini Developer API；`openai-compatible` 只依 runtime
@@ -68,6 +71,9 @@
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
   仍未做語意相關性排序；Verified Care Data、Graph、Neptune、通用 Tool loop、Prompt Registry、
   Model Router 與完整 trace 仍未完成。
+- Target Context 必須每次由 Core 重驗 current ACTIVE、Consent、Speaker ownership、risk verification、
+  version-bound confirmation、validity、tenant／elder scope 與 tombstone；不得只因 legacy row、Graph、
+  Search 或 cache 標示 ACTIVE 就放行。
 - 保留 deterministic Safety Evaluator、step 上限、typed outputs、Pydantic／JSON Schema 一致性與
   no-guess fallback。不得讓 LLM 判斷取代 deterministic security gate。
 

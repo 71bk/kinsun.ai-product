@@ -301,6 +301,11 @@ Staff 登入
 → 切換長者模式
 ```
 
+Staff 是 session initiator，不自動是 Speaker、Memory confirmer 或 consent actor。依
+[Spec 18](18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)，
+Staff MAY 見證「回答者確實是該 Elder、Elder 確實作出回答」，但 witness 不能替 Elder 說「好，記住」
+或只按按鈕就完成 MEDIUM Memory confirmation；合法代理同意需另有明確權限模型。
+
 ### 6.3 家中無帳號使用
 
 ```text
@@ -310,6 +315,9 @@ Family／Caregiver 登入 Household
 → 啟動 FAMILY_ASSISTED 或 DEVICE Elder Session
 → Elder 直接語音互動，不需登入
 ```
+
+Family／Caregiver 代啟動不會把其語句歸屬給 Elder；多人環境在 Speaker 未驗證前不得建立任何人的個人
+Memory。若使用 WITNESSED_VOICE，仍必須由 Elder 本人回答，見證者不能取代同意。
 
 如果沒有任何合法 User／Device 可以建立受控 Session，無帳號本身不等於匿名公開存取；系統必須先完成家庭邀請、裝置 enrollment 或其他核准的 bootstrap。
 

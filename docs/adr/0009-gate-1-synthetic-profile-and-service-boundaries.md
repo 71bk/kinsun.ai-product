@@ -4,9 +4,12 @@
 - 日期：2026-08-02
 - Owner：Project Owner
 - Expiry：2026-09-30 或 Gate 1 release evidence review，以較早者為準
+- 部分取代：第 7 節「所有 Memory Candidate 必須逐筆 confirm」已由
+  [ADR 0014](0014-risk-tiered-memory-speaker-verification.md) 取代；Event 人工覆核與其餘安全邊界不變
 - 決策依據：Project Owner 指示依 canonical Gate 1 計畫開始實作
 - 相關：[ADR 0004](0004-agent-runtime-into-monorepo.md)、
   [ADR 0007](0007-canonical-backend-and-aws-deployment-authority.md)、
+  [ADR 0014](0014-risk-tiered-memory-speaker-verification.md)、
   [Gate 1 requirements](../../.kiro/specs/gate-1-agent-vertical-slice/requirements.md)、
   [Gate 1 design](../../.kiro/specs/gate-1-agent-vertical-slice/design.md)
 
@@ -17,7 +20,8 @@ Canonical Gate 1 需要先證明下列行為可安全、可重跑：
 - Browser → BFF → Core → Agent Runtime 是唯一一般互動主線。
 - Core 以可信 server-side context 重新驗證 actor、tenant、elder、assignment、consent 與 state。
 - 語音低信心、撤回、停止與失敗在任何 Candidate 或正式寫入前生效。
-- Agent 只能提出 Event／Memory Candidate；人工 Gate 才能產生正式狀態。
+- Agent 只能提出 Event／Memory proposal；Event 人工 Gate 與 Core-owned Memory Policy／必要確認 Gate
+  才能產生正式狀態。
 - 正式狀態與 outbox 同交易，projection 可重建且不得讓刪除資料復活。
 
 Production ASR／TTS、Bedrock model／Guardrails、Graph provider 與 service credential mechanism 尚未完成
@@ -121,10 +125,14 @@ Gate 1 functional／failure-path 測試可使用 deterministic adapters：
 
 非 test profile 不得自動 fallback 至 synthetic adapter。
 
-### 7. Event 與效能 Gate
+### 7. Event、Memory 與效能 Gate
 
 - Gate 1 的 Event Candidate 全部需要照服員 verify／correct／reject；不採低風險 auto-verify。
-- Memory Candidate 必須由長者明確 confirm 才能 ACTIVE。
+- Memory 不再一律逐筆確認：依 [ADR 0014](0014-risk-tiered-memory-speaker-verification.md)，LOW 只有在
+  有效總體 Consent、verified Elder speaker、明確第一人稱、allowlisted kind、confidence 門檻及無
+  否定／時間歧義等 all-of 條件通過時才可由 Core 自動 ACTIVE；MEDIUM 綁定固定 Candidate version
+  由長者明確確認；HIGH 不建立 Memory row。現行程式仍是 blanket confirmation first slice，不得把
+  本條 Target 決策描述成已實作。
 - Voice／Agent／TTS 尚未統一的 latency／quality 門檻不阻塞 deterministic functional tests；
   evidence 只保存實測 baseline，不宣告達標。
 - Production provider、語言品質、data region、成本與 performance pass threshold 仍是 Owner decision。
@@ -146,7 +154,9 @@ Gate 1 functional／failure-path 測試可使用 deterministic adapters：
 - Ticket missing/revoked consent、expiry、replay、cross-tenant／elder、核發後撤回與 active cancel。
 - Low-confidence confirm 前零 Agent／Candidate／outbox。
 - Core→Agent→Core 使用同一 `agent_run_id`，Tool scope 只能縮小不能擴張。
-- Event／Memory 正式 transition 與 outbox 同交易，失敗零 side effect。
+- Event／Memory 正式 transition 與 outbox 同交易；HIGH 零 Memory row，失敗零 side effect。
+- Unverified／unknown Speaker、失效 Consent、stale confirmation 或不符風險政策的資料不得進 trusted
+  Memory 或 Agent Context；每次 retrieval 由 Core 重新檢查。
 - Delete／revoke 後 projection replay、rebuild、restore 不可復活。
 - Log、metric、trace、error response 不含 Token、完整 Prompt／Transcript／Audio 或 Ticket。
 - Synthetic 主旅程連續五次，並保存實際 adapter／policy／schema／release version。

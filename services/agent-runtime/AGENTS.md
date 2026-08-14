@@ -56,13 +56,21 @@ Core 依更新時間做 bounded first slice，尚未有語意相關性排序；V
 Core Tool client／request 相容程式，但 canonical orchestrator 不會依 `allowed_tools` 呼叫 Core；
 若 README 或舊測試敘述相反，以目前 orchestrator、Core companion service 與本檔為準。
 
+上述是 Current first slice。Accepted Target 依根目錄 Spec 18／ADR 0014：Runtime 仍只輸出不可信
+proposal 與 risk hint；Core 依 versioned policy、verified Elder speaker、第一人稱／否定／時間語意、
+confidence、Consent 與 scope 決定 LOW all-of auto-save、MEDIUM fixed-version Elder confirmation 或 HIGH
+restriction。Runtime 不得宣告 actual risk、confirmation 或 ACTIVE；Staff／Family witness 不得替 Elder
+consent。Care Event VERIFIED 不自動 promotion 成 Memory，HIGH 不建立 Memory row／content。
+
 ## 硬性規則
 
 - **不得讓 Agent 直接改變正式 Domain State**。Event 轉 `VERIFIED`、Memory 轉 `ACTIVE`、
   Consent 變更、Report 發布，一律透過 Core API 的 Command Gate，由 Core 重新授權。
 - **不得繞過 ElderScope、Consent 或 Authorization**。本地用 Mock 不是省略這些檢查的理由。
 - **不得跨 `elder_id` 或 `tenant_id` 讀取資料**。
-- **未確認的 Memory 不得進入 Context**。
+- **只有每次通過 Core final retrieval gate 的 Trusted Memory 可進 Context**：current ACTIVE、有效 Consent、
+  Speaker ownership、risk verification、version binding（如需要）、validity、tenant／elder scope 與
+  tombstone 缺一不可；MEDIUM 未確認／stale、HIGH 與 legacy 缺證據資料一律排除。
 - **不得產生可執行的 SQL、Gremlin 或 OpenSearch DSL**。查詢一律走參數化的 Planner。
 - **不得建立無上限的 Agent Loop**。每條控制流都要有 step 上限與明確停止條件。
 - 所有 Agent 輸出必須同時通過 Pydantic model 與 `contracts/schemas/` 的 JSON Schema。

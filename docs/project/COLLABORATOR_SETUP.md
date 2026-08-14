@@ -21,7 +21,7 @@
 重要邊界：
 
 - 只能使用 Synthetic 或完成去識別的資料；不要輸入真實長者資料。
-- 不得把模型輸出或未確認 Memory Candidate 當成正式事實。
+- 不得把模型輸出或未通過 Spec 18 Core Memory Policy／final retrieval gate 的資料當成正式事實。
 - 不得在前端、Git、log、截圖或 issue 中放入 Token、Secret、逐字稿或 Audio。
 - 前端是單一 Next.js multi-role PWA，不要新增第二套 elder／care／family app。
 - 不要直接修改已套用的 Alembic migration、database schema 或 API contract。

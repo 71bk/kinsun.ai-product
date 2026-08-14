@@ -146,32 +146,43 @@
     - 驗證 unreviewed/rejected Event 不進 Summary／Projection／Context。
     - _Requirements: R1, R5, R7, R10, R11_
 
-- [ ] 6. 完成 Memory Candidate 與長者明確確認閉環
+- [ ] 6. 完成風險分級 Memory、Speaker Gate 與版本綁定確認閉環
   - **Dependencies:** Tasks 1.4, 4
-  - [ ] 6.1 檢查 Memory baseline 並定義 explicit-confirmation state machine
+  - [ ] 6.1 檢查 Memory baseline 並定義 risk-tiered state／policy model
     - 人工比對 frozen baseline、現有 Memory model／API／enum；需要 schema 變更時新增 revision，不修改 baseline。
-    - 固定 `CANDIDATE→PENDING_CONFIRMATION`，再分支為 `CONFIRMED→ACTIVE`、`REJECTED` 或
-      `DEFERRED`；只有 `ACTIVE` 可後續轉為 `INACTIVE→DELETED`。
-    - 定義 stable preference／important relationship／routine allowlist；排除一次性事件與敏感推測。
+    - 沿用 `memory + memory_version`：LOW all-of 可直接 ACTIVE；MEDIUM `PENDING_CONFIRMATION` 分支
+      `CONFIRMED→ACTIVE`（同一 transaction）／REJECTED／DEFERRED；ACTIVE 可轉
+      `INACTIVE→DELETED`；不新增 Candidate table。
+    - 定義 constrained `memory_kind`、Core-owned versioned policy、Speaker evidence、version-bound
+      confirmation 與 HIGH minimal audit；沿用 INACTIVE，以 valid_to＋reason 表達 expiry。
     - _Requirements: R2, R6, R7_
-  - [ ] 6.2 實作 Agent Memory Candidate proposal 與 Core Tool Gate
+  - [ ] 6.2 實作 Agent Memory Proposal 與 Core MemoryPolicyService
     - 新 Tool 先定義 versioned schema／allowlist，再由 Core 重驗 service identity、scope、consent、state、idempotency。
-    - Agent 只能提出 Candidate 與簡短確認問題，不能宣告人類已確認。
-    - Safety block、低信心未確認、`LONG_TERM_MEMORY` 缺少／撤回時零 Candidate side effect。
+    - Agent 只能提出 kind／content／confidence／risk hint；Core 依 verified speaker、第一人稱、否定／時間
+      語意、allowlist、confidence 與 Consent 導出正式決策。
+    - Safety block、unknown speaker、低信心未確認、Consent 缺少／撤回時零 trusted Memory side effect；
+      HIGH 零 Memory row／content，只留不含敏感原文的 minimal audit。
     - _Requirements: R2, R4, R6_
-  - [ ] 6.3 實作 Core confirm／reject／defer／deactivate／delete commands
-    - Confirm 必須來自可信 elder confirmation context；照服員修正不能繞過長者確認 Gate。
+  - [ ] 6.3 實作 Core version-bound confirm／reject／defer／deactivate／delete commands
+    - MEDIUM Confirm 必須來自可信 Elder context，綁 expected version、content digest、Consent／policy
+      version；任何更正建立新 version，舊 confirmation 不繼承。
+    - Staff／Family witness 只證明 Speaker 與回答，不得替 Elder consent；合法代理另立模型。
     - ACTIVE transition＋outbox 同交易；reject/defer/stop/revoke 不得建立 ACTIVE Memory 或 activation
       outbox，但需保存防止重問、支援 idempotency 與稽核所需的最小化 non-active transition evidence。
     - delete/revoke 建立 tombstone 並立即停止 retrieval。
     - _Requirements: R6, R7, R8_
-  - [ ] 6.4 完成 Elder confirmation UI／Voice interaction
-    - 使用簡短、單一問題確認保存；支援 confirm、reject、later、stop 與逾時。
+  - [ ] 6.4 完成 LOW feedback 與 MEDIUM Elder UI／Voice／witness interaction
+    - LOW 使用非阻斷「已記住」與更正／不要記入口；MEDIUM 使用 candidate-specific 單一問題，支援
+      confirm、reject、later、stop、逾時與 stale-version conflict。
+    - Voice 使用 deterministic yes／no、ASR confidence 與 Speaker gate；模糊時維持 pending。
     - UI outcome 必須由 Core command 結果決定，不在 client 自行把 Candidate 標成 ACTIVE。
     - _Requirements: R3, R6, R10_
-  - [ ] 6.5 新增 Memory contract、integration 與 negative tests
+  - [ ] 6.5 實作 Context final gate 並新增 Memory contract／negative tests
     - 實作後同步 schema、OpenAPI／event、examples、live verifier 與 traceability。
-    - 測試 unconfirmed／rejected／deferred 不可檢索、cross-scope、revocation、delete、retry/replay/rebuild 不可復活。
+    - 每次 retrieval 重驗 current ACTIVE、Consent、Speaker ownership、risk verification、version binding、
+      valid_to、scope 與 tombstone；Graph／Search／cache／legacy row 都不能繞過。
+    - 測試 LOW 任一條件失敗不自動啟用、stale confirmation、witness 代答、HIGH 零 row／原文、
+      unverified／rejected／deferred、cross-scope、revocation、expiry、delete、retry／replay／rebuild 不可復活。
     - _Requirements: R6, R7, R8, R11_
 
 - [ ] 7. 實作可重建 Projection 與 confirmed-data reuse

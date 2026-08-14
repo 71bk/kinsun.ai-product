@@ -43,7 +43,7 @@ WebSocket token flow 不在本設計內。OpenSearch、Neptune、cache 與 Agent
 - 不做 production deployment 或宣稱 ECS application 已上線。
 - 不在 Gate 1 導入通用 multi-Agent debate、自由 Tool loop 或 cross-agent handoff。
 - 不做 Wave 3 RAG 擴充、陪伴需求訊號、主動陪伴、Family notification 或 English path。
-- 不使用 Draft Family Report、未覆核 Event 或未確認 Memory 驅動任何對外內容。
+- 不使用 Draft Family Report、未覆核 Event 或未通過 Spec 18 final gate 的 Memory 驅動任何對外內容。
 - 不選定尚未經 Owner 核准的 ASR／TTS、Bedrock model 或 Graph production provider。
 
 ## 4. Current Baseline and Net-New Boundaries
@@ -146,14 +146,21 @@ Owner decision、Policy version 與 negative tests。
 ### 6.3 Memory
 
 ```text
-CANDIDATE → PENDING_CONFIRMATION
-  → CONFIRMED → ACTIVE → INACTIVE → DELETED
+LOW proposal ──Core all-of policy──→ ACTIVE
+
+MEDIUM proposal → PENDING_CONFIRMATION
+  → exact-version Elder confirmation → CONFIRMED → ACTIVE → INACTIVE → DELETED
   → REJECTED
   → DEFERRED → PENDING_CONFIRMATION（僅由新的人類互動恢復）
+
+HIGH proposal → minimal REJECTED_HIGH_RISK audit（no Memory row/content）
 ```
 
-只有 Core Command Gate 能將 `CONFIRMED` 轉成 `ACTIVE`。模型、Hook、retry、scheduler、
-projection 或資料修復都不能替代長者確認。
+只有 Core Memory Policy／Command Gate 能建立 `ACTIVE`。LOW 必須通過 verified Elder speaker、明確
+第一人稱、allowlisted kind、confidence 與無否定／時間歧義等 all-of；MEDIUM 確認綁 fixed version／
+digest；HIGH 不建 Memory。模型、witness、Hook、retry、scheduler、projection 或資料修復都不能替代
+Core 決策或長者對 MEDIUM 的確認。詳細 invariant 以 Spec 18／ADR 0014 為準。
+`CONFIRMED → ACTIVE` 必須在同一正式 transaction 完成，不得暴露可檢索的半正式中間狀態。
 
 ### 6.4 Projection
 
@@ -231,7 +238,7 @@ Runtime register，Core companion path 不得再為同一 turn 建立第二個�
 identity 與 server-derived Tool scope 完成前，現有 register→Tool→complete 隔離測試不能作為
 canonical E2E 證據。未覆核 Candidate 不進 Context、Summary、Graph、Family response。
 
-### 7.3 Memory Candidate and Elder Confirmation
+### 7.3 Risk-tiered Memory and Elder Confirmation
 
 ```mermaid
 sequenceDiagram
@@ -240,17 +247,24 @@ sequenceDiagram
     participant A as Agent Runtime
     participant DB as Aurora + Outbox
 
-    C->>A: Confirmed transcript + LONG_TERM_MEMORY scope
-    A-->>C: Memory Candidate proposal
-    C->>DB: Save PENDING_CONFIRMATION candidate
-    C-->>E: Ask a short save-confirmation question
-    alt explicit confirm
-        E->>C: Confirm
-        C->>C: Recheck actor + consent + state + version
+    C->>A: Verified-speaker turn + LONG_TERM_MEMORY scope
+    A-->>C: Untrusted Memory proposal + risk hint
+    C->>C: Derive risk from consent + speaker + content + policy
+    alt LOW all-of pass
         C->>DB: ACTIVE Memory + outbox in one transaction
-    else reject / defer / stop / revoke
-        E->>C: Reject / defer / stop
-        C->>DB: Non-active terminal/recoverable state
+    else MEDIUM
+        C->>DB: Save immutable PENDING_CONFIRMATION version + digest
+        C-->>E: Ask candidate-specific save question
+        alt exact-version elder confirm
+            E->>C: Confirm by UI / voice
+            C->>C: Recheck speaker + consent + policy + version + digest
+            C->>DB: ACTIVE Memory + outbox in one transaction
+        else reject / defer / ambiguous / revoke
+            E->>C: Reject / defer / ambiguous / stop
+            C->>DB: Non-active terminal/recoverable state
+        end
+    else HIGH / unknown
+        C->>DB: Minimal policy audit without proposal content
     end
 ```
 
@@ -296,12 +310,13 @@ Context 依序組合：
 
 ```text
 Policy → Auth → Consent → Current turn → Session
-→ Active confirmed memory → Verified/corrected care data
+→ Current trusted memory after deterministic retrieval gate → Verified/corrected care data
 → Authorized Graph projection → approved RAG → Tool results → Output constraints
 ```
 
-每一項帶 reference、scope、version 與 sensitivity；未確認、未覆核、已撤回或已刪除資料先在
-Core 排除，再交給 Agent。Context Manifest 本體若含 Restricted Data，不能直接放進一般 trace
+每一項帶 reference、scope、version 與 sensitivity；Memory 每次由 Core 重驗 current ACTIVE、Consent、
+Speaker、risk verification、version binding、validity 與 tombstone。未通過、未覆核、已撤回或已刪除
+資料先在 Core 排除，再交給 Agent。Context Manifest 本體若含 Restricted Data，不能直接放進一般 trace
 或目前 target Handoff envelope。
 
 ## 9. Authorization and Privacy Design

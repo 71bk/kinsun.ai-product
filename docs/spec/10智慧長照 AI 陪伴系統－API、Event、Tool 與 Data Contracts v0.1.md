@@ -516,7 +516,11 @@ created_at
 
 updated_at
 
-# 九、確認式記憶 API
+# 九、風險分級長期記憶 API
+
+> 本節列出的 route 是既有目標 contract 基線；新 risk-tier、Speaker、version-bound confirmation 與
+> retrieval Gate 以 [Spec 18](18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+> 為準。實作前須做 OpenAPI impact review，不因本文件直接建立平行 endpoint。
 
 GET /api/v1/elders/{elder_id}/memory-candidates
 
@@ -538,6 +542,8 @@ Memory Candidate：
 
 memory_type
 
+memory_kind
+
 normalized_content
 
 source_ids[]
@@ -550,15 +556,35 @@ confirmation_question
 
 extractor_version
 
+extraction_confidence
+
+speaker_evidence_reference
+
+content_digest
+
+actual_risk_level（Core-owned；Agent risk hint 不具權威）
+
+policy_decision
+
+policy_version
+
 Confirm Command：
 
-confirmation_actor_id
+elder_response_intent
 
 confirmation_method
 
 expected_candidate_version
 
+expected_content_digest
+
 consent_version
+
+policy_version
+
+speaker_evidence_reference
+
+witness_evidence_reference（optional；witness 不取代 Elder consent）
 
 正式 Memory：
 
@@ -583,6 +609,18 @@ active_from
 inactive_at
 
 consent_version
+
+verification_level
+
+valid_from
+
+valid_to
+
+policy_version
+
+注意：LOW all-of 通過後可由 Core 直接建立 ACTIVE；MEDIUM 才建立上述 Candidate 並逐筆確認；HIGH
+不建立 Memory／Candidate content，只 MAY 留不含敏感原文的 minimal policy audit。每次 retrieval 仍須
+重新驗證 current version、Consent、Speaker、verification、validity 與 scope。
 
 graph_projection_status
 

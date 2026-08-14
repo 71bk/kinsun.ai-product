@@ -20,7 +20,12 @@
     deterministic Safety Evaluator、Event Candidate proposal 與明確固定早餐習慣的 bounded
     Memory Candidate proposal。Memory proposal 先私下綁在 Event Candidate version；只有照護者
     VERIFY 來源事件、且 Core 重驗 memory authorization／Consent 後，才建立待長者本人確認的
-    Memory Candidate。`MODEL_PROVIDER=mock` 是本機及目前
+    Memory Candidate。這是 **Current first slice**；Target 已由
+    [Spec 18](docs/spec/18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+    與 [ADR 0014](docs/adr/0014-risk-tiered-memory-speaker-verification.md) 改為總體 Consent＋Core
+    deterministic risk policy＋Speaker Gate＋version-bound confirmation：LOW 嚴格 all-of 可自動保存、
+    MEDIUM 由長者確認固定版本、HIGH 不建立 Memory row。尚未實作前不得把 Target 當 Current。
+    `MODEL_PROVIDER=mock` 是本機及目前
     staging application template 的預設；程式另有 `BedrockModelProvider`，以及只依 runtime
     URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`，以及原生
     Google Gen AI SDK 的 `GeminiModelProvider`。`MODEL_PROVIDER=gemini` 會依 key 類型選路：`AQ.`
@@ -107,6 +112,10 @@
    Traceability（原 .xlsx 的六個工作表都保留成 markdown 表格）。
 5. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
 6. 其他 `docs/spec/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
+7. 新增且明確取代舊條款的 Accepted Target spec／ADR。目前
+   [Spec 17](docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)
+   處理 Account／Elder 分離；[Spec 18](docs/spec/18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+   處理 Memory Policy，並在其明列的衝突範圍內優先於舊規格。
 
 **`docs/spec/*.md` 是規格的權威版本。** 2026-08-06 之前同一份內容存在四種格式——`.md`、
 結構化 `.json`、Story Map 的 `.csv`、以及 `origin/` 的 `.docx`／`.xlsx` 原始檔，其中
@@ -129,11 +138,13 @@ Google Drive 上的團隊文件若與此處不一致，依下方衝突規則處�
 1. 林阿嬤明確同意後開始語音互動。
 2. ASR 對低信心內容要求簡短確認，不假裝辨識成功。
 3. Orchestrator 產生安全、簡短且符合語言偏好的回覆。
-4. Event／Memory 只能先成為 Candidate。
-5. 長期記憶必須由長者明確確認；照護事件依規格完成人工覆核。
+4. Agent 的 Event／Memory 輸出只能是 proposal；Event 先成為 Candidate，Memory 由 Core policy 決策。
+5. 長期記憶先驗有效總體 Consent 與 Speaker：LOW all-of 才可自動保存，MEDIUM 由長者對固定版本
+   明確確認，HIGH 不建立 Memory；照護事件仍依規格完成人工覆核。
 6. 正式狀態寫入 PostgreSQL，並透過 Transactional Outbox 發布。
 7. Neptune／OpenSearch 完成可追蹤、可重建的 Projection。
-8. 後續對話只能重用已確認、未撤回且仍在有效 Scope 內的資料。
+8. 後續對話只能重用每次通過 current ACTIVE、Consent、Speaker、verification、version binding、
+   validity、tenant／elder scope 與 tombstone deterministic Gate 的 Trusted Memory。
 9. 產生有來源連結的 Daily Summary，供照服員覆核。
 10. 保存 Demo、Trace、Contract、Safety 與 Failure-path 證據。
 
@@ -150,7 +161,8 @@ Wave 順序：
 
 - 不提供診斷、治療建議或取代專業照護決策。
 - 不把模型輸出、推論、缺少資料或失敗結果描述成已確認事實。
-- 未確認的 Memory Candidate 不得進長期記憶、Graph、報表或後續對話事實。
+- MEDIUM 未確認／stale confirmation、HIGH、unverified Speaker、失效 Consent 或不符 lifecycle／scope 的
+  Memory 不得進 Trusted Memory、Graph、報表或後續對話事實；LOW 必須通過 Spec 18 的 all-of policy。
 - 未覆核的 Event Candidate 不得成為 Verified Event。
 - Draft Family Report 不得被家屬或通知預覽取得。
 - Family App／Web 的 `PUBLISHED` Report 是正式內容來源；LINE／Email 只能做最小通知與安全連結。
@@ -228,11 +240,13 @@ Wave 順序：
   deterministic Event／bounded Memory Candidate proposal；沒有通用 Tool loop，也不會從
   `allowed_tools` callback Core。Memory first slice 只辨識明確固定早餐習慣，不推論健康、情緒、
   陪伴需求或一次性事件；proposal 必須先隨 Event Candidate 保存，來源事件 VERIFY 後才可由 Core
-  建立仍需長者本人確認的 Memory Candidate。
+  建立仍需長者本人確認的 Memory Candidate。這段只描述 Current；Target 的 Agent＝proposal、Core＝
+  decision、Event／Memory 分離、LOW／MEDIUM／HIGH 與 Speaker Gate 依 Spec 18／ADR 0014。
   Canonical path 由 Core 以 `requested_outputs` 要求最小 proposal，再由 Core 重驗授權與 Consent 後寫入。
 - Agent 只能呼叫 Allowlist 中且有版本的 Tool。
 - 高風險 Tool 即使由 Agent 選擇，也必須由 Python Core 重新執行 Authorization、Consent、State 與 Idempotency 檢查。
-- Context 目標層次是 Policy → Auth → Consent → Current turn → Session → Active confirmed memory →
+- Context 目標層次是 Policy → Auth → Consent → Current turn → Session → Trusted memory after deterministic
+  retrieval gate →
   Verified care data → Graph → RAG → Tool results → Output constraints。`BASIC_VOICE` canonical path
   已能在 Core 重驗 `memory:read` 與 active `LONG_TERM_MEMORY` Consent 後，帶入同 tenant／elder、
   current version、`ACTIVE`、未刪除且不超過目前 Consent version 的最近 5 筆 Confirmed Memory；
@@ -533,7 +547,8 @@ kinsun.ai/
 
 - Acceptance Criteria 的正常、低信心、拒絕、撤回、失敗與重試路徑。
 - Cross-elder／Cross-tenant／Expired assignment／Revoked share 的 Negative Test。
-- Unconfirmed Memory、Unreviewed Event 與 Draft Report 無法進入正式讀取路徑。
+- 不符合 Spec 18 final gate 的 Memory（含 unverified Speaker、MEDIUM unconfirmed／stale、HIGH、失效
+  Consent、expired／inactive／deleted／cross-scope）、Unreviewed Event 與 Draft Report 無法進入正式讀取路徑。
 - Agent Tool Allowlist、Schema、Max-step、Timeout、Fallback 與 Core reauthorization。
 - Outbox、Consumer Idempotency、DLQ、Projection Lag 與 Rebuild 行為。
 - Delete／Revoke 後資料不會被 Retry、Replay 或 Restore 復活。

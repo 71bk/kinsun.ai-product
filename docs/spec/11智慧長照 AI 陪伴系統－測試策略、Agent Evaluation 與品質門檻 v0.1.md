@@ -570,7 +570,7 @@ Gate：
 
 • 用藥正確性推斷＝0。
 
-## 14.4 Memory Candidate
+## 14.4 Risk-tiered Memory
 
 • Candidate Precision ≥ 90%。
 
@@ -578,7 +578,24 @@ Gate：
 
 • Conflict Detection Recall ≥ 85%。
 
-• 未確認自動啟用＝0。
+• LOW all-of 任一條件失敗時自動啟用＝0。
+
+• Unverified／unknown Speaker Memory Activation＝0。
+
+• MEDIUM 未確認或 stale-version confirmation 自動啟用＝0。
+
+• Witness 取代 Elder consent＝0。
+
+• HIGH Memory row／敏感 proposal 原文保存＝0。
+
+• Event VERIFIED 自動 promotion 成 Memory＝0。
+
+• 失效 Consent、過期、INACTIVE、DELETED、cross-tenant／elder 或 legacy 缺證據 Memory 進 Context＝0。
+
+• Replay／Projection rebuild／cache 使不可用 Memory 復活＝0。
+
+完整 scenario matrix 以 [Spec 18](18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+第十七節為準。
 
 ## 14.5 Summary Agent
 

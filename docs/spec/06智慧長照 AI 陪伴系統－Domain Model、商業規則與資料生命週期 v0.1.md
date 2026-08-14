@@ -234,9 +234,14 @@ Aggregate Root：Daily Summary
 
 Aggregate Root：Memory
 
-內含：Memory Candidate、Confirmation、Memory Version、Activation State、Projection Status。
+內含：Memory Version、Core Policy Decision、Speaker Evidence Reference、Version-bound Confirmation、
+Activation State、Lifecycle 與 Projection Status。詳細規則以
+[Spec 18](18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+為準。
 
-責任：確保只有經確認的記憶可啟用及檢索。
+責任：確保 LOW 只有通過 Core all-of policy 才能自動啟用、MEDIUM 只有長者對固定版本確認才可啟用、
+HIGH 不建立 Memory，且所有 ACTIVE version 每次檢索仍通過 Consent、Speaker、verification、validity 與
+scope Gate。
 
 ## 5.7 Assignment Aggregate
 
@@ -346,15 +351,26 @@ summary_version_id、summary_id、version、content、source_event_ids、model_v
 
 6.10 Memory
 
-memory_id、elder_id、tenant_id、memory_type、status、current_version、confirmed_by、confirmed_at、activated_at、deactivated_at、deleted_at。
+Current baseline：memory_id、elder_id、tenant_id、memory_type、status、current_version、confirmed_by、
+confirmed_at、activated_at、deactivated_at、deleted_at。
 
 memory_type：PREFERENCE、IMPORTANT_RELATIONSHIP、ROUTINE、COMMUNICATION_PREFERENCE、PERSONAL_HISTORY。
 
+Target capability：memory_kind、actual_risk_level、policy_decision、policy_version、verification_level、
+required_verification、speaker_evidence_reference、consent_id／consent_version、lifecycle_reason。Broad
+`memory_type` 不足以決定 risk；Agent 提供的 risk 只是不可信 hint。
+
 6.11 Memory Version
 
-memory_version_id、memory_id、version、content、source_event_ids、valid_from、valid_to、created_at。
+Current baseline：memory_version_id、memory_id、version、content、source_event_ids、valid_from、valid_to、created_at。
 
-規則：同一記憶只能有一個 ACTIVE 版本；更正後舊版本轉 INACTIVE。
+Target capability：immutable normalized content、content_digest、source_session／turn／event references、
+Speaker evidence reference、confirmation method、confirmed memory version／digest、Consent／policy version、
+elder response intent、witness evidence 與 confirmed_at。
+
+規則：同一記憶只能有一個 current ACTIVE 版本；更正建立新版本並重新 policy，舊 confirmation 不得
+繼承。新版本為 MEDIUM 時重新確認。`valid_to` 過期視為不可讀，以 lifecycle reason 記錄並可轉
+INACTIVE，不新增同義的 DEACTIVATED／EXPIRED state。
 
 6.12 Graph Projection Record
 
@@ -544,15 +560,29 @@ Deletion Request 1 ─ N Deletion Job Item
 
 4. 無資料欄位必須標示未提及／資料不足。
 
-## 9.3 確認式記憶
+## 9.3 風險分級長期記憶
 
-1. 只有穩定偏好、重要關係、固定作息與個人歷史可成為候選記憶。
+1. Agent 只提出 proposal；Core 依有效總體 Consent、Speaker evidence、內容、來源、scope 與 versioned
+   policy 導出實際 risk 與決策。
 
-2. 候選記憶未被長者或合法授權人確認前，不得轉 ACTIVE。
+2. LOW 只有 verified Elder speaker、明確第一人稱、allowlisted memory_kind、confidence threshold、
+   無否定／時間歧義等 all-of 條件全部通過，才可自動轉 ACTIVE。
 
-3. DEFERRED、REJECTED、INACTIVE、DELETED 記憶不得被檢索。
+3. MEDIUM 建立 fixed Candidate version；只有長者本人以 UI／Voice 對該 version 與 digest 明確確認後
+   才可 ACTIVE。Witness 只證明身份與回答，不取代 Elder consent。
 
-4. 一般閒聊、一次性事件、醫療推測與陪伴需求推估不得自動成為長期記憶。
+4. HIGH／敏感／未知內容不建立 Memory row，也不保存 proposal 原文；只可留 bounded、無敏感內容的
+   policy decision audit。
+
+5. Life／Care Event 與 Memory 分離；帶時間的一次性 Event 不得推論成永久 Memory，Event VERIFIED
+   不自動 promotion。
+
+6. DEFERRED、REJECTED、INACTIVE、DELETED、過期、stale confirmation、缺必要 Speaker／Consent／
+   verification evidence 的記憶不得被檢索。
+
+7. 每次 Context Retrieval 都由 Core 重新檢查 current ACTIVE version、有效 Consent、Speaker ownership、
+   risk verification、validity、tenant／elder scope 與 tombstone；不得只信任寫入時檢查、Graph、Search
+   或 cache。
 
 ## 9.4 家屬報表
 
@@ -636,15 +666,17 @@ Deletion Request 1 ─ N Deletion Job Item
 
 ## 10.4 Memory
 
-建立：事件／對話形成 Candidate。
+建立：verified-speaker conversation 形成不可信 proposal，由 Core Memory Policy 分級；Event 與 Memory
+來源／生命週期分離。
 
-確認：長者選擇記住後轉 CONFIRMED／ACTIVE。
+啟用：LOW all-of 通過可直接 ACTIVE；MEDIUM 對 immutable version 明確確認後 ACTIVE；HIGH 不建立
+Memory。
 
-使用：只在相關對話注入少量 ACTIVE 記憶。
+使用：只在相關對話注入少量每次通過 final deterministic retrieval gate 的 Trusted Memory。
 
-更正：建立新版本並停用舊版本。
+更正：建立新版本、重新 policy 並停用舊版本；舊確認不得繼承。
 
-停用：不再適用或被授權人停用。
+停用：不再適用、Consent／政策要求或 `valid_to` 過期時轉 INACTIVE／不可讀。
 
 刪除：RDS 事實、Graph 投影與搜尋索引同步失效。
 

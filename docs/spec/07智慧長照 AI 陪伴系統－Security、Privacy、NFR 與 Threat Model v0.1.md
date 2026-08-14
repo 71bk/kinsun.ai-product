@@ -483,9 +483,12 @@ T-10｜Agent 任意呼叫工具
 
 控制：細粒度 Tool 權限、Schema、最大範圍、寫入二次授權、Approval Gate。
 
-T-11｜未確認記憶被引用
+T-11｜不可信、未確認或失效記憶被引用
 
-控制：只檢索 ACTIVE、confirmed_at 與 consent_version 有效的記憶。
+控制：依 [Spec 18](18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)，
+每次由 Core deterministic gate 只放行 current ACTIVE、有效 Consent、Speaker ownership、風險層
+verification、版本綁定確認（如需要）、validity、tenant／elder scope 與 tombstone 全部符合的 Trusted
+Memory；legacy row、Graph、Search 或 cache 不得繞過。HIGH 不建立 Memory content。
 
 T-12｜Graph 過度揭露關係
 
