@@ -1,5 +1,12 @@
 # Design Document: Gate 1 Agent Vertical Slice
 
+> **2026-08-14 scope note:** References to an `Elder Browser` describe the current demo surface, not a
+> requirement that the Elder owns an Account. The canonical Target separates initiating Actor from
+> `elder_id` and is specified by [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md).
+> This note does not expand Gate 1 to implement billing or full offboarding; it preserves the service seam
+> needed for a later Staff／Family／Device-assisted Session.
+
 ## 1. Overview
 
 本設計把 `requirements.md` 的 Gate 1 需求落在 ADR 0007 的唯一 canonical topology：

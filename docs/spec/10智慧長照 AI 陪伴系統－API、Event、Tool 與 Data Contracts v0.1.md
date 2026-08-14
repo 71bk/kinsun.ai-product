@@ -14,6 +14,16 @@
 
 適用範圍：REST API、WebSocket、Domain Event、Agent Handoff、Tool Contract、核心資料 Payload、錯誤碼、版本相容與測試
 
+## 2026-08-14 Target Contract Overlay
+
+依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)：
+
+- 既有 `/elders/{elder_id}/...` resource ownership 可保留，但 Server 必須從可信 Auth Context 重新驗證 Membership、Enrollment、Relationship／Assignment、Consent 與 source Tenant。
+- `POST /elders/{elder_id}/voice-sessions` Target contract 必須新增真實 initiator mode、authorization reference、service context 與 Entitlement check；Client 不得宣告可信 initiator／role／tenant。
+- Target 新增 Organization／Household、Elder Enrollment、Service Entitlement、single-Elder offboarding 與 optional account-link resources；未進入 OpenAPI 與實作前不得視為已存在 endpoint。
+- Authorization failure、Enrollment ended 與 Entitlement unavailable 必須是不同的內部 reason semantics，但對未授權 caller 不得洩漏 Elder 是否存在。
+- 新增 event 候選：`ElderEnrollmentStarted`、`ElderEnrollmentEnded`、`ServiceEntitlementChanged`、`ElderAccountLinked`、`ElderAccountUnlinked`；event contract 必須先完成版本化與資料最小化審查。
+
 ## 相關文件
 
 05｜核心工作流、狀態機與錯誤恢復 v0.1

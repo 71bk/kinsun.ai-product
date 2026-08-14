@@ -1,5 +1,7 @@
 # 03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx
 
+> **2026-08-14 Target Domain Overlay**：後續 backlog 必須依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md) 與 [Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md) 執行。新增的優先 Enablers 為 Account／Elder decoupling、Organization／Household context、Elder Enrollment、Service Entitlement、Staff-assisted Elder Session、single-Elder offboarding 與 Household continuation。這些工作不得被誤列為既有 Gate 1 已完成項目；Gate 1 的 Agent、ASR／TTS 與 CI 暫緩決策不因此改變。
+
 ## 工作表：00_總覽
 
 | 智慧長照 AI 陪伴系統｜Story Map v1.2 |  |  |  |  |  |  |  |  |  |

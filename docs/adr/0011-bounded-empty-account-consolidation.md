@@ -3,7 +3,9 @@
 - 狀態：Accepted
 - 日期：2026-08-12
 - Owner：Project Owner
-- 相關：[ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md)
+- 範圍更新：ADR 0013 後只適用於既有 provider-created 空白 Elder onboarding 骨架的相容退場，不得用於新的 Account／Elder onboarding
+- 退場條件：舊自動 onboarding／merge path 移除並通過資料與 rollback 驗證後，由後續 ADR 標記 Superseded
+- 相關：[ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md)、[ADR 0013](0013-separate-account-elder-enrollment-entitlement.md)
 
 ## 背景
 

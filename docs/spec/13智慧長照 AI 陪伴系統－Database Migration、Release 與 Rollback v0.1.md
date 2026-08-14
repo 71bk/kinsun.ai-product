@@ -14,6 +14,16 @@
 
 適用範圍：Aurora PostgreSQL、Python Core API、Agent Runtime、Domain Event、OpenSearch、Neptune、S3、Prompt、Policy、Model Route、RAG Corpus、Feature Flag、CI／CD、Backup 與 Restore
 
+## 2026-08-14 Account／Elder Migration Overlay
+
+依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)，本次 Domain 演進必須採 Expand → Backfill → New-write／Compatibility → Authorization Cutover → Validate → Contract：
+
+- 不重建資料庫、不合併既有 Alembic revisions、不修改 baseline SQL。
+- 先新增 `elder_enrollment`、`service_entitlement` 與必要約束；現有 `elder.tenant_id`、`elder.actor_id`、`actor_type=ELDER` 暫時保留。
+- Backfill 必須產生 collision／ambiguity report；不得對多 Tenant、重疊 Assignment 或不明付費狀態靜默推斷。
+- 新寫入停止「Account 必然建立 Elder」；compatibility fallback 必須可量測、可 feature-flag rollback。
+- Contract 只在 fallback 歸零、cross-elder／cross-tenant／expired-enrollment／entitlement／offboarding negative tests 通過後執行。
+
 ## 相關文件
 
 08｜AWS 系統架構、服務選型與 ADR v0.1

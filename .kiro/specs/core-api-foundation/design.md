@@ -1,5 +1,13 @@
 # Design Document: Core API Foundation
 
+> **2026-08-14 domain-boundary note:** The `TenantScopedMixin` and `ActorContext` examples are
+> infrastructure patterns, not a final Elder ownership decision. New Elder-domain work must follow
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md).
+> In particular, Actor and Elder are separate, an Elder may have no Actor, and multi-context service
+> participation is represented by Enrollment. Existing foundation tasks remain historical completion
+> evidence and are not reopened by this note.
+
 ## Overview
 
 This document defines the technical design for the **core-api** service foundation — the scaffolding upon which all kinsun.ai domain features will be built. The design covers project structure, configuration management, async database connectivity with connection pooling, base ORM patterns (optimistic concurrency, tenant isolation via mixin), health/readiness endpoints, standard response envelopes, structured error handling, request logging middleware, authentication abstractions with environment-guarded safety, transactional outbox persistence (write-path only), application lifecycle management, local development environment, and testing infrastructure.

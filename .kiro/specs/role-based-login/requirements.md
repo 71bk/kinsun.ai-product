@@ -1,5 +1,16 @@
 # 需求文件：角色式登入與導向系統
 
+> **LEGACY／SUPERSEDED SPEC（2026-08-14）**
+>
+> 本文件的 Cognito＋Google／LINE-only、DynamoDB `User_Record`、單一全域
+> `elder／family／caregiver／admin` 角色與「Elder 必須登入後進入語音頁」設計，已由
+> [ADR 0010](../../../docs/adr/0010-provider-neutral-oidc-and-application-sessions.md)、
+> [ADR 0012](../../../docs/adr/0012-kinsun-owned-account-and-linked-authenticators.md) 與
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md) 取代。
+> Target 以 Core `actor`／identity／App Session 驗證 User，以 Tenant Membership 的 contextual role
+> 加 Elder Enrollment、Relationship／Assignment、Consent 與 Entitlement 授權。Elder 可以沒有
+> Account；`ELDER` 不是必要 Authentication Role。本文只保留作歷史需求，不得作為新實作或驗收權威。
+
 ## 簡介
 
 角色式登入與導向系統為智慧長照 AI 陪伴系統的入口模組，負責依使用者角色提供差異化的登入體驗與頁面導向。系統於首頁提供三個登入入口（長者／家屬、居服員、管理者），透過 Google 與 LINE 聯合身分供應商進行 OAuth 驗證，並依據後端預先指派的角色將使用者導向對應介面。系統須兼顧長者的無障礙操作需求與多角色的安全隔離。

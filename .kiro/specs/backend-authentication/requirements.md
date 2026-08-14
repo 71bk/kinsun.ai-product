@@ -1,5 +1,16 @@
 # 需求文件：後端登入與註冊系統
 
+> **權威更新（2026-08-14）**
+>
+> 本文件仍是未核准的 Cognito 候選方案，不是目前 Authentication implementation authority。
+> 現行帳號方向以 [ADR 0010](../../../docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 與
+> [ADR 0012](../../../docs/adr/0012-kinsun-owned-account-and-linked-authenticators.md) 為準；Account／Elder
+> 邊界以 [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)
+> 為準。任何候選 Authentication 實作都必須遵守：建立／核准 Actor 不自動建立 Elder；
+> `ELDER` actor type 不授予 Elder scope；Tenant role 來自 Membership context；Elder 可無 Account；
+> optional self link 不搬移既有 Elder Data。
+
 > **路徑註記（2026-08-06 加註，未變更提案內容）**
 >
 > `infrastructure/` 目錄已於 2026-08-06 改名為 `infra/`。**本文件內所有 `infrastructure/`

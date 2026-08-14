@@ -14,6 +14,17 @@
 
 適用範圍：長者端、專業照護端、家屬端、語音鏈路、Agent、RDS、Graph、Search／Vector、Object Storage、通知與背景工作
 
+## 2026-08-14 Identity／Elder Security Overlay
+
+依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)：
+
+- Authentication 只建立 Actor Principal；不得自動建立 Elder 或授予 Elder scope。
+- Elder 可以沒有帳號。Staff／Family／Device 代啟動 Session 必須留下真實 initiator、service context、Enrollment、Relationship／Assignment、Entitlement、Consent 與 policy trace。
+- 授權採 Membership RBAC＋Elder-scoped ABAC；`ELDER` role、Entitlement 或相同 `elder_id` 都不能單獨授權。
+- Enrollment／Assignment／Relationship／Entitlement 被撤銷或到期後，下一個受保護 request 必須失敗，既有 Session／cache／secure link／device authorization 需失效或重新授權。
+- 離場不等同刪除；跨 Organization／Household 資料移轉預設禁止，必須依資料分類、Consent、目的、來源 Tenant 與保存政策核准。
+- 必測威脅新增：staff impersonates elder、stale delegated session、expired enrollment、entitlement bypass、unauthorized household import、elder self-link account takeover。
+
 ## 相關文件
 
 01｜產品方向與範圍基準 v1.2

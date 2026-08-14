@@ -1,6 +1,6 @@
 # 需求文件：智慧長照 AI 陪伴系統
 
-> **LEGACY SPEC。** 本文件描述的舊 TypeScript／Lambda／Step Functions／DynamoDB 方案已由 [ADR 0007](../../../docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 取代，不是目前實作或進度權威來源，也不得用來宣告 Gate 1 完成。現況以 repository 根目錄 [`AGENTS.md`](../../../AGENTS.md)、canonical `docs/` 規格與可執行 `contracts/` 為準；歷史完成清單見 [`tasks.legacy.md`](tasks.legacy.md)。
+> **LEGACY SPEC。** 本文件描述的舊 TypeScript／Lambda／Step Functions／DynamoDB 方案已由 [ADR 0007](../../../docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 取代，不是目前實作或進度權威來源，也不得用來宣告 Gate 1 完成。現況以 repository 根目錄 [`AGENTS.md`](../../../AGENTS.md)、canonical `docs/` 規格與可執行 `contracts/` 為準；歷史完成清單見 [`tasks.legacy.md`](tasks.legacy.md)。Account／Elder 分離、Enrollment、Entitlement、無帳號 Elder 與離場／居家續用的 Target 決策另見 [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)。
 
 ## 簡介
 

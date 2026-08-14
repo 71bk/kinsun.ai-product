@@ -14,6 +14,17 @@
 
 適用範圍：長者端、專業照護端與家屬端的資訊架構、操作流程、畫面狀態及低保真 Wireframe
 
+## **2026-08-14 Target Flow Overlay**
+
+依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)，以下流程是後續 UX 的必要基準：
+
+- Organization Admin 建立 Elder Profile，不建立或要求 Elder Account。
+- Staff 登入並選定 Organization／Care Unit 後，只能從 Server-authorized Elder list 選擇服務對象。
+- 切換到 Elder Mode 前顯示目前 Elder、服務情境與安全退出；Session audit 保留真正 initiating actor。
+- Household 可由 Family／Caregiver 登入後替無帳號 Elder 啟動受控 Session；無帳號不等於匿名公開使用。
+- 新增 single-Elder offboarding、影響預覽、資料處理與 Household continuation flow。
+- Elder 日後自行登入採「連結既有 Elder」，不得重新建立 Elder Profile。
+
 ## **相關文件**
 
 **01｜產品方向與範圍基準 v1.2**

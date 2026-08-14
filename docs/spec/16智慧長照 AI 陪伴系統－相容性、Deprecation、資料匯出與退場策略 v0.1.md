@@ -14,6 +14,16 @@
 
 適用範圍：Python Core API、Web／PWA、REST／WebSocket、Domain Event、Agent、Prompt、Model、ASR／TTS、RAG、Graph、Aurora PostgreSQL、S3、OpenSearch、Neptune、通知、Tenant、長者、家屬與營運資料
 
+## 2026-08-14 Single-Elder Offboarding Overlay
+
+依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md)／[Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)，「單一 Elder 離開機構」與「整個 Tenant Offboarding」是不同 lifecycle：
+
+- 單一 Elder 離場結束 `elder_enrollment`，撤銷相關 assignment、staff access、device authorization、未開始 Session 與自動排程；不刪 Elder 或 optional User Account。
+- 若方案由機構購買，離場後不自動沿用該 Entitlement。居家續用需要 Household Tenant／Enrollment／Entitlement、合法代理關係與 Consent。
+- `elder_id` 是 Care Subject ownership，不代表所有相同 `elder_id` 資料自動跨 Tenant 可見。
+- Elder profile／preference、可攜候選資料、Tenant operational record、security audit 與 AI projection 必須分級處理；機構內部筆記、任務、排班與稽核不得自動移入 Household。
+- 在法務、Data Governance 與契約核准前，只允許受控匯出／匯入，不實作自動跨 Tenant 資料搬移。
+
 ## 相關文件
 
 06｜Domain Model、商業規則與資料生命週期 v0.1

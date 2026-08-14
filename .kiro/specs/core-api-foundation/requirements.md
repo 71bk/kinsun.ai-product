@@ -1,5 +1,13 @@
 # Requirements Document
 
+> **2026-08-14 domain-boundary note:** This foundation remains valid, but `Actor_Context` and
+> tenant-scoped repository primitives do not imply `Actor == Elder` or that every Elder must inherit a
+> permanent single-tenant ownership model. Subsequent Elder features must follow
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md) and
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md):
+> Actor is the authenticated principal; Elder may have no account; service context is resolved through
+> Enrollment and authorization, not inferred from client input.
+
 ## Introduction
 
 This document defines the requirements for the foundational scaffolding of the **core-api** service in kinsun.ai. The core-api is the primary backend API service built with Python 3.12 and FastAPI. This foundation covers project setup, configuration management, async database connectivity, health and readiness endpoints, standard response envelopes, middleware extension points, error handling, testing infrastructure, and the base patterns (transactional outbox persistence, optimistic concurrency, tenant isolation abstractions) that all subsequent domain features will build upon.

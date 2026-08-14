@@ -1,5 +1,13 @@
 # Requirements Document: Gate 1 Agent Vertical Slice
 
+> **2026-08-14 scope note:** Gate 1 may keep its current synthetic/self-operated Persona path for demo
+> compatibility, but it must not encode `Actor == Elder` as a Domain invariant. Target no-account Elder,
+> Staff／Family-assisted Session, Enrollment and Entitlement behavior is governed by
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)
+> and is a follow-up vertical slice unless an existing Gate 1 requirement explicitly needs the seam.
+> Core／Agent contracts must continue to carry `elder_id` as care subject and must not trust client actor／tenant scope.
+
 ## 1. 文件狀態與權威邊界
 
 本 Spec 定義 `kinsun.ai` 第一條 canonical Gate 1 Vertical Slice 的**待實作增量**。它將既有產品、

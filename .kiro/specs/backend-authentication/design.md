@@ -1,5 +1,16 @@
 # 技術設計：後端登入與註冊系統
 
+> **權威更新（2026-08-14）**
+>
+> 本文件的 Cognito architecture 仍為 Proposed／historical candidate。現行 Account 與 Session 決策見
+> [ADR 0010](../../../docs/adr/0010-provider-neutral-oidc-and-application-sessions.md)／
+> [ADR 0012](../../../docs/adr/0012-kinsun-owned-account-and-linked-authenticators.md)；Target Account／Elder
+> 分離見 [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md)／
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)。
+> `BoundActorPrincipal` 只能表示登入 Principal；Actor bootstrap／invitation／approval 不得自動建立 Elder。
+> Full Elder authorization 必須在選定 Tenant context 後另外驗證 Enrollment、Relationship／Assignment、
+> Consent 與 resource scope；Entitlement 只控制服務能力。
+
 > **路徑註記（2026-08-06 加註，未變更提案內容）**
 >
 > `infrastructure/` 目錄已於 2026-08-06 改名為 `infra/`。**本文件內所有 `infrastructure/`

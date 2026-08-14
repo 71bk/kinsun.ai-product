@@ -1,5 +1,12 @@
 # Implementation Plan: Gate 1 Agent Vertical Slice
 
+> **2026-08-14 scope note:** Do not add Enrollment／Entitlement／Organization CRUD to Gate 1 merely to
+> satisfy [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md). Existing
+> Gate 1 work must only preserve the boundary: `elder_id` is the care subject, Actor／service identity is
+> the initiator, and client-supplied actor／tenant scope is never authoritative. The no-account Elder and
+> Staff-assisted Session are a separate follow-up slice tracked by
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md).
+
 ## Overview
 
 本計畫只列從目前 canonical baseline 到 Gate 1 閉環的**淨新增工作**。所有任務初始均未完成；

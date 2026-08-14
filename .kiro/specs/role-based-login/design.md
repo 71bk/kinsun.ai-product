@@ -1,5 +1,16 @@
 # 技術設計文件：角色式登入與導向系統
 
+> **LEGACY／SUPERSEDED DESIGN（2026-08-14）**
+>
+> 本設計的 Cognito、DynamoDB Single-Table `User_Record`、OAuth-only 與固定 role-to-route mapping
+> 不再是 canonical architecture。現行與 Target 決策見
+> [ADR 0010](../../../docs/adr/0010-provider-neutral-oidc-and-application-sessions.md)、
+> [ADR 0012](../../../docs/adr/0012-kinsun-owned-account-and-linked-authenticators.md)、
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md) 及
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)。
+> Elder 可以無帳號，由授權 Staff／Family／Device 建立受控 Elder Session；前端路由不得只靠
+> `elder` role 或 client entry point 授權。本文只作歷史參考。
+
 ## 概述（Overview）
 
 角色式登入與導向系統是智慧長照 AI 陪伴系統的身份驗證與授權入口模組。系統採用 Next.js App Router (PWA) 作為前端框架，整合 Amazon Cognito User Pool 支援 Google 與 LINE 聯合身分供應商進行 OAuth 2.0 驗證，並透過 DynamoDB Single-Table Design 儲存使用者角色對應關係，實現角色解析與頁面導向。

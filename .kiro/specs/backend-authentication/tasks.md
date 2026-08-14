@@ -1,5 +1,14 @@
 # 實作任務：後端登入與註冊系統
 
+> **執行狀態更新（2026-08-14）**
+>
+> 本清單仍屬未核准的 Cognito 候選方案，不得直接執行或用來覆蓋現行 Kinsun Account 實作。
+> 若未來重啟，必須先依 [ADR 0012](../../../docs/adr/0012-kinsun-owned-account-and-linked-authenticators.md)、
+> [ADR 0013](../../../docs/adr/0013-separate-account-elder-enrollment-entitlement.md) 與
+> [Spec 17](../../../docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)
+> 重新切 task：Actor／identity／Session 與 Elder 建立分離；任何 invitation／approval 不得自動建立 Elder；
+> Elder access 需另驗證 Membership＋Enrollment＋Relationship／Assignment＋Consent，Entitlement 不取代授權。
+
 > **路徑註記（2026-08-06 加註，未變更提案內容）**
 >
 > `infrastructure/` 目錄已於 2026-08-06 改名為 `infra/`。**本文件內所有 `infrastructure/`

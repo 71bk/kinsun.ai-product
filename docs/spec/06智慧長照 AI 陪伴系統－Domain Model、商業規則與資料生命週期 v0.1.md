@@ -14,6 +14,10 @@
 
 適用範圍：長者、專業照護者、家屬、照護單位、派案、語音互動、事件、摘要、記憶、Graph、報表、通知、同意、刪除與主動陪伴
 
+## 2026-08-14 Target Domain Overlay
+
+本文件原有照護 Aggregate 與 `elder_id` ownership 原則繼續有效。涉及 Account、Elder、Tenant、Role、Enrollment、Entitlement、離場及居家續用的內容，改以 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md) 與 [Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md) 為較新、較具體的權威。這是 Target 決策，不表示資料庫與 API 已完成。
+
 ## 相關文件
 
 01｜產品方向與範圍基準 v1.2
@@ -64,7 +68,7 @@ https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/
 
 2. AI 只能產生候選內容，不可直接創造授權、權限、正式記憶、正式照護決策或醫療結論。
 
-3. 所有重要資料都需綁定 elder_id、tenant_id、owner／actor、版本與來源。
+3. 所有 Elder-scoped 正式資料都需綁定 `elder_id`；需要隔離、來源或資料保管判斷時另帶 `tenant_id`／service context，人工或系統操作另記真實 actor／initiator、版本與來源。不得用 `user_id` 取代 Care Subject ownership。
 
 4. 未確認、待覆核、已發布、已撤回與已刪除必須是明確不同狀態。
 
@@ -80,11 +84,17 @@ https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/
 
 10. 無資料時保留「未提及／資料不足」，不得用模型補造。
 
+11. User／Actor 是登入 Principal；Elder 是被照護者，Elder 可以完全沒有 Account。
+
+12. Membership、Elder Enrollment、Service Entitlement 與 Elder Access 是不同關係，必須可獨立撤銷。
+
+13. `elder_id` 表達 Care Subject ownership；`tenant_id`／service context 表達隔離、來源與資料保管情境，不可互相取代。
+
 # 三、Bounded Context
 
 ## 3.1 Identity & Authorization Context
 
-負責 Actor、Role、Tenant、Care Unit、Relationship、Assignment 與 Authorization Scope。
+負責 Actor／User Account、Authenticator、App Session、Tenant Membership、contextual Role 與 Authorization Scope。不得建立或擁有 Elder Profile。
 
 ## 3.2 Elder Profile & Consent Context
 
@@ -114,21 +124,25 @@ https://docs.google.com/document/d/1fPZFY6Y7BEr6LnVOBVd7sRbmmAvUEutIS-HBesEOvoY/
 
 負責 Consent Revocation、Deletion Request、Retention Policy、Audit Record、Data Lineage 與衍生資料清理。
 
+## 3.9 Care Service Context
+
+負責 Organization／Household Tenant、Elder Enrollment、Service Entitlement、Care Unit、Relationship、Assignment、單一 Elder 離場與服務接續。
+
 # 四、核心角色與組織模型
 
 ## 4.1 Actor
 
-用途：代表可以登入、操作、授權或接收通知的人或系統主體。
+用途：代表可以驗證、登入、操作、授權或接收通知的人或系統 Principal；對人類 Principal，產品語言稱 User Account。
 
 主要欄位：actor_id、actor_type、display_name、status、tenant_memberships、created_at。
 
-actor_type：ELDER、DAYCARE_CARE_WORKER、HOME_CARE_WORKER、FAMILY_MEMBER、ADMIN、SYSTEM_SERVICE。
+現行 actor_type：ELDER、DAYCARE_CARE_WORKER、HOME_CARE_WORKER、FAMILY_MEMBER、ADMIN、SYSTEM_SERVICE。其中 `ELDER` 是 legacy compatibility 值，不是 Elder 使用系統的必要條件，也不能單獨授予 Elder Data access。
 
-Invariant：Actor 狀態非 ACTIVE 時不得新增業務操作；System Service 不得模擬人工核准。
+Invariant：Actor 狀態非 ACTIVE 時不得新增業務操作；System Service 不得模擬人工核准；建立 Actor 不得自動建立 Elder。
 
 ## 4.2 Tenant
 
-用途：代表照護機構、營運單位或隔離邊界。
+用途：代表 Organization／Household 的服務、營運與資料隔離情境。它不是 Elder 的帳號擁有者。
 
 主要欄位：tenant_id、tenant_type、name、status、policy_set_id。
 
@@ -150,7 +164,27 @@ unit_type：DAYCARE_CENTER、COMMUNITY_SITE、HOME_CARE_AGENCY。
 
 relationship_type：DAYCARE_ASSIGNMENT、HOME_CARE_ASSIGNMENT、FAMILY_SHARE、LEGAL_REPRESENTATIVE。
 
-Invariant：任何長者資料讀取都必須能回溯至有效 Relationship 或 Assignment。
+Invariant：任何長者資料讀取都必須能回溯至有效 Enrollment，以及 Relationship、Assignment、verified self link 或明確核准的 platform policy；Role／Entitlement 單獨不足以授權。
+
+## 4.5 Actor Tenant Membership
+
+用途：定義 Actor 在某個 Tenant／Care Unit 的 contextual Role 與有效期間。同一 Actor 可在不同 Tenant 擁有不同 Role；Authentication 成功不代表 Membership 有效。
+
+## 4.6 Elder Enrollment
+
+用途：定義 Elder 在哪個 Organization／Household、哪段期間接受服務。
+
+主要欄位：enrollment_id、elder_id、tenant_id、care_unit_id、enrollment_type、status、valid_from、valid_until、ended_reason、created_by_actor_id。
+
+Invariant：結束 Enrollment 必須撤銷該服務情境的後續 access／Session／排程，但不得刪除 Elder、User Account 或歷史照護資料。
+
+## 4.7 Service Entitlement
+
+用途：定義 Tenant 購買或獲配的方案、功能與容量。
+
+主要欄位：entitlement_id、tenant_id、plan_code、status、valid_from、valid_until、feature_set、limits、billing_owner_reference。
+
+Invariant：Entitlement 只控制服務能力，不授予任意 Elder Data access，也不取代資料保存、匯出與刪除政策。
 
 # 五、Aggregate 與 Aggregate Root
 
@@ -256,9 +290,11 @@ Aggregate Root：Deletion Request
 
 6.1 Elder
 
-elder_id、tenant_id、display_name、primary_care_setting、status、preferred_language、preferred_name、response_length_preference、created_at、updated_at。
+Target：elder_id、display_name、primary_care_setting、status、preferred_language、preferred_name、response_length_preference、created_at、updated_at；Organization／Household 關係由 Elder Enrollment 表達。
 
-規則：Demo 只能使用虛擬或去識別資料；長者狀態為 INACTIVE 時停止新互動與新報表。
+Current compatibility：現有 `tenant_id` 仍保留到 Expand → Migrate → Contract 完成；nullable、unique `actor_id` 只代表 optional self-account link，不是 Elder 必填欄位。
+
+規則：Demo 只能使用虛擬或去識別資料；長者狀態為 INACTIVE 時停止新互動與新報表；無 Actor／Account 的 Elder 仍是合法 ACTIVE Elder。
 
 6.2 Consent Grant
 
@@ -268,7 +304,9 @@ purpose：BASIC_VOICE、TRANSCRIPT_STORAGE、CARE_EVENT_EXTRACTION、LONG_TERM_M
 
 6.3 Conversation Session
 
-session_id、elder_id、tenant_id、initiator_type、language_route、state、started_at、ended_at、trace_id、consent_version、policy_version。
+session_id、elder_id、tenant_id／service_context、initiated_by_actor_id、initiator_mode、authorization_reference、entitlement_reference、language_route、state、started_at、ended_at、trace_id、consent_version、policy_version。
+
+規則：SELF、STAFF_ASSISTED、FAMILY_ASSISTED 與 DEVICE 必須可區分；不可把代啟動 Actor 改寫成 Elder Actor。
 
 6.4 Transcript Version
 
@@ -430,6 +468,12 @@ Tenant 1 ─ N Care Unit
 
 Tenant 1 ─ N Actor Membership
 
+Tenant 1 ─ N Service Entitlement
+
+Tenant 1 ─ N Elder Enrollment
+
+Elder 1 ─ N Elder Enrollment
+
 Elder 1 ─ N Consent Grant
 
 Elder 1 ─ N Conversation Session
@@ -479,6 +523,8 @@ Deletion Request 1 ─ N Deletion Job Item
 ## 9.1 授權與資料隔離
 
 1. 所有讀取與寫入都必須同時驗證 actor、role、relationship／assignment、tenant 與 elder scope。
+
+1A. 建立新付費功能或 Session 時，還必須驗證 active Enrollment 與 Entitlement；兩者均不得取代 Elder-scoped Authorization。
 
 2. 日照照服員只能存取所屬據點且被授權長者。
 
@@ -918,6 +964,8 @@ P2｜產品品質
 
 □ 家屬、日照照服員、居服員與長者權限模型已分開。
 
+□ User／Actor 與 Elder 已分離，無帳號 Elder、代啟動 Session、Enrollment、Entitlement 與 optional self link 均有明確規則。
+
 □ 已定義版本、來源追溯、冪等與 stale／rebuild 概念。
 
 □ 撤回、刪除與投影失敗時的資料可見性規則已定義。
@@ -938,7 +986,9 @@ P2｜產品品質
 
 5. 專業照護者是否可代長者確認記憶；若可，適用範圍與理由為何？
 
-6. 多機構共同照護時 elder_id 與跨 tenant Relationship 如何管理？
+6. 多機構共同照護時，哪些 Enrollment 可同時 ACTIVE，哪些資料可在跨 tenant Relationship 下共享？
+
+6A. 正式資料可攜、共同控制與各類資料保存期限由哪個法務／Data Governance policy 核准？
 
 7. 居服員離線草稿是否納入，若納入如何保護裝置資料？
 
