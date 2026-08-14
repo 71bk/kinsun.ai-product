@@ -3,7 +3,13 @@
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-export function StaffSignInView({ showLine }: { showLine: boolean }) {
+export function StaffSignInView({
+  nativeEnabled,
+  showLine,
+}: {
+  nativeEnabled: boolean;
+  showLine: boolean;
+}) {
   const { t } = useLocale();
 
   return (
@@ -12,11 +18,24 @@ export function StaffSignInView({ showLine }: { showLine: boolean }) {
       <p style={{ color: 'var(--color-foreground)', lineHeight: 1.7, margin: '20px 0' }}>
         {t('staffSignIn.body')}
       </p>
-      <form action="/backend/auth/login" method="post">
+      <form action={nativeEnabled ? '/backend/auth/kinsun/start' : '/backend/auth/login'} method="post">
         <input name="intent" type="hidden" value="STAFF" />
-        <input name="provider" type="hidden" value="GOOGLE" />
+        {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
-        <AuthSubmitButton>{t('common.continueWithGoogle')}</AuthSubmitButton>
+        {nativeEnabled && (
+          <input
+            autoComplete="email"
+            maxLength={254}
+            name="email"
+            placeholder="工作 Email"
+            required
+            style={{ boxSizing: 'border-box', fontSize: 18, marginBottom: 16, padding: 12, width: '100%' }}
+            type="email"
+          />
+        )}
+        <AuthSubmitButton>
+          {nativeEnabled ? '傳送 Email 驗證碼' : t('common.continueWithGoogle')}
+        </AuthSubmitButton>
       </form>
       {showLine && (
         <form action="/backend/auth/login" method="post" style={{ marginTop: 'var(--space-4)' }}>

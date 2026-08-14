@@ -3,7 +3,13 @@
 import { touchLinkStyle } from '@/components/touch-link';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-export function FamilyJoinView({ showLine }: { showLine: boolean }) {
+export function FamilyJoinView({
+  nativeEnabled,
+  showLine,
+}: {
+  nativeEnabled: boolean;
+  showLine: boolean;
+}) {
   const { t } = useLocale();
 
   return (
@@ -13,10 +19,42 @@ export function FamilyJoinView({ showLine }: { showLine: boolean }) {
       <p style={{ color: 'var(--color-foreground)', lineHeight: 1.7 }}>{t('join.note')}</p>
       {/* Native form post to the BFF: redemption stays server-side, so this page
           needs no JavaScript to work beyond the language switch. */}
-      <form action="/backend/auth/login" method="post" style={{ marginTop: 20 }}>
+      <form
+        action={nativeEnabled ? '/backend/auth/kinsun/start' : '/backend/auth/login'}
+        method="post"
+        style={{ marginTop: 20 }}
+      >
         <input name="intent" type="hidden" value="FAMILY" />
-        <input name="provider" type="hidden" value="GOOGLE" />
+        {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+        {nativeEnabled && (
+          <>
+            <label htmlFor="displayName" style={{ display: 'block', fontWeight: 700 }}>
+              您的稱呼
+            </label>
+            <input
+              id="displayName"
+              maxLength={120}
+              name="displayName"
+              style={{ boxSizing: 'border-box', fontSize: 18, padding: 12, width: '100%' }}
+            />
+            <label
+              htmlFor="email"
+              style={{ display: 'block', fontWeight: 700, marginTop: 16 }}
+            >
+              Email
+            </label>
+            <input
+              autoComplete="email"
+              id="email"
+              maxLength={254}
+              name="email"
+              required
+              style={{ boxSizing: 'border-box', fontSize: 18, padding: 12, width: '100%' }}
+              type="email"
+            />
+          </>
+        )}
         <label
           htmlFor="invitationCode"
           style={{ display: 'block', fontWeight: 700, marginBottom: 8 }}
@@ -45,7 +83,7 @@ export function FamilyJoinView({ showLine }: { showLine: boolean }) {
           }}
           type="submit"
         >
-          {t('common.continueWithGoogle')}
+          {nativeEnabled ? '傳送 Email 驗證碼' : t('common.continueWithGoogle')}
         </button>
       </form>
       {showLine && (

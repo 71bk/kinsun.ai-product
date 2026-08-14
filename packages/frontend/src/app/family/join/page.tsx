@@ -10,5 +10,7 @@ import { FamilyJoinView } from './FamilyJoinView';
  */
 export default function FamilyJoinPage() {
   const showLine = process.env.LINE_DIRECT_OIDC_ENABLED?.trim().toLowerCase() === 'true';
-  return <FamilyJoinView showLine={showLine} />;
+  const nativeEnabled =
+    process.env.KINSUN_NATIVE_AUTH_ENABLED?.trim().toLowerCase() === 'true';
+  return <FamilyJoinView nativeEnabled={nativeEnabled} showLine={showLine} />;
 }

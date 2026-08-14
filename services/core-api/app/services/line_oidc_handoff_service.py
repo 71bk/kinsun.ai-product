@@ -51,6 +51,7 @@ class LineOidcHandoffService:
         repository: GoogleIdentityRepository | None = None,
         token_codec: PendingIdentityTokenCodec | None = None,
         clock: Callable[[], datetime] | None = None,
+        allow_new_accounts: bool = True,
     ) -> None:
         self._session = session
         self._verifier = verifier
@@ -60,6 +61,7 @@ class LineOidcHandoffService:
         self._repository = repository or GoogleIdentityRepository(session, provider="LINE")
         self._token_codec = token_codec or PendingIdentityTokenCodec()
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._allow_new_accounts = allow_new_accounts
 
     async def handoff(
         self,
@@ -103,7 +105,7 @@ class LineOidcHandoffService:
             issued = await self._app_session_service.issue(external_identity_id=active[0].id)
             return AuthenticatedLineHandoff(status="AUTHENTICATED", session=issued)
 
-        if identities or intent == "STAFF":
+        if identities or intent == "STAFF" or not self._allow_new_accounts:
             raise AuthenticationError(_AUTHENTICATION_REQUIRED)
 
         if pending is not None:

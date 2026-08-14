@@ -5,5 +5,7 @@ import { StaffSignInView } from './StaffSignInView';
 /** See family/join/page.tsx for why this server/client split exists. */
 export default function StaffSignInPage() {
   const showLine = process.env.LINE_DIRECT_OIDC_ENABLED?.trim().toLowerCase() === 'true';
-  return <StaffSignInView showLine={showLine} />;
+  const nativeEnabled =
+    process.env.KINSUN_NATIVE_AUTH_ENABLED?.trim().toLowerCase() === 'true';
+  return <StaffSignInView nativeEnabled={nativeEnabled} showLine={showLine} />;
 }

@@ -25,7 +25,7 @@ class ExternalIdentity(BaseModel, VersionedMixin):
     __pk_name__ = "external_identity_id"
     __table_args__ = (
         sa.CheckConstraint(
-            "provider IN ('GOOGLE','LINE')",
+            "provider IN ('KINSUN','GOOGLE','LINE')",
             name="ck_external_identity_provider",
         ),
         sa.CheckConstraint(

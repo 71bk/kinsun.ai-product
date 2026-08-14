@@ -22,7 +22,7 @@ class GoogleIdentityRepository:
         self,
         session: AsyncSession,
         *,
-        provider: Literal["GOOGLE", "LINE"] = "GOOGLE",
+        provider: Literal["KINSUN", "GOOGLE", "LINE"] = "GOOGLE",
     ) -> None:
         self._session = session
         self._provider = provider

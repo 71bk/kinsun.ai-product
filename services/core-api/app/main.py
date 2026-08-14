@@ -35,6 +35,7 @@ from app.api.family_invitations import router as family_invitations_router
 from app.api.google_oidc_handoff import router as google_oidc_handoff_router
 from app.api.health import router as health_router
 from app.api.identity import router as identity_router
+from app.api.kinsun_email_auth import router as kinsun_email_auth_router
 from app.api.line_links import router as line_links_router
 from app.api.line_oidc_handoff import router as line_oidc_handoff_router
 from app.api.line_webhook import router as line_webhook_router
@@ -188,6 +189,8 @@ def create_app() -> FastAPI:
     app.include_router(tools_router)
     if settings.app_session_auth_enabled:
         app.include_router(app_sessions_router)
+    if settings.kinsun_native_auth_enabled:
+        app.include_router(kinsun_email_auth_router)
     if settings.google_oidc_handoff_enabled:
         app.include_router(google_oidc_handoff_router)
     if settings.line_oidc_handoff_enabled:

@@ -71,6 +71,7 @@ async def handoff_google_oidc(
         pending_policy=PendingIdentityPolicy(
             timedelta(seconds=settings.google_pending_identity_ttl_seconds)
         ),
+        allow_new_accounts=not settings.kinsun_native_auth_enabled,
     )
     result = await service.handoff(
         id_token=request.id_token,

@@ -201,6 +201,7 @@ async def handoff_line_oidc(
         pending_policy=PendingIdentityPolicy(
             timedelta(seconds=settings.line_pending_identity_ttl_seconds)
         ),
+        allow_new_accounts=not settings.kinsun_native_auth_enabled,
     ).handoff(
         id_token=request.id_token,
         expected_nonce=request.expected_nonce,

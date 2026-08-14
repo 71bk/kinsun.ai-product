@@ -59,6 +59,7 @@ class GoogleOidcHandoffService:
         repository: GoogleIdentityRepository | None = None,
         token_codec: PendingIdentityTokenCodec | None = None,
         clock: Callable[[], datetime] | None = None,
+        allow_new_accounts: bool = True,
     ) -> None:
         self._session = session
         self._verifier = verifier
@@ -68,6 +69,7 @@ class GoogleOidcHandoffService:
         self._repository = repository or GoogleIdentityRepository(session)
         self._token_codec = token_codec or PendingIdentityTokenCodec()
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._allow_new_accounts = allow_new_accounts
 
     async def handoff(
         self,
@@ -112,7 +114,7 @@ class GoogleOidcHandoffService:
             return AuthenticatedGoogleHandoff(status="AUTHENTICATED", session=issued)
 
         # Suspended/revoked identities cannot become fresh onboarding records.
-        if identities:
+        if identities or not self._allow_new_accounts:
             raise AuthenticationError(_AUTHENTICATION_REQUIRED)
 
         # Workforce access is provisioned by Core administrators. A login
