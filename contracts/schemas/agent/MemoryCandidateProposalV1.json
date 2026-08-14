@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/agent/MemoryCandidateProposalV1.json",
+  "title": "MemoryCandidateProposalV1",
+  "description": "Minimized, untrusted proposal only. Scope, source event IDs, consent, confirmation, and persistence remain Core-owned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memory_type",
+    "normalized_content",
+    "confirmation_question",
+    "confidence_band",
+    "extractor_version"
+  ],
+  "properties": {
+    "memory_type": {
+      "type": "string",
+      "enum": [
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY"
+      ]
+    },
+    "normalized_content": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "confirmation_question": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "confidence_band": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"]
+    },
+    "extractor_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    }
+  }
+}

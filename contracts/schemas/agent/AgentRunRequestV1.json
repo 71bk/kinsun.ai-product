@@ -76,6 +76,19 @@
       "pattern": "^[a-z]{2,3}(?:-[A-Za-z]{2})?$",
       "maxLength": 10
     },
+    "preferred_address": {
+      "description": "Optional trusted elder-profile address supplied by Core. Runtime must not infer a title when absent.",
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 80,
+      "default": null
+    },
+    "response_length": {
+      "description": "Trusted elder-profile response-length preference supplied by Core.",
+      "type": "string",
+      "enum": ["SHORT", "STANDARD", "DETAILED"],
+      "default": "STANDARD"
+    },
     "input_text": {
       "type": "string",
       "minLength": 1,
@@ -108,6 +121,24 @@
       },
       "default": []
     },
+    "verified_care_events": {
+      "description": "Core-authorized current VERIFIED/CORRECTED event summaries selected through projection references and rechecked against formal state.",
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "version", "event_type", "summary_text", "consent_version"],
+        "properties": {
+          "event_id": { "type": "string", "format": "uuid" },
+          "version": { "type": "integer", "minimum": 1 },
+          "event_type": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "summary_text": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "consent_version": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "default": []
+    },
     "allowed_tools": {
       "description": "Legacy per-run Tool allowlist retained for wire compatibility. The canonical Core companion path sends an empty list; Runtime does not use this field to write Core domain state.",
       "type": "array",
@@ -122,9 +153,9 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["event_candidate"]
+        "enum": ["event_candidate", "memory_candidate"]
       },
-      "maxItems": 1,
+      "maxItems": 2,
       "uniqueItems": true,
       "default": []
     },
@@ -145,6 +176,20 @@
         "required": ["confirmed_memories"],
         "properties": {
           "confirmed_memories": { "minItems": 1 }
+        }
+      },
+      "then": {
+        "properties": {
+          "purpose": { "const": "BASIC_VOICE" }
+        }
+      }
+    }
+    ,
+    {
+      "if": {
+        "required": ["verified_care_events"],
+        "properties": {
+          "verified_care_events": { "minItems": 1 }
         }
       },
       "then": {

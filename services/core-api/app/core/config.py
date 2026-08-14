@@ -93,6 +93,19 @@ class Settings(BaseSettings):
     google_pending_identity_ttl_seconds: int = Field(default=600, ge=60, le=900)
     google_oidc_handoff_enabled: bool = False
 
+    # Kinsun-owned email verification. The first delivery adapter is strictly
+    # development-only; production remains unavailable until real email
+    # delivery is implemented and selected explicitly.
+    kinsun_native_auth_enabled: bool = False
+    kinsun_identity_hmac_secret: str = ""
+    kinsun_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
+    kinsun_email_challenge_hmac_secret: str = ""
+    kinsun_auth_handoff_secret: str = ""
+    kinsun_email_delivery_mode: str = Field(default="disabled", max_length=32)
+    kinsun_synthetic_email_code_secret: str = ""
+    kinsun_email_challenge_ttl_seconds: int = Field(default=600, ge=120, le=900)
+    kinsun_email_challenge_max_attempts: int = Field(default=5, ge=1, le=5)
+
     # Provider-neutral Core-owned browser sessions. The authenticator remains
     # fail-closed until this explicit rollout gate is enabled.
     app_session_auth_enabled: bool = False
@@ -152,6 +165,10 @@ class Settings(BaseSettings):
     agent_runtime_url: str = "http://127.0.0.1:8001"
     agent_runtime_timeout_seconds: float = Field(default=10.0, gt=0, le=30)
     agent_runtime_model_id: str = Field(default="mock", min_length=1, max_length=200)
+    service_identity_enabled: bool = False
+    service_identity_hmac_secret: str = ""
+    service_identity_issuer: str = Field(default="kinsun-local", min_length=1, max_length=80)
+    service_identity_ttl_seconds: int = Field(default=30, ge=1, le=60)
 
     # ─── Validators ──────────────────────────────────────────────────────────────
 
@@ -191,6 +208,47 @@ class Settings(BaseSettings):
                 "GOOGLE_IDENTITY_HMAC_KEY_VERSION must remain 1; "
                 "rotation requires an explicit identity rekey migration"
             )
+        if self.kinsun_identity_hmac_key_version != 1:
+            raise ValueError(
+                "KINSUN_IDENTITY_HMAC_KEY_VERSION must remain 1; "
+                "rotation requires an explicit identity rekey migration"
+            )
+        if self.kinsun_email_delivery_mode not in {"disabled", "synthetic"}:
+            raise ValueError(
+                "KINSUN_EMAIL_DELIVERY_MODE must be either disabled or synthetic"
+            )
+        if self.kinsun_native_auth_enabled:
+            if not self.app_session_auth_enabled:
+                raise ValueError(
+                    "APP_SESSION_AUTH_ENABLED must be true when "
+                    "KINSUN_NATIVE_AUTH_ENABLED=true"
+                )
+            if self.kinsun_email_delivery_mode != "synthetic":
+                raise ValueError(
+                    "Kinsun native auth has no approved production email adapter; "
+                    "development must select synthetic delivery explicitly"
+                )
+            if self.app_env == AppEnv.PRODUCTION:
+                raise ValueError(
+                    "Synthetic Kinsun email delivery is forbidden in production"
+                )
+            if not re.fullmatch(r"[0-9]{6}", self.kinsun_synthetic_email_code_secret):
+                raise ValueError(
+                    "KINSUN_SYNTHETIC_EMAIL_CODE_SECRET must contain exactly six digits"
+                )
+            kinsun_secrets = {
+                self.kinsun_identity_hmac_secret,
+                self.kinsun_email_challenge_hmac_secret,
+                self.kinsun_auth_handoff_secret,
+                self.family_invitation_hmac_secret,
+            }
+            if any(len(secret.encode("utf-8")) < 32 for secret in kinsun_secrets):
+                raise ValueError(
+                    "Kinsun identity, challenge, handoff, and family invitation secrets "
+                    "must each contain at least 32 bytes"
+                )
+            if len(kinsun_secrets) != 4:
+                raise ValueError("Kinsun authentication secrets must be independent")
         if (
             self.google_identity_hmac_secret
             and self.google_oidc_handoff_secret
@@ -344,6 +402,20 @@ class Settings(BaseSettings):
             if self.asr_gate_hmac_secret == self.voice_ticket_hmac_secret:
                 raise ValueError(
                     "ASR_GATE_HMAC_SECRET must be independent from " "VOICE_TICKET_HMAC_SECRET"
+                )
+        if self.service_identity_enabled:
+            if len(self.service_identity_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "SERVICE_IDENTITY_HMAC_SECRET must contain at least 32 bytes when enabled"
+                )
+            if self.service_identity_hmac_secret in {
+                self.voice_ticket_hmac_secret,
+                self.asr_gate_hmac_secret,
+                self.google_oidc_handoff_secret,
+                self.line_oidc_handoff_secret,
+            }:
+                raise ValueError(
+                    "SERVICE_IDENTITY_HMAC_SECRET must be independent from other secrets"
                 )
         return self
 

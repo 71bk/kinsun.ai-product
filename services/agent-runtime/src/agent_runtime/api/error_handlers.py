@@ -27,6 +27,7 @@ from agent_runtime.common.errors import (
     DomainError,
     InvalidRequestError,
     ModelDependencyError,
+    ServiceAuthenticationError,
     StepLimitError,
 )
 from agent_runtime.core.envelopes import ErrorBody, ErrorEnvelope, ValidationDetail
@@ -38,6 +39,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 EXCEPTION_MAP: dict[type[DomainError], int] = {
+    ServiceAuthenticationError: 401,
     InvalidRequestError: 422,
     StepLimitError: 422,
     CoreDependencyError: 503,
@@ -45,6 +47,7 @@ EXCEPTION_MAP: dict[type[DomainError], int] = {
 }
 
 _STATUS_CODE_SLUGS: dict[int, str] = {
+    401: "unauthorized",
     400: "bad_request",
     422: "validation_error",
     500: "internal_error",
@@ -52,6 +55,7 @@ _STATUS_CODE_SLUGS: dict[int, str] = {
 }
 
 _REASON_CODE_BY_EXCEPTION: dict[type[DomainError], str] = {
+    ServiceAuthenticationError: "SERVICE_AUTHENTICATION_FAILED",
     InvalidRequestError: "INVALID_AGENT_REQUEST",
     StepLimitError: "AGENT_STEP_LIMIT_EXCEEDED",
     CoreDependencyError: "CORE_EXECUTION_UNAVAILABLE",

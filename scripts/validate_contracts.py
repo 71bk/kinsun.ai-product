@@ -39,6 +39,10 @@ DATA_SCHEMA_FOR = {
     "agent-run-request.json": "agent/AgentRunRequestV1.json",
     "agent-run-response.json": "agent/AgentRunResponseV1.json",
     "event-candidate-proposal.json": "agent/EventCandidateProposalV1.json",
+    "memory-candidate-proposal.json": "agent/MemoryCandidateProposalV1.json",
+    "memory-candidate-proposal-with-scope.json": (
+        "agent/MemoryCandidateProposalV1.json"
+    ),
     "event-candidate-proposal-with-transcript.json": (
         "agent/EventCandidateProposalV1.json"
     ),

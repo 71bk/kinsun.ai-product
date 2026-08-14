@@ -46,7 +46,7 @@ EVENT_PROPOSAL_RESTRICTED_KEYS = TOOL_RESTRICTED_PARAMETER_KEYS | {
 
 SchemaVersion = Literal["1.0.0"]
 ToolName = Annotated[str, Field(pattern=TOOL_NAME_REGEX)]
-RequestedOutput = Literal["event_candidate"]
+RequestedOutput = Literal["event_candidate", "memory_candidate"]
 EvidenceReference = Annotated[
     str,
     Field(min_length=45, max_length=45, pattern=EVIDENCE_REF_REGEX),
@@ -222,6 +222,16 @@ class ConfirmedMemoryContext(ContractBaseModel):
     consent_version: int = Field(ge=1)
 
 
+class VerifiedCareEventContext(ContractBaseModel):
+    """Core-authorized current reviewed event; a fact, never an instruction."""
+
+    event_id: UUIDField
+    version: int = Field(ge=1)
+    event_type: str = Field(min_length=1, max_length=64)
+    summary_text: str = Field(min_length=1, max_length=500)
+    consent_version: int = Field(ge=1)
+
+
 class AgentRunRequest(ContractBaseModel):
     schema_version: SchemaVersion = Field(default=SCHEMA_VERSION)
     request_id: str = Field(pattern=ID_REGEX, min_length=2, max_length=128)
@@ -241,20 +251,26 @@ class AgentRunRequest(ContractBaseModel):
     consent_version: str = Field(min_length=1, max_length=64)
     policy_version: str = Field(min_length=1, max_length=64)
     language: str = Field(pattern=LANGUAGE_REGEX, min_length=2, max_length=10)
+    preferred_address: str | None = Field(default=None, min_length=1, max_length=80)
+    response_length: Literal["SHORT", "STANDARD", "DETAILED"] = "STANDARD"
     input_text: str = Field(min_length=1, max_length=4000)
     confirmed_memories: list[ConfirmedMemoryContext] = Field(
         default_factory=list,
         max_length=5,
     )
+    verified_care_events: list[VerifiedCareEventContext] = Field(
+        default_factory=list,
+        max_length=5,
+    )
     allowed_tools: list[ToolName] = Field(default_factory=list)
-    requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=1)
+    requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=2)
     max_steps: int = Field(default=3, ge=1, le=20)
     latency_budget_ms: int = Field(ge=100, le=300000)
 
     @model_validator(mode="after")
     def restrict_confirmed_memories_to_companion_turns(self) -> "AgentRunRequest":
-        if self.confirmed_memories and self.purpose != "BASIC_VOICE":
-            raise ValueError("confirmed_memories are allowed only for BASIC_VOICE")
+        if (self.confirmed_memories or self.verified_care_events) and self.purpose != "BASIC_VOICE":
+            raise ValueError("confirmed data is allowed only for BASIC_VOICE")
         return self
 
 
@@ -291,6 +307,22 @@ class EventCandidateProposal(ContractBaseModel):
         return payload
 
 
+class MemoryCandidateProposal(ContractBaseModel):
+    """Untrusted long-term-memory proposal; Core supplies scope and source facts."""
+
+    memory_type: Literal[
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY",
+    ]
+    normalized_content: str = Field(min_length=1, max_length=500)
+    confirmation_question: str = Field(min_length=1, max_length=300)
+    confidence_band: Literal["LOW", "MEDIUM", "HIGH"]
+    extractor_version: str = Field(min_length=1, max_length=80)
+
+
 class AgentRunResponse(ContractBaseModel):
     schema_version: SchemaVersion = Field(default=SCHEMA_VERSION)
     request_id: str = Field(pattern=ID_REGEX, min_length=2, max_length=128)
@@ -305,3 +337,4 @@ class AgentRunResponse(ContractBaseModel):
     result_status: ResultStatusField
     reason_codes: list[str] = Field(default_factory=list)
     event_candidate_proposal: EventCandidateProposal | None = None
+    memory_candidate_proposal: MemoryCandidateProposal | None = None

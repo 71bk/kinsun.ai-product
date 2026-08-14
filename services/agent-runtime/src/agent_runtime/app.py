@@ -10,12 +10,14 @@ from agent_runtime.api.health import router as health_router
 from agent_runtime.api.rag_retrievals import router as rag_retrievals_router
 from agent_runtime.middleware.correlation import CorrelationIdMiddleware
 from agent_runtime.models.bedrock_provider import build_bedrock_model_provider
+from agent_runtime.models.gemini_provider import GeminiModelProvider
 from agent_runtime.models.mock_provider import MockModelProvider
 from agent_runtime.models.openai_compatible_provider import OpenAICompatibleModelProvider
 from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
 from agent_runtime.rag.models import RagRuntimeSettings
 from agent_runtime.rag.retriever import build_retriever
+from agent_runtime.security.service_identity import ServiceCredentialVerifier
 from agent_runtime.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -38,6 +40,16 @@ def build_provider() -> ModelProvider:
             model_id=settings.BEDROCK_TEXT_MODEL_ID,
             max_tokens=settings.BEDROCK_TEXT_MAX_TOKENS,
             temperature=settings.BEDROCK_TEXT_TEMPERATURE,
+        )
+    if provider_key == "gemini":
+        if not settings.GEMINI_API_KEY or not settings.GEMINI_MODEL_ID:
+            raise ValueError("MODEL_PROVIDER=gemini requires GEMINI_API_KEY and GEMINI_MODEL_ID")
+        return GeminiModelProvider(
+            api_key=settings.GEMINI_API_KEY.get_secret_value(),
+            model_id=settings.GEMINI_MODEL_ID,
+            max_tokens=settings.GEMINI_MAX_TOKENS,
+            temperature=settings.GEMINI_TEMPERATURE,
+            timeout_seconds=settings.GEMINI_TIMEOUT_SECONDS,
         )
     if provider_key == "openai-compatible":
         if not settings.OPENAI_COMPATIBLE_BASE_URL or not settings.OPENAI_COMPATIBLE_MODEL_ID:
@@ -120,6 +132,10 @@ async def _lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    if not settings.SERVICE_IDENTITY_ENABLED:
+        raise ValueError("SERVICE_IDENTITY_ENABLED=true is required for Agent Runtime")
+    if not settings.SERVICE_IDENTITY_HMAC_SECRET:
+        raise ValueError("SERVICE_IDENTITY_HMAC_SECRET is required for Agent Runtime")
     app = FastAPI(
         title="Eldercare Agent Runtime",
         version=settings.API_VERSION,
@@ -139,6 +155,13 @@ def create_app() -> FastAPI:
         max_total_tools=settings.MAX_TOTAL_TOOLS,
     )
     app.state.rag_retriever = build_configured_rag_retriever()
+    app.state.service_identity_verifier = ServiceCredentialVerifier(
+        secret=settings.SERVICE_IDENTITY_HMAC_SECRET.get_secret_value(),
+        issuer=settings.SERVICE_IDENTITY_ISSUER,
+        expected_subject="core-api",
+        audience="agent-runtime",
+        max_ttl_seconds=settings.SERVICE_IDENTITY_TTL_SECONDS,
+    )
     return app
 
 

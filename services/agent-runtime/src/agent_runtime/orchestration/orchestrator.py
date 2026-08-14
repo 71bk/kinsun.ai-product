@@ -3,6 +3,7 @@ from __future__ import annotations
 from agent_runtime.agents.companion.agent import CompanionAgent
 from agent_runtime.agents.event_extractor.agent import EventExtractorAgent
 from agent_runtime.agents.event_extractor.models import EventExtractionContext
+from agent_runtime.agents.memory_extractor.agent import MemoryExtractorAgent
 from agent_runtime.agents.safety_evaluator.evaluator import SafetyEvaluator
 from agent_runtime.common.enums import SafetyDecision
 from agent_runtime.common.errors import StepLimitError
@@ -15,6 +16,7 @@ from agent_runtime.contracts.models import (
     AgentRunResponse,
     ContextManifest,
     EventCandidateProposal,
+    MemoryCandidateProposal,
     SafetyEvaluation,
 )
 from agent_runtime.models.provider import ModelProvider
@@ -57,6 +59,7 @@ class AgentOrchestrator:
         self.max_total_tools = max_total_tools
         self.companion = CompanionAgent(provider)
         self.event_extractor = EventExtractorAgent()
+        self.memory_extractor = MemoryExtractorAgent()
         self.safety_evaluator = SafetyEvaluator()
 
     def select_agent(self, _request: AgentRunRequest) -> str:
@@ -145,6 +148,22 @@ class AgentOrchestrator:
             if isinstance(extraction, EventCandidateProposal):
                 event_candidate_proposal = extraction
 
+        memory_candidate_proposal: MemoryCandidateProposal | None = None
+        if (
+            safety_result.decision == SafetyDecision.ALLOW
+            and "memory_candidate" in request.requested_outputs
+            and event_candidate_proposal is not None
+        ):
+            try:
+                memory_extraction = await self.memory_extractor.run(
+                    request,
+                    source_event=event_candidate_proposal,
+                )
+            except ValueError:
+                memory_extraction = None
+            if isinstance(memory_extraction, MemoryCandidateProposal):
+                memory_candidate_proposal = memory_extraction
+
         return self._response(
             request=request,
             trace_id=trace_id,
@@ -154,6 +173,7 @@ class AgentOrchestrator:
             safety_result=safety_result,
             reply_text=reply_text,
             event_candidate_proposal=event_candidate_proposal,
+            memory_candidate_proposal=memory_candidate_proposal,
         )
 
     @staticmethod
@@ -167,6 +187,7 @@ class AgentOrchestrator:
         safety_result: SafetyEvaluation,
         reply_text: str,
         event_candidate_proposal: EventCandidateProposal | None = None,
+        memory_candidate_proposal: MemoryCandidateProposal | None = None,
     ) -> AgentRunResponse:
         return AgentRunResponse(
             request_id=request.request_id,
@@ -181,4 +202,5 @@ class AgentOrchestrator:
             result_status=map_to_status(safety_result),
             reason_codes=list(dict.fromkeys(safety_result.reason_codes)),
             event_candidate_proposal=event_candidate_proposal,
+            memory_candidate_proposal=memory_candidate_proposal,
         )

@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, field_validator
 
+from app.adapters.service_identity import (
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+    canonical_json_bytes,
+)
 from app.core.config import get_settings
 from app.core.exceptions import ServiceUnavailableError
 
@@ -105,6 +111,24 @@ class AgentEventCandidateProposal(BaseModel):
         return payload
 
 
+class AgentMemoryCandidateProposal(BaseModel):
+    """Minimized untrusted memory output; Core owns scope, source, and state."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    memory_type: Literal[
+        "PREFERENCE",
+        "IMPORTANT_RELATIONSHIP",
+        "ROUTINE",
+        "COMMUNICATION_PREFERENCE",
+        "PERSONAL_HISTORY",
+    ]
+    normalized_content: str = Field(min_length=1, max_length=500)
+    confirmation_question: str = Field(min_length=1, max_length=300)
+    confidence_band: Literal["LOW", "MEDIUM", "HIGH"]
+    extractor_version: str = Field(min_length=1, max_length=80)
+
+
 class AgentRunResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -121,6 +145,7 @@ class AgentRunResult(BaseModel):
     result_status: Literal["SUCCESS", "BLOCKED", "SAFE_FALLBACK", "FAILED"]
     reason_codes: list[str]
     event_candidate_proposal: AgentEventCandidateProposal | None = None
+    memory_candidate_proposal: AgentMemoryCandidateProposal | None = None
 
 
 class _AgentResponseMeta(BaseModel):
@@ -146,10 +171,24 @@ class AgentRuntimeClient:
         *,
         base_url: str,
         timeout_seconds: float,
+        credential_signer: ServiceCredentialSigner,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
-        self._base_url = base_url.rstrip("/")
+        normalized_url = base_url.rstrip("/")
+        parsed_url = urlsplit(normalized_url)
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
+            raise ValueError("Agent Runtime URL must be an absolute HTTP(S) origin")
+        if parsed_url.scheme == "http" and parsed_url.hostname not in {
+            "127.0.0.1",
+            "localhost",
+            "::1",
+        }:
+            raise ValueError("Remote Agent Runtime transport must use HTTPS")
+        if parsed_url.username or parsed_url.password or parsed_url.query or parsed_url.fragment:
+            raise ValueError("Agent Runtime URL must not contain credentials, query, or fragment")
+        self._base_url = normalized_url
         self._timeout_seconds = timeout_seconds
+        self._credential_signer = credential_signer
         self._transport = transport
 
     async def run(
@@ -158,16 +197,32 @@ class AgentRuntimeClient:
         request_payload: dict[str, object],
         correlation_id: str,
     ) -> AgentRunResult:
+        path = "/api/v1/agent/runs"
+        body = canonical_json_bytes(request_payload)
+        credential = self._credential_signer.sign(
+            method="POST",
+            path=path,
+            body=body,
+            correlation_id=correlation_id,
+        )
         try:
             async with httpx.AsyncClient(
                 base_url=self._base_url,
                 timeout=self._timeout_seconds,
                 transport=self._transport,
+                # Agent Runtime is a private service boundary. Process-level
+                # HTTP(S)_PROXY settings must never reroute localhost or
+                # service-discovery traffic through an outbound proxy.
+                trust_env=False,
             ) as client:
                 response = await client.post(
-                    "/api/v1/agent/runs",
-                    json=request_payload,
-                    headers={"X-Correlation-ID": correlation_id},
+                    path,
+                    content=body,
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Correlation-ID": correlation_id,
+                        SERVICE_CREDENTIAL_HEADER: credential,
+                    },
                 )
                 response.raise_for_status()
             envelope = _AgentRunEnvelope.model_validate(response.json())
@@ -180,7 +235,20 @@ class AgentRuntimeClient:
 
 def get_agent_runtime_client() -> AgentRuntimeClient:
     settings = get_settings()
+    if not settings.service_identity_enabled:
+        raise ServiceUnavailableError("Agent runtime service identity is disabled")
+    try:
+        signer = ServiceCredentialSigner(
+            secret=settings.service_identity_hmac_secret,
+            issuer=settings.service_identity_issuer,
+            subject="core-api",
+            audience="agent-runtime",
+            ttl_seconds=settings.service_identity_ttl_seconds,
+        )
+    except ValueError as exc:
+        raise ServiceUnavailableError("Agent runtime service identity is unavailable") from exc
     return AgentRuntimeClient(
         base_url=settings.agent_runtime_url,
         timeout_seconds=settings.agent_runtime_timeout_seconds,
+        credential_signer=signer,
     )

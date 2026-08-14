@@ -5,8 +5,16 @@ from httpx import ASGITransport, AsyncClient
 import agent_runtime.app as app_module
 from agent_runtime.app import _resolve_config_path, create_app
 from agent_runtime.rag.models import RetrievalResponseV1, RetrievalResultV1
+from agent_runtime.security.service_identity import (
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+    canonical_json_bytes,
+)
 
 RAG_PATH = "/api/v1/rag/retrievals"
+TEST_SIGNER = ServiceCredentialSigner(
+    secret="synthetic-test-service-identity-secret-32-bytes"
+)
 
 
 def request_payload(**overrides: object) -> dict[str, object]:
@@ -23,9 +31,24 @@ def request_payload(**overrides: object) -> dict[str, object]:
 
 
 async def post(app, payload: dict[str, object]):
+    body = canonical_json_bytes(payload)
+    correlation_id = "cid-rag-test"
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        return await client.post(RAG_PATH, json=payload)
+        return await client.post(
+            RAG_PATH,
+            content=body,
+            headers={
+                "Content-Type": "application/json",
+                "X-Correlation-ID": correlation_id,
+                SERVICE_CREDENTIAL_HEADER: TEST_SIGNER.sign(
+                    method="POST",
+                    path=RAG_PATH,
+                    body=body,
+                    correlation_id=correlation_id,
+                ),
+            },
+        )
 
 
 async def test_unconfigured_retrieval_returns_explicit_failed_fallback_without_guessing():

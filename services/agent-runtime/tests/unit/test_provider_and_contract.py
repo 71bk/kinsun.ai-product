@@ -4,6 +4,7 @@ from agent_runtime.agents.companion.agent import CompanionAgent
 from agent_runtime.agents.safety_evaluator.evaluator import SafetyEvaluator
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
 from agent_runtime.models.mock_provider import MockModelProvider
+from agent_runtime.models.prompting import build_model_prompts
 from agent_runtime.models.provider import ModelProvider
 
 
@@ -70,6 +71,55 @@ def test_safety_evaluator_blocks_high_risk_medical_request():
     result = evaluator.evaluate(req, "一般回覆")
     assert result.decision.value in {"BLOCK", "SAFE_FALLBACK"}
     assert result.risk_level.value == "HIGH"
+
+
+def test_safety_evaluator_blocks_model_generated_cause_and_self_treatment() -> None:
+    req = make_request()
+    req.input_text = "我頭痛。"
+    result = SafetyEvaluator().evaluate(
+        req,
+        "會不會是沒睡好或太累了呢？要不要先喝點溫水、坐著休息一下？",
+    )
+    assert result.decision.value == "BLOCK"
+    assert result.reason_codes == ["UNSAFE_MEDICAL_REPLY"]
+
+
+def test_companion_prompt_uses_neutral_address_when_profile_has_none() -> None:
+    req = make_request()
+    manifest = ContextManifest(
+        agent_id="companion-agent",
+        elder_id=req.elder_id,
+        tenant_id=req.tenant_id,
+        purpose=req.purpose,
+        consent_version=req.consent_version,
+        policy_version=req.policy_version,
+        items=[],
+        excluded_items=[],
+        total_token_estimate=0,
+    )
+    system_prompt, _ = build_model_prompts(req, manifest, req.language)
+    assert "只使用中性的「您／您好」" in system_prompt
+    assert "不得使用大哥、大姐" in system_prompt
+
+
+def test_companion_prompt_honors_only_trusted_address_and_length() -> None:
+    req = make_request()
+    req.preferred_address = "林奶奶"
+    req.response_length = "SHORT"
+    manifest = ContextManifest(
+        agent_id="companion-agent",
+        elder_id=req.elder_id,
+        tenant_id=req.tenant_id,
+        purpose=req.purpose,
+        consent_version=req.consent_version,
+        policy_version=req.policy_version,
+        items=[],
+        excluded_items=[],
+        total_token_estimate=0,
+    )
+    system_prompt, _ = build_model_prompts(req, manifest, req.language)
+    assert "稱呼只能使用 Core 提供的「林奶奶」" in system_prompt
+    assert "回覆限制為一到兩句" in system_prompt
 
 
 @pytest.mark.asyncio

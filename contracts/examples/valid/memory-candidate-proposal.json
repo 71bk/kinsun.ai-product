@@ -1,0 +1,9 @@
+{
+  "data": {
+    "memory_type": "ROUTINE",
+    "normalized_content": "每天早餐習慣吃粥。",
+    "confirmation_question": "要記住您每天早餐習慣吃粥嗎？",
+    "confidence_band": "HIGH",
+    "extractor_version": "memory-extractor-v1"
+  }
+}

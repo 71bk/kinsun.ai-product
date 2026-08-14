@@ -123,6 +123,17 @@
           "type": "null"
         }
       ]
+    },
+    "memory_candidate_proposal": {
+      "description": "Optional untrusted long-term-memory proposal. Core must bind it to a verified source event and create only a Candidate for later elder confirmation.",
+      "oneOf": [
+        {
+          "$ref": "https://kinsun.ai/contracts/schemas/agent/MemoryCandidateProposalV1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   }
 }

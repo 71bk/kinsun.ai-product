@@ -13,6 +13,10 @@ class StepLimitError(DomainError):
     """Agent flow exceeded an allowed decision or Tool limit."""
 
 
+class ServiceAuthenticationError(DomainError):
+    """A private endpoint caller did not present an accepted service identity."""
+
+
 class CoreDependencyError(DomainError):
     """A required Core registration or Tool gate failed closed."""
 

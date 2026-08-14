@@ -24,15 +24,18 @@ info:
     `allowed_tools` remains parseable for wire compatibility but is not a domain
     write grant. The canonical Core path sends an empty list. Runtime does not
     register or complete Core AgentRuns and does not call Core Tool endpoints.
-    It does not yet create memory candidates, query Neptune, run a general
-    multi-Tool loop, or hand off between agents. Browsers must not call this
-    private service directly.
+    It can also return a minimized Memory Candidate proposal when Core requests
+    both event and memory output; Core stores it behind Event review and only
+    an elder confirmation can activate it. It does not query production
+    Neptune, run a general multi-Tool loop, or hand off between agents.
+    Browsers must not call this private service directly.
 
     The Agent Run request can carry the elder's current-turn text. Production
-    use additionally requires an approved private Restricted Data transport
-    contract (service authentication, encryption, minimization, bounded
-    retention/cleanup, and audit) or a reference-based replacement; safe error
-    handling alone does not establish that boundary.
+    use is protected by the ADR 0009 Gate 1 request-bound service credential.
+    The credential binds issuer, subject, audience, method, path, correlation,
+    body SHA-256, expiry (at most 60 seconds), and a replay-protected ID. HTTP is
+    accepted only on loopback; remote transport must use HTTPS. Current-turn
+    text is request-lifetime only and never written to ordinary logs.
 
     `POST /api/v1/rag/retrievals` is staging-only. When its Bedrock and
     OpenSearch adapters are configured it retrieves approved chunks; when they
@@ -51,7 +54,7 @@ info:
     outcome, not a transport error — the elder still receives a reply.
 
 servers:
-  - url: http://localhost:8000
+  - url: http://localhost:8001
     description: Local development (uvicorn --app-dir src agent_runtime.app:app)
 
 tags:
@@ -128,7 +131,9 @@ paths:
         The request body carries elder transcript. It is never echoed back in
         error responses and never written to general logs.
       parameters:
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ServiceCorrelationId"
+      security:
+        - Gate1ServiceCredential: []
       requestBody:
         required: true
         content:
@@ -187,6 +192,8 @@ paths:
                   timestamp: "2026-07-31T04:12:09.482714Z"
         "422":
           $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthorized"
         "500":
           $ref: "#/components/responses/InternalError"
   /api/v1/rag/retrievals:
@@ -211,12 +218,13 @@ paths:
         and does not prove that Human Review, projection, or deletion workflows
         are complete.
 
-        Service-to-service authentication is not implemented yet. Until an
-        IAM, mTLS, or token contract is approved, deploy this endpoint only on
-        a controlled private network and accept `audience`/`purpose` only from
-        an already-authorized internal caller.
+        The same request-bound Core service identity used by Agent Runs is
+        mandatory. Missing, expired, replayed, wrong-audience, wrong-path, or
+        body-mismatched credentials are rejected.
       parameters:
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/ServiceCorrelationId"
+      security:
+        - Gate1ServiceCredential: []
       requestBody:
         required: true
         content:
@@ -253,10 +261,20 @@ paths:
                   schema_version: "1.0"
         "422":
           $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthorized"
         "500":
           $ref: "#/components/responses/InternalError"
 
 components:
+  securitySchemes:
+    Gate1ServiceCredential:
+      type: apiKey
+      in: header
+      name: X-Kinsun-Service-Credential
+      description: |
+        ADR 0009 Gate 1 local/test request-bound credential. It is not a
+        browser bearer token and is never accepted from a query or cookie.
   parameters:
     CorrelationId:
       name: x-correlation-id
@@ -268,8 +286,21 @@ components:
         `meta.correlation_id`.
       schema:
         type: string
+    ServiceCorrelationId:
+      name: x-correlation-id
+      in: header
+      required: true
+      description: Correlation ID covered by the signed service credential.
+      schema:
+        type: string
 
   responses:
+    ServiceUnauthorized:
+      description: Missing, invalid, expired, replayed, or request-mismatched service identity.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelopeV1"
     ValidationFailed:
       description: |
         The body failed schema validation, or it asked for something the
@@ -322,5 +353,3 @@ components:
       $ref: "../schemas/rag/retrieval-request.schema.json"
     RetrievalResponseV1:
       $ref: "../schemas/rag/retrieval-response.schema.json"
-
-security: []

@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     AGENT_VERSION: str = "0.0.1"
     CORE_API_BASE_URL: AnyHttpUrl | None = None
     CORE_API_TIMEOUT_SECONDS: float = Field(default=5.0, gt=0, le=30)
+    SERVICE_IDENTITY_ENABLED: bool = False
+    SERVICE_IDENTITY_HMAC_SECRET: SecretStr | None = None
+    SERVICE_IDENTITY_ISSUER: str = Field(default="kinsun-local", min_length=1, max_length=80)
+    SERVICE_IDENTITY_TTL_SECONDS: int = Field(default=30, ge=1, le=60)
     RAG_MODE: str = "disabled"
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"
@@ -37,6 +41,11 @@ class Settings(BaseSettings):
     BEDROCK_TEXT_MODEL_ID: str | None = None
     BEDROCK_TEXT_MAX_TOKENS: int = Field(default=512, gt=0, le=4096)
     BEDROCK_TEXT_TEMPERATURE: float = Field(default=0.2, ge=0.0, le=1.0)
+    GEMINI_API_KEY: SecretStr | None = None
+    GEMINI_MODEL_ID: str | None = None
+    GEMINI_MAX_TOKENS: int = Field(default=512, gt=0, le=4096)
+    GEMINI_TEMPERATURE: float = Field(default=0.2, ge=0.0, le=1.0)
+    GEMINI_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0.0, le=120.0)
     OPENAI_COMPATIBLE_BASE_URL: AnyHttpUrl | None = None
     OPENAI_COMPATIBLE_API_KEY: SecretStr | None = None
     OPENAI_COMPATIBLE_MODEL_ID: str | None = None

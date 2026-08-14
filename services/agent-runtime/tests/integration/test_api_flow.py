@@ -10,11 +10,19 @@ from referencing.jsonschema import DRAFT202012
 from agent_runtime.app import app
 from agent_runtime.contracts.models import AgentRunResponse
 from agent_runtime.rag.models import RetrievalRequestV1, RetrievalResponseV1, RetrievalResultV1
+from agent_runtime.security.service_identity import (
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+    canonical_json_bytes,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_DIR = REPO_ROOT / "contracts" / "schemas"
 
 RUNS_PATH = "/api/v1/agent/runs"
+TEST_SIGNER = ServiceCredentialSigner(
+    secret="synthetic-test-service-identity-secret-32-bytes"
+)
 
 
 def schema(rel: str) -> dict:
@@ -67,9 +75,23 @@ def make_payload(**overrides) -> dict:
 
 
 async def _post(payload: dict, headers: dict | None = None) -> tuple[int, dict, dict]:
+    body = canonical_json_bytes(payload)
+    request_headers = dict(headers or {})
+    correlation_id = request_headers.get("x-correlation-id", "cid-test-default")
+    request_headers["X-Correlation-ID"] = correlation_id
+    request_headers[SERVICE_CREDENTIAL_HEADER] = TEST_SIGNER.sign(
+        method="POST",
+        path=RUNS_PATH,
+        body=body,
+        correlation_id=correlation_id,
+    )
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post(RUNS_PATH, json=payload, headers=headers)
+        response = await client.post(
+            RUNS_PATH,
+            content=body,
+            headers={"Content-Type": "application/json", **request_headers},
+        )
         return response.status_code, response.json(), dict(response.headers)
 
 
@@ -91,6 +113,19 @@ async def test_agent_run_success_returns_envelope():
     assert body["data"]["selected_agent"] == "companion-agent"
     assert body["data"]["reply_text"]
     assert body["meta"]["correlation_id"]
+
+
+@pytest.mark.asyncio
+async def test_agent_run_rejects_browser_direct_request_without_service_identity():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            RUNS_PATH,
+            json=make_payload(request_id="req-browser-direct-001"),
+            headers={"X-Correlation-ID": "cid-browser-direct-001"},
+        )
+    assert response.status_code == 401
+    assert response.json()["error"]["reason_code"] == "SERVICE_AUTHENTICATION_FAILED"
 
 
 @pytest.mark.asyncio
@@ -119,6 +154,39 @@ async def test_requested_event_candidate_returns_minimized_proposal_only():
         "input_text",
         "transcript",
     }.isdisjoint(proposal)
+
+
+@pytest.mark.asyncio
+async def test_stable_routine_returns_event_and_memory_proposals_when_requested():
+    status, body, _ = await _post(
+        make_payload(
+            request_id="req-memory-proposal-001",
+            input_text="我每天早餐都吃粥",
+            requested_outputs=["event_candidate", "memory_candidate"],
+        )
+    )
+
+    assert status == 200
+    assert body["data"]["event_candidate_proposal"]["event_type"] == "MEAL"
+    proposal = body["data"]["memory_candidate_proposal"]
+    assert proposal["memory_type"] == "ROUTINE"
+    assert proposal["normalized_content"] == "每天早餐習慣吃粥。"
+    assert {"elder_id", "tenant_id", "source_event_ids", "input_text"}.isdisjoint(proposal)
+
+
+@pytest.mark.asyncio
+async def test_one_time_meal_never_returns_memory_proposal():
+    status, body, _ = await _post(
+        make_payload(
+            request_id="req-one-time-memory-001",
+            input_text="我今天早餐吃了粥",
+            requested_outputs=["event_candidate", "memory_candidate"],
+        )
+    )
+
+    assert status == 200
+    assert body["data"]["event_candidate_proposal"] is not None
+    assert body["data"]["memory_candidate_proposal"] is None
 
 
 @pytest.mark.asyncio

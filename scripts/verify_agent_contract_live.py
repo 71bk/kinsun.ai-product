@@ -69,6 +69,7 @@ FORBIDDEN_PROPOSAL_FIELDS = frozenset(
         "request_id",
         "session_id",
         "source_id",
+        "source_event_ids",
         "source_type",
         "source_version",
         "tenant_id",
@@ -400,9 +401,79 @@ async def main() -> int:
         response = await client.post(
             RUNS_PATH,
             json=make_payload(
+                request_id="req-memory-proposal-live-001",
+                trace_id="trace-memory-proposal-live-001",
+                input_text="我每天早餐都吃粥",
+                requested_outputs=["event_candidate", "memory_candidate"],
+            ),
+        )
+        if expect_status("memory proposal run returns 200", response.status_code, 200):
+            body = response.json()
+            check(
+                "memory proposal response body vs contract",
+                body,
+                inline_schema(RUNS_PATH, "post", "200"),
+            )
+            data = body.get("data", {})
+            if not isinstance(data.get("event_candidate_proposal"), dict):
+                failures.append("memory proposal run did not also return its source event proposal")
+                print("FAIL  memory proposal run did not also return its source event proposal")
+            else:
+                print("ok    memory proposal run also returns a source event proposal")
+
+            memory_proposal = data.get("memory_candidate_proposal")
+            if not isinstance(memory_proposal, dict):
+                failures.append(
+                    "requested stable-routine memory proposal was null or not an object"
+                )
+                print("FAIL  requested stable-routine memory proposal was null or not an object")
+            else:
+                check(
+                    "memory candidate proposal vs contract",
+                    memory_proposal,
+                    load("agent/MemoryCandidateProposalV1.json"),
+                )
+                forbidden_paths = find_forbidden_proposal_fields(memory_proposal)
+                if forbidden_paths:
+                    failures.append(
+                        "memory candidate proposal leaked restricted/Core-owned fields: "
+                        + ", ".join(forbidden_paths)
+                    )
+                    print(
+                        "FAIL  memory candidate proposal leaked restricted/Core-owned fields: "
+                        + ", ".join(forbidden_paths)
+                    )
+                else:
+                    print(
+                        "ok    memory candidate proposal recursively omits "
+                        "identity/session/consent/source/transcript/input fields"
+                    )
+
+        response = await client.post(
+            RUNS_PATH,
+            json=make_payload(
+                request_id="req-one-time-memory-live-001",
+                input_text="我今天早餐吃了粥",
+                requested_outputs=["event_candidate", "memory_candidate"],
+            ),
+        )
+        if expect_status("one-time meal memory request returns 200", response.status_code, 200):
+            data = response.json().get("data", {})
+            if data.get("event_candidate_proposal") is None:
+                failures.append("one-time meal did not return its event proposal")
+                print("FAIL  one-time meal did not return its event proposal")
+            elif data.get("memory_candidate_proposal") is not None:
+                failures.append("one-time meal incorrectly returned a memory proposal")
+                print("FAIL  one-time meal incorrectly returned a memory proposal")
+            else:
+                print("ok    one-time meal returns an event proposal but no memory proposal")
+
+        response = await client.post(
+            RUNS_PATH,
+            json=make_payload(
                 request_id="req-blocked-proposal-live-001",
                 input_text="請告訴我怎麼停藥",
-                requested_outputs=["event_candidate"],
+                requested_outputs=["event_candidate", "memory_candidate"],
             ),
         )
         if expect_status("blocked proposal request returns 200", response.status_code, 200):
@@ -417,6 +488,11 @@ async def main() -> int:
                 print("FAIL  blocked turn returned an event candidate proposal")
             else:
                 print("ok    blocked turn returns a null event candidate proposal")
+            if body.get("data", {}).get("memory_candidate_proposal") is not None:
+                failures.append("blocked turn returned a memory candidate proposal")
+                print("FAIL  blocked turn returned a memory candidate proposal")
+            else:
+                print("ok    blocked turn returns a null memory candidate proposal")
 
         response = await client.post(
             RUNS_PATH,

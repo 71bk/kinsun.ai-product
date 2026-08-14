@@ -32,6 +32,10 @@ _MEAL_PATTERN = re.compile(
     r"不吃|吃不下)|(?:吃了|吃過|沒吃|沒有吃|吃不下).{0,12}"
     r"(?:飯|粥|麵|水果|早餐|午餐|晚餐))"
 )
+_STABLE_MEAL_ROUTINE_PATTERN = re.compile(
+    r"(?:我)?(?:每天|每日|每天早上).{0,8}(?:早餐|早飯).{0,8}"
+    r"(?:吃|喝)(?:粥|飯|麵|水果|豆漿|牛奶)"
+)
 _SLEEP_PATTERN = re.compile(
     r"(?:(?:昨晚|昨天晚上|今天).{0,10}(?:睡得|睡了|失眠|沒睡|睡不著)|" r"睡不好|睡得好|睡不著|失眠)"
 )
@@ -105,7 +109,7 @@ class EventExtractorAgent:
                 },
                 ConfidenceBand.MEDIUM,
             )
-        if _MEAL_PATTERN.search(text):
+        if _MEAL_PATTERN.search(text) or _STABLE_MEAL_ROUTINE_PATTERN.search(text):
             return CareEventType.MEAL, self._meal_payload(text), ConfidenceBand.MEDIUM
         if _SLEEP_PATTERN.search(text):
             return CareEventType.SLEEP, self._sleep_payload(text), ConfidenceBand.MEDIUM

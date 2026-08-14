@@ -18,9 +18,32 @@ from agent_runtime.app import app
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
 from agent_runtime.models.provider import ModelProvider
+from agent_runtime.security.service_identity import (
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+    canonical_json_bytes,
+)
 
 RUNS_PATH = "/api/v1/agent/runs"
 ELDER_WORDS = "我昨天晚上睡不好，一直咳嗽。"
+TEST_SIGNER = ServiceCredentialSigner(
+    secret="synthetic-test-service-identity-secret-32-bytes"
+)
+
+
+def signed_request() -> tuple[bytes, dict[str, str]]:
+    body = canonical_json_bytes(make_payload())
+    correlation_id = "cid-provider-down-001"
+    return body, {
+        "Content-Type": "application/json",
+        "X-Correlation-ID": correlation_id,
+        SERVICE_CREDENTIAL_HEADER: TEST_SIGNER.sign(
+            method="POST",
+            path=RUNS_PATH,
+            body=body,
+            correlation_id=correlation_id,
+        ),
+    }
 
 
 class BrokenProvider(ModelProvider):
@@ -71,8 +94,9 @@ async def test_provider_failure_is_a_503_and_not_a_conversational_success(
     broken_provider: None,
 ) -> None:
     transport = ASGITransport(app=app)
+    body, headers = signed_request()
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post(RUNS_PATH, json=make_payload())
+        response = await client.post(RUNS_PATH, content=body, headers=headers)
 
     assert response.status_code == 503
     body = response.json()
@@ -87,8 +111,9 @@ async def test_provider_failure_keeps_the_elder_transcript_out_of_the_log(
 ) -> None:
     with caplog.at_level(logging.DEBUG, logger="agent_runtime"):
         transport = ASGITransport(app=app)
+        body, headers = signed_request()
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.post(RUNS_PATH, json=make_payload())
+            response = await client.post(RUNS_PATH, content=body, headers=headers)
 
     assert response.status_code == 503
     logged = "\n".join(
