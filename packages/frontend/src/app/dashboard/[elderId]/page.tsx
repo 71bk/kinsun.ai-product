@@ -13,6 +13,7 @@ import { StateCard, summaryState } from '@/components/StateCard';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { Toast } from '@/components/ui/Toast';
 import { ApiRequestError } from '@/lib/api/client';
 import { getElderWorkspace, type ElderWorkspaceView } from '@/lib/api/elders';
 import {
@@ -90,6 +91,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     decision: ReviewSummaryDecision;
   } | null>(null);
   const [summaryBusy, setSummaryBusy] = useState(false);
+  const [toastKey, setToastKey] = useState<MessageKey | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -193,6 +195,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
       await reviewEvent(apiConfig, elderId, event, decision, correctedContent);
       loadEvents();
       loadNeedsReview();
+      setToastKey('toast.eventReviewed');
     } catch (error) {
       setErrorKey(describeError(error, 'error.reviewEventFailed'));
       throw error;
@@ -203,6 +206,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     try {
       await rejectMemory(apiConfig, elderId, memory);
       loadMemories();
+      setToastKey('toast.memoryRejected');
     } catch (error) {
       setErrorKey(describeError(error, 'error.updateMemoryFailed'));
       throw error;
@@ -213,6 +217,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     try {
       await deleteMemory(apiConfig, elderId, memory);
       loadMemories();
+      setToastKey('toast.memoryDeleted');
     } catch (error) {
       setErrorKey(describeError(error, 'error.updateMemoryFailed'));
       throw error;
@@ -226,6 +231,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
       await reviewSummary(apiConfig, elderId, pendingSummary.summary, pendingSummary.decision);
       setPendingSummary(null);
       loadSummaries();
+      setToastKey('toast.summaryReviewed');
     } catch (error) {
       setErrorKey(describeError(error, 'error.reviewSummaryFailed'));
     } finally {
@@ -466,6 +472,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
         title={t('summaryReview.confirmTitle')}
         tone={pendingSummary?.decision === 'REJECT' ? 'destructive' : 'default'}
       />
+      {toastKey && <Toast message={t(toastKey)} onDismiss={() => setToastKey(null)} />}
     </main>
   );
 }

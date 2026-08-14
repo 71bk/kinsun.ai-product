@@ -1,0 +1,11 @@
+.page {
+  display: grid;
+  gap: var(--block-gap);
+  min-width: 0;
+}
+
+.back {
+  justify-self: start;
+  color: var(--color-primary-text);
+  font-weight: 700;
+}

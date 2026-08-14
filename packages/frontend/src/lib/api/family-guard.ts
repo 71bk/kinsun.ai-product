@@ -108,32 +108,39 @@ export function assertNoRestrictedFields(payload: unknown, depth = 0): void {
 }
 
 /**
- * Drops reports the family may not see, and reports the contract violation.
+ * Single-report counterpart used by both the list and detail clients below.
  *
- * Dropping rather than throwing is the right trade here: an unpublished report
- * that never reaches the DOM has leaked nothing, and failing the whole page
- * would deny a legitimate family member the reports they are entitled to
- * because of one bad row. The violation is still surfaced, because silently
- * swallowing it would hide a Core bug behind a page that looks fine.
+ * Returns `null` rather than throwing: an unpublished report that never
+ * reaches the DOM has leaked nothing, and the caller (list filter or detail
+ * fetch) is what decides whether "not visible" means "drop this row" or
+ * "treat the whole request as not found". The violation is still logged,
+ * because silently swallowing it would hide a Core bug behind a page that
+ * looks fine.
  *
- * Nothing is shown to the family about the dropped rows — learning that a draft
- * exists is itself disclosure (§10.3).
+ * Nothing is shown to the family about a dropped report — learning that a
+ * draft exists is itself disclosure (§10.3).
  */
+export function keepFamilyVisibleReport<T extends { status: string; report_id?: string }>(
+  report: T,
+): T | null {
+  if (isFamilyVisibleStatus(report.status)) return report;
+  // Status and id only: neither is restricted content, and the id is what
+  // makes the Core-side bug findable.
+  console.error(
+    '[family] Core returned a report the family surface must not render; dropped it.',
+    { status: report.status, reportId: report.report_id ?? '(unknown)' },
+  );
+  return null;
+}
+
+/** List counterpart of `keepFamilyVisibleReport`, used by `listFamilyReports`. */
 export function keepFamilyVisible<T extends { status: string; report_id?: string }>(
   reports: readonly T[],
 ): T[] {
   const visible: T[] = [];
   for (const report of reports) {
-    if (isFamilyVisibleStatus(report.status)) {
-      visible.push(report);
-      continue;
-    }
-    // Status and id only: neither is restricted content, and the id is what
-    // makes the Core-side bug findable.
-    console.error(
-      '[family] Core returned a report the family surface must not render; dropped it.',
-      { status: report.status, reportId: report.report_id ?? '(unknown)' },
-    );
+    const kept = keepFamilyVisibleReport(report);
+    if (kept) visible.push(kept);
   }
   return visible;
 }

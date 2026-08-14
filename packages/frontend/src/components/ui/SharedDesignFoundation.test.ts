@@ -11,6 +11,7 @@ import { ErrorState } from './ErrorState';
 import { FilterChip } from './FilterChip';
 import { SearchField } from './SearchField';
 import { SummaryMetricCard } from './SummaryMetricCard';
+import { Toast } from './Toast';
 
 function renderWithLocale(element: ReactElement, locale: 'zh-Hant' | 'en' = 'en'): string {
   return renderToStaticMarkup(
@@ -108,6 +109,20 @@ describe('shared design foundation semantics', () => {
     expect(markup).toContain('Confirm');
     expect(markup).toContain('data-tone="destructive"');
   });
+
+  /* role="status"/aria-live="polite", not "alert": a routine write-action
+     success must not interrupt a screen reader the way ErrorState does. */
+  it('confirms a completed write action without an assertive interruption', () => {
+    const markup = renderWithLocale(
+      createElement(Toast, { message: 'Synthetic action completed', onDismiss: () => undefined }),
+    );
+
+    expect(markup).toContain('role="status"');
+    expect(markup).toContain('aria-live="polite"');
+    expect(markup).not.toContain('role="alert"');
+    expect(markup).toContain('Synthetic action completed');
+    expect(markup).toContain('aria-label="Dismiss"');
+  });
 });
 
 describe('shared design foundation styling boundary', () => {
@@ -119,6 +134,7 @@ describe('shared design foundation styling boundary', () => {
     '../ui/EmptyState.module.css',
     '../ui/ErrorState.module.css',
     '../ui/ConfirmationDialog.module.css',
+    '../ui/Toast.module.css',
   ])('%s contains no raw hex colours', (relativePath) => {
     const css = readFileSync(
       fileURLToPath(new URL(`../layout/${relativePath}`, import.meta.url)),

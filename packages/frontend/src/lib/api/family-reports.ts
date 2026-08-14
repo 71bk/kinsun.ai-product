@@ -1,5 +1,5 @@
-import { apiFetch, type ApiConfig } from './client';
-import { assertNoRestrictedFields, keepFamilyVisible } from './family-guard';
+import { apiFetch, ApiRequestError, type ApiConfig } from './client';
+import { assertNoRestrictedFields, keepFamilyVisible, keepFamilyVisibleReport } from './family-guard';
 
 export type FamilyReportType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'IMPORTANT_EVENT';
 export type FamilyReportStatus = 'DRAFT' | 'NEEDS_REVIEW' | 'PUBLISHED' | 'WITHDRAWN' | 'STALE';
@@ -93,4 +93,26 @@ export async function listFamilyReports(
   );
   assertNoRestrictedFields(result);
   return keepFamilyVisible(result.items).map(toFamilyReportView);
+}
+
+/**
+ * Fetches a single report for the detail route. Same defence-in-depth as
+ * `listFamilyReports`: the raw payload is checked before it is mapped.
+ *
+ * A Draft/Needs-Review/Stale report collapses to the same `ApiRequestError`
+ * shape Core itself uses for "not found or not authorized" — confirming that
+ * an unpublished report exists at this id would itself be disclosure (§10.3),
+ * and AGENTS.md §5 requires "unauthorized" and "does not exist" to read alike.
+ */
+export async function getFamilyReport(
+  config: ApiConfig,
+  reportId: string,
+): Promise<FamilyReportView> {
+  const result = await apiFetch<CoreFamilyReport>(config, `/api/v1/family/reports/${reportId}`);
+  assertNoRestrictedFields(result);
+  const visible = keepFamilyVisibleReport(result);
+  if (!visible) {
+    throw new ApiRequestError(404, 'Report not found', 'RESOURCE_NOT_FOUND');
+  }
+  return toFamilyReportView(visible);
 }

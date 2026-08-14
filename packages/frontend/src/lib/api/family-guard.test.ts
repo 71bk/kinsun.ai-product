@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ApiConfig } from './client';
+import { ApiRequestError, type ApiConfig } from './client';
 import {
   assertNoRestrictedFields,
   FamilyDataRedlineError,
   isFamilyVisibleStatus,
   keepFamilyVisible,
 } from './family-guard';
-import { listFamilyReports } from './family-reports';
+import { getFamilyReport, listFamilyReports } from './family-reports';
 
 const config: ApiConfig = { apiBaseUrl: '/backend/core/' };
 
@@ -182,5 +182,46 @@ describe('listFamilyReports', () => {
 
     expect(reports).toHaveLength(1);
     expect(reports[0]?.items[0]?.text).toBe('午餐吃了魚');
+  });
+});
+
+describe('getFamilyReport', () => {
+  it('returns a published report', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => success(report({ report_id: 'published-1' }))),
+    );
+
+    const view = await getFamilyReport(config, 'published-1');
+
+    expect(view.reportId).toBe('published-1');
+    expect(view.items[0]?.text).toBe('午餐吃了魚');
+  });
+
+  /* §10.3: learning that a draft exists at this id is itself disclosure, so a
+     withheld status must read exactly like "not found", not like a distinct
+     "forbidden" case that would confirm the row is there. */
+  it('collapses a Draft or Needs-Review report to a 404, like Core itself does', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => success(report({ report_id: 'draft-1', status: 'DRAFT' }))),
+    );
+
+    const error = await getFamilyReport(config, 'draft-1').catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect((error as ApiRequestError).status).toBe(404);
+  });
+
+  it('fails loudly when Core leaks a restricted field', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => success(report({ transcript: '長者說的原話' }))),
+    );
+
+    await expect(getFamilyReport(config, 'report-1')).rejects.toBeInstanceOf(
+      FamilyDataRedlineError,
+    );
   });
 });

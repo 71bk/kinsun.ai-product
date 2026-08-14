@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FamilySummaryCard } from '@/components/family/FamilySummaryCard';
+import { ReportCard } from '@/components/family/ReportCard';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
 import { StateCard } from '@/components/StateCard';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ApiRequestError } from '@/lib/api/client';
 import { listFamilyReports, type FamilyReportView } from '@/lib/api/family-reports';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
+import styles from './FamilyHomePage.module.css';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -67,15 +72,22 @@ export default function FamilyHomePage() {
 
   if (errorKey) {
     return (
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-        <p style={{ color: 'var(--color-destructive)' }}>{t(errorKey)}</p>
+      <main className={styles.page}>
+        <ErrorState
+          action={
+            <button className={styles.retryButton} onClick={load} type="button">
+              {t('common.retry')}
+            </button>
+          }
+          description={t(errorKey)}
+        />
       </main>
     );
   }
 
   if (!reports) {
     return (
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
+      <main className={styles.page}>
         <Skeleton rows={5} />
       </main>
     );
@@ -114,42 +126,26 @@ export default function FamilyHomePage() {
     .slice(0, 5);
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>{t('family.homeTitle')}</h1>
-      <p style={{ color: 'var(--color-muted-foreground)', marginBottom: 20 }}>
-        {t('family.meta', {
+    <main className={styles.page}>
+      <PageHeader
+        meta={t('family.meta', {
           elderId,
           updated: lastUpdated ? formatDateTime(lastUpdated) : t('family.noData'),
         })}
-      </p>
+        title={t('family.homeTitle')}
+      />
 
-      <section style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>{t('family.todayTitle')}</h2>
+      <FamilySummaryCard title={t('family.todayTitle')}>
         {todayReport ? (
-          todayReport.items.length > 0 ? (
-            <ul>
-              {todayReport.items.map((item, index) => (
-                <li key={`${item.category}-${index}`}>{item.text}</li>
-              ))}
-            </ul>
-          ) : (
-            /* §1 / §4.2: "no data" gets its own shape rather than a grey line of
-               text, so it never reads as a section that failed to load.
-               `dataGapNotice` is Core-authored prose, not UI copy — shown as-is
-               when present rather than replaced by a translated string. */
-            <StateCard state="dataInsufficient">
-              {todayReport.dataGapNotice ?? t('family.todayInsufficient')}
-            </StateCard>
-          )
+          <ReportCard report={todayReport} />
         ) : (
           <StateCard state="dataInsufficient">{t('family.todayNone')}</StateCard>
         )}
-      </section>
+      </FamilySummaryCard>
 
-      <section style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>{t('family.weekTitle')}</h2>
+      <FamilySummaryCard title={t('family.weekTitle')}>
         {weeklyReports.length === 0 ? (
-          <p style={{ color: 'var(--color-muted-foreground)' }}>{t('family.weekNone')}</p>
+          <p className={styles.muted}>{t('family.weekNone')}</p>
         ) : (
           <p>
             {t('family.weekSummary', {
@@ -159,14 +155,16 @@ export default function FamilyHomePage() {
             })}
           </p>
         )}
-      </section>
+        <Link className={styles.viewAll} href="/family/reports">
+          {t('family.viewAll')}
+        </Link>
+      </FamilySummaryCard>
 
-      <section style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>{t('family.importantTitle')}</h2>
+      <FamilySummaryCard title={t('family.importantTitle')}>
         {importantItems.length === 0 ? (
-          <p style={{ color: 'var(--color-muted-foreground)' }}>{t('family.importantNone')}</p>
+          <p className={styles.muted}>{t('family.importantNone')}</p>
         ) : (
-          <ul>
+          <ul className={styles.importantList}>
             {importantItems.map((item, index) => (
               <li key={`${item.date}-${index}`}>
                 {item.date}：{item.text}
@@ -174,9 +172,7 @@ export default function FamilyHomePage() {
             ))}
           </ul>
         )}
-      </section>
-
-      <Link href="/family/reports">{t('family.viewAll')}</Link>
+      </FamilySummaryCard>
     </main>
   );
 }

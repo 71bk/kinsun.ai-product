@@ -40,6 +40,7 @@ const zhHant = {
   'common.retry': '重試',
   'common.confirm': '確認',
   'common.cancel': '取消',
+  'common.dismiss': '關閉提示',
   'common.emptyTitle': '目前沒有資料',
   'common.errorTitle': '目前無法顯示內容',
   'common.empty': '—',
@@ -83,10 +84,22 @@ const zhHant = {
   'error.assignmentAccess': '目前身分沒有可查看的居家派案，或派案已失效。',
   'error.loadAssignmentsFailed': '目前無法讀取派案，請稍後重試。',
 
+  // ---- toast (non-blocking write-action confirmation) ----
+  'toast.eventReviewed': '事件覆核已送出。',
+  'toast.memoryRejected': '已拒絕這筆候選記憶。',
+  'toast.memoryDeleted': '已刪除這筆記憶。',
+  'toast.summaryReviewed': '摘要覆核已送出。',
+  'toast.assignmentUpdated': '派案狀態已更新。',
+
   // ---- care navigation ----
   'careNav.label': '照護工作台導覽',
   'careNav.elders': '長者總覽',
   'careNav.assignments': '派案行程',
+
+  // ---- family navigation ----
+  'familyNav.label': '家屬安心報導覽',
+  'familyNav.home': '首頁',
+  'familyNav.reports': '報表',
 
   // ---- caregiver dashboard ----
   'dashboard.title': '授權長者總覽',
@@ -280,7 +293,6 @@ const zhHant = {
   'family.meta': '長者：{elderId}｜最後更新：{updated}',
   'family.noData': '尚無資料',
   'family.todayTitle': '今日報表',
-  'family.todayInsufficient': '今日資料不足。',
   'family.todayNone': '今日尚無已發布的家屬報表。',
   'family.weekTitle': '本週概覽',
   'family.weekNone': '本週尚無已發布的家屬報表。',
@@ -291,18 +303,26 @@ const zhHant = {
   'family.viewAll': '查看完整報表 →',
 
   // ---- family report centre ----
-  'reports.back': '← 返回家屬首頁',
   'reports.title': '家屬報表中心',
   'reports.subtitle': '僅顯示 Core API 依關係授權與發布狀態篩選後的正式內容。',
+  'reports.filterLabel': '依報表類型篩選',
+  'reports.allTypes': '全部類型',
   'reports.empty': '目前沒有可查看的已發布報表。',
+  'reports.emptyTitle': '沒有可查看的報表',
   'reports.withdrawn': '此報表已撤回。',
   'reports.insufficient': '資料不足。',
   'reports.publishedAt': '版本 {version}｜發布時間：{at}',
   'reports.period': '{start}～{end}',
+  'reports.viewDetail': '查看詳情',
   'reportType.DAILY': '每日報表',
   'reportType.WEEKLY': '每週報表',
   'reportType.MONTHLY': '每月報表',
   'reportType.IMPORTANT_EVENT': '重要事件報表',
+
+  // ---- family report detail ----
+  'reportDetail.title': '報表詳情',
+  'reportDetail.back': '← 返回報表列表',
+  'reportDetail.notFound': '找不到這份報表，或目前身分沒有查看權限。',
 
   // ---- family onboarding / sign-in ----
   'join.title': '家屬服務',
@@ -624,6 +644,7 @@ const en: Record<MessageKey, string> = {
   'common.retry': 'Retry',
   'common.confirm': 'Confirm',
   'common.cancel': 'Cancel',
+  'common.dismiss': 'Dismiss',
   'common.emptyTitle': 'No data yet',
   'common.errorTitle': 'Content is unavailable',
   'common.empty': '—',
@@ -667,9 +688,19 @@ const en: Record<MessageKey, string> = {
     'This account has no home-care assignments it may view, or the assignment has expired.',
   'error.loadAssignmentsFailed': 'Assignments are unavailable right now. Please try again later.',
 
+  'toast.eventReviewed': 'Event review submitted.',
+  'toast.memoryRejected': 'This candidate memory was rejected.',
+  'toast.memoryDeleted': 'This memory was deleted.',
+  'toast.summaryReviewed': 'Summary review submitted.',
+  'toast.assignmentUpdated': 'Assignment status updated.',
+
   'careNav.label': 'Care workspace navigation',
   'careNav.elders': 'Elder overview',
   'careNav.assignments': 'Assignments',
+
+  'familyNav.label': 'Family updates navigation',
+  'familyNav.home': 'Home',
+  'familyNav.reports': 'Reports',
 
   'dashboard.title': 'Authorized elders',
   'dashboard.subtitle':
@@ -854,7 +885,6 @@ const en: Record<MessageKey, string> = {
   'family.meta': 'Elder: {elderId} | Last updated: {updated}',
   'family.noData': 'No data yet',
   'family.todayTitle': 'Today’s report',
-  'family.todayInsufficient': 'Not enough data for today.',
   'family.todayNone': 'No published family report for today yet.',
   'family.weekTitle': 'This week',
   'family.weekNone': 'No published family reports this week yet.',
@@ -864,19 +894,26 @@ const en: Record<MessageKey, string> = {
   'family.importantNone': 'No shareable important events this week.',
   'family.viewAll': 'View all reports →',
 
-  'reports.back': '← Back to family home',
   'reports.title': 'Family report centre',
   'reports.subtitle':
     'Shows only the formal content the Core API has filtered by relationship authorization and publication state.',
+  'reports.filterLabel': 'Filter by report type',
+  'reports.allTypes': 'All types',
   'reports.empty': 'No published reports available to view.',
+  'reports.emptyTitle': 'No reports available',
   'reports.withdrawn': 'This report has been withdrawn.',
   'reports.insufficient': 'Not enough data.',
   'reports.publishedAt': 'Version {version} | Published: {at}',
   'reports.period': '{start} – {end}',
+  'reports.viewDetail': 'View detail',
   'reportType.DAILY': 'Daily report',
   'reportType.WEEKLY': 'Weekly report',
   'reportType.MONTHLY': 'Monthly report',
   'reportType.IMPORTANT_EVENT': 'Important event report',
+
+  'reportDetail.title': 'Report detail',
+  'reportDetail.back': '← Back to report list',
+  'reportDetail.notFound': 'This report was not found, or this account is not authorized to view it.',
 
   'join.title': 'Family access',
   'join.intro':

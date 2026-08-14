@@ -7,6 +7,7 @@ import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { Toast } from '@/components/ui/Toast';
 import {
   completeAssignment,
   listAssignments,
@@ -44,6 +45,7 @@ export default function AssignmentsPage() {
   const [date, setDate] = useState(localDateValue);
   const [assignments, setAssignments] = useState<AssignmentView[] | null>(null);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
+  const [toastKey, setToastKey] = useState<MessageKey | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +88,7 @@ export default function AssignmentsPage() {
           current?.map((item) => (item.assignmentId === updated.assignmentId ? updated : item)) ??
           [],
       );
+      setToastKey('toast.assignmentUpdated');
     } catch (error) {
       setErrorKey(assignmentError(error));
       throw error;
@@ -133,6 +136,7 @@ export default function AssignmentsPage() {
           ))}
         </div>
       )}
+      {toastKey && <Toast message={t(toastKey)} onDismiss={() => setToastKey(null)} />}
     </main>
   );
 }
