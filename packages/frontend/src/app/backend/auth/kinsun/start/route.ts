@@ -9,6 +9,7 @@ import {
 } from '@/lib/server/kinsun-auth-cookie';
 import {
   kinsunNativeAuthEnabled,
+  normalizeKinsunEmail,
   startKinsunEmailAuth,
 } from '@/lib/server/kinsun-auth-core';
 import {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     typeof form.get('returnTo') === 'string' ? String(form.get('returnTo')) : null,
   );
   const invitationCode = normalizeInvitationCode(form.get('invitationCode'));
-  const email = typeof form.get('email') === 'string' ? String(form.get('email')).trim() : '';
+  const email = normalizeKinsunEmail(form.get('email'));
   const displayName =
     typeof form.get('displayName') === 'string' ? String(form.get('displayName')).trim() : '';
   if (
@@ -49,9 +50,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     intent === 'STAFF' ||
     !returnTo ||
     invitationCode === null ||
-    email.length < 3 ||
-    email.length > 254 ||
+    !email ||
     displayName.length > 120 ||
+    (intent === 'FAMILY' && !invitationCode) ||
     (intent !== 'FAMILY' && invitationCode !== undefined)
   ) {
     return redirect('/sign-in?error=invalid_request');
@@ -63,7 +64,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       intent,
       ...(displayName ? { displayName } : {}),
     });
-    const maxAge = Math.max(1, Math.floor((Date.parse(started.expiresAt) - Date.now()) / 1000));
+    const maxAge = Math.floor((Date.parse(started.expiresAt) - Date.now()) / 1000);
+    if (!Number.isFinite(maxAge) || maxAge < 1 || maxAge > 900) {
+      throw new Error('Kinsun challenge expiry is invalid');
+    }
     const response = redirect('/auth/kinsun/verify');
     response.cookies.set(
       kinsunChallengeCookieName(),

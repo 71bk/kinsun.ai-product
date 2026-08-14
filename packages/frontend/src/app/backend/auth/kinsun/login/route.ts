@@ -10,6 +10,7 @@ import {
   KinsunCoreAuthError,
   kinsunNativeAuthEnabled,
   loginWithKinsunPassword,
+  normalizeKinsunEmail,
 } from '@/lib/server/kinsun-auth-core';
 import { strictRelativeReturnTo } from '@/lib/server/oauth-transaction';
 
@@ -33,15 +34,14 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
   const form = await request.formData().catch(() => null);
   if (!form) return redirect('/sign-in?error=invalid_request');
-  const email = typeof form.get('email') === 'string' ? String(form.get('email')).trim() : '';
+  const email = normalizeKinsunEmail(form.get('email'));
   const password = typeof form.get('password') === 'string' ? String(form.get('password')) : '';
   const returnTo = strictRelativeReturnTo(
     typeof form.get('returnTo') === 'string' ? String(form.get('returnTo')) : null,
   );
   if (
     !returnTo ||
-    email.length < 3 ||
-    email.length > 254 ||
+    !email ||
     password.length < 12 ||
     password.length > 128 ||
     Buffer.byteLength(password, 'utf8') > 1024 ||

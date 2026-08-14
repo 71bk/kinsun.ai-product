@@ -35,6 +35,10 @@ class DatabaseEngine:
         engine_options: dict[str, Any] = {
             "connect_args": {"timeout": settings.db_connect_timeout_seconds},
             "echo": settings.app_env == AppEnv.DEVELOPMENT,
+            # Development SQL echo may show statement structure, but bound
+            # values can contain e-mail addresses, credential hashes, or other
+            # restricted data and must remain hidden in every environment.
+            "hide_parameters": True,
         }
         if settings.db_pool_mode == DatabasePoolMode.NULL:
             engine_options["poolclass"] = NullPool

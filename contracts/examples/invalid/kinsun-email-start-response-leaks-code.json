@@ -1,0 +1,9 @@
+{
+  "_why_invalid": "The response may return only the opaque challenge and expiry; it must never expose the verification code.",
+  "data": {
+    "status": "CHALLENGE_CREATED",
+    "challenge_token": "ke1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expires_at": "2026-08-14T10:10:00Z",
+    "verification_code": "123456"
+  }
+}

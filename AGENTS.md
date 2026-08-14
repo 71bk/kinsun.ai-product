@@ -175,6 +175,9 @@ Wave 順序：
 - Cross-elder 或 Cross-tenant 資料暴露。
 - 未授權讀寫、Tool 執行或 Consent bypass。
 - Secret、Token、完整 Prompt、完整 Transcript／Audio 出現在一般 Log。
+- SQLAlchemy development `echo` 也不得輸出 bind parameter；engine 必須維持
+  `hide_parameters=True`，避免 Email、credential hash、token digest 或其他 Restricted Data
+  因本機 SQL diagnostics 寫入 log。
 - 醫療危險建議。
 - 未確認記憶被當成事實。
 - 已刪除或已撤回資料因 Replay／Projection rebuild 再次出現。
@@ -210,6 +213,12 @@ Wave 順序：
 
 - PostgreSQL／Domain Core 是正式交易資料與狀態的 Source of Truth；目前 provider 是 Supabase
   PostgreSQL，不使用 Supabase Auth 或專有 Data API。
+- **開發與登入／註冊 E2E 預設直接連 Supabase PostgreSQL**：由 repository 根目錄未版控的
+  `.env` 提供 `DATABASE_URL`，一般開發、除錯、migration 檢查與 E2E 不啟動 Docker、
+  `docker compose` 或本機 PostgreSQL。只有使用者明確要求 Docker 隔離環境時才可例外。
+- Supabase development database 不得承接破壞性的 integration rebuild、`downgrade base`、reset、
+  truncate 或 fixture 全量重建。需要這類測試時，必須另有可丟棄且與 development database 分離的
+  `TEST_DATABASE_URL`；沒有就略過並如實回報。
 - Neptune、OpenSearch、Cache 與 Agent Memory 是 Projection 或 Working State，必須可由正式資料重建。
 - 不從 Graph、Search 或模型輸出反推正式授權或正式狀態。
 - 正式寫入使用 Transactional Outbox；採 Outbox → EventBridge → 每個 Consumer 專屬 SQS／DLQ。
@@ -476,10 +485,11 @@ kinsun.ai/
 - Endpoint 或 envelope 改變時同步 contract、examples、live verification 與 divergence 文件。
 - Domain state 改變時同步 migration、tests、traceability 與必要文件。
 - 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威來源。
-- 目前本機基礎設施由 `docker-compose.yml`、`.env.example` 與 `docker/postgres/init/` 定義：
-  - PostgreSQL 16 是本機交易資料庫。
-  - `pgcrypto`、`citext` 由初始化腳本安裝。
-  - 初始化腳本只處理資料庫／Extension，不得成為第二個 Schema Source of Truth。
+- 目前開發資料庫以 repository 根目錄 `.env` 的 `DATABASE_URL` 直接連 Supabase PostgreSQL：
+  - 一般工作不得自行啟動 `docker-compose.yml`、本機 PostgreSQL 或 Adminer。
+  - `docker-compose.yml` 與 `docker/postgres/init/` 只保留為可重建參考與使用者明確要求時的隔離工具，
+    不是預設開發路徑；初始化腳本不得成為第二個 Schema Source of Truth。
+  - Schema 仍只由 Alembic 管理；Supabase 只提供 PostgreSQL，不使用 Supabase Auth 或專有 Data API。
   - `.env` 不進版控；新增設定時同步維護無 Secret 的 `.env.example`。
 - Core API 已定案，程式在 `services/core-api/`：
   - 套件與環境管理採 uv（[ADR 0001](docs/adr/0001-package-manager-uv.md)）；`uv.lock` 必須進版控。
@@ -563,7 +573,7 @@ kinsun.ai/
 cd services/core-api
 uv sync --extra test --extra dev
 uv run pytest tests/unit          # 不需資料庫
-uv run pytest tests/integration   # 需要 docker compose up -d postgres
+uv run pytest tests/integration   # 只可使用獨立、可丟棄的 TEST_DATABASE_URL
 uv run ruff check .
 uv run ruff format --check .
 ```
@@ -647,19 +657,22 @@ format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 
 每次變更至少執行：
 
 ```powershell
-docker compose config --quiet
 git diff --check
 git status --short
 ```
 
-動到 Database Schema 時另外執行（文件 13 §六.6：CI 需能從空 DB 重建）：
+動到 Database Schema 時，先對 Supabase 做唯讀 revision 檢查並人工審查 migration，再執行 additive
+upgrade；不得對 Supabase 執行 downgrade、reset 或空庫重建：
 
 ```powershell
-docker compose up -d postgres
-docker compose run --rm migrate alembic downgrade base
-docker compose run --rm migrate                          # upgrade head
-docker compose run --rm migrate alembic current
+cd services/core-api
+uv run alembic current
+uv run alembic heads
+uv run alembic upgrade head
 ```
+
+文件 13 §六.6 的空 DB 重建只可在另行提供的 disposable `TEST_DATABASE_URL` 執行；沒有獨立測試
+資料庫時標記未驗證，不得拿 Supabase development database 代替。
 
 並在交付說明中清楚列出已驗證、未驗證與受環境限制的項目。
 

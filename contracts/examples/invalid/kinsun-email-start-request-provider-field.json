@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "Kinsun registration uses the configured server-side delivery adapter and must not accept a caller-selected provider.",
+  "data": {
+    "email": "synthetic.elder@example.com",
+    "intent": "ELDER",
+    "delivery_provider": "caller-controlled"
+  }
+}

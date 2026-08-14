@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
 from app.core.config import get_settings
+from app.core.envelopes import ErrorBody, ErrorEnvelope
 from app.db.session import get_db_session
 from app.schemas.kinsun_email_auth import (
     CompletedKinsunEmailAuthResponse,
@@ -49,11 +50,27 @@ from app.services.service_dependencies import (
 router = APIRouter(tags=["internal-auth"])
 
 
+def _authentication_failed_response() -> JSONResponse:
+    envelope = ErrorEnvelope(
+        error=ErrorBody(
+            code="authentication_required",
+            message="Authentication required.",
+            correlation_id=get_correlation_id(),
+            reason_code="AUTHENTICATION_FAILED",
+            retryable=False,
+            details=None,
+        )
+    )
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
+        content=envelope.model_dump(mode="json"),
+    )
+
+
 def require_kinsun_auth_bff(
     request: Request,
-    authenticator: KinsunAuthHandoffAuthenticator = Depends(
-        get_kinsun_auth_handoff_authenticator
-    ),
+    authenticator: KinsunAuthHandoffAuthenticator = Depends(get_kinsun_auth_handoff_authenticator),
 ) -> None:
     authenticator.authenticate(request.headers.getlist("x-kinsun-bff-authorization"))
 
@@ -103,12 +120,8 @@ async def start_kinsun_email_auth(
     _: None = Depends(require_kinsun_auth_bff),
     session: AsyncSession = Depends(get_db_session),
     identity_codec: KinsunIdentityCodec = Depends(get_kinsun_identity_codec),
-    challenge_codec: KinsunEmailChallengeCodec = Depends(
-        get_kinsun_email_challenge_codec
-    ),
-    invitation_codec: FamilyInvitationTokenCodec = Depends(
-        get_family_invitation_token_codec
-    ),
+    challenge_codec: KinsunEmailChallengeCodec = Depends(get_kinsun_email_challenge_codec),
+    invitation_codec: FamilyInvitationTokenCodec = Depends(get_family_invitation_token_codec),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
 ) -> dict:
     """Create a uniform challenge without revealing whether an account exists."""
@@ -142,12 +155,8 @@ async def complete_kinsun_email_auth(
     _: None = Depends(require_kinsun_auth_bff),
     session: AsyncSession = Depends(get_db_session),
     identity_codec: KinsunIdentityCodec = Depends(get_kinsun_identity_codec),
-    challenge_codec: KinsunEmailChallengeCodec = Depends(
-        get_kinsun_email_challenge_codec
-    ),
-    invitation_codec: FamilyInvitationTokenCodec = Depends(
-        get_family_invitation_token_codec
-    ),
+    challenge_codec: KinsunEmailChallengeCodec = Depends(get_kinsun_email_challenge_codec),
+    invitation_codec: FamilyInvitationTokenCodec = Depends(get_family_invitation_token_codec),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
 ) -> dict | JSONResponse:
     """Consume one code and issue a Core App Session on success."""
@@ -169,26 +178,7 @@ async def complete_kinsun_email_auth(
         idempotency_key=operation_key,
     )
     if not isinstance(result, CompletedKinsunEmailAuthentication):
-        correlation_id = get_correlation_id()
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
-            content={
-                "error": {
-                    "code": "authentication_required",
-                    "message": "Authentication required.",
-                    "correlation_id": correlation_id,
-                    "reason_code": "AUTHENTICATION_FAILED",
-                    "retryable": False,
-                    "details": None,
-                },
-                "meta": {
-                    "correlation_id": correlation_id,
-                    "timestamp": datetime.now(UTC).isoformat(),
-                    "schema_version": "1.0",
-                },
-            },
-        )
+        return _authentication_failed_response()
 
     payload = CompletedKinsunEmailAuthResponse(
         session_token=result.session.token,
@@ -229,26 +219,7 @@ async def login_with_kinsun_password(
         password=request.password.get_secret_value(),
     )
     if not isinstance(result, CompletedPasswordAuthentication):
-        correlation_id = get_correlation_id()
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
-            content={
-                "error": {
-                    "code": "authentication_required",
-                    "message": "Authentication required.",
-                    "correlation_id": correlation_id,
-                    "reason_code": "AUTHENTICATION_FAILED",
-                    "retryable": False,
-                    "details": None,
-                },
-                "meta": {
-                    "correlation_id": correlation_id,
-                    "timestamp": datetime.now(UTC).isoformat(),
-                    "schema_version": "1.0",
-                },
-            },
-        )
+        return _authentication_failed_response()
     payload = CompletedKinsunEmailAuthResponse(
         session_token=result.session.token,
         idle_expires_at=result.session.idle_expires_at,

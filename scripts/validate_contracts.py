@@ -170,6 +170,34 @@ DATA_SCHEMA_FOR = {
     "app-session-logout-response-leaks-token.json": (
         "domain/AppSessionLogoutV1.json"
     ),
+    "kinsun-email-start-request.json": (
+        "domain/StartKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-email-start-request-provider-field.json": (
+        "domain/StartKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-email-start-response.json": "domain/StartedKinsunEmailAuthV1.json",
+    "kinsun-email-start-response-leaks-code.json": (
+        "domain/StartedKinsunEmailAuthV1.json"
+    ),
+    "kinsun-email-complete-request.json": (
+        "domain/CompleteKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-email-complete-request-extra-email.json": (
+        "domain/CompleteKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-password-login-request.json": (
+        "domain/KinsunPasswordLoginRequestV1.json"
+    ),
+    "kinsun-password-login-request-session-token.json": (
+        "domain/KinsunPasswordLoginRequestV1.json"
+    ),
+    "kinsun-authenticated-response.json": (
+        "domain/CompletedKinsunEmailAuthV1.json"
+    ),
+    "kinsun-authenticated-response-leaks-identity.json": (
+        "domain/CompletedKinsunEmailAuthV1.json"
+    ),
 }
 
 failures: list[str] = []

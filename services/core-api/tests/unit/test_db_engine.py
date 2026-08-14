@@ -46,6 +46,7 @@ class TestEngineCreation:
                 pool_size=3,
                 max_overflow=7,
                 echo=True,  # development mode
+                hide_parameters=True,
             )
             assert db_engine.engine is mock_create.return_value
 
@@ -66,6 +67,7 @@ class TestEngineCreation:
                 _VALID_DB_URL,
                 connect_args={"timeout": 2.5},
                 echo=True,
+                hide_parameters=True,
                 poolclass=NullPool,
             )
             _, kwargs = mock_create.call_args
@@ -91,6 +93,17 @@ class TestEngineCreation:
 
             _, kwargs = mock_create.call_args
             assert kwargs["echo"] is True
+
+    def test_bound_parameters_are_hidden_in_every_environment(self) -> None:
+        """SQL diagnostics must never emit e-mail or credential values."""
+        for app_env in ("development", "production"):
+            settings = _make_settings(APP_ENV=app_env)
+            with patch("app.db.engine.create_async_engine") as mock_create:
+                mock_create.return_value = MagicMock()
+                DatabaseEngine(settings)
+
+                _, kwargs = mock_create.call_args
+                assert kwargs["hide_parameters"] is True
 
     def test_session_factory_created(self) -> None:
         """Session factory is created with expire_on_commit=False."""

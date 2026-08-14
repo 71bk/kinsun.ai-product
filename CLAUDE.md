@@ -18,6 +18,11 @@
    git -c safe.directory=D:/Hackthon/kinsun.ai log -5 --oneline
    ```
 
+   開發與登入／註冊 E2E 預設由 repository 根目錄 `.env` 的 `DATABASE_URL` 直接連 Supabase
+   PostgreSQL；不要啟動 Docker、`docker compose` 或本機 PostgreSQL，除非使用者明確要求。
+   Supabase 不得執行 integration reset、`downgrade base` 或空庫重建；這些驗證必須使用獨立、
+   可丟棄的 `TEST_DATABASE_URL`，沒有就略過並回報。
+
 2. 讀根目錄 `AGENTS.md`、目前目錄適用的巢狀 `AGENTS.md`，再讀與需求直接相關的 spec、ADR、
    contract、migration、測試與實作。若文件和程式衝突，先以可執行 contract、migration、測試與
    code path 建立證據，再修正文件；不要靠 README 或檔名猜進度。
@@ -124,7 +129,9 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-需要 Docker／PostgreSQL 時再跑 integration、migration rebuild 與 Core live contract verifier；資料庫未啟動
+Integration 與空庫 migration rebuild 只可使用獨立、可丟棄的 `TEST_DATABASE_URL`；不得為此啟動
+Docker 或拿 Supabase development database 重建。一般 migration 直接連 Supabase，先跑唯讀
+`alembic current`／`alembic heads` 並審查 migration，再做 additive `alembic upgrade head`。連線不可用
 時，不要把 `/ready` 失敗混寫成 contract regression。
 
 ### Agent Runtime
@@ -193,6 +200,8 @@ contract 與 Core live verifier 均通過。Agent 259、RAG ingestion 138、Spee
 - 實作、contract、migration、測試、文件與 feature flag 敘述一致。
 - 每個 write path 都有 actor、scope、Consent、state、idempotency、audit 與失敗路徑。
 - 沒有真實長者資料、逐字稿、音訊、token、secret、endpoint credential 或敏感 log。
+- SQLAlchemy 即使在 development 開啟 `echo` 也必須維持 `hide_parameters=True`；不得讓 Email、
+  credential hash 或其他 bind parameter 進入本機／正式 log。
 - 沒有把 mock、adapter、synth、disabled gate 或本機測試誤稱為已部署能力。
 - 新增 API 有 schema 與 verifier；新增 state 有 migration 與 transition test；新增 UI 有雙語與 RWD。
 - `git diff --check` 通過，必要測試已跑；未跑項目附具體原因與風險。
@@ -208,7 +217,7 @@ contract 與 Core live verifier 均通過。Agent 259、RAG ingestion 138、Spee
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
 - 不為了 Windows Git ownership 問題改 repository owner 或全域安全設定；命令使用 scoped
-  `git -c safe.directory=D:/Hackthon/kinsun.ai ...`。若 Docker、網路、AWS 或沙箱受限，記錄限制，
+  `git -c safe.directory=D:/Hackthon/kinsun.ai ...`。若 Supabase、網路、AWS 或沙箱受限，記錄限制，
   不以關閉安全檢查繞過。
 - 本機直接啟動 Speech Gateway 要使用
   `uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002`；其

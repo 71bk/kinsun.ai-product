@@ -1,0 +1,10 @@
+{
+  "_why_invalid": "Authentication responses issue only the opaque App Session and expiries; they must not disclose the normalized email or identity digest.",
+  "data": {
+    "status": "AUTHENTICATED",
+    "session_token": "ks1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "idle_expires_at": "2026-08-21T10:00:00Z",
+    "absolute_expires_at": "2026-09-13T10:00:00Z",
+    "email": "synthetic.elder@example.com"
+  }
+}

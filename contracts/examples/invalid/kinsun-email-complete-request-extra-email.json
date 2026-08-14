@@ -1,0 +1,9 @@
+{
+  "_why_invalid": "Completion is bound to the server-side challenge and must not accept a caller-supplied email identity.",
+  "data": {
+    "challenge_token": "ke1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "verification_code": "123456",
+    "password": "synthetic-password-2026",
+    "email": "attacker@example.com"
+  }
+}

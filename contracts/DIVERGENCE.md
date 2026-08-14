@@ -74,6 +74,9 @@ Core 只接受 Core-owned opaque App Session：
   transaction 與 BFF-to-Core secret。BFF 使用 Authorization Code + PKCE、state、nonce；Core 再透過
   LINE 官方 verify endpoint 驗證 ID Token、issuer、audience、expiry、nonce 與 subject。LINE email
   為 optional，且不會用來自動連結既有 Actor；暫時 access token 在 callback 結束時 best-effort revoke。
+- Kinsun-owned email／password flow 使用獨立 BFF-to-Core secret、hash-only email identity lookup、
+  hash-only one-time verification challenge、Argon2id credential 與相同的 Core-owned App Session。OTP
+  只作為新帳號註冊證明，不是既有帳號的 passwordless login；錯誤密碼與未知帳號使用相同拒絕。
 - Core App Session 登出會先 server-side revoke，再由 BFF 清 Cookie。Direct Google、LINE 與 App
   Session gates 的 committed examples 預設關閉。
 - Development 仍只有在 `FAKE_AUTH_ENABLED=true` 時使用明確 fake actor；App Session 未啟用或設定
@@ -82,6 +85,18 @@ Core 只接受 Core-owned opaque App Session：
 目前 contract 包含 direct Google／LINE handoff、pending onboarding 與 App Session logout 的已實作邊界，
 但不代表 provider secret、callback URL 或 browser E2E 已在任何雲端環境部署驗證；這些仍須由環境
 設定與部署證據確認。Owner 已確認沒有既有 Cognito Actor 需要遷移。
+
+### Kinsun Email／Password Authentication
+
+Core 與 Next.js BFF 已實作預設關閉的三個 private auth boundary：建立 Email 註冊 challenge、以六位
+ASCII 驗證碼完成註冊，以及既有帳號的 Email／密碼登入。ELDER 可自行註冊；FAMILY 完成註冊時必須
+兌換有效邀請；STAFF 公開註冊一律拒絕。成功只核發 `ks1_` App Session，browser Cookie 仍由 BFF
+以 HttpOnly／SameSite 屬性保存，Core handoff secret 不進 browser。
+
+目前唯一 delivery mode 是 development-only `synthetic`，只供本機／測試使用；production 設定會
+fail closed。正式 Email provider、寄送內容與 rate／abuse policy、退信處理、密碼重設／變更、
+passkey、MFA 與真實 mailbox E2E 仍待 Owner 決策與實作。因此 executable contract 證明的是
+BFF／Core／Supabase PostgreSQL 邊界，不代表已串接可寄信的 production 信箱服務。
 
 ### LINE Login 與帳號連結
 

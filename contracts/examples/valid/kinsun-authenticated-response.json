@@ -1,0 +1,8 @@
+{
+  "data": {
+    "status": "AUTHENTICATED",
+    "session_token": "ks1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "idle_expires_at": "2026-08-21T10:00:00Z",
+    "absolute_expires_at": "2026-09-13T10:00:00Z"
+  }
+}

@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
+from app.services.kinsun_identity_codec import KinsunIdentityCodec
+
 
 class StartKinsunEmailAuthRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -14,6 +16,14 @@ class StartKinsunEmailAuthRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     intent: Literal["ELDER", "FAMILY", "STAFF"]
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        try:
+            return KinsunIdentityCodec.normalize_email(value)
+        except ValueError:
+            raise ValueError("email has an invalid shape") from None
 
 
 class StartedKinsunEmailAuthResponse(BaseModel):
@@ -55,6 +65,11 @@ class PasswordLoginRequest(BaseModel):
 
     email: str = Field(min_length=3, max_length=254)
     password: SecretStr
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return StartKinsunEmailAuthRequest.validate_email(value)
 
     @field_validator("password")
     @classmethod

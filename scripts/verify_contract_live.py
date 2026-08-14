@@ -49,6 +49,18 @@ os.environ["LINE_OIDC_HANDOFF_SECRET"] = (
 os.environ["FAMILY_INVITATION_HMAC_SECRET"] = (
     "live-contract-family-invitation-secret-material-32-bytes"
 )
+os.environ["KINSUN_NATIVE_AUTH_ENABLED"] = "true"
+os.environ["KINSUN_IDENTITY_HMAC_SECRET"] = (
+    "live-contract-kinsun-identity-secret-material-32-bytes"
+)
+os.environ["KINSUN_EMAIL_CHALLENGE_HMAC_SECRET"] = (
+    "live-contract-kinsun-challenge-secret-material-32-bytes"
+)
+os.environ["KINSUN_AUTH_HANDOFF_SECRET"] = (
+    "live-contract-kinsun-handoff-secret-material-32-bytes"
+)
+os.environ["KINSUN_EMAIL_DELIVERY_MODE"] = "synthetic"
+os.environ["KINSUN_SYNTHETIC_EMAIL_CODE_SECRET"] = "246810"
 # Keep Voice Ticket dependencies deterministic while probing their unauthenticated
 # fail-closed edge; this synthetic secret is verifier-only and not a deployment credential.
 os.environ["VOICE_TICKET_ENABLED"] = "true"
@@ -327,6 +339,42 @@ async def main() -> int:
             response.json(),
             load("common/ErrorEnvelopeV1.json"),
         )
+
+        kinsun_probes = (
+            (
+                "/api/v1/internal/auth/kinsun/email/start",
+                {"email": "synthetic.elder@example.com", "intent": "ELDER"},
+            ),
+            (
+                "/api/v1/internal/auth/kinsun/email/complete",
+                {
+                    "challenge_token": "ke1_" + "a" * 43,
+                    "verification_code": "246810",
+                    "password": "synthetic-password",
+                },
+            ),
+            (
+                "/api/v1/internal/auth/kinsun/password/login",
+                {
+                    "email": "synthetic.elder@example.com",
+                    "password": "synthetic-password",
+                },
+            ),
+        )
+        for path, body in kinsun_probes:
+            response = await client.post(path, json=body)
+            if response.status_code != 401:
+                failures.append(
+                    f"POST {path} returned {response.status_code}, expected 401"
+                )
+                print(f"FAIL  POST {path} fails closed: {response.status_code}")
+            else:
+                print(f"ok    POST {path} fails closed with 401")
+            check(
+                f"POST {path} 401 body vs ErrorEnvelopeV1",
+                response.json(),
+                load("common/ErrorEnvelopeV1.json"),
+            )
 
         response = await client.post(
             "/api/v1/internal/auth/google/handoff",

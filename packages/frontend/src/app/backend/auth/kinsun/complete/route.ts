@@ -34,6 +34,9 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!isTrustedRequestOrigin(request)) {
     return bffError(403, 'forbidden', 'Request origin rejected', 'CSRF_ORIGIN_REJECTED');
   }
+  if (!request.headers.get('content-type')?.startsWith('application/x-www-form-urlencoded')) {
+    return bffError(415, 'unsupported_media_type', 'Form request required', 'FORM_REQUIRED');
+  }
   const form = await request.formData().catch(() => null);
   const verificationCode =
     form && typeof form.get('verificationCode') === 'string'
