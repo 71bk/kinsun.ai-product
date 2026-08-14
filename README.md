@@ -102,7 +102,7 @@ uv run uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
 
 # Speech Gateway :8002（雲端 ASR／TTS 需對應 AWS 設定）
 cd services/speech-gateway; uv sync --extra test --extra dev
-uv run uvicorn speech_gateway.app:app --reload --port 8002
+uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002
 
 # Frontend :3000
 npm install
@@ -166,6 +166,11 @@ Safety Evaluator → 回應。本機預設走 `MockModelProvider`，讓測試與
 Google Gemini API。Core 的 `BASIC_VOICE` 路徑可在重驗授權與長期記憶 Consent 後，
 帶入最多 5 筆 current ACTIVE Confirmed Memory；Knowledge／RAG purpose 不會混入私人記憶。
 目前只按更新時間做有界選取，尚未有語意相關性排序。RAG 仍受 allowlist、簽章與 production gate 約束。
+
+Candidate 採 Core-owned proposal flow：Runtime 可回傳不含 scope／source ID 的 Event proposal，
+以及明確固定早餐習慣的 bounded Memory proposal。Core 先建立待覆核 Event，Memory proposal 只私下
+綁在該版本；照護者 VERIFY 事件且 Core 重驗長期記憶 Gate 後，才建立仍須長者本人確認的
+Memory Candidate。Runtime 不直接寫 Domain DB。
 
 **安全阻擋回的是 200 不是錯誤**：`data.result_status` 為 `BLOCKED`、`data.reply_text`
 換成安全訊息，長者仍然收到回覆。Safety Evaluator 目前是 deterministic 關鍵字規則

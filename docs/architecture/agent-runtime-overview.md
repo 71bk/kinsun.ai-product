@@ -1,7 +1,7 @@
 # Agent Runtime 架構總覽
 
-`services/agent-runtime/` 目前是 M0 Foundation，加上一條受控的 Event Candidate Core Tool
-路徑。預設本機設定使用 `MockModelProvider`，可在沒有 AWS 服務的環境驗證主要邊界；程式另有
+`services/agent-runtime/` 目前是 M0 Foundation，加上 Core-owned Event proposal 與 bounded
+Memory proposal 路徑。預設本機設定使用 `MockModelProvider`，可在沒有 AWS 服務的環境驗證主要邊界；程式另有
 可設定的 Bedrock Converse／OpenAI-compatible text provider 與 staging-only RAG adapter，但尚無真實外部 staging 或
 production runtime 驗證，不能把 adapter 存在描述成服務已部署。
 
@@ -16,15 +16,14 @@ HTTP Request
       → Companion Agent → configured ModelProvider
       → Safety Evaluator
       → allowed RAG reply: deterministic citation append
-      → Safety ALLOW + allowlisted create_event_candidate?
-          → deterministic Event Extractor
-          → Core AgentRun register
-          → ToolExecutor → Core Tool Gate → Event Candidate
-          → Core AgentRun terminal complete
+      → Safety ALLOW + Core requested event_candidate?
+          → deterministic Event Extractor → typed Event proposal
+      → Event proposal exists + Core requested memory_candidate?
+          → deterministic Memory Extractor → typed Memory proposal
   → SuccessEnvelope
 
 一般例外：DomainError → error_handlers → ErrorEnvelope
-Core register／Tool／complete 依賴失敗：fail closed → sanitized 503
+Core→Runtime 依賴失敗：fail closed → sanitized 503
 
 Staging RAG Request
   → RetrievalRequestV1
@@ -42,12 +41,12 @@ Staging RAG Request
 | API | `GET /health`、Agent Run、staging RAG Retrieval、例外處理 | `src/agent_runtime/api/` |
 | Envelope | `SuccessEnvelope`／`ErrorEnvelope`（對應 `contracts/schemas/common/`） | `src/agent_runtime/core/envelopes.py` |
 | Contract | Pydantic model；對應 `contracts/schemas/{agent,tools}/` 的 JSON Schema | `src/agent_runtime/contracts/models.py` |
-| Orchestration | Agent 選擇、step 控制、RAG、Safety gate、受控 Candidate Tool lifecycle、狀態組裝 | `src/agent_runtime/orchestration/` |
-| Agent | Companion Agent、deterministic Event Extractor、Safety Evaluator | `src/agent_runtime/agents/` |
+| Orchestration | Agent 選擇、step 控制、RAG、Safety gate、受控 Candidate proposal、狀態組裝 | `src/agent_runtime/orchestration/` |
+| Agent | Companion Agent、deterministic Event／Memory Extractor、Safety Evaluator | `src/agent_runtime/agents/` |
 | Context | Context Manifest 建構（本輪輸入、Core 授權的 Confirmed Memory、可選 RAG；僅記憶體，無持久化） | `src/agent_runtime/context/` |
 | Model | Provider 介面、共用安全 Prompt、預設 Mock、可設定 Bedrock Converse 或 OpenAI-compatible HTTP adapter | `src/agent_runtime/models/` |
-| Core integration | Core-owned AgentRun register／complete adapter | `src/agent_runtime/core/` |
-| Tool | Allowlisted Core Tool request builder 與 executor；目前只接 `create_event_candidate` | `src/agent_runtime/tools/` |
+| Legacy Core integration | 非 canonical 的早期 AgentRun register／complete adapter | `src/agent_runtime/core/` |
+| Legacy Tool | 非 canonical 的早期 Core Tool request builder／executor | `src/agent_runtime/tools/` |
 | Tracing | `trace_id`、本地識別碼工具；正式 Candidate run ID 由 Core 建立 | `src/agent_runtime/tracing/` |
 | RAG | Bedrock query embedding、受控 hybrid plan、OpenSearch adapter、引用與 fallback | `src/agent_runtime/rag/` |
 
@@ -60,35 +59,34 @@ OpenSearch 或 production Guardrails 已驗證。
 
 ## 為什麼沒有通用迴圈
 
-目前 Companion 固定只跑一個 bounded model decision。若 Safety 允許、request 明確 allowlist
-`create_event_candidate`，且 deterministic Event Extractor 確實產生 Candidate，才最多執行一次
-Core Tool。`MAX_TOOL_ROUNDS` 與 `MAX_TOTAL_TOOLS` 在這條路徑只作 fail-closed gate；
-`MAX_REWRITE` 尚未被執行流程使用。
+目前 Companion 固定只跑一個 bounded model decision。若 Safety 允許，Runtime 只依 Core 明確
+推導的 `requested_outputs` 執行 deterministic Event／Memory extraction 並回 typed proposal；
+Runtime 不 callback Core，也不寫 Domain DB。`MAX_TOOL_ROUNDS`、`MAX_TOTAL_TOOLS` 與
+`MAX_REWRITE` 尚未被 canonical 執行流程使用。
 
 因此目前不是通用多 Tool 迴圈，也沒有自由重試、Agent Debate 或 cross-agent handoff。真正會
 消耗多輪 Tool／rewrite budget 的控制流程，必須另行設計顯式停止條件、Core reauthorization
 與可測試的 failure state，不能把現有單次 Candidate 路徑描述成已完成的 Tool engine。
 
-## 受控 Event Candidate Tool 路徑
+## 受控 Event／Memory Candidate proposal 路徑
 
-只有以下條件全部成立才會嘗試正式 Candidate 寫入：
+Canonical Core 路徑依序套用以下 Gate：
 
-1. `allowed_tools` 明確包含 `create_event_candidate`。
-2. Safety decision 是 `ALLOW`。
-3. deterministic Event Extractor 產生符合 schema 的 Candidate。
-4. `session_id`、`elder_id`、`consent_version` 與必要識別碼格式有效。
-5. Runtime 能向 Core 註冊正式 UUID AgentRun。
+1. Core 先以 live authorization 與 `CARE_EVENT_EXTRACTION` Consent 決定是否要求
+   `event_candidate`。
+2. 只有另外通過 `memory:candidate:create` 與 `LONG_TERM_MEMORY` Consent，才加上
+   `memory_candidate`。
+3. Safety 必須為 `ALLOW`；Memory proposal 還必須同時有 Event proposal。
+4. Runtime proposal 不含 actor／tenant／elder／session／consent／source ID 或逐字稿。
+5. Core 完成 session 後重新授權並建立 `NEEDS_REVIEW` Event Candidate；Memory proposal 只私下
+   保存在該 Event version。
+6. 照護者 VERIFY 來源事件後，Core 再重驗 memory authorization／Consent 與 verified source，
+   才建立仍為 `CANDIDATE` 的 Memory。
+7. 只有長者本人後續以 `ELDER_UI` 明確確認，Memory 才能轉為 `ACTIVE`。
 
-Runtime 以同一個 Core-owned AgentRun UUID 執行 allowlisted Tool，並同步完成 terminal state。
-它不自行建立正式 Domain State、不信任 request body 的 actor／tenant／scope，也不建立 service
-credential；現行 adapter 只轉交 caller 的 `Authorization`，由 Core 重新驗證 service identity、
-tenant／elder／session／policy、Consent、授權、狀態與 idempotency。Core dependency、Tool 或
-completion 失敗一律 fail closed，不會以本地 UUID 假裝成功。
-
-這條 lifecycle 已有隔離測試，但尚未接成 canonical Core→Agent→Core E2E：目前仍需收斂雙向
-service identity、由 Core server-side 推導的 Tool scope，以及 Core pre-register／Runtime register
-二選一的唯一 AgentRun authority。完成前不得把直接呼叫 Runtime 的 Tool 測試描述成 Gate 1
-canonical Candidate 閉環，也不得讓 browser credential 被 Runtime 轉送成 `SYSTEM_SERVICE`。
+Memory first slice 只辨識「我每天早餐都吃粥」這類明確固定早餐習慣；不處理一般聊天、一次性
+事件、健康／情緒／陪伴需求推論、其他 Memory 類型或 conflict detection。現有早期 `core/` 與
+`tools/` adapter 只為相容保留，canonical orchestrator 不使用它們。
 
 ## Adapter 邊界
 
@@ -128,8 +126,8 @@ handoff 前，必須先決定 manifest 改成只帶 reference，或建立明確�
 
 ## 目前不存在的東西
 
-目前尚未實作：通用多 Tool 執行迴圈、Memory Candidate 自動擷取、Confirmed Memory 語意相關性
-排序、Graph／Neptune
+目前尚未實作：通用多 Tool 執行迴圈、其他 Memory 類型的自動擷取與 conflict detection、
+Memory confirmation 問答 E2E、Confirmed Memory 語意相關性排序、Graph／Neptune
 實際查詢、Prompt Registry、Model Router、cross-agent handoff、完整 Agent Trace 持久化、
 Evaluation runner，以及 production RAG／Guardrails。
 

@@ -27,15 +27,32 @@ provider 時，retrieval endpoint 會明確回傳 `FAILED` fallback 與空結果
 要啟用真實檢索時，依根目錄 `.env.example` 設定 Bedrock、OpenSearch 與四個 RAG config
 路徑。
 
-## 無 AWS 的模型設定
+## 模型設定
+
+`MODEL_PROVIDER=gemini` 會使用 Google Gen AI SDK 的原生 `generate_content` API。`AQ.` 開頭的
+Vertex AI Express key 會自動走 Vertex AI；其他 Gemini API key 走 Gemini Developer API。兩者
+不能混用 endpoint，設定不完整或 provider 失敗時一律 fail closed，不會退回 mock：
+
+```dotenv
+MODEL_PROVIDER=gemini
+GEMINI_API_KEY=<runtime-secret>
+GEMINI_MODEL_ID=<configured-model-id>
+GEMINI_MAX_TOKENS=512
+GEMINI_TEMPERATURE=0.2
+GEMINI_TIMEOUT_SECONDS=30
+```
+
+模型名稱不在程式碼寫死。Core 的 `AGENT_RUNTIME_MODEL_ID` 應同步使用相同 audit label；API key
+只可由本機未版控 `.env` 或部署平台 secret store 注入，不得放進 image、前端或 log。
 
 `MODEL_PROVIDER=openai-compatible` 會啟用 provider-neutral Chat Completions adapter。
 商業流程只依賴 `ModelProvider` 介面，URL、模型 ID 與 credential 都是 runtime 設定；adapter
 不使用特定供應商 SDK，也不跟隨 redirect。遠端有 API key 的端點必須是 HTTPS；無驗證的
 本機相容端點可以使用 HTTP。
 
-Google Gemini API 提供 OpenAI-compatible endpoint；模型名稱仍應依建立 key 時可用的官方清單
-選擇，不在 repository 寫死：
+Gemini Developer API 也提供 OpenAI-compatible endpoint；模型名稱仍應依建立 key 時可用的官方
+清單選擇，不在 repository 寫死。`AQ.` 開頭的 Vertex AI Express key 請使用上面的原生 provider，
+不要送到這個 Developer API endpoint：
 
 ```dotenv
 MODEL_PROVIDER=openai-compatible

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-- 更新日期：2026-08-13
+- 更新日期：2026-08-14
 - 校準基準：`main` at `4f6b4ae`
 - 適用範圍：整個 `kinsun.ai` repository
 
@@ -45,7 +45,7 @@
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-08-13 基準為 15 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
+  2026-08-14 工作樹基準為 16 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
   model attribute `id` 常透過 `__pk_name__` 對應 DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
 - 不用未經檢查的 autogenerate。migration SQL 維持 LF、可重建、可升級，並保留 RLS、grant、trigger、
   constraint 與 state-machine 規則。
@@ -55,10 +55,14 @@
 - Runtime 只產生不可信 proposal；Core 重新授權、重驗 Consent 並建立 review-required Candidate。
   canonical flow 由 Core 傳 `requested_outputs`，`allowed_tools` 固定空陣列；Runtime 不 callback Core、
   不完成 AgentRun、也不寫 Domain DB。
-- 預設與 staging application template 使用 mock。文字生成可明確選 `bedrock` 或
-  `openai-compatible`；後者只依 runtime URL／model／optional Bearer key，可接相容本機服務或
-  Google Gemini API，錯誤時不會 fallback 到 mock。真實 Bedrock／OpenSearch 仍未驗證，且
-  RAG retrieval 尚未 provider-neutral 化。
+- bounded Memory first slice 只擷取明確固定早餐習慣：Runtime proposal 不含 scope／source ID；Core
+  先把它私下綁在 Care Event version，照護者 VERIFY 事件後再重驗 `memory:candidate:create` 與
+  `LONG_TERM_MEMORY` Consent，建立仍須長者本人以 `ELDER_UI` 確認才可 ACTIVE 的 Candidate。
+- 預設與 staging application template 使用 mock。文字生成可明確選 `bedrock`、`gemini` 或
+  `openai-compatible`。原生 `gemini` provider 使用 Google Gen AI SDK，`AQ.` 開頭的 Vertex AI
+  Express key 走 Vertex AI，其他 key 走 Gemini Developer API；`openai-compatible` 只依 runtime
+  URL／model／optional Bearer key。provider 錯誤時都不會 fallback 到 mock。真實
+  Bedrock／OpenSearch 仍未驗證，且 RAG retrieval 尚未 provider-neutral 化。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
@@ -127,6 +131,9 @@ uv run ruff check .
 uv run ruff format --check .
 uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/verify_agent_contract_live.py ../../contracts
 ```
+
+`services/agent-runtime/tests/conftest.py` 必須在匯入 app 前固定 `APP_ENV=test`、
+`MODEL_PROVIDER=mock`；不要讓本機 `.env` 選到的真實 provider 或 secret 汙染一般測試。
 
 ### RAG Ingestion 與 Speech Gateway
 
@@ -197,6 +204,9 @@ contract 與 Core live verifier 均通過。Agent 259、RAG ingestion 138、Spee
 - 不為了 Windows Git ownership 問題改 repository owner 或全域安全設定；命令使用 scoped
   `git -c safe.directory=D:/Hackthon/kinsun.ai ...`。若 Docker、網路、AWS 或沙箱受限，記錄限制，
   不以關閉安全檢查繞過。
+- 本機直接啟動 Speech Gateway 要使用
+  `uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002`；其
+  `pyproject.toml` 設定 `tool.uv.package = false`，不可省略 `--app-dir src`。
 
 ## 尚待產品／平台決策
 

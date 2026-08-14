@@ -1,6 +1,6 @@
 # AGENTS.md
 
-- 更新日期：2026-08-13
+- 更新日期：2026-08-14
 - 校準基準：`main` at `4f6b4ae`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
@@ -17,11 +17,16 @@
     Run、受控 Tool、LINE Messaging／通知，以及 transactional outbox 與 provider-neutral event
     publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
   - `services/agent-runtime`：M0 單輪閉環——contract 驗證、受控 Orchestrator、Companion Agent、
-    deterministic Safety Evaluator 與 Event Candidate proposal。`MODEL_PROVIDER=mock` 是本機及目前
+    deterministic Safety Evaluator、Event Candidate proposal 與明確固定早餐習慣的 bounded
+    Memory Candidate proposal。Memory proposal 先私下綁在 Event Candidate version；只有照護者
+    VERIFY 來源事件、且 Core 重驗 memory authorization／Consent 後，才建立待長者本人確認的
+    Memory Candidate。`MODEL_PROVIDER=mock` 是本機及目前
     staging application template 的預設；程式另有 `BedrockModelProvider`，以及只依 runtime
-    URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`。後者可接
-    相容本機服務或 Google Gemini API，不使用供應商 SDK、不跟隨 redirect、設定錯誤時不會
-    fallback 到 mock。兩者都可使用受控 Context／RAG chunk 生成回答，但尚無真實
+    URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`，以及原生
+    Google Gen AI SDK 的 `GeminiModelProvider`。`MODEL_PROVIDER=gemini` 會依 key 類型選路：`AQ.`
+    開頭的 Vertex AI Express key 必須走 Vertex AI，其他 key 走 Gemini Developer API；兩者不得
+    混用 endpoint。provider 設定錯誤或呼叫失敗時都不會 fallback 到 mock。這些 provider 都可使用
+    受控 Context／RAG chunk 生成回答，但除本機 synthetic smoke 外尚無真實
     staging／production 連線證據。staging-only RAG adapter 可呼叫
     Bedrock embedding／OpenSearch，不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
@@ -220,7 +225,10 @@ Wave 順序：
 - 採受控 Orchestrator，不建立 Agent Debate、無限遞迴或自由互相呼叫。
 - 同步流程上限依 Agent 規格：最多 3 次模型決策、2 輪 Tool、5 次 Tool Call，以及 1 次 Rewrite／Context rebuild；若規格更新則依新版本執行。
 - 上述是安全上限，不代表目前都已實作。現行 runtime 只有一次模型決策、optional RAG 與
-  deterministic Event Candidate proposal；沒有通用 Tool loop，也不會從 `allowed_tools` callback Core。
+  deterministic Event／bounded Memory Candidate proposal；沒有通用 Tool loop，也不會從
+  `allowed_tools` callback Core。Memory first slice 只辨識明確固定早餐習慣，不推論健康、情緒、
+  陪伴需求或一次性事件；proposal 必須先隨 Event Candidate 保存，來源事件 VERIFY 後才可由 Core
+  建立仍需長者本人確認的 Memory Candidate。
   Canonical path 由 Core 以 `requested_outputs` 要求最小 proposal，再由 Core 重驗授權與 Consent 後寫入。
 - Agent 只能呼叫 Allowlist 中且有版本的 Tool。
 - 高風險 Tool 即使由 Agent 選擇，也必須由 Python Core 重新執行 Authorization、Consent、State 與 Idempotency 檢查。
@@ -545,6 +553,10 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
+`services/agent-runtime/tests/conftest.py` 會在 test module 匯入 app 前強制
+`APP_ENV=test`、`MODEL_PROVIDER=mock`。不得讓 developer `.env` 的真實 provider／secret 進入
+一般測試；完整 suite 必須維持不需網路。
+
 `services/agent-runtime`（不需資料庫、AWS 憑證或網路）：
 
 ```powershell
@@ -564,6 +576,10 @@ uv run pytest
 uv run ruff check .
 uv run ruff format --check .
 ```
+
+本機直接啟動 Speech Gateway 時必須使用
+`uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002`。該元件在
+`pyproject.toml` 設定 `tool.uv.package = false`，不能假設 `speech_gateway` 已安裝成可直接匯入的套件。
 
 `services/rag-ingestion`（本機測試不需真實 AWS）：
 
@@ -605,7 +621,7 @@ core-api 驗證；`scripts/verify_agent_contract_live.py` 對執行中的 agent-
 （不需資料庫、憑證或網路）。新增 endpoint 時要同步在對應那支加檢查，否則它永遠只驗舊的。
 
 2026-08-13 provider-neutral text adapter 完成後的本機校準結果：Core unit `755 passed`、
-Agent Runtime `274 passed`、Frontend `135 passed`、Infra `7 passed`；Core／Agent Runtime Ruff lint、
+Agent Runtime `296 passed`、Frontend `135 passed`、Infra `7 passed`；Core／Agent Runtime Ruff lint、
 Frontend ESLint／typecheck／production build、Infra typecheck／兩個
 synth、靜態 Contract 與 Core live verifier（68 operations）通過。較早且未受本次身份變更影響的
 RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立

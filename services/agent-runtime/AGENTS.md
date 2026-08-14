@@ -1,6 +1,6 @@
 # AGENTS.md — agent-runtime
 
-- 更新日期：2026-08-13
+- 更新日期：2026-08-14
 - 校準基準：`main` at `4f6b4ae`
 
 本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
@@ -19,6 +19,9 @@ M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證
 optional Bearer key 全由 runtime 設定，可接相容本機服務或 Google Gemini API。它只支援文字
 Chat Completions、不跟隨 redirect、錯誤時不會 fallback 到 mock，且帶 key 的遠端 HTTP 會在
 啟動時被拒絕。這不會改變 staging RAG 仍綁 Bedrock／OpenSearch 的現況。
+`MODEL_PROVIDER=gemini` 則使用原生 Google Gen AI SDK；`AQ.` 開頭的 Vertex AI Express key 自動
+走 Vertex AI，其他 key 走 Gemini Developer API。這兩種 key 不得混用 endpoint；設定不完整或
+Google provider 失敗時一律 fail closed，不會退回 mock，也不得把上游訊息帶出 provider 邊界。
 
 另有第一版 **staging-only** RAG endpoint、Bedrock query embedding 與 OpenSearch Hybrid
 Retrieval adapter，以及正式 Agent Run 的最小安全整合。只有明確標示
@@ -33,13 +36,18 @@ Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLE
 未完成，且尚未對真實 AWS/OpenSearch 環境完成驗證，因此不得描述成已部署或可用於
 production。
 
-Event Candidate 採 Core-owned proposal flow：request 的 `requested_outputs` 明確包含
-`event_candidate`、Safety 為 `ALLOW` 且 deterministic Event Extractor 找到受支援事件時，
-Runtime 只回傳不含 actor／tenant／elder／session／consent／逐字稿的 typed proposal。Runtime
+Event／Memory Candidate 採 Core-owned proposal flow：request 的 `requested_outputs` 明確包含
+`event_candidate`，並可在另外通過 memory authorization／Consent 時包含 `memory_candidate`。
+Safety 為 `ALLOW` 且 deterministic extractor 找到受支援內容時，Runtime 只回傳不含
+actor／tenant／elder／session／consent／source ID／逐字稿的 typed proposal。Memory first slice
+只辨識明確固定早餐習慣，且必須同時有 Event proposal；一般聊天、一次性事件、健康／情緒／
+陪伴需求推論都不產生 Memory proposal。Runtime
 不向 Core 註冊或完成 AgentRun、不呼叫 Core Tool，也不寫 domain DB；Core 才能在重新授權、
-重驗 Consent 並完成 conversation session 後建立 review-required Candidate。舊 `allowed_tools`
-欄位保留解析相容，但 canonical Core path 固定傳空陣列。尚未實作（不要描述成已完成）：
-Memory Candidate、Model Router、Prompt Registry、完整 Agent Trace、Neptune、通用 Tool 執行
+重驗 Consent 並完成 conversation session 後建立 review-required Event Candidate。Memory proposal
+先私下保存在 Event version；照護者 VERIFY 來源事件後，Core 再重驗 memory gate 並建立仍須長者
+本人確認的 Memory Candidate。舊 `allowed_tools` 欄位保留解析相容，但 canonical Core path 固定
+傳空陣列。尚未實作（不要描述成已完成）：其他類型的 Memory 自動擷取與 conflict detection、
+Model Router、Prompt Registry、完整 Agent Trace、Neptune、通用 Tool 執行
 迴圈與 RAG／Graph Evaluation。`BASIC_VOICE` request 現可接收 Core 已重驗授權／Consent 的最多
 5 筆 current ACTIVE Confirmed Memory；Runtime 以獨立 `confirmed-memory` context item 標記，並把
 內容當資料而非指令。Knowledge／RAG purpose 的 request 不得帶這個欄位。現行 selection 仍只是
@@ -105,10 +113,13 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-不需要資料庫、不需要 AWS 憑證、不需要網路。
+不需要資料庫、不需要 AWS 憑證、不需要網路。`tests/conftest.py` 在 test module 匯入 app 前
+固定 `APP_ENV=test`、`MODEL_PROVIDER=mock`；不得移除這層隔離，否則 developer `.env` 可能讓
+一般 integration tests 呼叫真實模型並讀取 secret。
 
-2026-08-13 本機基準：259 tests passed；Ruff check、Ruff format check 與 Agent live contract
-verifier 均通過。這是本機程式與 contract 驗證，不代表 Bedrock／OpenSearch staging 已驗證。
+2026-08-14 本機基準：296 tests passed；Ruff check、受影響檔案 Ruff format check、靜態 contract
+validator 與本機 Agent live contract verifier 均通過。這是本機程式與 contract 驗證，不代表
+Bedrock／OpenSearch staging 已驗證。
 
 `tests/unit/test_contract_schema_consistency.py` 掃的是 repository 根目錄的
 `contracts/schemas/`，因此它同時會驗證 core-api 的 schema 是否為合法的 JSON Schema。
