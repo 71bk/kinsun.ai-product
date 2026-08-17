@@ -1,0 +1,10 @@
+{
+  "_why_invalid": "Authentication responses must never expose password hashes or credential state.",
+  "data": {
+    "status": "AUTHENTICATED",
+    "session_token": "ks1_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "idle_expires_at": "2026-08-24T10:00:00Z",
+    "absolute_expires_at": "2026-09-16T10:00:00Z",
+    "password_hash": "$argon2id$must-never-be-returned"
+  }
+}

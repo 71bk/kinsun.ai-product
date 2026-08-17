@@ -68,12 +68,16 @@ def _database_url() -> str:
         raise RuntimeError("DATABASE_URL must use postgresql+asyncpg")
     database_name = parsed.path.removeprefix("/")
     allow_e2e = os.getenv("KINSUN_ALLOW_SYNTHETIC_E2E_SEED", "false").lower() == "true"
-    allowed_local_database = parsed.hostname in ALLOWED_LOCAL_HOSTS and (
-        database_name == "kinsun"
-        or (
-            allow_e2e
-            and database_name.startswith(E2E_DATABASE_PREFIX)
+    is_local = parsed.hostname in ALLOWED_LOCAL_HOSTS
+    is_e2e_database = database_name.startswith(E2E_DATABASE_PREFIX)
+    if is_e2e_database and not is_local:
+        raise RuntimeError("Synthetic E2E demo seed is restricted to local databases")
+    if is_e2e_database and not allow_e2e:
+        raise RuntimeError(
+            "Synthetic E2E demo seed requires KINSUN_ALLOW_SYNTHETIC_E2E_SEED=true"
         )
+    allowed_local_database = is_local and (
+        database_name == "kinsun" or is_e2e_database
     )
     allow_remote = os.getenv("KINSUN_ALLOW_REMOTE_DEMO_SEED", "false").lower() == "true"
     allowed_supabase_database = (

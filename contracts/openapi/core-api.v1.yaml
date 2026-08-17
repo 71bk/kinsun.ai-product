@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.4.0",
-    "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
-    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after direct Google or LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
+    "version": "1.5.0",
+    "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security and outbox APIs.",
+    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
     "/health": {
@@ -4444,6 +4444,171 @@
         ]
       }
     },
+    "/api/v1/internal/auth/kinsun/email/start": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Start Kinsun Email Auth",
+        "description": "Create a uniform challenge without revealing whether an account exists.",
+        "operationId": "start_kinsun_email_auth_api_v1_internal_auth_kinsun_email_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/StartKinsunEmailAuthRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/StartedKinsunEmailAuthEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "kinsunBffAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/kinsun/email/complete": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Complete Kinsun Email Auth",
+        "description": "Consume one code and issue a Core App Session on success.",
+        "operationId": "complete_kinsun_email_auth_api_v1_internal_auth_kinsun_email_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/CompleteKinsunEmailAuthRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CompletedKinsunEmailAuthEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "kinsunBffAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/internal/auth/kinsun/password/login": {
+      "post": {
+        "tags": [
+          "internal-auth"
+        ],
+        "summary": "Login With Kinsun Password",
+        "description": "Verify one Kinsun password and issue the existing Core App Session.",
+        "operationId": "login_with_kinsun_password_api_v1_internal_auth_kinsun_password_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/PasswordLoginRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CompletedKinsunEmailAuthEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "kinsunBffAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/internal/auth/google/handoff": {
       "post": {
         "tags": [
@@ -5246,6 +5411,12 @@
         "in": "header",
         "name": "X-Line-Signature",
         "description": "Base64 HMAC-SHA256 over the unmodified request body using the LINE Channel secret. It is not a bearer credential."
+      },
+      "kinsunBffAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Kinsun-BFF-Authorization",
+        "description": "Private BFF-to-Core bearer secret. The header value is `Bearer <secret>`; it is never exposed to the browser and is independent from App Sessions."
       }
     },
     "responses": {

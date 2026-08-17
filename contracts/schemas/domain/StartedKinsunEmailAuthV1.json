@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/StartedKinsunEmailAuthV1.json",
+  "title": "StartedKinsunEmailAuthV1",
+  "description": "Uniform short-lived registration challenge returned only to the trusted BFF.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "challenge_token", "expires_at"],
+  "properties": {
+    "status": {
+      "const": "CHALLENGE_CREATED"
+    },
+    "challenge_token": {
+      "type": "string",
+      "pattern": "^ke1_[A-Za-z0-9_-]{43}$"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

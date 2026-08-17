@@ -1,7 +1,7 @@
 # AGENTS.md
 
-- 更新日期：2026-08-14
-- 校準基準：`main` at `4f6b4ae`
+- 更新日期：2026-08-17
+- 校準基準：`main` at `a2af73e`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
 
@@ -11,8 +11,8 @@
 
 - 本專案源自 AWS Hackathon，現為可獨立維護、可替換雲端 provider 的 Voice-first 智慧長照 AI 陪伴系統。
 - 目前 repository 是可在本機執行與測試的 Monorepo，不只是文件 12 的空骨架；主要單元如下：
-  - `services/core-api`：正式 Domain Core。已有 Identity／Actor、Core App Session
-    authentication、direct Google／LINE OIDC handoff、受限帳號連結、Elder scope、Consent、Voice
+  - `services/core-api`：正式 Domain Core。已有 Identity／Actor、Kinsun-owned Email＋Password、Core App
+    Session authentication、direct Google／LINE OIDC handoff、受限帳號連結、Elder scope、Consent、Voice
     Ticket／ASR Gate、Care Event、Memory、Daily Summary、Family Report、Assignment、Deletion、Agent
     Run、受控 Tool、LINE Messaging／通知，以及 transactional outbox 與 provider-neutral event
     publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
@@ -44,7 +44,11 @@
     [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 的 direct Google／LINE
     OIDC＋Core-owned opaque Session application flow 已實作：BFF start／callback／onboarding routes、Core
     verifier／handoff／pending identity、App Session authenticator／logout，以及 Google→LINE explicit
-    linking 都已存在。[ADR 0011](docs/adr/0011-bounded-empty-account-consolidation.md) 只允許對沒有正式
+    linking 都已存在。[ADR 0015](docs/adr/0015-kinsun-email-password-authentication.md) 的 Kinsun-owned
+    Email＋Password primary flow 也已實作：credential 綁 Actor、password 使用 Argon2id、verification／
+    login 採 bounded attempt 與 lockout，Browser 只經 private BFF→Core boundary 換取 Core App Session。
+    目前寄信只有 synthetic development delivery；production email delivery、password reset／change、MFA 與
+    breached-password screening 仍未完成。[ADR 0011](docs/adr/0011-bounded-empty-account-consolidation.md) 只允許對沒有正式
     domain data 的 ELDER onboarding 骨架做二次確認後的受限合併；其他情況一律人工覆核，不得依 email
     自動合併 Actor。Cognito runtime、Hosted UI callback、SDK、IaC reference 與 `actor.cognito_sub` 已
     從目前 repository 移除；committed example 的 direct OIDC／App Session gates 仍預設關閉，實際環境
@@ -224,7 +228,8 @@ Wave 順序：
 
 - Single multi-role PWA。
 - Python modular monolith on ECS/Fargate。
-- API Gateway HTTP／WebSocket；身份驗證為 direct Google／LINE OIDC＋Core App Session。
+- API Gateway HTTP／WebSocket；身份驗證以 Kinsun Email／Password＋Core App Session 為 primary，
+  direct Google／LINE OIDC 為 optional provider handoff。
 - Bedrock AgentCore Runtime、Bedrock Models／Guardrails。
 - Aurora PostgreSQL、Neptune Serverless、OpenSearch Serverless、S3。
 - EventBridge、SQS／DLQ、Step Functions、Scheduler。
@@ -277,8 +282,8 @@ Wave 順序：
 **改動 contract 或 API 之前先讀那份清單並跑 validator**；其更新日期與末段「尚未實作」摘要可能
 落後於 2026-08-10 之後的 Voice／LINE／Auth 變更，不能只看單一段落判定現況。
 
-2026-08-13 靜態驗證基準：Core OpenAPI 63 paths、Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；
-Core app 實際有 68 operations（同一路徑可含多個 method）。數字會隨實作變更，應以
+2026-08-17 靜態驗證基準：Core OpenAPI 67 paths、Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；
+Core app 實際有 72 operations（同一路徑可含多個 method）。數字會隨實作變更，應以
 `scripts/validate_contracts.py` 與 live verifier 的當次輸出為準，不要手動維護第二份 operation 清單。
 
 若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
@@ -643,6 +648,12 @@ RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立
 `TEST_DATABASE_URL`，所以未對遠端 Supabase 執行破壞性的 integration rebuild；只在確認
 `actor.cognito_sub` 非空筆數為 0 後套用 fail-closed migration 至 `f2c6d8a1e490`。完整 Core Ruff
 format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 format check 已通過。
+
+2026-08-17 Kinsun Email＋Password contract closure 的本機校準結果：Core unit `808 passed`、Frontend
+`220 passed`；Frontend typecheck／production build、靜態 Contract 與 Core live verifier（72 operations）
+通過。完整 Frontend ESLint 仍有一個本次未修改的既有 unused argument；完整 Core Ruff 仍有兩個本次未
+修改的既有問題。沒有獨立 `TEST_DATABASE_URL`，未執行破壞性的 integration rebuild；本機 Docker
+設定檔因執行環境權限無法讀取，`docker compose config --quiet` 本次未驗證。
 
 每次變更至少執行：
 

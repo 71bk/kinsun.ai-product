@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CompleteKinsunEmailAuthRequestV1.json",
+  "title": "CompleteKinsunEmailAuthRequestV1",
+  "description": "Complete one Kinsun Email challenge and set the Actor-owned password credential.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["challenge_token", "verification_code", "password"],
+  "properties": {
+    "challenge_token": {
+      "type": "string",
+      "pattern": "^ke1_[A-Za-z0-9_-]{43}$"
+    },
+    "verification_code": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "password": {
+      "type": "string",
+      "format": "password",
+      "writeOnly": true,
+      "minLength": 12,
+      "maxLength": 128,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "invitation_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 24
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  }
+}

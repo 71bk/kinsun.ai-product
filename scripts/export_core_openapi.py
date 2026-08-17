@@ -15,6 +15,26 @@ os.environ.setdefault(
     "postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun",
 )
 os.environ.setdefault("APP_ENV", "development")
+os.environ.setdefault("APP_SESSION_AUTH_ENABLED", "true")
+os.environ.setdefault("KINSUN_NATIVE_AUTH_ENABLED", "true")
+os.environ.setdefault(
+    "KINSUN_IDENTITY_HMAC_SECRET",
+    "openapi-kinsun-identity-secret-material-32-bytes",
+)
+os.environ.setdefault(
+    "KINSUN_EMAIL_CHALLENGE_HMAC_SECRET",
+    "openapi-kinsun-challenge-secret-material-32-bytes",
+)
+os.environ.setdefault(
+    "KINSUN_AUTH_HANDOFF_SECRET",
+    "openapi-kinsun-handoff-secret-material-32-bytes",
+)
+os.environ.setdefault(
+    "FAMILY_INVITATION_HMAC_SECRET",
+    "openapi-family-invitation-secret-material-32-bytes",
+)
+os.environ.setdefault("KINSUN_EMAIL_DELIVERY_MODE", "synthetic")
+os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 
 from app.main import create_app  # noqa: E402
 
@@ -22,6 +42,9 @@ MODEL_FILES = {
     "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
     "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
     "CreateFamilyInvitationRequest": "domain/CreateFamilyInvitationRequestV1.json",
+    "StartKinsunEmailAuthRequest": "domain/StartKinsunEmailAuthRequestV1.json",
+    "CompleteKinsunEmailAuthRequest": "domain/CompleteKinsunEmailAuthRequestV1.json",
+    "PasswordLoginRequest": "domain/PasswordLoginRequestV1.json",
     "CreateLineLinkChallengeRequest": "domain/CreateLineLinkChallengeRequestV1.json",
     "DailyLineNotificationJobRequest": "domain/DailyLineNotificationJobRequestV1.json",
     "CreateConsentRequest": "domain/CreateConsentRequestV1.json",
@@ -65,6 +88,15 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     ),
     "revoke_family_invitation_api_v1_elders__elder_id__family_invitations__invitation_id__revoke_post": (
         "FamilyInvitationStatusEnvelopeV1"
+    ),
+    "start_kinsun_email_auth_api_v1_internal_auth_kinsun_email_start_post": (
+        "StartedKinsunEmailAuthEnvelopeV1"
+    ),
+    "complete_kinsun_email_auth_api_v1_internal_auth_kinsun_email_complete_post": (
+        "CompletedKinsunEmailAuthEnvelopeV1"
+    ),
+    "login_with_kinsun_password_api_v1_internal_auth_kinsun_password_login_post": (
+        "CompletedKinsunEmailAuthEnvelopeV1"
     ),
     "get_line_link_status_api_v1_me_line_link_get": "LineLinkStatusEnvelopeV1",
     "unlink_line_account_api_v1_me_line_link_delete": "LineLinkStatusEnvelopeV1",
@@ -198,6 +230,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
 
 HTTP_METHODS = {"get", "post", "patch", "delete"}
 LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
+KINSUN_AUTH_PATH_PREFIX = "/api/v1/internal/auth/kinsun/"
 
 
 def replace_model_refs(node: object) -> None:
@@ -231,13 +264,16 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.4.0",
-        "summary": "Implemented Core Domain, LINE linking, consent, security and outbox APIs.",
+        "version": "1.5.0",
+        "summary": (
+            "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
+            "security and outbox APIs."
+        ),
         "description": (
             "Current executable Core API contract. Every protected operation "
             "re-evaluates tenant, elder, relationship or assignment scope. "
             "Core-owned opaque App Sessions authenticate browser actors after "
-            "direct Google or LINE OIDC. LINE webhooks require a "
+            "Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a "
             "raw-body HMAC signature; Core stores keyed identity digests and, "
             "only for scheduled push, an authenticated encrypted destination."
         ),
@@ -272,6 +308,15 @@ def main() -> None:
             "description": (
                 "Base64 HMAC-SHA256 over the unmodified request body using the "
                 "LINE Channel secret. It is not a bearer credential."
+            ),
+        },
+        "kinsunBffAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Kinsun-BFF-Authorization",
+            "description": (
+                "Private BFF-to-Core bearer secret. The header value is `Bearer <secret>`; "
+                "it is never exposed to the browser and is independent from App Sessions."
             ),
         },
     }
@@ -380,6 +425,8 @@ def main() -> None:
             if path not in {"/health", "/ready"}:
                 if path == LINE_WEBHOOK_PATH:
                     operation["security"] = [{"lineSignature": []}]
+                elif path.startswith(KINSUN_AUTH_PATH_PREFIX):
+                    operation["security"] = [{"kinsunBffAuth": []}]
                 else:
                     operation["security"] = [{"bearerAuth": []}]
                 operation["responses"].update(

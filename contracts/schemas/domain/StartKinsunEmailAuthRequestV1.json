@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/StartKinsunEmailAuthRequestV1.json",
+  "title": "StartKinsunEmailAuthRequestV1",
+  "description": "Start a private BFF-mediated Kinsun Email registration challenge without disclosing account existence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["email", "intent"],
+  "properties": {
+    "email": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 254
+    },
+    "intent": {
+      "type": "string",
+      "enum": ["ELDER", "FAMILY", "STAFF"]
+    },
+    "display_name": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  }
+}

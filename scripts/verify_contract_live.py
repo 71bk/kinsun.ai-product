@@ -49,6 +49,18 @@ os.environ["LINE_OIDC_HANDOFF_SECRET"] = (
 os.environ["FAMILY_INVITATION_HMAC_SECRET"] = (
     "live-contract-family-invitation-secret-material-32-bytes"
 )
+os.environ["KINSUN_NATIVE_AUTH_ENABLED"] = "true"
+os.environ["KINSUN_IDENTITY_HMAC_SECRET"] = (
+    "live-contract-kinsun-identity-secret-material-32-bytes"
+)
+os.environ["KINSUN_EMAIL_CHALLENGE_HMAC_SECRET"] = (
+    "live-contract-kinsun-challenge-secret-material-32-bytes"
+)
+os.environ["KINSUN_AUTH_HANDOFF_SECRET"] = (
+    "live-contract-kinsun-handoff-secret-material-32-bytes"
+)
+os.environ["KINSUN_EMAIL_DELIVERY_MODE"] = "synthetic"
+os.environ["KINSUN_SYNTHETIC_EMAIL_CODE_SECRET"] = "246810"
 # Keep Voice Ticket dependencies deterministic while probing their unauthenticated
 # fail-closed edge; this synthetic secret is verifier-only and not a deployment credential.
 os.environ["VOICE_TICKET_ENABLED"] = "true"
@@ -327,6 +339,53 @@ async def main() -> int:
             response.json(),
             load("common/ErrorEnvelopeV1.json"),
         )
+
+        kinsun_auth_probes = (
+            (
+                "/api/v1/internal/auth/kinsun/email/start",
+                {
+                    "email": "synthetic.live-contract@example.test",
+                    "intent": "ELDER",
+                    "display_name": "Synthetic Elder",
+                },
+            ),
+            (
+                "/api/v1/internal/auth/kinsun/email/complete",
+                {
+                    "challenge_token": "ke1_" + "a" * 43,
+                    "verification_code": "246810",
+                    "password": "Synthetic-live-contract-password-1",
+                },
+            ),
+            (
+                "/api/v1/internal/auth/kinsun/password/login",
+                {
+                    "email": "synthetic.live-contract@example.test",
+                    "password": "Synthetic-live-contract-password-1",
+                },
+            ),
+        )
+        for path, request_body in kinsun_auth_probes:
+            response = await client.post(path, json=request_body)
+            if response.status_code != 401:
+                failures.append(f"POST {path} returned {response.status_code}, expected 401")
+                print(f"FAIL  POST {path} rejects missing BFF credential: {response.status_code}")
+            else:
+                print(f"ok    POST {path} rejects missing BFF credential with 401")
+            response_body = response.json()
+            check(
+                f"POST {path} 401 body vs ErrorEnvelopeV1",
+                response_body,
+                load("common/ErrorEnvelopeV1.json"),
+            )
+            serialized = json.dumps(response_body, ensure_ascii=False)
+            for restricted_value in request_body.values():
+                if isinstance(restricted_value, str) and restricted_value in serialized:
+                    failures.append(f"POST {path} reflected rejected authentication input")
+                    print(f"FAIL  POST {path} reflected rejected authentication input")
+                    break
+            else:
+                print(f"ok    POST {path} does not reflect rejected authentication input")
 
         response = await client.post(
             "/api/v1/internal/auth/google/handoff",

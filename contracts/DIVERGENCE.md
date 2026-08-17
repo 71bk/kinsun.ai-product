@@ -1,6 +1,6 @@
 # Contract 與文件 10 差異清單
 
-- 更新日期：2026-08-14
+- 更新日期：2026-08-17
 - 文件基準：`docs/spec/10智慧長照 AI 陪伴系統－API、Event、Tool 與 Data Contracts v0.1.md`
 - 執行基準：目前 `services/core-api` 與 `services/agent-runtime`
 
@@ -66,6 +66,12 @@ Core 只接受 Core-owned opaque App Session：
 - 一般 protected endpoint 的 bearer credential 必須是 `ks1_` App Session。Core 每次由 live DB 重查
   Session、Actor、Tenant membership 與 role；Cookie 或 Provider claim 不直接授權 elder scope。
 - Cognito verifier、Hosted UI callback、舊 onboarding resolver、雙 Cookie 過渡與 SDK 已移除。
+- Kinsun-owned Email＋Password flow 使用 private BFF-to-Core handoff secret；Core 以 keyed Email
+  identity digest 查找 Actor、以 Argon2id 驗證 Actor-owned credential，成功後只向 BFF 核發既有
+  `ks1_` App Session。帳號不存在、credential 不存在、錯密碼與 lockout 使用相同 401；bounded
+  failure/lockout state 必須提交，因此 endpoint 透過共用 `ErrorEnvelope` response helper 回應，而非
+  拋出會觸發 request transaction rollback 的 domain exception。三個 internal endpoint、request／
+  response schema、valid／invalid examples 與 live fail-closed probe 均已列入 executable contract。
 - Direct Google flow 使用 BFF-owned Authorization Code + PKCE、state、nonce 與 signed transaction
   Cookie；Core 會獨立重驗 Google ID Token。既有 identity 直接核發 App Session，未知 ELDER／FAMILY
   identity 則只核發短效 pending credential，經明確確認／邀請兌換後才建立 Core state。Google access／
@@ -79,9 +85,11 @@ Core 只接受 Core-owned opaque App Session：
 - Development 仍只有在 `FAKE_AUTH_ENABLED=true` 時使用明確 fake actor；App Session 未啟用或設定
   不完整時 fail closed。
 
-目前 contract 包含 direct Google／LINE handoff、pending onboarding 與 App Session logout 的已實作邊界，
-但不代表 provider secret、callback URL 或 browser E2E 已在任何雲端環境部署驗證；這些仍須由環境
-設定與部署證據確認。Owner 已確認沒有既有 Cognito Actor 需要遷移。
+目前 contract 包含 Kinsun Email challenge／completion／password login、direct Google／LINE handoff、
+pending onboarding 與 App Session logout 的已實作邊界。Kinsun Email delivery 目前只有明確啟用的
+synthetic development mode；production Email provider、password reset/change、MFA 與 breached-password
+checking 仍未實作。這些 contract 也不代表 provider secret、callback URL 或 browser E2E 已在任何
+雲端環境部署驗證；仍須由環境設定與部署證據確認。Owner 已確認沒有既有 Cognito Actor 需要遷移。
 
 ### LINE Login 與帳號連結
 

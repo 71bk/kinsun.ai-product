@@ -52,6 +52,13 @@ from app.schemas.family_invitation import (  # noqa: E402
     FamilyInvitationListResponse,
     FamilyInvitationStatusResponse,
 )
+from app.schemas.kinsun_email_auth import (  # noqa: E402
+    CompletedKinsunEmailAuthResponse,
+    CompleteKinsunEmailAuthRequest,
+    PasswordLoginRequest,
+    StartedKinsunEmailAuthResponse,
+    StartKinsunEmailAuthRequest,
+)
 from app.schemas.memory import (  # noqa: E402
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,
@@ -88,6 +95,11 @@ EXPORTS = {
         "FamilyInvitationCreatedV1": FamilyInvitationCreatedResponse,
         "FamilyInvitationListV1": FamilyInvitationListResponse,
         "FamilyInvitationStatusV1": FamilyInvitationStatusResponse,
+        "StartKinsunEmailAuthRequestV1": StartKinsunEmailAuthRequest,
+        "StartedKinsunEmailAuthV1": StartedKinsunEmailAuthResponse,
+        "CompleteKinsunEmailAuthRequestV1": CompleteKinsunEmailAuthRequest,
+        "PasswordLoginRequestV1": PasswordLoginRequest,
+        "CompletedKinsunEmailAuthV1": CompletedKinsunEmailAuthResponse,
         "CreateConsentRequestV1": CreateConsentRequest,
         "RevokeConsentRequestV1": RevokeConsentRequest,
         "ConsentV1": ConsentResponse,
@@ -145,6 +157,8 @@ SUCCESS_ENVELOPES = {
     "FamilyInvitationCreatedEnvelopeV1": "domain/FamilyInvitationCreatedV1.json",
     "FamilyInvitationListEnvelopeV1": "domain/FamilyInvitationListV1.json",
     "FamilyInvitationStatusEnvelopeV1": "domain/FamilyInvitationStatusV1.json",
+    "StartedKinsunEmailAuthEnvelopeV1": "domain/StartedKinsunEmailAuthV1.json",
+    "CompletedKinsunEmailAuthEnvelopeV1": "domain/CompletedKinsunEmailAuthV1.json",
     "ConsentEnvelopeV1": "domain/ConsentV1.json",
     "ConsentListEnvelopeV1": "domain/ConsentListV1.json",
     "VoiceSessionEnvelopeV1": "domain/VoiceSessionV1.json",
@@ -206,6 +220,26 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
         properties["share_scope"].update(
             {"minItems": 1, "maxItems": 4, "uniqueItems": True}
         )
+    elif title == "CompleteKinsunEmailAuthRequestV1":
+        properties["verification_code"]["pattern"] = r"^[0-9]{6}$"
+        properties["password"].update(
+            {"minLength": 12, "maxLength": 128, "pattern": r"^[^\u0000]+$"}
+        )
+    elif title == "PasswordLoginRequestV1":
+        properties["password"].update(
+            {"minLength": 12, "maxLength": 128, "pattern": r"^[^\u0000]+$"}
+        )
+    elif title == "StartedKinsunEmailAuthV1":
+        properties["challenge_token"]["pattern"] = r"^ke1_[A-Za-z0-9_-]{43}$"
+        schema["required"] = ["status", "challenge_token", "expires_at"]
+    elif title == "CompletedKinsunEmailAuthV1":
+        properties["session_token"]["pattern"] = r"^ks1_[A-Za-z0-9_-]{43}$"
+        schema["required"] = [
+            "status",
+            "session_token",
+            "idle_expires_at",
+            "absolute_expires_at",
+        ]
     elif title == "FamilyInvitationListV1":
         status = schema["$defs"]["FamilyInvitationStatusResponse"]
         status["properties"]["share_scope"].update(
