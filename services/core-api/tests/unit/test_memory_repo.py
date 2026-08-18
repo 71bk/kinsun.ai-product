@@ -15,6 +15,52 @@ from app.repositories.memory_repo import MemoryRepository
 
 
 @pytest.mark.asyncio
+async def test_candidate_source_evidence_is_current_reviewed_and_tenant_scoped() -> None:
+    session = AsyncMock()
+    result = MagicMock()
+    event_id = uuid4()
+    session_id = uuid4()
+    result.one_or_none.return_value = (
+        event_id,
+        2,
+        session_id,
+        "VERIFIED_ELDER",
+        "conversation-session:test:authenticated-text",
+        {"memory_kind": "MUSIC_PREFERENCE"},
+    )
+    session.execute.return_value = result
+
+    evidence = await MemoryRepository(session, uuid4()).get_candidate_source_evidence(
+        elder_id=uuid4(),
+        source_event_ids=[event_id],
+    )
+
+    assert evidence is not None
+    assert evidence.source_session_id == session_id
+    assert evidence.source_turn_reference == f"care-event:{event_id}:v2"
+    assert evidence.speaker_verification_level == "VERIFIED_ELDER"
+    assert evidence.memory_candidate_proposal == {"memory_kind": "MUSIC_PREFERENCE"}
+
+    statement = session.execute.call_args.args[0]
+    compiled = str(statement.compile(compile_kwargs={"literal_binds": False}))
+    assert "care_event.tenant_id" in compiled
+    assert "care_event.elder_id" in compiled
+    assert "care_event.status" in compiled
+    assert "care_event_version.version = eldercare_ai.care_event.current_version" in compiled
+
+
+@pytest.mark.asyncio
+async def test_candidate_source_evidence_rejects_multi_event_bundle_for_now() -> None:
+    session = AsyncMock()
+    evidence = await MemoryRepository(session, uuid4()).get_candidate_source_evidence(
+        elder_id=uuid4(),
+        source_event_ids=[uuid4(), uuid4()],
+    )
+    assert evidence is None
+    session.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated() -> None:
     session = AsyncMock()
     result = MagicMock()

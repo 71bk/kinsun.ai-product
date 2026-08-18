@@ -73,6 +73,14 @@ class CareEventVersion(Base):
     memory_candidate_proposal: Mapped[dict | None] = mapped_column(JSONB)
     evidence_text_ref: Mapped[str | None] = mapped_column(Text)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+    speaker_role: Mapped[str | None] = mapped_column(String(32))
+    speaker_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.actor.actor_id"),
+    )
+    speaker_verification_level: Mapped[str | None] = mapped_column(String(32))
+    speaker_verification_method: Mapped[str | None] = mapped_column(String(48))
+    speaker_evidence_reference: Mapped[str | None] = mapped_column(String(300))
     created_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey(f"{SCHEMA_NAME}.actor.actor_id"),

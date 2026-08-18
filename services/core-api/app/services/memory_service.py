@@ -6,17 +6,20 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
 from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.middleware.auth import ActorContext
-from app.models.care_event import CareEvent
 from app.models.enums import ActorType
 from app.models.memory import Memory, MemoryVersion
+from app.policies.memory_policy import (
+    CURRENT_MEMORY_POLICY_VERSION,
+    evaluate_memory_candidate,
+)
 from app.policies.memory_retrieval import memory_content_digest
+from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
@@ -55,33 +58,76 @@ class MemoryService:
             elder_id=elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
         )
-        count = await self._session.scalar(
-            select(func.count())
-            .select_from(CareEvent)
-            .where(
-                CareEvent.id.in_(request.source_event_ids),
-                CareEvent.elder_id == elder_id,
-                CareEvent.tenant_id == self._tenant_id,
-                CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
-            )
+        source = await self._memories.get_candidate_source_evidence(
+            elder_id=elder_id,
+            source_event_ids=request.source_event_ids,
         )
-        if count != len(set(request.source_event_ids)):
+        if source is None:
             raise ValidationError(
                 details=[
                     {
                         "field": "source_event_ids",
-                        "reason": "every source must be a verified event for this elder",
+                        "reason": "VERIFIED_SINGLE_SOURCE_REQUIRED",
+                    }
+                ]
+            )
+        expected_source_proposal = {
+            "memory_type": request.memory_type.value,
+            "memory_kind": request.memory_kind.value,
+            "normalized_content": request.normalized_content,
+            "confirmation_question": request.confirmation_question,
+            "extraction_confidence": request.extraction_confidence,
+            "proposal_risk_hint": request.proposal_risk_hint.value,
+            "extractor_version": request.extractor_version,
+        }
+        if source.memory_candidate_proposal != expected_source_proposal:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "source_event_ids",
+                        "reason": "SOURCE_PROPOSAL_MISMATCH",
                     }
                 ]
             )
 
+        policy = evaluate_memory_candidate(
+            memory_type=request.memory_type.value,
+            memory_kind=request.memory_kind.value,
+            normalized_content=request.normalized_content,
+            confirmation_question=request.confirmation_question,
+            extraction_confidence=request.extraction_confidence,
+            possible_conflict=request.possible_conflict,
+            speaker_verification_level=source.speaker_verification_level,
+            speaker_evidence_reference=source.speaker_evidence_reference,
+        )
+        if not policy.create_memory or policy.status is None:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "memory_kind",
+                        "reason": policy.reason_code,
+                    }
+                ]
+            )
+
+        now = datetime.now(UTC)
+        content_digest = memory_content_digest(request.normalized_content)
         memory = Memory(
             elder_id=elder_id,
             tenant_id=self._tenant_id,
             memory_type=request.memory_type.value,
             memory_kind=request.memory_kind.value,
-            status="PENDING_CONFIRMATION",
+            actual_risk_level=policy.actual_risk_level,
+            policy_decision=policy.policy_decision,
+            policy_version=CURRENT_MEMORY_POLICY_VERSION,
+            verification_level=policy.verification_level,
+            required_verification=policy.required_verification,
+            speaker_verification_level=source.speaker_verification_level,
+            speaker_evidence_reference=source.speaker_evidence_reference,
+            status=policy.status,
             current_version=1,
+            activated_at=now if policy.status == "ACTIVE" else None,
+            lifecycle_reason=policy.reason_code,
             consent_id=consent.id,
             consent_version=consent.version,
         )
@@ -92,13 +138,15 @@ class MemoryService:
                 memory_id=memory.id,
                 version=1,
                 content=request.normalized_content,
-                content_digest=memory_content_digest(request.normalized_content),
+                content_digest=content_digest,
                 confirmation_question=request.confirmation_question,
                 extractor_version=request.extractor_version,
                 extraction_confidence=Decimal(str(request.extraction_confidence)).quantize(
                     Decimal("0.0001")
                 ),
                 source_event_ids=request.source_event_ids,
+                source_session_id=source.source_session_id,
+                source_turn_reference=source.source_turn_reference,
                 proposal_risk_hint=request.proposal_risk_hint.value,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,
@@ -106,7 +154,11 @@ class MemoryService:
         )
         await self._session.flush()
         await self._write_event(
-            event_type="memory.candidate-created.v1",
+            event_type=(
+                "memory.auto-activated.v1"
+                if memory.status == "ACTIVE"
+                else "memory.candidate-created.v1"
+            ),
             memory=memory,
             actor_id=actor_id,
             trace_id=trace_id,
@@ -137,11 +189,22 @@ class MemoryService:
         """
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
+        if (
+            memory.policy_version != CURRENT_MEMORY_POLICY_VERSION
+            or memory.actual_risk_level != "MEDIUM"
+            or memory.policy_decision != "PENDING_ELDER_CONFIRMATION"
+            or memory.required_verification != "ELDER_CONFIRMATION"
+        ):
+            raise ConflictError("Memory candidate policy evidence is stale or ineligible")
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=memory.elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
         )
-        if consent.version != request.consent_version or consent.version != memory.consent_version:
+        if (
+            consent.id != memory.consent_id
+            or consent.version != request.consent_version
+            or consent.version != memory.consent_version
+        ):
             raise ConflictError("Consent version changed; create a new candidate confirmation")
 
         if memory.status == "DEFERRED":
@@ -154,6 +217,11 @@ class MemoryService:
             request=request,
         )
 
+        current = await self._memories.get_current_version(memory)
+        if current.content_digest is None or current.content_digest != memory_content_digest(
+            current.content
+        ):
+            raise ConflictError("Memory candidate content evidence is invalid")
         require_memory_transition(memory.status, "CONFIRMED")
         now = datetime.now(UTC)
         memory.status = "CONFIRMED"
@@ -162,6 +230,11 @@ class MemoryService:
         memory.confirmation_method = request.confirmation_method
         memory.confirmation_session_id = None
         memory.confirmation_evidence_ref = f"core-command:{trace_id}"
+        memory.confirmed_version = memory.current_version
+        memory.confirmed_content_digest = current.content_digest
+        memory.policy_decision = "ELDER_CONFIRMED_MEDIUM"
+        memory.verification_level = "ELDER_CONFIRMED"
+        memory.lifecycle_reason = "ELDER_CONFIRMED_CURRENT_VERSION"
         require_memory_transition(memory.status, "ACTIVE")
         memory.status = "ACTIVE"
         memory.activated_at = now
@@ -197,6 +270,9 @@ class MemoryService:
             )
 
         if request.confirmation_method != "ELDER_UI" or actor_context.actor_role != ActorType.ELDER:
+            raise AuthorizationDeniedError("Resource not found")
+        elder = await ElderRepository(self._session, self._tenant_id).get_by_id(memory.elder_id)
+        if elder is None or elder.actor_id != actor_context.actor_id:
             raise AuthorizationDeniedError("Resource not found")
 
     async def set_candidate_state(
@@ -244,6 +320,25 @@ class MemoryService:
         now = datetime.now(UTC)
         current.version_status = "INACTIVE"
         current.valid_to = now
+        if memory.status == "ACTIVE":
+            require_memory_transition(memory.status, "INACTIVE")
+        memory.status = "INACTIVE"
+        memory.deactivated_at = now
+        memory.actual_risk_level = "MEDIUM"
+        memory.policy_decision = "NO_MEMORY"
+        memory.policy_version = CURRENT_MEMORY_POLICY_VERSION
+        memory.verification_level = "UNVERIFIED"
+        memory.required_verification = "RESTRICTED"
+        memory.speaker_verification_level = "UNKNOWN"
+        memory.speaker_evidence_reference = None
+        memory.confirmed_by_actor_id = None
+        memory.confirmed_at = None
+        memory.confirmation_method = None
+        memory.confirmation_session_id = None
+        memory.confirmation_evidence_ref = None
+        memory.confirmed_version = None
+        memory.confirmed_content_digest = None
+        memory.lifecycle_reason = "CONTENT_CORRECTED_NEEDS_REVIEW"
         memory.current_version += 1
         self._memories.add_version(
             MemoryVersion(
@@ -255,6 +350,8 @@ class MemoryService:
                 extractor_version=None,
                 extraction_confidence=None,
                 source_event_ids=current.source_event_ids,
+                source_session_id=None,
+                source_turn_reference=None,
                 proposal_risk_hint=None,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,

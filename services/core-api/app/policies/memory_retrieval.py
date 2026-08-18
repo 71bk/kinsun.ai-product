@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from hashlib import sha256
 
-CURRENT_MEMORY_POLICY_VERSION = "memory-policy-2026-08-18.v1"
+from app.policies.memory_policy import (
+    CONFIRMABLE_MEMORY_KINDS,
+    CURRENT_MEMORY_POLICY_VERSION,
+    LOW_MEMORY_KINDS,
+    TRUSTED_SPEAKER_LEVELS,
+)
 
-_TRUSTED_SPEAKER_LEVELS = {"VERIFIED_ELDER", "WITNESSED_ELDER"}
 _CONFIRMATION_METHODS = {"ELDER_UI", "ELDER_VOICE", "WITNESSED_VOICE"}
-_LOW_MEMORY_KINDS = {"MUSIC_PREFERENCE", "HOBBY", "PREFERRED_ADDRESS"}
-_MEDIUM_MEMORY_KINDS = {"FAMILY_RELATIONSHIP", "CONTACT_ROUTINE", "DAILY_ROUTINE"}
 
 
 def memory_content_digest(content: str) -> str:
@@ -69,14 +71,14 @@ def evaluate_memory_trust(
     if evidence.content_digest != memory_content_digest(evidence.content):
         return MemoryTrustDecision(False, "CONTENT_DIGEST_MISMATCH")
     if (
-        evidence.speaker_verification_level not in _TRUSTED_SPEAKER_LEVELS
+        evidence.speaker_verification_level not in TRUSTED_SPEAKER_LEVELS
         or not evidence.speaker_evidence_reference
     ):
         return MemoryTrustDecision(False, "SPEAKER_EVIDENCE_INVALID")
 
     if evidence.actual_risk_level == "LOW":
         if (
-            evidence.memory_kind in _LOW_MEMORY_KINDS
+            evidence.memory_kind in LOW_MEMORY_KINDS
             and evidence.policy_decision == "AUTO_ACTIVATED_LOW"
             and evidence.verification_level == "POLICY_VERIFIED"
             and evidence.required_verification == "NONE"
@@ -86,7 +88,7 @@ def evaluate_memory_trust(
 
     if evidence.actual_risk_level == "MEDIUM":
         if (
-            evidence.memory_kind not in _MEDIUM_MEMORY_KINDS
+            evidence.memory_kind not in CONFIRMABLE_MEMORY_KINDS
             or evidence.policy_decision != "ELDER_CONFIRMED_MEDIUM"
             or evidence.verification_level != "ELDER_CONFIRMED"
             or evidence.required_verification != "ELDER_CONFIRMATION"

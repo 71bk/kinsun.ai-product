@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select
 
+from app.models.care_event import CareEvent, CareEventVersion
 from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryVersion
 from app.policies.memory_retrieval import (
@@ -27,6 +28,17 @@ class ConfirmedMemoryContextRecord:
     memory_type: str
     content: str
     consent_version: int
+
+
+@dataclass(frozen=True)
+class MemoryCandidateSourceEvidence:
+    """Current verified CareEvent evidence used for one Memory proposal."""
+
+    source_session_id: UUID | None
+    source_turn_reference: str
+    speaker_verification_level: str
+    speaker_evidence_reference: str | None
+    memory_candidate_proposal: dict | None
 
 
 class MemoryRepository(BaseRepository):
@@ -54,6 +66,50 @@ class MemoryRepository(BaseRepository):
             )
         )
         return result.scalar_one()
+
+    async def get_candidate_source_evidence(
+        self,
+        *,
+        elder_id: UUID,
+        source_event_ids: list[UUID],
+    ) -> MemoryCandidateSourceEvidence | None:
+        """Resolve one current, reviewed source without trusting request metadata."""
+        unique_ids = set(source_event_ids)
+        if len(source_event_ids) != 1 or len(unique_ids) != 1:
+            return None
+        result = await self._session.execute(
+            select(
+                CareEvent.id,
+                CareEvent.current_version,
+                CareEvent.source_session_id,
+                CareEventVersion.speaker_verification_level,
+                CareEventVersion.speaker_evidence_reference,
+                CareEventVersion.memory_candidate_proposal,
+            )
+            .join(
+                CareEventVersion,
+                and_(
+                    CareEventVersion.event_id == CareEvent.id,
+                    CareEventVersion.version == CareEvent.current_version,
+                ),
+            )
+            .where(
+                CareEvent.id.in_(unique_ids),
+                CareEvent.elder_id == elder_id,
+                CareEvent.tenant_id == self._tenant_id,
+                CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
+            )
+        )
+        row = result.one_or_none()
+        if row is None:
+            return None
+        return MemoryCandidateSourceEvidence(
+            source_session_id=row[2],
+            source_turn_reference=f"care-event:{row[0]}:v{row[1]}",
+            speaker_verification_level=row[3] or "UNKNOWN",
+            speaker_evidence_reference=row[4],
+            memory_candidate_proposal=row[5],
+        )
 
     async def list_for_deletion(self, *, elder_id: UUID) -> list[Memory]:
         result = await self._session.execute(

@@ -270,6 +270,10 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request.event_type.value == "MEAL"
         assert request.review_requirement == "REQUIRED"
         assert kwargs["memory_candidate_proposal"] == _memory_proposal().model_dump(mode="json")
+        speaker = kwargs["source_speaker_evidence"]
+        assert speaker.verification_level == "VERIFIED_ELDER"
+        assert speaker.speaker_actor_id == actor.actor_id
+        assert speaker.verification_method == "AUTHENTICATED_TEXT"
         return SimpleNamespace(id=uuid4())
 
     runtime.run.side_effect = run_runtime
@@ -302,6 +306,35 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
     assert agent_run.result_status == "SUCCESS"
     assert any(isinstance(item, SafetyEvaluation) for item in added)
     assert all("早餐分享" not in repr(item) for item in added)
+
+
+@pytest.mark.asyncio
+async def test_non_elder_or_voice_turn_never_requests_memory_proposal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = uuid4()
+    authorize, require_active = _install_candidate_capability(monkeypatch)
+    service = CompanionService(MagicMock(), tenant_id, SimpleNamespace(), "mock")
+    family = ActorContext(
+        actor_id=uuid4(),
+        actor_role="FAMILY_MEMBER",
+        tenant_id=tenant_id,
+    )
+    elder = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
+
+    family_outputs = await service._requested_outputs(
+        conversation=_conversation(input_mode="text"),
+        actor_context=family,
+    )
+    voice_outputs = await service._requested_outputs(
+        conversation=_conversation(input_mode="voice"),
+        actor_context=elder,
+    )
+
+    assert family_outputs == ["event_candidate"]
+    assert voice_outputs == ["event_candidate"]
+    assert authorize.await_count == 2
+    assert require_active.await_count == 2
 
 
 @pytest.mark.asyncio
