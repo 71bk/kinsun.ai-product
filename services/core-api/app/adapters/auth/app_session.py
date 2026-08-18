@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import Request
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 
+from app.core.auth import ActorContext, AuthenticationRequest, Authenticator
 from app.core.config import Settings
 from app.core.exceptions import AuthenticationError, ServiceUnavailableError
 from app.db.engine import DatabaseEngine
-from app.middleware.auth import ActorContext, Authenticator
 from app.services.app_session_service import AppSessionPolicy, AppSessionService
 
 _AUTHENTICATION_REQUIRED = "Authentication required"
@@ -27,7 +26,7 @@ class DatabaseAppSessionAuthenticator(Authenticator):
         self._db_engine = db_engine
         self._policy = AppSessionPolicy.from_settings(settings)
 
-    async def authenticate(self, request: Request) -> ActorContext:
+    async def authenticate(self, request: AuthenticationRequest) -> ActorContext:
         token = _extract_bearer_token(request)
         if not token.startswith("ks1_"):
             raise AuthenticationError(_AUTHENTICATION_REQUIRED)
@@ -61,7 +60,7 @@ class DatabaseAppSessionAuthenticator(Authenticator):
                 raise AuthenticationError(_AUTHENTICATION_REQUIRED) from None
 
 
-def _extract_bearer_token(request: Request) -> str:
+def _extract_bearer_token(request: AuthenticationRequest) -> str:
     values = request.headers.getlist("authorization")
     if len(values) != 1:
         raise AuthenticationError(_AUTHENTICATION_REQUIRED)

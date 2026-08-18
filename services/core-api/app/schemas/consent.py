@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.domain.consent import ConsentPurpose
 
 ALLOWED_DELETION_SCOPES = {
     "CONVERSATION_SESSION",
@@ -25,16 +26,6 @@ ALLOWED_DELETION_SCOPES = {
     "SEARCH_INDEX",
     "CACHE",
 }
-
-
-class ConsentPurpose(str, Enum):
-    BASIC_VOICE = "BASIC_VOICE"
-    TRANSCRIPT_STORAGE = "TRANSCRIPT_STORAGE"
-    CARE_EVENT_EXTRACTION = "CARE_EVENT_EXTRACTION"
-    LONG_TERM_MEMORY = "LONG_TERM_MEMORY"
-    COMPANION_SIGNAL_ANALYSIS = "COMPANION_SIGNAL_ANALYSIS"
-    PROACTIVE_COMPANION = "PROACTIVE_COMPANION"
-    FAMILY_SHARING = "FAMILY_SHARING"
 
 
 class CreateConsentRequest(BaseModel):

@@ -9,13 +9,13 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import require_report_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.models.care_event import CareEvent
 from app.models.report import FamilyReport, ReportVersion
 from app.models.summary import DailySummary
 from app.repositories.report_repo import ReportRepository
-from app.schemas.consent import ConsentPurpose
 from app.schemas.report import CreateFamilyReportDraftRequest
 from app.services.consent_service import ConsentService
 

@@ -9,6 +9,8 @@ import re
 import secrets
 from dataclasses import dataclass
 
+from app.core.email import normalize_email_text
+
 _TOKEN_PREFIX = "ke1_"
 _TOKEN_PATTERN = re.compile(r"^ke1_[A-Za-z0-9_-]{43}$")
 _EMAIL_PATTERN = re.compile(
@@ -39,7 +41,7 @@ class KinsunIdentityCodec:
     def normalize_email(value: str) -> str:
         if not isinstance(value, str):
             raise ValueError("Email address has an invalid shape")
-        normalized = value.strip().casefold()
+        normalized = normalize_email_text(value)
         if (
             len(normalized) > 254
             or not normalized.isascii()
@@ -52,6 +54,7 @@ class KinsunIdentityCodec:
         normalized = self.normalize_email(normalized_email)
         message = f"kinsun:v{self.key_version}:email:{normalized}".encode("ascii")
         return hmac.new(self._secret, message, hashlib.sha256).hexdigest()
+
 
 class KinsunEmailChallengeCodec:
     """Issue 256-bit challenge tokens and bind OTP digests to each token."""

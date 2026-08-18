@@ -9,9 +9,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.config import Settings
 from app.core.exceptions import AuthenticationError
-from app.middleware.auth import ActorContext
 from app.models.app_session import AppSession
 from app.repositories.app_session_repo import AppSessionRepository, ResolvedAppSession
 from app.services.actor_context_resolver import resolve_active_actor_context

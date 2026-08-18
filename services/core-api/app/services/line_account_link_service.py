@@ -10,9 +10,9 @@ from uuid import UUID
 from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, DomainException, NotFoundError
 from app.events.outbox_writer import write_outbox_entry
-from app.middleware.auth import ActorContext
 from app.models.actor import Actor
 from app.models.elder import Elder
 from app.models.line_identity import ExternalIdentity, LineLinkChallenge

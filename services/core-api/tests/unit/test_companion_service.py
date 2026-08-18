@@ -8,7 +8,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 
 import pytest
 
-from app.adapters.agent_runtime import (
+from app.core.agent_runtime import (
     AgentEventCandidateProposal,
     AgentMemoryCandidateProposal,
     AgentRunResult,
@@ -269,7 +269,7 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request.source_id == conversation.id
         assert request.event_type.value == "MEAL"
         assert request.review_requirement == "REQUIRED"
-        assert kwargs["memory_candidate_proposal"] == _memory_proposal().model_dump(mode="json")
+        assert kwargs["memory_candidate_proposal"] == _memory_proposal().as_payload()
         speaker = kwargs["source_speaker_evidence"]
         assert speaker.verification_level == "VERIFIED_ELDER"
         assert speaker.speaker_actor_id == actor.actor_id

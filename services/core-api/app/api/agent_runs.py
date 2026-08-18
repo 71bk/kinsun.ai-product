@@ -8,10 +8,10 @@ from fastapi import APIRouter, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import success
+from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, NotFoundError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_system_service_actor
-from app.middleware.auth import ActorContext
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.agent_run import (
     AgentRunCompletionResponse,

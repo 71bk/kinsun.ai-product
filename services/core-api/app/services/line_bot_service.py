@@ -6,8 +6,8 @@ import hashlib
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.agent_runtime import AgentRuntimeClient
-from app.adapters.line_messaging import LineMessagingClient, LineReply
+from app.core.agent_runtime import AgentRuntimePort
+from app.core.line_messaging import LineMessagingPort, LineReply
 from app.schemas.conversation import CreateVoiceSessionRequest, LanguageRoute
 from app.services.authorization_service import authorize_elder
 from app.services.companion_service import CompanionService
@@ -25,8 +25,8 @@ class LineBotService:
         session: AsyncSession,
         *,
         account_links: LineAccountLinkService,
-        line_client: LineMessagingClient,
-        runtime_client: AgentRuntimeClient,
+        line_client: LineMessagingPort,
+        runtime_client: AgentRuntimePort,
         model_route: str,
         runtime_timeout_seconds: float,
     ) -> None:

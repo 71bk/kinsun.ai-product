@@ -9,10 +9,10 @@ from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.auth.line_oidc import LineTokenVerifier
+from app.core.auth import ActorContext
 from app.core.exceptions import AuthenticationError, ConflictError
+from app.core.oidc import LineTokenVerifier
 from app.events.outbox_writer import write_outbox_entry
-from app.middleware.auth import ActorContext
 from app.models.account_merge import AccountMergeRequest
 from app.models.line_identity import ExternalIdentity
 from app.repositories.account_identity_repo import AccountIdentityRepository

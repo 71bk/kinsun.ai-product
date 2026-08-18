@@ -7,6 +7,7 @@ import hmac
 import re
 import secrets
 
+from app.core.email import normalize_email_text
 from app.core.exceptions import ValidationError
 
 _ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -44,7 +45,7 @@ class FamilyInvitationTokenCodec:
 
     @staticmethod
     def normalize_email(value: str) -> str:
-        normalized = value.strip().casefold()
+        normalized = normalize_email_text(value)
         if len(normalized) > 254 or not _EMAIL_PATTERN.fullmatch(normalized):
             raise ValidationError(
                 details=[{"field": "invitee_email", "reason": "Email format is invalid"}]

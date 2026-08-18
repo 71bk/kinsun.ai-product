@@ -15,6 +15,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
+from app.core.restricted_keys import contains_restricted_key
 from app.models.outbox import OutboxEvent
 
 MAX_PAYLOAD_BYTES = 256 * 1024  # 256 KB
@@ -28,17 +29,6 @@ RESTRICTED_PAYLOAD_KEYS = {
     "transcript",
     "transcript_text",
 }
-
-
-def _contains_restricted_key(value: object) -> bool:
-    if isinstance(value, dict):
-        return any(
-            str(key).lower() in RESTRICTED_PAYLOAD_KEYS or _contains_restricted_key(item)
-            for key, item in value.items()
-        )
-    if isinstance(value, list):
-        return any(_contains_restricted_key(item) for item in value)
-    return False
 
 
 async def write_outbox_entry(
@@ -142,7 +132,7 @@ async def write_outbox_entry(
         errors.append({"field": "payload", "reason": "payload must not be None"})
     elif not isinstance(payload, dict):
         errors.append({"field": "payload", "reason": "payload must be an object"})
-    elif _contains_restricted_key(payload):
+    elif contains_restricted_key(payload, RESTRICTED_PAYLOAD_KEYS):
         errors.append({"field": "payload", "reason": "payload contains a restricted field"})
 
     if errors:

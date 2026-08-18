@@ -8,10 +8,10 @@ from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import success
+from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext
 from app.schemas.deletion import DeletionJobItemResponse, DeletionRequestResponse
 from app.services.authorization_service import authorize_elder
 from app.services.deletion_service import DeletionService

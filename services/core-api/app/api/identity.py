@@ -13,12 +13,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
+from app.core.correlation import get_correlation_id as _get_correlation_id
 from app.core.envelopes import ResponseMeta, SuccessEnvelope
 from app.core.exceptions import AuthorizationDeniedError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext
-from app.middleware.logging import correlation_id_var
 from app.models.elder import Elder
 from app.repositories.actor_repo import ActorRepository
 from app.repositories.care_assignment_repo import CareAssignmentRepository
@@ -46,16 +46,6 @@ def _build_identity_service(session: AsyncSession, actor_context: ActorContext) 
         care_relationship_repo=CareRelationshipRepository(session, actor_context.tenant_id),
         care_assignment_repo=CareAssignmentRepository(session, actor_context.tenant_id),
     )
-
-
-def _get_correlation_id() -> str:
-    """Read the correlation_id from the request-scoped contextvar."""
-    cid = correlation_id_var.get()
-    if not cid:
-        import uuid
-
-        cid = str(uuid.uuid4())
-    return cid
 
 
 @router.get("/me")

@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import success
+from app.core.auth import ActorContext
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_system_service_actor
-from app.middleware.auth import ActorContext
 from app.schemas.tool import ToolRequest
 from app.services.tool_service import ToolExecutionService
 

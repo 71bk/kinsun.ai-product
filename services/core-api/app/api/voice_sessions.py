@@ -7,8 +7,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.agent_runtime import AgentRuntimeClient, get_agent_runtime_client
+from app.adapters.agent_runtime import get_agent_runtime_client
 from app.api.responses import get_correlation_id, success
+from app.core.agent_runtime import AgentRuntimePort
+from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
 from app.db.session import get_db_session
@@ -16,7 +18,6 @@ from app.middleware.actor_guard import (
     require_active_actor,
     require_system_service_actor,
 )
-from app.middleware.auth import ActorContext
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.asr_gate import ConfirmAsrGateRequest, SubmitAsrResultRequest
 from app.schemas.conversation import (
@@ -359,7 +360,7 @@ async def create_companion_turn(
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
-    runtime_client: AgentRuntimeClient = Depends(get_agent_runtime_client),
+    runtime_client: AgentRuntimePort = Depends(get_agent_runtime_client),
 ) -> dict:
     """Run one text-only companion turn through Core's authorization gate."""
     conversation_service = ConversationService(session, actor_context.tenant_id)

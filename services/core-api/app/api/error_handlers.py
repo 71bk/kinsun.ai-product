@@ -15,7 +15,6 @@ import logging
 import re
 import traceback
 import uuid
-from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
 from fastapi import Request
@@ -23,6 +22,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.correlation import correlation_id_var
+from app.core.correlation import get_correlation_id as _get_correlation_id
 from app.core.envelopes import ErrorBody, ErrorEnvelope, ValidationDetail
 from app.core.exceptions import (
     AuthenticationError,
@@ -42,9 +43,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Request-scoped correlation_id. Set by request logging middleware;
-# if not yet set when the error handler runs, a new UUID is generated.
-_correlation_id: ContextVar[str] = ContextVar("correlation_id", default="")
+# Backward-compatible private alias used by focused handler tests.
+_correlation_id = correlation_id_var
 
 # Exception class → HTTP status code mapping.
 EXCEPTION_MAP: dict[type[DomainException], int] = {
@@ -105,15 +105,6 @@ _INTERNAL_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\s", re.IGNORECASE),
     re.compile(r"[/\\](app|services|site-packages)[/\\]", re.IGNORECASE),
 ]
-
-
-def _get_correlation_id() -> str:
-    """Retrieve the current correlation_id or generate a new one."""
-    cid = _correlation_id.get()
-    if not cid:
-        cid = str(uuid.uuid4())
-        _correlation_id.set(cid)
-    return cid
 
 
 def _is_production() -> bool:

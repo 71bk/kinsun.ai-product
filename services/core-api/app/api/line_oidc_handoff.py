@@ -9,14 +9,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.auth.line_oidc import LineTokenVerifier
 from app.api.app_sessions import app_session_bearer
 from app.api.responses import get_correlation_id, success
+from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import ValidationError
+from app.core.oidc import LineTokenVerifier
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext, get_line_token_verifier
+from app.middleware.auth import get_line_token_verifier
 from app.repositories.account_identity_repo import AccountIdentityRepository
 from app.schemas.line_oidc_handoff import (
     AuthenticatedLineOidcHandoffResponse,

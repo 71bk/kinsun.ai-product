@@ -9,10 +9,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.auth.google_oidc import GoogleTokenVerifier
 from app.api.responses import get_correlation_id, success
 from app.core.config import get_settings
 from app.core.exceptions import ValidationError
+from app.core.oidc import GoogleTokenVerifier
 from app.db.session import get_db_session
 from app.middleware.auth import get_google_token_verifier
 from app.schemas.google_oidc_handoff import (

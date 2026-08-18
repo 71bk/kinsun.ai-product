@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import hmac
 import logging
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 
+from app.core.email import normalize_email_text
 from app.core.exceptions import AuthenticationError
+from app.core.oidc import LineTokenVerifier, VerifiedLineIdentity
 
 _AUTHENTICATION_REQUIRED = "Authentication required"
 _LINE_ISSUER = "https://access.line.me"
@@ -20,54 +20,6 @@ _MAX_TOKEN_LENGTH = 16_384
 _MIN_NONCE_LENGTH = 32
 _MAX_NONCE_LENGTH = 512
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class VerifiedLineIdentity:
-    """Minimal LINE identity returned after provider-side token verification."""
-
-    subject: str
-    email: str | None = None
-    display_name: str | None = None
-
-    def __post_init__(self) -> None:
-        if (
-            not self.subject
-            or self.subject != self.subject.strip()
-            or len(self.subject) > 255
-            or not self.subject.isascii()
-            or any(character.isspace() for character in self.subject)
-        ):
-            raise ValueError("LINE subject must be normalized ASCII of at most 255 characters")
-        if self.email is not None and (
-            not self.email
-            or self.email != self.email.strip()
-            or len(self.email) > 254
-            or any(character.isspace() for character in self.email)
-            or "@" not in self.email
-        ):
-            raise ValueError("LINE email must be normalized and at most 254 characters")
-        if self.display_name is not None:
-            normalized = self.display_name.strip()
-            if len(normalized) > 120:
-                raise ValueError("LINE display name must be at most 120 characters")
-            object.__setattr__(self, "display_name", normalized or None)
-
-    @property
-    def provider(self) -> str:
-        return "LINE"
-
-
-class LineTokenVerifier(ABC):
-    @abstractmethod
-    async def verify_id_token(
-        self,
-        token: str,
-        *,
-        expected_nonce: str,
-    ) -> VerifiedLineIdentity:
-        """Verify one LINE ID token and its browser-transaction nonce."""
-        ...
 
 
 class LineOidcEndpointVerifier(LineTokenVerifier):
@@ -182,7 +134,7 @@ class LineOidcEndpointVerifier(LineTokenVerifier):
             return None
         if not isinstance(value, str):
             raise ValueError("invalid email")
-        return value.strip().casefold()
+        return normalize_email_text(value)
 
     @staticmethod
     def _display_name(claims: dict[str, Any]) -> str | None:

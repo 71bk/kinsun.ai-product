@@ -14,6 +14,12 @@ from app.adapters.service_identity import (
     ServiceCredentialSigner,
     canonical_json_bytes,
 )
+from app.core.agent_runtime import (
+    AgentEventCandidateProposal,
+    AgentMemoryCandidateProposal,
+    AgentRunResult,
+    AgentSafetyResult,
+)
 from app.core.config import get_settings
 from app.core.exceptions import ServiceUnavailableError
 
@@ -65,7 +71,7 @@ def _contains_restricted_proposal_key(value: JsonValue) -> bool:
     return False
 
 
-class AgentSafetyResult(BaseModel):
+class _AgentSafetyPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: Literal["1.0.0"]
@@ -76,7 +82,7 @@ class AgentSafetyResult(BaseModel):
     safe_reply: str | None
 
 
-class AgentEventCandidateProposal(BaseModel):
+class _AgentEventCandidateProposalPayload(BaseModel):
     """Minimized untrusted output; it deliberately contains no scope facts."""
 
     model_config = ConfigDict(extra="forbid")
@@ -111,7 +117,7 @@ class AgentEventCandidateProposal(BaseModel):
         return payload
 
 
-class AgentMemoryCandidateProposal(BaseModel):
+class _AgentMemoryCandidateProposalPayload(BaseModel):
     """Minimized untrusted memory output; Core owns scope, source, and state."""
 
     model_config = ConfigDict(extra="forbid")
@@ -144,7 +150,7 @@ class AgentMemoryCandidateProposal(BaseModel):
     extractor_version: str = Field(min_length=1, max_length=80)
 
 
-class AgentRunResult(BaseModel):
+class _AgentRunPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: Literal["1.0.0"]
@@ -154,13 +160,13 @@ class AgentRunResult(BaseModel):
     selected_agent: str
     reply_text: str = Field(min_length=1, max_length=4000)
     reply_language: str
-    safety_result: AgentSafetyResult
+    safety_result: _AgentSafetyPayload
     context_manifest_id: str
     step_count: int
     result_status: Literal["SUCCESS", "BLOCKED", "SAFE_FALLBACK", "FAILED"]
     reason_codes: list[str]
-    event_candidate_proposal: AgentEventCandidateProposal | None = None
-    memory_candidate_proposal: AgentMemoryCandidateProposal | None = None
+    event_candidate_proposal: _AgentEventCandidateProposalPayload | None = None
+    memory_candidate_proposal: _AgentMemoryCandidateProposalPayload | None = None
 
 
 class _AgentResponseMeta(BaseModel):
@@ -174,7 +180,7 @@ class _AgentResponseMeta(BaseModel):
 class _AgentRunEnvelope(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    data: AgentRunResult
+    data: _AgentRunPayload
     meta: _AgentResponseMeta
 
 
@@ -245,7 +251,33 @@ class AgentRuntimeClient:
             raise ServiceUnavailableError("Agent runtime is unavailable") from exc
         if envelope.meta.correlation_id != correlation_id:
             raise ServiceUnavailableError("Agent runtime response correlation mismatch")
-        return envelope.data
+        data = envelope.data
+        event_proposal = data.event_candidate_proposal
+        memory_proposal = data.memory_candidate_proposal
+        return AgentRunResult(
+            schema_version=data.schema_version,
+            request_id=data.request_id,
+            trace_id=data.trace_id,
+            agent_run_id=data.agent_run_id,
+            selected_agent=data.selected_agent,
+            reply_text=data.reply_text,
+            reply_language=data.reply_language,
+            safety_result=AgentSafetyResult(**data.safety_result.model_dump()),
+            context_manifest_id=data.context_manifest_id,
+            step_count=data.step_count,
+            result_status=data.result_status,
+            reason_codes=data.reason_codes,
+            event_candidate_proposal=(
+                AgentEventCandidateProposal(**event_proposal.model_dump())
+                if event_proposal is not None
+                else None
+            ),
+            memory_candidate_proposal=(
+                AgentMemoryCandidateProposal(**memory_proposal.model_dump())
+                if memory_proposal is not None
+                else None
+            ),
+        )
 
 
 def get_agent_runtime_client() -> AgentRuntimeClient:

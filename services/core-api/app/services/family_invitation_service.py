@@ -10,6 +10,7 @@ from uuid import UUID
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.email import normalize_email_text
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.events.outbox_writer import write_outbox_entry
 from app.models.actor import Actor
@@ -158,7 +159,7 @@ class FamilyInvitationService:
         ):
             raise AuthenticationError(_AUTHENTICATION_REQUIRED)
 
-        email = pending.verified_email.strip().casefold() if pending.verified_email else None
+        email = normalize_email_text(pending.verified_email) if pending.verified_email else None
         token_hash = self._codec.hash_code(invitation_code)
         invitation = await self._invitations.get_by_token_hash_for_update(token_hash)
         if invitation is None or invitation.status != "ISSUED" or now >= invitation.expires_at:

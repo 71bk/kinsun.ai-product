@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.exceptions import AuthenticationError
-from app.middleware.auth import ActorContext
 from app.models.actor import Actor
 from app.models.membership import ActorTenantMembership
 from app.models.tenant import Tenant

@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import status
 from fastapi.responses import JSONResponse
 
+from app.core.correlation import get_correlation_id
 from app.core.envelopes import ErrorBody, ErrorEnvelope, ResponseMeta, SuccessEnvelope
-from app.middleware.logging import correlation_id_var
-
-
-def get_correlation_id() -> str:
-    return correlation_id_var.get() or str(uuid.uuid4())
 
 
 def success(data: Any) -> dict:

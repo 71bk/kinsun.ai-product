@@ -8,11 +8,11 @@ from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
+from app.core.auth import ActorContext
 from app.core.config import Settings, get_settings
 from app.core.exceptions import ServiceUnavailableError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext
 from app.schemas.line_identity import CreateLineLinkChallengeRequest
 from app.services.line_account_link_service import LineAccountLinkService
 from app.services.line_identity_codec import LineIdentityCodec

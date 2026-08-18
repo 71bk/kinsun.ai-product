@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.restricted_keys import contains_restricted_key
 from app.events.failures import (
     EventConsumerFailure,
     EventDeliveryFailure,
@@ -36,17 +37,6 @@ RESTRICTED_EVENT_KEYS = {
     "transcript",
     "transcript_text",
 }
-
-
-def _contains_restricted_key(value: Any) -> bool:
-    if isinstance(value, dict):
-        return any(
-            str(key).lower() in RESTRICTED_EVENT_KEYS or _contains_restricted_key(item)
-            for key, item in value.items()
-        )
-    if isinstance(value, list):
-        return any(_contains_restricted_key(item) for item in value)
-    return False
 
 
 class EventAggregate(BaseModel):
@@ -88,7 +78,7 @@ class DomainEvent(BaseModel):
     @field_validator("payload")
     @classmethod
     def reject_restricted_payload(cls, value: dict[str, Any]) -> dict[str, Any]:
-        if _contains_restricted_key(value):
+        if contains_restricted_key(value, RESTRICTED_EVENT_KEYS):
             raise ValueError("payload contains a restricted field")
         return value
 

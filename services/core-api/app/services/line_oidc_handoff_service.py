@@ -9,8 +9,8 @@ from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.auth.line_oidc import LineTokenVerifier
 from app.core.exceptions import AuthenticationError
+from app.core.oidc import LineTokenVerifier
 from app.models.pending_identity import PendingExternalIdentity
 from app.repositories.google_identity_repo import GoogleIdentityRepository
 from app.services.app_session_service import AppSessionService, IssuedAppSession

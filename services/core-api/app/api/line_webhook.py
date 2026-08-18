@@ -12,10 +12,11 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
-from app.adapters.agent_runtime import AgentRuntimeClient, get_agent_runtime_client
-from app.adapters.line_messaging import LineMessagingClient, LineReply
+from app.adapters.agent_runtime import get_agent_runtime_client
+from app.core.agent_runtime import AgentRuntimePort
 from app.core.config import Settings, get_settings
 from app.core.exceptions import ConflictError, DomainException, ServiceUnavailableError
+from app.core.line_messaging import LineMessagingPort, LineReply
 from app.db.engine import DatabaseEngine
 from app.db.session import get_db_engine
 from app.repositories.line_identity_repo import LineIdentityRepository
@@ -70,7 +71,7 @@ def _is_supported_event(event: dict[str, Any]) -> bool:
 
 async def _reply_legacy_connectivity(
     events: list[dict[str, Any]],
-    line_client: LineMessagingClient,
+    line_client: LineMessagingPort,
 ) -> None:
     for event in events:
         if event.get("type") != "message":
@@ -94,9 +95,9 @@ async def _process_event(
     event: dict[str, Any],
     settings: Settings,
     db_engine: DatabaseEngine,
-    line_client: LineMessagingClient,
+    line_client: LineMessagingPort,
     codec: LineIdentityCodec,
-    runtime_client: AgentRuntimeClient,
+    runtime_client: AgentRuntimePort,
 ) -> bool:
     """Process one event in its own transaction scope; return whether LINE should retry."""
     event_type = event.get("type")

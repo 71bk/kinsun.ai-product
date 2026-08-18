@@ -1,8 +1,12 @@
 import { apiFetch, ApiRequestError, type ApiConfig } from './client';
-import { assertNoRestrictedFields, keepFamilyVisible, keepFamilyVisibleReport } from './family-guard';
+import {
+  assertNoRestrictedFields,
+  keepFamilyVisible,
+  keepFamilyVisibleReport,
+} from './family-guard';
+import type { FamilyReportStatus, FamilyReportType } from './family-report-types';
 
-export type FamilyReportType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'IMPORTANT_EVENT';
-export type FamilyReportStatus = 'DRAFT' | 'NEEDS_REVIEW' | 'PUBLISHED' | 'WITHDRAWN' | 'STALE';
+export type { FamilyReportStatus, FamilyReportType } from './family-report-types';
 
 interface CoreFamilyReportItem {
   category: string;

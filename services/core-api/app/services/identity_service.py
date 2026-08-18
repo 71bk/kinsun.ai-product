@@ -16,8 +16,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from app.core.auth import ActorContext
 from app.core.exceptions import AuthorizationDeniedError
-from app.middleware.auth import ActorContext
 from app.models.enums import ActorType
 from app.policies import RoleModeIncompatibleError
 from app.repositories.actor_repo import ActorRepository

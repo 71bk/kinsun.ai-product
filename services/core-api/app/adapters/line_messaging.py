@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
 from typing import Any
 
 import httpx
 
 from app.core.exceptions import ServiceUnavailableError
+from app.core.line_messaging import LineDailyReportNotice, LineReply
 
 _LINE_API_BASE_URL = "https://api.line.me"
 _LINE_USER_ID_PATTERN = re.compile(r"^[A-Za-z0-9]{1,128}$")
@@ -21,22 +21,6 @@ def _suppress_sensitive_http_client_logs() -> None:
         client_logger = logging.getLogger(logger_name)
         if client_logger.getEffectiveLevel() < logging.WARNING:
             client_logger.setLevel(logging.WARNING)
-
-
-@dataclass(frozen=True)
-class LineReply:
-    """One reply without retaining the LINE reply token."""
-
-    text: str
-    account_link_url: str | None = None
-
-
-@dataclass(frozen=True)
-class LineDailyReportNotice:
-    """Minimal lock-screen-safe notification; report content stays in Family Web."""
-
-    report_date: str
-    action_url: str
 
 
 class LineMessagingClient:

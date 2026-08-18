@@ -7,8 +7,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
-from app.middleware.auth import ActorContext
 from app.policies.elder_access import ElderAccessPolicy, ElderAccessRequest
 from app.repositories.care_assignment_repo import CareAssignmentRepository
 from app.repositories.care_relationship_repo import CareRelationshipRepository

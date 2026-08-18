@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from fastapi import Depends
 
+from app.core.auth import ActorContext
 from app.core.exceptions import AuthorizationDeniedError
-from app.middleware.auth import ActorContext, get_actor_context
+from app.middleware.auth import get_actor_context
 from app.models.enums import ActorType
 from app.policies import ActorInactiveError
 

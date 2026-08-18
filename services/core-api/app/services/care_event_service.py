@@ -12,10 +12,11 @@ from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import CARE_EVENT_REVIEW_STATES
 from app.events.outbox_writer import write_outbox_entry
-from app.middleware.auth import ActorContext
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
 from app.policies.memory_policy import SourceSpeakerEvidence, evaluate_memory_candidate
@@ -26,7 +27,6 @@ from app.schemas.care_event import (
     CreateCareEventCandidateRequest,
     ReviewCareEventRequest,
 )
-from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import CreateMemoryCandidateRequest
 from app.services.authorization_service import authorize_elder
 from app.services.consent_service import ConsentService

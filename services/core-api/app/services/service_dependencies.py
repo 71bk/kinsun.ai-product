@@ -7,6 +7,7 @@ from functools import lru_cache
 from app.adapters.line_messaging import LineMessagingClient
 from app.core.config import get_settings
 from app.core.exceptions import ServiceUnavailableError
+from app.core.line_messaging import LineMessagingPort
 from app.services.family_invitation_tokens import FamilyInvitationTokenCodec
 from app.services.google_identity_codec import GoogleIdentityCodec
 from app.services.google_oidc_handoff_auth import GoogleOidcHandoffAuthenticator
@@ -168,14 +169,14 @@ def get_line_oidc_handoff_authenticator() -> LineOidcHandoffAuthenticator:
 def _build_line_messaging_client(
     channel_access_token: str,
     timeout_seconds: float,
-) -> LineMessagingClient:
+) -> LineMessagingPort:
     return LineMessagingClient(
         channel_access_token=channel_access_token,
         timeout_seconds=timeout_seconds,
     )
 
 
-def get_line_messaging_client() -> LineMessagingClient:
+def get_line_messaging_client() -> LineMessagingPort:
     settings = get_settings()
     try:
         return _build_line_messaging_client(

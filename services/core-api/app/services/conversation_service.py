@@ -8,12 +8,12 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
+from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import require_session_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.models.conversation import ConversationSession
 from app.models.policy import PolicyRegistry
 from app.repositories.conversation_repo import ConversationRepository
-from app.schemas.consent import ConsentPurpose
 from app.schemas.conversation import CreateVoiceSessionRequest, CreateVoiceTicketRequest
 from app.services.consent_service import ConsentService
 from app.services.voice_ticket_codec import IssuedVoiceTicket, VoiceTicketCodec

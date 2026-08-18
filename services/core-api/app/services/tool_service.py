@@ -8,15 +8,15 @@ from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.responses import get_correlation_id
+from app.core.auth import ActorContext
+from app.core.correlation import get_correlation_id
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.middleware.auth import ActorContext
+from app.domain.consent import ConsentPurpose
 from app.models.agent import AgentRun, AgentToolCall
 from app.models.idempotency import IdempotencyRecord
 from app.repositories.care_assignment_repo import CareAssignmentRepository
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
-from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import CreateMemoryCandidateRequest
 from app.schemas.summary import CreateSummaryDraftRequest
 from app.schemas.tool import ToolRequest, ToolResult

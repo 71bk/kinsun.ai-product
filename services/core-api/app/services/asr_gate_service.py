@@ -10,12 +10,12 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
+from app.domain.consent import ConsentPurpose
 from app.models.asr_gate import AsrGateEvidence
 from app.models.elder import Elder
 from app.repositories.asr_gate_repo import AsrGateRepository
 from app.repositories.conversation_repo import ConversationRepository
 from app.schemas.asr_gate import AsrGateDecisionResponse, SubmitAsrResultRequest
-from app.schemas.consent import ConsentPurpose
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 

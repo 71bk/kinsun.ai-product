@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.core.restricted_keys import contains_restricted_key
+
 
 class CareEventType(str, Enum):
     MEAL = "MEAL"
@@ -55,17 +57,6 @@ EvidenceRef = Annotated[
 ]
 
 
-def _contains_restricted_key(value: Any) -> bool:
-    if isinstance(value, dict):
-        return any(
-            str(key).lower() in RESTRICTED_PAYLOAD_KEYS or _contains_restricted_key(item)
-            for key, item in value.items()
-        )
-    if isinstance(value, list):
-        return any(_contains_restricted_key(item) for item in value)
-    return False
-
-
 class CreateCareEventCandidateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -84,7 +75,7 @@ class CreateCareEventCandidateRequest(BaseModel):
     def validate_source(self) -> CreateCareEventCandidateRequest:
         if self.source_type == "CONVERSATION_SESSION" and self.source_id is None:
             raise ValueError("source_id is required for a conversation-session source")
-        if _contains_restricted_key(self.structured_payload):
+        if contains_restricted_key(self.structured_payload, RESTRICTED_PAYLOAD_KEYS):
             raise ValueError("structured_payload contains a restricted field")
         return self
 
@@ -103,7 +94,9 @@ class ReviewCareEventRequest(BaseModel):
             raise ValueError("corrected_payload is required for CORRECT")
         if self.decision != "CORRECT" and self.corrected_payload is not None:
             raise ValueError("corrected_payload is only allowed for CORRECT")
-        if self.corrected_payload is not None and _contains_restricted_key(self.corrected_payload):
+        if self.corrected_payload is not None and contains_restricted_key(
+            self.corrected_payload, RESTRICTED_PAYLOAD_KEYS
+        ):
             raise ValueError("corrected_payload contains a restricted field")
         return self
 

@@ -8,11 +8,12 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
+from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
-from app.middleware.auth import ActorContext
 from app.models.enums import ActorType
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.decision_support import (
@@ -31,7 +32,6 @@ from app.policies.memory_retrieval import (
 from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
-from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,

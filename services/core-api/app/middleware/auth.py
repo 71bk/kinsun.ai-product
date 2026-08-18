@@ -1,8 +1,6 @@
-"""Authentication abstractions and environment-guarded factory.
+"""Environment-guarded authentication factory and FastAPI dependency.
 
 Defines:
-- ActorContext: immutable identity derived from authentication
-- Authenticator ABC: pluggable interface for auth providers
 - FakeAuthenticator: configurable authenticator for tests and local dev
 - NoAuthenticatorConfiguredError: raised when no auth is configured
 - get_authenticator(): environment-guarded factory
@@ -12,51 +10,14 @@ Defines:
 from __future__ import annotations
 
 import uuid
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 from fastapi import Depends, Request
 
+from app.core.auth import ActorContext, AuthenticationRequest, Authenticator
 from app.core.config import AppEnv, get_settings
 from app.core.exceptions import AuthenticationError, ServiceUnavailableError
-
-if TYPE_CHECKING:
-    from app.adapters.auth.google_oidc import GoogleTokenVerifier
-    from app.adapters.auth.line_oidc import LineTokenVerifier
-
-
-@dataclass(frozen=True)
-class ActorContext:
-    """Immutable identity context derived from authentication.
-
-    Actor identity is derived ONLY from the authenticator — never from
-    request body, query parameters, or headers directly.
-    """
-
-    actor_id: uuid.UUID
-    actor_role: str
-    tenant_id: uuid.UUID
-    status: str = "ACTIVE"
-
-
-class Authenticator(ABC):
-    """Pluggable authenticator interface.
-
-    Concrete implementations:
-    - FakeAuthenticator (tests + explicit local dev)
-    - DatabaseAppSessionAuthenticator (production browser sessions)
-    """
-
-    @abstractmethod
-    async def authenticate(self, request: Request) -> ActorContext:
-        """Extract and validate credentials, return ActorContext.
-
-        Raises:
-            AuthenticationError: if credentials are missing or invalid.
-        """
-        ...
+from app.core.oidc import GoogleTokenVerifier, LineTokenVerifier
 
 
 class FakeAuthenticator(Authenticator):
@@ -81,7 +42,7 @@ class FakeAuthenticator(Authenticator):
         self._tenant_id = tenant_id or uuid.uuid4()
         self._status = status
 
-    async def authenticate(self, request: Request) -> ActorContext:
+    async def authenticate(self, request: AuthenticationRequest) -> ActorContext:
         return ActorContext(
             actor_id=self._actor_id,
             actor_role=self._actor_role,

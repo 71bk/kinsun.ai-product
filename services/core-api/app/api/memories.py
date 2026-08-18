@@ -8,11 +8,11 @@ from fastapi import APIRouter, Depends, Header, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
+from app.core.auth import ActorContext
 from app.core.cursor import decode_cursor, encode_cursor
 from app.core.exceptions import NotFoundError, ValidationError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext
 from app.policies.memory_retrieval import memory_content_digest
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.consent import ConsentPurpose

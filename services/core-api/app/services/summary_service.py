@@ -10,12 +10,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, ValidationError
+from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import require_summary_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
 from app.repositories.summary_repo import SummaryRepository
-from app.schemas.consent import ConsentPurpose
 from app.schemas.summary import CreateSummaryDraftRequest, ReviewSummaryRequest, SummaryItem
 from app.services.care_event_rendering import (
     SUMMARY_CATEGORY_BY_EVENT_TYPE,

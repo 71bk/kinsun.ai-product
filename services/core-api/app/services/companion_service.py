@@ -8,7 +8,8 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.agent_runtime import AgentRuntimeClient
+from app.core.agent_runtime import AgentRuntimePort
+from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import (
     AuthenticationError,
@@ -16,7 +17,7 @@ from app.core.exceptions import (
     NotFoundError,
     ServiceUnavailableError,
 )
-from app.middleware.auth import ActorContext
+from app.domain.consent import ConsentPurpose
 from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
@@ -26,7 +27,6 @@ from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
-from app.schemas.consent import ConsentPurpose
 from app.schemas.conversation import CompanionTurnResponse
 from app.services.asr_gate_service import AsrGateService
 from app.services.authorization_service import authorize_elder
@@ -82,7 +82,7 @@ class CompanionService:
         self,
         session: AsyncSession,
         tenant_id: UUID,
-        runtime_client: AgentRuntimeClient,
+        runtime_client: AgentRuntimePort,
         model_route: str,
     ) -> None:
         self._session = session
@@ -456,7 +456,7 @@ class CompanionService:
                     trace_id=correlation_id,
                     idempotency_key=f"event-candidate:{agent_run_id}",
                     memory_candidate_proposal=(
-                        memory_proposal.model_dump(mode="json")
+                        memory_proposal.as_payload()
                         if memory_proposal is not None and "memory_candidate" in requested_outputs
                         else None
                     ),

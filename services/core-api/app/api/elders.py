@@ -18,10 +18,10 @@ from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import success
+from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
-from app.middleware.auth import ActorContext
 from app.policies.elder_access import ElderAccessPolicy, ElderAccessRequest
 from app.repositories.care_assignment_repo import CareAssignmentRepository
 from app.repositories.care_relationship_repo import CareRelationshipRepository

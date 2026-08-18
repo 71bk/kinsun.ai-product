@@ -12,6 +12,7 @@ from uuid import UUID
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.email import normalize_email_text
 from app.core.exceptions import AuthenticationError, ConflictError, ValidationError
 from app.events.outbox_writer import write_outbox_entry
 from app.models.actor import Actor
@@ -174,7 +175,7 @@ class PendingGoogleOnboardingService:
         trace_id: str,
         idempotency_key: str,
     ) -> tuple[Actor, Tenant, Elder, ExternalIdentity]:
-        email = pending.verified_email.strip().casefold() if pending.verified_email else None
+        email = normalize_email_text(pending.verified_email) if pending.verified_email else None
         if email is not None:
             # Hash the lock input so no e-mail address appears in database
             # diagnostics while concurrent first-use checks remain serialized.

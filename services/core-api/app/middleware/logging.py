@@ -10,7 +10,7 @@ Security:
     - NEVER logs sensitive query parameters
 
 Usage:
-    from app.middleware.logging import correlation_id_var
+    from app.core.correlation import correlation_id_var
 
     # Read the current correlation_id in any async context:
     cid = correlation_id_var.get()
@@ -28,9 +28,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-# ─── Public ContextVar for correlation_id ────────────────────────────────────
-# Other modules import this to read the current request's correlation_id.
-correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+from app.core.correlation import correlation_id_var
 
 # ─── Optional ContextVars for actor/tenant context ───────────────────────────
 # These may be set by the auth middleware (downstream). The logger reads them

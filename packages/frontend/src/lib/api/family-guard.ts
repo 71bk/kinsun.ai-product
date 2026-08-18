@@ -10,7 +10,7 @@
  * mapping drops unknown keys, which would hide exactly the leak we want to see.
  */
 
-import type { FamilyReportStatus } from './family-reports';
+import type { FamilyReportStatus } from './family-report-types';
 
 /**
  * Statuses a family member may see at all. Everything else is either not yet a

@@ -8,8 +8,8 @@ from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from app.adapters.line_messaging import LineDailyReportNotice, LineMessagingClient
 from app.core.exceptions import ServiceUnavailableError
+from app.core.line_messaging import LineDailyReportNotice, LineMessagingPort
 from app.db.engine import DatabaseEngine
 from app.repositories.notification_repo import DailyLineCandidate, NotificationRepository
 from app.schemas.notification import (
@@ -34,7 +34,7 @@ class DailyLineNotificationService:
         db_engine: DatabaseEngine,
         *,
         tenant_id: UUID,
-        line_client: LineMessagingClient,
+        line_client: LineMessagingPort,
         subject_cipher: LineSubjectCipher,
         family_report_url: str,
         send_time_local: str = "08:00",
