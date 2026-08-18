@@ -15,12 +15,17 @@ from app.events.outbox_writer import write_outbox_entry
 from app.middleware.auth import ActorContext
 from app.models.enums import ActorType
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
+from app.policies.decision_support import (
+    apply_decision_support_profile,
+    profile_binding_is_current,
+)
 from app.policies.memory_policy import (
     CURRENT_MEMORY_POLICY_VERSION,
     TRUSTED_SPEAKER_LEVELS,
     evaluate_memory_candidate,
 )
 from app.policies.memory_retrieval import memory_content_digest
+from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
 from app.schemas.consent import ConsentPurpose
@@ -48,6 +53,7 @@ class MemoryService:
         self._session = session
         self._tenant_id = tenant_id
         self._memories = MemoryRepository(session, tenant_id)
+        self._decision_support_profiles = DecisionSupportProfileRepository(session, tenant_id)
         self._evidence_aware_memory = evidence_aware_memory
         self._auto_low_risk_memory = auto_low_risk_memory
         if self._auto_low_risk_memory and not self._evidence_aware_memory:
@@ -150,6 +156,21 @@ class MemoryService:
                     }
                 ]
             )
+        profile = await self._decision_support_profiles.resolve_for_memory(
+            elder_id=elder_id,
+            data_class=request.memory_type.value,
+        )
+        profiled_policy = apply_decision_support_profile(policy, profile)
+        if not profiled_policy.allowed:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "decision_support_profile",
+                        "reason": profiled_policy.reason_code,
+                    }
+                ]
+            )
+        policy = profiled_policy.decision
         if policy.status == "ACTIVE" and not self._auto_low_risk_memory:
             raise ValidationError(
                 details=[
@@ -174,6 +195,8 @@ class MemoryService:
             required_verification=policy.required_verification,
             speaker_verification_level=source.speaker_verification_level,
             speaker_evidence_reference=source.speaker_evidence_reference,
+            decision_support_profile_id=profile.profile_id,
+            decision_support_profile_version=profile.profile_version,
             status=policy.status,
             current_version=1,
             activated_at=now if policy.status == "ACTIVE" else None,
@@ -241,15 +264,39 @@ class MemoryService:
         self._require_evidence_aware_memory()
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
+        standard_confirmation = (
+            memory.actual_risk_level == "MEDIUM"
+            and memory.policy_decision == "PENDING_ELDER_CONFIRMATION"
+            and memory.required_verification == "ELDER_CONFIRMATION"
+        )
+        supported_confirmation = (
+            memory.actual_risk_level in {"LOW", "MEDIUM"}
+            and memory.policy_decision == "PENDING_SUPPORTED_CONFIRMATION"
+            and memory.required_verification == "SUPPORTED_ELDER_CONFIRMATION"
+        )
         if (
             memory.policy_version != CURRENT_MEMORY_POLICY_VERSION
-            or memory.actual_risk_level != "MEDIUM"
-            or memory.policy_decision != "PENDING_ELDER_CONFIRMATION"
-            or memory.required_verification != "ELDER_CONFIRMATION"
+            or not (standard_confirmation or supported_confirmation)
             or memory.speaker_verification_level not in TRUSTED_SPEAKER_LEVELS
             or not memory.speaker_evidence_reference
         ):
             raise ConflictError("Memory candidate policy evidence is stale or ineligible")
+        profile = await self._decision_support_profiles.resolve_for_memory(
+            elder_id=memory.elder_id,
+            data_class=memory.memory_type,
+        )
+        if (
+            not profile_binding_is_current(
+                bound_profile_id=memory.decision_support_profile_id,
+                bound_profile_version=memory.decision_support_profile_version,
+                current=profile,
+            )
+            or (standard_confirmation and profile.mode != "STANDARD")
+            or (supported_confirmation and profile.mode != "SUPPORTED")
+        ):
+            raise ConflictError(
+                "Decision support profile changed; create a new memory candidate"
+            )
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=memory.elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
@@ -287,7 +334,11 @@ class MemoryService:
         memory.confirmation_evidence_ref = confirmation_evidence_reference
         memory.confirmed_version = memory.current_version
         memory.confirmed_content_digest = current.content_digest
-        memory.policy_decision = "ELDER_CONFIRMED_MEDIUM"
+        memory.policy_decision = (
+            "ELDER_CONFIRMED_SUPPORTED"
+            if supported_confirmation
+            else "ELDER_CONFIRMED_MEDIUM"
+        )
         memory.verification_level = "ELDER_CONFIRMED"
         memory.lifecycle_reason = "ELDER_CONFIRMED_CURRENT_VERSION"
         self._memories.add_confirmation(
@@ -300,8 +351,8 @@ class MemoryService:
                 consent_id=consent.id,
                 consent_version=consent.version,
                 policy_version=CURRENT_MEMORY_POLICY_VERSION,
-                decision_support_profile_id=None,
-                decision_support_profile_version=None,
+                decision_support_profile_id=profile.profile_id,
+                decision_support_profile_version=profile.profile_version,
                 confirmation_method=request.confirmation_method,
                 response_intent="AFFIRM",
                 confirmed_by_actor_id=actor_context.actor_id,

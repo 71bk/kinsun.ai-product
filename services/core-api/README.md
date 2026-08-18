@@ -60,6 +60,15 @@ only be enabled when the parent gate is enabled. Disabling either gate never
 removes the elder's ability to inspect, correct, deactivate, or delete existing
 records.
 
+When the parent rollout is enabled, Core also resolves the current
+`DecisionSupportProfile` for the Elder and Memory data class. No authored
+profile preserves the existing `STANDARD` rules. `SUPPORTED` can only tighten
+the flow and routes otherwise auto-active LOW Memory to Elder confirmation;
+`REPRESENTATIVE_REQUIRED`, expired, stale, or invalid profiles block new
+Elder-owned Memory. The profile stores only versioned policy metadata and an
+opaque basis reference—never diagnosis text, an LLM-derived capacity score, or
+delegate confirmation authority.
+
 Staging ECS tasks must set `DB_SSLMODE=require`. The entrypoint emits the
 driver-specific query option (`ssl=require` for SQLAlchemy/asyncpg and
 `sslmode=require` for psycopg), rejects conflicting/weaker explicit modes, and

@@ -90,6 +90,8 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
             None,
             None,
             None,
+            None,
+            None,
             False,
         )
     ]
@@ -115,7 +117,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     assert records[0].content == content
     assert records[0].consent_version == 4
 
-    statement = session.execute.call_args.args[0]
+    statement = session.execute.await_args_list[-2].args[0]
     compiled = str(statement.compile(compile_kwargs={"literal_binds": False}))
     assert "memory.tenant_id" in compiled
     assert "memory.elder_id" in compiled
@@ -132,6 +134,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     assert "graph_projection_record" in compiled
     assert "graph_projection_record.projection_status" in compiled
     assert "memory_confirmation" in compiled
+    assert "decision_support_profile_id" in compiled
     assert "EXISTS" in compiled
     assert (
         "graph_projection_record.source_version = eldercare_ai.memory.current_version" in compiled
@@ -188,6 +191,8 @@ async def test_medium_context_requires_matching_append_only_confirmation_record(
             "core-command:confirmation",
             confirmed_actor_id,
             object(),
+            None,
+            None,
             evidence_present,
         )
 

@@ -61,11 +61,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 56
+_TOTAL_HEAD_TABLE_COUNT = 57
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "b8d0e4f6a213"
+_HEAD_REVISION = "a4c6e8f0b123"
 
 
 def _get_alembic_config() -> Config:
@@ -453,7 +453,7 @@ async def test_upgrade_downgrade_upgrade_roundtrip(test_engine):
 
 @pytest.mark.asyncio
 async def test_head_upgrade_creates_expected_tables(test_engine):
-    """Verify all migrations through head create 55 tables, including the core 8.
+    """Verify all migrations through head create expected tables, including the core 8.
 
     Validates: Requirement 16.1, 16.5
     """
@@ -472,6 +472,54 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
     )
     missing = set(_CORE_TABLES) - set(tables)
     assert not missing, f"Expected core tables {_CORE_TABLES} to be a subset, missing: {missing}"
+    assert "decision_support_profile" in tables
+
+
+@pytest.mark.asyncio
+async def test_decision_support_profile_migration_binds_memory_evidence(test_engine) -> None:
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        profile_columns = await conn.run_sync(_get_columns, "decision_support_profile")
+        memory_columns = await conn.run_sync(_get_columns, "memory")
+        profile_checks = await conn.run_sync(
+            _get_check_constraints,
+            "decision_support_profile",
+        )
+        profile_fks = await conn.run_sync(_get_foreign_keys, "decision_support_profile")
+        memory_fks = await conn.run_sync(_get_foreign_keys, "memory")
+        confirmation_fks = await conn.run_sync(_get_foreign_keys, "memory_confirmation")
+
+    assert {
+        "decision_support_profile_id",
+        "tenant_id",
+        "elder_id",
+        "decision_scope",
+        "data_class",
+        "mode",
+        "allowed_memory_risks",
+        "basis_reference",
+        "effective_from",
+        "expires_at",
+        "reviewed_by_actor_id",
+        "policy_version",
+        "profile_version",
+        "supersedes_profile_id",
+    } <= set(profile_columns)
+    assert {
+        "decision_support_profile_id",
+        "decision_support_profile_version",
+    } <= set(memory_columns)
+    assert "ck_decision_support_profile_mode" in profile_checks
+    assert "ck_decision_support_profile_allowed_risks" in profile_checks
+    assert "fk_decision_support_profile_tenant" in profile_fks
+    assert "fk_decision_support_profile_elder" in profile_fks
+    assert "fk_memory_decision_support_profile" in memory_fks
+    assert "fk_memory_confirmation_decision_support_profile" in confirmation_fks
 
 
 @pytest.mark.asyncio

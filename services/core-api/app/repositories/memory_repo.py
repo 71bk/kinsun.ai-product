@@ -11,12 +11,14 @@ from sqlalchemy import and_, func, or_, select
 from app.models.care_event import CareEvent, CareEventVersion
 from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
+from app.policies.decision_support import profile_binding_is_current
 from app.policies.memory_retrieval import (
     CURRENT_MEMORY_POLICY_VERSION,
     MemoryTrustEvidence,
     evaluate_memory_trust,
 )
 from app.repositories.base import BaseRepository
+from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 
 
 @dataclass(frozen=True)
@@ -202,6 +204,12 @@ class MemoryRepository(BaseRepository):
                 MemoryConfirmation.speaker_evidence_reference == Memory.speaker_evidence_reference,
                 MemoryConfirmation.confirmation_evidence_reference
                 == Memory.confirmation_evidence_ref,
+                MemoryConfirmation.decision_support_profile_id.is_not_distinct_from(
+                    Memory.decision_support_profile_id
+                ),
+                MemoryConfirmation.decision_support_profile_version.is_not_distinct_from(
+                    Memory.decision_support_profile_version
+                ),
             )
             .exists()
         )
@@ -228,6 +236,8 @@ class MemoryRepository(BaseRepository):
                 Memory.confirmation_evidence_ref,
                 Memory.confirmed_by_actor_id,
                 Memory.confirmed_at,
+                Memory.decision_support_profile_id,
+                Memory.decision_support_profile_version,
                 matching_confirmation_exists.label("matching_confirmation_exists"),
             )
             .join(
@@ -264,7 +274,18 @@ class MemoryRepository(BaseRepository):
             .limit(candidate_limit)
         )
         trusted: list[ConfirmedMemoryContextRecord] = []
+        profile_cache = {}
         for row in result.all():
+            profile = profile_cache.get(row[2])
+            if profile is None:
+                profile = await DecisionSupportProfileRepository(
+                    self._session,
+                    self._tenant_id,
+                ).resolve_for_memory(
+                    elder_id=elder_id,
+                    data_class=row[2],
+                )
+                profile_cache[row[2]] = profile
             decision = evaluate_memory_trust(
                 MemoryTrustEvidence(
                     version=row[1],
@@ -285,7 +306,13 @@ class MemoryRepository(BaseRepository):
                     confirmation_evidence_reference=row[18],
                     confirmed_by_present=row[19] is not None,
                     confirmed_at_present=row[20] is not None,
-                    confirmation_record_present=bool(row[21]) if len(row) > 21 else False,
+                    confirmation_record_present=bool(row[23]) if len(row) > 23 else False,
+                    decision_support_mode=profile.mode,
+                    decision_support_binding_current=profile_binding_is_current(
+                        bound_profile_id=row[21] if len(row) > 21 else None,
+                        bound_profile_version=row[22] if len(row) > 22 else None,
+                        current=profile,
+                    ),
                 ),
                 current_policy_version=current_policy_version,
                 allow_auto_low_risk_memory=allow_auto_low_risk_memory,

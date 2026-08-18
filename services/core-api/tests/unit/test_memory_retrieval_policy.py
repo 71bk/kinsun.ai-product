@@ -84,6 +84,27 @@ def test_low_is_excluded_when_auto_rollout_is_disabled() -> None:
     assert decision.reason_code == "AUTO_LOW_RISK_MEMORY_DISABLED"
 
 
+def test_supported_low_requires_current_profile_bound_confirmation() -> None:
+    evidence = replace(
+        _low_evidence(),
+        policy_decision="ELDER_CONFIRMED_SUPPORTED",
+        verification_level="ELDER_CONFIRMED",
+        required_verification="SUPPORTED_ELDER_CONFIRMATION",
+        confirmed_version=2,
+        confirmed_content_digest=_low_evidence().content_digest,
+        confirmation_method="ELDER_UI",
+        confirmation_evidence_reference="core-command:supported",
+        confirmed_by_present=True,
+        confirmed_at_present=True,
+        confirmation_record_present=True,
+        decision_support_mode="SUPPORTED",
+    )
+
+    assert evaluate_memory_trust(evidence).reason_code == "TRUSTED_SUPPORTED_LOW"
+    stale = replace(evidence, decision_support_binding_current=False)
+    assert evaluate_memory_trust(stale).reason_code == "DECISION_SUPPORT_PROFILE_STALE"
+
+
 def test_medium_confirmation_is_bound_to_current_version_and_digest() -> None:
     assert evaluate_memory_trust(_medium_evidence()).allowed is True
     stale = evaluate_memory_trust(replace(_medium_evidence(), confirmed_version=2))

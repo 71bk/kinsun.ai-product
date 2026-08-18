@@ -10,6 +10,10 @@ import pytest
 
 from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
 from app.middleware.auth import ActorContext
+from app.policies.decision_support import (
+    DecisionSupportResolution,
+    default_standard_resolution,
+)
 from app.policies.memory_policy import CURRENT_MEMORY_POLICY_VERSION
 from app.policies.memory_retrieval import memory_content_digest
 from app.schemas.memory import UpdateMemoryRequest
@@ -82,6 +86,11 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
         evidence_aware_memory=True,
         auto_low_risk_memory=False,
     )
+    service._decision_support_profiles = SimpleNamespace(
+        resolve_for_memory=AsyncMock(
+            return_value=default_standard_resolution("ROUTINE")
+        )
+    )
     service._write_event = AsyncMock()
     consent_id = uuid4()
     content = "每天早餐習慣吃粥。"
@@ -116,6 +125,9 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
         required_verification="ELDER_CONFIRMATION",
         speaker_verification_level="VERIFIED_ELDER",
         speaker_evidence_reference="speaker-evidence:verified-text",
+        decision_support_profile_id=None,
+        decision_support_profile_version=None,
+        memory_type="ROUTINE",
         lifecycle_reason="ELDER_CONFIRMATION_REQUIRED",
         confirmed_by_actor_id=None,
         confirmed_at=None,
@@ -174,6 +186,159 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
     assert confirmation.idempotency_key == "idem-synthetic-elder-confirmation"
     session.flush.assert_awaited_once()
     service._write_event.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_supported_confirmation_binds_current_profile_without_delegate_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = MagicMock(flush=AsyncMock())
+    tenant_id = uuid4()
+    profile_id = uuid4()
+    consent_id = uuid4()
+    elder = actor("ELDER")
+    content = "Prefers classical music"
+    digest = memory_content_digest(content)
+    confirmations: list[object] = []
+    service = MemoryService(
+        session,
+        tenant_id,
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
+    service._write_event = AsyncMock()
+    service._decision_support_profiles = SimpleNamespace(
+        resolve_for_memory=AsyncMock(
+            return_value=DecisionSupportResolution(
+                usable=True,
+                mode="SUPPORTED",
+                allowed_memory_risks=frozenset({"LOW", "MEDIUM"}),
+                profile_id=profile_id,
+                profile_version=2,
+                data_class="PREFERENCE",
+                reason_code="DECISION_SUPPORT_PROFILE_ACTIVE",
+            )
+        )
+    )
+    service._memories = SimpleNamespace(
+        get_current_version=AsyncMock(
+            return_value=SimpleNamespace(content=content, content_digest=digest)
+        ),
+        add_confirmation=MagicMock(side_effect=confirmations.append),
+    )
+    monkeypatch.setattr(
+        "app.services.memory_service.ElderRepository",
+        MagicMock(
+            return_value=SimpleNamespace(
+                get_by_id=AsyncMock(return_value=SimpleNamespace(actor_id=elder.actor_id))
+            )
+        ),
+    )
+    memory = SimpleNamespace(
+        id=uuid4(),
+        elder_id=uuid4(),
+        memory_type="PREFERENCE",
+        current_version=1,
+        consent_id=consent_id,
+        consent_version=2,
+        status="PENDING_CONFIRMATION",
+        policy_version=CURRENT_MEMORY_POLICY_VERSION,
+        actual_risk_level="LOW",
+        policy_decision="PENDING_SUPPORTED_CONFIRMATION",
+        verification_level="UNVERIFIED",
+        required_verification="SUPPORTED_ELDER_CONFIRMATION",
+        speaker_verification_level="VERIFIED_ELDER",
+        speaker_evidence_reference="speaker-evidence:supported",
+        decision_support_profile_id=profile_id,
+        decision_support_profile_version=2,
+        lifecycle_reason="SUPPORTED_ELDER_CONFIRMATION_REQUIRED",
+        confirmed_by_actor_id=None,
+        confirmed_at=None,
+        confirmation_method=None,
+        confirmation_session_id=None,
+        confirmation_evidence_ref=None,
+        confirmed_version=None,
+        confirmed_content_digest=None,
+        activated_at=None,
+    )
+
+    with patch.object(
+        ConsentService,
+        "require_active",
+        AsyncMock(return_value=SimpleNamespace(id=consent_id, version=2)),
+    ):
+        result = await service.confirm(
+            memory=memory,
+            actor_context=elder,
+            request=SimpleNamespace(
+                confirmation_method="ELDER_UI",
+                expected_candidate_version=1,
+                consent_version=2,
+            ),
+            trace_id="trace-supported-confirmation",
+            idempotency_key="idem-supported-confirmation",
+        )
+
+    assert result.status == "ACTIVE"
+    assert result.confirmed_by_actor_id == elder.actor_id
+    assert result.policy_decision == "ELDER_CONFIRMED_SUPPORTED"
+    assert len(confirmations) == 1
+    assert confirmations[0].decision_support_profile_id == profile_id
+    assert confirmations[0].decision_support_profile_version == 2
+
+
+@pytest.mark.asyncio
+async def test_confirmation_fails_closed_when_profile_binding_is_stale() -> None:
+    session = MagicMock()
+    old_profile_id = uuid4()
+    service = MemoryService(
+        session,
+        uuid4(),
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
+    service._memories = SimpleNamespace(add_confirmation=MagicMock())
+    service._decision_support_profiles = SimpleNamespace(
+        resolve_for_memory=AsyncMock(
+            return_value=DecisionSupportResolution(
+                usable=True,
+                mode="SUPPORTED",
+                allowed_memory_risks=frozenset({"LOW", "MEDIUM"}),
+                profile_id=uuid4(),
+                profile_version=3,
+                data_class="PREFERENCE",
+                reason_code="DECISION_SUPPORT_PROFILE_ACTIVE",
+            )
+        )
+    )
+    memory = SimpleNamespace(
+        elder_id=uuid4(),
+        memory_type="PREFERENCE",
+        current_version=1,
+        policy_version=CURRENT_MEMORY_POLICY_VERSION,
+        actual_risk_level="LOW",
+        policy_decision="PENDING_SUPPORTED_CONFIRMATION",
+        required_verification="SUPPORTED_ELDER_CONFIRMATION",
+        speaker_verification_level="VERIFIED_ELDER",
+        speaker_evidence_reference="speaker-evidence:supported",
+        decision_support_profile_id=old_profile_id,
+        decision_support_profile_version=2,
+    )
+
+    with (
+        patch.object(ConsentService, "require_active", AsyncMock()) as require_active,
+        pytest.raises(ConflictError, match="Decision support profile changed"),
+    ):
+        await service.confirm(
+            memory=memory,
+            actor_context=actor("ELDER"),
+            request=SimpleNamespace(expected_candidate_version=1),
+            trace_id="trace-stale-profile",
+            idempotency_key="idem-stale-profile",
+        )
+
+    require_active.assert_not_awaited()
+    service._memories.add_confirmation.assert_not_called()
 
 
 @pytest.mark.asyncio

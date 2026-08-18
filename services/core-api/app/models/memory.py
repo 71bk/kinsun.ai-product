@@ -17,6 +17,23 @@ from app.db.base import SCHEMA_NAME, Base, BaseModel, TenantScopedMixin
 class Memory(BaseModel, TenantScopedMixin):
     __tablename__ = "memory"
     __pk_name__ = "memory_id"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "(decision_support_profile_id IS NULL) = "
+            "(decision_support_profile_version IS NULL) AND "
+            "(decision_support_profile_version IS NULL OR "
+            "decision_support_profile_version > 0)",
+            name="ck_memory_decision_support_profile_binding",
+        ),
+        sa.ForeignKeyConstraint(
+            ["decision_support_profile_id", "decision_support_profile_version"],
+            [
+                f"{SCHEMA_NAME}.decision_support_profile.decision_support_profile_id",
+                f"{SCHEMA_NAME}.decision_support_profile.profile_version",
+            ],
+            name="fk_memory_decision_support_profile",
+        ),
+    )
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -32,6 +49,8 @@ class Memory(BaseModel, TenantScopedMixin):
     required_verification: Mapped[str | None] = mapped_column(String(32))
     speaker_verification_level: Mapped[str | None] = mapped_column(String(32))
     speaker_evidence_reference: Mapped[str | None] = mapped_column(String(300))
+    decision_support_profile_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    decision_support_profile_version: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(
         String(24),
         server_default=sa.text("'CANDIDATE'"),
@@ -153,6 +172,14 @@ class MemoryConfirmation(Base):
             "(decision_support_profile_version IS NULL OR "
             "decision_support_profile_version > 0)",
             name="ck_memory_confirmation_profile_binding",
+        ),
+        sa.ForeignKeyConstraint(
+            ["decision_support_profile_id", "decision_support_profile_version"],
+            [
+                f"{SCHEMA_NAME}.decision_support_profile.decision_support_profile_id",
+                f"{SCHEMA_NAME}.decision_support_profile.profile_version",
+            ],
+            name="fk_memory_confirmation_decision_support_profile",
         ),
         sa.CheckConstraint(
             "(witness_actor_id IS NULL) = (witness_evidence_reference IS NULL)",
