@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
+from app.bootstrap.dependencies import get_family_invitation_token_codec
 from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, NotFoundError
 from app.db.session import get_db_session
@@ -16,7 +17,6 @@ from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.family_invitation import CreateFamilyInvitationRequest
 from app.services.family_invitation_service import FamilyInvitationService
 from app.services.family_invitation_tokens import FamilyInvitationTokenCodec
-from app.services.service_dependencies import get_family_invitation_token_codec
 
 router = APIRouter(prefix="/api/v1", tags=["family-invitations"])
 

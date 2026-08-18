@@ -11,6 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.app_sessions import app_session_bearer
 from app.api.responses import get_correlation_id, success
+from app.bootstrap.dependencies import (
+    get_family_invitation_token_codec,
+    get_line_identity_codec,
+    get_line_oidc_handoff_authenticator,
+)
 from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import ValidationError
@@ -51,11 +56,6 @@ from app.services.line_oidc_handoff_service import (
     LineOidcHandoffService,
 )
 from app.services.pending_google_onboarding_service import PendingGoogleOnboardingService
-from app.services.service_dependencies import (
-    get_family_invitation_token_codec,
-    get_line_identity_codec,
-    get_line_oidc_handoff_authenticator,
-)
 
 router = APIRouter(prefix="/api/v1/internal/auth/line", tags=["internal-auth"])
 

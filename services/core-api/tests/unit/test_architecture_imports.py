@@ -238,9 +238,6 @@ def test_core_application_services_do_not_import_outer_layers() -> None:
     for module_name, source_file in modules.items():
         if module_name != "app.services" and not module_name.startswith("app.services."):
             continue
-        # This legacy-named module is the explicit composition root for provider clients.
-        if module_name == "app.services.service_dependencies":
-            continue
         for node in ast.walk(_parse(source_file)):
             if not isinstance(node, ast.Import | ast.ImportFrom):
                 continue
@@ -254,11 +251,45 @@ def test_core_application_services_do_not_import_outer_layers() -> None:
             if any(
                 target == forbidden_prefix or target.startswith(f"{forbidden_prefix}.")
                 for target in targets
-                for forbidden_prefix in ("app.adapters", "app.api", "app.middleware")
+                for forbidden_prefix in (
+                    "app.adapters",
+                    "app.api",
+                    "app.bootstrap",
+                    "app.middleware",
+                )
             ):
                 violations.add(f"{_repository_relative(source_file)}:{node.lineno}: {module_name}")
 
     assert not violations, "Core services import outer layers:\n" + "\n".join(sorted(violations))
+
+
+def test_migrated_conversation_services_do_not_import_transport_schemas() -> None:
+    """Lock in DTO-to-command mapping for services already migrated off Pydantic schemas."""
+    modules = _module_inventory(CORE)
+    migrated_modules = (
+        "app.services.conversation_service",
+        "app.services.line_bot_service",
+    )
+    violations: set[str] = set()
+
+    for module_name in migrated_modules:
+        source_file = modules[module_name]
+        for node in ast.walk(_parse(source_file)):
+            if not isinstance(node, ast.Import | ast.ImportFrom):
+                continue
+            targets = _import_targets(
+                node,
+                module_name=module_name,
+                source_file=source_file,
+            )
+            if any(
+                target == "app.schemas" or target.startswith("app.schemas.") for target in targets
+            ):
+                violations.add(f"{_repository_relative(source_file)}:{node.lineno}: {module_name}")
+
+    assert not violations, "Migrated services import transport schemas:\n" + "\n".join(
+        sorted(violations)
+    )
 
 
 def test_core_and_domain_packages_only_depend_on_inward_packages() -> None:

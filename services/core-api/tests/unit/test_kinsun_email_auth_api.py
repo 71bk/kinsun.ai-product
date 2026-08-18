@@ -12,6 +12,12 @@ from pydantic import ValidationError
 from app.api import kinsun_email_auth as api_module
 from app.api.error_handlers import register_exception_handlers
 from app.api.kinsun_email_auth import require_kinsun_auth_bff, router
+from app.bootstrap.dependencies import (
+    get_family_invitation_token_codec,
+    get_kinsun_email_challenge_codec,
+    get_kinsun_identity_codec,
+    get_password_hasher,
+)
 from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.main import app as runtime_app
@@ -22,12 +28,6 @@ from app.schemas.kinsun_email_auth import (
 )
 from app.services.kinsun_email_auth_service import RejectedKinsunEmailAuthentication
 from app.services.password_auth_service import RejectedPasswordAuthentication
-from app.services.service_dependencies import (
-    get_family_invitation_token_codec,
-    get_kinsun_email_challenge_codec,
-    get_kinsun_identity_codec,
-    get_password_hasher,
-)
 
 _PASSWORD = "Synthetic-only-password-1"
 

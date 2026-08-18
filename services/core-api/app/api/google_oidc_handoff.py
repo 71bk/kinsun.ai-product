@@ -10,6 +10,11 @@ from fastapi import APIRouter, Depends, Header, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
+from app.bootstrap.dependencies import (
+    get_family_invitation_token_codec,
+    get_google_identity_codec,
+    get_google_oidc_handoff_authenticator,
+)
 from app.core.config import get_settings
 from app.core.exceptions import ValidationError
 from app.core.oidc import GoogleTokenVerifier
@@ -33,11 +38,6 @@ from app.services.google_oidc_handoff_service import (
     PendingIdentityPolicy,
 )
 from app.services.pending_google_onboarding_service import PendingGoogleOnboardingService
-from app.services.service_dependencies import (
-    get_family_invitation_token_codec,
-    get_google_identity_codec,
-    get_google_oidc_handoff_authenticator,
-)
 
 router = APIRouter(prefix="/api/v1/internal/auth/google", tags=["internal-auth"])
 

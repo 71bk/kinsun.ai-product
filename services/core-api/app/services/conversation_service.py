@@ -9,12 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
 from app.domain.consent import ConsentPurpose
+from app.domain.conversation import ConversationStartCommand
 from app.domain.state_machine import require_session_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.models.conversation import ConversationSession
 from app.models.policy import PolicyRegistry
 from app.repositories.conversation_repo import ConversationRepository
-from app.schemas.conversation import CreateVoiceSessionRequest, CreateVoiceTicketRequest
 from app.services.consent_service import ConsentService
 from app.services.voice_ticket_codec import IssuedVoiceTicket, VoiceTicketCodec
 
@@ -37,7 +37,7 @@ class ConversationService:
         elder_id: UUID,
         actor_id: UUID,
         actor_role: str,
-        request: CreateVoiceSessionRequest | CreateVoiceTicketRequest,
+        command: ConversationStartCommand,
         trace_id: str,
         idempotency_key: str,
     ) -> ConversationSession:
@@ -56,8 +56,8 @@ class ConversationService:
             tenant_id=self._tenant_id,
             initiator_actor_id=actor_id,
             initiator_type=initiator_type,
-            language_route=request.language_preference.value,
-            input_mode=request.input_mode,
+            language_route=command.language_route.value,
+            input_mode=command.input_mode,
             state="CREATED",
             trace_id=trace_id,
             consent_id=consent.id,
@@ -94,7 +94,7 @@ class ConversationService:
         elder_id: UUID,
         actor_id: UUID,
         actor_role: str,
-        request: CreateVoiceSessionRequest | CreateVoiceTicketRequest,
+        command: ConversationStartCommand,
         trace_id: str,
         idempotency_key: str,
         codec: VoiceTicketCodec,
@@ -103,7 +103,7 @@ class ConversationService:
             elder_id=elder_id,
             actor_id=actor_id,
             actor_role=actor_role,
-            request=request,
+            command=command,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
         )

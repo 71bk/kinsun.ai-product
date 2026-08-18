@@ -14,6 +14,7 @@ from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
 from app.db.session import get_db_session
+from app.domain.conversation import ConversationStartCommand
 from app.middleware.actor_guard import (
     require_active_actor,
     require_system_service_actor,
@@ -106,7 +107,10 @@ async def create_voice_session(
             elder_id=elder_id,
             actor_id=actor_context.actor_id,
             actor_role=actor_context.actor_role,
-            request=request,
+            command=ConversationStartCommand(
+                language_route=request.language_preference,
+                input_mode=request.input_mode,
+            ),
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
@@ -150,7 +154,10 @@ async def issue_voice_ticket(
             elder_id=elder_id,
             actor_id=actor_context.actor_id,
             actor_role=actor_context.actor_role,
-            request=request,
+            command=ConversationStartCommand(
+                language_route=request.language_preference,
+                input_mode=request.input_mode,
+            ),
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
             codec=codec,

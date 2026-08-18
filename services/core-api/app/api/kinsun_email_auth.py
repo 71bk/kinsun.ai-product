@@ -10,6 +10,13 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import authentication_rejected, get_correlation_id, success
+from app.bootstrap.dependencies import (
+    get_family_invitation_token_codec,
+    get_kinsun_auth_handoff_authenticator,
+    get_kinsun_email_challenge_codec,
+    get_kinsun_identity_codec,
+    get_password_hasher,
+)
 from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.schemas.kinsun_email_auth import (
@@ -38,13 +45,6 @@ from app.services.password_auth_service import (
     PasswordLockoutPolicy,
 )
 from app.services.password_hasher import PasswordHasher
-from app.services.service_dependencies import (
-    get_family_invitation_token_codec,
-    get_kinsun_auth_handoff_authenticator,
-    get_kinsun_email_challenge_codec,
-    get_kinsun_identity_codec,
-    get_password_hasher,
-)
 
 router = APIRouter(tags=["internal-auth"])
 

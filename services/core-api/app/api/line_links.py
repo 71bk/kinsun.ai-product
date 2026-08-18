@@ -8,6 +8,10 @@ from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
+from app.bootstrap.dependencies import (
+    get_line_identity_codec,
+    get_line_subject_cipher,
+)
 from app.core.auth import ActorContext
 from app.core.config import Settings, get_settings
 from app.core.exceptions import ServiceUnavailableError
@@ -16,10 +20,6 @@ from app.middleware.actor_guard import require_active_actor
 from app.schemas.line_identity import CreateLineLinkChallengeRequest
 from app.services.line_account_link_service import LineAccountLinkService
 from app.services.line_identity_codec import LineIdentityCodec
-from app.services.service_dependencies import (
-    get_line_identity_codec,
-    get_line_subject_cipher,
-)
 
 router = APIRouter(prefix="/api/v1/me", tags=["line-account-linking"])
 

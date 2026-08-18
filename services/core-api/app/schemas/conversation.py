@@ -3,20 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
-class LanguageRoute(str, Enum):
-    ZH_TW = "ZH_TW"
-    NAN_TW = "NAN_TW"
-    HAK_TW = "HAK_TW"
-    EN_US = "EN_US"
-    MIXED = "MIXED"
-    UNKNOWN = "UNKNOWN"
+from app.domain.conversation import LanguageRoute
 
 
 class CreateVoiceSessionRequest(BaseModel):

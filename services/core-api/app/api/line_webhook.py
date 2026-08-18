@@ -13,6 +13,11 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
 from app.adapters.agent_runtime import get_agent_runtime_client
+from app.bootstrap.dependencies import (
+    get_line_identity_codec,
+    get_line_messaging_client,
+    get_line_subject_cipher,
+)
 from app.core.agent_runtime import AgentRuntimePort
 from app.core.config import Settings, get_settings
 from app.core.exceptions import ConflictError, DomainException, ServiceUnavailableError
@@ -23,11 +28,6 @@ from app.repositories.line_identity_repo import LineIdentityRepository
 from app.services.line_account_link_service import LineAccountLinkService
 from app.services.line_bot_service import LineBotService
 from app.services.line_identity_codec import LineIdentityCodec
-from app.services.service_dependencies import (
-    get_line_identity_codec,
-    get_line_messaging_client,
-    get_line_subject_cipher,
-)
 
 router = APIRouter(prefix="/api/v1/webhooks", tags=["line"])
 logger = logging.getLogger(__name__)

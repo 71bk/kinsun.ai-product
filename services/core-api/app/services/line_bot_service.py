@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.agent_runtime import AgentRuntimePort
 from app.core.line_messaging import LineMessagingPort, LineReply
-from app.schemas.conversation import CreateVoiceSessionRequest, LanguageRoute
+from app.domain.conversation import ConversationStartCommand, LanguageRoute
 from app.services.authorization_service import authorize_elder
 from app.services.companion_service import CompanionService
 from app.services.conversation_service import ConversationService
@@ -79,10 +79,9 @@ class LineBotService:
             elder_id=elder.id,
             actor_id=actor.actor_id,
             actor_role=actor.actor_role,
-            request=CreateVoiceSessionRequest(
-                language_preference=LanguageRoute(elder.preferred_language),
+            command=ConversationStartCommand(
+                language_route=LanguageRoute(elder.preferred_language),
                 input_mode="text",
-                client_timezone=elder.timezone,
             ),
             trace_id=operation_key,
             idempotency_key=operation_key,

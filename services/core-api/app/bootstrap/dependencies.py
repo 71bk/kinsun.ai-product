@@ -1,4 +1,4 @@
-"""Small, cache-safe service dependencies assembled from validated settings."""
+"""Cache-safe provider wiring assembled from validated settings."""
 
 from __future__ import annotations
 
@@ -72,9 +72,7 @@ def _build_kinsun_auth_handoff_authenticator(secret: str) -> KinsunAuthHandoffAu
 
 def get_kinsun_auth_handoff_authenticator() -> KinsunAuthHandoffAuthenticator:
     try:
-        return _build_kinsun_auth_handoff_authenticator(
-            get_settings().kinsun_auth_handoff_secret
-        )
+        return _build_kinsun_auth_handoff_authenticator(get_settings().kinsun_auth_handoff_secret)
     except ValueError as exc:
         raise ServiceUnavailableError("Kinsun authentication is unavailable") from exc
 

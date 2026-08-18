@@ -5,6 +5,10 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.api.responses import success
+from app.bootstrap.dependencies import (
+    get_line_messaging_client,
+    get_line_subject_cipher,
+)
 from app.core.auth import ActorContext
 from app.core.config import Settings, get_settings
 from app.core.exceptions import ServiceUnavailableError
@@ -13,10 +17,6 @@ from app.db.session import get_db_engine
 from app.middleware.actor_guard import require_system_service_actor
 from app.schemas.notification import DailyLineNotificationJobRequest
 from app.services.daily_line_notification_service import DailyLineNotificationService
-from app.services.service_dependencies import (
-    get_line_messaging_client,
-    get_line_subject_cipher,
-)
 
 router = APIRouter(prefix="/api/v1/internal/notification-jobs", tags=["notifications"])
 

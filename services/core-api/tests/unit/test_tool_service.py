@@ -8,11 +8,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.middleware.auth import ActorContext
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord
 from app.schemas.tool import ToolRequest
-from app.services import tool_service
+from app.services import tool_dispatcher, tool_service
+from app.services.tool_dispatcher import ToolCommandDispatcher
 from app.services.tool_service import ToolExecutionService
 
 
@@ -255,7 +256,7 @@ async def test_summary_tool_requests_only_ready_summaries(
         list_for_date=AsyncMock(return_value=[]),
         get_version=AsyncMock(),
     )
-    monkeypatch.setattr(tool_service, "SummaryService", lambda *_args: summaries)
+    monkeypatch.setattr(tool_dispatcher, "SummaryService", lambda *_args: summaries)
 
     result = await ToolExecutionService(session, actor)._dispatch(request, "tool-trace")
 
@@ -294,7 +295,7 @@ async def test_memory_tool_uses_only_the_final_trusted_context_gate(
         list_for_elder=AsyncMock(),
         get_version=AsyncMock(),
     )
-    monkeypatch.setattr(tool_service, "MemoryService", lambda *_args: memory_service)
+    monkeypatch.setattr(tool_dispatcher, "MemoryService", lambda *_args: memory_service)
 
     result = await ToolExecutionService(session, actor)._dispatch(request, "tool-trace")
 
@@ -311,3 +312,33 @@ async def test_memory_tool_uses_only_the_final_trusted_context_gate(
     list_trusted_context.assert_awaited_once_with(elder_id=request.elder_id, limit=2)
     memory_service.list_for_elder.assert_not_awaited()
     memory_service.get_version.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_fails_closed_for_an_unknown_tool() -> None:
+    request = _request(tool_name="unknown_tool", parameters={})
+    session = _session(existing_call=None, run=None)
+
+    with pytest.raises(ValidationError):
+        await ToolCommandDispatcher(session, _actor()).dispatch(request, "tool-trace")
+
+
+@pytest.mark.asyncio
+async def test_execution_still_blocks_unknown_tool_before_dispatch() -> None:
+    request = _request(tool_name="unknown_tool", parameters={})
+    session = _session(
+        existing_call=None,
+        run=SimpleNamespace(
+            policy_version=request.policy_version,
+            result_status="RUNNING",
+        ),
+    )
+    service = ToolExecutionService(session, _actor())
+    dispatch = AsyncMock()
+    service._dispatcher.dispatch = dispatch
+
+    result = await service.execute(request)
+
+    assert result.result_status == "BLOCKED"
+    assert result.reason_code == "TOOL_NOT_ALLOWLISTED"
+    dispatch.assert_not_awaited()
