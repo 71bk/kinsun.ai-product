@@ -90,6 +90,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
             None,
             None,
             None,
+            False,
         )
     ]
     session.execute.return_value = result
@@ -122,6 +123,8 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     assert "memory_version.content" in compiled
     assert "graph_projection_record" in compiled
     assert "graph_projection_record.projection_status" in compiled
+    assert "memory_confirmation" in compiled
+    assert "EXISTS" in compiled
     assert (
         "graph_projection_record.source_version = eldercare_ai.memory.current_version" in compiled
     )
@@ -143,3 +146,53 @@ async def test_active_context_excludes_legacy_row_without_trust_evidence() -> No
     )
 
     assert records == []
+
+
+@pytest.mark.asyncio
+async def test_medium_context_requires_matching_append_only_confirmation_record() -> None:
+    session = AsyncMock()
+    result = MagicMock()
+    consent_id = uuid4()
+    confirmed_actor_id = uuid4()
+    content = "Granddaughter visits every Sunday"
+    digest = memory_content_digest(content)
+
+    def medium_row(*, evidence_present: bool) -> tuple[object, ...]:
+        return (
+            uuid4(),
+            2,
+            "ROUTINE",
+            content,
+            3,
+            digest,
+            "CONTACT_ROUTINE",
+            consent_id,
+            CURRENT_MEMORY_POLICY_VERSION,
+            "ELDER_CONFIRMED_MEDIUM",
+            "MEDIUM",
+            "ELDER_CONFIRMED",
+            "ELDER_CONFIRMATION",
+            "VERIFIED_ELDER",
+            "speaker-evidence:confirmed-text",
+            2,
+            digest,
+            "ELDER_UI",
+            "core-command:confirmation",
+            confirmed_actor_id,
+            object(),
+            evidence_present,
+        )
+
+    missing_record = medium_row(evidence_present=False)
+    matching_record = medium_row(evidence_present=True)
+    result.all.return_value = [missing_record, matching_record]
+    session.execute.return_value = result
+
+    records = await MemoryRepository(session, uuid4()).list_active_context_for_elder(
+        elder_id=uuid4(),
+        active_consent_id=consent_id,
+        active_consent_version=3,
+        limit=5,
+    )
+
+    assert [record.memory_id for record in records] == [matching_record[0]]

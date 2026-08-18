@@ -40,6 +40,7 @@ class MemoryTrustEvidence:
     confirmation_evidence_reference: str | None
     confirmed_by_present: bool
     confirmed_at_present: bool
+    confirmation_record_present: bool
 
 
 @dataclass(frozen=True)
@@ -99,6 +100,8 @@ def evaluate_memory_trust(
             or evidence.confirmed_content_digest != evidence.content_digest
         ):
             return MemoryTrustDecision(False, "CONFIRMATION_VERSION_STALE")
+        if not evidence.confirmation_record_present:
+            return MemoryTrustDecision(False, "CONFIRMATION_RECORD_MISSING")
         if (
             evidence.confirmation_method not in _CONFIRMATION_METHODS
             or not evidence.confirmation_evidence_reference

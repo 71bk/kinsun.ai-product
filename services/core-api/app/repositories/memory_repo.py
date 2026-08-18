@@ -10,7 +10,7 @@ from sqlalchemy import and_, func, or_, select
 
 from app.models.care_event import CareEvent, CareEventVersion
 from app.models.graph_projection import GraphProjectionRecord
-from app.models.memory import Memory, MemoryVersion
+from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.memory_retrieval import (
     CURRENT_MEMORY_POLICY_VERSION,
     MemoryTrustEvidence,
@@ -47,6 +47,9 @@ class MemoryRepository(BaseRepository):
 
     def add_version(self, version: MemoryVersion) -> None:
         self._session.add(version)
+
+    def add_confirmation(self, confirmation: MemoryConfirmation) -> None:
+        self._session.add(confirmation)
 
     async def get(self, elder_id: UUID, memory_id: UUID) -> Memory | None:
         result = await self._session.execute(
@@ -178,6 +181,29 @@ class MemoryRepository(BaseRepository):
     ) -> list[ConfirmedMemoryContextRecord]:
         """Return only bounded records that pass the Spec 18 final gate."""
         candidate_limit = min(max(limit * 4, limit), 64)
+        matching_confirmation_exists = (
+            select(MemoryConfirmation.memory_confirmation_id)
+            .where(
+                MemoryConfirmation.tenant_id == self._tenant_id,
+                MemoryConfirmation.elder_id == elder_id,
+                MemoryConfirmation.memory_id == Memory.id,
+                MemoryConfirmation.memory_version == Memory.current_version,
+                MemoryConfirmation.content_digest == MemoryVersion.content_digest,
+                MemoryConfirmation.consent_id == Memory.consent_id,
+                MemoryConfirmation.consent_version == Memory.consent_version,
+                MemoryConfirmation.policy_version == Memory.policy_version,
+                MemoryConfirmation.response_intent == "AFFIRM",
+                MemoryConfirmation.confirmation_method == Memory.confirmation_method,
+                MemoryConfirmation.confirmed_by_actor_id == Memory.confirmed_by_actor_id,
+                MemoryConfirmation.confirmation_session_id == Memory.confirmation_session_id,
+                MemoryConfirmation.confirmed_at == Memory.confirmed_at,
+                MemoryConfirmation.speaker_verification_level == Memory.speaker_verification_level,
+                MemoryConfirmation.speaker_evidence_reference == Memory.speaker_evidence_reference,
+                MemoryConfirmation.confirmation_evidence_reference
+                == Memory.confirmation_evidence_ref,
+            )
+            .exists()
+        )
         result = await self._session.execute(
             select(
                 Memory.id,
@@ -201,6 +227,7 @@ class MemoryRepository(BaseRepository):
                 Memory.confirmation_evidence_ref,
                 Memory.confirmed_by_actor_id,
                 Memory.confirmed_at,
+                matching_confirmation_exists.label("matching_confirmation_exists"),
             )
             .join(
                 MemoryVersion,
@@ -257,6 +284,7 @@ class MemoryRepository(BaseRepository):
                     confirmation_evidence_reference=row[18],
                     confirmed_by_present=row[19] is not None,
                     confirmed_at_present=row[20] is not None,
+                    confirmation_record_present=bool(row[21]) if len(row) > 21 else False,
                 ),
                 current_policy_version=current_policy_version,
             )

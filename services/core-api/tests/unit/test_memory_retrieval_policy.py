@@ -33,6 +33,7 @@ def _low_evidence() -> MemoryTrustEvidence:
         confirmation_evidence_reference=None,
         confirmed_by_present=False,
         confirmed_at_present=False,
+        confirmation_record_present=False,
     )
 
 
@@ -58,6 +59,7 @@ def _medium_evidence() -> MemoryTrustEvidence:
         confirmation_evidence_reference="core-command:test",
         confirmed_by_present=True,
         confirmed_at_present=True,
+        confirmation_record_present=True,
     )
 
 
@@ -74,6 +76,12 @@ def test_medium_confirmation_is_bound_to_current_version_and_digest() -> None:
     stale = evaluate_memory_trust(replace(_medium_evidence(), confirmed_version=2))
     assert stale.allowed is False
     assert stale.reason_code == "CONFIRMATION_VERSION_STALE"
+
+    missing_record = evaluate_memory_trust(
+        replace(_medium_evidence(), confirmation_record_present=False)
+    )
+    assert missing_record.allowed is False
+    assert missing_record.reason_code == "CONFIRMATION_RECORD_MISSING"
 
 
 def test_tampered_content_and_stale_policy_are_rejected() -> None:

@@ -89,7 +89,8 @@ class ConfirmMemoryRequest(BaseModel):
             "Only ELDER_UI can activate a candidate. Legacy caregiver and legal "
             "representative values remain parseable during deprecation but fail "
             "closed at the Core authorization gate. VOICE remains unavailable "
-            "until candidate-specific affirmative evidence exists."
+            "until the voice path can produce authenticated candidate-specific "
+            "affirmative evidence."
         )
     )
     expected_candidate_version: int = Field(ge=1)

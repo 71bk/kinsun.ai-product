@@ -34,7 +34,7 @@ from app.models.line_identity import (  # noqa: F401
     LineWebhookReceipt,
 )
 from app.models.membership import ActorTenantMembership  # noqa: F401
-from app.models.memory import Memory, MemoryVersion  # noqa: F401
+from app.models.memory import Memory, MemoryConfirmation, MemoryVersion  # noqa: F401
 from app.models.notification import (  # noqa: F401
     NotificationDelivery,
     NotificationPreference,

@@ -13,9 +13,10 @@ from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.middleware.auth import ActorContext
 from app.models.enums import ActorType
-from app.models.memory import Memory, MemoryVersion
+from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.memory_policy import (
     CURRENT_MEMORY_POLICY_VERSION,
+    TRUSTED_SPEAKER_LEVELS,
     evaluate_memory_candidate,
 )
 from app.policies.memory_retrieval import memory_content_digest
@@ -183,9 +184,10 @@ class MemoryService:
         trace. Caregiver and legal-representative review may help prepare a
         candidate, but cannot satisfy the elder confirmation gate.
 
-        VOICE confirmation remains unavailable until a versioned,
-        consent-scoped record can prove an affirmative answer to this exact
-        candidate. A completed conversation alone is insufficient.
+        VOICE confirmation remains unavailable until the voice path can create
+        a versioned, consent-scoped record proving an authenticated affirmative
+        answer to this exact candidate. A completed conversation alone is
+        insufficient.
         """
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
@@ -194,6 +196,8 @@ class MemoryService:
             or memory.actual_risk_level != "MEDIUM"
             or memory.policy_decision != "PENDING_ELDER_CONFIRMATION"
             or memory.required_verification != "ELDER_CONFIRMATION"
+            or memory.speaker_verification_level not in TRUSTED_SPEAKER_LEVELS
+            or not memory.speaker_evidence_reference
         ):
             raise ConflictError("Memory candidate policy evidence is stale or ineligible")
         consent = await ConsentService(self._session, self._tenant_id).require_active(
@@ -229,12 +233,40 @@ class MemoryService:
         memory.confirmed_at = now
         memory.confirmation_method = request.confirmation_method
         memory.confirmation_session_id = None
-        memory.confirmation_evidence_ref = f"core-command:{trace_id}"
+        confirmation_evidence_reference = f"core-command:{trace_id}"
+        memory.confirmation_evidence_ref = confirmation_evidence_reference
         memory.confirmed_version = memory.current_version
         memory.confirmed_content_digest = current.content_digest
         memory.policy_decision = "ELDER_CONFIRMED_MEDIUM"
         memory.verification_level = "ELDER_CONFIRMED"
         memory.lifecycle_reason = "ELDER_CONFIRMED_CURRENT_VERSION"
+        self._memories.add_confirmation(
+            MemoryConfirmation(
+                tenant_id=self._tenant_id,
+                elder_id=memory.elder_id,
+                memory_id=memory.id,
+                memory_version=memory.current_version,
+                content_digest=current.content_digest,
+                consent_id=consent.id,
+                consent_version=consent.version,
+                policy_version=CURRENT_MEMORY_POLICY_VERSION,
+                decision_support_profile_id=None,
+                decision_support_profile_version=None,
+                confirmation_method=request.confirmation_method,
+                response_intent="AFFIRM",
+                confirmed_by_actor_id=actor_context.actor_id,
+                confirmation_session_id=None,
+                speaker_verification_level=memory.speaker_verification_level,
+                speaker_evidence_reference=memory.speaker_evidence_reference,
+                witness_actor_id=None,
+                witness_evidence_reference=None,
+                confirmation_evidence_reference=confirmation_evidence_reference,
+                trace_id=trace_id,
+                correlation_id=trace_id,
+                idempotency_key=idempotency_key,
+                confirmed_at=now,
+            )
+        )
         require_memory_transition(memory.status, "ACTIVE")
         memory.status = "ACTIVE"
         memory.activated_at = now
@@ -262,8 +294,8 @@ class MemoryService:
                     {
                         "field": "confirmation_method",
                         "reason": (
-                            "VOICE confirmation is unavailable until an affirmative "
-                            "candidate-specific evidence record is implemented"
+                            "VOICE confirmation is unavailable until the voice path can "
+                            "produce authenticated candidate-specific affirmative evidence"
                         ),
                     }
                 ]

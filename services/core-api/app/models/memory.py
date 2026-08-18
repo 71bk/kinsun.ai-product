@@ -120,3 +120,126 @@ class MemoryVersion(Base):
         server_default=sa.func.now(),
         nullable=False,
     )
+
+
+class MemoryConfirmation(Base):
+    """Append-only evidence for one decision about one exact Memory version."""
+
+    __tablename__ = "memory_confirmation"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "memory_version > 0 AND consent_version > 0",
+            name="ck_memory_confirmation_positive_versions",
+        ),
+        sa.CheckConstraint(
+            "content_digest ~ '^[0-9a-f]{64}$'",
+            name="ck_memory_confirmation_content_digest",
+        ),
+        sa.CheckConstraint(
+            "confirmation_method IN ('ELDER_UI','ELDER_VOICE','WITNESSED_VOICE')",
+            name="ck_memory_confirmation_method",
+        ),
+        sa.CheckConstraint(
+            "response_intent IN ('AFFIRM','REJECT','UNCERTAIN','DEFER')",
+            name="ck_memory_confirmation_response_intent",
+        ),
+        sa.CheckConstraint(
+            "speaker_verification_level IN ('VERIFIED_ELDER','WITNESSED_ELDER')",
+            name="ck_memory_confirmation_speaker_level",
+        ),
+        sa.CheckConstraint(
+            "(decision_support_profile_id IS NULL) = "
+            "(decision_support_profile_version IS NULL) AND "
+            "(decision_support_profile_version IS NULL OR "
+            "decision_support_profile_version > 0)",
+            name="ck_memory_confirmation_profile_binding",
+        ),
+        sa.CheckConstraint(
+            "(witness_actor_id IS NULL) = (witness_evidence_reference IS NULL)",
+            name="ck_memory_confirmation_witness_pair",
+        ),
+        sa.CheckConstraint(
+            "confirmation_method <> 'WITNESSED_VOICE' OR witness_actor_id IS NOT NULL",
+            name="ck_memory_confirmation_witnessed_method",
+        ),
+        sa.UniqueConstraint(
+            "memory_id",
+            "memory_version",
+            "response_intent",
+            name="uq_memory_confirmation_version_intent",
+        ),
+        sa.Index(
+            "ix_memory_confirmation_trust_lookup",
+            "memory_id",
+            "memory_version",
+            "content_digest",
+            "policy_version",
+            "response_intent",
+        ),
+        sa.Index(
+            "ix_memory_confirmation_tenant_elder",
+            "tenant_id",
+            "elder_id",
+            "confirmed_at",
+        ),
+    )
+
+    memory_confirmation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=sa.func.gen_random_uuid(),
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.tenant.tenant_id"),
+        nullable=False,
+    )
+    elder_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.elder.elder_id"),
+        nullable=False,
+    )
+    memory_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.memory.memory_id"),
+        nullable=False,
+    )
+    memory_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    consent_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.consent_grant.consent_id"),
+        nullable=False,
+    )
+    consent_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    policy_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    decision_support_profile_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    decision_support_profile_version: Mapped[int | None] = mapped_column(Integer)
+    confirmation_method: Mapped[str] = mapped_column(String(32), nullable=False)
+    response_intent: Mapped[str] = mapped_column(String(16), nullable=False)
+    confirmed_by_actor_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.actor.actor_id"),
+        nullable=False,
+    )
+    confirmation_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.conversation_session.session_id"),
+    )
+    speaker_verification_level: Mapped[str] = mapped_column(String(32), nullable=False)
+    speaker_evidence_reference: Mapped[str] = mapped_column(String(300), nullable=False)
+    witness_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.actor.actor_id"),
+    )
+    witness_evidence_reference: Mapped[str | None] = mapped_column(String(300))
+    confirmation_evidence_reference: Mapped[str] = mapped_column(String(300), nullable=False)
+    trace_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    correlation_id: Mapped[str | None] = mapped_column(String(80))
+    idempotency_key: Mapped[str] = mapped_column(String(160), nullable=False)
+    confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=sa.func.now(),
+        nullable=False,
+    )

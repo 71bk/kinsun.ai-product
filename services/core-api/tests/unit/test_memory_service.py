@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.exceptions import AuthorizationDeniedError, ValidationError
+from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
 from app.middleware.auth import ActorContext
 from app.policies.memory_policy import CURRENT_MEMORY_POLICY_VERSION
 from app.policies.memory_retrieval import memory_content_digest
@@ -75,15 +75,18 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
 ) -> None:
     session = MagicMock()
     session.flush = AsyncMock()
-    service = MemoryService(session, uuid4())
+    tenant_id = uuid4()
+    service = MemoryService(session, tenant_id)
     service._write_event = AsyncMock()
     consent_id = uuid4()
     content = "每天早餐習慣吃粥。"
     digest = memory_content_digest(content)
+    confirmations: list[object] = []
     service._memories = SimpleNamespace(
         get_current_version=AsyncMock(
             return_value=SimpleNamespace(content=content, content_digest=digest)
-        )
+        ),
+        add_confirmation=MagicMock(side_effect=confirmations.append),
     )
     elder = actor("ELDER")
     monkeypatch.setattr(
@@ -106,6 +109,8 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
         policy_decision="PENDING_ELDER_CONFIRMATION",
         verification_level="UNVERIFIED",
         required_verification="ELDER_CONFIRMATION",
+        speaker_verification_level="VERIFIED_ELDER",
+        speaker_evidence_reference="speaker-evidence:verified-text",
         lifecycle_reason="ELDER_CONFIRMATION_REQUIRED",
         confirmed_by_actor_id=None,
         confirmed_at=None,
@@ -144,8 +149,57 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
     assert result.confirmed_content_digest == digest
     assert result.policy_decision == "ELDER_CONFIRMED_MEDIUM"
     assert result.verification_level == "ELDER_CONFIRMED"
+    assert len(confirmations) == 1
+    confirmation = confirmations[0]
+    assert confirmation.tenant_id == tenant_id
+    assert confirmation.memory_id == memory.id
+    assert confirmation.memory_version == 2
+    assert confirmation.content_digest == digest
+    assert confirmation.consent_id == consent_id
+    assert confirmation.policy_version == CURRENT_MEMORY_POLICY_VERSION
+    assert confirmation.response_intent == "AFFIRM"
+    assert confirmation.confirmed_by_actor_id == elder.actor_id
+    assert confirmation.confirmed_at == result.confirmed_at
+    assert confirmation.speaker_evidence_reference == "speaker-evidence:verified-text"
+    assert (
+        confirmation.confirmation_evidence_reference
+        == "core-command:trace-synthetic-elder-confirmation"
+    )
+    assert confirmation.trace_id == "trace-synthetic-elder-confirmation"
+    assert confirmation.idempotency_key == "idem-synthetic-elder-confirmation"
     session.flush.assert_awaited_once()
     service._write_event.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_confirmation_rejects_missing_speaker_evidence_before_consent_lookup() -> None:
+    session = MagicMock()
+    service = MemoryService(session, uuid4())
+    service._memories = SimpleNamespace(add_confirmation=MagicMock())
+    memory = SimpleNamespace(
+        current_version=1,
+        policy_version=CURRENT_MEMORY_POLICY_VERSION,
+        actual_risk_level="MEDIUM",
+        policy_decision="PENDING_ELDER_CONFIRMATION",
+        required_verification="ELDER_CONFIRMATION",
+        speaker_verification_level="VERIFIED_ELDER",
+        speaker_evidence_reference=None,
+    )
+
+    with (
+        patch.object(ConsentService, "require_active", AsyncMock()) as require_active,
+        pytest.raises(ConflictError, match="policy evidence is stale or ineligible"),
+    ):
+        await service.confirm(
+            memory=memory,
+            actor_context=actor("ELDER"),
+            request=SimpleNamespace(expected_candidate_version=1),
+            trace_id="trace-missing-speaker-evidence",
+            idempotency_key="idem-missing-speaker-evidence",
+        )
+
+    require_active.assert_not_awaited()
+    service._memories.add_confirmation.assert_not_called()
 
 
 @pytest.mark.asyncio
