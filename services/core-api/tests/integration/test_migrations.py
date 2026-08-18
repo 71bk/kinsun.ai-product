@@ -25,7 +25,7 @@ import os
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from alembic import command
 from alembic.config import Config
@@ -61,7 +61,7 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 57
+_TOTAL_HEAD_TABLE_COUNT = 61
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
@@ -523,6 +523,128 @@ async def test_decision_support_profile_migration_binds_memory_evidence(test_eng
 
 
 @pytest.mark.asyncio
+async def test_memory_confirmation_rows_are_append_only(test_engine) -> None:
+    confirmation_id = "92000000-0000-4000-8000-000000000001"
+    seed_sql = """
+        INSERT INTO eldercare_ai.tenant
+            (tenant_id, tenant_type, name, status, timezone)
+        VALUES
+            ('92000000-0000-4000-8000-000000000010', 'DEMO',
+             'Append-only test tenant', 'ACTIVE', 'UTC');
+
+        INSERT INTO eldercare_ai.actor
+            (actor_id, actor_type, display_name, status)
+        VALUES
+            ('92000000-0000-4000-8000-000000000011', 'ELDER',
+             'Append-only test elder actor', 'ACTIVE');
+
+        INSERT INTO eldercare_ai.elder
+            (elder_id, tenant_id, actor_id, display_name,
+             primary_care_setting, status, preferred_language,
+             response_length_preference, timezone)
+        VALUES
+            ('92000000-0000-4000-8000-000000000012',
+             '92000000-0000-4000-8000-000000000010',
+             '92000000-0000-4000-8000-000000000011',
+             'Append-only test elder', 'INDEPENDENT', 'ACTIVE',
+             'ZH_TW', 'STANDARD', 'UTC');
+
+        INSERT INTO eldercare_ai.policy_registry
+            (policy_id, owner_tenant_id, policy_code, policy_type,
+             version, status, policy_payload, effective_from)
+        VALUES
+            ('92000000-0000-4000-8000-000000000013',
+             '92000000-0000-4000-8000-000000000010',
+             'append-only-memory-consent', 'CONSENT', '1',
+             'ACTIVE', '{}'::jsonb, '2026-01-01T00:00:00Z');
+
+        INSERT INTO eldercare_ai.consent_grant
+            (consent_id, elder_id, purpose_code, status, version, scope,
+             granted_by_actor_id, policy_id, granted_at, effective_at)
+        VALUES
+            ('92000000-0000-4000-8000-000000000014',
+             '92000000-0000-4000-8000-000000000012',
+             'LONG_TERM_MEMORY', 'GRANTED', 1, '{}'::jsonb,
+             '92000000-0000-4000-8000-000000000011',
+             '92000000-0000-4000-8000-000000000013',
+             '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+
+        INSERT INTO eldercare_ai.memory
+            (memory_id, elder_id, tenant_id, memory_type, status,
+             current_version, consent_id, consent_version, evidence_state)
+        VALUES
+            ('92000000-0000-4000-8000-000000000003',
+             '92000000-0000-4000-8000-000000000012',
+             '92000000-0000-4000-8000-000000000010',
+             'ROUTINE', 'PENDING_CONFIRMATION', 1,
+             '92000000-0000-4000-8000-000000000014', 1, 'CURRENT');
+
+        INSERT INTO eldercare_ai.memory_confirmation
+            (memory_confirmation_id, tenant_id, elder_id, memory_id,
+             memory_version, content_digest, consent_id, consent_version,
+             policy_version, confirmation_method, response_intent,
+             confirmed_by_actor_id, speaker_verification_level,
+             speaker_evidence_reference, confirmation_evidence_reference,
+             trace_id, idempotency_key, confirmed_at)
+        VALUES
+            (:confirmation_id,
+             '92000000-0000-4000-8000-000000000010',
+             '92000000-0000-4000-8000-000000000012',
+             '92000000-0000-4000-8000-000000000003',
+             1, :content_digest,
+             '92000000-0000-4000-8000-000000000014', 1,
+             'memory-policy-2026-08-18.v1', 'ELDER_UI', 'AFFIRM',
+             '92000000-0000-4000-8000-000000000011', 'VERIFIED_ELDER',
+             'speaker-evidence:append-only-test',
+             'core-command:append-only-test',
+             'trace-append-only-test', 'append-only-test:1', now());
+    """
+    seed_params = {
+        "confirmation_id": confirmation_id,
+        "content_digest": "a" * 64,
+    }
+
+    async with test_engine.connect() as conn:
+        transaction = await conn.begin()
+        try:
+            for statement in seed_sql.split(";"):
+                if statement.strip():
+                    await conn.execute(text(statement), seed_params)
+
+            with pytest.raises(DBAPIError, match="append-only"):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.memory_confirmation "
+                            "SET trace_id = 'tampered' "
+                            "WHERE memory_confirmation_id = :confirmation_id"
+                        ),
+                        {"confirmation_id": confirmation_id},
+                    )
+
+            with pytest.raises(DBAPIError, match="append-only"):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "DELETE FROM eldercare_ai.memory_confirmation "
+                            "WHERE memory_confirmation_id = :confirmation_id"
+                        ),
+                        {"confirmation_id": confirmation_id},
+                    )
+
+            remaining = await conn.scalar(
+                text(
+                    "SELECT count(*) FROM eldercare_ai.memory_confirmation "
+                    "WHERE memory_confirmation_id = :confirmation_id"
+                ),
+                {"confirmation_id": confirmation_id},
+            )
+            assert remaining == 1
+        finally:
+            await transaction.rollback()
+
+
+@pytest.mark.asyncio
 async def test_legacy_memory_backfill_quarantines_and_survives_downgrade(test_engine) -> None:
     previous_head = "a4c6e8f0b123"
     active_memory_id = "91000000-0000-4000-8000-000000000001"
@@ -531,7 +653,11 @@ async def test_legacy_memory_backfill_quarantines_and_survives_downgrade(test_en
 
     async with test_engine.begin() as conn:
         await conn.run_sync(_drop_all_tables)
+
+    async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, previous_head)
+
+    async with test_engine.begin() as conn:
         seed_sql = """
                 INSERT INTO eldercare_ai.tenant
                     (tenant_id, tenant_type, name, status, timezone)
