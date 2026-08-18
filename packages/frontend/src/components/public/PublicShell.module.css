@@ -13,3 +13,8 @@
 .main {
   flex: 1;
 }
+
+.immersiveMain {
+  min-width: 0;
+  overflow: clip;
+}

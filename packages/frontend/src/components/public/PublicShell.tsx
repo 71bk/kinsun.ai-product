@@ -14,30 +14,46 @@ export interface PublicShellProps {
    *  same contract as SurfaceShell's `signedIn`: it only picks the header CTA,
    *  never an authorization signal. */
   signedIn: boolean;
+  /** Lets a product-led public page own its header/footer while retaining the
+   *  locale provider, skip link, and public surface token scope. */
+  immersive?: boolean;
   children: ReactNode;
 }
 
 /** Shell for the public surface (MASTER.md §3, §7.3): the signed-out landing
  *  page and the legal pages under `app/(public)/`. */
-export function PublicShell({ initialLocale, signedIn, children }: PublicShellProps) {
+export function PublicShell({ initialLocale, signedIn, immersive = false, children }: PublicShellProps) {
   return (
     <LocaleProvider initialLocale={initialLocale}>
-      <PublicFrame signedIn={signedIn}>{children}</PublicFrame>
+      <PublicFrame signedIn={signedIn} immersive={immersive}>
+        {children}
+      </PublicFrame>
     </LocaleProvider>
   );
 }
 
-function PublicFrame({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
+function PublicFrame({
+  signedIn,
+  immersive,
+  children,
+}: {
+  signedIn: boolean;
+  immersive: boolean;
+  children: ReactNode;
+}) {
   const { locale } = useLocale();
 
   return (
     <div className={styles.shell} data-surface="public" lang={localeTag(locale)}>
       <SkipLink />
-      <PublicHeader signedIn={signedIn} />
-      <main id="main-content" className={styles.main}>
+      {immersive ? null : <PublicHeader signedIn={signedIn} />}
+      <main
+        id="main-content"
+        className={`${styles.main} ${immersive ? styles.immersiveMain : ''}`}
+      >
         {children}
       </main>
-      <PublicFooter />
+      {immersive ? null : <PublicFooter />}
     </div>
   );
 }
