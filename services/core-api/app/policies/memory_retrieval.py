@@ -53,6 +53,7 @@ def evaluate_memory_trust(
     evidence: MemoryTrustEvidence,
     *,
     current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
+    allow_auto_low_risk_memory: bool = False,
 ) -> MemoryTrustDecision:
     """Apply the Spec 18 evidence gate without consulting model output."""
     required_values = (
@@ -78,6 +79,8 @@ def evaluate_memory_trust(
         return MemoryTrustDecision(False, "SPEAKER_EVIDENCE_INVALID")
 
     if evidence.actual_risk_level == "LOW":
+        if not allow_auto_low_risk_memory:
+            return MemoryTrustDecision(False, "AUTO_LOW_RISK_MEMORY_DISABLED")
         if (
             evidence.memory_kind in LOW_MEMORY_KINDS
             and evidence.policy_decision == "AUTO_ACTIVATED_LOW"

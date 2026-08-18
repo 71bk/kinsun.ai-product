@@ -10,6 +10,7 @@ import pytest
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.middleware.auth import ActorContext
+from app.repositories.memory_repo import ConfirmedMemoryContextRecord
 from app.schemas.tool import ToolRequest
 from app.services import tool_service
 from app.services.tool_service import ToolExecutionService
@@ -264,3 +265,49 @@ async def test_summary_tool_requests_only_ready_summaries(
         summary_date=None,
         statuses=["READY"],
     )
+
+
+@pytest.mark.asyncio
+async def test_memory_tool_uses_only_the_final_trusted_context_gate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request = _request(parameters={"limit": 2})
+    actor = _actor()
+    session = _session(
+        existing_call=None,
+        run=SimpleNamespace(policy_version=request.policy_version),
+    )
+    memory_id = uuid4()
+    list_trusted_context = AsyncMock(
+        return_value=[
+            ConfirmedMemoryContextRecord(
+                memory_id=memory_id,
+                version=3,
+                memory_type="PREFERENCE",
+                content="Prefers classical music",
+                consent_version=1,
+            )
+        ]
+    )
+    memory_service = SimpleNamespace(
+        list_trusted_context=list_trusted_context,
+        list_for_elder=AsyncMock(),
+        get_version=AsyncMock(),
+    )
+    monkeypatch.setattr(tool_service, "MemoryService", lambda *_args: memory_service)
+
+    result = await ToolExecutionService(session, actor)._dispatch(request, "tool-trace")
+
+    assert result.result_status == "SUCCESS"
+    assert result.data == [
+        {
+            "memory_id": str(memory_id),
+            "memory_type": "PREFERENCE",
+            "content": "Prefers classical music",
+            "version": 3,
+        }
+    ]
+    assert result.source_refs == [memory_id]
+    list_trusted_context.assert_awaited_once_with(elder_id=request.elder_id, limit=2)
+    memory_service.list_for_elder.assert_not_awaited()
+    memory_service.get_version.assert_not_awaited()

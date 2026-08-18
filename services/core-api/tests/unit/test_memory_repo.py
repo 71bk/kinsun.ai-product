@@ -95,13 +95,21 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     ]
     session.execute.return_value = result
 
-    records = await MemoryRepository(session, uuid4()).list_active_context_for_elder(
+    disabled_records = await MemoryRepository(session, uuid4()).list_active_context_for_elder(
         elder_id=uuid4(),
         active_consent_id=consent_id,
         active_consent_version=4,
         limit=5,
     )
+    records = await MemoryRepository(session, uuid4()).list_active_context_for_elder(
+        elder_id=uuid4(),
+        active_consent_id=consent_id,
+        active_consent_version=4,
+        limit=5,
+        allow_auto_low_risk_memory=True,
+    )
 
+    assert disabled_records == []
     assert records[0].memory_id == memory_id
     assert records[0].version == 3
     assert records[0].content == content

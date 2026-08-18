@@ -471,6 +471,16 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
             )
         ),
     )
+    monkeypatch.setattr(
+        companion_service,
+        "get_settings",
+        MagicMock(
+            return_value=SimpleNamespace(
+                evidence_aware_memory=True,
+                auto_low_risk_memory=True,
+            )
+        ),
+    )
     session = _session()
 
     async def run_runtime(*, request_payload, **_kwargs):
@@ -515,6 +525,7 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
         active_consent_id=require_active.return_value.id,
         active_consent_version=4,
         limit=5,
+        allow_auto_low_risk_memory=True,
     )
 
 

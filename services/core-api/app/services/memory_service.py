@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
 from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
@@ -21,7 +22,7 @@ from app.policies.memory_policy import (
 )
 from app.policies.memory_retrieval import memory_content_digest
 from app.repositories.elder_repo import ElderRepository
-from app.repositories.memory_repo import MemoryRepository
+from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
     ConfirmMemoryRequest,
@@ -32,10 +33,27 @@ from app.services.consent_service import ConsentService
 
 
 class MemoryService:
-    def __init__(self, session: AsyncSession, tenant_id: UUID) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        tenant_id: UUID,
+        *,
+        evidence_aware_memory: bool | None = None,
+        auto_low_risk_memory: bool | None = None,
+    ) -> None:
+        if evidence_aware_memory is None:
+            evidence_aware_memory = get_settings().evidence_aware_memory
+        if auto_low_risk_memory is None:
+            auto_low_risk_memory = get_settings().auto_low_risk_memory
         self._session = session
         self._tenant_id = tenant_id
         self._memories = MemoryRepository(session, tenant_id)
+        self._evidence_aware_memory = evidence_aware_memory
+        self._auto_low_risk_memory = auto_low_risk_memory
+        if self._auto_low_risk_memory and not self._evidence_aware_memory:
+            raise ValueError(
+                "evidence_aware_memory must be enabled when auto_low_risk_memory is enabled"
+            )
 
     async def get(self, elder_id: UUID, memory_id: UUID) -> Memory | None:
         return await self._memories.get(elder_id, memory_id)
@@ -46,6 +64,27 @@ class MemoryService:
     async def list_for_elder(self, **kwargs) -> list[Memory]:
         return await self._memories.list_for_elder(**kwargs)
 
+    async def list_trusted_context(
+        self,
+        *,
+        elder_id: UUID,
+        limit: int,
+    ) -> list[ConfirmedMemoryContextRecord]:
+        """Return only rollout-enabled records that pass the final evidence gate."""
+        if not self._evidence_aware_memory:
+            return []
+        consent = await ConsentService(self._session, self._tenant_id).require_active(
+            elder_id=elder_id,
+            purpose=ConsentPurpose.LONG_TERM_MEMORY,
+        )
+        return await self._memories.list_active_context_for_elder(
+            elder_id=elder_id,
+            active_consent_id=consent.id,
+            active_consent_version=consent.version,
+            limit=limit,
+            allow_auto_low_risk_memory=self._auto_low_risk_memory,
+        )
+
     async def create_candidate(
         self,
         *,
@@ -55,6 +94,7 @@ class MemoryService:
         trace_id: str,
         idempotency_key: str,
     ) -> Memory:
+        self._require_evidence_aware_memory()
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
@@ -107,6 +147,15 @@ class MemoryService:
                     {
                         "field": "memory_kind",
                         "reason": policy.reason_code,
+                    }
+                ]
+            )
+        if policy.status == "ACTIVE" and not self._auto_low_risk_memory:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "feature_flag",
+                        "reason": "AUTO_LOW_RISK_MEMORY_DISABLED",
                     }
                 ]
             )
@@ -189,6 +238,7 @@ class MemoryService:
         answer to this exact candidate. A completed conversation alone is
         insufficient.
         """
+        self._require_evidence_aware_memory()
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
         if (
@@ -279,6 +329,17 @@ class MemoryService:
             idempotency_key=idempotency_key,
         )
         return memory
+
+    def _require_evidence_aware_memory(self) -> None:
+        if not self._evidence_aware_memory:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "feature_flag",
+                        "reason": "EVIDENCE_AWARE_MEMORY_DISABLED",
+                    }
+                ]
+            )
 
     async def _validate_confirmation_authority(
         self,

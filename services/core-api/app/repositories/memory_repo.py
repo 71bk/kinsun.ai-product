@@ -178,6 +178,7 @@ class MemoryRepository(BaseRepository):
         active_consent_version: int,
         limit: int,
         current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
+        allow_auto_low_risk_memory: bool = False,
     ) -> list[ConfirmedMemoryContextRecord]:
         """Return only bounded records that pass the Spec 18 final gate."""
         candidate_limit = min(max(limit * 4, limit), 64)
@@ -287,6 +288,7 @@ class MemoryRepository(BaseRepository):
                     confirmation_record_present=bool(row[21]) if len(row) > 21 else False,
                 ),
                 current_policy_version=current_policy_version,
+                allow_auto_low_risk_memory=allow_auto_low_risk_memory,
             )
             if not decision.allowed:
                 continue

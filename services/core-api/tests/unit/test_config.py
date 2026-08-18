@@ -95,6 +95,8 @@ class TestSettingsConstruction:
             AGENT_RUNTIME_URL="http://127.0.0.1:8001",
             AGENT_RUNTIME_TIMEOUT_SECONDS="8",
             AGENT_RUNTIME_MODEL_ID="mock-v1",
+            EVIDENCE_AWARE_MEMORY="true",
+            AUTO_LOW_RISK_MEMORY="true",
         )
         assert s.app_title == "Custom Title"
         assert s.app_version == "2.0.0"
@@ -138,6 +140,24 @@ class TestSettingsConstruction:
         assert s.agent_runtime_url == "http://127.0.0.1:8001"
         assert s.agent_runtime_timeout_seconds == 8
         assert s.agent_runtime_model_id == "mock-v1"
+        assert s.evidence_aware_memory is True
+        assert s.auto_low_risk_memory is True
+
+    def test_memory_rollout_flags_default_off(self) -> None:
+        s = _make_settings(
+            EVIDENCE_AWARE_MEMORY="false",
+            AUTO_LOW_RISK_MEMORY="false",
+        )
+
+        assert s.evidence_aware_memory is False
+        assert s.auto_low_risk_memory is False
+
+    def test_auto_low_memory_requires_parent_rollout_gate(self) -> None:
+        with pytest.raises(ValidationError, match="EVIDENCE_AWARE_MEMORY"):
+            _make_settings(
+                EVIDENCE_AWARE_MEMORY="false",
+                AUTO_LOW_RISK_MEMORY="true",
+            )
 
 
 # ─── Validation errors ───────────────────────────────────────────────────────

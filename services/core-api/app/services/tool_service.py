@@ -264,27 +264,23 @@ class ToolExecutionService:
         if request.tool_name == "retrieve_confirmed_memory":
             service = MemoryService(self._session, self._actor.tenant_id)
             limit = self._bounded_limit(request.parameters.get("limit"), default=5, maximum=10)
-            memories = await service.list_for_elder(
+            memories = await service.list_trusted_context(
                 elder_id=request.elder_id,
-                statuses=["ACTIVE"],
                 limit=limit,
-                cursor=None,
             )
-            data = []
-            for memory in memories[:10]:
-                version = await service.get_version(memory)
-                data.append(
-                    {
-                        "memory_id": str(memory.id),
-                        "memory_type": memory.memory_type,
-                        "content": version.content,
-                        "version": memory.current_version,
-                    }
-                )
+            data = [
+                {
+                    "memory_id": str(memory.memory_id),
+                    "memory_type": memory.memory_type,
+                    "content": memory.content,
+                    "version": memory.version,
+                }
+                for memory in memories
+            ]
             return ToolResult(
                 result_status="SUCCESS" if data else "NO_DATA",
                 data=data,
-                source_refs=[memory.id for memory in memories[:10]],
+                source_refs=[memory.memory_id for memory in memories],
                 trace_id=trace_id,
             )
 

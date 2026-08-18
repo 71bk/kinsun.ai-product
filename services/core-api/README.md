@@ -52,6 +52,14 @@ through the standard `DATABASE_URL` path only; it does not depend on Supabase
 Auth or a Supabase-specific data API. The Aurora notes below describe the
 retained AWS deployment profile, not the current database provider.
 
+Evidence-aware Memory has two independent rollout gates. Both default to
+`false`: `EVIDENCE_AWARE_MEMORY` controls new candidate creation, confirmation,
+and trusted-context retrieval; `AUTO_LOW_RISK_MEMORY` additionally permits LOW
+all-of candidates to auto-activate and enter trusted context. The LOW gate may
+only be enabled when the parent gate is enabled. Disabling either gate never
+removes the elder's ability to inspect, correct, deactivate, or delete existing
+records.
+
 Staging ECS tasks must set `DB_SSLMODE=require`. The entrypoint emits the
 driver-specific query option (`ssl=require` for SQLAlchemy/asyncpg and
 `sslmode=require` for psycopg), rejects conflicting/weaker explicit modes, and

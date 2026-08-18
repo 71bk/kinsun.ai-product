@@ -122,6 +122,9 @@ class CompanionService:
         except NotFoundError:
             return []
 
+        settings = get_settings()
+        if not settings.evidence_aware_memory:
+            return []
         records = await MemoryRepository(
             self._session,
             self._tenant_id,
@@ -130,6 +133,7 @@ class CompanionService:
             active_consent_id=consent.id,
             active_consent_version=consent.version,
             limit=_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS,
+            allow_auto_low_risk_memory=settings.auto_low_risk_memory,
         )
         return [
             {

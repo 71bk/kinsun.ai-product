@@ -64,11 +64,24 @@ def _medium_evidence() -> MemoryTrustEvidence:
 
 
 def test_low_requires_all_policy_and_speaker_evidence() -> None:
-    assert evaluate_memory_trust(_low_evidence()).allowed is True
+    assert (
+        evaluate_memory_trust(
+            _low_evidence(),
+            allow_auto_low_risk_memory=True,
+        ).allowed
+        is True
+    )
     assert (
         evaluate_memory_trust(replace(_low_evidence(), speaker_evidence_reference=None)).reason_code
         == "SPEAKER_EVIDENCE_INVALID"
     )
+
+
+def test_low_is_excluded_when_auto_rollout_is_disabled() -> None:
+    decision = evaluate_memory_trust(_low_evidence())
+
+    assert decision.allowed is False
+    assert decision.reason_code == "AUTO_LOW_RISK_MEMORY_DISABLED"
 
 
 def test_medium_confirmation_is_bound_to_current_version_and_digest() -> None:

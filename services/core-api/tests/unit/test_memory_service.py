@@ -76,7 +76,12 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
     session = MagicMock()
     session.flush = AsyncMock()
     tenant_id = uuid4()
-    service = MemoryService(session, tenant_id)
+    service = MemoryService(
+        session,
+        tenant_id,
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
     service._write_event = AsyncMock()
     consent_id = uuid4()
     content = "每天早餐習慣吃粥。"
@@ -174,7 +179,12 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
 @pytest.mark.asyncio
 async def test_confirmation_rejects_missing_speaker_evidence_before_consent_lookup() -> None:
     session = MagicMock()
-    service = MemoryService(session, uuid4())
+    service = MemoryService(
+        session,
+        uuid4(),
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
     service._memories = SimpleNamespace(add_confirmation=MagicMock())
     memory = SimpleNamespace(
         current_version=1,
@@ -200,6 +210,85 @@ async def test_confirmation_rejects_missing_speaker_evidence_before_consent_look
 
     require_active.assert_not_awaited()
     service._memories.add_confirmation.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_confirmation_fails_before_consent_when_rollout_is_disabled() -> None:
+    session = MagicMock()
+    service = MemoryService(
+        session,
+        uuid4(),
+        evidence_aware_memory=False,
+        auto_low_risk_memory=False,
+    )
+    service._memories = SimpleNamespace(add_confirmation=MagicMock())
+
+    with (
+        patch.object(ConsentService, "require_active", AsyncMock()) as require_active,
+        pytest.raises(ValidationError) as exc_info,
+    ):
+        await service.confirm(
+            memory=SimpleNamespace(current_version=1),
+            actor_context=actor("ELDER"),
+            request=SimpleNamespace(expected_candidate_version=1),
+            trace_id="trace-disabled-confirmation",
+            idempotency_key="idem-disabled-confirmation",
+        )
+
+    assert exc_info.value.details[0]["reason"] == "EVIDENCE_AWARE_MEMORY_DISABLED"
+    require_active.assert_not_awaited()
+    service._memories.add_confirmation.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_trusted_context_is_empty_without_touching_consent_when_rollout_is_disabled() -> None:
+    session = MagicMock()
+    service = MemoryService(
+        session,
+        uuid4(),
+        evidence_aware_memory=False,
+        auto_low_risk_memory=False,
+    )
+    service._memories = SimpleNamespace(list_active_context_for_elder=AsyncMock())
+
+    with patch.object(ConsentService, "require_active", AsyncMock()) as require_active:
+        records = await service.list_trusted_context(elder_id=uuid4(), limit=5)
+
+    assert records == []
+    require_active.assert_not_awaited()
+    service._memories.list_active_context_for_elder.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_trusted_context_passes_low_rollout_state_to_final_gate() -> None:
+    session = MagicMock()
+    consent = SimpleNamespace(id=uuid4(), version=2)
+    service = MemoryService(
+        session,
+        uuid4(),
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
+    service._memories = SimpleNamespace(
+        list_active_context_for_elder=AsyncMock(return_value=[])
+    )
+    elder_id = uuid4()
+
+    with patch.object(
+        ConsentService,
+        "require_active",
+        AsyncMock(return_value=consent),
+    ):
+        records = await service.list_trusted_context(elder_id=elder_id, limit=5)
+
+    assert records == []
+    service._memories.list_active_context_for_elder.assert_awaited_once_with(
+        elder_id=elder_id,
+        active_consent_id=consent.id,
+        active_consent_version=2,
+        limit=5,
+        allow_auto_low_risk_memory=False,
+    )
 
 
 @pytest.mark.asyncio
