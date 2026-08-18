@@ -93,6 +93,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
             None,
             None,
             False,
+            "CURRENT",
         )
     ]
     session.execute.return_value = result
@@ -122,6 +123,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     assert "memory.tenant_id" in compiled
     assert "memory.elder_id" in compiled
     assert "memory.status" in compiled
+    assert "memory.evidence_state" in compiled
     assert "memory.deleted_at IS NULL" in compiled
     assert "memory.consent_id" in compiled
     assert "memory.consent_version" in compiled
@@ -134,6 +136,7 @@ async def test_active_context_query_is_tenant_scoped_bounded_and_evidence_gated(
     assert "graph_projection_record" in compiled
     assert "graph_projection_record.projection_status" in compiled
     assert "memory_confirmation" in compiled
+    assert "confirmation_session_id IS NOT DISTINCT FROM" in compiled
     assert "decision_support_profile_id" in compiled
     assert "EXISTS" in compiled
     assert (
@@ -194,6 +197,7 @@ async def test_medium_context_requires_matching_append_only_confirmation_record(
             None,
             None,
             evidence_present,
+            "CURRENT",
         )
 
     missing_record = medium_row(evidence_present=False)

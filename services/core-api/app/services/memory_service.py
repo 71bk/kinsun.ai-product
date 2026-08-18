@@ -24,7 +24,10 @@ from app.policies.memory_policy import (
     TRUSTED_SPEAKER_LEVELS,
     evaluate_memory_candidate,
 )
-from app.policies.memory_retrieval import memory_content_digest
+from app.policies.memory_retrieval import (
+    CURRENT_MEMORY_EVIDENCE_STATE,
+    memory_content_digest,
+)
 from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
@@ -195,6 +198,7 @@ class MemoryService:
             required_verification=policy.required_verification,
             speaker_verification_level=source.speaker_verification_level,
             speaker_evidence_reference=source.speaker_evidence_reference,
+            evidence_state=CURRENT_MEMORY_EVIDENCE_STATE,
             decision_support_profile_id=profile.profile_id,
             decision_support_profile_version=profile.profile_version,
             status=policy.status,
@@ -262,6 +266,8 @@ class MemoryService:
         insufficient.
         """
         self._require_evidence_aware_memory()
+        if memory.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
+            raise ConflictError("Memory candidate evidence requires review")
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
         standard_confirmation = (

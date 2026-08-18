@@ -19,6 +19,14 @@ class Memory(BaseModel, TenantScopedMixin):
     __pk_name__ = "memory_id"
     __table_args__ = (
         sa.CheckConstraint(
+            "evidence_state IN ('CURRENT','LEGACY_NEEDS_REVIEW')",
+            name="ck_memory_evidence_state",
+        ),
+        sa.CheckConstraint(
+            "evidence_state <> 'LEGACY_NEEDS_REVIEW' " "OR status NOT IN ('ACTIVE','CONFIRMED')",
+            name="ck_memory_legacy_not_active",
+        ),
+        sa.CheckConstraint(
             "(decision_support_profile_id IS NULL) = "
             "(decision_support_profile_version IS NULL) AND "
             "(decision_support_profile_version IS NULL OR "
@@ -49,6 +57,11 @@ class Memory(BaseModel, TenantScopedMixin):
     required_verification: Mapped[str | None] = mapped_column(String(32))
     speaker_verification_level: Mapped[str | None] = mapped_column(String(32))
     speaker_evidence_reference: Mapped[str | None] = mapped_column(String(300))
+    evidence_state: Mapped[str] = mapped_column(
+        String(32),
+        server_default=sa.text("'LEGACY_NEEDS_REVIEW'"),
+        nullable=False,
+    )
     decision_support_profile_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     decision_support_profile_version: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(

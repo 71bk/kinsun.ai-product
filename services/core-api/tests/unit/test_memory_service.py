@@ -112,6 +112,7 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
         ),
     )
     memory = SimpleNamespace(
+        evidence_state="CURRENT",
         id=uuid4(),
         elder_id=uuid4(),
         current_version=2,
@@ -235,6 +236,7 @@ async def test_supported_confirmation_binds_current_profile_without_delegate_aut
         ),
     )
     memory = SimpleNamespace(
+        evidence_state="CURRENT",
         id=uuid4(),
         elder_id=uuid4(),
         memory_type="PREFERENCE",
@@ -312,6 +314,7 @@ async def test_confirmation_fails_closed_when_profile_binding_is_stale() -> None
         )
     )
     memory = SimpleNamespace(
+        evidence_state="CURRENT",
         elder_id=uuid4(),
         memory_type="PREFERENCE",
         current_version=1,
@@ -352,6 +355,7 @@ async def test_confirmation_rejects_missing_speaker_evidence_before_consent_look
     )
     service._memories = SimpleNamespace(add_confirmation=MagicMock())
     memory = SimpleNamespace(
+        evidence_state="CURRENT",
         current_version=1,
         policy_version=CURRENT_MEMORY_POLICY_VERSION,
         actual_risk_level="MEDIUM",
@@ -375,6 +379,33 @@ async def test_confirmation_rejects_missing_speaker_evidence_before_consent_look
 
     require_active.assert_not_awaited()
     service._memories.add_confirmation.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_confirmation_rejects_legacy_candidate_before_consent_lookup() -> None:
+    service = MemoryService(
+        MagicMock(),
+        uuid4(),
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
+
+    with (
+        patch.object(ConsentService, "require_active", AsyncMock()) as require_active,
+        pytest.raises(ConflictError, match="evidence requires review"),
+    ):
+        await service.confirm(
+            memory=SimpleNamespace(
+                evidence_state="LEGACY_NEEDS_REVIEW",
+                current_version=1,
+            ),
+            actor_context=actor("ELDER"),
+            request=SimpleNamespace(expected_candidate_version=1),
+            trace_id="trace-legacy-memory",
+            idempotency_key="idem-legacy-memory",
+        )
+
+    require_active.assert_not_awaited()
 
 
 @pytest.mark.asyncio

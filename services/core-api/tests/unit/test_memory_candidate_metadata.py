@@ -98,6 +98,7 @@ async def test_create_candidate_persists_confirmation_and_extraction_metadata(
 
     assert len(memories) == 1
     memory = memories[0]
+    assert memory.evidence_state == "CURRENT"
     assert memory.memory_kind == "MUSIC_PREFERENCE"
     assert memory.consent_id == consent_id
     assert memory.status == "ACTIVE"
@@ -318,6 +319,7 @@ async def test_supported_profile_routes_low_memory_to_elder_confirmation(
     )
 
     assert result.status == "PENDING_CONFIRMATION"
+    assert result.evidence_state == "CURRENT"
     assert result.actual_risk_level == "LOW"
     assert result.policy_decision == "PENDING_SUPPORTED_CONFIRMATION"
     assert result.required_verification == "SUPPORTED_ELDER_CONFIRMATION"

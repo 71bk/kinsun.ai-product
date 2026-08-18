@@ -15,6 +15,7 @@ from app.policies.memory_retrieval import (
 def _low_evidence() -> MemoryTrustEvidence:
     content = "喜歡聽歌仔戲"
     return MemoryTrustEvidence(
+        evidence_state="CURRENT",
         version=2,
         content=content,
         content_digest=memory_content_digest(content),
@@ -41,6 +42,7 @@ def _medium_evidence() -> MemoryTrustEvidence:
     content = "每天早餐習慣吃粥。"
     digest = memory_content_digest(content)
     return MemoryTrustEvidence(
+        evidence_state="CURRENT",
         version=3,
         content=content,
         content_digest=digest,
@@ -148,3 +150,9 @@ def test_high_or_legacy_memory_never_enters_context() -> None:
         )
     )
     assert legacy.reason_code == "LEGACY_EVIDENCE_MISSING"
+
+    explicitly_legacy = evaluate_memory_trust(
+        replace(_low_evidence(), evidence_state="LEGACY_NEEDS_REVIEW")
+    )
+    assert explicitly_legacy.allowed is False
+    assert explicitly_legacy.reason_code == "LEGACY_NEEDS_REVIEW"

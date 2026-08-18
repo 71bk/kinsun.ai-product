@@ -13,6 +13,8 @@ from app.policies.memory_policy import (
 )
 
 _CONFIRMATION_METHODS = {"ELDER_UI", "ELDER_VOICE", "WITNESSED_VOICE"}
+CURRENT_MEMORY_EVIDENCE_STATE = "CURRENT"
+LEGACY_MEMORY_EVIDENCE_STATE = "LEGACY_NEEDS_REVIEW"
 
 
 def memory_content_digest(content: str) -> str:
@@ -22,6 +24,7 @@ def memory_content_digest(content: str) -> str:
 
 @dataclass(frozen=True)
 class MemoryTrustEvidence:
+    evidence_state: str
     version: int
     content: str
     content_digest: str | None
@@ -58,6 +61,8 @@ def evaluate_memory_trust(
     allow_auto_low_risk_memory: bool = False,
 ) -> MemoryTrustDecision:
     """Apply the Spec 18 evidence gate without consulting model output."""
+    if evidence.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
+        return MemoryTrustDecision(False, LEGACY_MEMORY_EVIDENCE_STATE)
     required_values = (
         evidence.content_digest,
         evidence.memory_kind,
@@ -120,9 +125,8 @@ def evaluate_memory_trust(
             or evidence.required_verification != "SUPPORTED_ELDER_CONFIRMATION"
             or evidence.decision_support_mode != "SUPPORTED"
         )
-        if (
-            evidence.verification_level != "ELDER_CONFIRMED"
-            or (standard_confirmation and supported_confirmation)
+        if evidence.verification_level != "ELDER_CONFIRMED" or (
+            standard_confirmation and supported_confirmation
         ):
             return MemoryTrustDecision(False, "MEDIUM_CONFIRMATION_REQUIRED")
         return _evaluate_confirmation_evidence(evidence, "TRUSTED_MEDIUM")

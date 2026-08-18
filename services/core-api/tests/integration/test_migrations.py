@@ -65,7 +65,7 @@ _TOTAL_HEAD_TABLE_COUNT = 57
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "a4c6e8f0b123"
+_HEAD_REVISION = "c5d7e9f1a234"
 
 
 def _get_alembic_config() -> Config:
@@ -520,6 +520,229 @@ async def test_decision_support_profile_migration_binds_memory_evidence(test_eng
     assert "fk_decision_support_profile_elder" in profile_fks
     assert "fk_memory_decision_support_profile" in memory_fks
     assert "fk_memory_confirmation_decision_support_profile" in confirmation_fks
+
+
+@pytest.mark.asyncio
+async def test_legacy_memory_backfill_quarantines_and_survives_downgrade(test_engine) -> None:
+    previous_head = "a4c6e8f0b123"
+    active_memory_id = "91000000-0000-4000-8000-000000000001"
+    pending_memory_id = "91000000-0000-4000-8000-000000000002"
+    current_memory_id = "91000000-0000-4000-8000-000000000003"
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+        await conn.run_sync(_run_upgrade, previous_head)
+        seed_sql = """
+                INSERT INTO eldercare_ai.tenant
+                    (tenant_id, tenant_type, name, status, timezone)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000010', 'DEMO',
+                     'Synthetic legacy tenant', 'ACTIVE', 'Asia/Taipei');
+
+                INSERT INTO eldercare_ai.actor
+                    (actor_id, actor_type, display_name, status)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000011', 'ELDER',
+                     'Synthetic legacy elder actor', 'ACTIVE');
+
+                INSERT INTO eldercare_ai.elder
+                    (elder_id, tenant_id, actor_id, display_name,
+                     primary_care_setting, status, preferred_language,
+                     response_length_preference, timezone)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000012',
+                     '91000000-0000-4000-8000-000000000010',
+                     '91000000-0000-4000-8000-000000000011',
+                     'Synthetic legacy elder', 'INDEPENDENT', 'ACTIVE',
+                     'ZH_TW', 'STANDARD', 'Asia/Taipei');
+
+                INSERT INTO eldercare_ai.policy_registry
+                    (policy_id, owner_tenant_id, policy_code, policy_type,
+                     version, status, policy_payload, effective_from)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000013',
+                     '91000000-0000-4000-8000-000000000010',
+                     'synthetic-legacy-memory-consent', 'CONSENT', '1',
+                     'ACTIVE', '{}'::jsonb, '2026-01-01T00:00:00Z');
+
+                INSERT INTO eldercare_ai.consent_grant
+                    (consent_id, elder_id, purpose_code, status, version, scope,
+                     granted_by_actor_id, policy_id, granted_at, effective_at)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000014',
+                     '91000000-0000-4000-8000-000000000012',
+                     'LONG_TERM_MEMORY', 'GRANTED', 1, '{}'::jsonb,
+                     '91000000-0000-4000-8000-000000000011',
+                     '91000000-0000-4000-8000-000000000013',
+                     '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+
+                INSERT INTO eldercare_ai.care_event
+                    (event_id, elder_id, tenant_id, event_type, status,
+                     current_version, consent_version)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000015',
+                     '91000000-0000-4000-8000-000000000012',
+                     '91000000-0000-4000-8000-000000000010',
+                     'PERSONAL_PREFERENCE', 'VERIFIED', 1, 1);
+
+                INSERT INTO eldercare_ai.care_event_version
+                    (event_id, version, structured_payload,
+                     memory_candidate_proposal, speaker_role,
+                     speaker_actor_id, speaker_verification_level,
+                     speaker_verification_method, speaker_evidence_reference,
+                     created_by_actor_id)
+                VALUES
+                    ('91000000-0000-4000-8000-000000000015', 1, '{}'::jsonb,
+                     jsonb_build_object(
+                       'memory_type', 'PERSONAL_HISTORY',
+                       'memory_kind', 'FAMILY_RELATIONSHIP',
+                       'normalized_content', 'Synthetic current pending content',
+                       'confirmation_question', 'Remember this synthetic item?',
+                       'extraction_confidence', 0.9,
+                       'proposal_risk_hint', 'MEDIUM',
+                       'extractor_version', 'synthetic-extractor-v1'
+                     ),
+                     'ELDER', '91000000-0000-4000-8000-000000000011',
+                     'VERIFIED_ELDER', 'AUTHENTICATED_TEXT',
+                     'speaker-evidence:synthetic-current',
+                     '91000000-0000-4000-8000-000000000011');
+
+                INSERT INTO eldercare_ai.memory
+                    (memory_id, elder_id, tenant_id, memory_type, memory_kind,
+                     actual_risk_level, policy_decision, policy_version,
+                     verification_level, required_verification,
+                     speaker_verification_level, speaker_evidence_reference,
+                     status, current_version, consent_id, consent_version)
+                VALUES
+                    (:active_memory_id,
+                     '91000000-0000-4000-8000-000000000012',
+                     '91000000-0000-4000-8000-000000000010',
+                     'PREFERENCE', NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, 'ACTIVE', 1, NULL, 1),
+                    (:pending_memory_id,
+                     '91000000-0000-4000-8000-000000000012',
+                     '91000000-0000-4000-8000-000000000010',
+                     'ROUTINE', NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, 'PENDING_CONFIRMATION', 1, NULL, 1),
+                    (:current_memory_id,
+                     '91000000-0000-4000-8000-000000000012',
+                     '91000000-0000-4000-8000-000000000010',
+                     'PERSONAL_HISTORY', 'FAMILY_RELATIONSHIP', 'MEDIUM',
+                     'PENDING_ELDER_CONFIRMATION',
+                     'memory-policy-2026-08-18.v1', 'UNVERIFIED',
+                     'ELDER_CONFIRMATION', 'VERIFIED_ELDER',
+                     'speaker-evidence:synthetic-current',
+                     'PENDING_CONFIRMATION', 1,
+                     '91000000-0000-4000-8000-000000000014', 1);
+
+                INSERT INTO eldercare_ai.memory_version
+                    (memory_id, version, content, content_digest,
+                     confirmation_question, extractor_version,
+                     extraction_confidence, source_event_ids,
+                     source_turn_reference, proposal_risk_hint, version_status)
+                VALUES
+                    (:active_memory_id, 1, 'Synthetic legacy active content',
+                     NULL, NULL, NULL, NULL, '{}', NULL, NULL, 'ACTIVE'),
+                    (:pending_memory_id, 1, 'Synthetic legacy pending content',
+                     NULL, NULL, NULL, NULL, '{}', NULL, NULL, 'ACTIVE'),
+                    (:current_memory_id, 1, 'Synthetic current pending content',
+                     encode(digest(convert_to(
+                       'Synthetic current pending content', 'UTF8'
+                     ), 'sha256'), 'hex'),
+                     'Remember this synthetic item?', 'synthetic-extractor-v1',
+                     0.9,
+                     ARRAY['91000000-0000-4000-8000-000000000015'::uuid],
+                     'care-event:91000000-0000-4000-8000-000000000015:v1',
+                     'MEDIUM', 'ACTIVE');
+                """
+        seed_params = {
+            "active_memory_id": active_memory_id,
+            "pending_memory_id": pending_memory_id,
+            "current_memory_id": current_memory_id,
+        }
+        for statement in seed_sql.split(";"):
+            if statement.strip():
+                await conn.execute(text(statement), seed_params)
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    "SELECT memory_id::text, evidence_state, status, "
+                    "lifecycle_reason, deactivated_at IS NOT NULL "
+                    "FROM eldercare_ai.memory ORDER BY memory_id"
+                )
+            )
+        ).all()
+        columns = await conn.run_sync(_get_columns, "memory")
+        checks = await conn.run_sync(_get_check_constraints, "memory")
+        indexes = await conn.run_sync(_get_indexes, "memory")
+
+    assert rows == [
+        (
+            active_memory_id,
+            "LEGACY_NEEDS_REVIEW",
+            "INACTIVE",
+            "LEGACY_NEEDS_REVIEW",
+            True,
+        ),
+        (
+            pending_memory_id,
+            "LEGACY_NEEDS_REVIEW",
+            "DEFERRED",
+            "LEGACY_NEEDS_REVIEW",
+            False,
+        ),
+        (
+            current_memory_id,
+            "CURRENT",
+            "PENDING_CONFIRMATION",
+            None,
+            False,
+        ),
+    ]
+    assert "evidence_state" in columns
+    assert "ck_memory_evidence_state" in checks
+    assert "ck_memory_legacy_not_active" in checks
+    assert "ix_memory_evidence_context" in indexes
+
+    async with test_engine.begin() as conn:
+        with pytest.raises(IntegrityError):
+            async with conn.begin_nested():
+                await conn.execute(
+                    text(
+                        "UPDATE eldercare_ai.memory SET status = 'ACTIVE' "
+                        "WHERE memory_id = :memory_id"
+                    ),
+                    {"memory_id": active_memory_id},
+                )
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_downgrade, previous_head)
+
+    async with test_engine.begin() as conn:
+        columns_after_downgrade = await conn.run_sync(_get_columns, "memory")
+        statuses_after_downgrade = (
+            await conn.execute(
+                text(
+                    "SELECT memory_id::text, status FROM eldercare_ai.memory "
+                    "ORDER BY memory_id"
+                )
+            )
+        ).all()
+
+    assert "evidence_state" not in columns_after_downgrade
+    assert statuses_after_downgrade == [
+        (active_memory_id, "INACTIVE"),
+        (pending_memory_id, "DEFERRED"),
+        (current_memory_id, "PENDING_CONFIRMATION"),
+    ]
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
 
 
 @pytest.mark.asyncio

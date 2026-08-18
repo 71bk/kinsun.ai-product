@@ -13,6 +13,7 @@ from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.decision_support import profile_binding_is_current
 from app.policies.memory_retrieval import (
+    CURRENT_MEMORY_EVIDENCE_STATE,
     CURRENT_MEMORY_POLICY_VERSION,
     MemoryTrustEvidence,
     evaluate_memory_trust,
@@ -198,7 +199,9 @@ class MemoryRepository(BaseRepository):
                 MemoryConfirmation.response_intent == "AFFIRM",
                 MemoryConfirmation.confirmation_method == Memory.confirmation_method,
                 MemoryConfirmation.confirmed_by_actor_id == Memory.confirmed_by_actor_id,
-                MemoryConfirmation.confirmation_session_id == Memory.confirmation_session_id,
+                MemoryConfirmation.confirmation_session_id.is_not_distinct_from(
+                    Memory.confirmation_session_id
+                ),
                 MemoryConfirmation.confirmed_at == Memory.confirmed_at,
                 MemoryConfirmation.speaker_verification_level == Memory.speaker_verification_level,
                 MemoryConfirmation.speaker_evidence_reference == Memory.speaker_evidence_reference,
@@ -239,6 +242,7 @@ class MemoryRepository(BaseRepository):
                 Memory.decision_support_profile_id,
                 Memory.decision_support_profile_version,
                 matching_confirmation_exists.label("matching_confirmation_exists"),
+                Memory.evidence_state,
             )
             .join(
                 MemoryVersion,
@@ -261,6 +265,7 @@ class MemoryRepository(BaseRepository):
                 Memory.elder_id == elder_id,
                 Memory.tenant_id == self._tenant_id,
                 Memory.status == "ACTIVE",
+                Memory.evidence_state == CURRENT_MEMORY_EVIDENCE_STATE,
                 Memory.deleted_at.is_(None),
                 Memory.consent_id == active_consent_id,
                 Memory.consent_version == active_consent_version,
@@ -288,6 +293,7 @@ class MemoryRepository(BaseRepository):
                 profile_cache[row[2]] = profile
             decision = evaluate_memory_trust(
                 MemoryTrustEvidence(
+                    evidence_state=row[24] if len(row) > 24 else "LEGACY_NEEDS_REVIEW",
                     version=row[1],
                     content=row[3],
                     content_digest=row[5],

@@ -74,6 +74,7 @@ async def deletion_seed(db_session) -> DeletionSeed:
                 tenant_id=tenant_id,
                 elder_id=elder_id,
                 memory_type="PREFERENCE",
+                evidence_state="CURRENT",
                 status="ACTIVE",
                 current_version=1,
                 consent_version=1,
