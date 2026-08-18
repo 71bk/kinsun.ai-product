@@ -24,9 +24,11 @@ def _actor(tenant_id):
 def _proposal() -> dict:
     return {
         "memory_type": "ROUTINE",
+        "memory_kind": "DAILY_ROUTINE",
         "normalized_content": "每天早餐習慣吃粥。",
         "confirmation_question": "要記住您每天早餐習慣吃粥嗎？",
-        "confidence_band": "HIGH",
+        "extraction_confidence": 0.9,
+        "proposal_risk_hint": "MEDIUM",
         "extractor_version": "memory-extractor-v1",
     }
 
@@ -115,7 +117,9 @@ async def test_promotion_reauthorizes_and_binds_core_owned_source_event(
     request = create_candidate.await_args.kwargs["request"]
     assert request.source_event_ids == [event.id]
     assert request.memory_type.value == "ROUTINE"
-    assert request.confidence_band.value == "HIGH"
+    assert request.memory_kind.value == "DAILY_ROUTINE"
+    assert request.extraction_confidence == 0.9
+    assert request.proposal_risk_hint.value == "MEDIUM"
     assert create_candidate.await_args.kwargs["actor_id"] == actor.actor_id
 
 

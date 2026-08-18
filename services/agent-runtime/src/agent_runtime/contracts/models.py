@@ -317,9 +317,24 @@ class MemoryCandidateProposal(ContractBaseModel):
         "COMMUNICATION_PREFERENCE",
         "PERSONAL_HISTORY",
     ]
+    memory_kind: Literal[
+        "MUSIC_PREFERENCE",
+        "HOBBY",
+        "PREFERRED_ADDRESS",
+        "FAMILY_RELATIONSHIP",
+        "CONTACT_ROUTINE",
+        "DAILY_ROUTINE",
+        "HEALTH_INFERENCE",
+        "MEDICATION_JUDGMENT",
+        "MOOD_OR_LONELINESS_INFERENCE",
+        "FAMILY_CONFLICT",
+        "FINANCIAL_INFORMATION",
+        "SENSITIVE_OR_UNKNOWN",
+    ]
     normalized_content: str = Field(min_length=1, max_length=500)
     confirmation_question: str = Field(min_length=1, max_length=300)
-    confidence_band: Literal["LOW", "MEDIUM", "HIGH"]
+    extraction_confidence: float = Field(ge=0, le=1)
+    proposal_risk_hint: Literal["LOW", "MEDIUM", "HIGH"]
     extractor_version: str = Field(min_length=1, max_length=80)
 
 

@@ -10,6 +10,11 @@ from sqlalchemy import and_, func, or_, select
 
 from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryVersion
+from app.policies.memory_retrieval import (
+    CURRENT_MEMORY_POLICY_VERSION,
+    MemoryTrustEvidence,
+    evaluate_memory_trust,
+)
 from app.repositories.base import BaseRepository
 
 
@@ -110,10 +115,13 @@ class MemoryRepository(BaseRepository):
         self,
         *,
         elder_id: UUID,
-        max_consent_version: int,
+        active_consent_id: UUID,
+        active_consent_version: int,
         limit: int,
+        current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
     ) -> list[ConfirmedMemoryContextRecord]:
-        """Return only bounded, current, active memory versions for Agent context."""
+        """Return only bounded records that pass the Spec 18 final gate."""
+        candidate_limit = min(max(limit * 4, limit), 64)
         result = await self._session.execute(
             select(
                 Memory.id,
@@ -121,6 +129,22 @@ class MemoryRepository(BaseRepository):
                 Memory.memory_type,
                 MemoryVersion.content,
                 Memory.consent_version,
+                MemoryVersion.content_digest,
+                Memory.memory_kind,
+                Memory.consent_id,
+                Memory.policy_version,
+                Memory.policy_decision,
+                Memory.actual_risk_level,
+                Memory.verification_level,
+                Memory.required_verification,
+                Memory.speaker_verification_level,
+                Memory.speaker_evidence_reference,
+                Memory.confirmed_version,
+                Memory.confirmed_content_digest,
+                Memory.confirmation_method,
+                Memory.confirmation_evidence_ref,
+                Memory.confirmed_by_actor_id,
+                Memory.confirmed_at,
             )
             .join(
                 MemoryVersion,
@@ -144,22 +168,53 @@ class MemoryRepository(BaseRepository):
                 Memory.tenant_id == self._tenant_id,
                 Memory.status == "ACTIVE",
                 Memory.deleted_at.is_(None),
-                Memory.consent_version > 0,
-                Memory.consent_version <= max_consent_version,
+                Memory.consent_id == active_consent_id,
+                Memory.consent_version == active_consent_version,
+                Memory.policy_version == current_policy_version,
                 MemoryVersion.version_status == "ACTIVE",
-                MemoryVersion.valid_to.is_(None),
+                MemoryVersion.valid_from <= func.now(),
+                or_(MemoryVersion.valid_to.is_(None), MemoryVersion.valid_to > func.now()),
                 func.char_length(MemoryVersion.content).between(1, 500),
             )
             .order_by(Memory.updated_at.desc(), Memory.id.desc())
-            .limit(limit)
+            .limit(candidate_limit)
         )
-        return [
-            ConfirmedMemoryContextRecord(
-                memory_id=row[0],
-                version=row[1],
-                memory_type=row[2],
-                content=row[3],
-                consent_version=row[4],
+        trusted: list[ConfirmedMemoryContextRecord] = []
+        for row in result.all():
+            decision = evaluate_memory_trust(
+                MemoryTrustEvidence(
+                    version=row[1],
+                    content=row[3],
+                    content_digest=row[5],
+                    memory_kind=row[6],
+                    consent_id_present=row[7] is not None,
+                    policy_version=row[8],
+                    policy_decision=row[9],
+                    actual_risk_level=row[10],
+                    verification_level=row[11],
+                    required_verification=row[12],
+                    speaker_verification_level=row[13],
+                    speaker_evidence_reference=row[14],
+                    confirmed_version=row[15],
+                    confirmed_content_digest=row[16],
+                    confirmation_method=row[17],
+                    confirmation_evidence_reference=row[18],
+                    confirmed_by_present=row[19] is not None,
+                    confirmed_at_present=row[20] is not None,
+                ),
+                current_policy_version=current_policy_version,
             )
-            for row in result.all()
-        ]
+            if not decision.allowed:
+                continue
+            trusted.append(
+                ConfirmedMemoryContextRecord(
+                    memory_id=row[0],
+                    version=row[1],
+                    memory_type=row[2],
+                    content=row[3],
+                    consent_version=row[4],
+                )
+            )
+            if len(trusted) == limit:
+                break
+        return trusted

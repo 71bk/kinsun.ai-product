@@ -2,11 +2,14 @@
   "_why_invalid": "A memory candidate cannot become traceable without at least one verified source event.",
   "data": {
     "memory_type": "PREFERENCE",
+    "memory_kind": "MUSIC_PREFERENCE",
     "normalized_content": "喜歡聽歌仔戲",
     "source_event_ids": [],
     "possible_conflict": false,
     "conflict_with_memory_ids": [],
     "confirmation_question": "您希望我記住嗎？",
-    "extractor_version": "memory-extractor-v1"
+    "extractor_version": "memory-extractor-v1",
+    "extraction_confidence": 0.9,
+    "proposal_risk_hint": "LOW"
   }
 }

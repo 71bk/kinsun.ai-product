@@ -2,9 +2,11 @@
   "_why_invalid": "Runtime proposals must not supply Core-owned elder or tenant scope.",
   "data": {
     "memory_type": "ROUTINE",
+    "memory_kind": "DAILY_ROUTINE",
     "normalized_content": "每天早餐習慣吃粥。",
     "confirmation_question": "要記住您每天早餐習慣吃粥嗎？",
-    "confidence_band": "HIGH",
+    "extraction_confidence": 0.9,
+    "proposal_risk_hint": "MEDIUM",
     "extractor_version": "memory-extractor-v1",
     "elder_id": "runtime-must-not-supply-scope"
   }

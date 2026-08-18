@@ -126,7 +126,8 @@ class CompanionService:
             self._tenant_id,
         ).list_active_context_for_elder(
             elder_id=conversation.elder_id,
-            max_consent_version=consent.version,
+            active_consent_id=consent.id,
+            active_consent_version=consent.version,
             limit=_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS,
         )
         return [

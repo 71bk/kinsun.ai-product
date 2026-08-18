@@ -24,6 +24,14 @@ class Memory(BaseModel, TenantScopedMixin):
         nullable=False,
     )
     memory_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    memory_kind: Mapped[str | None] = mapped_column(String(48))
+    actual_risk_level: Mapped[str | None] = mapped_column(String(16))
+    policy_decision: Mapped[str | None] = mapped_column(String(40))
+    policy_version: Mapped[str | None] = mapped_column(String(80))
+    verification_level: Mapped[str | None] = mapped_column(String(32))
+    required_verification: Mapped[str | None] = mapped_column(String(32))
+    speaker_verification_level: Mapped[str | None] = mapped_column(String(32))
+    speaker_evidence_reference: Mapped[str | None] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(
         String(24),
         server_default=sa.text("'CANDIDATE'"),
@@ -45,9 +53,16 @@ class Memory(BaseModel, TenantScopedMixin):
         ForeignKey(f"{SCHEMA_NAME}.conversation_session.session_id"),
     )
     confirmation_evidence_ref: Mapped[str | None] = mapped_column(String(300))
+    confirmed_version: Mapped[int | None] = mapped_column(Integer)
+    confirmed_content_digest: Mapped[str | None] = mapped_column(String(64))
     activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deactivated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lifecycle_reason: Mapped[str | None] = mapped_column(String(120))
+    consent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.consent_grant.consent_id"),
+    )
     consent_version: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
@@ -66,6 +81,7 @@ class MemoryVersion(Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_digest: Mapped[str | None] = mapped_column(String(64))
     confirmation_question: Mapped[str | None] = mapped_column(String(300))
     extractor_version: Mapped[str | None] = mapped_column(String(80))
     extraction_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
@@ -74,6 +90,12 @@ class MemoryVersion(Base):
         server_default=sa.text("'{}'"),
         nullable=False,
     )
+    source_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.conversation_session.session_id"),
+    )
+    source_turn_reference: Mapped[str | None] = mapped_column(String(160))
+    proposal_risk_hint: Mapped[str | None] = mapped_column(String(16))
     version_status: Mapped[str] = mapped_column(
         String(16),
         server_default=sa.text("'ACTIVE'"),

@@ -7,9 +7,11 @@
   "additionalProperties": false,
   "required": [
     "memory_type",
+    "memory_kind",
     "normalized_content",
     "confirmation_question",
-    "confidence_band",
+    "extraction_confidence",
+    "proposal_risk_hint",
     "extractor_version"
   ],
   "properties": {
@@ -23,6 +25,23 @@
         "PERSONAL_HISTORY"
       ]
     },
+    "memory_kind": {
+      "type": "string",
+      "enum": [
+        "MUSIC_PREFERENCE",
+        "HOBBY",
+        "PREFERRED_ADDRESS",
+        "FAMILY_RELATIONSHIP",
+        "CONTACT_ROUTINE",
+        "DAILY_ROUTINE",
+        "HEALTH_INFERENCE",
+        "MEDICATION_JUDGMENT",
+        "MOOD_OR_LONELINESS_INFERENCE",
+        "FAMILY_CONFLICT",
+        "FINANCIAL_INFORMATION",
+        "SENSITIVE_OR_UNKNOWN"
+      ]
+    },
     "normalized_content": {
       "type": "string",
       "minLength": 1,
@@ -33,9 +52,15 @@
       "minLength": 1,
       "maxLength": 300
     },
-    "confidence_band": {
+    "extraction_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "proposal_risk_hint": {
       "type": "string",
-      "enum": ["LOW", "MEDIUM", "HIGH"]
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Untrusted Agent hint for observability only; Core derives the actual risk."
     },
     "extractor_version": {
       "type": "string",
