@@ -205,14 +205,8 @@ DATA_SCHEMA_FOR = {
     "kinsun-email-complete-request-extra-email.json": (
         "domain/CompleteKinsunEmailAuthRequestV1.json"
     ),
-    "kinsun-password-login-request.json": (
-        "domain/KinsunPasswordLoginRequestV1.json"
-    ),
     "kinsun-password-login-request-session-token.json": (
-        "domain/KinsunPasswordLoginRequestV1.json"
-    ),
-    "kinsun-authenticated-response.json": (
-        "domain/CompletedKinsunEmailAuthV1.json"
+        "domain/PasswordLoginRequestV1.json"
     ),
     "kinsun-authenticated-response-leaks-identity.json": (
         "domain/CompletedKinsunEmailAuthV1.json"
