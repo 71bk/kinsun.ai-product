@@ -6,38 +6,63 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.exceptions import AuthorizationDeniedError, ConflictError, ValidationError
 from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.middleware.auth import ActorContext
-from app.models.care_event import CareEvent
 from app.models.enums import ActorType
-from app.models.memory import Memory, MemoryVersion
-from app.repositories.memory_repo import MemoryRepository
+from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
+from app.policies.decision_support import (
+    apply_decision_support_profile,
+    profile_binding_is_current,
+)
+from app.policies.memory_policy import (
+    CURRENT_MEMORY_POLICY_VERSION,
+    TRUSTED_SPEAKER_LEVELS,
+    evaluate_memory_candidate,
+)
+from app.policies.memory_retrieval import (
+    CURRENT_MEMORY_EVIDENCE_STATE,
+    memory_content_digest,
+)
+from app.repositories.decision_support_repo import DecisionSupportProfileRepository
+from app.repositories.elder_repo import ElderRepository
+from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
-    ConfidenceBand,
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,
     UpdateMemoryRequest,
 )
 from app.services.consent_service import ConsentService
 
-CONFIDENCE_VALUES = {
-    ConfidenceBand.LOW: Decimal("0.3000"),
-    ConfidenceBand.MEDIUM: Decimal("0.6000"),
-    ConfidenceBand.HIGH: Decimal("0.9000"),
-}
-
 
 class MemoryService:
-    def __init__(self, session: AsyncSession, tenant_id: UUID) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        tenant_id: UUID,
+        *,
+        evidence_aware_memory: bool | None = None,
+        auto_low_risk_memory: bool | None = None,
+    ) -> None:
+        if evidence_aware_memory is None:
+            evidence_aware_memory = get_settings().evidence_aware_memory
+        if auto_low_risk_memory is None:
+            auto_low_risk_memory = get_settings().auto_low_risk_memory
         self._session = session
         self._tenant_id = tenant_id
         self._memories = MemoryRepository(session, tenant_id)
+        self._decision_support_profiles = DecisionSupportProfileRepository(session, tenant_id)
+        self._evidence_aware_memory = evidence_aware_memory
+        self._auto_low_risk_memory = auto_low_risk_memory
+        if self._auto_low_risk_memory and not self._evidence_aware_memory:
+            raise ValueError(
+                "evidence_aware_memory must be enabled when auto_low_risk_memory is enabled"
+            )
 
     async def get(self, elder_id: UUID, memory_id: UUID) -> Memory | None:
         return await self._memories.get(elder_id, memory_id)
@@ -48,6 +73,27 @@ class MemoryService:
     async def list_for_elder(self, **kwargs) -> list[Memory]:
         return await self._memories.list_for_elder(**kwargs)
 
+    async def list_trusted_context(
+        self,
+        *,
+        elder_id: UUID,
+        limit: int,
+    ) -> list[ConfirmedMemoryContextRecord]:
+        """Return only rollout-enabled records that pass the final evidence gate."""
+        if not self._evidence_aware_memory:
+            return []
+        consent = await ConsentService(self._session, self._tenant_id).require_active(
+            elder_id=elder_id,
+            purpose=ConsentPurpose.LONG_TERM_MEMORY,
+        )
+        return await self._memories.list_active_context_for_elder(
+            elder_id=elder_id,
+            active_consent_id=consent.id,
+            active_consent_version=consent.version,
+            limit=limit,
+            allow_auto_low_risk_memory=self._auto_low_risk_memory,
+        )
+
     async def create_candidate(
         self,
         *,
@@ -57,36 +103,109 @@ class MemoryService:
         trace_id: str,
         idempotency_key: str,
     ) -> Memory:
+        self._require_evidence_aware_memory()
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
         )
-        count = await self._session.scalar(
-            select(func.count())
-            .select_from(CareEvent)
-            .where(
-                CareEvent.id.in_(request.source_event_ids),
-                CareEvent.elder_id == elder_id,
-                CareEvent.tenant_id == self._tenant_id,
-                CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
-            )
+        source = await self._memories.get_candidate_source_evidence(
+            elder_id=elder_id,
+            source_event_ids=request.source_event_ids,
         )
-        if count != len(set(request.source_event_ids)):
+        if source is None:
             raise ValidationError(
                 details=[
                     {
                         "field": "source_event_ids",
-                        "reason": "every source must be a verified event for this elder",
+                        "reason": "VERIFIED_SINGLE_SOURCE_REQUIRED",
+                    }
+                ]
+            )
+        expected_source_proposal = {
+            "memory_type": request.memory_type.value,
+            "memory_kind": request.memory_kind.value,
+            "normalized_content": request.normalized_content,
+            "confirmation_question": request.confirmation_question,
+            "extraction_confidence": request.extraction_confidence,
+            "proposal_risk_hint": request.proposal_risk_hint.value,
+            "extractor_version": request.extractor_version,
+        }
+        if source.memory_candidate_proposal != expected_source_proposal:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "source_event_ids",
+                        "reason": "SOURCE_PROPOSAL_MISMATCH",
                     }
                 ]
             )
 
+        policy = evaluate_memory_candidate(
+            memory_type=request.memory_type.value,
+            memory_kind=request.memory_kind.value,
+            normalized_content=request.normalized_content,
+            confirmation_question=request.confirmation_question,
+            extraction_confidence=request.extraction_confidence,
+            possible_conflict=request.possible_conflict,
+            speaker_verification_level=source.speaker_verification_level,
+            speaker_evidence_reference=source.speaker_evidence_reference,
+        )
+        if not policy.create_memory or policy.status is None:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "memory_kind",
+                        "reason": policy.reason_code,
+                    }
+                ]
+            )
+        profile = await self._decision_support_profiles.resolve_for_memory(
+            elder_id=elder_id,
+            data_class=request.memory_type.value,
+        )
+        profiled_policy = apply_decision_support_profile(policy, profile)
+        if not profiled_policy.allowed:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "decision_support_profile",
+                        "reason": profiled_policy.reason_code,
+                    }
+                ]
+            )
+        policy = profiled_policy.decision
+        if policy.status == "ACTIVE" and not self._auto_low_risk_memory:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "feature_flag",
+                        "reason": "AUTO_LOW_RISK_MEMORY_DISABLED",
+                    }
+                ]
+            )
+
+        now = datetime.now(UTC)
+        content_digest = memory_content_digest(request.normalized_content)
         memory = Memory(
             elder_id=elder_id,
             tenant_id=self._tenant_id,
             memory_type=request.memory_type.value,
-            status="PENDING_CONFIRMATION",
+            memory_kind=request.memory_kind.value,
+            actual_risk_level=policy.actual_risk_level,
+            policy_decision=policy.policy_decision,
+            policy_version=CURRENT_MEMORY_POLICY_VERSION,
+            verification_level=policy.verification_level,
+            required_verification=policy.required_verification,
+            speaker_verification_level=source.speaker_verification_level,
+            speaker_evidence_reference=source.speaker_evidence_reference,
+            evidence_state=CURRENT_MEMORY_EVIDENCE_STATE,
+            decision_support_profile_id=profile.profile_id,
+            decision_support_profile_version=profile.profile_version,
+            status=policy.status,
             current_version=1,
+            activated_at=now if policy.status == "ACTIVE" else None,
+            lifecycle_reason=policy.reason_code,
+            consent_id=consent.id,
             consent_version=consent.version,
         )
         self._memories.add_memory(memory)
@@ -96,17 +215,27 @@ class MemoryService:
                 memory_id=memory.id,
                 version=1,
                 content=request.normalized_content,
+                content_digest=content_digest,
                 confirmation_question=request.confirmation_question,
                 extractor_version=request.extractor_version,
-                extraction_confidence=CONFIDENCE_VALUES[request.confidence_band],
+                extraction_confidence=Decimal(str(request.extraction_confidence)).quantize(
+                    Decimal("0.0001")
+                ),
                 source_event_ids=request.source_event_ids,
+                source_session_id=source.source_session_id,
+                source_turn_reference=source.source_turn_reference,
+                proposal_risk_hint=request.proposal_risk_hint.value,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,
             )
         )
         await self._session.flush()
         await self._write_event(
-            event_type="memory.candidate-created.v1",
+            event_type=(
+                "memory.auto-activated.v1"
+                if memory.status == "ACTIVE"
+                else "memory.candidate-created.v1"
+            ),
             memory=memory,
             actor_id=actor_id,
             trace_id=trace_id,
@@ -131,17 +260,58 @@ class MemoryService:
         trace. Caregiver and legal-representative review may help prepare a
         candidate, but cannot satisfy the elder confirmation gate.
 
-        VOICE confirmation remains unavailable until a versioned,
-        consent-scoped record can prove an affirmative answer to this exact
-        candidate. A completed conversation alone is insufficient.
+        VOICE confirmation remains unavailable until the voice path can create
+        a versioned, consent-scoped record proving an authenticated affirmative
+        answer to this exact candidate. A completed conversation alone is
+        insufficient.
         """
+        self._require_evidence_aware_memory()
+        if memory.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
+            raise ConflictError("Memory candidate evidence requires review")
         if memory.current_version != request.expected_candidate_version:
             raise ConflictError("Memory candidate version conflict")
+        standard_confirmation = (
+            memory.actual_risk_level == "MEDIUM"
+            and memory.policy_decision == "PENDING_ELDER_CONFIRMATION"
+            and memory.required_verification == "ELDER_CONFIRMATION"
+        )
+        supported_confirmation = (
+            memory.actual_risk_level in {"LOW", "MEDIUM"}
+            and memory.policy_decision == "PENDING_SUPPORTED_CONFIRMATION"
+            and memory.required_verification == "SUPPORTED_ELDER_CONFIRMATION"
+        )
+        if (
+            memory.policy_version != CURRENT_MEMORY_POLICY_VERSION
+            or not (standard_confirmation or supported_confirmation)
+            or memory.speaker_verification_level not in TRUSTED_SPEAKER_LEVELS
+            or not memory.speaker_evidence_reference
+        ):
+            raise ConflictError("Memory candidate policy evidence is stale or ineligible")
+        profile = await self._decision_support_profiles.resolve_for_memory(
+            elder_id=memory.elder_id,
+            data_class=memory.memory_type,
+        )
+        if (
+            not profile_binding_is_current(
+                bound_profile_id=memory.decision_support_profile_id,
+                bound_profile_version=memory.decision_support_profile_version,
+                current=profile,
+            )
+            or (standard_confirmation and profile.mode != "STANDARD")
+            or (supported_confirmation and profile.mode != "SUPPORTED")
+        ):
+            raise ConflictError(
+                "Decision support profile changed; create a new memory candidate"
+            )
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=memory.elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
         )
-        if consent.version != request.consent_version or consent.version != memory.consent_version:
+        if (
+            consent.id != memory.consent_id
+            or consent.version != request.consent_version
+            or consent.version != memory.consent_version
+        ):
             raise ConflictError("Consent version changed; create a new candidate confirmation")
 
         if memory.status == "DEFERRED":
@@ -154,6 +324,11 @@ class MemoryService:
             request=request,
         )
 
+        current = await self._memories.get_current_version(memory)
+        if current.content_digest is None or current.content_digest != memory_content_digest(
+            current.content
+        ):
+            raise ConflictError("Memory candidate content evidence is invalid")
         require_memory_transition(memory.status, "CONFIRMED")
         now = datetime.now(UTC)
         memory.status = "CONFIRMED"
@@ -161,7 +336,44 @@ class MemoryService:
         memory.confirmed_at = now
         memory.confirmation_method = request.confirmation_method
         memory.confirmation_session_id = None
-        memory.confirmation_evidence_ref = f"core-command:{trace_id}"
+        confirmation_evidence_reference = f"core-command:{trace_id}"
+        memory.confirmation_evidence_ref = confirmation_evidence_reference
+        memory.confirmed_version = memory.current_version
+        memory.confirmed_content_digest = current.content_digest
+        memory.policy_decision = (
+            "ELDER_CONFIRMED_SUPPORTED"
+            if supported_confirmation
+            else "ELDER_CONFIRMED_MEDIUM"
+        )
+        memory.verification_level = "ELDER_CONFIRMED"
+        memory.lifecycle_reason = "ELDER_CONFIRMED_CURRENT_VERSION"
+        self._memories.add_confirmation(
+            MemoryConfirmation(
+                tenant_id=self._tenant_id,
+                elder_id=memory.elder_id,
+                memory_id=memory.id,
+                memory_version=memory.current_version,
+                content_digest=current.content_digest,
+                consent_id=consent.id,
+                consent_version=consent.version,
+                policy_version=CURRENT_MEMORY_POLICY_VERSION,
+                decision_support_profile_id=profile.profile_id,
+                decision_support_profile_version=profile.profile_version,
+                confirmation_method=request.confirmation_method,
+                response_intent="AFFIRM",
+                confirmed_by_actor_id=actor_context.actor_id,
+                confirmation_session_id=None,
+                speaker_verification_level=memory.speaker_verification_level,
+                speaker_evidence_reference=memory.speaker_evidence_reference,
+                witness_actor_id=None,
+                witness_evidence_reference=None,
+                confirmation_evidence_reference=confirmation_evidence_reference,
+                trace_id=trace_id,
+                correlation_id=trace_id,
+                idempotency_key=idempotency_key,
+                confirmed_at=now,
+            )
+        )
         require_memory_transition(memory.status, "ACTIVE")
         memory.status = "ACTIVE"
         memory.activated_at = now
@@ -174,6 +386,17 @@ class MemoryService:
             idempotency_key=idempotency_key,
         )
         return memory
+
+    def _require_evidence_aware_memory(self) -> None:
+        if not self._evidence_aware_memory:
+            raise ValidationError(
+                details=[
+                    {
+                        "field": "feature_flag",
+                        "reason": "EVIDENCE_AWARE_MEMORY_DISABLED",
+                    }
+                ]
+            )
 
     async def _validate_confirmation_authority(
         self,
@@ -189,14 +412,17 @@ class MemoryService:
                     {
                         "field": "confirmation_method",
                         "reason": (
-                            "VOICE confirmation is unavailable until an affirmative "
-                            "candidate-specific evidence record is implemented"
+                            "VOICE confirmation is unavailable until the voice path can "
+                            "produce authenticated candidate-specific affirmative evidence"
                         ),
                     }
                 ]
             )
 
         if request.confirmation_method != "ELDER_UI" or actor_context.actor_role != ActorType.ELDER:
+            raise AuthorizationDeniedError("Resource not found")
+        elder = await ElderRepository(self._session, self._tenant_id).get_by_id(memory.elder_id)
+        if elder is None or elder.actor_id != actor_context.actor_id:
             raise AuthorizationDeniedError("Resource not found")
 
     async def set_candidate_state(
@@ -244,16 +470,39 @@ class MemoryService:
         now = datetime.now(UTC)
         current.version_status = "INACTIVE"
         current.valid_to = now
+        if memory.status == "ACTIVE":
+            require_memory_transition(memory.status, "INACTIVE")
+        memory.status = "INACTIVE"
+        memory.deactivated_at = now
+        memory.actual_risk_level = "MEDIUM"
+        memory.policy_decision = "NO_MEMORY"
+        memory.policy_version = CURRENT_MEMORY_POLICY_VERSION
+        memory.verification_level = "UNVERIFIED"
+        memory.required_verification = "RESTRICTED"
+        memory.speaker_verification_level = "UNKNOWN"
+        memory.speaker_evidence_reference = None
+        memory.confirmed_by_actor_id = None
+        memory.confirmed_at = None
+        memory.confirmation_method = None
+        memory.confirmation_session_id = None
+        memory.confirmation_evidence_ref = None
+        memory.confirmed_version = None
+        memory.confirmed_content_digest = None
+        memory.lifecycle_reason = "CONTENT_CORRECTED_NEEDS_REVIEW"
         memory.current_version += 1
         self._memories.add_version(
             MemoryVersion(
                 memory_id=memory.id,
                 version=memory.current_version,
                 content=request.content,
+                content_digest=memory_content_digest(request.content),
                 confirmation_question=None,
                 extractor_version=None,
                 extraction_confidence=None,
                 source_event_ids=current.source_event_ids,
+                source_session_id=None,
+                source_turn_reference=None,
+                proposal_risk_hint=None,
                 version_status="ACTIVE",
                 created_by_actor_id=actor_id,
                 supersedes_version_id=current.memory_version_id,

@@ -11,11 +11,18 @@
   --cyan-600: #0891b2;
   --cyan-700: #0e7490;
   --cyan-900: #164e63;
+  --forest-950: #0b3b35;
+  --forest-900: #114f46;
+  --forest-800: #17665a;
   --green-600: #059669;
   --green-700: #047857;
   --green-50: #ecfdf5;
   --amber-700: #b45309;
   --amber-50: #fffbeb;
+  --gold-400: #f4b62a;
+  --mint-25: #f7fbfa;
+  --mint-50: #edf7f4;
+  --cream-50: #fffcf5;
   --red-600: #dc2626;
   --red-50: #fef2f2;
   --slate-500: #64748b;
@@ -54,6 +61,13 @@
      cyan borders are separators only and are too light to define a control. */
   --color-interactive-border: var(--cyan-700);
   --color-scrim: rgb(var(--cyan-900-channels) / 0.48);
+  --color-brand-deep: var(--forest-950);
+  --color-brand-deep-soft: var(--forest-900);
+  --color-brand-action: var(--forest-800);
+  --color-brand-gold: var(--gold-400);
+  --color-brand-canvas: var(--mint-25);
+  --color-brand-tint: var(--mint-50);
+  --color-brand-warm: var(--cream-50);
 
   /* ---- semantic: workflow state (§4.2) — colour + icon + text always together ---- */
   --state-candidate-fg: var(--slate-500);

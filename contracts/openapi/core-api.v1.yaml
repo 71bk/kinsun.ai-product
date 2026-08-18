@@ -4,7 +4,7 @@
     "title": "kinsun.ai Core API",
     "version": "1.5.0",
     "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security and outbox APIs.",
-    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun email/password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
+    "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
     "/health": {
@@ -4450,7 +4450,7 @@
           "internal-auth"
         ],
         "summary": "Start Kinsun Email Auth",
-        "description": "Create a uniform, short-lived registration challenge without revealing whether an account exists. Email delivery is selected only by server configuration.",
+        "description": "Create a uniform challenge without revealing whether an account exists.",
         "operationId": "start_kinsun_email_auth_api_v1_internal_auth_kinsun_email_start_post",
         "requestBody": {
           "content": {
@@ -4464,7 +4464,7 @@
         },
         "responses": {
           "200": {
-            "description": "Challenge created without account-enumeration disclosure.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -4475,6 +4475,15 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
@@ -4496,7 +4505,7 @@
           "internal-auth"
         ],
         "summary": "Complete Kinsun Email Auth",
-        "description": "Atomically consume one registration challenge, create the eligible Core identity and password, and issue one Core-owned App Session.",
+        "description": "Consume one code and issue a Core App Session on success.",
         "operationId": "complete_kinsun_email_auth_api_v1_internal_auth_kinsun_email_complete_post",
         "requestBody": {
           "content": {
@@ -4510,7 +4519,7 @@
         },
         "responses": {
           "200": {
-            "description": "Registration completed and App Session issued.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -4521,6 +4530,12 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
@@ -4545,13 +4560,13 @@
           "internal-auth"
         ],
         "summary": "Login With Kinsun Password",
-        "description": "Verify one Kinsun-owned email and password pair and issue one Core-owned App Session. Rejections use a uniform authentication error.",
+        "description": "Verify one Kinsun password and issue the existing Core App Session.",
         "operationId": "login_with_kinsun_password_api_v1_internal_auth_kinsun_password_login_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "../schemas/domain/KinsunPasswordLoginRequestV1.json"
+                "$ref": "../schemas/domain/PasswordLoginRequestV1.json"
               }
             }
           },
@@ -4559,7 +4574,7 @@
         },
         "responses": {
           "200": {
-            "description": "Password authenticated and App Session issued.",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -4570,6 +4585,15 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
@@ -5392,7 +5416,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-Kinsun-BFF-Authorization",
-        "description": "Private BFF-to-Core Authorization header containing Bearer plus the dedicated Kinsun handoff secret. It is not a browser App Session and must never be logged or exposed to clients."
+        "description": "Private BFF-to-Core bearer secret. The header value is `Bearer <secret>`; it is never exposed to the browser and is independent from App Sessions."
       }
     },
     "responses": {

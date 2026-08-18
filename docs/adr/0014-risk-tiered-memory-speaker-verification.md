@@ -6,6 +6,7 @@
 - 部分取代：[ADR 0009](0009-gate-1-synthetic-profile-and-service-boundaries.md) 第 7 節「所有 Memory Candidate 必須由長者逐筆確認」
 - 不取代：ADR 0009 的 Event 人工覆核、Agent proposal-only、Core authority、Consent、Outbox、Projection 與安全邊界
 - 相關：[ADR 0013](0013-separate-account-elder-enrollment-entitlement.md)、[Spec 18](../spec/18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
+- 延伸決策：[ADR 0016](0016-evidence-aware-memory-supported-confirmation-family-visit.md) 定義 Reported Statement／Verified Fact、DecisionSupportProfile、敏感疾病資料隔離、ConflictGroup 與 Family Visit；不放寬本 ADR 的 Elder confirmation、HIGH restriction 或 retrieval Gate
 
 ## 背景
 

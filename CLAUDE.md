@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-- 更新日期：2026-08-14
-- 校準基準：`main` at `4f6b4ae`
+- 更新日期：2026-08-17
+- 校準基準：`main` at `a2af73e`
 - 適用範圍：整個 `kinsun.ai` repository
 
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
@@ -45,12 +45,12 @@
   與 business rule 放 service；資料存取經 repository；跨系統通知先寫 transactional outbox。
 - 以解析後的 `Identity`／`Actor` 為權限依據，不信任 Client 傳入的 tenant、elder、role、assignment
   或 permission scope。email 不是 Actor authority，也不得用 email 自動合併帳號。
-- Direct Google／LINE OIDC、Core App Session、pending onboarding、explicit Google→LINE linking 與
+- Kinsun-owned Email＋Password primary flow、Direct Google／LINE OIDC、Core App Session、pending onboarding、explicit Google→LINE linking 與
   bounded empty-account consolidation 已有 application code。Cognito runtime、SDK、Hosted UI callback、
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-08-14 工作樹基準為 16 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
+  2026-08-17 工作樹基準為 19 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
   model attribute `id` 常透過 `__pk_name__` 對應 DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
 - 不用未經檢查的 autogenerate。migration SQL 維持 LF、可重建、可升級，並保留 RLS、grant、trigger、
   constraint 與 state-machine 規則。
@@ -88,6 +88,9 @@
   `apps/elder-web`、`apps/care-web`、`apps/family-web`。
 - Browser 只透過同源 BFF 呼叫後端；token、provider secret 與 session credential 不進 client bundle、
   URL、log 或錯誤訊息。新環境變數必須同步 `.env.example`，只放安全假值。
+- Kinsun Email／Password 是 primary flow；BFF 以獨立 private credential 呼叫 Core，Browser 只收到
+  HttpOnly Core App Session cookie。verification code／password 不得進 response 或 log；目前 delivery
+  只允許 synthetic development mode，不能宣稱 production email 已上線。
 - 使用既有 CSS Modules、design tokens 與 components；不要引入 Tailwind 或第二套 UI framework。
   使用者可見文字同步 `zh-TW` 與 `en`，至少檢查 375／390／430 px。
 - 功能旗標預設關閉；未經明確授權，不啟用 direct OIDC、ASR、通知或其他 staging／production 功能。
@@ -108,8 +111,8 @@
 - OpenAPI、AsyncAPI、JSON Schema、Pydantic model、實際 route 與 live verifier 必須一起演進。
   不可實作未登記 API；不相容變更必須有新 major version 或正式 migration plan。
 - [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 是差異說明，不是 executable truth，而且局部摘要
-  可能落後；改動前後都跑 validator。2026-08-13 快照：Core OpenAPI 63 paths、Agent 3 paths、
-  AsyncAPI 1 channel，Core app 實際 68 operations。
+  可能落後；改動前後都跑 validator。2026-08-17 快照：Core OpenAPI 67 paths、Agent 3 paths、
+  AsyncAPI 1 channel，Core app 實際 72 operations。
 - `infra` 保留 AWS CDK v2 deployment profile；application stack 的 `desiredCount` 預設 0。黑客松 AWS
   帳號目前無法操作，Cognito 已從 IaC 移除，OpenSearch 仍是 external reference。沒有使用者明確要求
   與新的可操作帳號，不部署、不 push image、不變更 AWS resource，也不把 synth 結果描述成已上線。
@@ -193,6 +196,12 @@ contract 與 Core live verifier 均通過。Agent 259、RAG ingestion 138、Spee
 影響的結果。沒有獨立 `TEST_DATABASE_URL`，因此未重建 integration DB；Supabase 只在唯讀確認 legacy
 欄位非空筆數為 0 後，套用 migration 至 `f2c6d8a1e490`。完整 Core format check 仍會指出兩個本次未
 修改的既有檔案。這個快照只供回歸比較，不可取代當次驗證。
+
+2026-08-17 Kinsun Email＋Password contract closure 當次結果：Core unit 808、Frontend 220 tests passed；
+Frontend typecheck／production build、static contract 與 Core live verifier（72 operations）通過。完整
+Frontend ESLint 仍有一個本次未修改的既有 unused argument，完整 Core Ruff 仍有兩個本次未修改的既有
+問題。沒有獨立 `TEST_DATABASE_URL`，未重建 integration DB；本機 Docker 設定檔受執行環境權限限制，
+`docker compose config --quiet` 未驗證。這個快照同樣不可取代當次驗證。
 
 ## 交付前自我審查
 

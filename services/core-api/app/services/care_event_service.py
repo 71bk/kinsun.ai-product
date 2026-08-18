@@ -18,6 +18,7 @@ from app.events.outbox_writer import write_outbox_entry
 from app.middleware.auth import ActorContext
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
+from app.policies.memory_policy import SourceSpeakerEvidence, evaluate_memory_candidate
 from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.conversation_repo import ConversationRepository
 from app.schemas.care_event import (
@@ -72,6 +73,7 @@ class CareEventService:
         trace_id: str,
         idempotency_key: str,
         memory_candidate_proposal: dict[str, Any] | None = None,
+        source_speaker_evidence: SourceSpeakerEvidence | None = None,
     ) -> CareEvent:
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
@@ -86,6 +88,52 @@ class CareEventService:
                 raise NotFoundError("Source session not found")
             if conversation.state != "COMPLETED":
                 raise ConflictError("Care-event extraction requires a completed session")
+
+        speaker_evidence = source_speaker_evidence or SourceSpeakerEvidence(
+            verification_level="UNKNOWN",
+            evidence_reference=None,
+            speaker_role=None,
+            speaker_actor_id=None,
+            verification_method="UNVERIFIED_SOURCE",
+        )
+        if memory_candidate_proposal is not None:
+            try:
+                await ConsentService(self._session, self._tenant_id).require_active(
+                    elder_id=elder_id,
+                    purpose=ConsentPurpose.LONG_TERM_MEMORY,
+                )
+            except NotFoundError:
+                logger.info(
+                    "memory proposal discarded before care-event persistence",
+                    extra={"reason_code": "LONG_TERM_MEMORY_CONSENT_INACTIVE"},
+                )
+                memory_candidate_proposal = None
+        if memory_candidate_proposal is not None:
+            try:
+                proposal_decision = evaluate_memory_candidate(
+                    memory_type=str(memory_candidate_proposal["memory_type"]),
+                    memory_kind=str(memory_candidate_proposal["memory_kind"]),
+                    normalized_content=str(memory_candidate_proposal["normalized_content"]),
+                    confirmation_question=str(memory_candidate_proposal["confirmation_question"]),
+                    extraction_confidence=float(memory_candidate_proposal["extraction_confidence"]),
+                    possible_conflict=False,
+                    speaker_verification_level=speaker_evidence.verification_level,
+                    speaker_evidence_reference=speaker_evidence.evidence_reference,
+                )
+            except (KeyError, TypeError, ValueError):
+                proposal_decision = None
+            if proposal_decision is None or not proposal_decision.create_memory:
+                logger.info(
+                    "memory proposal discarded before care-event persistence",
+                    extra={
+                        "reason_code": (
+                            proposal_decision.reason_code
+                            if proposal_decision is not None
+                            else "INVALID_PROPOSAL"
+                        )
+                    },
+                )
+                memory_candidate_proposal = None
 
         event = CareEvent(
             elder_id=elder_id,
@@ -109,6 +157,11 @@ class CareEventService:
                 memory_candidate_proposal=memory_candidate_proposal,
                 evidence_text_ref=json.dumps(request.evidence_refs),
                 confidence=CONFIDENCE_VALUES[request.confidence_band],
+                speaker_role=speaker_evidence.speaker_role,
+                speaker_actor_id=speaker_evidence.speaker_actor_id,
+                speaker_verification_level=speaker_evidence.verification_level,
+                speaker_verification_method=speaker_evidence.verification_method,
+                speaker_evidence_reference=speaker_evidence.evidence_reference,
                 created_by_actor_id=actor_id,
             )
         )
@@ -169,6 +222,11 @@ class CareEventService:
                     memory_candidate_proposal=None,
                     evidence_text_ref=current.evidence_text_ref,
                     confidence=current.confidence,
+                    speaker_role=current.speaker_role,
+                    speaker_actor_id=current.speaker_actor_id,
+                    speaker_verification_level=current.speaker_verification_level,
+                    speaker_verification_method=current.speaker_verification_method,
+                    speaker_evidence_reference=current.speaker_evidence_reference,
                     created_by_actor_id=actor_id,
                     supersedes_version_id=current.event_version_id,
                 )

@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "The verification code must contain exactly six ASCII digits.",
+  "data": {
+    "challenge_token": "ke1_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "verification_code": "１２３４５６",
+    "password": "Synthetic-only-password-1"
+  }
+}

@@ -18,23 +18,70 @@ class MemoryType(str, Enum):
     PERSONAL_HISTORY = "PERSONAL_HISTORY"
 
 
-class ConfidenceBand(str, Enum):
+class MemoryKind(str, Enum):
+    MUSIC_PREFERENCE = "MUSIC_PREFERENCE"
+    HOBBY = "HOBBY"
+    PREFERRED_ADDRESS = "PREFERRED_ADDRESS"
+    FAMILY_RELATIONSHIP = "FAMILY_RELATIONSHIP"
+    CONTACT_ROUTINE = "CONTACT_ROUTINE"
+    DAILY_ROUTINE = "DAILY_ROUTINE"
+    HEALTH_INFERENCE = "HEALTH_INFERENCE"
+    MEDICATION_JUDGMENT = "MEDICATION_JUDGMENT"
+    MOOD_OR_LONELINESS_INFERENCE = "MOOD_OR_LONELINESS_INFERENCE"
+    FAMILY_CONFLICT = "FAMILY_CONFLICT"
+    FINANCIAL_INFORMATION = "FINANCIAL_INFORMATION"
+    SENSITIVE_OR_UNKNOWN = "SENSITIVE_OR_UNKNOWN"
+
+
+class MemoryRiskLevel(str, Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+
+
+class MemoryPolicyDecision(str, Enum):
+    AUTO_ACTIVATED_LOW = "AUTO_ACTIVATED_LOW"
+    PENDING_ELDER_CONFIRMATION = "PENDING_ELDER_CONFIRMATION"
+    PENDING_SUPPORTED_CONFIRMATION = "PENDING_SUPPORTED_CONFIRMATION"
+    ELDER_CONFIRMED_MEDIUM = "ELDER_CONFIRMED_MEDIUM"
+    ELDER_CONFIRMED_SUPPORTED = "ELDER_CONFIRMED_SUPPORTED"
+    REJECTED_HIGH_RISK = "REJECTED_HIGH_RISK"
+    NO_MEMORY = "NO_MEMORY"
+
+
+class MemoryVerificationLevel(str, Enum):
+    UNVERIFIED = "UNVERIFIED"
+    POLICY_VERIFIED = "POLICY_VERIFIED"
+    ELDER_CONFIRMED = "ELDER_CONFIRMED"
+
+
+class RequiredMemoryVerification(str, Enum):
+    NONE = "NONE"
+    ELDER_CONFIRMATION = "ELDER_CONFIRMATION"
+    SUPPORTED_ELDER_CONFIRMATION = "SUPPORTED_ELDER_CONFIRMATION"
+    RESTRICTED = "RESTRICTED"
+
+
+class SpeakerVerificationLevel(str, Enum):
+    UNKNOWN = "UNKNOWN"
+    VERIFIED_ELDER = "VERIFIED_ELDER"
+    WITNESSED_ELDER = "WITNESSED_ELDER"
+    THIRD_PARTY = "THIRD_PARTY"
 
 
 class CreateMemoryCandidateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     memory_type: MemoryType
+    memory_kind: MemoryKind
     normalized_content: str = Field(min_length=1, max_length=500)
     source_event_ids: list[UUID] = Field(min_length=1, max_length=16)
     possible_conflict: bool = False
     conflict_with_memory_ids: list[UUID] = Field(default_factory=list, max_length=16)
     confirmation_question: str = Field(min_length=1, max_length=300)
     extractor_version: str = Field(min_length=1, max_length=80)
-    confidence_band: ConfidenceBand = ConfidenceBand.MEDIUM
+    extraction_confidence: float = Field(ge=0, le=1)
+    proposal_risk_hint: MemoryRiskLevel
 
 
 class ConfirmMemoryRequest(BaseModel):
@@ -45,7 +92,8 @@ class ConfirmMemoryRequest(BaseModel):
             "Only ELDER_UI can activate a candidate. Legacy caregiver and legal "
             "representative values remain parseable during deprecation but fail "
             "closed at the Core authorization gate. VOICE remains unavailable "
-            "until candidate-specific affirmative evidence exists."
+            "until the voice path can produce authenticated candidate-specific "
+            "affirmative evidence."
         )
     )
     expected_candidate_version: int = Field(ge=1)

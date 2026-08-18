@@ -17,6 +17,7 @@ from app.models.care_unit import CareUnit  # noqa: F401
 from app.models.consent import ConsentGrant  # noqa: F401
 from app.models.context_manifest import ContextManifest  # noqa: F401
 from app.models.conversation import ConversationSession  # noqa: F401
+from app.models.decision_support import DecisionSupportProfile  # noqa: F401
 from app.models.deletion import (  # noqa: F401
     DeletionJobItem,
     DeletionRequest,
@@ -34,7 +35,7 @@ from app.models.line_identity import (  # noqa: F401
     LineWebhookReceipt,
 )
 from app.models.membership import ActorTenantMembership  # noqa: F401
-from app.models.memory import Memory, MemoryVersion  # noqa: F401
+from app.models.memory import Memory, MemoryConfirmation, MemoryVersion  # noqa: F401
 from app.models.notification import (  # noqa: F401
     NotificationDelivery,
     NotificationPreference,

@@ -41,8 +41,10 @@ class MemoryExtractorAgent:
             content = f"每天早餐習慣喝{item}。"
         return MemoryCandidateProposal(
             memory_type="ROUTINE",
+            memory_kind="DAILY_ROUTINE",
             normalized_content=content,
             confirmation_question=f"要記住您{content.rstrip('。')}嗎？",
-            confidence_band="HIGH",
+            extraction_confidence=0.9,
+            proposal_risk_hint="MEDIUM",
             extractor_version=EXTRACTOR_VERSION,
         )

@@ -1,11 +1,14 @@
 {
   "data": {
     "memory_type": "PREFERENCE",
+    "memory_kind": "MUSIC_PREFERENCE",
     "normalized_content": "喜歡聽歌仔戲",
     "source_event_ids": ["11111111-1111-4111-8111-111111111111"],
     "possible_conflict": false,
     "conflict_with_memory_ids": [],
     "confirmation_question": "您希望我記住您喜歡聽歌仔戲嗎？",
-    "extractor_version": "memory-extractor-v1"
+    "extractor_version": "memory-extractor-v1",
+    "extraction_confidence": 0.9,
+    "proposal_risk_hint": "LOW"
   }
 }

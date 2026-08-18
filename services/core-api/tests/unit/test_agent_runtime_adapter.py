@@ -11,9 +11,7 @@ from app.adapters.agent_runtime import AgentRuntimeClient
 from app.adapters.service_identity import ServiceCredentialSigner
 from app.core.exceptions import ServiceUnavailableError
 
-TEST_SIGNER = ServiceCredentialSigner(
-    secret="synthetic-test-service-identity-secret-32-bytes"
-)
+TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-secret-32-bytes")
 
 
 def _success_payload() -> dict:
@@ -66,9 +64,11 @@ def _proposal_payload() -> dict:
 def _memory_proposal_payload() -> dict:
     return {
         "memory_type": "ROUTINE",
+        "memory_kind": "DAILY_ROUTINE",
         "normalized_content": "每天早餐習慣吃粥。",
         "confirmation_question": "要記住您每天早餐習慣吃粥嗎？",
-        "confidence_band": "HIGH",
+        "extraction_confidence": 0.9,
+        "proposal_risk_hint": "MEDIUM",
         "extractor_version": "memory-extractor-v1",
     }
 

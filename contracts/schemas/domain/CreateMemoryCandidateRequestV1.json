@@ -1,12 +1,30 @@
 {
   "$defs": {
-    "ConfidenceBand": {
+    "MemoryKind": {
+      "enum": [
+        "MUSIC_PREFERENCE",
+        "HOBBY",
+        "PREFERRED_ADDRESS",
+        "FAMILY_RELATIONSHIP",
+        "CONTACT_ROUTINE",
+        "DAILY_ROUTINE",
+        "HEALTH_INFERENCE",
+        "MEDICATION_JUDGMENT",
+        "MOOD_OR_LONELINESS_INFERENCE",
+        "FAMILY_CONFLICT",
+        "FINANCIAL_INFORMATION",
+        "SENSITIVE_OR_UNKNOWN"
+      ],
+      "title": "MemoryKind",
+      "type": "string"
+    },
+    "MemoryRiskLevel": {
       "enum": [
         "LOW",
         "MEDIUM",
         "HIGH"
       ],
-      "title": "ConfidenceBand",
+      "title": "MemoryRiskLevel",
       "type": "string"
     },
     "MemoryType": {
@@ -25,6 +43,9 @@
   "properties": {
     "memory_type": {
       "$ref": "#/$defs/MemoryType"
+    },
+    "memory_kind": {
+      "$ref": "#/$defs/MemoryKind"
     },
     "normalized_content": {
       "maxLength": 500,
@@ -68,17 +89,25 @@
       "title": "Extractor Version",
       "type": "string"
     },
-    "confidence_band": {
-      "$ref": "#/$defs/ConfidenceBand",
-      "default": "MEDIUM"
+    "extraction_confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Extraction Confidence",
+      "type": "number"
+    },
+    "proposal_risk_hint": {
+      "$ref": "#/$defs/MemoryRiskLevel"
     }
   },
   "required": [
     "memory_type",
+    "memory_kind",
     "normalized_content",
     "source_event_ids",
     "confirmation_question",
-    "extractor_version"
+    "extractor_version",
+    "extraction_confidence",
+    "proposal_risk_hint"
   ],
   "title": "CreateMemoryCandidateRequestV1",
   "type": "object",

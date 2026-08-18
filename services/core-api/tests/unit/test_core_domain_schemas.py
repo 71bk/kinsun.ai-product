@@ -133,10 +133,13 @@ def test_memory_candidate_requires_a_source_event() -> None:
     with pytest.raises(ValidationError):
         CreateMemoryCandidateRequest(
             memory_type="PREFERENCE",
+            memory_kind="MUSIC_PREFERENCE",
             normalized_content="喜歡聽歌仔戲",
             source_event_ids=[],
             confirmation_question="您希望我記住您喜歡歌仔戲嗎？",
             extractor_version="memory-extractor-v1",
+            extraction_confidence=0.9,
+            proposal_risk_hint="LOW",
         )
 
 

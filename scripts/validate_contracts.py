@@ -142,6 +142,25 @@ DATA_SCHEMA_FOR = {
     "google-oidc-handoff-request-extra-token.json": (
         "domain/GoogleOidcHandoffRequestV1.json"
     ),
+    "kinsun-email-auth-start-request.json": (
+        "domain/StartKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-email-auth-start-response.json": "domain/StartedKinsunEmailAuthV1.json",
+    "kinsun-email-auth-complete-request.json": (
+        "domain/CompleteKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-password-login-request.json": "domain/PasswordLoginRequestV1.json",
+    "kinsun-authenticated-response.json": "domain/CompletedKinsunEmailAuthV1.json",
+    "kinsun-email-auth-start-with-scope.json": (
+        "domain/StartKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-email-auth-complete-bad-code.json": (
+        "domain/CompleteKinsunEmailAuthRequestV1.json"
+    ),
+    "kinsun-password-login-with-actor.json": "domain/PasswordLoginRequestV1.json",
+    "kinsun-authenticated-response-leaks-hash.json": (
+        "domain/CompletedKinsunEmailAuthV1.json"
+    ),
     "google-onboarding-complete-request.json": (
         "domain/CompleteGoogleOnboardingRequestV1.json"
     ),

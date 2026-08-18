@@ -176,6 +176,12 @@ class Settings(BaseSettings):
     service_identity_issuer: str = Field(default="kinsun-local", min_length=1, max_length=80)
     service_identity_ttl_seconds: int = Field(default=30, ge=1, le=60)
 
+    # Evidence-aware Memory is an explicit rollout. Both gates default off so a
+    # new runtime revision cannot silently activate or retrieve long-term
+    # memories merely because the expanded schema already exists.
+    evidence_aware_memory: bool = False
+    auto_low_risk_memory: bool = False
+
     # ─── Validators ──────────────────────────────────────────────────────────────
 
     @field_validator("database_url")
@@ -428,6 +434,10 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "SERVICE_IDENTITY_HMAC_SECRET must be independent from other secrets"
                 )
+        if self.auto_low_risk_memory and not self.evidence_aware_memory:
+            raise ValueError(
+                "EVIDENCE_AWARE_MEMORY must be true when AUTO_LOW_RISK_MEMORY=true"
+            )
         return self
 
     # ─── Secret redaction ────────────────────────────────────────────────────────

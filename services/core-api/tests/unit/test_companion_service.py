@@ -61,9 +61,11 @@ def _proposal() -> AgentEventCandidateProposal:
 def _memory_proposal() -> AgentMemoryCandidateProposal:
     return AgentMemoryCandidateProposal(
         memory_type="ROUTINE",
+        memory_kind="DAILY_ROUTINE",
         normalized_content="每天早餐習慣吃粥。",
         confirmation_question="要記住您每天早餐習慣吃粥嗎？",
-        confidence_band="HIGH",
+        extraction_confidence=0.9,
+        proposal_risk_hint="MEDIUM",
         extractor_version="memory-extractor-v1",
     )
 
@@ -139,7 +141,7 @@ def _install_candidate_capability(
     granted: bool = True,
 ) -> tuple[AsyncMock, AsyncMock]:
     authorize = AsyncMock()
-    require_active = AsyncMock(return_value=SimpleNamespace(version=4))
+    require_active = AsyncMock(return_value=SimpleNamespace(id=uuid4(), version=4))
     if not granted:
         authorize.side_effect = NotFoundError("Resource not found")
     monkeypatch.setattr(companion_service, "authorize_elder", authorize)
@@ -268,6 +270,10 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request.event_type.value == "MEAL"
         assert request.review_requirement == "REQUIRED"
         assert kwargs["memory_candidate_proposal"] == _memory_proposal().model_dump(mode="json")
+        speaker = kwargs["source_speaker_evidence"]
+        assert speaker.verification_level == "VERIFIED_ELDER"
+        assert speaker.speaker_actor_id == actor.actor_id
+        assert speaker.verification_method == "AUTHENTICATED_TEXT"
         return SimpleNamespace(id=uuid4())
 
     runtime.run.side_effect = run_runtime
@@ -300,6 +306,35 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
     assert agent_run.result_status == "SUCCESS"
     assert any(isinstance(item, SafetyEvaluation) for item in added)
     assert all("早餐分享" not in repr(item) for item in added)
+
+
+@pytest.mark.asyncio
+async def test_non_elder_or_voice_turn_never_requests_memory_proposal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = uuid4()
+    authorize, require_active = _install_candidate_capability(monkeypatch)
+    service = CompanionService(MagicMock(), tenant_id, SimpleNamespace(), "mock")
+    family = ActorContext(
+        actor_id=uuid4(),
+        actor_role="FAMILY_MEMBER",
+        tenant_id=tenant_id,
+    )
+    elder = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
+
+    family_outputs = await service._requested_outputs(
+        conversation=_conversation(input_mode="text"),
+        actor_context=family,
+    )
+    voice_outputs = await service._requested_outputs(
+        conversation=_conversation(input_mode="voice"),
+        actor_context=elder,
+    )
+
+    assert family_outputs == ["event_candidate"]
+    assert voice_outputs == ["event_candidate"]
+    assert authorize.await_count == 2
+    assert require_active.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -436,6 +471,16 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
             )
         ),
     )
+    monkeypatch.setattr(
+        companion_service,
+        "get_settings",
+        MagicMock(
+            return_value=SimpleNamespace(
+                evidence_aware_memory=True,
+                auto_low_risk_memory=True,
+            )
+        ),
+    )
     session = _session()
 
     async def run_runtime(*, request_payload, **_kwargs):
@@ -477,8 +522,10 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
     assert require_active.await_count == 4
     list_context.assert_awaited_once_with(
         elder_id=conversation.elder_id,
-        max_consent_version=4,
+        active_consent_id=require_active.return_value.id,
+        active_consent_version=4,
         limit=5,
+        allow_auto_low_risk_memory=True,
     )
 
 

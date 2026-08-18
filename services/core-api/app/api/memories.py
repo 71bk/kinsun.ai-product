@@ -13,6 +13,7 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.db.session import get_db_session
 from app.middleware.actor_guard import require_active_actor
 from app.middleware.auth import ActorContext
+from app.policies.memory_retrieval import memory_content_digest
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
@@ -89,7 +90,19 @@ async def create_memory_candidate(
         actor_context=actor_context,
         key=idempotency_key,
         operation="create_memory_candidate",
-        payload={"elder_id": elder_id, **request.model_dump(mode="json")},
+        payload={
+            "elder_id": elder_id,
+            "memory_type": request.memory_type.value,
+            "memory_kind": request.memory_kind.value,
+            "content_digest": memory_content_digest(request.normalized_content),
+            "confirmation_question_digest": memory_content_digest(request.confirmation_question),
+            "source_event_ids": request.source_event_ids,
+            "possible_conflict": request.possible_conflict,
+            "conflict_with_memory_ids": request.conflict_with_memory_ids,
+            "extractor_version": request.extractor_version,
+            "extraction_confidence": request.extraction_confidence,
+            "proposal_risk_hint": request.proposal_risk_hint.value,
+        },
     )
     service = MemoryService(session, actor_context.tenant_id)
     if replay.replayed:

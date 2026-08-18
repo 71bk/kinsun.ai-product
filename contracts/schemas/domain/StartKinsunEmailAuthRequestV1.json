@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://kinsun.ai/contracts/schemas/domain/StartKinsunEmailAuthRequestV1.json",
   "title": "StartKinsunEmailAuthRequestV1",
-  "description": "Private BFF request to create a uniform Kinsun registration challenge without disclosing account existence.",
+  "description": "Start a private BFF-mediated Kinsun Email registration challenge without disclosing account existence.",
   "type": "object",
   "additionalProperties": false,
   "required": ["email", "intent"],
@@ -10,8 +10,7 @@
     "email": {
       "type": "string",
       "minLength": 3,
-      "maxLength": 254,
-      "pattern": "^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$"
+      "maxLength": 254
     },
     "intent": {
       "type": "string",
@@ -19,9 +18,16 @@
     },
     "display_name": {
       "oneOf": [
-        { "type": "null" },
-        { "type": "string", "minLength": 1, "maxLength": 120 }
-      ]
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   }
 }

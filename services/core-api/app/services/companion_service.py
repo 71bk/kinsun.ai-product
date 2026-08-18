@@ -21,6 +21,7 @@ from app.models.agent import AgentRun
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
+from app.policies.memory_policy import derive_turn_speaker_evidence
 from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
@@ -121,13 +122,18 @@ class CompanionService:
         except NotFoundError:
             return []
 
+        settings = get_settings()
+        if not settings.evidence_aware_memory:
+            return []
         records = await MemoryRepository(
             self._session,
             self._tenant_id,
         ).list_active_context_for_elder(
             elder_id=conversation.elder_id,
-            max_consent_version=consent.version,
+            active_consent_id=consent.id,
+            active_consent_version=consent.version,
             limit=_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS,
+            allow_auto_low_risk_memory=settings.auto_low_risk_memory,
         )
         return [
             {
@@ -161,6 +167,8 @@ class CompanionService:
         except NotFoundError:
             return []
         requested_outputs = ["event_candidate"]
+        if conversation.input_mode != "text" or actor_context.actor_role != "ELDER":
+            return requested_outputs
         try:
             await authorize_elder(
                 self._session,
@@ -451,6 +459,13 @@ class CompanionService:
                         memory_proposal.model_dump(mode="json")
                         if memory_proposal is not None and "memory_candidate" in requested_outputs
                         else None
+                    ),
+                    source_speaker_evidence=derive_turn_speaker_evidence(
+                        input_mode=conversation.input_mode,
+                        actor_role=actor_context.actor_role,
+                        actor_id=actor_context.actor_id,
+                        session_id=conversation.id,
+                        turn_reference=str(agent_run_id),
                     ),
                 )
 

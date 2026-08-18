@@ -47,8 +47,10 @@ async def test_explicit_stable_breakfast_routine_returns_minimized_proposal() ->
 
     assert proposal is not None
     assert proposal.memory_type == "ROUTINE"
+    assert proposal.memory_kind == "DAILY_ROUTINE"
     assert proposal.normalized_content == "每天早餐習慣吃粥。"
-    assert proposal.confidence_band == "HIGH"
+    assert proposal.extraction_confidence == 0.9
+    assert proposal.proposal_risk_hint == "MEDIUM"
     assert "每天早餐" in proposal.confirmation_question
     assert {"elder_id", "tenant_id", "source_event_ids"}.isdisjoint(proposal.model_dump())
 

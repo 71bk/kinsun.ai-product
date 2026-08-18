@@ -2,17 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://kinsun.ai/contracts/schemas/domain/CompletedKinsunEmailAuthV1.json",
   "title": "CompletedKinsunEmailAuthV1",
-  "description": "Core-owned App Session issued after Kinsun registration or password authentication.",
+  "description": "Core App Session issued to the trusted BFF after successful Kinsun authentication.",
   "type": "object",
   "additionalProperties": false,
   "required": ["status", "session_token", "idle_expires_at", "absolute_expires_at"],
   "properties": {
-    "status": { "const": "AUTHENTICATED" },
+    "status": {
+      "const": "AUTHENTICATED"
+    },
     "session_token": {
       "type": "string",
       "pattern": "^ks1_[A-Za-z0-9_-]{43}$"
     },
-    "idle_expires_at": { "type": "string", "format": "date-time" },
-    "absolute_expires_at": { "type": "string", "format": "date-time" }
+    "idle_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "absolute_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   }
 }

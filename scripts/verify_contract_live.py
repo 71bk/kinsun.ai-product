@@ -340,41 +340,52 @@ async def main() -> int:
             load("common/ErrorEnvelopeV1.json"),
         )
 
-        kinsun_probes = (
+        kinsun_auth_probes = (
             (
                 "/api/v1/internal/auth/kinsun/email/start",
-                {"email": "synthetic.elder@example.com", "intent": "ELDER"},
+                {
+                    "email": "synthetic.live-contract@example.test",
+                    "intent": "ELDER",
+                    "display_name": "Synthetic Elder",
+                },
             ),
             (
                 "/api/v1/internal/auth/kinsun/email/complete",
                 {
                     "challenge_token": "ke1_" + "a" * 43,
                     "verification_code": "246810",
-                    "password": "synthetic-password",
+                    "password": "Synthetic-live-contract-password-1",
                 },
             ),
             (
                 "/api/v1/internal/auth/kinsun/password/login",
                 {
-                    "email": "synthetic.elder@example.com",
-                    "password": "synthetic-password",
+                    "email": "synthetic.live-contract@example.test",
+                    "password": "Synthetic-live-contract-password-1",
                 },
             ),
         )
-        for path, body in kinsun_probes:
-            response = await client.post(path, json=body)
+        for path, request_body in kinsun_auth_probes:
+            response = await client.post(path, json=request_body)
             if response.status_code != 401:
-                failures.append(
-                    f"POST {path} returned {response.status_code}, expected 401"
-                )
-                print(f"FAIL  POST {path} fails closed: {response.status_code}")
+                failures.append(f"POST {path} returned {response.status_code}, expected 401")
+                print(f"FAIL  POST {path} rejects missing BFF credential: {response.status_code}")
             else:
-                print(f"ok    POST {path} fails closed with 401")
+                print(f"ok    POST {path} rejects missing BFF credential with 401")
+            response_body = response.json()
             check(
                 f"POST {path} 401 body vs ErrorEnvelopeV1",
-                response.json(),
+                response_body,
                 load("common/ErrorEnvelopeV1.json"),
             )
+            serialized = json.dumps(response_body, ensure_ascii=False)
+            for restricted_value in request_body.values():
+                if isinstance(restricted_value, str) and restricted_value in serialized:
+                    failures.append(f"POST {path} reflected rejected authentication input")
+                    print(f"FAIL  POST {path} reflected rejected authentication input")
+                    break
+            else:
+                print(f"ok    POST {path} does not reflect rejected authentication input")
 
         response = await client.post(
             "/api/v1/internal/auth/google/handoff",

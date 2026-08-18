@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "Browser and BFF callers cannot supply tenant or Elder authorization scope during authentication.",
+  "data": {
+    "email": "synthetic.elder@example.test",
+    "intent": "ELDER",
+    "tenant_id": "10000000-0000-4000-8000-000000000001"
+  }
+}

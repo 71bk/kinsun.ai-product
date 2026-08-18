@@ -21,7 +21,7 @@ export default async function HomePage() {
 
   const locale = parseLocaleCookie(cookieStore.get(LOCALE_COOKIE)?.value);
   return (
-    <PublicShell initialLocale={locale} signedIn={false}>
+    <PublicShell initialLocale={locale} signedIn={false} immersive>
       <Landing />
     </PublicShell>
   );

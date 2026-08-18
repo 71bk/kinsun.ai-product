@@ -9,9 +9,8 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.responses import get_correlation_id, success
+from app.api.responses import authentication_rejected, get_correlation_id, success
 from app.core.config import get_settings
-from app.core.envelopes import ErrorBody, ErrorEnvelope
 from app.db.session import get_db_session
 from app.schemas.kinsun_email_auth import (
     CompletedKinsunEmailAuthResponse,
@@ -48,24 +47,6 @@ from app.services.service_dependencies import (
 )
 
 router = APIRouter(tags=["internal-auth"])
-
-
-def _authentication_failed_response() -> JSONResponse:
-    envelope = ErrorEnvelope(
-        error=ErrorBody(
-            code="authentication_required",
-            message="Authentication required.",
-            correlation_id=get_correlation_id(),
-            reason_code="AUTHENTICATION_FAILED",
-            retryable=False,
-            details=None,
-        )
-    )
-    return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
-        content=envelope.model_dump(mode="json"),
-    )
 
 
 def require_kinsun_auth_bff(
@@ -152,6 +133,7 @@ async def start_kinsun_email_auth(
 )
 async def complete_kinsun_email_auth(
     request: CompleteKinsunEmailAuthRequest,
+    response: Response,
     _: None = Depends(require_kinsun_auth_bff),
     session: AsyncSession = Depends(get_db_session),
     identity_codec: KinsunIdentityCodec = Depends(get_kinsun_identity_codec),
@@ -178,13 +160,15 @@ async def complete_kinsun_email_auth(
         idempotency_key=operation_key,
     )
     if not isinstance(result, CompletedKinsunEmailAuthentication):
-        return _authentication_failed_response()
+        return authentication_rejected()
 
     payload = CompletedKinsunEmailAuthResponse(
         session_token=result.session.token,
         idle_expires_at=result.session.idle_expires_at,
         absolute_expires_at=result.session.absolute_expires_at,
     )
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
     return success(payload.model_dump(mode="json"))
 
 
@@ -195,6 +179,7 @@ async def complete_kinsun_email_auth(
 )
 async def login_with_kinsun_password(
     request: PasswordLoginRequest,
+    response: Response,
     _: None = Depends(require_kinsun_auth_bff),
     session: AsyncSession = Depends(get_db_session),
     identity_codec: KinsunIdentityCodec = Depends(get_kinsun_identity_codec),
@@ -219,10 +204,12 @@ async def login_with_kinsun_password(
         password=request.password.get_secret_value(),
     )
     if not isinstance(result, CompletedPasswordAuthentication):
-        return _authentication_failed_response()
+        return authentication_rejected()
     payload = CompletedKinsunEmailAuthResponse(
         session_token=result.session.token,
         idle_expires_at=result.session.idle_expires_at,
         absolute_expires_at=result.session.absolute_expires_at,
     )
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
     return success(payload.model_dump(mode="json"))

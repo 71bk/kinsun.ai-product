@@ -6,7 +6,11 @@
   "additionalProperties": false,
   "required": ["data", "meta"],
   "properties": {
-    "data": { "$ref": "https://kinsun.ai/contracts/schemas/domain/CompletedKinsunEmailAuthV1.json" },
-    "meta": { "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json" }
+    "data": {
+      "$ref": "https://kinsun.ai/contracts/schemas/domain/CompletedKinsunEmailAuthV1.json"
+    },
+    "meta": {
+      "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json"
+    }
   }
 }
