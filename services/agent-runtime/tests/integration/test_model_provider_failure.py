@@ -26,9 +26,7 @@ from agent_runtime.security.service_identity import (
 
 RUNS_PATH = "/api/v1/agent/runs"
 ELDER_WORDS = "我昨天晚上睡不好，一直咳嗽。"
-TEST_SIGNER = ServiceCredentialSigner(
-    secret="synthetic-test-service-identity-secret-32-bytes"
-)
+TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-secret-32-bytes")
 
 
 def signed_request() -> tuple[bytes, dict[str, str]]:

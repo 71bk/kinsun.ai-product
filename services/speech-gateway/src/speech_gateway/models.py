@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Mandarin and English go to Amazon Transcribe.
 TranscribeLanguage = Literal["zh-TW", "en-US"]
@@ -20,6 +22,29 @@ class GatewayModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class MemoryVoiceConfirmationContext(GatewayModel):
+    elder_id: UUID
+    memory_id: UUID
+    confirmation_method: Literal["ELDER_VOICE", "WITNESSED_VOICE"]
+    expected_candidate_version: int = Field(ge=1)
+    consent_version: int = Field(ge=1)
+    confirmation_question_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    witness_actor_id: UUID | None = None
+    witness_evidence_reference: str | None = Field(
+        default=None,
+        pattern=r"^evidence:[0-9a-fA-F-]{36}$",
+        max_length=300,
+    )
+
+    @model_validator(mode="after")
+    def validate_witness_pair(self) -> MemoryVoiceConfirmationContext:
+        witnessed = self.confirmation_method == "WITNESSED_VOICE"
+        paired = self.witness_actor_id is not None and self.witness_evidence_reference is not None
+        if witnessed != paired:
+            raise ValueError("witness identity and evidence must match WITNESSED_VOICE")
+        return self
+
+
 class TranscribeRequest(GatewayModel):
     """Audio is base64 so the boundary stays a plain JSON contract."""
 
@@ -32,6 +57,7 @@ class TranscribeRequest(GatewayModel):
     # rather than an error.
     sample_rate: int = Field(default=16000, ge=8000, le=48000)
     encoding: Literal["pcm"] = "pcm"
+    memory_confirmation: MemoryVoiceConfirmationContext | None = None
 
 
 class TranscriptSegment(GatewayModel):
@@ -53,6 +79,15 @@ class TranscribeResponse(GatewayModel):
     ]
     confirmation_required: bool
     gate_expires_at: datetime
+    memory_decision: (
+        Literal[
+            "ACTIVE",
+            "REJECTED",
+            "DEFERRED",
+            "PENDING_CONFIRMATION",
+        ]
+        | None
+    ) = None
 
 
 class SynthesizeRequest(GatewayModel):

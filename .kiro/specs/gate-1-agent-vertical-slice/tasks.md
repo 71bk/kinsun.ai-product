@@ -18,23 +18,26 @@
 
 ## Tasks
 
-- [ ] 1. 固定 Gate 1 traceability 與 Owner decision gates
-  - [ ] 1.1 建立 Gate 1 AC → Domain State → Security Gate → Test Gate 對照
+- [x] 1. 固定 Gate 1 traceability 與 Owner decision gates
+  - [x] 1.1 建立 Gate 1 AC → Domain State → Security Gate → Test Gate 對照
     - 以 `requirements.md` §5 與 `design.md` §13 為起點，逐項連回 docs 01A／02／05／06／07／10／11。
     - 明確標示 current baseline、net-new target、Owner decision 與 out-of-scope，避免把 target architecture 當成現況。
     - 記錄文件 05 低風險 Event auto-verify 與 Gate 1 全人工覆核的衝突；未決前維持較嚴格行為。
     - _Requirements: R11, R12_
-  - [ ] 1.2 核准 canonical Voice／Speech 與效能門檻
-    - 由 Owner 決定 ASR／TTS provider、國語／臺語／混語 Gate 1 範圍、data region、fallback、成本與 quality gate。
-    - 統一 docs 01／02／07／11 不一致的 Voice／Agent／TTS latency 門檻；核准前只記 baseline，不宣稱達標。
-    - 以 ADR 或核准紀錄保存 Owner、Expiry、Fallback 與移除條件。
+  - [x] 1.2 固定 ADR-0009 canonical synthetic Voice／Speech 邊界
+    - Gate 1 completion 採 ADR-0009 synthetic provider 與 functional baseline；國語／臺語／混語 route
+      均 fail closed，且不把 synthetic latency／quality 當成 production 門檻。
+    - Production ASR／TTS provider、data region、fallback、成本、quality 與 latency threshold 保留為
+      release-time Owner gate，不阻擋本 Spec 的 synthetic completion。
+    - Owner、Expiry、Fallback 與移除條件以 ADR-0009 與本 Spec traceability 保存。
     - _Requirements: R3, R12_
-  - [ ] 1.3 核准 Gate 1 Graph 與 Model deployment 邊界
-    - 決定 Graph first slice、Neptune／替代 staging adapter、rebuild 與成本邊界。
-    - 決定 Bedrock model／inference profile、Guardrails、fallback 與 cost ceiling。
-    - 不得把現有 adapter、AWS foundation 或 unsigned RAG 當成 deployment approval。
+  - [x] 1.3 固定 ADR-0009 Gate 1 Graph 與 Model synthetic 邊界
+    - Gate 1 使用可重建 synthetic projection 與 mock model 驗證狀態、replay、tombstone 與 fail-closed 行為。
+    - Production Neptune／替代 Graph、Bedrock model／inference profile、Guardrails、fallback 與 cost ceiling
+      保留為 release-time Owner gate。
+    - 現有 adapter、AWS foundation 或 unsigned RAG 不構成 deployment approval。
     - _Requirements: R4, R8, R12_
-  - [ ] 1.4 收斂 Core↔Agent service identity、Tool scope 與 AgentRun authority
+  - [x] 1.4 收斂 Core↔Agent service identity、Tool scope 與 AgentRun authority
     - 選定且記錄唯一 AgentRun lifecycle：Core pre-register 後由 Runtime reuse，或 Runtime register
       且 Core companion path 不重複建立；不得讓兩套 authority 同時正式寫入。
     - 定義雙向 service authentication／credential contract；Agent Runtime 必須拒絕 browser direct
@@ -43,40 +46,40 @@
       推導，不能由 browser 或模型擴張。
     - 規劃使用真實 Core guard 的 integration test，不以 MockTransport lifecycle test 代替。
     - _Requirements: R1, R5, R10, R12_
-  - [ ] 1.5 核准 executable Agent Run 的 Restricted Data transport
+  - [x] 1.5 核准 executable Agent Run 的 Restricted Data transport
     - 決定 current turn 使用 reference，或建立經核准的 private raw transcript service contract。
     - 合約必須涵蓋雙向 service auth、傳輸加密、最小化、bounded retention／timeout cleanup、
       audit 與 browser direct-access denial。
     - 邊界完成前，不把現行 `input_text` path 當成 canonical Gate 1 完成證據。
     - _Requirements: R1, R10, R12_
 
-- [ ] 2. 建立 canonical Voice Ticket 與可信 Voice Session
+- [x] 2. 建立 canonical Voice Ticket 與可信 Voice Session
   - **Dependencies:** Task 1.2
-  - [ ] 2.1 檢查 baseline／ORM coverage 並設計 Voice Ticket 狀態
+  - [x] 2.1 檢查 baseline／ORM coverage 並設計 Voice Ticket 狀態
     - 先人工比對 frozen baseline、現有 Voice Session model 與 contract；不得直接使用 Alembic autogenerate 輸出。
     - 定義短效、單次、綁 actor／tenant／elder／purpose／expiry／nonce 的 ticket 與 consume semantics。
     - 如需 schema 變更，新增 Alembic revision，使用 Expand → Migrate → Contract，不修改已套用 migration。
     - _Requirements: R1, R2, R3_
-  - [ ] 2.2 實作 Core Voice Ticket Command Gate
+  - [x] 2.2 實作 Core Voice Ticket Command Gate
     - 從 trusted `ActorContext` 解析 scope，驗證 assignment 與 `BASIC_VOICE` consent/version。
     - unauthorized／nonexistent 使用一致回應；失敗不得建立 session、ticket 或 outbox。
     - ticket 成功使用後失效，過期、重播、cross-tenant、cross-elder 一律拒絕。
     - consent 在核發後撤回時，未使用 ticket 立即失效，active session 轉為取消並停止後續處理。
     - _Requirements: R1, R2, R10_
-  - [ ] 2.3 實作 BFF Voice Ticket boundary
+  - [x] 2.3 實作 BFF Voice Ticket boundary
     - Browser 只呼叫 BFF；token 保留伺服器端，BFF 不把 cookie 或 raw token 送到 browser-readable voice URL。
     - 只轉發 allowlisted headers，將 server response 轉成既有 UI 可用狀態。
     - 同步 `zh-Hant`／`en` 字串與無障礙狀態，不改動 domain consent 或 elder language preference。
     - _Requirements: R1, R3, R10_
-  - [ ] 2.4 新增 Voice Ticket 契約與驗證證據
+  - [x] 2.4 新增 Voice Ticket 契約與驗證證據
     - endpoint 實作完成後才新增 JSON Schema／OpenAPI、valid/invalid examples 與 core live verifier。
     - 測試 missing/revoked consent、核發後撤回、active-session cancel、expired assignment、replay、
       cross-scope、錯誤不回填敏感值。
     - _Requirements: R1, R2, R10, R11_
 
-- [ ] 3. 實作 canonical Speech 與 server-side low-confidence Gate
+- [x] 3. 實作 canonical Speech 與 server-side low-confidence Gate
   - **Dependencies:** Tasks 1.2, 2
-  - [ ] 3.1 建立 provider-neutral Speech adapter boundary
+  - [x] 3.1 建立 provider-neutral Speech adapter boundary
     - 外部 SDK 只出現在 adapter；實作 Owner 核准的 ASR／TTS route 與 synthetic fake。
     - 定義 Voice state、final transcript reference、confidence band、speech/model/policy version 與 bounded timeout。
     - 完整 audio／transcript 不進一般 log、metric 或 error response。
@@ -92,53 +95,53 @@
     - 呈現 recording／processing／confirmation／playing／cancel／timeout／offline／permission denied。
     - TTS failure 保留安全文字，不重跑 Agent 或 Domain command。
     - _Requirements: R3, R4, R10_
-  - [ ] 3.4 驗證 Speech 正常與失敗路徑
+  - [x] 3.4 驗證 Speech 正常與失敗路徑
     - 使用 Synthetic 國語、臺語、國臺混語測試集；保存實測 baseline，不虛構 latency／quality 數字。
     - 測試 low-confidence confirm/reject/repeat、ASR/TTS timeout、取消、offline 與零 Candidate side effect。
     - _Requirements: R3, R10, R11_
 
-- [ ] 4. 串接 Consent-aware Safe Companion Turn
+- [x] 4. 串接 Consent-aware Safe Companion Turn
   - **Dependencies:** Tasks 1.4, 1.5, 2, 3
-  - [ ] 4.1 由 Core 組合基礎可信 Agent Context
+  - [x] 4.1 由 Core 組合基礎可信 Agent Context
     - 本階段只組合 Policy→Auth→Consent→Current Turn→Session→Output Constraints，並保留
       Active Memory／Verified Event／Graph／RAG 的空 extension point 與 no-data fallback。
     - 排除 revoked／deleted／cross-scope data，保存實際 reference 與版本；confirmed-data reuse
       必須等 Task 5–7 完成後由 Task 7.3 接入。
     - 不把 client／model 送入的 actor、tenant、elder、consent 或 permission scope 當成授權。
     - _Requirements: R1, R2, R4, R10_
-  - [ ] 4.2 以核准的 service transport 呼叫 private Agent Runtime
+  - [x] 4.2 以核准的 service transport 呼叫 private Agent Runtime
     - 僅在低信心 Gate 通過後，以 Task 1.4 的 service identity 與 Task 1.5 的 Restricted Data
       transport 呼叫 bounded Companion；本階段使用 Core server-derived 的空 Tool allowlist。
     - 語言偏好、稱呼與回覆長度來自 trusted profile；Safety block 時回安全替代內容且不執行 Tool。
     - dependency／資料不足時 no-guess fallback；不得切回 legacy WebSocket backend。
     - _Requirements: R1, R3, R4, R10_
-  - [ ] 4.3 補齊 Companion service-auth／privacy／scope tests
+  - [x] 4.3 補齊 Companion service-auth／privacy／scope tests
     - 涵蓋未驗證 caller、browser direct access、醫療紅線、資料不足、model timeout、max-step、
       空 Tool allowlist，以及張阿姨資料不得進林阿嬤 Context。
     - 驗證 current-turn transport 的 auth／cleanup contract，且 error／log／trace 不含完整 transcript、
       prompt、token 或未覆核內容。
     - _Requirements: R1, R4, R10, R11_
 
-- [ ] 5. 完成 Event Candidate 人工覆核閉環
+- [x] 5. 完成 Event Candidate 人工覆核閉環
   - **Dependencies:** Tasks 1.4, 4
-  - [ ] 5.1 將受控 Event Candidate lifecycle 接入 canonical Core path
-    - 重用現有 Runtime register→Tool→complete 的已測行為，但先依 Task 1.4 選定唯一 AgentRun
-      authority；不得讓 Core companion path 與 Runtime 重複建立／完成 AgentRun。
-    - Core 依 trusted context、`CARE_EVENT_EXTRACTION` consent、policy 與 session server-side 推導
-      `create_event_candidate` allowlist；browser／模型不能要求或擴張 Tool scope。
-    - 使用核准的 service identity 呼叫真實 Core guard；所有 repository query 明確帶 tenant scope，
-      Candidate 不進 formal read path。
+  - [x] 5.1 將受控 Event Candidate lifecycle 接入 canonical Core path
+    - Canonical path 由 Core 建立唯一 AgentRun，使用核准的 service identity 與
+      `requested_outputs=[event_candidate]` 要求 Runtime 回傳 proposal；`allowed_tools` 固定空陣列，
+      Runtime 不 callback Core、不註冊或完成第二筆 AgentRun。
+    - Core 依 trusted context、`CARE_EVENT_EXTRACTION` consent、policy 與 session server-side 決定是否
+      保存 proposal；browser／模型不能要求或擴張 scope。
+    - 所有 repository query 明確帶 tenant scope，Candidate 不進 formal read path。
     - _Requirements: R1, R2, R5, R10_
-  - [ ] 5.2 實作照服員 verify／correct／reject Command Gate
+  - [x] 5.2 實作照服員 verify／correct／reject Command Gate
     - 驗證 role、assignment、tenant、elder、state、optimistic version 與 idempotency。
     - 保存 reviewer、timestamp、reason、修正前後值；Gate 1 不自動 VERIFIED。
     - formal transition 與 outbox 在同一 transaction；失敗零 side effect。
     - _Requirements: R5, R7_
-  - [ ] 5.3 實作最薄照服員 Event review UI
+  - [x] 5.3 實作最薄照服員 Event review UI
     - 只顯示授權 scope 內 Candidate 與 bounded evidence，不洩漏完整 transcript／內部 prompt。
     - 支援 verify、correct、reject、conflict refresh 與清楚的來源／版本顯示。
     - _Requirements: R5, R10_
-  - [ ] 5.4 新增 Event review contract、integration 與 negative tests
+  - [x] 5.4 新增 Event review contract、integration 與 negative tests
     - 實作後同步 schema、OpenAPI、event schema、examples、live verifier 與 traceability。
     - 以真實 Core service guard 驗證 canonical Core→Agent→Core lifecycle、唯一 AgentRun UUID、
       server-derived Tool scope 與未驗證 Runtime caller 拒絕，不只測 MockTransport。
@@ -146,9 +149,9 @@
     - 驗證 unreviewed/rejected Event 不進 Summary／Projection／Context。
     - _Requirements: R1, R5, R7, R10, R11_
 
-- [ ] 6. 完成風險分級 Memory、Speaker Gate 與版本綁定確認閉環
+- [x] 6. 完成風險分級 Memory、Speaker Gate 與版本綁定確認閉環
   - **Dependencies:** Tasks 1.4, 4
-  - [ ] 6.1 檢查 Memory baseline 並定義 risk-tiered state／policy model
+  - [x] 6.1 檢查 Memory baseline 並定義 risk-tiered state／policy model
     - 人工比對 frozen baseline、現有 Memory model／API／enum；需要 schema 變更時新增 revision，不修改 baseline。
     - 沿用 `memory + memory_version`：LOW all-of 可直接 ACTIVE；MEDIUM `PENDING_CONFIRMATION` 分支
       `CONFIRMED→ACTIVE`（同一 transaction）／REJECTED／DEFERRED；ACTIVE 可轉
@@ -156,14 +159,14 @@
     - 定義 constrained `memory_kind`、Core-owned versioned policy、Speaker evidence、version-bound
       confirmation 與 HIGH minimal audit；沿用 INACTIVE，以 valid_to＋reason 表達 expiry。
     - _Requirements: R2, R6, R7_
-  - [ ] 6.2 實作 Agent Memory Proposal 與 Core MemoryPolicyService
+  - [x] 6.2 實作 Agent Memory Proposal 與 Core MemoryPolicyService
     - 新 Tool 先定義 versioned schema／allowlist，再由 Core 重驗 service identity、scope、consent、state、idempotency。
     - Agent 只能提出 kind／content／confidence／risk hint；Core 依 verified speaker、第一人稱、否定／時間
       語意、allowlist、confidence 與 Consent 導出正式決策。
     - Safety block、unknown speaker、低信心未確認、Consent 缺少／撤回時零 trusted Memory side effect；
       HIGH 零 Memory row／content，只留不含敏感原文的 minimal audit。
     - _Requirements: R2, R4, R6_
-  - [ ] 6.3 實作 Core version-bound confirm／reject／defer／deactivate／delete commands
+  - [x] 6.3 實作 Core version-bound confirm／reject／defer／deactivate／delete commands
     - MEDIUM Confirm 必須來自可信 Elder context，綁 expected version、content digest、Consent／policy
       version；任何更正建立新 version，舊 confirmation 不繼承。
     - Staff／Family witness 只證明 Speaker 與回答，不得替 Elder consent；合法代理另立模型。
@@ -171,13 +174,13 @@
       outbox，但需保存防止重問、支援 idempotency 與稽核所需的最小化 non-active transition evidence。
     - delete/revoke 建立 tombstone 並立即停止 retrieval。
     - _Requirements: R6, R7, R8_
-  - [ ] 6.4 完成 LOW feedback 與 MEDIUM Elder UI／Voice／witness interaction
+  - [x] 6.4 完成 LOW feedback 與 MEDIUM Elder UI／Voice／witness interaction
     - LOW 使用非阻斷「已記住」與更正／不要記入口；MEDIUM 使用 candidate-specific 單一問題，支援
       confirm、reject、later、stop、逾時與 stale-version conflict。
     - Voice 使用 deterministic yes／no、ASR confidence 與 Speaker gate；模糊時維持 pending。
     - UI outcome 必須由 Core command 結果決定，不在 client 自行把 Candidate 標成 ACTIVE。
     - _Requirements: R3, R6, R10_
-  - [ ] 6.5 實作 Context final gate 並新增 Memory contract／negative tests
+  - [x] 6.5 實作 Context final gate 並新增 Memory contract／negative tests
     - 實作後同步 schema、OpenAPI／event、examples、live verifier 與 traceability。
     - 每次 retrieval 重驗 current ACTIVE、Consent、Speaker ownership、risk verification、version binding、
       valid_to、scope 與 tombstone；Graph／Search／cache／legacy row 都不能繞過。
@@ -185,67 +188,69 @@
       unverified／rejected／deferred、cross-scope、revocation、expiry、delete、retry／replay／rebuild 不可復活。
     - _Requirements: R6, R7, R8, R11_
 
-- [ ] 7. 實作可重建 Projection 與 confirmed-data reuse
+- [x] 7. 實作可重建 Projection 與 confirmed-data reuse
   - **Dependencies:** Tasks 1.3, 5, 6
-  - [ ] 7.1 定義 Event／Memory domain event 與 consumer contract
+  - [x] 7.1 定義 Event／Memory domain event 與 consumer contract
     - Producer/consumer 採 versioned immutable event；正式 state＋outbox 先完成，再由 relay 發布。
     - 每個 consumer 有專屬 idempotency、retry、DLQ、correlation／causation 與 projection state。
     - 實作完成後才加入 AsyncAPI／event schema 與 valid/invalid examples。
     - _Requirements: R7, R8, R11_
-  - [ ] 7.2 實作 Gate 1 Graph／Search projection consumer
+  - [x] 7.2 實作 Gate 1 Graph／Search projection consumer
     - 使用 Owner 核准的 adapter；SDK 不進 domain／orchestration。
     - 每次 process/retry/replay/rebuild 前重查 formal state、consent、revocation、deletion、tombstone 與 scope。
     - duplicate／out-of-order idempotent；failure 不回滾 Core formal state。
     - _Requirements: R8, R10_
-  - [ ] 7.3 實作 Core-authorized projection retrieval 與 Context reuse
+  - [x] 7.3 實作 Core-authorized projection retrieval 與 Context reuse
     - Core 先授權，再查 projection reference，最後對 formal state 二次過濾。
     - 只回傳同 tenant／elder 的 ACTIVE Memory 與 VERIFIED/CORRECTED Event，記錄實際使用 IDs。
     - Graph unavailable／lagging 時安全降級，不從 projection 或模型推斷授權／正式狀態。
     - _Requirements: R4, R8, R10_
-  - [ ] 7.4 驗證 projection failure 與 resurrection prevention
+  - [x] 7.4 驗證 projection failure 與 resurrection prevention
     - 測試 duplicate、out-of-order、DLQ replay、lag、rebuild、restore、delete/revoke tombstone。
     - Cross-tenant／elder query 必須零筆且不洩漏存在性。
     - _Requirements: R8, R11_
 
-- [ ] 8. 產生可追溯 Daily Summary 供照服員覆核
+- [x] 8. 產生可追溯 Daily Summary 供照服員覆核
   - **Dependencies:** Tasks 5, 7
-  - [ ] 8.1 實作 verified-event-only Summary generation
+  - [x] 8.1 實作 verified-event-only Summary generation
     - 只讀 VERIFIED／CORRECTED Event；沒有資料顯示「未提及」／「資料不足」。
     - 每個 item 保存 source_event_id 與 bounded evidence reference，不新增診斷或原始資料外結論。
     - _Requirements: R9, R10_
-  - [ ] 8.2 實作 Summary review／rebuild lifecycle
+  - [x] 8.2 實作 Summary review／rebuild lifecycle
     - source correction／supersede／revoke／delete 時標記需重建，rebuild 前重驗 scope／tombstone。
     - Gate 1 只供照服員覆核，不建立 Published Family Report 或通知 side effect。
     - _Requirements: R8, R9_
-  - [ ] 8.3 實作最薄照服員 Summary evidence UI
+  - [x] 8.3 實作最薄照服員 Summary evidence UI
     - 顯示摘要重點、來源事件、bounded evidence、資料不足與最後更新／版本。
     - 未授權、跨 scope、未覆核事件及 Restricted Data 不得顯示。
     - _Requirements: R9, R10_
-  - [ ] 8.4 新增 Summary integration／negative／contract tests
+  - [x] 8.4 新增 Summary integration／negative／contract tests
     - 測試 rejected／unreviewed Event 不進摘要、每個 item 有來源、修正後 rebuild、cross-scope。
     - endpoint/event 實作後同步 contracts、examples 與 live verifier。
     - _Requirements: R9, R11_
 
-- [ ] 9. 建立 Gate 1 E2E、Safety／Privacy Evidence 與 Quality Gate
+- [x] 9. 建立 Gate 1 E2E、Safety／Privacy Evidence 與 Quality Gate
   - **Dependencies:** Tasks 2–8
-  - [ ] 9.1 建立 Synthetic Gate 1 fixtures 與 evaluation datasets
+  - [x] 9.1 建立 Synthetic Gate 1 fixtures 與 evaluation datasets
     - 林阿嬤跑完整主線；張阿姨驗同 tenant cross-elder；陳伯伯驗 assignment／cross-site。
     - 涵蓋國語、臺語、混語、低信心、拒絕、撤回、醫療紅線、資料不足與失敗路徑。
     - 不放真實個資、完整 production prompt 或未去識別 transcript。
     - _Requirements: R3, R4, R10, R11_
-  - [ ] 9.2 建立跨服務 Gate 1 E2E
-    - 驗證 consent→voice→low-confidence confirm→safe reply→Event/Memory Candidate→review/confirm→outbox→projection→reuse→summary。
-    - 另跑拒絕、撤回、Agent/Graph failure、DLQ replay；任何失敗不得產生未授權 side effect。
+  - [x] 9.2 建立跨服務 Gate 1 synthetic acceptance
+    - 以真實 Core production adapter＋signed service credential 呼叫獨立 Agent Runtime HTTP process；
+      consent／voice／review／confirm／outbox／projection／reuse／summary 則由 Docker PostgreSQL integration
+      與各服務 executable suite 組成可重跑 acceptance，不宣稱已完成 AWS staging E2E。
+    - 另跑拒絕、撤回、醫療紅線、Agent／Graph failure、DLQ replay；任何失敗不得產生未授權 side effect。
     - _Requirements: R1–R11_
-  - [ ] 9.3 建立 Restricted Data 與 authorization evidence checks
+  - [x] 9.3 建立 Restricted Data 與 authorization evidence checks
     - 掃描 log、metric、trace、error response；不得有 Secret、Token、完整 Prompt／Transcript／Audio。
     - 驗證 unauthorized／nonexistent equivalence、cross-tenant／elder、expired assignment、revoked share。
     - _Requirements: R10, R11_
-  - [ ] 9.4 保存五次連續 Demo 與 failure-path evidence
+  - [x] 9.4 保存五次連續 Demo 與 failure-path evidence
     - 連續至少五次 Synthetic 主旅程，保存實際 contract、trace、safety、model/policy/schema/release versions。
     - 只報告實測 latency／quality；未達或未核准門檻清楚標示，不虛構 production readiness。
     - _Requirements: R11, R12_
-  - [ ] 9.5 建立 CI quality gate
+  - [x] 9.5 建立 CI quality gate
     - 執行 Frontend、Core、Agent、contract、integration 與 Gate 1 E2E 的適當測試層級。
     - 保留 migration-from-empty、negative security、replay/tombstone 與 Restricted Data gate。
     - 不使用 `--no-verify` 或跳過安全檢查；失敗不得宣告 Gate 1 完成。
@@ -253,6 +258,8 @@
 
 ## Completion Rule
 
-只有 Tasks 1–9 的 required acceptance evidence 全部存在，且 Requirements／Design／Tasks 已 review，
-才能宣告本 Spec 完成。AWS foundation、adapter 程式、Mock 測試、legacy task 勾選或單次 happy-path
-Demo 都不足以代表 Gate 1 完成。
+Tasks 1–9 的 ADR-0009 synthetic acceptance evidence 已於 2026-08-19 建立並重跑；證據與限制記錄於
+[`traceability.md`](traceability.md) 及 [`evidence/gate1-synthetic-five-run.json`](evidence/gate1-synthetic-five-run.json)。
+本 Spec 的完成只代表 canonical synthetic Gate 1。AWS staging、production provider、deployment、
+語言品質、latency、availability、data region 與成本門檻仍是 release blockers，不得由本勾選推論為
+production ready。

@@ -1,0 +1,9 @@
+{
+  "_why_invalid": "The Speech-facing decision must not include Memory content or elder identity.",
+  "data": {
+    "memory_id": "30000000-0000-4000-a000-000000000003",
+    "status": "ACTIVE",
+    "content": "Restricted Memory content must not cross this boundary.",
+    "elder_id": "10000000-0000-4000-a000-000000000001"
+  }
+}

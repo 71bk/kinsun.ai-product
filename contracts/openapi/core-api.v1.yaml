@@ -2559,6 +2559,92 @@
         ]
       }
     },
+    "/api/v1/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation": {
+      "post": {
+        "tags": [
+          "memories"
+        ],
+        "summary": "Decide Memory By Voice",
+        "description": "Accept a bounded voice decision only from the trusted Speech service.",
+        "operationId": "decide_memory_by_voice_api_v1_internal_elders__elder_id__memory_candidates__memory_id__voice_confirmation_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/VoiceMemoryConfirmationRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/VoiceMemoryDecisionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/elders/{elder_id}/memory-candidates/{memory_id}/reject": {
       "post": {
         "tags": [
@@ -5165,7 +5251,8 @@
           "PROACTIVE_COMPANION",
           "FAMILY_SHARING"
         ],
-        "title": "ConsentPurpose"
+        "title": "ConsentPurpose",
+        "description": "Supported purposes for granting and enforcing consent."
       },
       "ElderMode": {
         "type": "string",
@@ -5269,7 +5356,8 @@
           "MIXED",
           "UNKNOWN"
         ],
-        "title": "LanguageRoute"
+        "title": "LanguageRoute",
+        "description": "Supported language routes for a conversation."
       },
       "LineOidcHandoffRequest": {
         "properties": {
@@ -5326,6 +5414,33 @@
           "expected_nonce"
         ],
         "title": "LinkLineIdentityRequest"
+      },
+      "MemoryKind": {
+        "type": "string",
+        "enum": [
+          "MUSIC_PREFERENCE",
+          "HOBBY",
+          "PREFERRED_ADDRESS",
+          "FAMILY_RELATIONSHIP",
+          "CONTACT_ROUTINE",
+          "DAILY_ROUTINE",
+          "HEALTH_INFERENCE",
+          "MEDICATION_JUDGMENT",
+          "MOOD_OR_LONELINESS_INFERENCE",
+          "FAMILY_CONFLICT",
+          "FINANCIAL_INFORMATION",
+          "SENSITIVE_OR_UNKNOWN"
+        ],
+        "title": "MemoryKind"
+      },
+      "MemoryRiskLevel": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH"
+        ],
+        "title": "MemoryRiskLevel"
       },
       "MemoryType": {
         "type": "string",

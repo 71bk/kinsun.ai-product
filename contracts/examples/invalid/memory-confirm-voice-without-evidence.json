@@ -1,5 +1,5 @@
 {
-  "_why_invalid": "VOICE confirmation cannot establish a candidate-specific affirmative answer until versioned consent-scoped evidence is implemented.",
+  "_why_invalid": "The public Elder command accepts ELDER_UI only; voice decisions require the private candidate-specific evidence contract.",
   "data": {
     "confirmation_method": "VOICE",
     "expected_candidate_version": 1,

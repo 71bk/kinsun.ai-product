@@ -88,6 +88,14 @@ DATA_SCHEMA_FOR = {
     "memory-candidate-without-source.json": "domain/CreateMemoryCandidateRequestV1.json",
     "memory-confirm-elder-ui.json": "domain/ConfirmMemoryRequestV1.json",
     "memory-confirm-voice-without-evidence.json": "domain/ConfirmMemoryRequestV1.json",
+    "memory-confirm-elder-voice.json": "domain/VoiceMemoryConfirmationRequestV1.json",
+    "memory-confirm-voice-decision.json": "domain/VoiceMemoryDecisionV1.json",
+    "memory-confirm-voice-decision-leaks-content.json": (
+        "domain/VoiceMemoryDecisionV1.json"
+    ),
+    "memory-confirm-witness-missing-evidence.json": (
+        "domain/VoiceMemoryConfirmationRequestV1.json"
+    ),
     "summary-draft.json": "domain/CreateSummaryDraftRequestV1.json",
     "summary-draft-without-evidence-or-gap.json": "domain/CreateSummaryDraftRequestV1.json",
     "family-report-publish.json": "domain/PublishFamilyReportRequestV1.json",
@@ -186,12 +194,8 @@ DATA_SCHEMA_FOR = {
         "domain/ConfirmLineAccountMergeRequestV1.json"
     ),
     "app-session-logout-response.json": "domain/AppSessionLogoutV1.json",
-    "app-session-logout-response-leaks-token.json": (
-        "domain/AppSessionLogoutV1.json"
-    ),
-    "kinsun-email-start-request.json": (
-        "domain/StartKinsunEmailAuthRequestV1.json"
-    ),
+    "app-session-logout-response-leaks-token.json": ("domain/AppSessionLogoutV1.json"),
+    "kinsun-email-start-request.json": ("domain/StartKinsunEmailAuthRequestV1.json"),
     "kinsun-email-start-request-provider-field.json": (
         "domain/StartKinsunEmailAuthRequestV1.json"
     ),

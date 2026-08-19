@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from uuid import UUID
 
 import httpx
@@ -110,3 +111,43 @@ async def test_public_decision_with_confidence_is_rejected_as_malformed() -> Non
             confidence=0.99,
             transcript="synthetic transcript",
         )
+
+
+@pytest.mark.asyncio
+async def test_client_submits_bounded_candidate_specific_memory_decision() -> None:
+    memory_id = UUID("52000000-0000-4000-8000-000000000002")
+    elder_id = UUID("52000000-0000-4000-8000-000000000003")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == (
+            f"/api/v1/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation"
+        )
+        assert request.headers["Idempotency-Key"].startswith("memory-voice:")
+        payload = json.loads(request.content)
+        assert payload["response_intent"] == "AFFIRM"
+        assert "transcript" not in payload
+        return httpx.Response(
+            200,
+            json={"data": {"memory_id": str(memory_id), "status": "ACTIVE"}},
+        )
+
+    client = CoreVoiceGateClient(
+        base_url="http://core.test",
+        timeout_seconds=1,
+        service_token="synthetic-service-token",
+        transport=httpx.MockTransport(handler),
+    )
+    result = await client.decide_memory_by_voice(
+        elder_id=elder_id,
+        memory_id=memory_id,
+        session_id=SESSION_ID,
+        confirmation_method="ELDER_VOICE",
+        expected_candidate_version=2,
+        consent_version=3,
+        confirmation_question_digest="a" * 64,
+        response_intent="AFFIRM",
+        witness_actor_id=None,
+        witness_evidence_reference=None,
+    )
+
+    assert result.status == "ACTIVE"

@@ -37,9 +37,7 @@ class SafetyEvaluator:
                 schema_version=SafetyEvaluation.model_fields["schema_version"].default,
                 decision=SafetyDecision.BLOCK,
                 risk_level=RiskLevel.HIGH,
-                reason_codes=[
-                    "UNSAFE_MEDICAL_REPLY" if reply_matches else "HIGH_RISK_REQUEST"
-                ],
+                reason_codes=["UNSAFE_MEDICAL_REPLY" if reply_matches else "HIGH_RISK_REQUEST"],
                 matched_terms=matched,
                 safe_reply="我不能提供醫療建議，請先與照護人員或醫師確認，避免風險。",
             )

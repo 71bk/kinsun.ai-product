@@ -63,6 +63,21 @@ _CORE_LANGUAGE_ROUTES = {
     "hak-TW": "HAK_TW",
 }
 
+_AFFIRMATIVE_MEMORY_ANSWERS = frozenset({"是", "好", "可以", "記住", "yes"})
+_REJECT_MEMORY_ANSWERS = frozenset({"不是", "不要", "不用", "no"})
+_DEFER_MEMORY_ANSWERS = frozenset({"稍後", "晚點", "下次", "later"})
+
+
+def _memory_response_intent(text: str) -> str:
+    normalized = "".join(text.casefold().strip().split()).rstrip("。！？!?")
+    if normalized in _AFFIRMATIVE_MEMORY_ANSWERS:
+        return "AFFIRM"
+    if normalized in _REJECT_MEMORY_ANSWERS:
+        return "REJECT"
+    if normalized in _DEFER_MEMORY_ANSWERS:
+        return "DEFER"
+    return "UNCERTAIN"
+
 
 def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
     settings = get_settings()
@@ -172,6 +187,35 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
             await _fail_consumed_session(core, payload.session_id)
             raise HTTPException(status_code=503, detail="voice safety gate unavailable") from exc
 
+        memory_decision = None
+        confirmation = payload.memory_confirmation
+        if confirmation is not None and decision.decision == "CAN_SEND_TO_AGENT":
+            response_intent = _memory_response_intent(text)
+            try:
+                memory_result = await core.decide_memory_by_voice(
+                    elder_id=confirmation.elder_id,
+                    memory_id=confirmation.memory_id,
+                    session_id=payload.session_id,
+                    confirmation_method=confirmation.confirmation_method,
+                    expected_candidate_version=confirmation.expected_candidate_version,
+                    consent_version=confirmation.consent_version,
+                    confirmation_question_digest=(confirmation.confirmation_question_digest),
+                    response_intent=response_intent,
+                    witness_actor_id=confirmation.witness_actor_id,
+                    witness_evidence_reference=(confirmation.witness_evidence_reference),
+                )
+            except CoreGateRejectedError as exc:
+                raise HTTPException(
+                    status_code=403,
+                    detail="memory confirmation unavailable",
+                ) from exc
+            except CoreGateUnavailableError as exc:
+                raise HTTPException(
+                    status_code=503,
+                    detail="memory confirmation unavailable",
+                ) from exc
+            memory_decision = memory_result.status
+
         return TranscribeResponse(
             session_id=payload.session_id,
             text=text,
@@ -180,6 +224,7 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
             gate_decision=decision.decision,
             confirmation_required=decision.confirmation_required,
             gate_expires_at=decision.expires_at,
+            memory_decision=memory_decision,
         )
 
     @app.post("/api/v1/speech/syntheses", response_model=SynthesizeResponse)

@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class MemoryType(str, Enum):
@@ -98,6 +98,48 @@ class ConfirmMemoryRequest(BaseModel):
     )
     expected_candidate_version: int = Field(ge=1)
     consent_version: int = Field(ge=1)
+
+
+class VoiceMemoryConfirmationRequest(BaseModel):
+    """Trusted Speech-to-Core decision for one exact Memory candidate version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    confirmation_method: Literal["ELDER_VOICE", "WITNESSED_VOICE"]
+    session_id: UUID
+    expected_candidate_version: int = Field(ge=1)
+    consent_version: int = Field(ge=1)
+    confirmation_question_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    response_intent: Literal["AFFIRM", "REJECT", "UNCERTAIN", "DEFER"]
+    witness_actor_id: UUID | None = None
+    witness_evidence_reference: str | None = Field(
+        default=None,
+        min_length=10,
+        max_length=300,
+        pattern=r"^evidence:[0-9a-fA-F-]{36}$",
+    )
+
+    @model_validator(mode="after")
+    def validate_witness_pair(self) -> VoiceMemoryConfirmationRequest:
+        witnessed = self.confirmation_method == "WITNESSED_VOICE"
+        has_witness_pair = (
+            self.witness_actor_id is not None and self.witness_evidence_reference is not None
+        )
+        if witnessed != has_witness_pair:
+            raise ValueError(
+                "WITNESSED_VOICE requires witness_actor_id and "
+                "witness_evidence_reference; ELDER_VOICE forbids them"
+            )
+        return self
+
+
+class VoiceMemoryDecisionResponse(BaseModel):
+    """Bounded Speech-facing result; Memory content never crosses this boundary."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: UUID
+    status: Literal["ACTIVE", "REJECTED", "DEFERRED", "PENDING_CONFIRMATION"]
 
 
 class MemoryDecisionRequest(BaseModel):

@@ -265,6 +265,38 @@ async def main() -> int:
         )
 
         response = await client.post(
+            f"/api/v1/internal/elders/{sample_uuid}/memory-candidates/"
+            f"{sample_uuid}/voice-confirmation",
+            headers={"Idempotency-Key": "live-contract-memory-voice-confirmation"},
+            json={
+                "confirmation_method": "ELDER_VOICE",
+                "session_id": sample_uuid,
+                "expected_candidate_version": 1,
+                "consent_version": 1,
+                "confirmation_question_digest": "a" * 64,
+                "response_intent": "AFFIRM",
+                "witness_actor_id": None,
+                "witness_evidence_reference": None,
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST internal Memory voice confirmation did not fail closed with 401: "
+                f"returned {response.status_code}"
+            )
+            print(
+                "FAIL  POST internal Memory voice confirmation fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST internal Memory voice confirmation fails closed with 401")
+        check(
+            "POST internal Memory voice confirmation 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
             "/api/v1/internal/agent-runs",
             headers={"Idempotency-Key": "live-contract-agent-run"},
             json={
@@ -368,8 +400,12 @@ async def main() -> int:
         for path, request_body in kinsun_auth_probes:
             response = await client.post(path, json=request_body)
             if response.status_code != 401:
-                failures.append(f"POST {path} returned {response.status_code}, expected 401")
-                print(f"FAIL  POST {path} rejects missing BFF credential: {response.status_code}")
+                failures.append(
+                    f"POST {path} returned {response.status_code}, expected 401"
+                )
+                print(
+                    f"FAIL  POST {path} rejects missing BFF credential: {response.status_code}"
+                )
             else:
                 print(f"ok    POST {path} rejects missing BFF credential with 401")
             response_body = response.json()
@@ -381,11 +417,15 @@ async def main() -> int:
             serialized = json.dumps(response_body, ensure_ascii=False)
             for restricted_value in request_body.values():
                 if isinstance(restricted_value, str) and restricted_value in serialized:
-                    failures.append(f"POST {path} reflected rejected authentication input")
+                    failures.append(
+                        f"POST {path} reflected rejected authentication input"
+                    )
                     print(f"FAIL  POST {path} reflected rejected authentication input")
                     break
             else:
-                print(f"ok    POST {path} does not reflect rejected authentication input")
+                print(
+                    f"ok    POST {path} does not reflect rejected authentication input"
+                )
 
         response = await client.post(
             "/api/v1/internal/auth/google/handoff",
@@ -422,8 +462,7 @@ async def main() -> int:
                 f"{response.status_code}, expected 401"
             )
             print(
-                "FAIL  POST Google onboarding fails closed: "
-                f"{response.status_code}"
+                "FAIL  POST Google onboarding fails closed: " f"{response.status_code}"
             )
         else:
             print("ok    POST Google onboarding fails closed with 401")
@@ -446,10 +485,7 @@ async def main() -> int:
                 "POST /api/v1/internal/auth/line/handoff returned "
                 f"{response.status_code}, expected 401"
             )
-            print(
-                "FAIL  POST LINE handoff fails closed: "
-                f"{response.status_code}"
-            )
+            print("FAIL  POST LINE handoff fails closed: " f"{response.status_code}")
         else:
             print("ok    POST LINE handoff fails closed with 401")
         check(
@@ -467,10 +503,7 @@ async def main() -> int:
                 "POST /api/v1/internal/auth/line/onboarding returned "
                 f"{response.status_code}, expected 401"
             )
-            print(
-                "FAIL  POST LINE onboarding fails closed: "
-                f"{response.status_code}"
-            )
+            print("FAIL  POST LINE onboarding fails closed: " f"{response.status_code}")
         else:
             print("ok    POST LINE onboarding fails closed with 401")
         check(
@@ -485,7 +518,9 @@ async def main() -> int:
                 "GET /api/v1/internal/auth/line/status returned "
                 f"{response.status_code}, expected 401"
             )
-            print(f"FAIL  GET LINE identity status fails closed: {response.status_code}")
+            print(
+                f"FAIL  GET LINE identity status fails closed: {response.status_code}"
+            )
         else:
             print("ok    GET LINE identity status fails closed with 401")
         check(

@@ -1,0 +1,119 @@
+name: Gate 1 Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-gate1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        env:
+          POSTGRES_DB: kinsun
+          POSTGRES_USER: kinsun
+          POSTGRES_PASSWORD: kinsun_local_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kinsun -d kinsun"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun
+      TEST_DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun_test
+      APP_ENV: development
+      FAKE_AUTH_ENABLED: "false"
+      AWS_EC2_METADATA_DISABLED: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.11.25"
+          enable-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked Python environments
+        run: |
+          uv sync --frozen --project services/core-api --extra test --extra dev
+          uv sync --frozen --project services/agent-runtime --extra test --extra dev
+          uv sync --frozen --project services/speech-gateway --extra test --extra dev
+
+      - name: Create disposable integration database
+        run: >-
+          uv run --frozen --project services/core-api python -c
+          "import psycopg;
+          connection = psycopg.connect('postgresql://kinsun:kinsun_local_dev@localhost:5432/postgres', autocommit=True);
+          connection.execute('CREATE DATABASE kinsun_test');
+          connection.close()"
+
+      - name: Core API quality and PostgreSQL integration
+        run: |
+          uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py
+          uv run --frozen --project services/core-api pytest services/core-api/tests/unit
+          uv run --frozen --project services/core-api pytest services/core-api/tests/integration
+
+      - name: Agent Runtime quality
+        run: |
+          uv run --frozen --project services/agent-runtime ruff check services/agent-runtime
+          uv run --frozen --project services/agent-runtime ruff format --check services/agent-runtime
+          uv run --frozen --project services/agent-runtime pytest services/agent-runtime/tests
+
+      - name: Speech Gateway quality
+        run: |
+          uv run --frozen --project services/speech-gateway ruff check services/speech-gateway
+          uv run --frozen --project services/speech-gateway ruff format --check services/speech-gateway
+          uv run --frozen --project services/speech-gateway pytest services/speech-gateway/tests
+
+      - name: Executable contracts
+        run: |
+          uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/validate_contracts.py contracts
+          uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_contract_live.py contracts
+          uv run --frozen --project services/agent-runtime --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_agent_contract_live.py contracts
+
+      - name: Five-run synthetic Core-to-Agent evidence
+        run: >-
+          uv run --frozen --project services/core-api python
+          scripts/verify_gate1_cross_service.py
+          --evidence-out /tmp/gate1-synthetic-five-run.json
+
+      - name: Frontend quality
+        run: |
+          npm ci
+          npm run typecheck --workspace @elderly-care/frontend
+          npm run test --workspace @elderly-care/frontend -- --run
+          npm run lint
+          npm run build --workspace @elderly-care/frontend
+
+      - name: Upload bounded Gate 1 evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate1-synthetic-evidence
+          path: /tmp/gate1-synthetic-five-run.json
+          if-no-files-found: error
+          retention-days: 30

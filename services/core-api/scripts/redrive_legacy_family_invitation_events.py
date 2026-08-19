@@ -4,7 +4,6 @@ import psycopg
 
 from app.core.config import get_settings
 
-
 database_url = get_settings().database_url.replace(
     "postgresql+asyncpg://", "postgresql://"
 ).replace("ssl=", "sslmode=")

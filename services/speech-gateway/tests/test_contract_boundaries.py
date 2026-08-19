@@ -14,7 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from speech_gateway.app import create_app
-from speech_gateway.core_voice_gate import CoreGateDecision
+from speech_gateway.core_voice_gate import CoreGateDecision, CoreMemoryDecision
 from speech_gateway.models import TranscriptSegment
 from speech_gateway.settings import get_settings
 
@@ -25,6 +25,7 @@ VOICE_TICKET = "synthetic-opaque-voice-ticket-material-000000000001"
 class FakeCoreGate:
     def __init__(self) -> None:
         self.failed_sessions: list[UUID] = []
+        self.memory_decisions: list[dict[str, object]] = []
 
     async def consume_ticket(self, *, session_id, voice_ticket):  # noqa: ANN001
         assert session_id == SESSION_ID
@@ -41,6 +42,13 @@ class FakeCoreGate:
 
     async def fail_session(self, *, session_id):  # noqa: ANN001
         self.failed_sessions.append(session_id)
+
+    async def decide_memory_by_voice(self, **kwargs):  # noqa: ANN003, ANN201
+        self.memory_decisions.append(kwargs)
+        return CoreMemoryDecision(
+            memory_id=kwargs["memory_id"],
+            status=("ACTIVE" if kwargs["response_intent"] == "AFFIRM" else "PENDING_CONFIRMATION"),
+        )
 
 
 @pytest.fixture
@@ -108,6 +116,68 @@ def test_low_confidence_is_reported_as_not_acceptable(
     assert response.status_code == 200
     assert response.json()["gate_decision"] == "CONFIRMATION_REQUIRED"
     assert response.json()["confirmation_required"] is True
+
+
+def test_candidate_specific_affirmation_reaches_core_only_after_asr_gate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def affirmative_transcript(audio, language, sample_rate, region):  # noqa: ANN001, ARG001
+        return ("是", 0.96, [])
+
+    core = FakeCoreGate()
+    monkeypatch.setattr("speech_gateway.app.transcribe_pcm", affirmative_transcript)
+    memory_id = UUID("52000000-0000-4000-8000-000000000002")
+    elder_id = UUID("52000000-0000-4000-8000-000000000003")
+
+    response = TestClient(create_app(core_client=core)).post(
+        "/api/v1/speech/transcriptions",
+        json={
+            **_transcription_payload(),
+            "memory_confirmation": {
+                "elder_id": str(elder_id),
+                "memory_id": str(memory_id),
+                "confirmation_method": "ELDER_VOICE",
+                "expected_candidate_version": 2,
+                "consent_version": 3,
+                "confirmation_question_digest": "a" * 64,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["memory_decision"] == "ACTIVE"
+    assert len(core.memory_decisions) == 1
+    assert core.memory_decisions[0]["response_intent"] == "AFFIRM"
+    assert core.memory_decisions[0]["memory_id"] == memory_id
+
+
+def test_low_confidence_memory_answer_has_zero_candidate_side_effect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def low_confidence(audio, language, sample_rate, region):  # noqa: ANN001, ARG001
+        return ("是", 0.42, [])
+
+    core = FakeCoreGate()
+    monkeypatch.setattr("speech_gateway.app.transcribe_pcm", low_confidence)
+    response = TestClient(create_app(core_client=core)).post(
+        "/api/v1/speech/transcriptions",
+        json={
+            **_transcription_payload(),
+            "memory_confirmation": {
+                "elder_id": "52000000-0000-4000-8000-000000000003",
+                "memory_id": "52000000-0000-4000-8000-000000000002",
+                "confirmation_method": "ELDER_VOICE",
+                "expected_candidate_version": 2,
+                "consent_version": 3,
+                "confirmation_question_digest": "a" * 64,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["gate_decision"] == "CONFIRMATION_REQUIRED"
+    assert response.json()["memory_decision"] is None
+    assert core.memory_decisions == []
 
 
 @pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])

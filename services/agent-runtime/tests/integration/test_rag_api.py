@@ -12,9 +12,7 @@ from agent_runtime.security.service_identity import (
 )
 
 RAG_PATH = "/api/v1/rag/retrievals"
-TEST_SIGNER = ServiceCredentialSigner(
-    secret="synthetic-test-service-identity-secret-32-bytes"
-)
+TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-secret-32-bytes")
 
 
 def request_payload(**overrides: object) -> dict[str, object]:

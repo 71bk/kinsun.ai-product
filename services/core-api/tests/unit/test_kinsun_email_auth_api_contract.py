@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from app.api.kinsun_email_auth import _authentication_failed_response
+from app.api.responses import authentication_rejected
 from app.schemas.kinsun_email_auth import (
     CompleteKinsunEmailAuthRequest,
     PasswordLoginRequest,
@@ -42,7 +42,7 @@ def test_completion_rejects_non_ascii_verification_digits() -> None:
 
 
 def test_authentication_failure_uses_the_canonical_error_envelope() -> None:
-    response = _authentication_failed_response()
+    response = authentication_rejected()
     payload = json.loads(response.body)
 
     assert response.status_code == 401

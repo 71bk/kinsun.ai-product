@@ -70,7 +70,7 @@ describe('reviewSummary', () => {
 
 describe('generateSummary', () => {
   it('posts only the selected date with an idempotency key', async () => {
-    const fetchMock = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) =>
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) =>
       new Response(
         JSON.stringify({
           data: {

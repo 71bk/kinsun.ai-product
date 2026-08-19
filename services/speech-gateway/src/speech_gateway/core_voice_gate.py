@@ -31,6 +31,13 @@ class CoreGateDecision(BaseModel):
     expires_at: datetime
 
 
+class CoreMemoryDecision(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: UUID
+    status: Literal["ACTIVE", "REJECTED", "DEFERRED", "PENDING_CONFIRMATION"]
+
+
 class CoreVoiceGateClient:
     def __init__(
         self,
@@ -130,3 +137,46 @@ class CoreVoiceGateClient:
             payload={"target_state": "FAILED"},
             headers={"Idempotency-Key": f"speech-asr-failed:{session_id}"},
         )
+
+    async def decide_memory_by_voice(
+        self,
+        *,
+        elder_id: UUID,
+        memory_id: UUID,
+        session_id: UUID,
+        confirmation_method: str,
+        expected_candidate_version: int,
+        consent_version: int,
+        confirmation_question_digest: str,
+        response_intent: str,
+        witness_actor_id: UUID | None,
+        witness_evidence_reference: str | None,
+    ) -> CoreMemoryDecision:
+        data = await self._post(
+            f"/api/v1/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation",
+            payload={
+                "confirmation_method": confirmation_method,
+                "session_id": str(session_id),
+                "expected_candidate_version": expected_candidate_version,
+                "consent_version": consent_version,
+                "confirmation_question_digest": confirmation_question_digest,
+                "response_intent": response_intent,
+                "witness_actor_id": (
+                    str(witness_actor_id) if witness_actor_id is not None else None
+                ),
+                "witness_evidence_reference": witness_evidence_reference,
+            },
+            headers={
+                "Idempotency-Key": (
+                    f"memory-voice:{memory_id}:{expected_candidate_version}:"
+                    f"{session_id}:{response_intent}"
+                )
+            },
+        )
+        try:
+            decision = CoreMemoryDecision.model_validate(data)
+        except ValueError as exc:
+            raise CoreGateUnavailableError("Core returned an invalid Memory decision") from exc
+        if decision.memory_id != memory_id:
+            raise CoreGateUnavailableError("Core returned a mismatched Memory decision")
+        return decision

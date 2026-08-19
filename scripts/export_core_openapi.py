@@ -60,6 +60,8 @@ MODEL_FILES = {
     "ReviewCareEventRequest": "domain/ReviewCareEventRequestV1.json",
     "CreateMemoryCandidateRequest": "domain/CreateMemoryCandidateRequestV1.json",
     "ConfirmMemoryRequest": "domain/ConfirmMemoryRequestV1.json",
+    "VoiceMemoryConfirmationRequest": "domain/VoiceMemoryConfirmationRequestV1.json",
+    "VoiceMemoryDecisionResponse": "domain/VoiceMemoryDecisionV1.json",
     "MemoryDecisionRequest": "domain/MemoryDecisionRequestV1.json",
     "UpdateMemoryRequest": "domain/UpdateMemoryRequestV1.json",
     "CreateSummaryDraftRequest": "domain/CreateSummaryDraftRequestV1.json",
@@ -134,9 +136,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "consume_voice_ticket_api_v1_internal_voice_tickets_consume_post": (
         "VoiceSessionEnvelopeV1"
     ),
-    "submit_asr_result_api_v1_internal_asr_results_post": (
-        "AsrGateDecisionEnvelopeV1"
-    ),
+    "submit_asr_result_api_v1_internal_asr_results_post": ("AsrGateDecisionEnvelopeV1"),
     "confirm_asr_gate_api_v1_voice_sessions__session_id__asr_confirmation_post": (
         "AsrGateDecisionEnvelopeV1"
     ),
@@ -172,6 +172,9 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "list_memories_api_v1_elders__elder_id__memories_get": "MemoryListEnvelopeV1",
     "confirm_memory_api_v1_elders__elder_id__memory_candidates__memory_id__confirm_post": (
         "MemoryEnvelopeV1"
+    ),
+    "decide_memory_by_voice_api_v1_internal_elders__elder_id__memory_candidates__memory_id__voice_confirmation_post": (
+        "VoiceMemoryDecisionEnvelopeV1"
     ),
     "reject_memory_api_v1_elders__elder_id__memory_candidates__memory_id__reject_post": (
         "MemoryEnvelopeV1"
@@ -379,7 +382,10 @@ def main() -> None:
             "only after the corresponding event transaction commits."
         )
         for parameter in line_operation.get("parameters", []):
-            if isinstance(parameter, dict) and parameter.get("name") == "X-Line-Signature":
+            if (
+                isinstance(parameter, dict)
+                and parameter.get("name") == "X-Line-Signature"
+            ):
                 parameter["required"] = True
         line_operation["requestBody"] = {
             "required": True,

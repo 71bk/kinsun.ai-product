@@ -12,7 +12,7 @@ from app.core.auth import ActorContext
 from app.core.cursor import decode_cursor, encode_cursor
 from app.core.exceptions import NotFoundError, ValidationError
 from app.db.session import get_db_session
-from app.middleware.actor_guard import require_active_actor
+from app.middleware.actor_guard import require_active_actor, require_system_service_actor
 from app.policies.memory_retrieval import memory_content_digest
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.consent import ConsentPurpose
@@ -24,6 +24,8 @@ from app.schemas.memory import (
     MemoryListResponse,
     MemoryResponse,
     UpdateMemoryRequest,
+    VoiceMemoryConfirmationRequest,
+    VoiceMemoryDecisionResponse,
 )
 from app.services.authorization_service import authorize_elder
 from app.services.consent_service import ConsentService
@@ -288,6 +290,59 @@ async def confirm_memory(
         idempotency_key=idempotency_key,
         actor_context=actor_context,
         session=session,
+    )
+
+
+@router.post("/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation")
+async def decide_memory_by_voice(
+    request: VoiceMemoryConfirmationRequest,
+    elder_id: UUID = Path(...),
+    memory_id: UUID = Path(...),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    actor_context: ActorContext = Depends(require_system_service_actor),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """Accept a bounded voice decision only from the trusted Speech service."""
+    await authorize_elder(
+        session,
+        actor_context,
+        elder_id,
+        "memory:voice-confirm",
+    )
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
+    idem, replay = await _begin(
+        session=session,
+        actor_context=actor_context,
+        key=idempotency_key,
+        operation="memory_voice_confirmation",
+        payload={
+            "elder_id": elder_id,
+            "memory_id": memory_id,
+            **request.model_dump(mode="json"),
+        },
+    )
+    if not replay.replayed:
+        memory = await service.decide_by_voice(
+            memory=memory,
+            request=request,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+        )
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="memory",
+            resource_id=memory.id,
+            response_status=200,
+            response_body={"memory_id": str(memory.id), "status": memory.status},
+        )
+    return success(
+        VoiceMemoryDecisionResponse(
+            memory_id=memory.id,
+            status=memory.status,
+        ).model_dump(mode="json")
     )
 
 

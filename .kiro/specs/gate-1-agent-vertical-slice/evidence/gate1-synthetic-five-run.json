@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "profile": "ADR-0009-synthetic",
+  "provider": "synthetic",
+  "production_approved": false,
+  "generated_at": "2026-08-19T03:00:25.086323+00:00",
+  "revision": "3e2a15d152bba2a4fa4dda8b4f13f416c98169d7",
+  "working_tree_dirty": true,
+  "fixture": {
+    "path": ".kiro/specs/gate-1-agent-vertical-slice/fixtures/gate1-synthetic-v1.json",
+    "schema_version": "1.0.0",
+    "sha256": "dc0eab3880bd1a94711d5beb62b59cdae0a9f20eb616d8fc984f058bb2305e88"
+  },
+  "adapters": {
+    "core_agent_adapter": "AgentRuntimeClient",
+    "agent_provider": "mock",
+    "agent_version": "0.0.1",
+    "policy_version": "adr-0009+memory-policy-v1",
+    "contract_version": "1.0.0"
+  },
+  "claims_excluded": [
+    "production latency",
+    "production availability",
+    "production model quality",
+    "production data region",
+    "production cost"
+  ],
+  "browser_direct_denied": true,
+  "runs": [
+    {
+      "run": 1,
+      "passed": true,
+      "duration_ms": 646.29,
+      "agent_run_authority_preserved": true,
+      "bounded_event_proposal": true,
+      "bounded_memory_proposal": true,
+      "blocked_path_zero_candidates": true,
+      "restricted_response_keys_absent": true
+    },
+    {
+      "run": 2,
+      "passed": true,
+      "duration_ms": 1009.15,
+      "agent_run_authority_preserved": true,
+      "bounded_event_proposal": true,
+      "bounded_memory_proposal": true,
+      "blocked_path_zero_candidates": true,
+      "restricted_response_keys_absent": true
+    },
+    {
+      "run": 3,
+      "passed": true,
+      "duration_ms": 3242.13,
+      "agent_run_authority_preserved": true,
+      "bounded_event_proposal": true,
+      "bounded_memory_proposal": true,
+      "blocked_path_zero_candidates": true,
+      "restricted_response_keys_absent": true
+    },
+    {
+      "run": 4,
+      "passed": true,
+      "duration_ms": 863.18,
+      "agent_run_authority_preserved": true,
+      "bounded_event_proposal": true,
+      "bounded_memory_proposal": true,
+      "blocked_path_zero_candidates": true,
+      "restricted_response_keys_absent": true
+    },
+    {
+      "run": 5,
+      "passed": true,
+      "duration_ms": 592.27,
+      "agent_run_authority_preserved": true,
+      "bounded_event_proposal": true,
+      "bounded_memory_proposal": true,
+      "blocked_path_zero_candidates": true,
+      "restricted_response_keys_absent": true
+    }
+  ]
+}

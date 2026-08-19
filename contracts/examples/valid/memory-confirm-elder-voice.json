@@ -1,0 +1,12 @@
+{
+  "data": {
+    "confirmation_method": "ELDER_VOICE",
+    "session_id": "10000000-0000-4000-a000-000000000001",
+    "expected_candidate_version": 2,
+    "consent_version": 3,
+    "confirmation_question_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "response_intent": "AFFIRM",
+    "witness_actor_id": null,
+    "witness_evidence_reference": null
+  }
+}

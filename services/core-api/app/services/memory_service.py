@@ -14,6 +14,7 @@ from app.core.exceptions import AuthorizationDeniedError, ConflictError, Validat
 from app.domain.consent import ConsentPurpose
 from app.domain.state_machine import require_memory_transition
 from app.events.outbox_writer import write_outbox_entry
+from app.models.actor import Actor
 from app.models.enums import ActorType
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.decision_support import (
@@ -29,6 +30,8 @@ from app.policies.memory_retrieval import (
     CURRENT_MEMORY_EVIDENCE_STATE,
     memory_content_digest,
 )
+from app.repositories.asr_gate_repo import AsrGateRepository
+from app.repositories.conversation_repo import ConversationRepository
 from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord, MemoryRepository
@@ -36,7 +39,9 @@ from app.schemas.memory import (
     ConfirmMemoryRequest,
     CreateMemoryCandidateRequest,
     UpdateMemoryRequest,
+    VoiceMemoryConfirmationRequest,
 )
+from app.services.authorization_service import authorize_elder
 from app.services.consent_service import ConsentService
 
 
@@ -260,10 +265,8 @@ class MemoryService:
         trace. Caregiver and legal-representative review may help prepare a
         candidate, but cannot satisfy the elder confirmation gate.
 
-        VOICE confirmation remains unavailable until the voice path can create
-        a versioned, consent-scoped record proving an authenticated affirmative
-        answer to this exact candidate. A completed conversation alone is
-        insufficient.
+        Voice confirmation uses the separate service-authenticated path below;
+        this browser-facing command remains ELDER_UI-only.
         """
         self._require_evidence_aware_memory()
         if memory.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
@@ -300,9 +303,7 @@ class MemoryService:
             or (standard_confirmation and profile.mode != "STANDARD")
             or (supported_confirmation and profile.mode != "SUPPORTED")
         ):
-            raise ConflictError(
-                "Decision support profile changed; create a new memory candidate"
-            )
+            raise ConflictError("Decision support profile changed; create a new memory candidate")
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=memory.elder_id,
             purpose=ConsentPurpose.LONG_TERM_MEMORY,
@@ -341,9 +342,7 @@ class MemoryService:
         memory.confirmed_version = memory.current_version
         memory.confirmed_content_digest = current.content_digest
         memory.policy_decision = (
-            "ELDER_CONFIRMED_SUPPORTED"
-            if supported_confirmation
-            else "ELDER_CONFIRMED_MEDIUM"
+            "ELDER_CONFIRMED_SUPPORTED" if supported_confirmation else "ELDER_CONFIRMED_MEDIUM"
         )
         memory.verification_level = "ELDER_CONFIRMED"
         memory.lifecycle_reason = "ELDER_CONFIRMED_CURRENT_VERSION"
@@ -387,6 +386,225 @@ class MemoryService:
         )
         return memory
 
+    async def decide_by_voice(
+        self,
+        *,
+        memory: Memory,
+        request: VoiceMemoryConfirmationRequest,
+        trace_id: str,
+        idempotency_key: str,
+    ) -> Memory:
+        """Apply a candidate-specific voice decision after every Core trust gate."""
+        self._require_evidence_aware_memory()
+        if memory.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
+            raise ConflictError("Memory candidate evidence requires review")
+        if memory.current_version != request.expected_candidate_version:
+            raise ConflictError("Memory candidate version conflict")
+        standard_confirmation = (
+            memory.actual_risk_level == "MEDIUM"
+            and memory.policy_decision == "PENDING_ELDER_CONFIRMATION"
+            and memory.required_verification == "ELDER_CONFIRMATION"
+        )
+        supported_confirmation = (
+            memory.actual_risk_level in {"LOW", "MEDIUM"}
+            and memory.policy_decision == "PENDING_SUPPORTED_CONFIRMATION"
+            and memory.required_verification == "SUPPORTED_ELDER_CONFIRMATION"
+        )
+        if (
+            memory.policy_version != CURRENT_MEMORY_POLICY_VERSION
+            or not (standard_confirmation or supported_confirmation)
+            or memory.speaker_verification_level not in TRUSTED_SPEAKER_LEVELS
+            or not memory.speaker_evidence_reference
+        ):
+            raise ConflictError("Memory candidate policy evidence is stale or ineligible")
+        expected_speaker_level = (
+            "WITNESSED_ELDER"
+            if request.confirmation_method == "WITNESSED_VOICE"
+            else "VERIFIED_ELDER"
+        )
+        if memory.speaker_verification_level != expected_speaker_level:
+            raise ConflictError("Voice speaker evidence does not match confirmation method")
+
+        profile = await self._decision_support_profiles.resolve_for_memory(
+            elder_id=memory.elder_id,
+            data_class=memory.memory_type,
+        )
+        if (
+            not profile_binding_is_current(
+                bound_profile_id=memory.decision_support_profile_id,
+                bound_profile_version=memory.decision_support_profile_version,
+                current=profile,
+            )
+            or (standard_confirmation and profile.mode != "STANDARD")
+            or (supported_confirmation and profile.mode != "SUPPORTED")
+        ):
+            raise ConflictError("Decision support profile changed; create a new memory candidate")
+        consent = await ConsentService(self._session, self._tenant_id).require_active(
+            elder_id=memory.elder_id,
+            purpose=ConsentPurpose.LONG_TERM_MEMORY,
+        )
+        if (
+            consent.id != memory.consent_id
+            or consent.version != request.consent_version
+            or consent.version != memory.consent_version
+        ):
+            raise ConflictError("Consent version changed; create a new candidate confirmation")
+
+        conversation = await ConversationRepository(
+            self._session,
+            self._tenant_id,
+        ).get_for_elder(request.session_id, memory.elder_id)
+        evidence = await AsrGateRepository(
+            self._session,
+            self._tenant_id,
+        ).get_for_session_for_update(request.session_id)
+        now = datetime.now(UTC)
+        if (
+            conversation is None
+            or conversation.state != "PROCESSING"
+            or conversation.input_mode not in {"voice", "voice_with_text_fallback"}
+            or evidence is None
+            or evidence.elder_id != memory.elder_id
+            or evidence.gate_status not in {"ALLOWED", "CONFIRMED"}
+            or (evidence.gate_status == "CONFIRMED" and evidence.confirmation_action != "CONFIRM")
+            or evidence.expires_at <= now
+        ):
+            raise ConflictError("Voice confirmation evidence is unavailable")
+
+        basic_voice_consent = await ConsentService(
+            self._session,
+            self._tenant_id,
+        ).require_active(
+            elder_id=memory.elder_id,
+            purpose=ConsentPurpose.BASIC_VOICE,
+        )
+        if (
+            basic_voice_consent.id != conversation.consent_id
+            or basic_voice_consent.version != conversation.consent_version
+        ):
+            raise ConflictError("Voice confirmation consent changed")
+
+        current = await self._memories.get_current_version(memory)
+        if (
+            current.content_digest is None
+            or current.content_digest != memory_content_digest(current.content)
+            or not current.confirmation_question
+            or memory_content_digest(current.confirmation_question)
+            != request.confirmation_question_digest
+        ):
+            raise ConflictError("Memory confirmation question or content evidence is invalid")
+
+        elder = await ElderRepository(self._session, self._tenant_id).get_by_id(memory.elder_id)
+        if elder is None or elder.actor_id is None:
+            raise AuthorizationDeniedError("Resource not found")
+        witness_actor_id = request.witness_actor_id
+        if request.confirmation_method == "ELDER_VOICE":
+            if conversation.initiator_actor_id != elder.actor_id:
+                raise AuthorizationDeniedError("Resource not found")
+        else:
+            witness = (
+                await self._session.get(Actor, witness_actor_id)
+                if witness_actor_id is not None
+                else None
+            )
+            if (
+                witness is None
+                or witness.status != "ACTIVE"
+                or witness.actor_type
+                not in {
+                    ActorType.DAYCARE_CARE_WORKER.value,
+                    ActorType.HOME_CARE_WORKER.value,
+                    ActorType.FAMILY_MEMBER.value,
+                }
+                or conversation.initiator_actor_id != witness_actor_id
+            ):
+                raise AuthorizationDeniedError("Resource not found")
+            await authorize_elder(
+                self._session,
+                ActorContext(
+                    actor_id=witness.id,
+                    actor_role=witness.actor_type,
+                    tenant_id=self._tenant_id,
+                ),
+                memory.elder_id,
+                "memory:witness",
+            )
+
+        confirmation_evidence_reference = f"asr-gate:{evidence.id}"
+        self._memories.add_confirmation(
+            MemoryConfirmation(
+                tenant_id=self._tenant_id,
+                elder_id=memory.elder_id,
+                memory_id=memory.id,
+                memory_version=memory.current_version,
+                content_digest=current.content_digest,
+                consent_id=consent.id,
+                consent_version=consent.version,
+                policy_version=CURRENT_MEMORY_POLICY_VERSION,
+                decision_support_profile_id=profile.profile_id,
+                decision_support_profile_version=profile.profile_version,
+                confirmation_method=request.confirmation_method,
+                response_intent=request.response_intent,
+                confirmed_by_actor_id=elder.actor_id,
+                confirmation_session_id=conversation.id,
+                speaker_verification_level=memory.speaker_verification_level,
+                speaker_evidence_reference=memory.speaker_evidence_reference,
+                witness_actor_id=witness_actor_id,
+                witness_evidence_reference=request.witness_evidence_reference,
+                confirmation_evidence_reference=confirmation_evidence_reference,
+                trace_id=trace_id,
+                correlation_id=trace_id,
+                idempotency_key=idempotency_key,
+                confirmed_at=now,
+            )
+        )
+
+        if request.response_intent == "AFFIRM":
+            if memory.status == "DEFERRED":
+                require_memory_transition(memory.status, "PENDING_CONFIRMATION")
+                memory.status = "PENDING_CONFIRMATION"
+            require_memory_transition(memory.status, "CONFIRMED")
+            memory.status = "CONFIRMED"
+            memory.confirmed_by_actor_id = elder.actor_id
+            memory.confirmed_at = now
+            memory.confirmation_method = request.confirmation_method
+            memory.confirmation_session_id = conversation.id
+            memory.confirmation_evidence_ref = confirmation_evidence_reference
+            memory.confirmed_version = memory.current_version
+            memory.confirmed_content_digest = current.content_digest
+            memory.policy_decision = (
+                "ELDER_CONFIRMED_SUPPORTED" if supported_confirmation else "ELDER_CONFIRMED_MEDIUM"
+            )
+            memory.verification_level = "ELDER_CONFIRMED"
+            memory.lifecycle_reason = "ELDER_VOICE_CONFIRMED_CURRENT_VERSION"
+            require_memory_transition(memory.status, "ACTIVE")
+            memory.status = "ACTIVE"
+            memory.activated_at = now
+            event_type = "memory.confirmed.v1"
+        elif request.response_intent == "REJECT":
+            require_memory_transition(memory.status, "REJECTED")
+            memory.status = "REJECTED"
+            memory.lifecycle_reason = "ELDER_VOICE_REJECTED"
+            event_type = "memory.rejected.v1"
+        elif request.response_intent == "DEFER":
+            require_memory_transition(memory.status, "DEFERRED")
+            memory.status = "DEFERRED"
+            memory.lifecycle_reason = "ELDER_VOICE_DEFERRED"
+            event_type = "memory.deferred.v1"
+        else:
+            memory.lifecycle_reason = "ELDER_VOICE_UNCERTAIN"
+            event_type = "memory.confirmation-uncertain.v1"
+
+        await self._session.flush()
+        await self._write_event(
+            event_type=event_type,
+            memory=memory,
+            actor_id=elder.actor_id,
+            trace_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
+        return memory
+
     def _require_evidence_aware_memory(self) -> None:
         if not self._evidence_aware_memory:
             raise ValidationError(
@@ -406,19 +624,6 @@ class MemoryService:
         request: ConfirmMemoryRequest,
     ) -> None:
         """Allow only an authenticated elder to confirm their own candidate."""
-        if request.confirmation_method == "VOICE":
-            raise ValidationError(
-                details=[
-                    {
-                        "field": "confirmation_method",
-                        "reason": (
-                            "VOICE confirmation is unavailable until the voice path can "
-                            "produce authenticated candidate-specific affirmative evidence"
-                        ),
-                    }
-                ]
-            )
-
         if request.confirmation_method != "ELDER_UI" or actor_context.actor_role != ActorType.ELDER:
             raise AuthorizationDeniedError("Resource not found")
         elder = await ElderRepository(self._session, self._tenant_id).get_by_id(memory.elder_id)

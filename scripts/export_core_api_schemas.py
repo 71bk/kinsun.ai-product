@@ -67,6 +67,8 @@ from app.schemas.memory import (  # noqa: E402
     MemoryListResponse,
     MemoryResponse,
     UpdateMemoryRequest,
+    VoiceMemoryConfirmationRequest,
+    VoiceMemoryDecisionResponse,
 )
 from app.schemas.report import (  # noqa: E402
     CreateFamilyReportDraftRequest,
@@ -119,6 +121,8 @@ EXPORTS = {
         "CareEventListV1": CareEventListResponse,
         "CreateMemoryCandidateRequestV1": CreateMemoryCandidateRequest,
         "ConfirmMemoryRequestV1": ConfirmMemoryRequest,
+        "VoiceMemoryConfirmationRequestV1": VoiceMemoryConfirmationRequest,
+        "VoiceMemoryDecisionV1": VoiceMemoryDecisionResponse,
         "MemoryDecisionRequestV1": MemoryDecisionRequest,
         "UpdateMemoryRequestV1": UpdateMemoryRequest,
         "MemoryV1": MemoryResponse,
@@ -168,6 +172,7 @@ SUCCESS_ENVELOPES = {
     "CareEventReviewEnvelopeV1": "domain/CareEventReviewV1.json",
     "CareEventListEnvelopeV1": "domain/CareEventListV1.json",
     "MemoryEnvelopeV1": "domain/MemoryV1.json",
+    "VoiceMemoryDecisionEnvelopeV1": "domain/VoiceMemoryDecisionV1.json",
     "MemoryListEnvelopeV1": "domain/MemoryListV1.json",
     "MemoryDeletionEnvelopeV1": "domain/MemoryDeletionV1.json",
     "DailySummaryEnvelopeV1": "domain/DailySummaryV1.json",
@@ -197,7 +202,16 @@ RESTRICTED_KEYS = [
 # property-name guards that Pydantic cannot faithfully round-trip. Keep that
 # audited executable contract instead of silently replacing it with a weaker
 # `additionalProperties: true` schema.
-PRESERVE_EXISTING = {"ToolRequestV1"}
+PRESERVE_EXISTING = {
+    # These security-sensitive auth contracts are hand-audited. Pydantic's
+    # generated shape loses descriptions and rewrites nullable oneOf clauses.
+    "CompleteKinsunEmailAuthRequestV1",
+    "CompletedKinsunEmailAuthV1",
+    "PasswordLoginRequestV1",
+    "StartKinsunEmailAuthRequestV1",
+    "StartedKinsunEmailAuthV1",
+    "ToolRequestV1",
+}
 
 
 def apply_semantic_constraints(title: str, schema: dict) -> None:
@@ -210,9 +224,7 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
         properties["invitee_email"]["anyOf"][0]["format"] = "email"
         properties["share_scope"]["uniqueItems"] = True
     elif title == "FamilyInvitationCreatedV1":
-        properties["invitation_code"]["pattern"] = (
-            r"^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$"
-        )
+        properties["invitation_code"]["pattern"] = r"^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$"
         properties["share_scope"].update(
             {"minItems": 1, "maxItems": 4, "uniqueItems": True}
         )
@@ -229,6 +241,31 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
         properties["password"].update(
             {"minLength": 12, "maxLength": 128, "pattern": r"^[^\u0000]+$"}
         )
+    elif title == "VoiceMemoryConfirmationRequestV1":
+        schema["allOf"] = [
+            {
+                "if": {
+                    "properties": {"confirmation_method": {"const": "WITNESSED_VOICE"}},
+                    "required": ["confirmation_method"],
+                },
+                "then": {
+                    "required": ["witness_actor_id", "witness_evidence_reference"],
+                    "properties": {
+                        "witness_actor_id": {"type": "string", "format": "uuid"},
+                        "witness_evidence_reference": {
+                            "type": "string",
+                            "pattern": r"^evidence:[0-9a-fA-F-]{36}$",
+                        },
+                    },
+                },
+                "else": {
+                    "properties": {
+                        "witness_actor_id": {"type": "null"},
+                        "witness_evidence_reference": {"type": "null"},
+                    }
+                },
+            }
+        ]
     elif title == "StartedKinsunEmailAuthV1":
         properties["challenge_token"]["pattern"] = r"^ke1_[A-Za-z0-9_-]{43}$"
         schema["required"] = ["status", "challenge_token", "expires_at"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -16,7 +17,7 @@ from app.policies.decision_support import (
 )
 from app.policies.memory_policy import CURRENT_MEMORY_POLICY_VERSION
 from app.policies.memory_retrieval import memory_content_digest
-from app.schemas.memory import UpdateMemoryRequest
+from app.schemas.memory import UpdateMemoryRequest, VoiceMemoryConfirmationRequest
 from app.services.consent_service import ConsentService
 from app.services.memory_service import MemoryService
 
@@ -30,20 +31,253 @@ def actor(role: str) -> ActorContext:
 
 
 @pytest.mark.asyncio
-async def test_voice_confirmation_is_rejected_before_any_repository_access() -> None:
+async def test_browser_confirmation_cannot_select_legacy_voice_method() -> None:
     session = MagicMock()
     service = MemoryService(session, uuid4())
 
-    with pytest.raises(ValidationError) as exc_info:
+    with pytest.raises(AuthorizationDeniedError, match="Resource not found"):
         await service._validate_confirmation_authority(
             memory=SimpleNamespace(elder_id=uuid4()),
             actor_context=actor("ELDER"),
             request=SimpleNamespace(confirmation_method="VOICE"),
         )
 
-    assert exc_info.value.details[0]["field"] == "confirmation_method"
     session.scalar.assert_not_called()
     session.execute.assert_not_called()
+
+
+def _voice_case(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    method: str,
+    response_intent: str = "AFFIRM",
+    gate_status: str = "ALLOWED",
+):
+    session = MagicMock(flush=AsyncMock())
+    tenant_id = uuid4()
+    elder_actor_id = uuid4()
+    witness_actor_id = uuid4() if method == "WITNESSED_VOICE" else None
+    initiator_actor_id = witness_actor_id or elder_actor_id
+    consent_id = uuid4()
+    voice_consent_id = uuid4()
+    voice_session_id = uuid4()
+    content = "每天早餐習慣吃粥。"
+    question = "要記住您每天早餐習慣吃粥嗎？"
+    confirmations: list[object] = []
+    memory = SimpleNamespace(
+        evidence_state="CURRENT",
+        id=uuid4(),
+        elder_id=uuid4(),
+        memory_type="ROUTINE",
+        current_version=2,
+        consent_id=consent_id,
+        consent_version=3,
+        status="PENDING_CONFIRMATION",
+        policy_version=CURRENT_MEMORY_POLICY_VERSION,
+        actual_risk_level="MEDIUM",
+        policy_decision="PENDING_ELDER_CONFIRMATION",
+        verification_level="UNVERIFIED",
+        required_verification="ELDER_CONFIRMATION",
+        speaker_verification_level=(
+            "WITNESSED_ELDER" if method == "WITNESSED_VOICE" else "VERIFIED_ELDER"
+        ),
+        speaker_evidence_reference="speaker-evidence:synthetic-current",
+        decision_support_profile_id=None,
+        decision_support_profile_version=None,
+        lifecycle_reason="ELDER_CONFIRMATION_REQUIRED",
+        confirmed_by_actor_id=None,
+        confirmed_at=None,
+        confirmation_method=None,
+        confirmation_session_id=None,
+        confirmation_evidence_ref=None,
+        confirmed_version=None,
+        confirmed_content_digest=None,
+        activated_at=None,
+    )
+    service = MemoryService(
+        session,
+        tenant_id,
+        evidence_aware_memory=True,
+        auto_low_risk_memory=False,
+    )
+    service._decision_support_profiles = SimpleNamespace(
+        resolve_for_memory=AsyncMock(return_value=default_standard_resolution("ROUTINE"))
+    )
+    service._memories = SimpleNamespace(
+        get_current_version=AsyncMock(
+            return_value=SimpleNamespace(
+                content=content,
+                content_digest=memory_content_digest(content),
+                confirmation_question=question,
+            )
+        ),
+        add_confirmation=MagicMock(side_effect=confirmations.append),
+    )
+    service._write_event = AsyncMock()
+    conversation = SimpleNamespace(
+        id=voice_session_id,
+        elder_id=memory.elder_id,
+        state="PROCESSING",
+        input_mode="voice",
+        initiator_actor_id=initiator_actor_id,
+        consent_id=voice_consent_id,
+        consent_version=4,
+    )
+    evidence = SimpleNamespace(
+        id=uuid4(),
+        elder_id=memory.elder_id,
+        gate_status=gate_status,
+        confirmation_action=None,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+    )
+    monkeypatch.setattr(
+        "app.services.memory_service.ConversationRepository",
+        MagicMock(return_value=SimpleNamespace(get_for_elder=AsyncMock(return_value=conversation))),
+    )
+    monkeypatch.setattr(
+        "app.services.memory_service.AsrGateRepository",
+        MagicMock(
+            return_value=SimpleNamespace(
+                get_for_session_for_update=AsyncMock(return_value=evidence)
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        "app.services.memory_service.ElderRepository",
+        MagicMock(
+            return_value=SimpleNamespace(
+                get_by_id=AsyncMock(return_value=SimpleNamespace(actor_id=elder_actor_id))
+            )
+        ),
+    )
+    authorize = AsyncMock()
+    monkeypatch.setattr("app.services.memory_service.authorize_elder", authorize)
+    if witness_actor_id is not None:
+        session.get = AsyncMock(
+            return_value=SimpleNamespace(
+                id=witness_actor_id,
+                actor_type="DAYCARE_CARE_WORKER",
+                status="ACTIVE",
+            )
+        )
+    request = VoiceMemoryConfirmationRequest(
+        confirmation_method=method,
+        session_id=voice_session_id,
+        expected_candidate_version=2,
+        consent_version=3,
+        confirmation_question_digest=memory_content_digest(question),
+        response_intent=response_intent,
+        witness_actor_id=witness_actor_id,
+        witness_evidence_reference=(
+            f"evidence:{uuid4()}" if witness_actor_id is not None else None
+        ),
+    )
+    return SimpleNamespace(
+        service=service,
+        session=session,
+        memory=memory,
+        request=request,
+        consent=SimpleNamespace(id=consent_id, version=3),
+        voice_consent=SimpleNamespace(id=voice_consent_id, version=4),
+        elder_actor_id=elder_actor_id,
+        witness_actor_id=witness_actor_id,
+        confirmations=confirmations,
+        authorize=authorize,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["ELDER_VOICE", "WITNESSED_VOICE"])
+async def test_voice_affirmation_binds_candidate_session_and_witness_without_delegation(
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+) -> None:
+    case = _voice_case(monkeypatch, method=method)
+
+    with patch.object(
+        ConsentService,
+        "require_active",
+        AsyncMock(side_effect=[case.consent, case.voice_consent]),
+    ):
+        result = await case.service.decide_by_voice(
+            memory=case.memory,
+            request=case.request,
+            trace_id="trace-voice-memory-confirmation",
+            idempotency_key=f"idem-{method.lower()}",
+        )
+
+    assert result.status == "ACTIVE"
+    assert result.confirmed_by_actor_id == case.elder_actor_id
+    assert result.confirmation_method == method
+    assert result.confirmation_session_id == case.request.session_id
+    assert len(case.confirmations) == 1
+    confirmation = case.confirmations[0]
+    assert confirmation.response_intent == "AFFIRM"
+    assert confirmation.confirmed_by_actor_id == case.elder_actor_id
+    assert confirmation.witness_actor_id == case.witness_actor_id
+    if method == "WITNESSED_VOICE":
+        case.authorize.assert_awaited_once()
+        assert case.witness_actor_id != case.elder_actor_id
+    else:
+        case.authorize.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_voice_confirmation_fails_closed_before_side_effect_when_asr_gate_is_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _voice_case(
+        monkeypatch,
+        method="ELDER_VOICE",
+        gate_status="AWAITING_CONFIRMATION",
+    )
+
+    with (
+        patch.object(
+            ConsentService,
+            "require_active",
+            AsyncMock(return_value=case.consent),
+        ),
+        pytest.raises(ConflictError, match="Voice confirmation evidence is unavailable"),
+    ):
+        await case.service.decide_by_voice(
+            memory=case.memory,
+            request=case.request,
+            trace_id="trace-pending-asr",
+            idempotency_key="idem-pending-asr",
+        )
+
+    assert case.confirmations == []
+    case.session.flush.assert_not_awaited()
+    case.service._write_event.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_voice_rejection_records_evidence_without_activating_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _voice_case(
+        monkeypatch,
+        method="ELDER_VOICE",
+        response_intent="REJECT",
+    )
+
+    with patch.object(
+        ConsentService,
+        "require_active",
+        AsyncMock(side_effect=[case.consent, case.voice_consent]),
+    ):
+        result = await case.service.decide_by_voice(
+            memory=case.memory,
+            request=case.request,
+            trace_id="trace-voice-reject",
+            idempotency_key="idem-voice-reject",
+        )
+
+    assert result.status == "REJECTED"
+    assert result.confirmed_by_actor_id is None
+    assert case.confirmations[0].response_intent == "REJECT"
+    assert case.service._write_event.await_args.kwargs["event_type"] == "memory.rejected.v1"
 
 
 @pytest.mark.asyncio
@@ -87,9 +321,7 @@ async def test_elder_ui_confirmation_activates_with_server_generated_evidence(
         auto_low_risk_memory=False,
     )
     service._decision_support_profiles = SimpleNamespace(
-        resolve_for_memory=AsyncMock(
-            return_value=default_standard_resolution("ROUTINE")
-        )
+        resolve_for_memory=AsyncMock(return_value=default_standard_resolution("ROUTINE"))
     )
     service._write_event = AsyncMock()
     consent_id = uuid4()
@@ -465,9 +697,7 @@ async def test_trusted_context_passes_low_rollout_state_to_final_gate() -> None:
         evidence_aware_memory=True,
         auto_low_risk_memory=False,
     )
-    service._memories = SimpleNamespace(
-        list_active_context_for_elder=AsyncMock(return_value=[])
-    )
+    service._memories = SimpleNamespace(list_active_context_for_elder=AsyncMock(return_value=[]))
     elder_id = uuid4()
 
     with patch.object(

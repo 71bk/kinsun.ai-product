@@ -1,0 +1,29 @@
+{
+  "additionalProperties": false,
+  "description": "Bounded Speech-facing result; Memory content never crosses this boundary.",
+  "properties": {
+    "memory_id": {
+      "format": "uuid",
+      "title": "Memory Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ACTIVE",
+        "REJECTED",
+        "DEFERRED",
+        "PENDING_CONFIRMATION"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "memory_id",
+    "status"
+  ],
+  "title": "VoiceMemoryDecisionV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/VoiceMemoryDecisionV1.json"
+}

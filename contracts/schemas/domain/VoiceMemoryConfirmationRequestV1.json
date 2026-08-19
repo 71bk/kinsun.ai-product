@@ -1,0 +1,124 @@
+{
+  "additionalProperties": false,
+  "description": "Trusted Speech-to-Core decision for one exact Memory candidate version.",
+  "properties": {
+    "confirmation_method": {
+      "enum": [
+        "ELDER_VOICE",
+        "WITNESSED_VOICE"
+      ],
+      "title": "Confirmation Method",
+      "type": "string"
+    },
+    "session_id": {
+      "format": "uuid",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "expected_candidate_version": {
+      "minimum": 1,
+      "title": "Expected Candidate Version",
+      "type": "integer"
+    },
+    "consent_version": {
+      "minimum": 1,
+      "title": "Consent Version",
+      "type": "integer"
+    },
+    "confirmation_question_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Confirmation Question Digest",
+      "type": "string"
+    },
+    "response_intent": {
+      "enum": [
+        "AFFIRM",
+        "REJECT",
+        "UNCERTAIN",
+        "DEFER"
+      ],
+      "title": "Response Intent",
+      "type": "string"
+    },
+    "witness_actor_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Witness Actor Id"
+    },
+    "witness_evidence_reference": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "minLength": 10,
+          "pattern": "^evidence:[0-9a-fA-F-]{36}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Witness Evidence Reference"
+    }
+  },
+  "required": [
+    "confirmation_method",
+    "session_id",
+    "expected_candidate_version",
+    "consent_version",
+    "confirmation_question_digest",
+    "response_intent"
+  ],
+  "title": "VoiceMemoryConfirmationRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/VoiceMemoryConfirmationRequestV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "confirmation_method": {
+            "const": "WITNESSED_VOICE"
+          }
+        },
+        "required": [
+          "confirmation_method"
+        ]
+      },
+      "then": {
+        "required": [
+          "witness_actor_id",
+          "witness_evidence_reference"
+        ],
+        "properties": {
+          "witness_actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "witness_evidence_reference": {
+            "type": "string",
+            "pattern": "^evidence:[0-9a-fA-F-]{36}$"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "witness_actor_id": {
+            "type": "null"
+          },
+          "witness_evidence_reference": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

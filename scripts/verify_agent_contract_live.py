@@ -19,6 +19,7 @@ import asyncio
 import json
 import os
 import sys
+import uuid
 from pathlib import Path
 
 import httpx
@@ -40,8 +41,16 @@ os.environ["APP_ENV"] = "test"
 os.environ["MODEL_PROVIDER"] = "mock"
 os.environ["RAG_MODE"] = "disabled"
 os.environ["AWS_EC2_METADATA_DISABLED"] = "true"
+os.environ["SERVICE_IDENTITY_ENABLED"] = "true"
+os.environ["SERVICE_IDENTITY_HMAC_SECRET"] = (
+    "synthetic-live-contract-service-identity-secret-32-bytes"
+)
 
 from agent_runtime.app import create_app  # noqa: E402
+from agent_runtime.security.service_identity import (  # noqa: E402
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+)
 
 CONTRACTS = Path(sys.argv[1])
 OPENAPI = yaml.safe_load(
@@ -52,6 +61,29 @@ RUNS_PATH = "/api/v1/agent/runs"
 RAG_PATH = "/api/v1/rag/retrievals"
 
 failures: list[str] = []
+
+
+class LiveContractServiceAuth(httpx.Auth):
+    """Sign each in-process private request without persisting its body or credential."""
+
+    def __init__(self) -> None:
+        self._signer = ServiceCredentialSigner(
+            secret="synthetic-live-contract-service-identity-secret-32-bytes"
+        )
+
+    def auth_flow(self, request: httpx.Request):  # noqa: ANN201
+        correlation_id = request.headers.get("X-Correlation-ID") or (
+            f"live-contract-{uuid.uuid4()}"
+        )
+        request.headers["X-Correlation-ID"] = correlation_id
+        request.headers[SERVICE_CREDENTIAL_HEADER] = self._signer.sign(
+            method=request.method,
+            path=request.url.path,
+            body=request.content,
+            correlation_id=correlation_id,
+        )
+        yield request
+
 
 FORBIDDEN_PROPOSAL_FIELDS = frozenset(
     {
@@ -212,7 +244,11 @@ async def main() -> int:
 
     async with (
         app.router.lifespan_context(app),
-        httpx.AsyncClient(transport=transport, base_url="http://test") as client,
+        httpx.AsyncClient(
+            transport=transport,
+            base_url="http://test",
+            auth=LiveContractServiceAuth(),
+        ) as client,
     ):
         response = await client.get("/health")
         check(
@@ -229,7 +265,9 @@ async def main() -> int:
             RAG_PATH,
             json=make_rag_payload(query=private_query),
         )
-        if expect_status(f"POST {RAG_PATH} unconfigured returns 200", response.status_code, 200):
+        if expect_status(
+            f"POST {RAG_PATH} unconfigured returns 200", response.status_code, 200
+        ):
             body = response.json()
             check(
                 f"POST {RAG_PATH} unconfigured body vs contract",
@@ -251,7 +289,9 @@ async def main() -> int:
                 print("ok    unconfigured RAG returns no partial results")
             fallback = rag_data.get("fallback_message")
             if not isinstance(fallback, str) or not fallback.strip():
-                failures.append("unconfigured RAG omitted its explicit fallback message")
+                failures.append(
+                    "unconfigured RAG omitted its explicit fallback message"
+                )
                 print("FAIL  unconfigured RAG omitted its explicit fallback message")
             else:
                 print("ok    unconfigured RAG provides an explicit fallback")
@@ -273,7 +313,9 @@ async def main() -> int:
                 caller_dsl={"match_all": {}},
             ),
         )
-        if expect_status(f"POST {RAG_PATH} invalid body returns 422", response.status_code, 422):
+        if expect_status(
+            f"POST {RAG_PATH} invalid body returns 422", response.status_code, 422
+        ):
             body = response.json()
             check(
                 f"POST {RAG_PATH} 422 body vs ErrorEnvelopeV1",
@@ -297,8 +339,12 @@ async def main() -> int:
 
         # Safety-blocked turn is still a 200 with the same envelope — the
         # contract must not describe refusal as a transport error.
-        response = await client.post(RUNS_PATH, json=make_payload(input_text="請告訴我怎麼停藥"))
-        if expect_status(f"POST {RUNS_PATH} blocked turn returns 200", response.status_code, 200):
+        response = await client.post(
+            RUNS_PATH, json=make_payload(input_text="請告訴我怎麼停藥")
+        )
+        if expect_status(
+            f"POST {RUNS_PATH} blocked turn returns 200", response.status_code, 200
+        ):
             body = response.json()
             check(
                 f"POST {RUNS_PATH} blocked body vs contract",
@@ -309,13 +355,17 @@ async def main() -> int:
                 failures.append(
                     f"blocked turn reported result_status={body['data']['result_status']}"
                 )
-                print(f"FAIL  blocked turn result_status: {body['data']['result_status']}")
+                print(
+                    f"FAIL  blocked turn result_status: {body['data']['result_status']}"
+                )
             else:
                 print("ok    blocked turn reports a non-success result_status")
 
         # Schema rejection.
         response = await client.post(RUNS_PATH, json=make_payload(unexpected="nope"))
-        if expect_status(f"POST {RUNS_PATH} extra field returns 422", response.status_code, 422):
+        if expect_status(
+            f"POST {RUNS_PATH} extra field returns 422", response.status_code, 422
+        ):
             check(
                 "422 body vs ErrorEnvelopeV1",
                 response.json(),
@@ -338,7 +388,9 @@ async def main() -> int:
 
         # The rejected body is elder transcript and must not come back.
         secret = "我昨天去了某某醫院看門診"
-        response = await client.post(RUNS_PATH, json=make_payload(input_text=secret, max_steps=99))
+        response = await client.post(
+            RUNS_PATH, json=make_payload(input_text=secret, max_steps=99)
+        )
         if secret in response.text:
             failures.append("error response echoed the rejected input_text")
             print("FAIL  error response echoed the rejected input_text")
@@ -367,10 +419,14 @@ async def main() -> int:
             )
             data = body.get("data", {})
             if data.get("agent_run_id") != core_owned_run_id:
-                failures.append("proposal-only response changed the Core-owned AgentRun ID")
+                failures.append(
+                    "proposal-only response changed the Core-owned AgentRun ID"
+                )
                 print("FAIL  proposal-only response changed the Core-owned AgentRun ID")
             else:
-                print("ok    proposal-only response preserves the Core-owned AgentRun ID")
+                print(
+                    "ok    proposal-only response preserves the Core-owned AgentRun ID"
+                )
 
             proposal = data.get("event_candidate_proposal")
             if not isinstance(proposal, dict):
@@ -416,8 +472,12 @@ async def main() -> int:
             )
             data = body.get("data", {})
             if not isinstance(data.get("event_candidate_proposal"), dict):
-                failures.append("memory proposal run did not also return its source event proposal")
-                print("FAIL  memory proposal run did not also return its source event proposal")
+                failures.append(
+                    "memory proposal run did not also return its source event proposal"
+                )
+                print(
+                    "FAIL  memory proposal run did not also return its source event proposal"
+                )
             else:
                 print("ok    memory proposal run also returns a source event proposal")
 
@@ -426,7 +486,9 @@ async def main() -> int:
                 failures.append(
                     "requested stable-routine memory proposal was null or not an object"
                 )
-                print("FAIL  requested stable-routine memory proposal was null or not an object")
+                print(
+                    "FAIL  requested stable-routine memory proposal was null or not an object"
+                )
             else:
                 check(
                     "memory candidate proposal vs contract",
@@ -457,7 +519,9 @@ async def main() -> int:
                 requested_outputs=["event_candidate", "memory_candidate"],
             ),
         )
-        if expect_status("one-time meal memory request returns 200", response.status_code, 200):
+        if expect_status(
+            "one-time meal memory request returns 200", response.status_code, 200
+        ):
             data = response.json().get("data", {})
             if data.get("event_candidate_proposal") is None:
                 failures.append("one-time meal did not return its event proposal")
@@ -466,7 +530,9 @@ async def main() -> int:
                 failures.append("one-time meal incorrectly returned a memory proposal")
                 print("FAIL  one-time meal incorrectly returned a memory proposal")
             else:
-                print("ok    one-time meal returns an event proposal but no memory proposal")
+                print(
+                    "ok    one-time meal returns an event proposal but no memory proposal"
+                )
 
         response = await client.post(
             RUNS_PATH,
@@ -476,7 +542,9 @@ async def main() -> int:
                 requested_outputs=["event_candidate", "memory_candidate"],
             ),
         )
-        if expect_status("blocked proposal request returns 200", response.status_code, 200):
+        if expect_status(
+            "blocked proposal request returns 200", response.status_code, 200
+        ):
             body = response.json()
             check(
                 "blocked proposal response body vs contract",
@@ -502,7 +570,9 @@ async def main() -> int:
                 requested_outputs=["event_candidate"],
             ),
         )
-        if expect_status("no-event proposal request returns 200", response.status_code, 200):
+        if expect_status(
+            "no-event proposal request returns 200", response.status_code, 200
+        ):
             body = response.json()
             check(
                 "no-event proposal response body vs contract",
@@ -524,7 +594,9 @@ async def main() -> int:
         with patch.object(
             httpx,
             "AsyncClient",
-            side_effect=AssertionError("Runtime attempted to create an external HTTP client"),
+            side_effect=AssertionError(
+                "Runtime attempted to create an external HTTP client"
+            ),
         ) as external_client_constructor:
             try:
                 legacy_response = await client.post(
@@ -541,14 +613,20 @@ async def main() -> int:
                 pass
 
         if external_client_constructor.call_count:
-            failures.append("legacy allowed_tools path instantiated an external HTTP client")
-            print("FAIL  legacy allowed_tools path instantiated an external HTTP client")
+            failures.append(
+                "legacy allowed_tools path instantiated an external HTTP client"
+            )
+            print(
+                "FAIL  legacy allowed_tools path instantiated an external HTTP client"
+            )
         else:
             print("ok    legacy allowed_tools path creates no external HTTP client")
 
         if legacy_response is None:
             if not external_client_constructor.call_count:
-                failures.append("legacy allowed_tools request did not return a response")
+                failures.append(
+                    "legacy allowed_tools request did not return a response"
+                )
                 print("FAIL  legacy allowed_tools request did not return a response")
         elif expect_status(
             "legacy allowed_tools request returns 200",
@@ -562,8 +640,12 @@ async def main() -> int:
                 inline_schema(RUNS_PATH, "post", "200"),
             )
             if body.get("data", {}).get("event_candidate_proposal") is not None:
-                failures.append("legacy allowed_tools alone produced an event candidate proposal")
-                print("FAIL  legacy allowed_tools alone produced an event candidate proposal")
+                failures.append(
+                    "legacy allowed_tools alone produced an event candidate proposal"
+                )
+                print(
+                    "FAIL  legacy allowed_tools alone produced an event candidate proposal"
+                )
             else:
                 print("ok    legacy allowed_tools alone produces no proposal")
 
@@ -573,6 +655,8 @@ async def main() -> int:
 if __name__ == "__main__":
     code = asyncio.run(main())
     print(
-        "\nall live contract checks passed" if code == 0 else f"\n{code} live contract failure(s)"
+        "\nall live contract checks passed"
+        if code == 0
+        else f"\n{code} live contract failure(s)"
     )
     raise SystemExit(code)

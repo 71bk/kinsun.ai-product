@@ -1,0 +1,12 @@
+{
+  "_why_invalid": "WITNESSED_VOICE requires an authorized witness actor and an opaque witness evidence reference as a pair.",
+  "data": {
+    "confirmation_method": "WITNESSED_VOICE",
+    "session_id": "10000000-0000-4000-a000-000000000001",
+    "expected_candidate_version": 2,
+    "consent_version": 3,
+    "confirmation_question_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "response_intent": "AFFIRM",
+    "witness_actor_id": "20000000-0000-4000-a000-000000000002"
+  }
+}

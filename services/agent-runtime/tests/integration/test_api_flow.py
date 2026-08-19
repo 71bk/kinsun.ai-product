@@ -20,9 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_DIR = REPO_ROOT / "contracts" / "schemas"
 
 RUNS_PATH = "/api/v1/agent/runs"
-TEST_SIGNER = ServiceCredentialSigner(
-    secret="synthetic-test-service-identity-secret-32-bytes"
-)
+TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-secret-32-bytes")
 
 
 def schema(rel: str) -> dict:
