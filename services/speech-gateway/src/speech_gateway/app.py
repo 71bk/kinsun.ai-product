@@ -33,21 +33,23 @@ from speech_gateway.models import (
     TranscribeRequest,
     TranscribeResponse,
 )
-from speech_gateway.sagemaker_asr import (
-    SageMakerAsrNotConfiguredError,
-    transcribe_via_sagemaker,
+from speech_gateway.provider_adapters import (
+    AwsPollyTtsProvider,
+    AwsTranscribeAsrProvider,
+    SageMakerAsrProvider,
+    SageMakerTtsProvider,
 )
-from speech_gateway.sagemaker_tts import (
-    SageMakerTtsNotConfiguredError,
-    synthesize_via_sagemaker,
+from speech_gateway.provider_contracts import (
+    AsrProviderRequest,
+    ProviderErrorCategory,
+    SpeechProviderError,
+    TtsProviderRequest,
 )
+from speech_gateway.provider_router import SpeechProviderRouter
+from speech_gateway.sagemaker_asr import transcribe_via_sagemaker
+from speech_gateway.sagemaker_tts import synthesize_via_sagemaker
 from speech_gateway.settings import get_settings
 from speech_gateway.tts import synthesize
-
-# Language routing is centralized here: Mandarin/English use AWS managed
-# providers, while Hokkien/Hakka use private SageMaker endpoints. Nothing else
-# in the service should make an independent provider decision.
-_SAGEMAKER_LANGUAGES = frozenset({"nan-TW", "hak-TW"})
 
 logger = logging.getLogger("speech_gateway")
 
@@ -79,8 +81,12 @@ def _memory_response_intent(text: str) -> str:
     return "UNCERTAIN"
 
 
-def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
+def create_app(
+    core_client: CoreVoiceGateClient | None = None,
+    provider_router: SpeechProviderRouter | None = None,
+) -> FastAPI:
     settings = get_settings()
+    providers = provider_router or _build_provider_router(settings)
     core = core_client or CoreVoiceGateClient(
         base_url=settings.CORE_API_BASE_URL,
         timeout_seconds=settings.CORE_API_TIMEOUT_SECONDS,
@@ -137,48 +143,57 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
         except CoreGateUnavailableError as exc:
             raise HTTPException(status_code=503, detail="voice safety gate unavailable") from exc
 
-        model_version = MODEL_VERSION
         try:
-            if payload.language in _SAGEMAKER_LANGUAGES:
-                text, confidence, _segments, model_version = await transcribe_via_sagemaker(
-                    audio,
-                    payload.language,  # type: ignore[arg-type]
-                    payload.sample_rate,
-                    settings.AWS_REGION,
-                    settings.SAGEMAKER_ASR_ENDPOINT,
+            result = await providers.transcribe(
+                AsrProviderRequest(
+                    audio=audio,
+                    language=payload.language,
+                    sample_rate=payload.sample_rate,
                 )
-            else:
-                text, confidence, _segments = await transcribe_pcm(
-                    audio,
-                    payload.language,  # type: ignore[arg-type]
-                    payload.sample_rate,
-                    settings.AWS_REGION,
-                )
-        except SageMakerAsrNotConfiguredError as exc:
-            # 501 rather than 502: the language is understood but this deployment
-            # has no model for it, which is a different thing for the caller than
-            # a model that failed.
-            logger.warning("no ASR endpoint configured for %s", payload.language)
+            )
+        except SpeechProviderError as exc:
+            logger.warning(
+                "ASR provider failed",
+                extra={
+                    "speech_provider": exc.provider_key,
+                    "provider_error_category": exc.category.value,
+                    "language": payload.language,
+                },
+            )
             await _fail_consumed_session(core, payload.session_id)
+            if exc.category in {
+                ProviderErrorCategory.MISCONFIGURED,
+                ProviderErrorCategory.UNSUPPORTED_LANGUAGE,
+            }:
+                raise HTTPException(
+                    status_code=501,
+                    detail="this language is not available in this deployment",
+                ) from exc
             raise HTTPException(
-                status_code=501, detail="this language is not available in this deployment"
+                status_code=502,
+                detail="speech recognition unavailable",
             ) from exc
-        except Exception as exc:
-            logger.warning("transcription failed: %s", type(exc).__name__)
-            await _fail_consumed_session(core, payload.session_id)
-            raise HTTPException(status_code=502, detail="speech recognition unavailable") from exc
 
-        if not text.strip():
+        if not result.text.strip():
             await _fail_consumed_session(core, payload.session_id)
             raise HTTPException(status_code=422, detail="speech recognition returned no text")
+
+        logger.info(
+            "ASR provider completed",
+            extra={
+                "speech_provider": result.metadata.provider_key,
+                "provider_model_version": result.metadata.model_version,
+                "language": payload.language,
+            },
+        )
 
         try:
             decision = await core.submit_asr_result(
                 session_id=payload.session_id,
                 language_route=_CORE_LANGUAGE_ROUTES[payload.language],
-                model_version=model_version,
-                confidence=confidence,
-                transcript=text,
+                model_version=result.metadata.model_version,
+                confidence=result.confidence,
+                transcript=result.text,
             )
         except CoreGateRejectedError as exc:
             await _fail_consumed_session(core, payload.session_id)
@@ -190,7 +205,7 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
         memory_decision = None
         confirmation = payload.memory_confirmation
         if confirmation is not None and decision.decision == "CAN_SEND_TO_AGENT":
-            response_intent = _memory_response_intent(text)
+            response_intent = _memory_response_intent(result.text)
             try:
                 memory_result = await core.decide_memory_by_voice(
                     elder_id=confirmation.elder_id,
@@ -218,9 +233,9 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
 
         return TranscribeResponse(
             session_id=payload.session_id,
-            text=text,
+            text=result.text,
             language=payload.language,
-            model_version=model_version,
+            model_version=result.metadata.model_version,
             gate_decision=decision.decision,
             confirmation_required=decision.confirmation_required,
             gate_expires_at=decision.expires_at,
@@ -230,37 +245,121 @@ def create_app(core_client: CoreVoiceGateClient | None = None) -> FastAPI:
     @app.post("/api/v1/speech/syntheses", response_model=SynthesizeResponse)
     async def create_synthesis(payload: SynthesizeRequest) -> SynthesizeResponse:
         try:
-            if payload.language in _SAGEMAKER_LANGUAGES:
-                audio, content_type, voice_id = await synthesize_via_sagemaker(
-                    payload.text,
-                    payload.language,  # type: ignore[arg-type]
-                    payload.speaking_speed,
-                    settings.AWS_REGION,
-                    settings.SAGEMAKER_TTS_ENDPOINT,
+            result = await providers.synthesize(
+                TtsProviderRequest(
+                    text=payload.text,
+                    language=payload.language,
+                    speaking_speed=payload.speaking_speed,
                 )
-            else:
-                audio, content_type, voice_id = await synthesize(
-                    payload.text,
-                    payload.language,  # type: ignore[arg-type]
-                    payload.speaking_speed,
-                    settings.AWS_REGION,
-                )
-        except SageMakerTtsNotConfiguredError as exc:
-            logger.warning("no TTS endpoint configured for %s", payload.language)
-            raise HTTPException(
-                status_code=501, detail="this language is not available in this deployment"
-            ) from exc
-        except Exception as exc:
-            logger.warning("synthesis failed: %s", type(exc).__name__)
+            )
+        except SpeechProviderError as exc:
+            logger.warning(
+                "TTS provider failed",
+                extra={
+                    "speech_provider": exc.provider_key,
+                    "provider_error_category": exc.category.value,
+                    "language": payload.language,
+                },
+            )
+            if exc.category in {
+                ProviderErrorCategory.MISCONFIGURED,
+                ProviderErrorCategory.UNSUPPORTED_LANGUAGE,
+            }:
+                raise HTTPException(
+                    status_code=501,
+                    detail="this language is not available in this deployment",
+                ) from exc
             raise HTTPException(status_code=502, detail="speech synthesis unavailable") from exc
 
+        logger.info(
+            "TTS provider completed",
+            extra={
+                "speech_provider": result.metadata.provider_key,
+                "provider_model_version": result.metadata.model_version,
+                "language": payload.language,
+            },
+        )
+
         return SynthesizeResponse(
-            audio_base64=base64.b64encode(audio).decode("ascii"),
-            content_type=content_type,
-            voice_id=voice_id,
+            audio_base64=base64.b64encode(result.audio).decode("ascii"),
+            content_type=result.content_type,
+            voice_id=result.voice_id,
         )
 
     return app
+
+
+def _build_provider_router(settings) -> SpeechProviderRouter:  # noqa: ANN001
+    """Build the closed runtime registry from server-owned configuration."""
+    return SpeechProviderRouter(
+        asr_providers=(
+            AwsTranscribeAsrProvider(
+                region=settings.AWS_REGION,
+                transcribe=_call_transcribe_pcm,
+                model_version=MODEL_VERSION,
+            ),
+            SageMakerAsrProvider(
+                region=settings.AWS_REGION,
+                endpoint_name=settings.SAGEMAKER_ASR_ENDPOINT,
+                transcribe=_call_transcribe_via_sagemaker,
+            ),
+        ),
+        tts_providers=(
+            AwsPollyTtsProvider(
+                region=settings.AWS_REGION,
+                synthesize=_call_synthesize,
+            ),
+            SageMakerTtsProvider(
+                region=settings.AWS_REGION,
+                endpoint_name=settings.SAGEMAKER_TTS_ENDPOINT,
+                synthesize=_call_synthesize_via_sagemaker,
+            ),
+        ),
+        asr_routes=settings.asr_provider_routes(),
+        tts_routes=settings.tts_provider_routes(),
+        asr_timeout_seconds=settings.ASR_PROVIDER_TIMEOUT_SECONDS,
+        tts_timeout_seconds=settings.TTS_PROVIDER_TIMEOUT_SECONDS,
+    )
+
+
+async def _call_transcribe_pcm(audio, language, sample_rate, region):  # noqa: ANN001, ANN202
+    return await transcribe_pcm(audio, language, sample_rate, region)
+
+
+async def _call_transcribe_via_sagemaker(  # noqa: ANN001, ANN202
+    audio,
+    language,
+    sample_rate,
+    region,
+    endpoint_name,
+):
+    return await transcribe_via_sagemaker(
+        audio,
+        language,
+        sample_rate,
+        region,
+        endpoint_name,
+    )
+
+
+async def _call_synthesize(text, language, speaking_speed, region):  # noqa: ANN001, ANN202
+    return await synthesize(text, language, speaking_speed, region)
+
+
+async def _call_synthesize_via_sagemaker(  # noqa: ANN001, ANN202
+    text,
+    language,
+    speaking_speed,
+    region,
+    endpoint_name,
+):
+    return await synthesize_via_sagemaker(
+        text,
+        language,
+        speaking_speed,
+        region,
+        endpoint_name,
+    )
 
 
 async def _fail_consumed_session(
