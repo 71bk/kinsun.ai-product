@@ -27,6 +27,7 @@ from speech_gateway.core_voice_gate import (
     CoreGateUnavailableError,
     CoreVoiceGateClient,
 )
+from speech_gateway.deepgram_asr import DeepgramNova3AsrProvider
 from speech_gateway.models import (
     SynthesizeRequest,
     SynthesizeResponse,
@@ -302,6 +303,11 @@ def _build_provider_router(settings) -> SpeechProviderRouter:  # noqa: ANN001
                 region=settings.AWS_REGION,
                 endpoint_name=settings.SAGEMAKER_ASR_ENDPOINT,
                 transcribe=_call_transcribe_via_sagemaker,
+            ),
+            DeepgramNova3AsrProvider(
+                api_key=settings.DEEPGRAM_API_KEY,
+                base_url=settings.DEEPGRAM_API_BASE_URL,
+                timeout_seconds=settings.ASR_PROVIDER_TIMEOUT_SECONDS,
             ),
         ),
         tts_providers=(

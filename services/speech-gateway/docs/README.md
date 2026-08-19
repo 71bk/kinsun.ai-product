@@ -1,14 +1,16 @@
 # Speech Gateway deployment assets
 
 `services/speech-gateway` is the canonical voice boundary. Its application
-routes Mandarin and English through Amazon Transcribe/Polly, and routes
-Taiwanese Hokkien (`nan-TW`) and Hakka (`hak-TW`) through private SageMaker
-endpoints when they have been explicitly configured.
+selects Mandarin and English ASR from server-owned Amazon Transcribe or
+Deepgram Nova-3 routes, uses Amazon Polly for their TTS, and routes Taiwanese
+Hokkien (`nan-TW`) and Hakka (`hak-TW`) through private SageMaker endpoints
+when they have been explicitly configured.
 
 The runtime adapters are:
 
 - `src/speech_gateway/sagemaker_asr.py`
 - `src/speech_gateway/sagemaker_tts.py`
+- `src/speech_gateway/deepgram_asr.py`
 - `src/speech_gateway/provider_adapters.py`
 - `src/speech_gateway/provider_router.py`
 

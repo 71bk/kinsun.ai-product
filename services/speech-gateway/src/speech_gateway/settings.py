@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     ASR_PROVIDER_TIMEOUT_SECONDS: float = 30.0
     TTS_PROVIDER_TIMEOUT_SECONDS: float = 30.0
 
+    # Deepgram remains opt-in by route. The key is intentionally allowed to be
+    # blank while another ASR provider is selected, then fails closed on first
+    # Deepgram use. It must come from the deployment secret mechanism.
+    DEEPGRAM_API_KEY: str = ""
+    DEEPGRAM_API_BASE_URL: str = "https://api.deepgram.com"
+
     # Core is the only threshold and formal-state authority. This bearer value
     # is a Core-issued service credential, not
     # a browser token, and must never be returned or logged.

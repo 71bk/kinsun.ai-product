@@ -12,6 +12,7 @@ The runtime process registers only these adapters:
 | Capability | Provider key | Current implementation | Languages |
 | --- | --- | --- | --- |
 | ASR | `aws-transcribe` | Amazon Transcribe Streaming | `zh-TW`, `en-US` |
+| ASR | `deepgram-nova-3` | Deepgram pre-recorded Nova-3 API | `zh-TW`, `en-US` |
 | ASR | `aws-sagemaker` | Private SageMaker endpoint | `nan-TW`, `hak-TW` |
 | TTS | `aws-polly` | Amazon Polly neural voices | `zh-TW`, `en-US` |
 | TTS | `aws-sagemaker` | Private SageMaker endpoint | `nan-TW`, `hak-TW` |
@@ -34,11 +35,32 @@ TTS_PROVIDER_NAN_TW=aws-sagemaker
 TTS_PROVIDER_HAK_TW=aws-sagemaker
 ASR_PROVIDER_TIMEOUT_SECONDS=30
 TTS_PROVIDER_TIMEOUT_SECONDS=30
+DEEPGRAM_API_KEY=
+DEEPGRAM_API_BASE_URL=https://api.deepgram.com
 ```
 
 `SAGEMAKER_ASR_ENDPOINT` and `SAGEMAKER_TTS_ENDPOINT` remain separate required
 configuration for the private adapters. Route changes take effect after the
 service restarts.
+
+Deepgram is opt-in. To use Nova-3 for Traditional Mandarin and US English while
+preserving the low-resource routes, set:
+
+```dotenv
+ASR_PROVIDER_ZH_TW=deepgram-nova-3
+ASR_PROVIDER_EN_US=deepgram-nova-3
+ASR_PROVIDER_NAN_TW=aws-sagemaker
+ASR_PROVIDER_HAK_TW=aws-sagemaker
+DEEPGRAM_API_KEY=<deployment-secret>
+```
+
+The adapter always sends raw mono linear16 PCM with an explicit sample rate,
+`model=nova-3`, a fixed `zh-TW` or `en-US` language, `channels=1`, and
+`mip_opt_out=true`. Model selection, endpoint, privacy policy, and credentials
+are not accepted from the public API. Deepgram is not registered for `nan-TW`
+or `hak-TW`; selecting it for either language stops application construction.
+The normalized confidence is the minimum valid word confidence when word data
+is present, keeping the downstream Core gate conservative.
 
 For a local Docker smoke test, pass the same server-owned variables to the
 container; do not expose them as `NEXT_PUBLIC_*` values:
@@ -58,15 +80,16 @@ docker run --rm -p 8002:8002 `
 ```
 
 AWS credentials, the Core service credential, and private endpoint names must
-be supplied through the deployment's secret/configuration mechanism. Do not put
-them in an image, browser bundle, command history, or committed file.
+be supplied through the deployment's secret/configuration mechanism. The same
+applies to `DEEPGRAM_API_KEY`. Do not put credentials in an image, browser
+bundle, command history, or committed file.
 
 ## Validation and failure behavior
 
 - Unknown provider keys, incomplete routes, unsupported provider/language
   combinations, and invalid timeouts stop application construction.
-- Missing private endpoint configuration fails on first use with a bounded
-  `misconfigured` category and HTTP 501.
+- Missing private endpoint or selected Deepgram credential configuration fails
+  on first use with a bounded `misconfigured` category and HTTP 501.
 - Timeouts, upstream failures, and invalid provider responses fail with bounded
   categories and HTTP 502.
 - The router calls exactly one configured provider. It never silently falls

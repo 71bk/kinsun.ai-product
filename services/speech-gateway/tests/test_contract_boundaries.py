@@ -359,17 +359,31 @@ def test_unexpected_field_is_refused(client: TestClient) -> None:
     assert response.status_code == 422
 
 
-def test_browser_cannot_select_or_override_a_provider(client: TestClient) -> None:
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("provider", "browser-selected-provider"),
+        ("model", "browser-selected-model"),
+        ("endpoint", "https://browser-selected.invalid"),
+        ("keyterms", ["browser-selected-keyterm"]),
+        ("api_key", "browser-selected-credential"),
+    ],
+)
+def test_browser_cannot_select_or_override_provider_policy(
+    client: TestClient,
+    field: str,
+    value: object,
+) -> None:
     response = client.post(
         "/api/v1/speech/syntheses",
         json={
             "text": "synthetic text",
             "language": "zh-TW",
-            "provider": "browser-selected-provider",
+            field: value,
         },
     )
     assert response.status_code == 422
-    assert "browser-selected-provider" not in response.text
+    assert str(value) not in response.text
 
 
 def test_synthesis_returns_base64_audio(client: TestClient) -> None:
