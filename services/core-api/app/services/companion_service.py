@@ -32,27 +32,13 @@ from app.services.asr_gate_service import AsrGateService
 from app.services.authorization_service import authorize_elder
 from app.services.care_event_rendering import render_reviewed_event
 from app.services.care_event_service import CareEventService
+from app.services.companion_request import build_companion_runtime_request
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
 
 _MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS = 5
 _MAX_VERIFIED_EVENT_CONTEXT_ITEMS = 5
-
-_ACTOR_ROLE_MAP = {
-    "ELDER": "elder",
-    "FAMILY_MEMBER": "family",
-    "SYSTEM_SERVICE": "system",
-}
-
-_LANGUAGE_MAP = {
-    "ZH_TW": "zh-TW",
-    "NAN_TW": "nan-TW",
-    "HAK_TW": "hak-TW",
-    "EN_US": "en-US",
-    "MIXED": "zh-TW",
-    "UNKNOWN": "zh-TW",
-}
 
 _RESULT_STATUS_MAP = {
     "SUCCESS": "SUCCESS",
@@ -302,30 +288,20 @@ class CompanionService:
             turn_purpose=turn_purpose,
         )
         preferred_address, response_length = await self._trusted_profile(conversation.elder_id)
-        request_payload: dict[str, object] = {
-            "schema_version": "1.0.0",
-            "request_id": request_id,
-            "trace_id": conversation.trace_id,
-            "agent_run_id": agent_run_wire_id,
-            "session_id": str(conversation.id),
-            "actor_id": str(actor_context.actor_id),
-            "actor_role": _ACTOR_ROLE_MAP.get(actor_context.actor_role, "staff"),
-            "elder_id": str(conversation.elder_id),
-            "tenant_id": str(actor_context.tenant_id),
-            "purpose": turn_purpose,
-            "consent_version": str(conversation.consent_version),
-            "policy_version": conversation.policy_version,
-            "language": _LANGUAGE_MAP[conversation.language_route],
-            "preferred_address": preferred_address,
-            "response_length": response_length,
-            "input_text": input_text,
-            "confirmed_memories": confirmed_memories,
-            "verified_care_events": verified_care_events,
-            "allowed_tools": [],
-            "requested_outputs": requested_outputs,
-            "max_steps": 3,
-            "latency_budget_ms": latency_budget_ms,
-        }
+        request_payload = build_companion_runtime_request(
+            conversation=conversation,
+            actor_context=actor_context,
+            request_id=request_id,
+            agent_run_wire_id=agent_run_wire_id,
+            purpose=turn_purpose,
+            preferred_address=preferred_address,
+            response_length=response_length,
+            input_text=input_text,
+            confirmed_memories=confirmed_memories,
+            verified_care_events=verified_care_events,
+            requested_outputs=requested_outputs,
+            latency_budget_ms=latency_budget_ms,
+        )
 
         if is_text_turn:
             await self._conversations.transition(
