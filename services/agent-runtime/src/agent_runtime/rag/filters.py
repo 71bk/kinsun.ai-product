@@ -4,6 +4,8 @@ from collections.abc import Mapping
 
 from agent_runtime.rag.models import QueryProfile
 
+NORMAL_RAG_RISK_LEVELS = ("low", "medium")
+
 
 def build_normal_rag_filter(
     *,
@@ -16,15 +18,12 @@ def build_normal_rag_filter(
     must: list[dict[str, object]] = [
         {"term": {"current_status": "current"}},
         {"term": {"stop_normal_rag": False}},
+        {"term": {"retrieval_eligible": True}},
+        {"terms": {"risk_level": list(NORMAL_RAG_RISK_LEVELS)}},
     ]
     must.append(_scope_filter("allowed_audiences", audience))
     must.append(_scope_filter("allowed_purposes", purpose))
-    bool_filter: dict[str, object] = {
-        "must": must,
-        "must_not": [
-            {"terms": {"risk_level": ["high", "critical", "high_red_line"]}},
-        ],
-    }
+    bool_filter: dict[str, object] = {"must": must}
     return {"bool": bool_filter}
 
 
@@ -41,12 +40,16 @@ def is_normal_rag_eligible(
         return False
     if source.get("stop_normal_rag") is not False:
         return False
-    risk_level = source.get("risk_level")
-    if isinstance(risk_level, str) and risk_level.casefold() in {
-        "high",
-        "critical",
-        "high_red_line",
-    }:
+    if source.get("retrieval_eligible") is not True:
+        return False
+    block_reasons = source.get("retrieval_block_reasons")
+    if not isinstance(block_reasons, list) or block_reasons:
+        return False
+    if source.get("risk_level") not in NORMAL_RAG_RISK_LEVELS:
+        return False
+    if not isinstance(source.get("requires_official_assessment"), bool):
+        return False
+    if not isinstance(source.get("requires_professional_assessment"), bool):
         return False
     if not _scope_allows(source.get("allowed_audiences"), audience):
         return False
@@ -56,29 +59,18 @@ def is_normal_rag_eligible(
 
 
 def _scope_allows(raw_allowed: object, requested: str | None) -> bool:
-    if raw_allowed is None:
-        return True
     if not isinstance(raw_allowed, list) or any(
-        not isinstance(value, str) for value in raw_allowed
+        not isinstance(value, str) or not value.strip() for value in raw_allowed
     ):
         return False
     if not raw_allowed:
-        return True
-    return requested is not None and requested in raw_allowed
+        return False
+    return isinstance(requested, str) and bool(requested.strip()) and requested in raw_allowed
 
 
 def _scope_filter(field: str, requested: str | None) -> dict[str, object]:
-    """Allow an explicit scope match or an absent/empty unrestricted field."""
+    """Require an explicit caller scope and an exact allowlist match."""
 
-    unrestricted = {"bool": {"must_not": [{"exists": {"field": field}}]}}
-    if requested is None:
-        return unrestricted
-    return {
-        "bool": {
-            "should": [
-                {"term": {field: requested}},
-                unrestricted,
-            ],
-            "minimum_should_match": 1,
-        }
-    }
+    if not isinstance(requested, str) or not requested.strip():
+        return {"match_none": {}}
+    return {"term": {field: requested}}

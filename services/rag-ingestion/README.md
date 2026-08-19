@@ -25,6 +25,11 @@ staging alias.
   production switch; this first release still refuses every non-staging target.
 - The current supplied Allowlist records Human Review as `NOT_COMPLETED`; the
   service carries that state into receipts and never upgrades it.
+- Missing, empty, or unsupported normal-RAG policy metadata never inherits a
+  permissive default. Documents remain available in the staging index for
+  review, but only documents with explicit current status, low/medium risk,
+  nonempty audience and purpose scopes, and Boolean official/professional
+  assessment flags receive `retrieval_eligible=true`.
 - Embedding artifacts default to the OS temp directory at
   `kinsun-rag/embeddings.jsonl`. Any artifact path inside the repository is
   rejected. Receipts contain counts and governance state, never vectors or
@@ -152,7 +157,8 @@ operators must use the six repository scripts so the Allowlist and SHA gates run
 
 `smoke-test` first verifies the alias, configured search pipelines, citation
 identity, and mandatory `current_status=current` /
-`stop_normal_rag=false` filters. It then POSTs the configured positive and
+`stop_normal_rag=false` / `retrieval_eligible=true` / low-or-medium-risk
+filters. It then POSTs the configured positive and
 no-data cases to the Agent Runtime retrieval endpoint. A pass requires a
 standard success envelope, three to five fully cited chunks for the positive
 case, and `NO_DATA` with an empty result set and explicit fallback for the

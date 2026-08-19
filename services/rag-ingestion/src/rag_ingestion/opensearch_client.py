@@ -301,12 +301,17 @@ class OpenSearchGateway:
                     "source_url",
                     "current_status",
                     "stop_normal_rag",
+                    "risk_level",
+                    "retrieval_eligible",
+                    "retrieval_block_reasons",
                 ],
                 "query": {
                     "bool": {
                         "filter": [
                             {"term": {"current_status": "current"}},
                             {"term": {"stop_normal_rag": False}},
+                            {"term": {"retrieval_eligible": True}},
+                            {"terms": {"risk_level": ["low", "medium"]}},
                         ]
                     }
                 },
@@ -325,6 +330,9 @@ class OpenSearchGateway:
             if (
                 source.get("current_status") != "current"
                 or source.get("stop_normal_rag") is not False
+                or source.get("retrieval_eligible") is not True
+                or source.get("risk_level") not in {"low", "medium"}
+                or source.get("retrieval_block_reasons") != []
             ):
                 raise OpenSearchOperationError("OpenSearch smoke-test returned a blocked chunk")
             if not isinstance(source.get("chunk_id"), str) or not isinstance(

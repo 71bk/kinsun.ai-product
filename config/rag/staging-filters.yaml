@@ -11,6 +11,10 @@ forbidden_paths:
 filters:
   current_status: current
   stop_normal_rag: false
+  retrieval_eligible: true
+  risk_levels:
+    - low
+    - medium
 staging_guards:
   require_staging_index_name: true
   reject_production_mode: true

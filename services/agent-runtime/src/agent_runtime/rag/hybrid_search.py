@@ -25,8 +25,12 @@ class HybridSearch:
                 "current_status",
                 "stop_normal_rag",
                 "risk_level",
+                "requires_official_assessment",
+                "requires_professional_assessment",
                 "allowed_audiences",
                 "allowed_purposes",
+                "retrieval_eligible",
+                "retrieval_block_reasons",
             ],
             "query": {
                 "hybrid": {

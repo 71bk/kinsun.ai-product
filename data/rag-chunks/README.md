@@ -42,11 +42,13 @@ Ingestion 程式只能讀取 `data/rag-chunks/approved/`。
 `review_status=needs_review` 與 `production_gate=BLOCKED`。
 
 新增內容包含衛教與照護指引（失智症、營養、防跌、健康照護附錄、家庭照顧者支持），風險
-由 Chunk 層級標記承擔。全部 726 個 Chunk 中，36 筆 `risk_level=high_red_line` 與 35 筆
-`stop_normal_rag=true` 會被 `agent_runtime/rag/filters.py` 的檢索過濾排除，實際可進入
-Agent context 的是 630 筆。另有 16 筆沒有頁碼（1966 網頁來源）。這些數字由
+由 Chunk 層級標記承擔。全部 726 個 Chunk 中，36 筆 `risk_level=high_red_line`、35 筆
+`stop_normal_rag=true`，且另有非 current、缺少／空白 scope 或缺少 assessment metadata 的資料。
+2026-08-19 起，這些缺口都以 fail-closed 處理：資料仍可進 staging index 供人工審查，但只有
+143 筆具備完整的 normal-RAG metadata、可標記 `retrieval_eligible=true` 並進入 Agent context。
+另有 16 筆沒有頁碼（1966 網頁來源）。這些數字由
 `tests/integration/test_approved_dataset.py` 守著，資料集再變動時測試會紅。
 
-**這是目前唯一在執行的範圍限制。** 既有 6 個來源的 `sources[]` 帶有人工審查寫下的
+除了上述 Chunk 層 fail-closed gate，既有 6 個來源的 `sources[]` 帶有人工審查寫下的
 `scope_note`（例如 UCLA 量表註明「僅描述性內容，停用施測、診斷與自動計分」），新升級的
 11 個沒有等價的來源層級約束。

@@ -38,6 +38,16 @@ class FakeBulkRawClient:
         return self.response
 
 
+class FakeSearchRawClient:
+    def __init__(self, source: dict[str, Any]) -> None:
+        self.source = source
+        self.calls: list[dict[str, Any]] = []
+
+    def search(self, **kwargs: Any) -> dict[str, Any]:
+        self.calls.append(kwargs)
+        return {"hits": {"hits": [{"_source": self.source}]}}
+
+
 def test_bulk_create_omits_the_refresh_policy_serverless_rejects() -> None:
     client = FakeBulkRawClient({"errors": False, "items": [{"create": {"status": 201}}]})
 
@@ -104,3 +114,49 @@ def test_search_pipeline_put_uses_configured_name_and_body() -> None:
 )
 def test_signing_service_is_inferred_from_hostname(host: str, expected: str) -> None:
     assert infer_opensearch_service(host) == expected
+
+
+def _eligible_smoke_source() -> dict[str, Any]:
+    return {
+        "chunk_id": "synthetic-chunk",
+        "document_name": "Synthetic Guide",
+        "current_status": "current",
+        "stop_normal_rag": False,
+        "risk_level": "low",
+        "retrieval_eligible": True,
+        "retrieval_block_reasons": [],
+    }
+
+
+def test_smoke_query_requires_explicit_normal_rag_eligibility() -> None:
+    client = FakeSearchRawClient(_eligible_smoke_source())
+
+    count = OpenSearchGateway(client).smoke_test_current_normal_rag("synthetic-staging")
+
+    assert count == 1
+    filters = client.calls[0]["body"]["query"]["bool"]["filter"]
+    assert filters == [
+        {"term": {"current_status": "current"}},
+        {"term": {"stop_normal_rag": False}},
+        {"term": {"retrieval_eligible": True}},
+        {"terms": {"risk_level": ["low", "medium"]}},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("current_status", "unknown"),
+        ("stop_normal_rag", True),
+        ("risk_level", "unknown"),
+        ("retrieval_eligible", False),
+        ("retrieval_block_reasons", ["risk_level_not_allowed"]),
+    ],
+)
+def test_smoke_query_rejects_ineligible_hit(field: str, value: object) -> None:
+    source = _eligible_smoke_source()
+    source[field] = value
+    client = FakeSearchRawClient(source)
+
+    with pytest.raises(OpenSearchOperationError, match="blocked chunk"):
+        OpenSearchGateway(client).smoke_test_current_normal_rag("synthetic-staging")

@@ -243,6 +243,11 @@ def test_checked_in_nextgen_index_config_uses_engine_free_mapping() -> None:
         "space_type": "cosinesimil",
         "method": {"name": "hnsw"},
     }
+    properties = definition.body["mappings"]["properties"]
+    assert properties["retrieval_eligible"] == {"type": "boolean"}
+    assert properties["retrieval_block_reasons"] == {"type": "keyword"}
+    assert properties["requires_official_assessment"] == {"type": "boolean"}
+    assert properties["requires_professional_assessment"] == {"type": "boolean"}
 
 
 def test_existing_index_is_not_overwritten(tmp_path: Path) -> None:

@@ -43,8 +43,12 @@
       "stop_normal_rag": { "type": "boolean" },
       "risk_level": { "type": "keyword" },
       "requires_human_review": { "type": "boolean" },
+      "requires_official_assessment": { "type": "boolean" },
+      "requires_professional_assessment": { "type": "boolean" },
       "allowed_audiences": { "type": "keyword" },
       "allowed_purposes": { "type": "keyword" },
+      "retrieval_eligible": { "type": "boolean" },
+      "retrieval_block_reasons": { "type": "keyword" },
       "source_version": { "type": "keyword" },
       "last_verified_at": { "type": "date", "ignore_malformed": true }
     }

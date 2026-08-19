@@ -41,17 +41,32 @@ def test_current_approved_dataset_matches_allowlist_and_normalizes_filters() -> 
     assert all(isinstance(document["stop_normal_rag"], bool) for document in documents)
     assert sum(document["stop_normal_rag"] for document in documents) == 35
     assert all(document["current_status"] for document in documents)
-    # The promoted health-education sources rely entirely on chunk-level markers
-    # for scoping, since no source-level review has been recorded for them.
-    # Retrieval must keep both categories out of Agent context.
-    blocked = [
-        document
-        for document in documents
-        if document["stop_normal_rag"]
-        or document["risk_level"] in {"high", "critical", "high_red_line"}
-    ]
+    # Metadata completeness is a necessary staging retrieval gate. Missing
+    # scopes, risk, or assessment flags stay indexable for human review but do
+    # not enter Agent context.
+    eligible = [document for document in documents if document["retrieval_eligible"]]
     assert sum(1 for document in documents if document["risk_level"] == "high_red_line") == 36
-    assert len(documents) - len(blocked) == 630
+    assert len(eligible) == 143
+    assert all(document["retrieval_block_reasons"] == [] for document in eligible)
+    assert all(
+        document["retrieval_eligible"] is (not document["retrieval_block_reasons"])
+        for document in documents
+    )
+    reason_counts = {
+        reason: sum(reason in document["retrieval_block_reasons"] for document in documents)
+        for reason in {
+            reason for document in documents for reason in document["retrieval_block_reasons"]
+        }
+    }
+    assert reason_counts == {
+        "allowed_audiences_missing_or_empty": 75,
+        "allowed_purposes_missing_or_empty": 65,
+        "current_status_not_current": 306,
+        "requires_official_assessment_missing": 5,
+        "requires_professional_assessment_missing": 225,
+        "risk_level_not_allowed": 74,
+        "stop_normal_rag": 35,
+    }
     # The nutrition manual publishes no direct file link, so its citation is the
     # official agency page. Every document must still carry a usable source.
     assert all(document["source_url"].startswith("https://") for document in documents)
