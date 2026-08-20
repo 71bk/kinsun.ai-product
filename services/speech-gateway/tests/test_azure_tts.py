@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import httpx
 import pytest
 
@@ -131,7 +129,10 @@ async def test_missing_or_invalid_server_configuration_fails_before_http(
 
 
 @pytest.mark.asyncio
-async def test_low_resource_language_is_refused_before_http() -> None:
+@pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])
+async def test_low_resource_language_is_refused_before_http(
+    language: SpeechLanguage,
+) -> None:
     calls = 0
 
     async def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
@@ -142,7 +143,7 @@ async def test_low_resource_language_is_refused_before_http() -> None:
     provider = _provider(handler)
 
     with pytest.raises(SpeechProviderError) as caught:
-        await provider.synthesize(_request(cast(SpeechLanguage, "hak-TW")))
+        await provider.synthesize(_request(language))
 
     assert caught.value.category == ProviderErrorCategory.UNSUPPORTED_LANGUAGE
     assert calls == 0
@@ -218,10 +219,20 @@ async def test_malformed_success_response_is_rejected(response: httpx.Response) 
     assert caught.value.category == ProviderErrorCategory.INVALID_RESPONSE
 
 
-def test_runtime_route_cannot_send_hakka_to_azure() -> None:
-    settings = Settings(TTS_PROVIDER_HAK_TW="azure-speech-tts")
+@pytest.mark.parametrize(
+    ("setting_name", "language"),
+    [
+        ("TTS_PROVIDER_NAN_TW", "nan-TW"),
+        ("TTS_PROVIDER_HAK_TW", "hak-TW"),
+    ],
+)
+def test_runtime_route_cannot_send_low_resource_language_to_azure(
+    setting_name: str,
+    language: SpeechLanguage,
+) -> None:
+    settings = Settings.model_validate({setting_name: "azure-speech-tts"})
 
-    with pytest.raises(ProviderConfigurationError, match="does not support hak-TW"):
+    with pytest.raises(ProviderConfigurationError, match=f"does not support {language}"):
         _build_provider_router(settings)
 
 

@@ -141,9 +141,15 @@ def test_provider_language_mismatch_fails_during_router_construction() -> None:
         "test-asr",
         supported_languages=frozenset({"zh-TW"}),
     )
+    reverse_order_routes = {
+        "hak-TW": provider.key,
+        "nan-TW": provider.key,
+        "en-US": provider.key,
+        "zh-TW": provider.key,
+    }
 
-    with pytest.raises(ProviderConfigurationError, match="does not support"):
-        _router(primary_asr=provider)
+    with pytest.raises(ProviderConfigurationError, match="does not support en-US"):
+        _router(primary_asr=provider, asr_routes=reverse_order_routes)
 
 
 @pytest.mark.asyncio
