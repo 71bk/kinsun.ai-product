@@ -32,6 +32,8 @@ def synthetic_chunk(chunk_id: str = "synthetic_source_chunk_001") -> dict[str, A
             "stop_normal_rag": False,
             "risk_level": "low",
             "requires_human_review": False,
+            "requires_official_assessment": False,
+            "requires_professional_assessment": False,
             "allowed_audiences": ["elder"],
             "allowed_purposes": ["general_information"],
             "source_version": "synthetic-v1",

@@ -55,8 +55,8 @@ def make_search_settings() -> HybridSearchSettings:
 def make_request(
     profile: str = "natural_language",
     *,
-    audience: str | None = None,
-    purpose: str | None = None,
+    audience: str | None = "elder",
+    purpose: str | None = "general_information",
 ) -> RetrievalRequestV1:
     return RetrievalRequestV1(
         schema_version="1.0.0",
@@ -79,6 +79,10 @@ def make_hit(
     score: float = 1.0,
     allowed_audiences: list[str] | None = None,
     allowed_purposes: list[str] | None = None,
+    requires_official_assessment: bool | None = False,
+    requires_professional_assessment: bool | None = False,
+    retrieval_eligible: bool | None = True,
+    retrieval_block_reasons: list[str] | None = None,
 ) -> dict[str, object]:
     return {
         "_id": chunk_id,
@@ -94,8 +98,12 @@ def make_hit(
             "current_status": current_status,
             "stop_normal_rag": stop_normal_rag,
             "risk_level": risk_level,
-            "allowed_audiences": allowed_audiences,
-            "allowed_purposes": allowed_purposes,
+            "requires_official_assessment": requires_official_assessment,
+            "requires_professional_assessment": requires_professional_assessment,
+            "allowed_audiences": allowed_audiences or ["elder"],
+            "allowed_purposes": allowed_purposes or ["general_information"],
+            "retrieval_eligible": retrieval_eligible,
+            "retrieval_block_reasons": retrieval_block_reasons or [],
         },
     }
 
@@ -327,12 +335,11 @@ def test_hybrid_plan_uses_configured_profile_and_mandatory_filters(
         "must": [
             {"term": {"current_status": "current"}},
             {"term": {"stop_normal_rag": False}},
-            {"bool": {"must_not": [{"exists": {"field": "allowed_audiences"}}]}},
-            {"bool": {"must_not": [{"exists": {"field": "allowed_purposes"}}]}},
-        ],
-        "must_not": [
-            {"terms": {"risk_level": ["high", "critical", "high_red_line"]}},
-        ],
+            {"term": {"retrieval_eligible": True}},
+            {"terms": {"risk_level": ["low", "medium"]}},
+            {"term": {"allowed_audiences": "elder"}},
+            {"term": {"allowed_purposes": "general_information"}},
+        ]
     }
     assert hybrid["filter"] == {"bool": expected_bool}
 
@@ -345,10 +352,9 @@ def test_high_risk_query_filter_is_applied_to_every_normal_rag_profile() -> None
 
     natural_bool = natural_plan.body["query"]["hybrid"]["filter"]["bool"]
     legal_bool = legal_plan.body["query"]["hybrid"]["filter"]["bool"]
-    assert natural_bool["must_not"] == [
-        {"terms": {"risk_level": ["high", "critical", "high_red_line"]}},
-    ]
-    assert legal_bool["must_not"] == natural_bool["must_not"]
+    expected = {"terms": {"risk_level": ["low", "medium"]}}
+    assert expected in natural_bool["must"]
+    assert expected in legal_bool["must"]
 
 
 def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:
@@ -357,24 +363,17 @@ def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:
     plan = HybridSearch(make_search_settings()).build(request, [0.0] * 1024)
 
     must = plan.body["query"]["hybrid"]["filter"]["bool"]["must"]
-    assert {
-        "bool": {
-            "should": [
-                {"term": {"allowed_audiences": "elder"}},
-                {"bool": {"must_not": [{"exists": {"field": "allowed_audiences"}}]}},
-            ],
-            "minimum_should_match": 1,
-        }
-    } in must
-    assert {
-        "bool": {
-            "should": [
-                {"term": {"allowed_purposes": "care_guidance"}},
-                {"bool": {"must_not": [{"exists": {"field": "allowed_purposes"}}]}},
-            ],
-            "minimum_should_match": 1,
-        }
-    } in must
+    assert {"term": {"allowed_audiences": "elder"}} in must
+    assert {"term": {"allowed_purposes": "care_guidance"}} in must
+
+
+def test_hybrid_plan_without_explicit_scope_matches_nothing() -> None:
+    request = make_request(audience=None, purpose=None)
+
+    plan = HybridSearch(make_search_settings()).build(request, [0.0] * 1024)
+
+    must = plan.body["query"]["hybrid"]["filter"]["bool"]["must"]
+    assert must.count({"match_none": {}}) == 2
 
 
 @pytest.mark.asyncio
@@ -506,9 +505,64 @@ async def test_high_and_critical_risk_do_not_enter_natural_language_context() ->
     assert is_normal_rag_eligible(hits[3]["_source"], "legal") is False
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("risk_level", "unknown"),
+        ("risk_level", "LOW"),
+        ("allowed_audiences", []),
+        ("allowed_purposes", []),
+        ("requires_official_assessment", None),
+        ("requires_professional_assessment", None),
+        ("retrieval_eligible", False),
+        ("retrieval_block_reasons", ["risk_level_not_allowed"]),
+    ],
+)
+def test_incomplete_or_unknown_policy_metadata_is_rejected(field: str, value: object) -> None:
+    source = make_hit("blocked")["_source"]
+    source[field] = value
+
+    assert (
+        is_normal_rag_eligible(
+            source,
+            "natural_language",
+            audience="elder",
+            purpose="general_information",
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "risk_level",
+        "allowed_audiences",
+        "allowed_purposes",
+        "requires_official_assessment",
+        "requires_professional_assessment",
+        "retrieval_eligible",
+        "retrieval_block_reasons",
+    ],
+)
+def test_missing_policy_metadata_is_rejected(field: str) -> None:
+    source = make_hit("blocked")["_source"]
+    source.pop(field)
+
+    assert (
+        is_normal_rag_eligible(
+            source,
+            "legal",
+            audience="elder",
+            purpose="general_information",
+        )
+        is False
+    )
+
+
 @pytest.mark.asyncio
 async def test_metadata_scope_mismatch_is_rejected_after_search() -> None:
-    hits = [make_hit(f"safe-{number}") for number in range(3)]
+    hits = [make_hit(f"safe-{number}", allowed_purposes=["care_guidance"]) for number in range(3)]
     hits.extend(
         [
             make_hit("wrong-audience", allowed_audiences=["caregiver"]),

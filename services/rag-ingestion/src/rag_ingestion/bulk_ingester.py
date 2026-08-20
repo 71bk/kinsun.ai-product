@@ -18,6 +18,15 @@ from rag_ingestion.validator import ValidatedChunk
 # 0, 5, ..., 60 seconds.
 COUNT_VISIBILITY_ATTEMPTS = 13
 COUNT_VISIBILITY_DELAY_SECONDS = 5.0
+NORMAL_RAG_RISK_LEVELS = frozenset({"low", "medium"})
+
+CURRENT_STATUS_NOT_CURRENT = "current_status_not_current"
+STOP_NORMAL_RAG = "stop_normal_rag"
+RISK_LEVEL_NOT_ALLOWED = "risk_level_not_allowed"
+ALLOWED_AUDIENCES_MISSING_OR_EMPTY = "allowed_audiences_missing_or_empty"
+ALLOWED_PURPOSES_MISSING_OR_EMPTY = "allowed_purposes_missing_or_empty"
+REQUIRES_OFFICIAL_ASSESSMENT_MISSING = "requires_official_assessment_missing"
+REQUIRES_PROFESSIONAL_ASSESSMENT_MISSING = "requires_professional_assessment_missing"
 
 
 class BulkIngestionError(RuntimeError):
@@ -194,6 +203,22 @@ def build_index_document(chunk: ValidatedChunk, vector: Sequence[float]) -> dict
     current_status = _first_string(data, metadata, "current_status") or "unknown"
     stop_normal_rag = _first_bool(data, metadata, "stop_normal_rag", default=True)
     requires_human_review = _first_bool(data, metadata, "requires_human_review", default=True)
+    risk_level = _first_string(data, metadata, "risk_level") or "unknown"
+    allowed_audiences = _first_string_list(data, metadata, "allowed_audiences")
+    allowed_purposes = _first_string_list(data, metadata, "allowed_purposes")
+    requires_official_assessment = _optional_bool(data, metadata, "requires_official_assessment")
+    requires_professional_assessment = _optional_bool(
+        data, metadata, "requires_professional_assessment"
+    )
+    retrieval_block_reasons = _normal_rag_block_reasons(
+        current_status=current_status,
+        stop_normal_rag=stop_normal_rag,
+        risk_level=risk_level,
+        allowed_audiences=allowed_audiences,
+        allowed_purposes=allowed_purposes,
+        requires_official_assessment=requires_official_assessment,
+        requires_professional_assessment=requires_professional_assessment,
+    )
     page_start = _first_positive_int(
         data, metadata, "page_start", "printed_page_start", "physical_page_start"
     )
@@ -250,10 +275,14 @@ def build_index_document(chunk: ValidatedChunk, vector: Sequence[float]) -> dict
         "embedding": list(vector),
         "current_status": current_status,
         "stop_normal_rag": stop_normal_rag,
-        "risk_level": _first_string(data, metadata, "risk_level") or "unknown",
+        "risk_level": risk_level,
         "requires_human_review": requires_human_review,
-        "allowed_audiences": _first_string_list(data, metadata, "allowed_audiences"),
-        "allowed_purposes": _first_string_list(data, metadata, "allowed_purposes"),
+        "requires_official_assessment": requires_official_assessment,
+        "requires_professional_assessment": requires_professional_assessment,
+        "allowed_audiences": allowed_audiences,
+        "allowed_purposes": allowed_purposes,
+        "retrieval_eligible": not retrieval_block_reasons,
+        "retrieval_block_reasons": retrieval_block_reasons,
         "source_version": source_version,
         "last_verified_at": _first_string(
             data, metadata, "last_verified_at", "last_version_checked_at"
@@ -286,6 +315,15 @@ def _first_bool(
     return value
 
 
+def _optional_bool(data: dict[str, Any], metadata: dict[str, Any], name: str) -> bool | None:
+    value = _lookup(data, metadata, name)
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        raise BulkIngestionError(f"{name} must be a boolean")
+    return value
+
+
 def _first_positive_int(data: dict[str, Any], metadata: dict[str, Any], *names: str) -> int | None:
     for name in names:
         value = _lookup(data, metadata, name)
@@ -305,6 +343,38 @@ def _first_string_list(data: dict[str, Any], metadata: dict[str, Any], name: str
     if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
         raise BulkIngestionError(f"{name} must be an array of strings")
     return value
+
+
+def _normal_rag_block_reasons(
+    *,
+    current_status: str,
+    stop_normal_rag: bool,
+    risk_level: str,
+    allowed_audiences: list[str],
+    allowed_purposes: list[str],
+    requires_official_assessment: bool | None,
+    requires_professional_assessment: bool | None,
+) -> list[str]:
+    reasons: list[str] = []
+    if current_status != "current":
+        reasons.append(CURRENT_STATUS_NOT_CURRENT)
+    if stop_normal_rag:
+        reasons.append(STOP_NORMAL_RAG)
+    if risk_level not in NORMAL_RAG_RISK_LEVELS:
+        reasons.append(RISK_LEVEL_NOT_ALLOWED)
+    if not _has_explicit_scope(allowed_audiences):
+        reasons.append(ALLOWED_AUDIENCES_MISSING_OR_EMPTY)
+    if not _has_explicit_scope(allowed_purposes):
+        reasons.append(ALLOWED_PURPOSES_MISSING_OR_EMPTY)
+    if requires_official_assessment is None:
+        reasons.append(REQUIRES_OFFICIAL_ASSESSMENT_MISSING)
+    if requires_professional_assessment is None:
+        reasons.append(REQUIRES_PROFESSIONAL_ASSESSMENT_MISSING)
+    return reasons
+
+
+def _has_explicit_scope(values: list[str]) -> bool:
+    return bool(values) and all(value.strip() for value in values)
 
 
 def _validate_vector(value: Any, dimension: int) -> None:

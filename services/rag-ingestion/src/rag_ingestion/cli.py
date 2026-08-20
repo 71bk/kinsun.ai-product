@@ -417,7 +417,12 @@ def _smoke_test(context: _Context) -> dict[str, Any]:
         "index_name": index_name,
         "index_alias": alias_name,
         "safe_filtered_hit_count": hit_count,
-        "filters": {"current_status": "current", "stop_normal_rag": False},
+        "filters": {
+            "current_status": "current",
+            "stop_normal_rag": False,
+            "retrieval_eligible": True,
+            "risk_levels": ["low", "medium"],
+        },
         "search_pipelines": [pipeline.name for pipeline in pipelines],
         "runtime_endpoint_path": runtime_report.endpoint_path,
         "positive_retrieval": {

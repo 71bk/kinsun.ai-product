@@ -64,6 +64,19 @@ def _vector() -> tuple[float, ...]:
     return tuple(0.01 for _ in range(DIMENSION))
 
 
+def _with_metadata(chunk: ValidatedChunk, **changes: object) -> ValidatedChunk:
+    changed = dict(chunk.loaded.data)
+    metadata = dict(changed["metadata"])
+    metadata.update(changes)
+    changed["metadata"] = metadata
+    return ValidatedChunk(
+        loaded=type(chunk.loaded)(changed, chunk.loaded.file_path, chunk.loaded.line_number),
+        allowlist_entry=chunk.allowlist_entry,
+        text_sha256=chunk.text_sha256,
+        embedding_text_sha256=chunk.embedding_text_sha256,
+    )
+
+
 def test_bulk_ingest_uses_chunk_id_as_id_and_verifies_count(tmp_path: Path) -> None:
     chunk = _validated_chunk(tmp_path)
     client = FakeBulkClient()
@@ -195,6 +208,8 @@ def test_high_risk_filter_fields_are_normalized_at_top_level(tmp_path: Path) -> 
     assert document["current_status"] == "current"
     assert document["document_name"] == "Synthetic Care Guide"
     assert document["source_url"] == "https://example.invalid/synthetic-guide"
+    assert document["retrieval_eligible"] is False
+    assert document["retrieval_block_reasons"] == ["stop_normal_rag"]
 
 
 def test_official_page_url_is_accepted_when_no_direct_file_link_exists(tmp_path: Path) -> None:
@@ -280,4 +295,56 @@ def test_missing_stop_normal_rag_defaults_to_blocked(tmp_path: Path) -> None:
         embedding_text_sha256=chunk.embedding_text_sha256,
     )
 
-    assert build_index_document(modified, _vector())["stop_normal_rag"] is True
+    document = build_index_document(modified, _vector())
+
+    assert document["stop_normal_rag"] is True
+    assert document["retrieval_eligible"] is False
+    assert "stop_normal_rag" in document["retrieval_block_reasons"]
+
+
+def test_complete_policy_metadata_is_explicitly_retrieval_eligible(tmp_path: Path) -> None:
+    document = build_index_document(_validated_chunk(tmp_path), _vector())
+
+    assert document["retrieval_eligible"] is True
+    assert document["retrieval_block_reasons"] == []
+    assert document["requires_official_assessment"] is False
+    assert document["requires_professional_assessment"] is False
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "reason"),
+    [
+        ("current_status", "unknown", "current_status_not_current"),
+        ("risk_level", "unknown", "risk_level_not_allowed"),
+        ("risk_level", "LOW", "risk_level_not_allowed"),
+        ("allowed_audiences", [], "allowed_audiences_missing_or_empty"),
+        ("allowed_audiences", [" "], "allowed_audiences_missing_or_empty"),
+        ("allowed_purposes", [], "allowed_purposes_missing_or_empty"),
+        ("requires_official_assessment", None, "requires_official_assessment_missing"),
+        (
+            "requires_professional_assessment",
+            None,
+            "requires_professional_assessment_missing",
+        ),
+    ],
+)
+def test_incomplete_policy_metadata_is_indexed_but_blocked(
+    tmp_path: Path, field: str, value: object, reason: str
+) -> None:
+    chunk = _with_metadata(_validated_chunk(tmp_path), **{field: value})
+
+    document = build_index_document(chunk, _vector())
+
+    assert document["retrieval_eligible"] is False
+    assert reason in document["retrieval_block_reasons"]
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["requires_official_assessment", "requires_professional_assessment"],
+)
+def test_assessment_metadata_must_be_a_real_boolean(tmp_path: Path, field: str) -> None:
+    chunk = _with_metadata(_validated_chunk(tmp_path), **{field: "false"})
+
+    with pytest.raises(BulkIngestionError, match=f"{field} must be a boolean"):
+        build_index_document(chunk, _vector())

@@ -651,6 +651,12 @@ def test_smoke_test_queries_verified_alias_not_concrete_index(
     assert summary["index_alias"] == "synthetic-staging"
     assert summary["scope"] == "bedrock_hybrid_retrieval_e2e"
     assert summary["production_approved"] is False
+    assert summary["filters"] == {
+        "current_status": "current",
+        "stop_normal_rag": False,
+        "retrieval_eligible": True,
+        "risk_levels": ["low", "medium"],
+    }
 
 
 def test_cli_reports_bulk_error_classes_from_the_wrapped_cause(
