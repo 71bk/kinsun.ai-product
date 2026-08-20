@@ -1,4 +1,4 @@
-"""Freeze inputs or build the deterministic RagChunkV2 local candidate."""
+"""Freeze inputs, record test evidence, or build the RagChunkV2 candidate."""
 
 from __future__ import annotations
 
@@ -13,14 +13,15 @@ sys.path.insert(0, str(REPO_ROOT / "services" / "rag-ingestion" / "src"))
 from rag_ingestion.v2_artifacts import (  # noqa: E402
     build_v2_artifacts,
     prepare_preflight,
+    run_test_evidence,
 )
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="prepare or build the immutable RagChunkV2 local candidate"
+        description="prepare, test, or build the immutable RagChunkV2 local candidate"
     )
-    parser.add_argument("command", choices=("preflight", "build"))
+    parser.add_argument("command", choices=("preflight", "evidence", "build"))
     parser.add_argument("--repository-root", type=Path, default=REPO_ROOT)
     parser.add_argument("--output-root", type=Path)
     args = parser.parse_args(argv)
@@ -34,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "preflight":
             summary = prepare_preflight(repository_root, output_root)
+        elif args.command == "evidence":
+            summary = run_test_evidence(repository_root, output_root)
         else:
             summary = build_v2_artifacts(
                 repository_root,

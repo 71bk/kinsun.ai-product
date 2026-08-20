@@ -1,4 +1,5 @@
 * text=auto
+.gitattributes text eol=lf
 
 # 進 Linux container 執行的檔案必須是 LF，否則 bash 會噴 bad interpreter
 *.sh text eol=lf
@@ -9,12 +10,20 @@ docs/project/*.sql text eol=lf
 
 # RagChunkV2 byte-level manifests and their versioned validation inputs.
 data/rag-v2/** text eol=lf
+data/rag-chunks/** text eol=lf
+data/rag-manifest/** text eol=lf
+config/rag/** text eol=lf
 contracts/schemas/rag/rag-chunk-v2.schema.json text eol=lf
+contracts/schemas/rag/** text eol=lf
+scripts/rag/*.py text eol=lf
 scripts/rag/build_v2_artifacts.py text eol=lf
 scripts/rag/validate_v2_artifacts.py text eol=lf
 services/rag-ingestion/README.md text eol=lf
+services/rag-ingestion/Dockerfile text eol=lf
 services/rag-ingestion/pyproject.toml text eol=lf
 services/rag-ingestion/uv.lock text eol=lf
+services/rag-ingestion/src/**/*.py text eol=lf
+services/rag-ingestion/tests/**/*.py text eol=lf
 services/rag-ingestion/src/rag_ingestion/allowlist.py text eol=lf
 services/rag-ingestion/src/rag_ingestion/chunk_loader.py text eol=lf
 services/rag-ingestion/src/rag_ingestion/v2_artifacts.py text eol=lf

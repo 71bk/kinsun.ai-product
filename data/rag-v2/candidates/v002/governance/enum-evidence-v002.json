@@ -1,0 +1,581 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v002",
+  "scope": "source-scoped evidence snapshot; not a canonical global registry",
+  "validation_input_inventory_sha256": "d1a8e2480b72e0dc82b5cd7b5e665f61d156e18533d2954ccb0336922e6c2f05",
+  "fields": {
+    "authority_level": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "official_government",
+        "official_health_education",
+        "official_law",
+        "official_manual",
+        "official_manual_appendix",
+        "peer_reviewed_journal",
+        "peer_reviewed_research",
+        "scale_repository"
+      ],
+      "evidence": [
+        {
+          "value": "official_government",
+          "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+          "prior_chunk_id": "mohw_1966_apply_ltc_application_channels_004",
+          "source_locator": "官方網頁主內容 > 申請流程 > 1.申請長照服務（網頁行32-42）",
+          "field": "authority_level"
+        },
+        {
+          "value": "official_health_education",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "authority_level"
+        },
+        {
+          "value": "official_law",
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "prior_chunk_id": "moj_long_term_care_services_act_20210609_article_001",
+          "source_locator": "第 1 頁／第一章 總則／第 1 條",
+          "field": "authority_level"
+        },
+        {
+          "value": "official_manual",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "authority_level"
+        },
+        {
+          "value": "official_manual_appendix",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_001",
+          "source_locator": "PDF實體頁110–110；印刷頁106–106",
+          "field": "authority_level"
+        },
+        {
+          "value": "peer_reviewed_journal",
+          "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+          "prior_chunk_id": "frontiers_loneliness_speech_analysis_2021_abstract_overview_001",
+          "source_locator": "Main article PDF physical page 1, Abstract",
+          "field": "authority_level"
+        },
+        {
+          "value": "peer_reviewed_research",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "authority_level"
+        },
+        {
+          "value": "scale_repository",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_administration_scoring_v003",
+          "source_locator": "PDF physical pages 2-2; UCLA Loneliness Scale - Administration and Scoring",
+          "field": "authority_level"
+        }
+      ]
+    },
+    "source_type": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "assessment_scale",
+        "care_manual",
+        "care_manual_appendix",
+        "health_education",
+        "law",
+        "research_article",
+        "risk_rule",
+        "service_guide"
+      ],
+      "evidence": [
+        {
+          "value": "assessment_scale",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_administration_scoring_v003",
+          "source_locator": "PDF physical pages 2-2; UCLA Loneliness Scale - Administration and Scoring",
+          "field": "source_type"
+        },
+        {
+          "value": "care_manual",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "source_type"
+        },
+        {
+          "value": "care_manual_appendix",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_001",
+          "source_locator": "PDF實體頁110–110；印刷頁106–106",
+          "field": "source_type"
+        },
+        {
+          "value": "health_education",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "source_type"
+        },
+        {
+          "value": "law",
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "prior_chunk_id": "moj_long_term_care_services_act_20210609_article_001",
+          "source_locator": "第 1 頁／第一章 總則／第 1 條",
+          "field": "source_type"
+        },
+        {
+          "value": "research_article",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "source_type"
+        },
+        {
+          "value": "risk_rule",
+          "path": "data/rag-chunks/approved/長照高負荷家庭照顧者轉介及服務流程_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_high_burden_caregiver_referral_service_flow_20250930_001_v004",
+          "source_locator": "PDF實體頁1；版本、流程起點與備註1",
+          "field": "source_type"
+        },
+        {
+          "value": "service_guide",
+          "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+          "prior_chunk_id": "mohw_1966_apply_ltc_application_channels_004",
+          "source_locator": "官方網頁主內容 > 申請流程 > 1.申請長照服務（網頁行32-42）",
+          "field": "source_type"
+        }
+      ]
+    },
+    "content_type": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "administration_use_boundary",
+        "caregiver_tip",
+        "definition",
+        "ethical_consideration",
+        "example",
+        "faq",
+        "feature_definition",
+        "flow_reconstruction",
+        "health_education",
+        "limitation",
+        "methodology",
+        "model_evaluation",
+        "narrative",
+        "policy",
+        "procedure",
+        "psychometric_evidence",
+        "research_background",
+        "research_finding",
+        "research_question",
+        "resource",
+        "scale_overview",
+        "table",
+        "version_description",
+        "warning"
+      ],
+      "evidence": [
+        {
+          "value": "administration_use_boundary",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_administration_scoring_v003",
+          "source_locator": "PDF physical pages 2-2; UCLA Loneliness Scale - Administration and Scoring",
+          "field": "content_type"
+        },
+        {
+          "value": "caregiver_tip",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_p017_v002",
+          "source_locator": "PDF實體頁17；印刷頁16；基本照護與溝通原則",
+          "field": "content_type"
+        },
+        {
+          "value": "definition",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_001",
+          "source_locator": "PDF實體頁110–110；印刷頁106–106",
+          "field": "content_type"
+        },
+        {
+          "value": "ethical_consideration",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_author_contributions_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 10, Author Contributions",
+          "field": "content_type"
+        },
+        {
+          "value": "example",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_005",
+          "source_locator": "PDF實體頁116–117；印刷頁112–113",
+          "field": "content_type"
+        },
+        {
+          "value": "faq",
+          "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+          "prior_chunk_id": "mohw_1966_apply_ltc_foreign_caregiver_faq_014",
+          "source_locator": "官方網頁主內容 > 常見問答 > 外籍看護工（網頁行108-114）",
+          "field": "content_type"
+        },
+        {
+          "value": "feature_definition",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_linguistic_features_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical pages 3-4, Linguistic Features",
+          "field": "content_type"
+        },
+        {
+          "value": "flow_reconstruction",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_015",
+          "source_locator": "PDF physical pages 25-25; printed pages 21-21",
+          "field": "content_type"
+        },
+        {
+          "value": "health_education",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "content_type"
+        },
+        {
+          "value": "limitation",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_study_limitations_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical pages 9-10, Study Limitations",
+          "field": "content_type"
+        },
+        {
+          "value": "methodology",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "content_type"
+        },
+        {
+          "value": "model_evaluation",
+          "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+          "prior_chunk_id": "frontiers_loneliness_speech_analysis_2021_classification_results_018",
+          "source_locator": "Main article PDF physical pages 6-7, Results paragraph 4, Figure 4D, Table 3",
+          "field": "content_type"
+        },
+        {
+          "value": "narrative",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "content_type"
+        },
+        {
+          "value": "policy",
+          "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_核心批次_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_family_caregiver_support_manual_202507_care_resignation_historical_context_001",
+          "source_locator": "PDF頁 11",
+          "field": "content_type"
+        },
+        {
+          "value": "procedure",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_002",
+          "source_locator": "PDF實體頁111–111；印刷頁107–107",
+          "field": "content_type"
+        },
+        {
+          "value": "psychometric_evidence",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_cross_version_evidence_v003",
+          "source_locator": "PDF physical pages 1-1; UCLA Loneliness Scale - Selected Related Evidence",
+          "field": "content_type"
+        },
+        {
+          "value": "research_background",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_abstract_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 1, Abstract",
+          "field": "content_type"
+        },
+        {
+          "value": "research_finding",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_binary_classification_models_and_gini_based_feature_ranking_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical pages 6-7, Binary Classification Models and GINI Based Feature Ranking",
+          "field": "content_type"
+        },
+        {
+          "value": "research_question",
+          "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+          "prior_chunk_id": "frontiers_loneliness_speech_analysis_2021_eight_daily_life_questions_008",
+          "source_locator": "Data_Sheet_1.PDF physical page 1, Supplementary Table 1",
+          "field": "content_type"
+        },
+        {
+          "value": "resource",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_069",
+          "source_locator": "PDF實體頁245–245；印刷頁241–241",
+          "field": "content_type"
+        },
+        {
+          "value": "scale_overview",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_overview_v003",
+          "source_locator": "PDF physical pages 1-1; UCLA Loneliness Scale - Description of Measure",
+          "field": "content_type"
+        },
+        {
+          "value": "table",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_019",
+          "source_locator": "PDF實體頁136–136；印刷頁132–132",
+          "field": "content_type"
+        },
+        {
+          "value": "version_description",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_revised_overview_v003",
+          "source_locator": "PDF physical pages 3-3; Revised UCLA Loneliness Scale - Description and Revision",
+          "field": "content_type"
+        },
+        {
+          "value": "warning",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_p020_v002",
+          "source_locator": "PDF實體頁20；印刷頁19；黃昏症候群與迷路預防",
+          "field": "content_type"
+        }
+      ]
+    },
+    "language": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "en",
+        "zh-Hant"
+      ],
+      "evidence": [
+        {
+          "value": "en",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "language"
+        },
+        {
+          "value": "zh-Hant",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "language"
+        }
+      ]
+    },
+    "locale": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "en-US",
+        "zh-TW"
+      ],
+      "evidence": [
+        {
+          "value": "en-US",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "locale"
+        },
+        {
+          "value": "zh-TW",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "locale"
+        }
+      ]
+    },
+    "risk_level": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "high",
+        "high_red_line",
+        "low",
+        "medium"
+      ],
+      "evidence": [
+        {
+          "value": "high",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_004",
+          "source_locator": "PDF physical pages 9-9; printed pages 5-5",
+          "field": "risk_level"
+        },
+        {
+          "value": "high_red_line",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_chunk_v004_045",
+          "source_locator": "PDF實體頁186–187；印刷頁182–183",
+          "field": "risk_level"
+        },
+        {
+          "value": "low",
+          "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+          "prior_chunk_id": "frontiers_do_words_matter_loneliness_nlp_2021_v003_a_caveat_on_anaphora_and_overestimation_01",
+          "source_locator": "fpsyt-12-728732.pdf, main PDF physical page 4, A Caveat on Anaphora and Overestimation",
+          "field": "risk_level"
+        },
+        {
+          "value": "medium",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "risk_level"
+        }
+      ]
+    },
+    "current_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "current",
+        "superseded",
+        "unknown"
+      ],
+      "evidence": [
+        {
+          "value": "current",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "current_status"
+        },
+        {
+          "value": "superseded",
+          "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_核心批次_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_family_caregiver_support_manual_202507_high_burden_referral_flow_diagram_001",
+          "source_locator": "PDF頁 21",
+          "field": "current_status"
+        },
+        {
+          "value": "unknown",
+          "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+          "prior_chunk_id": "fetzer_ucla_loneliness_scale_compendium_original_administration_scoring_v003",
+          "source_locator": "PDF physical pages 2-2; UCLA Loneliness Scale - Administration and Scoring",
+          "field": "current_status"
+        }
+      ]
+    },
+    "version_check_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "pending",
+        "verified_official_source"
+      ],
+      "evidence": [
+        {
+          "value": "pending",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "version_check_status"
+        },
+        {
+          "value": "verified_official_source",
+          "path": "data/rag-chunks/approved/居家服務督導員工作手冊_健康照護附錄_Chunks_v001.jsonl",
+          "prior_chunk_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529_cardiovascular_conditions_001",
+          "source_locator": "PDF實體頁155",
+          "field": "version_check_status"
+        }
+      ]
+    },
+    "license_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "approved",
+        "open",
+        "permission_required",
+        "unknown"
+      ],
+      "evidence": [
+        {
+          "value": "approved",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "license_status"
+        },
+        {
+          "value": "open",
+          "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+          "prior_chunk_id": "mohw_1966_apply_ltc_application_channels_004",
+          "source_locator": "官方網頁主內容 > 申請流程 > 1.申請長照服務（網頁行32-42）",
+          "field": "license_status"
+        },
+        {
+          "value": "permission_required",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "license_status"
+        },
+        {
+          "value": "unknown",
+          "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_核心批次_Chunks_v004.jsonl",
+          "prior_chunk_id": "mohw_family_caregiver_support_manual_202507_basic_data_and_five_assessment_tools_001",
+          "source_locator": "PDF頁 32",
+          "field": "license_status"
+        }
+      ]
+    },
+    "data_classification": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "internal",
+        "public"
+      ],
+      "evidence": [
+        {
+          "value": "internal",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "data_classification"
+        },
+        {
+          "value": "public",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "data_classification"
+        }
+      ]
+    },
+    "distribution_scope": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "internal_knowledge",
+        "public_knowledge",
+        "research_evidence"
+      ],
+      "evidence": [
+        {
+          "value": "internal_knowledge",
+          "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+          "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_chunk_001",
+          "source_locator": "PDF physical pages 4-4; printed pages 0-0",
+          "field": "distribution_scope"
+        },
+        {
+          "value": "public_knowledge",
+          "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+          "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_foreword_v002",
+          "source_locator": "PDF實體頁2；印刷頁1；前言",
+          "field": "distribution_scope"
+        },
+        {
+          "value": "research_evidence",
+          "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+          "prior_chunk_id": "frontiers_loneliness_speech_analysis_2021_abstract_overview_001",
+          "source_locator": "Main article PDF physical page 1, Abstract",
+          "field": "distribution_scope"
+        }
+      ]
+    }
+  }
+}

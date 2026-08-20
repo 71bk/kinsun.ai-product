@@ -2,10 +2,60 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import re
 from pathlib import Path
 from typing import Any
 
 import pytest
+
+_RAG_V2_INVENTORY_SHA256_ENV = "RAG_V2_VALIDATION_INPUT_INVENTORY_SHA256"
+
+
+def _normalize_node_id(node_id: str) -> str:
+    path, separator, test_name = node_id.partition("::")
+    if not separator:
+        return node_id
+    normalized_path = path.replace("\\", "/")
+    return f"{normalized_path}{separator}{test_name}"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def bind_rag_v2_validation_inventory(
+    record_testsuite_property: Any,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Bind formal JUnit evidence to the preflight inputs used by that run."""
+
+    inventory_sha256 = os.getenv(_RAG_V2_INVENTORY_SHA256_ENV)
+    if inventory_sha256 is None:
+        return
+    if re.fullmatch(r"[a-f0-9]{64}", inventory_sha256) is None:
+        pytest.fail(f"{_RAG_V2_INVENTORY_SHA256_ENV} must be a lowercase SHA-256 digest")
+    record_testsuite_property(
+        "validation_input_inventory_sha256",
+        inventory_sha256,
+    )
+    collected_node_ids = sorted(_normalize_node_id(item.nodeid) for item in request.session.items)
+    if len(collected_node_ids) != len(set(collected_node_ids)):
+        pytest.fail("pytest collected duplicate test node IDs")
+    collected_node_payload = json.dumps(
+        collected_node_ids,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    record_testsuite_property(
+        "collected_test_node_hash_mode",
+        "sha256_canonical_json_v1",
+    )
+    record_testsuite_property(
+        "collected_test_node_ids_sha256",
+        hashlib.sha256(collected_node_payload.encode("utf-8")).hexdigest(),
+    )
+    record_testsuite_property(
+        "collected_test_node_count",
+        str(len(collected_node_ids)),
+    )
 
 
 def sha256_text(value: str) -> str:

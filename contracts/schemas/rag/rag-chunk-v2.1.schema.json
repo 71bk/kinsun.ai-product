@@ -1,0 +1,582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v2.1.schema.json",
+  "title": "RagChunkV2.1",
+  "description": "Canonical local-staging v2.1 successor metadata for the frozen public-knowledge and research-evidence corpus. This contract never grants production approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_version",
+    "identity",
+    "content",
+    "citation",
+    "retrieval_policy",
+    "governance",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.1.0"
+    },
+    "artifact_version": {
+      "const": "v002"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_id",
+        "prior_chunk_id",
+        "source_id",
+        "chunk_file_id",
+        "prior_chunk_file_id",
+        "chunk_index"
+      ],
+      "properties": {
+        "chunk_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prior_chunk_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "source_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "chunk_file_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prior_chunk_file_id": {
+          "$ref": "#/$defs/NullableIdentifier"
+        },
+        "chunk_index": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "embedding_text",
+        "char_count",
+        "embedding_char_count",
+        "text_sha256",
+        "embedding_text_sha256",
+        "content_type",
+        "language",
+        "locale"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50000
+        },
+        "embedding_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50000
+        },
+        "char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50000
+        },
+        "embedding_char_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50000
+        },
+        "text_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "embedding_text_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "content_type": {
+          "enum": [
+            "administration_use_boundary",
+            "caregiver_tip",
+            "definition",
+            "ethical_consideration",
+            "example",
+            "faq",
+            "feature_definition",
+            "flow_reconstruction",
+            "health_education",
+            "limitation",
+            "methodology",
+            "model_evaluation",
+            "narrative",
+            "policy",
+            "procedure",
+            "psychometric_evidence",
+            "research_background",
+            "research_finding",
+            "research_question",
+            "resource",
+            "scale_overview",
+            "table",
+            "version_description",
+            "warning",
+            null
+          ]
+        },
+        "language": {
+          "enum": [
+            "en",
+            "zh-Hant",
+            null
+          ]
+        },
+        "locale": {
+          "enum": [
+            "en-US",
+            "zh-TW",
+            null
+          ]
+        }
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "section",
+        "physical_page_start",
+        "physical_page_end",
+        "printed_page_start",
+        "printed_page_end",
+        "source_locator",
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+        "license_evidence_url",
+        "storage_url"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "publisher": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "physical_page_start": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "physical_page_end": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "printed_page_start": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "printed_page_end": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "source_locator": {
+          "$ref": "#/$defs/NullableLongText"
+        },
+        "direct_official_source_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        },
+        "official_source_page_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        },
+        "direct_source_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        },
+        "source_page_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        },
+        "license_evidence_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        },
+        "storage_url": {
+          "$ref": "#/$defs/NullableHttpUrl"
+        }
+      }
+    },
+    "retrieval_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_audiences",
+        "allowed_purposes",
+        "risk_level",
+        "requires_official_assessment",
+        "requires_professional_assessment",
+        "requires_human_review",
+        "stop_normal_rag",
+        "retrieval_eligible",
+        "retrieval_block_reasons"
+      ],
+      "properties": {
+        "allowed_audiences": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "care_professional",
+              "caregiver",
+              "elder",
+              "family_caregiver",
+              "older_adult",
+              "system_admin"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "allowed_purposes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "care_insight_design",
+              "care_record",
+              "care_summary",
+              "evaluation",
+              "evaluation_dataset_design",
+              "explainable_evidence",
+              "feature_design",
+              "form_reference",
+              "general_information",
+              "health_education",
+              "human_administered_assessment_design",
+              "legal_reference",
+              "manual_review",
+              "presentation_evidence",
+              "research_reference",
+              "resource_navigation",
+              "safety_routing",
+              "scale_explanation",
+              "source_lookup"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "risk_level": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "high_red_line",
+            null
+          ]
+        },
+        "requires_official_assessment": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "requires_professional_assessment": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "requires_human_review": {
+          "type": "boolean"
+        },
+        "stop_normal_rag": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "retrieval_eligible": {
+          "type": "boolean"
+        },
+        "retrieval_block_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_status",
+        "current_status",
+        "version_check_status",
+        "license_status",
+        "embedding_status",
+        "ingestion_status",
+        "human_source_review",
+        "production_gate",
+        "production_approved",
+        "data_classification",
+        "distribution_scope",
+        "storage_target"
+      ],
+      "properties": {
+        "review_status": {
+          "const": "needs_review"
+        },
+        "current_status": {
+          "enum": [
+            "current",
+            "superseded",
+            "unknown"
+          ]
+        },
+        "version_check_status": {
+          "enum": [
+            "pending",
+            "verified_official_source"
+          ]
+        },
+        "license_status": {
+          "enum": [
+            "approved",
+            "open",
+            "permission_required",
+            "unknown"
+          ]
+        },
+        "embedding_status": {
+          "const": "not_started"
+        },
+        "ingestion_status": {
+          "const": "staging"
+        },
+        "human_source_review": {
+          "const": "not_completed"
+        },
+        "production_gate": {
+          "const": "blocked"
+        },
+        "production_approved": {
+          "const": false
+        },
+        "data_classification": {
+          "enum": [
+            "internal",
+            "public",
+            null
+          ]
+        },
+        "distribution_scope": {
+          "enum": [
+            "internal_knowledge",
+            "public_knowledge",
+            "research_evidence",
+            null
+          ]
+        },
+        "storage_target": {
+          "const": "local_pending_upload"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+        "parser_version",
+        "chunker_version",
+        "pipeline_version",
+        "prior_artifact_version",
+        "prior_delivery_version",
+        "source_file",
+        "prior_artifact_path",
+        "authority_level",
+        "source_type",
+        "is_official_source",
+        "mapping_warnings"
+      ],
+      "properties": {
+        "source_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "source_version_date": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "version_published_at": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "source_page_updated_at": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "published_at": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "last_verified_at": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "parser_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "chunker_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "pipeline_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "prior_artifact_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "prior_delivery_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "source_file": {
+          "$ref": "#/$defs/NullableLongText"
+        },
+        "prior_artifact_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^data/rag-chunks/approved/[^/]+\\.jsonl$"
+        },
+        "authority_level": {
+          "enum": [
+            "official_government",
+            "official_health_education",
+            "official_law",
+            "official_manual",
+            "official_manual_appendix",
+            "peer_reviewed_journal",
+            "peer_reviewed_research",
+            "scale_repository",
+            null
+          ]
+        },
+        "source_type": {
+          "enum": [
+            "assessment_scale",
+            "care_manual",
+            "care_manual_appendix",
+            "health_education",
+            "law",
+            "research_article",
+            "risk_rule",
+            "service_guide",
+            null
+          ]
+        },
+        "is_official_source": {
+          "type": "boolean"
+        },
+        "mapping_warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "NullableIdentifier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Identifier"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "NullablePositiveInteger": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "NullableText": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 512
+    },
+    "NullableLongText": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "NullableHttpUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https?://",
+      "maxLength": 4096
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "is_official_source": {
+                "const": false
+              }
+            },
+            "required": [
+              "is_official_source"
+            ]
+          }
+        },
+        "required": [
+          "provenance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "citation": {
+            "properties": {
+              "direct_official_source_url": {
+                "type": "null"
+              },
+              "official_source_page_url": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
