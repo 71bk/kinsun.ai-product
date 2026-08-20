@@ -1,0 +1,895 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "scope": "source-scoped evidence snapshot; not a canonical global registry",
+  "validation_input_inventory_sha256": "16708a98631b6ef33499b50b03274d62f8f319a937bf8bd90fc051a76757c08d",
+  "fields": {
+    "authority_level": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "official_government",
+        "official_health_education",
+        "official_law",
+        "official_manual",
+        "official_manual_appendix",
+        "peer_reviewed_journal",
+        "peer_reviewed_research",
+        "scale_repository"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "authority_level"
+        }
+      ]
+    },
+    "source_type": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "assessment_scale",
+        "care_manual",
+        "care_manual_appendix",
+        "health_education",
+        "law",
+        "research_article",
+        "risk_rule",
+        "service_guide"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "source_type"
+        }
+      ]
+    },
+    "content_type": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "administration_use_boundary",
+        "caregiver_tip",
+        "definition",
+        "ethical_consideration",
+        "example",
+        "faq",
+        "feature_definition",
+        "flow_reconstruction",
+        "health_education",
+        "limitation",
+        "methodology",
+        "model_evaluation",
+        "narrative",
+        "policy",
+        "procedure",
+        "psychometric_evidence",
+        "research_background",
+        "research_finding",
+        "research_question",
+        "resource",
+        "scale_overview",
+        "table",
+        "version_description",
+        "warning"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "content_type"
+        }
+      ]
+    },
+    "language": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "en",
+        "zh-Hant"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "language"
+        }
+      ]
+    },
+    "locale": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "en-US",
+        "zh-TW"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "locale"
+        }
+      ]
+    },
+    "risk_level": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "high",
+        "high_red_line",
+        "low",
+        "medium"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "risk_level"
+        }
+      ]
+    },
+    "current_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "current",
+        "superseded",
+        "unknown"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "current_status"
+        }
+      ]
+    },
+    "version_check_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "pending",
+        "verified_official_source"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "version_check_status"
+        }
+      ]
+    },
+    "license_status": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "approved",
+        "open",
+        "permission_required",
+        "unknown"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "license_status"
+        }
+      ]
+    },
+    "data_classification": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "internal",
+        "public"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "data_classification"
+        }
+      ]
+    },
+    "distribution_scope": {
+      "classification": "controlled_enum",
+      "canonical_values": [
+        "internal_knowledge",
+        "public_knowledge",
+        "research_evidence"
+      ],
+      "evidence": [
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        },
+        {
+          "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+          "field": "distribution_scope"
+        }
+      ]
+    }
+  }
+}

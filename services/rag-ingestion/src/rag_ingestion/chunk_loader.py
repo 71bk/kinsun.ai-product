@@ -15,6 +15,12 @@ class ChunkLoadError(ValueError):
     """Raised before validation when the approved JSONL set is not exact."""
 
 
+class _DuplicateJsonKey(ValueError):
+    def __init__(self, key: str) -> None:
+        self.key = key
+        super().__init__(key)
+
+
 @dataclass(frozen=True, slots=True)
 class LoadedChunk:
     data: dict[str, Any]
@@ -56,7 +62,11 @@ def load_allowlisted_chunks(chunks_dir: Path, allowlist: Allowlist) -> tuple[Loa
                 if not line.strip():
                     raise ChunkLoadError(f"blank JSONL line at {file_path.name}:{line_number}")
                 try:
-                    data = json.loads(line)
+                    data = json.loads(line, object_pairs_hook=_reject_duplicate_keys)
+                except _DuplicateJsonKey as exc:
+                    raise ChunkLoadError(
+                        f"duplicate JSON key {exc.key!r} at {file_path.name}:{line_number}"
+                    ) from exc
                 except json.JSONDecodeError as exc:
                     raise ChunkLoadError(
                         f"invalid JSONL at {file_path.name}:{line_number}"
@@ -89,3 +99,12 @@ def load_allowlisted_chunks(chunks_dir: Path, allowlist: Allowlist) -> tuple[Loa
         suffix = "..." if len(missing) > 3 else ""
         raise ChunkLoadError(f"allowlisted chunks are missing: {preview}{suffix}")
     return tuple(loaded_by_id[chunk_id] for chunk_id in allowlist.allowed_chunk_ids)
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _DuplicateJsonKey(key)
+        result[key] = value
+    return result

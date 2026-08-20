@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "kind": "prior_artifact_immutable_lock",
+  "entry_count": 22,
+  "inventory_sha256": "fc7307e987ec8b87d85b909c05df28938a442a2d9750424e9fdb42f31ec975c9",
+  "entries": [
+    {
+      "path": "data/rag-chunks/README.md",
+      "size_bytes": 3380,
+      "sha256": "946fcdbf42206de05587abcb06c2b10605ecad8d30473cfe16e5d9ec63371bfd"
+    },
+    {
+      "path": "data/rag-chunks/SHA256SUMS.txt",
+      "size_bytes": 2872,
+      "sha256": "2b55162aae687fb9bb9d340f97250f065b6247b1aefc3f5deba3776f1200e2fa"
+    },
+    {
+      "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+      "size_bytes": 589681,
+      "sha256": "790cbb8b28a23657db90206aaaf84aa64deb1b9cbecd793092528f3b7bc8fbda"
+    },
+    {
+      "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+      "size_bytes": 801833,
+      "sha256": "edb326277b61225ed5fe41f232263d3127c6e7320e1d8e64e9fd5d033b743d5d"
+    },
+    {
+      "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+      "size_bytes": 348318,
+      "sha256": "05f75dd24d4b5a848175c109be656f9de2ee860aac1f1234b55a1fe8f137828c"
+    },
+    {
+      "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+      "size_bytes": 99797,
+      "sha256": "ce112fe38389466b20531d098b9f73ecc86d04a02987085e1a61091c15397010"
+    },
+    {
+      "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+      "size_bytes": 469229,
+      "sha256": "08d8b475d2b83f5f6e33357dfe23cdee0bf58142240d01594a7e045b1e82f5cb"
+    },
+    {
+      "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_核心批次_Chunks_v004.jsonl",
+      "size_bytes": 624133,
+      "sha256": "f4a13a78673ba8c8cd90e8915fe3d453a388691b6890557dd1223702d142182b"
+    },
+    {
+      "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_第八章附錄_Chunks_v003.jsonl",
+      "size_bytes": 123636,
+      "sha256": "1ef0798aec6cf75a016f5a0cd8d6ab50a26f7b56375e20b01751ccc3b096dc1a"
+    },
+    {
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_健康照護附錄_Chunks_v001.jsonl",
+      "size_bytes": 144946,
+      "sha256": "709ec87c7234958f24b9a141ee357056b69c9f0092f364e21a1fffc2b231f53a"
+    },
+    {
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_核心_Chunks_v001.jsonl",
+      "size_bytes": 966941,
+      "sha256": "c588d1f25113eb19a7aba95f461486cc1c4d60ce33dc089f3fd7df145801dff9"
+    },
+    {
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_表單附錄_Chunks_v004.jsonl",
+      "size_bytes": 15263,
+      "sha256": "5f63d35e98a8e1f64e395e571dbf17e5510bfe112edbdb9812136136ab9b193c"
+    },
+    {
+      "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+      "size_bytes": 51780,
+      "sha256": "813c696ed3ae79a872aaca1175b6c025f113c5f9dc60adfea805c6cdb5f72ff7"
+    },
+    {
+      "path": "data/rag-chunks/approved/老年期營養手冊112年版_Chunks_v001.jsonl",
+      "size_bytes": 277535,
+      "sha256": "e99d893021a61eef0f5394bb1d3c55e6868d9bf793c4ee36b67a78041c5e08c8"
+    },
+    {
+      "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+      "size_bytes": 276316,
+      "sha256": "d76a2d4fb6ba9cf92d5c81058bf06cc8217931e0b9532730af963a367dc74f97"
+    },
+    {
+      "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+      "size_bytes": 407400,
+      "sha256": "edceca7fede51526c89ba38766f6015c1901935d3936429599c4172a682f737c"
+    },
+    {
+      "path": "data/rag-chunks/approved/長照高負荷家庭照顧者轉介及服務流程_Chunks_v004.jsonl",
+      "size_bytes": 47728,
+      "sha256": "563241394b1445e9954537562f42debe1a9a494a539d2ec0f59051bd27cd233c"
+    },
+    {
+      "path": "data/rag-chunks/approved/長者防跌妙招手冊_Chunks_v001.jsonl",
+      "size_bytes": 141037,
+      "sha256": "0d2eb9eb8961267662e87e6ac799ff1a69170778d1303801231e6f4f3b210abe"
+    },
+    {
+      "path": "data/rag-chunks/approved/高負荷家庭照顧者初篩指標_Chunks_v002.jsonl",
+      "size_bytes": 23502,
+      "sha256": "1008ce75ec0d3a834546e68014ea3b14226a7ee68d28a199309038c5ee2a8f68"
+    },
+    {
+      "path": "data/rag-manifest/AI_Reviewed_Embedding_Staging_Allowlist_v002.json",
+      "size_bytes": 593015,
+      "sha256": "4e1d734bc5643b83ac7c8ed9a00f131671c39b6dff5fa8ff5d8cb08bad0c61bc"
+    },
+    {
+      "path": "data/rag-manifest/AWS長照_RAG_AI_Source_Review_Current_Candidates_v002.json",
+      "size_bytes": 31967,
+      "sha256": "17349780d9e968b5f6c9e73c7e03f91fdf331097dba21baae57a5e4f93bb33ae"
+    },
+    {
+      "path": "data/rag-manifest/all_current_chunk_catalog_20260802.json",
+      "size_bytes": 7718,
+      "sha256": "789bd587b45ec816cf4247a7017c1fb50cbf89a27a4f4160d721534feb752e8b"
+    }
+  ]
+}

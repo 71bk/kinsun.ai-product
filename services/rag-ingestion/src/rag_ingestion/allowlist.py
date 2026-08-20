@@ -48,6 +48,12 @@ class AllowlistGovernanceError(AllowlistError):
         self.production_approved = decision.production_approved if decision is not None else False
 
 
+class _DuplicateJsonKey(ValueError):
+    def __init__(self, key: str) -> None:
+        self.key = key
+        super().__init__(key)
+
+
 @dataclass(frozen=True, slots=True)
 class AllowlistEntry:
     chunk_id: str
@@ -259,7 +265,12 @@ def load_allowlist(path: Path) -> Allowlist:
     except OSError as exc:
         raise AllowlistError(f"cannot read allowlist: {type(exc).__name__}") from exc
     try:
-        raw = json.loads(payload.decode("utf-8-sig"))
+        raw = json.loads(
+            payload.decode("utf-8-sig"),
+            object_pairs_hook=_reject_duplicate_keys,
+        )
+    except _DuplicateJsonKey as exc:
+        raise AllowlistError(f"duplicate JSON key in allowlist: {exc.key}") from exc
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise AllowlistError(f"allowlist is not valid UTF-8 JSON: {type(exc).__name__}") from exc
     if not isinstance(raw, dict):
@@ -359,6 +370,15 @@ def load_allowlist(path: Path) -> Allowlist:
         governance=governance,
         raw=raw,
     )
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _DuplicateJsonKey(key)
+        result[key] = value
+    return result
 
 
 def _governance_state(raw: dict[str, Any]) -> GovernanceState:

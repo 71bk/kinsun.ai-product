@@ -1,0 +1,442 @@
+{
+  "artifact_version": "v003",
+  "entries": [
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": ".gitattributes",
+      "sha256": "20ea43ca8ee946c947b789fc3c3a16a8cf7a35afb7c46d4ca96e3492500be09a",
+      "size_bytes": 1335
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/embedding.yaml",
+      "sha256": "8c5e8a491bc79164a6e79fb6674f2489bed1fd1d0a396a1e236797b332dcb79d",
+      "size_bytes": 368
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/hybrid-legal.json",
+      "sha256": "a621e8b439f7674f2b58a8a563123de4b79e82dd3effeb0b3a2b39aac7763c37",
+      "size_bytes": 641
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/hybrid-natural-language.json",
+      "sha256": "f04a616b02c8fcb3f4ec1f5faf3bdfccda0fb65fe4b99b64d7166fc0ed71742a",
+      "size_bytes": 646
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/opensearch-index-v1.json",
+      "sha256": "efab9d1aad91795d328c95668a31b040b4cb0589e8f123886cad55702d87a815",
+      "size_bytes": 1817
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/smoke-test.yaml",
+      "sha256": "801666c969b689a99b332b449f634b180f9a9458820fbcd76582b9baa7ffadca",
+      "size_bytes": 579
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "config/rag/staging-filters.yaml",
+      "sha256": "8e4ea67aaeebe620c686ce12d5073229c1539e73be9e0ed54736dd6288e4ebec",
+      "size_bytes": 557
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/ingestion-receipt.schema.json",
+      "sha256": "f3a03c49118c0799acab998cdd1a963fa4a9b594966ceb3212baa20ace9462dc",
+      "size_bytes": 3393
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/rag-chunk-v2.1.schema.json",
+      "sha256": "639d4d3d562980f386dbcd1735fd0d42c5ce9d2633d8784652cf50ff43ce4acb",
+      "size_bytes": 14053
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/rag-chunk-v2.schema.json",
+      "sha256": "aa6a9d06324e6450438e9cf2ed157a009cb637510862c8cd5b6e764cac4e452c",
+      "size_bytes": 11203
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/rag-chunk.schema.json",
+      "sha256": "83f0bfc4682fa5ca4c5c0e6b0fef42910cc50ed0825f8f09136aee4da7bf56cb",
+      "size_bytes": 1394
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/rag-metadata.schema.json",
+      "sha256": "58088604a34f177efbc2e90aef9e4280299dda9f97fef55e46151838abc6b37b",
+      "size_bytes": 1800
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/retrieval-request.schema.json",
+      "sha256": "00adff0f17f636db0209dd01c9f995b398642204e7234dae584f5186c9beb557",
+      "size_bytes": 1061
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/retrieval-response.schema.json",
+      "sha256": "aad890d3e46c2a5096139222a842e675f044b9f54f0b276443a0b21bcc96df02",
+      "size_bytes": 2948
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/README.md",
+      "sha256": "ae26f8c659073c842e6fa7142b8a7e239a8ce01a40a04ade4255afbeffe1f4df",
+      "size_bytes": 3334
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/SHA256SUMS.txt",
+      "sha256": "a162c2ed8ac0c4a421e73950dc5df433ff6fe7be87e4d0b249da462f28ae36dc",
+      "size_bytes": 2853
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_核心_Chunks_v002.jsonl",
+      "sha256": "b8d7ac0e894b062e9c983735218dfd6809de663e261d031920e5b8ee05e6bbd0",
+      "size_bytes": 589616
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/A單位個案管理人員工作手冊_第四章附錄及表單_Chunks_v004.jsonl",
+      "sha256": "95afc72263a29fc37a253db5d9f72b6c0d877b2890d70b3c0200a4386366dc31",
+      "size_bytes": 801763
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/Do_Words_Matter_Loneliness_NLP_Chunks_v003.jsonl",
+      "sha256": "6772057f294a6f01e62d16b8d41b00dd2a1e9576bd8fbb712970c5443c4ff0bc",
+      "size_bytes": 348278
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/Fetzer_UCLA孤獨量表_說明_Chunks_v003.jsonl",
+      "sha256": "53fc8910fa24e162d74fc12b7c95c019b6293762c89ff7c31e9324b827da94fc",
+      "size_bytes": 99787
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/失智症衛教及資源手冊_Chunks_v002.jsonl",
+      "sha256": "4646751510cd99216a09eb20def9ff190fa8d1f8299557ce3321315ff5209584",
+      "size_bytes": 469173
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_核心批次_Chunks_v004.jsonl",
+      "sha256": "c0bb2386421972f76dc18fa91ae853778f5e40d4075461d572ddf21a6bb7da66",
+      "size_bytes": 624031
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/家庭照顧者支持服務據點專業人員工作手冊_第八章附錄_Chunks_v003.jsonl",
+      "sha256": "8a6e57abfcfc2db4ecc25e08782f8f95bc9d22cf60afab957ada8ce4adbf4f59",
+      "size_bytes": 123606
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_健康照護附錄_Chunks_v001.jsonl",
+      "sha256": "b7b9863aa5e3b06e2d8935b1a548b6899e3a2b9c06c8822d37106c43f8656040",
+      "size_bytes": 144920
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_核心_Chunks_v001.jsonl",
+      "sha256": "f0ccee3997b8e1247df7ecff9178f3a2e20e0d60edf266813df71686ef0947f5",
+      "size_bytes": 966819
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/居家服務督導員工作手冊_表單附錄_Chunks_v004.jsonl",
+      "sha256": "174debbd794372fcc214f5ba89187c4f234bfa731df3e93a467f36d7aab381e7",
+      "size_bytes": 15258
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/申請長照服務_Chunks_v003.jsonl",
+      "sha256": "0649daa44634a3c79816d1bd8b764f9b80d53e2632e1faf38427c94ceb99acaf",
+      "size_bytes": 51764
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/老年期營養手冊112年版_Chunks_v001.jsonl",
+      "sha256": "80c8fe49cf609ce289fb360af32b8d31fb2bdfb783bf5d3186c7682dc9aca3b6",
+      "size_bytes": 277494
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/自動語音分析高齡者孤獨感研究_Chunks_v002.jsonl",
+      "sha256": "4f3fe37016ceb6445f06e8b10be147a1ed63947d3e538dcbd84427ddec020029",
+      "size_bytes": 276291
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/長期照顧服務法_Chunks_v005.jsonl",
+      "sha256": "64a0a6fd670e3c33e34459c79c274af6d07eda18dd5e8e4dfcfd3c2a1bc6a34b",
+      "size_bytes": 407328
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/長照高負荷家庭照顧者轉介及服務流程_Chunks_v004.jsonl",
+      "sha256": "c4f1a16fe09643033a1d77ef04fdc9df79d8e40b9cc6924b38bb172b407eee4a",
+      "size_bytes": 47718
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/長者防跌妙招手冊_Chunks_v001.jsonl",
+      "sha256": "44bcdfc987f6e162f0bad4f6b3db89f0b4021a211ac0a5796dae10bd50318b3d",
+      "size_bytes": 141007
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-chunks/approved/高負荷家庭照顧者初篩指標_Chunks_v002.jsonl",
+      "sha256": "471d0ee1d47de93dfd680249c50d9b6ecdd64c065888091355f5e1aa1b0a489c",
+      "size_bytes": 23496
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-manifest/AI_Reviewed_Embedding_Staging_Allowlist_v002.json",
+      "sha256": "27791cc7ade9e646518b2302fb95069de3ec348fa6d748ff5be552aa2b68ba89",
+      "size_bytes": 581009
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-manifest/AWS長照_RAG_AI_Source_Review_Current_Candidates_v002.json",
+      "sha256": "2f5b24938fcda40711de6dbf12c050037f38259e6dc91fb9144bb6c527663977",
+      "size_bytes": 31138
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-manifest/all_current_chunk_catalog_20260802.json",
+      "sha256": "319ad22f541e0be5a5516ba283eac581ffe0ad40d7d1417067cf82f05aefc165",
+      "size_bytes": 7555
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/README.md",
+      "sha256": "398338d321bbd52178a0962e05e59dc480c0efe90f1db54b109bc868a5d68104",
+      "size_bytes": 2478
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/evidence/README.md",
+      "sha256": "c4ef7061685b5f1182d850509ce6733a7e2592cb7387f5640be91eabbc04826f",
+      "size_bytes": 669
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "scripts/rag/build_v2_artifacts.py",
+      "sha256": "3353dbd17f16a8989b1eb7e94f283a1a8e75ff957a31b3511c36ee56cd8c8523",
+      "size_bytes": 2104
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "scripts/rag/validate_v2_artifacts.py",
+      "sha256": "787ffc1ef56e8a384d8f22dc38e40d4c2ddbbb1c36531c84b62c1a23495f5874",
+      "size_bytes": 86866
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/README.md",
+      "sha256": "08f40a4a5d05fe86808cf36f55947d4562b555c51a875cf45c6b7fc314ad48e4",
+      "size_bytes": 10419
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/pyproject.toml",
+      "sha256": "3ce32844bdc4394d53e2ae50ce1c070fd632bb1a7d34ab6d6d60da30338f885d",
+      "size_bytes": 1160
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/__init__.py",
+      "sha256": "4ed5db10d63ff7a14f74cdc857aecc6e606e2de9806d0e537326744ba261d538",
+      "size_bytes": 618
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/allowlist.py",
+      "sha256": "544e7ad69064b032087df36cde301991085bad49109abd04afac3cc837041f21",
+      "size_bytes": 16984
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/allowlist_builder.py",
+      "sha256": "fea51e27b92ff1989225309bfc1c3c054b711a289f13d3a7c4cba7f3ec606a2b",
+      "size_bytes": 12807
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/bedrock_embedder.py",
+      "sha256": "71ef3ce5a031420bb5d274904b4b240547a4ec5e25dfe933c6deccb1772b4163",
+      "size_bytes": 13528
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/bulk_ingester.py",
+      "sha256": "cc87c26865ec0bf1567eef8f577c764681ad9559ca8b4f58a5f277875627bfcb",
+      "size_bytes": 16326
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/chunk_loader.py",
+      "sha256": "ac53062dbb65d1437137c16612a36bcd1e3b254ea2347611d957ffbde5eabce9",
+      "size_bytes": 4537
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/cli.py",
+      "sha256": "55b90a58c764b3bd4b2d022052b9a07fba7f76ff8c2656d759783cc5aa9e37d9",
+      "size_bytes": 27391
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/index_manager.py",
+      "sha256": "2e267a52384a886ecb5020dc1feffa161f7ebee84e0dc75fda1f4d9317625f24",
+      "size_bytes": 17439
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/opensearch_client.py",
+      "sha256": "d149d8212ed9671c05803df748e848718ed058e647115f0eebf41bc44f92b83d",
+      "size_bytes": 16549
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/receipt.py",
+      "sha256": "5d8c74e78f4b25bdc31539ae3eae1a50081eeab3de0efc5b4a66bce92e42c88e",
+      "size_bytes": 5111
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/settings.py",
+      "sha256": "779ee07fbe62f6f457f0a2dcd37b8059423b1837adcff69a77035354663d5da4",
+      "size_bytes": 13071
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/smoke_test.py",
+      "sha256": "9f4c2862c1ea83f241c6a4d16399d8a49c81a3e32c8282d56262a04e7cefe626",
+      "size_bytes": 13529
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/v2_artifacts.py",
+      "sha256": "0c76d9e6f3d50e1281441f93d2305428956a1bf65c42415967074e6d76fc2ec7",
+      "size_bytes": 94319
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/validator.py",
+      "sha256": "4962d8101eff915b10a164c76ee0fd11d895972436a8fbb012fa08d119b358ce",
+      "size_bytes": 6081
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/conftest.py",
+      "sha256": "a7ae16eab3c290db63ead04ce22a65f32e026f4eebb98149388bc42ceeb80982",
+      "size_bytes": 5154
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/integration/test_approved_dataset.py",
+      "sha256": "11ce1f25be60aa02c77f53380af90c67b2b28f7a380a36b9a8114cf85864d867",
+      "size_bytes": 3951
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/integration/test_v2_artifacts.py",
+      "sha256": "32bc12c7b938c6831d844a3d8b2b254aa65b5c3a8eaea1c587af2bd227c93a22",
+      "size_bytes": 24335
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/integration/test_v2_validator_integrity.py",
+      "sha256": "e5e9fde3e918e61afb4a0a6c02e4e8fc5836874c383b48f82e09b01783851aa7",
+      "size_bytes": 37553
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_allowlist_and_loader.py",
+      "sha256": "eae89164438566d0397b9747574cd7b3d93d7681c889727b094720d19c8ffb31",
+      "size_bytes": 9029
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_allowlist_builder.py",
+      "sha256": "90abdea433c042f98cb6dd9432b8211ba27a5fc8a3efe103744f601691b325d6",
+      "size_bytes": 6490
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_bedrock_embedder.py",
+      "sha256": "50162b92afe2edcc60a4d6374ee2b1bb210cb8473b97bff685886bd06177a5b1",
+      "size_bytes": 6967
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_bulk_ingester.py",
+      "sha256": "b2b7dac6da468960a5bb7285630b455a25cda7cd3a57d08b3bb5fc2c181d400d",
+      "size_bytes": 13019
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_cli.py",
+      "sha256": "ec4c12db46f5fd2b5fa41fd2521210a7c687b55e8dea2eca0c12bff8545c6b64",
+      "size_bytes": 27089
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_index_manager.py",
+      "sha256": "b5c3dba594011860c1ea1e487a816a4c2834a874f95da6e8829306ebfb0edc87",
+      "size_bytes": 20109
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_opensearch_client.py",
+      "sha256": "51d2d147594a270543ca463f483ac7f72fbdd23322cc73ff7b2b097450a2595b",
+      "size_bytes": 4937
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_rag_chunk_v2_schema_contract.py",
+      "sha256": "2aa59553bf1627a2c8022d4f0740246476984fd67ae862400d0fe1da7c9157f5",
+      "size_bytes": 5946
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_settings_and_receipt.py",
+      "sha256": "d9c3a697d3161e764164049ebf28073edfdda6ba5fc2c9da6673f135d374001d",
+      "size_bytes": 5518
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_smoke_test.py",
+      "sha256": "16c9b500517c8bb74370d1d4d190752f84031b277e446775b424a9c6533be6f9",
+      "size_bytes": 5933
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/unit/test_validator.py",
+      "sha256": "9cd611ce30c5511a7bed8f6d32deca5b5a75c1b4bc193200d3018f81c3c720bc",
+      "size_bytes": 2043
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/uv.lock",
+      "sha256": "8bc8ebc98c523100d085f4dc55b263550625545602f1a12e6e958e11f2259ec7",
+      "size_bytes": 109336
+    }
+  ],
+  "entry_count": 72,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "d1a8e2480b72e0dc82b5cd7b5e665f61d156e18533d2954ccb0336922e6c2f05",
+  "kind": "validation_input_inventory",
+  "schema_version": "1.0.0"
+}

@@ -161,7 +161,7 @@ feat(rag): canonicalize public knowledge metadata v2
 | --- | --- |
 | `identity` | `chunk_id`、`source_id`、`chunk_file_id`、`chunk_index`、schema/version |
 | `content` | `text`、`embedding_text`、`char_count`、content hashes、content type |
-| `citation` | title、publisher、page range、`source_locator`、四種分離 URL |
+| `citation` | title、publisher、page range、`source_locator`、中性來源 URL、官方專用 URL、license 與 storage URL |
 | `retrieval_policy` | audiences、purposes、risk、assessment flags、safety route refs、eligibility |
 | `governance` | review、version check、license、embedding、ingestion、production gate |
 | `provenance` | parser/chunker version、source version/date、last verified、artifact lineage |
@@ -176,7 +176,7 @@ feat(rag): canonicalize public knowledge metadata v2
   - `current_status` 與 `version_check_status`／`verification_status`。
   - `language` 與 `locale`。
   - `data_classification` 與 `distribution_scope`。
-  - direct official source、official source page、license evidence、storage URL。
+  - 中性的 direct source／source page，以及僅供官方來源使用的 direct official source／official source page、license evidence、storage URL；研究來源不得填入官方專用欄位。
   - source human review 與 runtime `requires_human_review`。
 - 只做 deterministic、evidence-backed mapping；不使用 LLM 推定缺值。
 - 可由 Allowlist 以 source／chunk identity 精確 join 的治理值，保留 evidence reference 後帶入。
@@ -187,7 +187,7 @@ feat(rag): canonicalize public knowledge metadata v2
 
 ### 5.4 版本產物
 
-- 新版 `RagChunkV2` JSONL 與 JSON Schema。
+- 新版 `RagChunkV2` JSONL 與獨立版本 JSON Schema；既有 schema bytes 不覆寫。
 - 新版 Source Manifest、Chunk File Manifest 與候選 Allowlist v003。
 - prior-version immutable lock。
 - version-difference summary。

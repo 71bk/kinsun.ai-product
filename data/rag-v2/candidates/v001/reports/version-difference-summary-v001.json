@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "prior_shape": {
+    "nested_metadata_chunks": 661,
+    "flat_metadata_chunks": 65
+  },
+  "successor_shape": {
+    "canonical_rag_chunk_v2_chunks": 726
+  },
+  "source_count": 17,
+  "chunk_count": 726,
+  "official_source_count": 14,
+  "official_chunk_count": 651,
+  "research_source_count": 3,
+  "research_chunk_count": 75,
+  "text_changed_count": 0,
+  "embedding_text_changed_count": 0,
+  "successor_id_count": 726,
+  "review_row_count": 648,
+  "mapping_warning_counts": {
+    "current_status_needs_verification_preserved_as_unknown": 27,
+    "non_official_source_preserved_as_research_evidence": 75,
+    "printed_page_end_invalid_integer": 1,
+    "printed_page_start_invalid_integer": 1
+  },
+  "retrieval_block_reason_counts": {
+    "allowed_audiences_missing_or_empty": 75,
+    "allowed_purposes_missing_or_empty": 65,
+    "current_status_not_current": 306,
+    "requires_official_assessment_missing": 5,
+    "requires_professional_assessment_missing": 225,
+    "risk_level_not_allowed": 74,
+    "stop_normal_rag": 35
+  },
+  "status_changes_applied_automatically": false,
+  "production_approved": false
+}
