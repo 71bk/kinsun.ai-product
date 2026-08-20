@@ -86,6 +86,27 @@ runtime origin.
 
 ## Commands
 
+### RagChunkV2 local metadata candidate
+
+The metadata-only V2 workflow is separate from the six-step AWS ingestion
+sequence. It freezes the current V1 bytes, writes an immutable local candidate,
+and validates all 17 sources and 726 chunks against the strict V2 schema:
+
+```powershell
+uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py preflight
+uv run --project services/rag-ingestion pytest services/rag-ingestion/tests `
+  --junitxml=data/rag-v2/evidence/v002/pytest-rag-ingestion.xml
+uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py build
+uv run --project services/rag-ingestion python scripts/rag/validate_v2_artifacts.py
+```
+
+Preflight and build refuse to overwrite `v001`. The candidate preserves V1
+`text` and `embedding_text` byte-for-byte, keeps every row in `needs_review`,
+and never calls Bedrock, OpenSearch, cloud storage, or a production service.
+See `data/rag-v2/README.md` for the artifact boundaries.
+
+### Staging ingestion
+
 From the repository root, run the required staging sequence:
 
 ```powershell

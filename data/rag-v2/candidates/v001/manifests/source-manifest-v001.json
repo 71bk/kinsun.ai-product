@@ -1,0 +1,416 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "source_count": 17,
+  "chunk_count": 726,
+  "sources": [
+    {
+      "source_number": 1,
+      "source_id": "moj_long_term_care_services_act_20210609",
+      "title": "長期照顧服務法",
+      "authority_level": "official_law",
+      "source_type": "law",
+      "is_official_source": true,
+      "chunk_count": 72,
+      "source_versions": [
+        "2021-06-09"
+      ],
+      "direct_official_source_urls": [
+        "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0070040"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [
+        "https://law.moj.gov.tw/Service/Copyright.aspx"
+      ],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1pFa93kCjvkL1XBNliw9lXqkmzmdHc63r/view?usp=drivesdk"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 2,
+      "source_id": "mohw_1966_apply_ltc",
+      "title": "申請長照服務",
+      "authority_level": "official_government",
+      "source_type": "service_guide",
+      "is_official_source": true,
+      "chunk_count": 16,
+      "source_versions": [
+        "unknown"
+      ],
+      "direct_official_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6533-70777-207.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1MjM-agXNFaDdroOpQbgE0UlN_sCPU36D/view?usp=drivesdk"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 3,
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "title": "家庭照顧者支持手冊－核心",
+      "authority_level": "official_manual",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "chunk_count": 102,
+      "source_versions": [
+        "114年7月"
+      ],
+      "direct_official_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1qJEvb7LWY_WDJsv_P2KoBJbOqQRDJcmp/view?usp=drivesdk"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 4,
+      "source_id": "mohw_family_caregiver_support_manual_appendix_202507",
+      "title": "家庭照顧者支持手冊－附錄",
+      "authority_level": "official_manual",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "chunk_count": 30,
+      "source_versions": [
+        "114年7月初版"
+      ],
+      "direct_official_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1_R5OlO9QScLlVKR0xrFCZHv3OW_9IrxC/view?usp=drivesdk"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 5,
+      "source_id": "mohw_high_burden_caregiver_screening_20231222",
+      "title": "高負荷家庭照顧者初篩指標",
+      "authority_level": "official_government",
+      "source_type": "risk_rule",
+      "is_official_source": true,
+      "chunk_count": 6,
+      "source_versions": [
+        "112年12月22日二修"
+      ],
+      "direct_official_source_urls": [
+        "https://www.mohw.gov.tw/dl-78165-87c38eb9-6cd0-4bdc-a664-4315f9304dd7.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1ts8maIdc0KuyiKEMoNmDC5nluUQnClf3/view?usp=drivesdk"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 6,
+      "source_id": "mohw_high_burden_caregiver_referral_service_flow_20250930",
+      "title": "高負荷家庭照顧者轉介流程",
+      "authority_level": "official_government",
+      "source_type": "risk_rule",
+      "is_official_source": true,
+      "chunk_count": 10,
+      "source_versions": [
+        "114年9月30日四修"
+      ],
+      "direct_official_source_urls": [
+        "https://www.mohw.gov.tw/dl-78166-3cc0f176-f0d8-4f06-8046-b5809dd2823a.html"
+      ],
+      "official_source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "license_evidence_urls": [
+        "https://1966.gov.tw/LTC/cp-6476-70761-207.html"
+      ],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 7,
+      "source_id": "hpa_older_adult_nutrition_manual_20230525",
+      "title": "老年期營養手冊",
+      "authority_level": "official_health_education",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "chunk_count": 41,
+      "source_versions": [
+        "112年版"
+      ],
+      "direct_official_source_urls": [],
+      "official_source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/List.aspx?nodeid=170"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 8,
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "title": "A 單位核心",
+      "authority_level": "official_manual",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "chunk_count": 65,
+      "source_versions": [
+        "2023-07-19"
+      ],
+      "direct_official_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 9,
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "title": "A 單位第四章附錄及表單",
+      "authority_level": "official_manual_appendix",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "chunk_count": 70,
+      "source_versions": [
+        "2023-07-19"
+      ],
+      "direct_official_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 10,
+      "source_id": "mohw_home_care_service_supervisor_manual_20260529",
+      "title": "居督核心",
+      "authority_level": "official_manual",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "chunk_count": 122,
+      "source_versions": [
+        "中華民國114年12月初版"
+      ],
+      "direct_official_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "official_source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 11,
+      "source_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529",
+      "title": "居督健康照護附錄",
+      "authority_level": "official_manual_appendix",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "chunk_count": 26,
+      "source_versions": [
+        "中華民國114年12月初版（健康照護附錄）"
+      ],
+      "direct_official_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "official_source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 12,
+      "source_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529",
+      "title": "居督表單附錄",
+      "authority_level": "official_manual_appendix",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "chunk_count": 5,
+      "source_versions": [
+        "Delivery_v004 / Chunks_v004"
+      ],
+      "direct_official_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "official_source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 13,
+      "source_id": "hpa_elder_fall_prevention_tips_manual_202102",
+      "title": "長者防跌妙招手冊",
+      "authority_level": "official_health_education",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "chunk_count": 30,
+      "source_versions": [
+        "110年2月（第五版）"
+      ],
+      "direct_official_source_urls": [
+        "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=dd29b4b0c54644d788ff66b03cfb3026"
+      ],
+      "official_source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=1193"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 14,
+      "source_id": "hpa_dementia_health_education_resource_manual_201610",
+      "title": "失智症衛教及資源手冊",
+      "authority_level": "official_health_education",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "chunk_count": 56,
+      "source_versions": [
+        "2016-10；一版"
+      ],
+      "direct_official_source_urls": [
+        "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=160a8428997c4a60b67a1b0d3efe9848"
+      ],
+      "official_source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=4381"
+      ],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 15,
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "title": "Fetzer／UCLA 孤獨量表",
+      "authority_level": "scale_repository",
+      "source_type": "assessment_scale",
+      "is_official_source": false,
+      "chunk_count": 10,
+      "source_versions": [
+        "unknown"
+      ],
+      "direct_official_source_urls": [
+        "https://backend.fetzer.org/sites/default/files/images/stories/pdf/selfmeasures/Self_Measures_for_Love_and_Compassion_Research_LONELINESS_AND_INTERPERSONAL_PROBLEMS.pdf"
+      ],
+      "official_source_page_urls": [],
+      "license_evidence_urls": [],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 16,
+      "source_id": "frontiers_loneliness_speech_analysis_2021",
+      "title": "自動語音孤獨感研究",
+      "authority_level": "peer_reviewed_journal",
+      "source_type": "research_article",
+      "is_official_source": false,
+      "chunk_count": 25,
+      "source_versions": [
+        "2021"
+      ],
+      "direct_official_source_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.712251/pdf"
+      ],
+      "official_source_page_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.712251/full"
+      ],
+      "license_evidence_urls": [
+        "https://creativecommons.org/licenses/by/4.0/"
+      ],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_number": 17,
+      "source_id": "frontiers_do_words_matter_loneliness_nlp_2021",
+      "title": "Do Words Matter NLP 研究",
+      "authority_level": "peer_reviewed_research",
+      "source_type": "research_article",
+      "is_official_source": false,
+      "chunk_count": 40,
+      "source_versions": [
+        "2021"
+      ],
+      "direct_official_source_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.728732/pdf"
+      ],
+      "official_source_page_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.728732/full"
+      ],
+      "license_evidence_urls": [
+        "https://creativecommons.org/licenses/by/4.0/"
+      ],
+      "storage_urls": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    }
+  ]
+}

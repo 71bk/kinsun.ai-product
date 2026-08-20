@@ -190,6 +190,20 @@ def test_invalid_jsonl_is_rejected_without_returning_partial_set(tmp_path: Path)
         load_allowlisted_chunks(chunks_dir, load_allowlist(manifest_path))
 
 
+def test_duplicate_json_key_is_rejected_without_returning_partial_set(
+    tmp_path: Path,
+) -> None:
+    manifest_path, chunks_dir = write_dataset(tmp_path)
+    duplicate_key_chunk = json.dumps(synthetic_chunk())[:-1] + ',"chunk_id":"shadow"}'
+    (chunks_dir / "duplicate-key.jsonl").write_text(
+        duplicate_key_chunk + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ChunkLoadError, match="duplicate JSON key 'chunk_id'"):
+        load_allowlisted_chunks(chunks_dir, load_allowlist(manifest_path))
+
+
 def test_allowlist_duplicate_ids_are_rejected(tmp_path: Path) -> None:
     manifest_path, _ = write_dataset(tmp_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -199,6 +213,15 @@ def test_allowlist_duplicate_ids_are_rejected(tmp_path: Path) -> None:
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     with pytest.raises(AllowlistError, match="duplicate allowlist chunk_id"):
+        load_allowlist(manifest_path)
+
+
+def test_allowlist_duplicate_json_key_is_rejected(tmp_path: Path) -> None:
+    manifest_path, _ = write_dataset(tmp_path)
+    payload = manifest_path.read_text(encoding="utf-8")
+    manifest_path.write_text(payload[:-1] + ',"source_count":1}', encoding="utf-8")
+
+    with pytest.raises(AllowlistError, match="duplicate JSON key in allowlist: source_count"):
         load_allowlist(manifest_path)
 
 

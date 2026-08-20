@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "status": "PASS",
+  "command": "uv run --project services/rag-ingestion pytest services/rag-ingestion/tests --junitxml=data/rag-v2/evidence/v002/pytest-rag-ingestion.xml",
+  "evidence_path": "data/rag-v2/evidence/v002/pytest-rag-ingestion.xml",
+  "evidence_sha256": "33ca1a07ef75f2ff6eaa7e15a18d47ecb3b2de4c8bb7c2e40808843966a6f5e6",
+  "tests": 159,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "production_approved": false
+}

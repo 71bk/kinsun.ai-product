@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "preflight_version": "v002",
+  "status": "PASS",
+  "pass_count": 8,
+  "fail_count": 0,
+  "validation_input_inventory_sha256": "16708a98631b6ef33499b50b03274d62f8f319a937bf8bd90fc051a76757c08d",
+  "prior_artifact_lock_sha256": "fc7307e987ec8b87d85b909c05df28938a442a2d9750424e9fdb42f31ec975c9",
+  "checks": [
+    {
+      "name": "chunk_count",
+      "status": "PASS",
+      "observed": 726
+    },
+    {
+      "name": "unique_successor_ids",
+      "status": "PASS",
+      "observed": 726
+    },
+    {
+      "name": "text_bytes_unchanged",
+      "status": "PASS",
+      "observed": 726
+    },
+    {
+      "name": "embedding_text_bytes_unchanged",
+      "status": "PASS",
+      "observed": 726
+    },
+    {
+      "name": "retrieval_eligible",
+      "status": "PASS",
+      "observed": 143
+    },
+    {
+      "name": "human_review_rows",
+      "status": "PASS",
+      "observed": 648
+    },
+    {
+      "name": "production_approved_false",
+      "status": "PASS",
+      "observed": 726
+    },
+    {
+      "name": "prior_artifact_lock",
+      "status": "PASS"
+    }
+  ],
+  "review_status": "needs_review",
+  "production_approved": false
+}

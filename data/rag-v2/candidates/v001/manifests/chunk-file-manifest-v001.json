@@ -1,0 +1,408 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v001",
+  "chunk_file_count": 17,
+  "chunk_count": 726,
+  "files": [
+    {
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "chunk_file_id": "fetzer_ucla_loneliness_scale_compendium_rag_v2_v001",
+      "path": "chunks/fetzer_ucla_loneliness_scale_compendium.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 10,
+      "sha256": "f2e3a954a203be759eb74059489a2871c7eef59a02c79fd97edeef02b7019fda",
+      "size_bytes": 60151,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pypdf_6_layout_plus_150dpi_visual_review_v1"
+      ],
+      "chunker_versions": [
+        "semantic_assessment_scale_version_boundary_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "frontiers_do_words_matter_loneliness_nlp_2021",
+      "chunk_file_id": "frontiers_do_words_matter_loneliness_nlp_2021_rag_v2_v001",
+      "path": "chunks/frontiers_do_words_matter_loneliness_nlp_2021.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 40,
+      "sha256": "14e03a31775b6c00fb3474fb19a0d9d8b1397a336f13863624afe8f623462af1",
+      "size_bytes": 218723,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "jats_nxml_docx_parser_v1"
+      ],
+      "chunker_versions": [
+        "research_semantic_chunker_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "frontiers_loneliness_speech_analysis_2021",
+      "chunk_file_id": "frontiers_loneliness_speech_analysis_2021_rag_v2_v001",
+      "path": "chunks/frontiers_loneliness_speech_analysis_2021.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 25,
+      "sha256": "509b4f95f52de64a67c4d991a95a4f783183d870a73a7aedd24a31b82afa919e",
+      "size_bytes": 170630,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "jats_nxml_parser_v002"
+      ],
+      "chunker_versions": [
+        "research_semantic_chunker_v002"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "hpa_dementia_health_education_resource_manual_201610",
+      "chunk_file_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v001",
+      "path": "chunks/hpa_dementia_health_education_resource_manual_201610.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 56,
+      "sha256": "c1eed43af2ad016cd92cf28f65981f2f7d5d7de39979908ede37ce9bca786dc9",
+      "size_bytes": 452102,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pypdf_6_page_text_plus_pdfplumber_selected_tables_v1"
+      ],
+      "chunker_versions": [
+        "semantic_topic_and_visual_table_page_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "hpa_elder_fall_prevention_tips_manual_202102",
+      "chunk_file_id": "hpa_elder_fall_prevention_tips_manual_202102_rag_v2_v001",
+      "path": "chunks/hpa_elder_fall_prevention_tips_manual_202102.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 30,
+      "sha256": "88da96fe81fb8ff8deea304579fecca0c717d0e3989e3a7d7c1ce9f37fbe9415",
+      "size_bytes": 113580,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pdfplumber_0_11_page_text_bbox_visual_checked_v1"
+      ],
+      "chunker_versions": [
+        "semantic_fall_prevention_topic_chunker_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "hpa_older_adult_nutrition_manual_20230525",
+      "chunk_file_id": "hpa_older_adult_nutrition_manual_20230525_rag_v2_v001",
+      "path": "chunks/hpa_older_adult_nutrition_manual_20230525.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 41,
+      "sha256": "990d84668b0cef6bad910bf718bd9a149909a163aad3ba77923aa1ad4df7f5d5",
+      "size_bytes": 245678,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pdfplumber_0_11_page_text_bbox_visual_checked_v1"
+      ],
+      "chunker_versions": [
+        "semantic_nutrition_topic_chunker_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_1966_apply_ltc",
+      "chunk_file_id": "mohw_1966_apply_ltc_rag_v2_v001",
+      "path": "chunks/mohw_1966_apply_ltc.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 16,
+      "sha256": "ca93aa96cbd8130bbb2c051ad4a16fb459b43c198599c18e55735f8889577744",
+      "size_bytes": 53397,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "official_page_text_snapshot_v2"
+      ],
+      "chunker_versions": [
+        "semantic_heading_chunker_v2"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "chunk_file_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v001",
+      "path": "chunks/mohw_a_unit_case_manager_manual_20230719.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 65,
+      "sha256": "283156668e3a151442e36c563c203652f6c550b8ee3a591f131e9a4869083451",
+      "size_bytes": 435825,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [],
+      "chunker_versions": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "chunk_file_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v001",
+      "path": "chunks/mohw_a_unit_case_manager_manual_appendix_20230719.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 70,
+      "sha256": "70d296be40c4377f6f35d7efa1b72e126c1f91ca9927706b069e2855600c7631",
+      "size_bytes": 775096,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pypdf_page_text_v001"
+      ],
+      "chunker_versions": [
+        "appendix_semantic_page_group_v001"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "chunk_file_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v001",
+      "path": "chunks/mohw_family_caregiver_support_manual_202507.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 102,
+      "sha256": "5f26ffadd45573939f46fd513ffab16bfbf168236063dd279bcba785c5a9ad2e",
+      "size_bytes": 611065,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pymupdf_text_parser_normalized_v3"
+      ],
+      "chunker_versions": [
+        "semantic_care_manual_chunker_v3"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_appendix_202507",
+      "chunk_file_id": "mohw_family_caregiver_support_manual_appendix_202507_rag_v2_v001",
+      "path": "chunks/mohw_family_caregiver_support_manual_appendix_202507.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 30,
+      "sha256": "af94973ca75a022a53d21775ec1d60278003a8e6fe0605c70fa81724ff1cf688",
+      "size_bytes": 116946,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pymupdf_text_parser_normalized_v1"
+      ],
+      "chunker_versions": [
+        "semantic_care_manual_appendix_chunker_v2"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_high_burden_caregiver_referral_service_flow_20250930",
+      "chunk_file_id": "mohw_high_burden_caregiver_referral_service_flow_20250930_rag_v2_v001",
+      "path": "chunks/mohw_high_burden_caregiver_referral_service_flow_20250930.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 10,
+      "sha256": "43526b23669ebea874b8b03181edefab0effb340b2590509a2d33fbeec20a5dc",
+      "size_bytes": 37054,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pdfplumber_bbox_visual_review_v3"
+      ],
+      "chunker_versions": [
+        "flow_graph_semantic_chunker_v3"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_high_burden_caregiver_screening_20231222",
+      "chunk_file_id": "mohw_high_burden_caregiver_screening_20231222_rag_v2_v001",
+      "path": "chunks/mohw_high_burden_caregiver_screening_20231222.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 6,
+      "sha256": "83b3bd0490a001f3212b4863728d34fd07f7d8e8119def3c96442ad842a6189c",
+      "size_bytes": 24158,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "xpdf_pdftotext_4_00_visual_checked_windows_data_pdf_v1"
+      ],
+      "chunker_versions": [
+        "semantic_risk_rule_chunker_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_20260529",
+      "chunk_file_id": "mohw_home_care_service_supervisor_manual_20260529_rag_v2_v001",
+      "path": "chunks/mohw_home_care_service_supervisor_manual_20260529.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 122,
+      "sha256": "83296fb79bb56fa644dd35649a679b263a860adf0119471ea47905d09c5bfbdf",
+      "size_bytes": 843678,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pypdf_reading_order_visual_boundary_review_v1"
+      ],
+      "chunker_versions": [
+        "semantic_paragraph_table_unit_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529",
+      "chunk_file_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v001",
+      "path": "chunks/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 5,
+      "sha256": "cbfdac07edb66f2e7024cd62f22b93d5491c699bd3d088366b0c2cd4fa4d785e",
+      "size_bytes": 15858,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [],
+      "chunker_versions": [],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529",
+      "chunk_file_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529_rag_v2_v001",
+      "path": "chunks/mohw_home_care_service_supervisor_manual_health_appendix_20260529.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 26,
+      "sha256": "d122903d4e2a005f00e61d55c65ee87b251035885697fae9d2432da93caa8a31",
+      "size_bytes": 118837,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pypdf_reading_order_visual_scope_review_v1"
+      ],
+      "chunker_versions": [
+        "health_topic_semantic_boundary_v1"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    },
+    {
+      "source_id": "moj_long_term_care_services_act_20210609",
+      "chunk_file_id": "moj_long_term_care_services_act_20210609_rag_v2_v001",
+      "path": "chunks/moj_long_term_care_services_act_20210609.rag-chunk-v2.v001.jsonl",
+      "chunk_count": 72,
+      "sha256": "b41bb5af8033b76c8fb4ffdbe0cb7b08f7db009eac1a13151087315aca7447a8",
+      "size_bytes": 273974,
+      "schema_version": "2.0.0",
+      "extension_schema_version": null,
+      "artifact_version": "v001",
+      "chunk_size_target": 600,
+      "chunk_overlap": 0,
+      "parser_versions": [
+        "pdf_text_parser_v1"
+      ],
+      "chunker_versions": [
+        "article_chunker_v3"
+      ],
+      "review_status": "needs_review",
+      "ingestion_status": "staging",
+      "embedding_status": "not_started",
+      "production_approved": false,
+      "storage_target": "local_pending_upload"
+    }
+  ]
+}
