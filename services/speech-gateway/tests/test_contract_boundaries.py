@@ -8,6 +8,7 @@ The live round trip is verified separately against the real services.
 from __future__ import annotations
 
 import base64
+from collections.abc import Iterator
 from uuid import UUID
 
 import pytest
@@ -49,6 +50,26 @@ class FakeCoreGate:
             memory_id=kwargs["memory_id"],
             status=("ACTIVE" if kwargs["response_intent"] == "AFFIRM" else "PENDING_CONFIRMATION"),
         )
+
+
+@pytest.fixture(autouse=True)
+def isolated_provider_routes(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Local developer .env files must never change contract test behavior."""
+    routes = {
+        "ASR_PROVIDER_ZH_TW": "aws-transcribe",
+        "ASR_PROVIDER_EN_US": "aws-transcribe",
+        "ASR_PROVIDER_NAN_TW": "aws-sagemaker",
+        "ASR_PROVIDER_HAK_TW": "aws-sagemaker",
+        "TTS_PROVIDER_ZH_TW": "aws-polly",
+        "TTS_PROVIDER_EN_US": "aws-polly",
+        "TTS_PROVIDER_NAN_TW": "aws-sagemaker",
+        "TTS_PROVIDER_HAK_TW": "aws-sagemaker",
+    }
+    for key, value in routes.items():
+        monkeypatch.setenv(key, value)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -367,6 +388,10 @@ def test_unexpected_field_is_refused(client: TestClient) -> None:
         ("endpoint", "https://browser-selected.invalid"),
         ("keyterms", ["browser-selected-keyterm"]),
         ("api_key", "browser-selected-credential"),
+        ("voice", "browser-selected-voice"),
+        ("region", "browser-selected-region"),
+        ("output_format", "browser-selected-output"),
+        ("subscription_key", "browser-selected-subscription-key"),
     ],
 )
 def test_browser_cannot_select_or_override_provider_policy(

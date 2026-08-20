@@ -63,13 +63,17 @@ class DeterministicTtsProvider:
         key: str,
         *,
         supported_languages: frozenset[SpeechLanguage] = ALL_LANGUAGES,
+        error: Exception | None = None,
     ) -> None:
         self.key = key
         self.supported_languages = supported_languages
+        self.error = error
         self.calls: list[SpeechLanguage] = []
 
     async def synthesize(self, request: TtsProviderRequest) -> TtsProviderResult:
         self.calls.append(request.language)
+        if self.error:
+            raise self.error
         return TtsProviderResult(
             audio=b"synthetic-audio",
             content_type="audio/mpeg",
@@ -239,3 +243,28 @@ async def test_tts_uses_the_independent_server_side_route() -> None:
 
     assert result.metadata.provider_key == "test-tts"
     assert tts.calls == ["hak-TW"]
+
+
+@pytest.mark.asyncio
+async def test_tts_failure_does_not_call_another_registered_provider() -> None:
+    asr = DeterministicAsrProvider("test-asr")
+    provider_error = SpeechProviderError("test-primary-tts", ProviderErrorCategory.UNAVAILABLE)
+    primary = DeterministicTtsProvider("test-primary-tts", error=provider_error)
+    fallback = DeterministicTtsProvider("test-fallback-tts")
+    router = SpeechProviderRouter(
+        asr_providers=(asr,),
+        tts_providers=(primary, fallback),
+        asr_routes={language: asr.key for language in ALL_LANGUAGES},
+        tts_routes={language: primary.key for language in ALL_LANGUAGES},
+        asr_timeout_seconds=1,
+        tts_timeout_seconds=1,
+    )
+
+    with pytest.raises(SpeechProviderError) as caught:
+        await router.synthesize(
+            TtsProviderRequest(text="synthetic", language="zh-TW", speaking_speed="normal")
+        )
+
+    assert caught.value.category == ProviderErrorCategory.UNAVAILABLE
+    assert primary.calls == ["zh-TW"]
+    assert fallback.calls == []

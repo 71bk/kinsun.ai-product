@@ -14,6 +14,7 @@ The runtime process registers only these adapters:
 | ASR | `aws-transcribe` | Amazon Transcribe Streaming | `zh-TW`, `en-US` |
 | ASR | `deepgram-nova-3` | Deepgram pre-recorded Nova-3 API | `zh-TW`, `en-US` |
 | ASR | `aws-sagemaker` | Private SageMaker endpoint | `nan-TW`, `hak-TW` |
+| TTS | `azure-speech-tts` | Azure AI Speech REST synthesis | `zh-TW`, `en-US` |
 | TTS | `aws-polly` | Amazon Polly neural voices | `zh-TW`, `en-US` |
 | TTS | `aws-sagemaker` | Private SageMaker endpoint | `nan-TW`, `hak-TW` |
 
@@ -29,14 +30,18 @@ ASR_PROVIDER_ZH_TW=aws-transcribe
 ASR_PROVIDER_EN_US=aws-transcribe
 ASR_PROVIDER_NAN_TW=aws-sagemaker
 ASR_PROVIDER_HAK_TW=aws-sagemaker
-TTS_PROVIDER_ZH_TW=aws-polly
-TTS_PROVIDER_EN_US=aws-polly
+TTS_PROVIDER_ZH_TW=azure-speech-tts
+TTS_PROVIDER_EN_US=azure-speech-tts
 TTS_PROVIDER_NAN_TW=aws-sagemaker
 TTS_PROVIDER_HAK_TW=aws-sagemaker
 ASR_PROVIDER_TIMEOUT_SECONDS=30
 TTS_PROVIDER_TIMEOUT_SECONDS=30
 DEEPGRAM_API_KEY=
 DEEPGRAM_API_BASE_URL=https://api.deepgram.com
+AZURE_SPEECH_KEY=
+AZURE_SPEECH_REGION=
+AZURE_SPEECH_TTS_VOICE_ZH_TW=zh-TW-HsiaoChenNeural
+AZURE_SPEECH_TTS_VOICE_EN_US=en-US-JennyNeural
 ```
 
 `SAGEMAKER_ASR_ENDPOINT` and `SAGEMAKER_TTS_ENDPOINT` remain separate required
@@ -62,6 +67,15 @@ or `hak-TW`; selecting it for either language stops application construction.
 The normalized confidence is the minimum valid word confidence when word data
 is present, keeping the downstream Core gate conservative.
 
+Azure Speech is the default TTS route for Traditional Mandarin and US English.
+The adapter derives the REST endpoint from the server-owned region, XML-escapes
+input before placing it in SSML, and fixes output to
+`audio-24khz-48kbitrate-mono-mp3`. The default voices are
+`zh-TW-HsiaoChenNeural` and `en-US-JennyNeural`; deployments may change them
+only through server configuration. `slow`, `normal`, and `fast` map to bounded
+SSML prosody rates of `-20%`, `0%`, and `+20%`. Azure is not registered for
+`nan-TW` or `hak-TW`.
+
 For a local Docker smoke test, pass the same server-owned variables to the
 container; do not expose them as `NEXT_PUBLIC_*` values:
 
@@ -72,8 +86,8 @@ docker run --rm -p 8002:8002 `
   -e ASR_PROVIDER_EN_US=aws-transcribe `
   -e ASR_PROVIDER_NAN_TW=aws-sagemaker `
   -e ASR_PROVIDER_HAK_TW=aws-sagemaker `
-  -e TTS_PROVIDER_ZH_TW=aws-polly `
-  -e TTS_PROVIDER_EN_US=aws-polly `
+  -e TTS_PROVIDER_ZH_TW=azure-speech-tts `
+  -e TTS_PROVIDER_EN_US=azure-speech-tts `
   -e TTS_PROVIDER_NAN_TW=aws-sagemaker `
   -e TTS_PROVIDER_HAK_TW=aws-sagemaker `
   kinsun-speech-gateway
@@ -81,15 +95,16 @@ docker run --rm -p 8002:8002 `
 
 AWS credentials, the Core service credential, and private endpoint names must
 be supplied through the deployment's secret/configuration mechanism. The same
-applies to `DEEPGRAM_API_KEY`. Do not put credentials in an image, browser
-bundle, command history, or committed file.
+applies to `DEEPGRAM_API_KEY` and `AZURE_SPEECH_KEY`. Do not put credentials in
+an image, browser bundle, command history, or committed file.
 
 ## Validation and failure behavior
 
 - Unknown provider keys, incomplete routes, unsupported provider/language
   combinations, and invalid timeouts stop application construction.
-- Missing private endpoint or selected Deepgram credential configuration fails
-  on first use with a bounded `misconfigured` category and HTTP 501.
+- Missing private endpoint, selected Deepgram credential, or selected Azure
+  key/region configuration fails on first use with a bounded `misconfigured`
+  category and HTTP 501.
 - Timeouts, upstream failures, and invalid provider responses fail with bounded
   categories and HTTP 502.
 - The router calls exactly one configured provider. It never silently falls

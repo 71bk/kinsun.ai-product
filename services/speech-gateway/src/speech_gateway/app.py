@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from speech_gateway.asr import MODEL_VERSION, transcribe_pcm
+from speech_gateway.azure_tts import AzureSpeechTtsProvider
 from speech_gateway.core_voice_gate import (
     CoreGateRejectedError,
     CoreGateUnavailableError,
@@ -311,6 +312,13 @@ def _build_provider_router(settings) -> SpeechProviderRouter:  # noqa: ANN001
             ),
         ),
         tts_providers=(
+            AzureSpeechTtsProvider(
+                subscription_key=settings.AZURE_SPEECH_KEY,
+                region=settings.AZURE_SPEECH_REGION,
+                voice_zh_tw=settings.AZURE_SPEECH_TTS_VOICE_ZH_TW,
+                voice_en_us=settings.AZURE_SPEECH_TTS_VOICE_EN_US,
+                timeout_seconds=settings.TTS_PROVIDER_TIMEOUT_SECONDS,
+            ),
             AwsPollyTtsProvider(
                 region=settings.AWS_REGION,
                 synthesize=_call_synthesize,

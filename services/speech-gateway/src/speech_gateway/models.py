@@ -92,8 +92,8 @@ class TranscribeResponse(GatewayModel):
 
 class SynthesizeRequest(GatewayModel):
     text: str = Field(min_length=1, max_length=3000)
-    # Mandarin/English use Polly; Hokkien/Hakka require the private SageMaker
-    # endpoint and fail closed when it has not been configured.
+    # Mandarin/English use a server-routed managed provider; Hokkien/Hakka
+    # require the private SageMaker endpoint and fail closed when unavailable.
     language: SpeechLanguage
     speaking_speed: SpeakingSpeed = "normal"
 

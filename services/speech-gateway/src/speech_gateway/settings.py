@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     ASR_PROVIDER_EN_US: str = "aws-transcribe"
     ASR_PROVIDER_NAN_TW: str = "aws-sagemaker"
     ASR_PROVIDER_HAK_TW: str = "aws-sagemaker"
-    TTS_PROVIDER_ZH_TW: str = "aws-polly"
-    TTS_PROVIDER_EN_US: str = "aws-polly"
+    TTS_PROVIDER_ZH_TW: str = "azure-speech-tts"
+    TTS_PROVIDER_EN_US: str = "azure-speech-tts"
     TTS_PROVIDER_NAN_TW: str = "aws-sagemaker"
     TTS_PROVIDER_HAK_TW: str = "aws-sagemaker"
     ASR_PROVIDER_TIMEOUT_SECONDS: float = 30.0
@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     # Deepgram use. It must come from the deployment secret mechanism.
     DEEPGRAM_API_KEY: str = ""
     DEEPGRAM_API_BASE_URL: str = "https://api.deepgram.com"
+
+    # Azure Speech TTS is the managed Mandarin/English synthesis route. The
+    # credential and region may remain blank while another provider is routed,
+    # but a selected Azure route fails closed on first use without both.
+    AZURE_SPEECH_KEY: str = ""
+    AZURE_SPEECH_REGION: str = ""
+    AZURE_SPEECH_TTS_VOICE_ZH_TW: str = "zh-TW-HsiaoChenNeural"
+    AZURE_SPEECH_TTS_VOICE_EN_US: str = "en-US-JennyNeural"
 
     # Core is the only threshold and formal-state authority. This bearer value
     # is a Core-issued service credential, not
