@@ -90,6 +90,7 @@ def build_configured_rag_retriever():
                 "OPENSEARCH_INDEX": settings.OPENSEARCH_INDEX,
                 "OPENSEARCH_ALIAS": settings.OPENSEARCH_ALIAS,
                 "RAG_MODE": settings.RAG_MODE,
+                "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS,
             }.items()
             if value is not None and str(value).strip()
         }

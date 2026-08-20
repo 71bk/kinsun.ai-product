@@ -47,18 +47,31 @@ os.environ["SERVICE_IDENTITY_HMAC_SECRET"] = (
 )
 
 from agent_runtime.app import create_app  # noqa: E402
+from agent_runtime.rag.client import OpenSearchClient  # noqa: E402
+from agent_runtime.rag.hybrid_search import HybridSearch  # noqa: E402
+from agent_runtime.rag.models import (  # noqa: E402
+    HybridProfileSettings,
+    HybridSearchSettings,
+)
+from agent_runtime.rag.retriever import Retriever  # noqa: E402
 from agent_runtime.security.service_identity import (  # noqa: E402
     SERVICE_CREDENTIAL_HEADER,
     ServiceCredentialSigner,
 )
 
 CONTRACTS = Path(sys.argv[1])
-OPENAPI = yaml.safe_load(
-    (CONTRACTS / "openapi" / "agent-runtime.v1.yaml").read_text(encoding="utf-8")
-)
+OPENAPIS = {
+    1: yaml.safe_load(
+        (CONTRACTS / "openapi" / "agent-runtime.v1.yaml").read_text(encoding="utf-8")
+    ),
+    2: yaml.safe_load(
+        (CONTRACTS / "openapi" / "agent-runtime.v2.yaml").read_text(encoding="utf-8")
+    ),
+}
 
 RUNS_PATH = "/api/v1/agent/runs"
 RAG_PATH = "/api/v1/rag/retrievals"
+RAG_V2_PATH = "/api/v2/rag/retrievals"
 
 failures: list[str] = []
 
@@ -130,14 +143,14 @@ def load(rel: str) -> dict:
     return json.loads((CONTRACTS / "schemas" / rel).read_text(encoding="utf-8"))
 
 
-def _component_id(name: str) -> str:
+def _component_id(name: str, openapi: dict) -> str:
     """Absolute $id of the schema file that components/schemas/<name> points at."""
-    rel = OPENAPI["components"]["schemas"][name]["$ref"]
+    rel = openapi["components"]["schemas"][name]["$ref"]
     target = (CONTRACTS / "openapi" / rel).resolve()
     return json.loads(target.read_text(encoding="utf-8"))["$id"]
 
 
-def _resolve_component_refs(node):
+def _resolve_component_refs(node, openapi: dict):
     """Rewrite `#/components/schemas/X` to X's absolute `$id`.
 
     An inline OpenAPI response schema is not a standalone JSON Schema: its
@@ -149,17 +162,24 @@ def _resolve_component_refs(node):
     if isinstance(node, dict):
         ref = node.get("$ref")
         if isinstance(ref, str) and ref.startswith("#/components/schemas/"):
-            return {**node, "$ref": _component_id(ref.rsplit("/", 1)[1])}
-        return {key: _resolve_component_refs(value) for key, value in node.items()}
+            return {
+                **node,
+                "$ref": _component_id(ref.rsplit("/", 1)[1], openapi),
+            }
+        return {key: _resolve_component_refs(value, openapi) for key, value in node.items()}
     if isinstance(node, list):
-        return [_resolve_component_refs(item) for item in node]
+        return [_resolve_component_refs(item, openapi) for item in node]
     return node
 
 
 def inline_schema(path: str, method: str, status: str) -> dict:
     """Pull the inline response schema the OpenAPI doc declares for a path."""
-    node = OPENAPI["paths"][path][method]["responses"][status]
-    return _resolve_component_refs(node["content"]["application/json"]["schema"])
+    openapi = OPENAPIS[2 if path.startswith("/api/v2/") else 1]
+    node = openapi["paths"][path][method]["responses"][status]
+    return _resolve_component_refs(
+        node["content"]["application/json"]["schema"],
+        openapi,
+    )
 
 
 def check(label: str, payload: dict, schema: dict) -> None:
@@ -232,6 +252,122 @@ def make_rag_payload(**overrides) -> dict:
     }
     payload.update(overrides)
     return payload
+
+
+def make_rag_v2_payload(**overrides) -> dict:
+    payload = make_rag_payload(
+        schema_version="2.0.0",
+        request_id="req-rag-v2-live-001",
+        audience="elder",
+        purpose="general_information",
+    )
+    payload.update(overrides)
+    return payload
+
+
+class LiveQueryEmbedder:
+    dimension = 1024
+
+    async def embed_query(self, text: str) -> list[float]:
+        return [0.01] * self.dimension
+
+
+class LiveSearchTransport:
+    def __init__(self, *, incomplete: bool) -> None:
+        self._incomplete = incomplete
+
+    def search(self, **kwargs: object) -> dict[str, object]:
+        return {
+            "hits": {
+                "hits": [
+                    _live_v2_hit(
+                        number,
+                        missing_locator=self._incomplete and number == 3,
+                    )
+                    for number in range(1, 6)
+                ]
+            }
+        }
+
+
+def _live_v2_hit(number: int, *, missing_locator: bool) -> dict[str, object]:
+    source_url = f"https://example.invalid/live-governed/{number}"
+    return {
+        "_id": f"live-governed-{number}",
+        "_score": 1.0 - number / 20,
+        "_source": {
+            "chunk_id": f"live-governed-{number}",
+            "source_id": "live-governed-source",
+            "text": f"Synthetic governed live evidence {number}",
+            "artifact_version": "v002",
+            "title": "Synthetic Governed Live Guide",
+            "publisher": None,
+            "section": "Synthetic section",
+            "physical_page_start": None,
+            "physical_page_end": None,
+            "printed_page_start": None,
+            "printed_page_end": None,
+            "source_locator": None if missing_locator else f"Web section {number}",
+            "direct_official_source_url": source_url,
+            "official_source_page_url": source_url,
+            "direct_source_url": source_url,
+            "source_page_url": source_url,
+            "is_official_source": True,
+            "source_version": None,
+            "source_version_date": None,
+            "version_published_at": None,
+            "source_page_updated_at": None,
+            "published_at": None,
+            "last_verified_at": None,
+            "review_status": "needs_review",
+            "production_approved": False,
+            "storage_url": "https://storage.example.invalid/private-object",
+            "current_status": "current",
+            "stop_normal_rag": False,
+            "risk_level": "low",
+            "requires_official_assessment": False,
+            "requires_professional_assessment": False,
+            "allowed_audiences": ["elder"],
+            "allowed_purposes": ["general_information"],
+            "retrieval_eligible": True,
+            "retrieval_block_reasons": [],
+        },
+    }
+
+
+def build_live_v2_retriever(*, incomplete: bool) -> Retriever:
+    natural = HybridProfileSettings(
+        profile="natural_language",
+        search_pipeline="live-natural",
+        bm25_weight=0.4,
+        vector_weight=0.6,
+        vector_min_score=0.7,
+        top_k=5,
+        agent_chunk_min=3,
+        agent_chunk_max=5,
+    )
+    legal = HybridProfileSettings(
+        profile="legal",
+        search_pipeline="live-legal",
+        bm25_weight=0.65,
+        vector_weight=0.35,
+        vector_min_score=0.7,
+        top_k=5,
+        agent_chunk_min=3,
+        agent_chunk_max=5,
+    )
+    return Retriever(
+        query_embedder=LiveQueryEmbedder(),
+        search_client=OpenSearchClient(LiveSearchTransport(incomplete=incomplete)),
+        hybrid_search=HybridSearch(
+            HybridSearchSettings(
+                index_alias="rag-live-staging",
+                natural_language=natural,
+                legal=legal,
+            )
+        ),
+        allow_needs_review_citations=True,
+    )
 
 
 async def main() -> int:
@@ -327,6 +463,81 @@ async def main() -> int:
                 print("FAIL  RAG validation response echoed the rejected query")
             else:
                 print("ok    RAG validation response does not echo the rejected query")
+
+        v2_private_query = "synthetic-v2-private-query-7d39a2"
+        response = await client.post(
+            RAG_V2_PATH,
+            json=make_rag_v2_payload(query=v2_private_query),
+        )
+        if expect_status(
+            f"POST {RAG_V2_PATH} unconfigured returns 200",
+            response.status_code,
+            200,
+        ):
+            body = response.json()
+            check(
+                f"POST {RAG_V2_PATH} unconfigured body vs contract",
+                body,
+                inline_schema(RAG_V2_PATH, "post", "200"),
+            )
+            if body.get("data", {}).get("status") != "FAILED":
+                failures.append("unconfigured V2 RAG did not report FAILED")
+                print("FAIL  unconfigured V2 RAG did not report FAILED")
+            else:
+                print("ok    unconfigured V2 RAG reports FAILED")
+            if v2_private_query in json.dumps(body, ensure_ascii=False):
+                failures.append("unconfigured V2 RAG echoed the rejected query")
+                print("FAIL  unconfigured V2 RAG echoed the rejected query")
+            else:
+                print("ok    unconfigured V2 RAG does not echo the query")
+
+        app.state.rag_retriever = build_live_v2_retriever(incomplete=False)
+        response = await client.post(RAG_V2_PATH, json=make_rag_v2_payload())
+        if expect_status(
+            f"POST {RAG_V2_PATH} governed success returns 200",
+            response.status_code,
+            200,
+        ):
+            body = response.json()
+            check(
+                f"POST {RAG_V2_PATH} governed success body vs contract",
+                body,
+                inline_schema(RAG_V2_PATH, "post", "200"),
+            )
+            results = body.get("data", {}).get("results", [])
+            if len(results) != 5 or any(not result.get("source_locator") for result in results):
+                failures.append("V2 RAG omitted complete source locators")
+                print("FAIL  V2 RAG omitted complete source locators")
+            else:
+                print("ok    V2 RAG returns five complete source locators")
+            serialized = json.dumps(body, ensure_ascii=False)
+            if "storage_url" in serialized or "storage.example.invalid" in serialized:
+                failures.append("V2 RAG exposed an internal storage URL")
+                print("FAIL  V2 RAG exposed an internal storage URL")
+            else:
+                print("ok    V2 RAG excludes internal storage URLs")
+
+        app.state.rag_retriever = build_live_v2_retriever(incomplete=True)
+        response = await client.post(RAG_V2_PATH, json=make_rag_v2_payload())
+        if expect_status(
+            f"POST {RAG_V2_PATH} incomplete citation returns 200",
+            response.status_code,
+            200,
+        ):
+            body = response.json()
+            check(
+                f"POST {RAG_V2_PATH} incomplete citation body vs contract",
+                body,
+                inline_schema(RAG_V2_PATH, "post", "200"),
+            )
+            data = body.get("data", {})
+            if data.get("status") != "NO_DATA" or data.get("results") != []:
+                failures.append("V2 RAG exposed a partial incomplete citation batch")
+                print("FAIL  V2 RAG exposed a partial incomplete citation batch")
+            else:
+                print("ok    V2 RAG fails the incomplete citation batch closed")
+
+        app.state.rag_retriever = None
 
         # Normal turn.
         response = await client.post(RUNS_PATH, json=make_payload())

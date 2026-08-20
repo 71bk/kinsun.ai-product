@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     SERVICE_IDENTITY_ISSUER: str = Field(default="kinsun-local", min_length=1, max_length=80)
     SERVICE_IDENTITY_TTL_SECONDS: int = Field(default=30, ge=1, le=60)
     RAG_MODE: str = "disabled"
+    RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"
     RAG_HYBRID_NATURAL_CONFIG_PATH: str = "config/rag/hybrid-natural-language.json"

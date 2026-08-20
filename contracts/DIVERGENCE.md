@@ -226,10 +226,16 @@ Candidate、Inactive、Deleted、superseded version 及 Knowledge／RAG turn 均
 
 ### Staging RAG retrieval
 
-Agent Runtime 已實作 `POST /api/v1/rag/retrievals` 的 staging-only HTTP boundary，並使用
-`SuccessEnvelope` 回傳 `RetrievalResponseV1`。未設定 Bedrock／OpenSearch、provider 失敗或
-沒有足夠合格來源時，介面會 fail closed：HTTP 200 的 `data.status` 為 `FAILED` 或
-`NO_DATA`、`results` 為空，並提供明確 fallback；不得由 Agent 猜測或把查詢字串回填到回應。
+Agent Runtime 已實作 `POST /api/v1/rag/retrievals` 相容路徑，以及
+`POST /api/v2/rag/retrievals` 的完整治理 citation 路徑。V2 使用獨立
+`RetrievalRequestV2`／`RetrievalResponseV2` 契約，並且已由 in-process live verifier
+驗證成功、失敗與 citation 不完整三條實際 runtime 路徑。Agent 內部知識流程使用 V2；任一
+候選 citation 不完整時整批回 `NO_DATA`，不暴露 partial result。V2 結果帶公開來源定位、版本
+證據與治理狀態，closed schema 明確排除 storage URL。
+
+V1 與 V2 在未設定 Bedrock／OpenSearch、provider 失敗或沒有足夠合格來源時都會 fail
+closed：HTTP 200 的 `data.status` 為 `FAILED` 或 `NO_DATA`、`results` 為空，並提供明確
+fallback；不得由 Agent 猜測或把查詢字串回填到回應。
 
 這個可執行 retrieval contract 不代表資料治理與 AWS 環境已完成：
 
@@ -244,6 +250,9 @@ Agent Runtime 已實作 `POST /api/v1/rag/retrievals` 的 staging-only HTTP boun
 - Repository 不保存真實 AWS 金鑰，且目前沒有可供本次驗證的 AWS Account／Bedrock／
   OpenSearch staging 連線資訊，因此 executable contract 測試只驗證無設定時的安全 fallback，
   不宣稱已建立或驗證真實 index、alias、embedding 或文件數。
+- `RAG_ALLOW_NEEDS_REVIEW_CITATIONS` 預設為 `false`。只有 staging 明確 override 才能讀取
+  `needs_review` evidence；這不會改寫 chunk 的 `production_approved=false`。目前尚未執行
+  OpenSearch V2 reindex 或 alias cutover，因此合成 V2 live PASS 不能解讀為真實索引已就緒。
 - allowlist 的 `production_status` 仍是 `BLOCKED`；unsigned development override 不得用於
   production。任何 production 執行仍須正式簽署 Allowlist，並明確設定
   `RAG_PRODUCTION_ENABLED=true`；此 endpoint 與目前相關設定不得當作 production RAG。

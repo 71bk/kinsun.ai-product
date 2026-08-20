@@ -9,7 +9,8 @@
 contracts/
 ├── openapi/
 │   ├── core-api.v1.yaml              OpenAPI 3.1，63 個已實作的 path
-│   └── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 endpoint
+│   ├── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 V1 endpoint
+│   └── agent-runtime.v2.yaml         OpenAPI 3.1，治理 citation retrieval endpoint
 ├── asyncapi/
 │   └── core-events.v1.yaml           AsyncAPI 3.x，Core Domain Event channel
 ├── schemas/
@@ -31,10 +32,12 @@ contracts/
 `common/` 的 `ResponseMetaV1` 與 `ErrorEnvelopeV1` 由兩邊共用而非各自複製一份
 （[ADR 0005](../docs/adr/0005-agent-runtime-api-conventions.md)）。
 
-Agent Runtime 的第三個 endpoint 是 `POST /api/v1/rag/retrievals`。它只代表 staging
-retrieval HTTP boundary 已可呼叫：未設定 Bedrock／OpenSearch 時仍回 HTTP 200，但
-`data.status = FAILED`、`results = []` 並提供明確 fallback，Agent 不得據此猜測答案。
-這不代表 staging ingestion、Human Review、production projection 或 deletion 已完成。
+Agent Runtime 保留 `POST /api/v1/rag/retrievals` 作相容路徑，並新增
+`POST /api/v2/rag/retrievals` 治理 citation 契約。V2 完整結果包含來源定位、公開 URL、版本
+證據及治理狀態，closed schema 不接受 storage URL；citation 缺一項就整批 fail closed。
+未設定 Bedrock／OpenSearch 時兩版仍會 HTTP 200，且 `data.status = FAILED`、
+`results = []` 並帶明確 fallback，Agent 不得自行猜測答案。這不代表 V2 reindex、staging
+ingestion、Human Review、production projection 或 deletion 已完成。
 
 ## §8.2 的明示例外
 

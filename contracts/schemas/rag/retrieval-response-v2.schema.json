@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/retrieval-response-v2.schema.json",
+  "title": "RetrievalResponseV2",
+  "description": "A governed retrieval response. Storage URLs and internal artifact paths are intentionally outside this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "status",
+    "fallback_message",
+    "results"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "2.0.0" },
+    "request_id": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "status": { "type": "string", "enum": ["SUCCESS", "NO_DATA", "FAILED"] },
+    "fallback_message": { "type": ["string", "null"], "maxLength": 1000 },
+    "results": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/RetrievalResultV2" }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "SUCCESS" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "fallback_message": { "type": "null" },
+          "results": { "minItems": 3, "maxItems": 5 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "enum": ["NO_DATA", "FAILED"] } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "fallback_message": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "results": { "maxItems": 0 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "NullableHttpUrl": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "pattern": "^https?://",
+      "maxLength": 4096
+    },
+    "NullableEvidenceText": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "\\S"
+    },
+    "NullablePositiveInteger": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "RetrievalResultV2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_id",
+        "source_id",
+        "text",
+        "score",
+        "artifact_version",
+        "title",
+        "publisher",
+        "section",
+        "physical_page_start",
+        "physical_page_end",
+        "printed_page_start",
+        "printed_page_end",
+        "source_locator",
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+        "is_official_source",
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+        "review_status",
+        "production_approved"
+      ],
+      "properties": {
+        "chunk_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "source_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 50000, "pattern": "\\S" },
+        "score": { "type": "number" },
+        "artifact_version": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S" },
+        "publisher": { "$ref": "#/$defs/NullableEvidenceText" },
+        "section": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "\\S" },
+        "physical_page_start": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "physical_page_end": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "printed_page_start": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "printed_page_end": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "source_locator": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "\\S" },
+        "direct_official_source_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "official_source_page_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "direct_source_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "source_page_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "is_official_source": { "type": "boolean" },
+        "source_version": { "$ref": "#/$defs/NullableEvidenceText" },
+        "source_version_date": { "$ref": "#/$defs/NullableEvidenceText" },
+        "version_published_at": { "$ref": "#/$defs/NullableEvidenceText" },
+        "source_page_updated_at": { "$ref": "#/$defs/NullableEvidenceText" },
+        "published_at": { "$ref": "#/$defs/NullableEvidenceText" },
+        "last_verified_at": { "$ref": "#/$defs/NullableEvidenceText" },
+        "review_status": { "type": "string", "enum": ["needs_review", "verified"] },
+        "production_approved": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": { "physical_page_start": { "type": "integer" }, "physical_page_end": { "type": "integer" } }
+            },
+            {
+              "properties": { "physical_page_start": { "type": "null" }, "physical_page_end": { "type": "null" } }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": { "printed_page_start": { "type": "integer" }, "printed_page_end": { "type": "integer" } }
+            },
+            {
+              "properties": { "printed_page_start": { "type": "null" }, "printed_page_end": { "type": "null" } }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            { "properties": { "direct_source_url": { "type": "string" } } },
+            { "properties": { "source_page_url": { "type": "string" } } }
+          ]
+        },
+        {
+          "if": {
+            "properties": { "is_official_source": { "const": true } },
+            "required": ["is_official_source"]
+          },
+          "then": {
+            "anyOf": [
+              { "properties": { "direct_official_source_url": { "type": "string" } } },
+              { "properties": { "official_source_page_url": { "type": "string" } } }
+            ]
+          },
+          "else": {
+            "properties": {
+              "direct_official_source_url": { "type": "null" },
+              "official_source_page_url": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "production_approved": { "const": true } },
+            "required": ["production_approved"]
+          },
+          "then": {
+            "properties": { "review_status": { "const": "verified" } }
+          }
+        }
+      ]
+    }
+  }
+}

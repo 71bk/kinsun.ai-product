@@ -12,6 +12,8 @@ def build_normal_rag_filter(
     profile: QueryProfile,
     audience: str | None = None,
     purpose: str | None = None,
+    governed_citations: bool = False,
+    allow_needs_review: bool = False,
 ) -> dict[str, object]:
     """Return mandatory fail-closed filters for ordinary RAG answers."""
 
@@ -23,6 +25,8 @@ def build_normal_rag_filter(
     ]
     must.append(_scope_filter("allowed_audiences", audience))
     must.append(_scope_filter("allowed_purposes", purpose))
+    if governed_citations:
+        must.append(_governance_filter(allow_needs_review=allow_needs_review))
     bool_filter: dict[str, object] = {"must": must}
     return {"bool": bool_filter}
 
@@ -33,6 +37,8 @@ def is_normal_rag_eligible(
     *,
     audience: str | None = None,
     purpose: str | None = None,
+    governed_citations: bool = False,
+    allow_needs_review: bool = False,
 ) -> bool:
     """Defence-in-depth after search; missing policy fields are denied."""
 
@@ -55,6 +61,11 @@ def is_normal_rag_eligible(
         return False
     if not _scope_allows(source.get("allowed_purposes"), purpose):
         return False
+    if governed_citations and not _governance_allows(
+        source,
+        allow_needs_review=allow_needs_review,
+    ):
+        return False
     return True
 
 
@@ -74,3 +85,39 @@ def _scope_filter(field: str, requested: str | None) -> dict[str, object]:
     if not isinstance(requested, str) or not requested.strip():
         return {"match_none": {}}
     return {"term": {field: requested}}
+
+
+def _governance_filter(*, allow_needs_review: bool) -> dict[str, object]:
+    if not allow_needs_review:
+        return {
+            "bool": {
+                "must": [
+                    {"term": {"review_status": "verified"}},
+                    {"term": {"production_approved": True}},
+                ]
+            }
+        }
+    return {
+        "bool": {
+            "should": [
+                {"term": {"review_status": "verified"}},
+                {
+                    "bool": {
+                        "must": [
+                            {"term": {"review_status": "needs_review"}},
+                            {"term": {"production_approved": False}},
+                        ]
+                    }
+                },
+            ],
+            "minimum_should_match": 1,
+        }
+    }
+
+
+def _governance_allows(source: Mapping[str, object], *, allow_needs_review: bool) -> bool:
+    review_status = source.get("review_status")
+    production_approved = source.get("production_approved")
+    if review_status == "verified":
+        return production_approved is True or (allow_needs_review and production_approved is False)
+    return allow_needs_review and review_status == "needs_review" and production_approved is False

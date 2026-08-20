@@ -11,8 +11,15 @@
 - `GET /health`
 - `POST /api/v1/agent/runs`
 - `POST /api/v1/rag/retrievals`
+- `POST /api/v2/rag/retrievals`
 
-契約在 [`contracts/openapi/agent-runtime.v1.yaml`](../../contracts/openapi/agent-runtime.v1.yaml)。
+契約在 [`contracts/openapi/agent-runtime.v1.yaml`](../../contracts/openapi/agent-runtime.v1.yaml)
+與 [`contracts/openapi/agent-runtime.v2.yaml`](../../contracts/openapi/agent-runtime.v2.yaml)。
+
+V1 retrieval 保留作相容路徑。V2 是 Agent 內部採用的完整治理 citation 契約：每筆結果都帶
+`source_locator`、公開來源 URL、版本證據、`review_status` 與
+`production_approved`，且永遠不回傳 `storage_url`。任一候選 citation 不完整時，V2
+整批回傳空結果，不以其他 chunk 掩蓋資料缺口。
 
 ## 執行
 
@@ -166,9 +173,13 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
   自由 Tool loop、Agent Debate 或未受控重試。
 - **RAG intent 是保守的顯式 purpose gate**：目前不以自由文字猜測意圖，避免生活聊天誤觸
   外部知識服務。
-- **Retrieval endpoint 目前只允許內部 staging 使用**：服務對服務 IAM／mTLS／token 尚未
-  定案，`/api/v1/rag/retrievals` 不得直接暴露到公網；`audience`、`purpose` 必須由已授權的
-  內部 caller 從可信身分與用途推導。
+- **Retrieval endpoint 目前只允許內部 staging 使用**：目前使用 request-bound service
+  credential；`/api/v1/rag/retrievals` 與 `/api/v2/rag/retrievals` 均不得直接暴露到公網。
+  `audience`、`purpose` 必須由已授權的內部 caller 從可信身分與用途推導。
+- **V2 needs-review override 預設關閉**：只有 staging operator 明確設定
+  `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 才能回傳 `needs_review` chunk，而且結果仍固定
+  `production_approved=false`。目前沒有執行 V2 OpenSearch reindex 或 alias cutover；在相符的
+  V2 projection 可用前，真實 adapter 會安全地回 `NO_DATA`。
 - 外部服務只能出現在 `models/provider.py`、`core/`、`tools/` 或 `rag/` 的 Adapter 邊界。
 
 ## 尚未實作
@@ -176,7 +187,8 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 通用多 Tool 執行迴圈、Memory Candidate、Graph 查詢、Prompt Registry、Model Router、
 完整 Agent Trace 持久化（Core AgentRun register／complete lifecycle 以外）、RAG Evaluation、
 production index。OpenAI-compatible text provider 已完成，但 RAG retrieval 本身仍是 staging-only
-AWS adapter，尚未 provider-neutral 化。
+AWS adapter；V2 citation 已用合成 in-process adapter 完成 live verification，並不代表真實
+OpenSearch V2 projection、AWS deployment 或 production enablement 已完成。
 
 `contracts/schemas/agent/HandoffEnvelopeV1` 仍是目標形狀；`contracts/schemas/tools/` 現已由
 受控的 Core Tool adapter 使用，但目前只接通 `create_event_candidate`。

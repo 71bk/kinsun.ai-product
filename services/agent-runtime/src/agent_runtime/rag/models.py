@@ -5,6 +5,7 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -25,6 +26,26 @@ class RetrievalRequestV1(RagBaseModel):
     """Wire model matching the staging retrieval request contract."""
 
     schema_version: Literal["1.0.0"]
+    request_id: str = Field(min_length=2, max_length=128, pattern=ID_REGEX)
+    query: str = Field(min_length=1, max_length=2000)
+    query_profile: QueryProfile
+    top_k: Literal[5]
+    audience: str | None = Field(default=None, max_length=80)
+    purpose: str | None = Field(default=None, max_length=120)
+    language: str = Field(default="zh-TW", pattern=LANGUAGE_REGEX)
+
+    @field_validator("query")
+    @classmethod
+    def query_must_contain_non_whitespace(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("query must contain non-whitespace text")
+        return value
+
+
+class RetrievalRequestV2(RagBaseModel):
+    """Wire request for governed V2 retrieval."""
+
+    schema_version: Literal["2.0.0"]
     request_id: str = Field(min_length=2, max_length=128, pattern=ID_REGEX)
     query: str = Field(min_length=1, max_length=2000)
     query_profile: QueryProfile
@@ -73,6 +94,136 @@ class RetrievalResultV1(RagBaseModel):
         return self
 
 
+class RetrievalResultV2(RagBaseModel):
+    """A governed chunk citation with no internal storage location."""
+
+    chunk_id: str = Field(min_length=1, max_length=256)
+    source_id: str = Field(min_length=1, max_length=256)
+    text: str = Field(min_length=1, max_length=50000)
+    score: float = Field(allow_inf_nan=False)
+    artifact_version: str = Field(min_length=1, max_length=80)
+    title: str = Field(min_length=1, max_length=512)
+    publisher: str | None = Field(max_length=512)
+    section: str = Field(min_length=1, max_length=1024)
+    physical_page_start: int | None = Field(ge=1)
+    physical_page_end: int | None = Field(ge=1)
+    printed_page_start: int | None = Field(ge=1)
+    printed_page_end: int | None = Field(ge=1)
+    source_locator: str = Field(min_length=1, max_length=2048)
+    direct_official_source_url: str | None = Field(max_length=4096)
+    official_source_page_url: str | None = Field(max_length=4096)
+    direct_source_url: str | None = Field(max_length=4096)
+    source_page_url: str | None = Field(max_length=4096)
+    is_official_source: bool
+    source_version: str | None = Field(max_length=512)
+    source_version_date: str | None = Field(max_length=512)
+    version_published_at: str | None = Field(max_length=512)
+    source_page_updated_at: str | None = Field(max_length=512)
+    published_at: str | None = Field(max_length=512)
+    last_verified_at: str | None = Field(max_length=512)
+    review_status: Literal["needs_review", "verified"]
+    production_approved: bool
+
+    @property
+    def document_name(self) -> str:
+        """Compatibility display name for the shared citation renderer."""
+
+        return self.title
+
+    @property
+    def page_start(self) -> int | None:
+        return self.printed_page_start or self.physical_page_start
+
+    @property
+    def page_end(self) -> int | None:
+        return self.printed_page_end or self.physical_page_end
+
+    @property
+    def source_url(self) -> str:
+        value = (
+            self.official_source_page_url or self.direct_official_source_url
+            if self.is_official_source
+            else self.source_page_url or self.direct_source_url
+        )
+        if value is None:
+            raise ValueError("governed citation has no public source URL")
+        return value
+
+    @field_validator(
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+    )
+    @classmethod
+    def public_urls_must_be_absolute(cls, value: str | None) -> str | None:
+        if value is not None:
+            parsed = urlsplit(value)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.hostname is None
+                or any(character.isspace() for character in value)
+            ):
+                raise ValueError("citation URL must be an absolute HTTP(S) URI")
+        return value
+
+    @field_validator(
+        "chunk_id",
+        "source_id",
+        "text",
+        "artifact_version",
+        "title",
+        "section",
+        "source_locator",
+    )
+    @classmethod
+    def required_text_must_contain_non_whitespace(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("required citation text must contain non-whitespace text")
+        return value
+
+    @field_validator(
+        "publisher",
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+    )
+    @classmethod
+    def optional_evidence_must_not_be_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("optional citation evidence must be null or non-blank")
+        return value
+
+    @model_validator(mode="after")
+    def governed_citation_must_be_complete(self) -> RetrievalResultV2:
+        _validate_page_pair(
+            self.physical_page_start,
+            self.physical_page_end,
+            "physical_page",
+        )
+        _validate_page_pair(
+            self.printed_page_start,
+            self.printed_page_end,
+            "printed_page",
+        )
+        if self.direct_source_url is None and self.source_page_url is None:
+            raise ValueError("a public direct or source-page URL is required")
+        if self.is_official_source:
+            if self.direct_official_source_url is None and self.official_source_page_url is None:
+                raise ValueError("an official source requires an official public URL")
+        elif (
+            self.direct_official_source_url is not None or self.official_source_page_url is not None
+        ):
+            raise ValueError("non-official evidence cannot populate official URL fields")
+        if self.production_approved and self.review_status != "verified":
+            raise ValueError("production approval requires verified review status")
+        return self
+
+
 class RetrievalResponseV1(RagBaseModel):
     """Wire model matching the staging retrieval response contract."""
 
@@ -84,6 +235,30 @@ class RetrievalResponseV1(RagBaseModel):
 
     @model_validator(mode="after")
     def status_and_results_must_be_consistent(self) -> RetrievalResponseV1:
+        if self.status == "SUCCESS":
+            if self.fallback_message is not None:
+                raise ValueError("successful retrieval cannot include a fallback message")
+            if not 3 <= len(self.results) <= 5:
+                raise ValueError("successful retrieval must provide three to five chunks")
+        else:
+            if not self.fallback_message or not self.fallback_message.strip():
+                raise ValueError("non-success retrieval must include an explicit fallback message")
+            if self.results:
+                raise ValueError("fallback retrieval must not expose partial results to the agent")
+        return self
+
+
+class RetrievalResponseV2(RagBaseModel):
+    """Governed retrieval response that fails closed without partial results."""
+
+    schema_version: Literal["2.0.0"]
+    request_id: str = Field(min_length=2, max_length=128, pattern=ID_REGEX)
+    status: RetrievalStatus
+    fallback_message: str | None = Field(max_length=1000)
+    results: list[RetrievalResultV2] = Field(max_length=5)
+
+    @model_validator(mode="after")
+    def status_and_results_must_be_consistent(self) -> RetrievalResponseV2:
         if self.status == "SUCCESS":
             if self.fallback_message is not None:
                 raise ValueError("successful retrieval cannot include a fallback message")
@@ -186,6 +361,7 @@ class RagRuntimeSettings(RagBaseModel):
     embedding: QueryEmbeddingSettings
     opensearch: OpenSearchConnectionSettings
     hybrid: HybridSearchSettings
+    allow_needs_review_citations: bool = False
 
     @classmethod
     def from_config_files(
@@ -219,6 +395,10 @@ class RagRuntimeSettings(RagBaseModel):
         index_alias = _resolve_config_value(index_values, "alias", "alias_env", env)
         host = _required_env(env, "OPENSEARCH_HOST")
         mode = env.get("RAG_MODE") or index_document.get("mode")
+        allow_needs_review_citations = _as_bool(
+            env.get("RAG_ALLOW_NEEDS_REVIEW_CITATIONS", "false"),
+            "RAG_ALLOW_NEEDS_REVIEW_CITATIONS",
+        )
 
         embedding = QueryEmbeddingSettings(
             model_id=_as_nonempty_str(model_id, "embedding model ID"),
@@ -242,6 +422,7 @@ class RagRuntimeSettings(RagBaseModel):
                 natural_language=natural,
                 legal=legal,
             ),
+            allow_needs_review_citations=allow_needs_review_citations,
         )
 
 
@@ -323,3 +504,22 @@ def _as_nonempty_str(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{label} must be a non-empty string")
     return value.strip()
+
+
+def _as_bool(value: object, label: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        if normalized == "true":
+            return True
+        if normalized == "false":
+            return False
+    raise ValueError(f"{label} must be true or false")
+
+
+def _validate_page_pair(start: int | None, end: int | None, label: str) -> None:
+    if (start is None) != (end is None):
+        raise ValueError(f"{label}_start and {label}_end must both be set or both be null")
+    if start is not None and end is not None and end < start:
+        raise ValueError(f"{label}_end must be greater than or equal to {label}_start")

@@ -1,0 +1,12 @@
+{
+  "data": {
+    "schema_version": "2.0.0",
+    "request_id": "rag-v2-request-001",
+    "query": "How do I apply for synthetic long-term-care services?",
+    "query_profile": "natural_language",
+    "top_k": 5,
+    "audience": "elder",
+    "purpose": "general_information",
+    "language": "en-US"
+  }
+}

@@ -4,11 +4,11 @@ from agent_runtime.common.enums import ResultStatus
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
 from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
-from agent_runtime.rag.fallback import failed_response, no_data_response
+from agent_runtime.rag.fallback import failed_response_v2, no_data_response_v2
 from agent_runtime.rag.models import (
-    RetrievalRequestV1,
-    RetrievalResponseV1,
-    RetrievalResultV1,
+    RetrievalRequestV2,
+    RetrievalResponseV2,
+    RetrievalResultV2,
 )
 
 
@@ -30,17 +30,17 @@ class CapturingProvider(ModelProvider):
 
 
 class StubRetriever:
-    def __init__(self, response: RetrievalResponseV1) -> None:
+    def __init__(self, response: RetrievalResponseV2) -> None:
         self.response = response
-        self.requests: list[RetrievalRequestV1] = []
+        self.requests: list[RetrievalRequestV2] = []
 
-    async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1:
+    async def retrieve_v2(self, request: RetrievalRequestV2) -> RetrievalResponseV2:
         self.requests.append(request)
         return self.response
 
 
 class UnexpectedRetriever:
-    async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1:
+    async def retrieve_v2(self, request: RetrievalRequestV2) -> RetrievalResponseV2:
         raise AssertionError(f"RAG should not be called for purpose {request.purpose}")
 
 
@@ -67,22 +67,41 @@ def make_request(**overrides: object) -> AgentRunRequest:
     return AgentRunRequest.model_validate(values)
 
 
-def make_result(position: int, *, text: str | None = None) -> RetrievalResultV1:
-    return RetrievalResultV1(
+def make_result(position: int, *, text: str | None = None) -> RetrievalResultV2:
+    source_url = f"https://example.invalid/long-term-care/{position}"
+    return RetrievalResultV2(
         chunk_id=f"SYNTHETIC-CHUNK-{position:03d}",
+        source_id="SYNTHETIC-SOURCE",
         text=text or f"這是第 {position} 筆合成的長照申請資訊。",
         score=0.9 - position / 100,
-        document_name=f"合成長照指引 {position}",
+        artifact_version="v002",
+        title=f"合成長照指引 {position}",
+        publisher="合成衛生機關",
         section="申請流程",
-        page_start=position,
-        page_end=position + 1,
-        source_url=f"https://example.invalid/long-term-care/{position}",
+        physical_page_start=position,
+        physical_page_end=position + 1,
+        printed_page_start=position,
+        printed_page_end=position + 1,
+        source_locator=f"PDF physical pages {position}-{position + 1}, 申請流程",
+        direct_official_source_url=source_url,
+        official_source_page_url=source_url,
+        direct_source_url=source_url,
+        source_page_url=source_url,
+        is_official_source=True,
+        source_version="synthetic-v1",
+        source_version_date=None,
+        version_published_at=None,
+        source_page_updated_at=None,
+        published_at=None,
+        last_verified_at=None,
+        review_status="needs_review",
+        production_approved=False,
     )
 
 
-def success_response(request_id: str, count: int = 4) -> RetrievalResponseV1:
-    return RetrievalResponseV1(
-        schema_version="1.0.0",
+def success_response(request_id: str, count: int = 4) -> RetrievalResponseV2:
+    return RetrievalResponseV2(
+        schema_version="2.0.0",
         request_id=request_id,
         status="SUCCESS",
         fallback_message=None,
@@ -122,6 +141,7 @@ async def test_successful_rag_chunks_reach_agent_context_and_reply_cites_every_s
     assert response.result_status == ResultStatus.SUCCESS
     assert "引用來源：" in response.reply_text
     for position in range(1, 5):
+        assert "合成衛生機關" in response.reply_text
         assert f"合成長照指引 {position}" in response.reply_text
         assert f"https://example.invalid/long-term-care/{position}" in response.reply_text
 
@@ -132,9 +152,9 @@ async def test_no_data_or_failed_rag_never_calls_agent_or_guesses(retrieval_stat
     request = make_request()
     provider = CapturingProvider(reply="這段不應出現在回覆中。")
     retrieval = (
-        no_data_response(request.request_id)
+        no_data_response_v2(request.request_id)
         if retrieval_status == "NO_DATA"
-        else failed_response(request.request_id)
+        else failed_response_v2(request.request_id)
     )
     orchestrator = AgentOrchestrator(provider, max_steps=3)
 
