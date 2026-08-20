@@ -21,7 +21,8 @@ from speech_gateway.provider_contracts import (
     TtsProviderResult,
 )
 
-SUPPORTED_LANGUAGES = frozenset(cast(tuple[SpeechLanguage, ...], get_args(SpeechLanguage)))
+SUPPORTED_LANGUAGE_ORDER = cast(tuple[SpeechLanguage, ...], get_args(SpeechLanguage))
+SUPPORTED_LANGUAGES = frozenset(SUPPORTED_LANGUAGE_ORDER)
 _SAFE_IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
 
 
@@ -103,7 +104,8 @@ def _validate_routes(
         raise ProviderConfigurationError(f"{kind} routes must cover every supported language")
 
     validated: dict[SpeechLanguage, str] = {}
-    for language, provider_key in routes.items():
+    for language in SUPPORTED_LANGUAGE_ORDER:
+        provider_key = routes[language]
         if not _SAFE_IDENTIFIER.fullmatch(provider_key):
             raise ProviderConfigurationError(f"{kind} route has an invalid provider key")
         provider = providers.get(provider_key)
