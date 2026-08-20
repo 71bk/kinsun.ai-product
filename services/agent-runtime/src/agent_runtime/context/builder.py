@@ -4,7 +4,7 @@ from hashlib import sha256
 from agent_runtime.context.manifest import build_context_manifest
 from agent_runtime.contracts.models import AgentRunRequest, ContextItem, ContextManifest
 from agent_runtime.rag.citations import render_controlled_cited_chunk
-from agent_runtime.rag.models import RetrievalResultV1
+from agent_runtime.rag.models import RetrievalResultV2
 
 
 def build_minimal_context_manifest(request: AgentRunRequest, agent_id: str) -> ContextManifest:
@@ -14,7 +14,7 @@ def build_minimal_context_manifest(request: AgentRunRequest, agent_id: str) -> C
 def build_rag_context_manifest(
     request: AgentRunRequest,
     agent_id: str,
-    results: Sequence[RetrievalResultV1],
+    results: Sequence[RetrievalResultV2],
 ) -> ContextManifest:
     """Add only a complete, bounded 3–5 chunk retrieval result to Agent context."""
 
@@ -36,7 +36,7 @@ def _rag_context_item_id(chunk_id: str, position: int) -> str:
     return f"rag-{position}-{digest}"
 
 
-def _build_rag_context_item(result: RetrievalResultV1, position: int) -> ContextItem:
+def _build_rag_context_item(result: RetrievalResultV2, position: int) -> ContextItem:
     content = render_controlled_cited_chunk(result)
     return ContextItem(
         item_id=_rag_context_item_id(result.chunk_id, position),

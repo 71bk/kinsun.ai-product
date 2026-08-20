@@ -9,7 +9,7 @@ from referencing.jsonschema import DRAFT202012
 
 from agent_runtime.app import app
 from agent_runtime.contracts.models import AgentRunResponse
-from agent_runtime.rag.models import RetrievalRequestV1, RetrievalResponseV1, RetrievalResultV1
+from agent_runtime.rag.models import RetrievalRequestV2, RetrievalResponseV2, RetrievalResultV2
 from agent_runtime.security.service_identity import (
     SERVICE_CREDENTIAL_HEADER,
     ServiceCredentialSigner,
@@ -259,22 +259,40 @@ async def test_malformed_extractor_output_is_not_returned():
 @pytest.mark.asyncio
 async def test_agent_run_uses_app_state_rag_and_returns_cited_reply():
     class AppStateRetriever:
-        async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1:
+        async def retrieve_v2(self, request: RetrievalRequestV2) -> RetrievalResponseV2:
             results = [
-                RetrievalResultV1(
+                RetrievalResultV2(
                     chunk_id=f"SYNTHETIC-API-{position:03d}",
+                    source_id="SYNTHETIC-API-SOURCE",
                     text=f"第 {position} 筆合成長照資料。",
                     score=0.9,
-                    document_name=f"合成 API 指引 {position}",
+                    artifact_version="v002",
+                    title=f"合成 API 指引 {position}",
+                    publisher="合成衛生機關",
                     section="申請",
-                    page_start=position,
-                    page_end=position,
-                    source_url=f"https://example.invalid/api-source/{position}",
+                    physical_page_start=position,
+                    physical_page_end=position,
+                    printed_page_start=None,
+                    printed_page_end=None,
+                    source_locator=f"PDF physical page {position}, 申請",
+                    direct_official_source_url=(f"https://example.invalid/api-source/{position}"),
+                    official_source_page_url=(f"https://example.invalid/api-source/{position}"),
+                    direct_source_url=f"https://example.invalid/api-source/{position}",
+                    source_page_url=f"https://example.invalid/api-source/{position}",
+                    is_official_source=True,
+                    source_version="synthetic-v1",
+                    source_version_date=None,
+                    version_published_at=None,
+                    source_page_updated_at=None,
+                    published_at=None,
+                    last_verified_at=None,
+                    review_status="needs_review",
+                    production_approved=False,
                 )
                 for position in range(1, 4)
             ]
-            return RetrievalResponseV1(
-                schema_version="1.0.0",
+            return RetrievalResponseV2(
+                schema_version="2.0.0",
                 request_id=request.request_id,
                 status="SUCCESS",
                 fallback_message=None,

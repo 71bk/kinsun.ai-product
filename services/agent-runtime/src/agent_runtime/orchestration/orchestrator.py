@@ -30,8 +30,8 @@ from agent_runtime.orchestration.rag_integration import (
 )
 from agent_runtime.orchestration.stop_conditions import map_to_status
 from agent_runtime.rag.citations import append_citations
-from agent_runtime.rag.fallback import failed_response
-from agent_runtime.rag.models import RetrievalResponseV1
+from agent_runtime.rag.fallback import failed_response_v2
+from agent_runtime.rag.models import RetrievalResponseV2
 from agent_runtime.tracing.trace import new_agent_run_id, new_trace_id
 
 
@@ -84,7 +84,7 @@ class AgentOrchestrator:
         if not LoopController(self.max_steps).can_execute(request.max_steps, step_count):
             raise StepLimitError("max_steps does not allow a single decision step")
 
-        retrieval: RetrievalResponseV1 | None = None
+        retrieval: RetrievalResponseV2 | None = None
         if is_rag_request(request):
             input_safety = self.safety_evaluator.evaluate(request, "")
             if input_safety.decision == SafetyDecision.ALLOW:
@@ -107,7 +107,7 @@ class AgentOrchestrator:
                         retrieval.results,
                     )
                 except ValueError:
-                    retrieval = failed_response(request.request_id)
+                    retrieval = failed_response_v2(request.request_id)
                     safety_result = retrieval_fallback_safety(retrieval)
                     return self._response(
                         request=request,
@@ -129,7 +129,7 @@ class AgentOrchestrator:
             try:
                 reply_text = append_citations(reply_text, retrieval.results)
             except ValueError:
-                retrieval = failed_response(request.request_id)
+                retrieval = failed_response_v2(request.request_id)
                 safety_result = retrieval_fallback_safety(retrieval)
                 reply_text = fallback_reply(safety_result, "")
 

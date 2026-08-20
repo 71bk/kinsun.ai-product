@@ -121,6 +121,14 @@ DATA_SCHEMA_FOR = {
     "retrieval-response.json": "rag/retrieval-response.schema.json",
     "retrieval-response-missing-source-url.json": "rag/retrieval-response.schema.json",
     "retrieval-response-half-populated-page-range.json": "rag/retrieval-response.schema.json",
+    "retrieval-request-v2.json": "rag/retrieval-request-v2.schema.json",
+    "retrieval-response-v2.json": "rag/retrieval-response-v2.schema.json",
+    "retrieval-response-v2-storage-url.json": (
+        "rag/retrieval-response-v2.schema.json"
+    ),
+    "retrieval-response-v2-missing-locator.json": (
+        "rag/retrieval-response-v2.schema.json"
+    ),
     "family-invitation-create-request.json": (
         "domain/CreateFamilyInvitationRequestV1.json"
     ),

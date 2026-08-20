@@ -4,11 +4,11 @@ from typing import Protocol
 
 from agent_runtime.common.enums import ActorRole, RiskLevel, SafetyDecision
 from agent_runtime.contracts.models import AgentRunRequest, SafetyEvaluation
-from agent_runtime.rag.fallback import failed_response
+from agent_runtime.rag.fallback import failed_response_v2
 from agent_runtime.rag.models import (
     QueryProfile,
-    RetrievalRequestV1,
-    RetrievalResponseV1,
+    RetrievalRequestV2,
+    RetrievalResponseV2,
 )
 
 RAG_PURPOSES: dict[str, QueryProfile] = {
@@ -25,7 +25,7 @@ AUDIENCE_BY_ROLE = {
 
 
 class RagRetriever(Protocol):
-    async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1: ...
+    async def retrieve_v2(self, request: RetrievalRequestV2) -> RetrievalResponseV2: ...
 
 
 def is_rag_request(request: AgentRunRequest) -> bool:
@@ -34,11 +34,11 @@ def is_rag_request(request: AgentRunRequest) -> bool:
     return _normalized_purpose(request.purpose) in RAG_PURPOSES
 
 
-def build_retrieval_request(request: AgentRunRequest) -> RetrievalRequestV1:
+def build_retrieval_request(request: AgentRunRequest) -> RetrievalRequestV2:
     purpose = _normalized_purpose(request.purpose)
     profile = RAG_PURPOSES[purpose]
-    return RetrievalRequestV1(
-        schema_version="1.0.0",
+    return RetrievalRequestV2(
+        schema_version="2.0.0",
         request_id=request.request_id,
         query=request.input_text,
         query_profile=profile,
@@ -52,23 +52,23 @@ def build_retrieval_request(request: AgentRunRequest) -> RetrievalRequestV1:
 async def retrieve_for_agent(
     request: AgentRunRequest,
     retriever: RagRetriever | None,
-) -> RetrievalResponseV1:
+) -> RetrievalResponseV2:
     """Return a sanitized FAILED outcome for missing or faulty retrieval adapters."""
 
     if retriever is None:
-        return failed_response(request.request_id)
+        return failed_response_v2(request.request_id)
     try:
         retrieval_request = build_retrieval_request(request)
-        response = await retriever.retrieve(retrieval_request)
+        response = await retriever.retrieve_v2(retrieval_request)
         if response.request_id != request.request_id:
-            return failed_response(request.request_id)
+            return failed_response_v2(request.request_id)
         return response
     except Exception:
         # Do not expose provider errors or the elder's query in the Agent reply.
-        return failed_response(request.request_id)
+        return failed_response_v2(request.request_id)
 
 
-def retrieval_fallback_safety(response: RetrievalResponseV1) -> SafetyEvaluation:
+def retrieval_fallback_safety(response: RetrievalResponseV2) -> SafetyEvaluation:
     """Represent a no-guess retrieval outcome using the existing Agent wire contract."""
 
     if response.status == "SUCCESS" or response.fallback_message is None:

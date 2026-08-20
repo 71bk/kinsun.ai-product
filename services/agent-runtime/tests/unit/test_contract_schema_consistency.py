@@ -17,7 +17,13 @@ from agent_runtime.contracts.models import (
     MemoryCandidateProposal,
     SafetyEvaluation,
 )
-from agent_runtime.rag.models import RetrievalRequestV1, RetrievalResponseV1
+from agent_runtime.rag.models import (
+    RetrievalRequestV1,
+    RetrievalRequestV2,
+    RetrievalResponseV1,
+    RetrievalResponseV2,
+    RetrievalResultV2,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_DIR = REPO_ROOT / "contracts" / "schemas"
@@ -107,6 +113,8 @@ def test_valid_examples_pass_pydantic_models(example_name, model):
     [
         ("retrieval-request.json", RetrievalRequestV1),
         ("retrieval-response.json", RetrievalResponseV1),
+        ("retrieval-request-v2.json", RetrievalRequestV2),
+        ("retrieval-response-v2.json", RetrievalResponseV2),
     ],
 )
 def test_valid_rag_examples_pass_pydantic_models(example_name, model):
@@ -118,6 +126,8 @@ def test_valid_rag_examples_pass_pydantic_models(example_name, model):
     [
         ("retrieval-request-top-k-ten.json", RetrievalRequestV1),
         ("retrieval-response-missing-source-url.json", RetrievalResponseV1),
+        ("retrieval-response-v2-storage-url.json", RetrievalResponseV2),
+        ("retrieval-response-v2-missing-locator.json", RetrievalResponseV2),
     ],
 )
 def test_invalid_rag_examples_are_rejected_by_pydantic(example_name, model):
@@ -238,11 +248,21 @@ def test_handoff_envelope_model_output_matches_schema():
         (HandoffEnvelope, "agent/HandoffEnvelopeV1.json"),
         (RetrievalRequestV1, "rag/retrieval-request.schema.json"),
         (RetrievalResponseV1, "rag/retrieval-response.schema.json"),
+        (RetrievalRequestV2, "rag/retrieval-request-v2.schema.json"),
+        (RetrievalResponseV2, "rag/retrieval-response-v2.schema.json"),
     ],
 )
 def test_model_fields_match_schema_properties(model, schema_name):
     schema = load_json(SCHEMA_DIR / schema_name)
     assert set(model.model_fields) == set(schema["properties"])
+
+
+def test_retrieval_result_v2_fields_match_closed_schema_definition() -> None:
+    schema = load_json(SCHEMA_DIR / "rag" / "retrieval-response-v2.schema.json")
+
+    assert set(RetrievalResultV2.model_fields) == set(
+        schema["$defs"]["RetrievalResultV2"]["properties"]
+    )
 
 
 def test_schema_version_const_is_enforced_by_model():

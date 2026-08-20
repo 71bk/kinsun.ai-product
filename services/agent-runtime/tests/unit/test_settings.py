@@ -22,3 +22,9 @@ def test_env_files_are_absolute_and_service_scoped_last() -> None:
     # pydantic-settings gives the last file priority, so the service keeps the
     # final say over anything shared at the repository root.
     assert env_files[-1] == AGENT_RUNTIME_ENV_FILE
+
+
+def test_needs_review_citation_override_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS is False

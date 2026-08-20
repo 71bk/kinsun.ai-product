@@ -176,14 +176,19 @@ Memory Candidate。Runtime 不直接寫 Domain DB。
 換成安全訊息，長者仍然收到回覆。Safety Evaluator 目前是 deterministic 關鍵字規則
 （停藥、改藥、診斷等）。
 
-RAG（`POST /api/v1/rag/retrievals`）是 Bedrock query embedding ＋ OpenSearch Hybrid
-Search adapter。只有 `general_information`／`legal_reference` purpose 的回合會檢索，
+RAG 保留 `POST /api/v1/rag/retrievals` 相容路徑，Agent 內部改用
+`POST /api/v2/rag/retrievals` 的完整治理 citation contract。底層仍是 Bedrock query
+embedding ＋ OpenSearch Hybrid Search adapter。只有 `general_information`／
+`legal_reference` purpose 的回合會檢索，
 成功時 3～5 個帶引用的 chunk 進入 Context Manifest，查無資料時**不呼叫模型猜測**。
 治理 gate：Allowlist 尚未簽署，Human Review 未完成。僅在 staging 明確設定
 `RAG_REQUIRE_OWNER_SIGNATURE=false` 才可用 unsigned development override；即使啟用，
 外部 `RAG_ALLOWLIST_EXPECTED_SHA256` 精確比對與來源／chunk／數量驗證仍是不可略過的
 hard gate，receipt 與 log 必須標記 `governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、
 `production_approved=false`。Production 需正式簽署並明確設定 `RAG_PRODUCTION_ENABLED=true`。
+V2 另需明確設定 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 才會讓 staging 讀取
+`needs_review` citation；這不會授予 production approval。目前尚未執行 V2 OpenSearch
+reindex 或 alias cutover。
 
 回應與 core-api 共用 envelope（`{"data","meta"}` / `{"error"}`），見
 [ADR 0005](docs/adr/0005-agent-runtime-api-conventions.md)。範圍見
