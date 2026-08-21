@@ -89,20 +89,21 @@ runtime origin.
 ### RagChunkV2 local metadata candidate
 
 The metadata-only V2 workflow is separate from the six-step AWS ingestion
-sequence. It freezes the current V1 bytes, writes an immutable local candidate,
-and validates all 17 sources and 726 chunks against the strict, separately
-versioned `rag-chunk-v2.1.schema.json` contract:
+sequence. It freezes the current repository inputs and validates the immutable
+17-source, 726-chunk local candidate against the strict, separately versioned
+`rag-chunk-v2.1.schema.json` contract:
 
 ```powershell
 uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py preflight
 uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py evidence
-uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py build
 uv run --project services/rag-ingestion python scripts/rag/validate_v2_artifacts.py
 ```
 
-Preflight, evidence, and build refuse to overwrite their versioned outputs.
+Preflight, evidence, and deterministic rebuilds refuse to overwrite their
+versioned outputs.
 The evidence runner binds the full-suite JUnit report to the frozen validation
-inventory and atomically records pytest's exact subprocess argv and exit code.
+inventory, writes a standalone evidence summary, and atomically records
+pytest's exact subprocess argv and exit code.
 The active `candidates/v002` package preserves V1 `text` and `embedding_text`
 UTF-8 bytes, keeps every row in `needs_review`, and never calls Bedrock,
 OpenSearch, cloud storage, or a production service. See `data/rag-v2/README.md`

@@ -217,13 +217,13 @@ def test_execution_receipt_is_atomic_immutable_and_deeply_validated(tmp_path: Pa
     inventory_file_digest = "b" * 64
     prior_digest = "c" * 64
     prior_file_digest = "d" * 64
-    inventory_path = "data/rag-v2/preflight/v003/validation-input-inventory.json"
-    prior_path = "data/rag-v2/preflight/v003/prior-artifact-lock.json"
+    inventory_path = "data/rag-v2/preflight/v005/validation-input-inventory.json"
+    prior_path = "data/rag-v2/preflight/v005/prior-artifact-lock.json"
     receipt = {
         "schema_version": "1.0.0",
         "artifact_version": ARTIFACT_VERSION,
         "preflight_version": PREFLIGHT_VERSION,
-        "evidence_version": "v003",
+        "evidence_version": "v005",
         "status": "PASS",
         "display_command": (
             "python -m pytest services/rag-ingestion/tests --junitxml="
@@ -238,7 +238,7 @@ def test_execution_receipt_is_atomic_immutable_and_deeply_validated(tmp_path: Pa
             + str(
                 (
                     REPOSITORY_ROOT
-                    / "data/rag-v2/.pending/evidence-v003-test/v003"
+                    / "data/rag-v2/.pending/evidence-v005-test/v005"
                     / TEST_EVIDENCE_PATH.name
                 ).resolve()
             ),
@@ -341,13 +341,14 @@ def test_evidence_runner_atomically_publishes_complete_passing_evidence(
     monkeypatch.setattr(v2_artifacts.subprocess, "run", fake_run)
     result = v2_artifacts.run_test_evidence(root, output_root)
 
-    evidence_dir = output_root / "evidence" / "v003"
+    evidence_dir = output_root / "evidence" / "v005"
     assert result["status"] == "PASS"
     assert result["exit_code"] == 0
     assert calls["pytest"] == 1
     assert {path.name for path in evidence_dir.iterdir()} == {
         "pytest-rag-ingestion.xml",
         "pytest-execution-receipt.json",
+        "test-evidence.json",
     }
     receipt = json.loads(
         (evidence_dir / "pytest-execution-receipt.json").read_text(encoding="utf-8")
@@ -382,7 +383,7 @@ def test_evidence_runner_process_failure_never_publishes_active_evidence(
     monkeypatch.setattr(v2_artifacts.subprocess, "run", fake_run)
     with pytest.raises(V2ArtifactError, match="nothing was published"):
         v2_artifacts.run_test_evidence(root, output_root)
-    assert not (output_root / "evidence" / "v003").exists()
+    assert not (output_root / "evidence" / "v005").exists()
     assert not list((output_root / ".pending").iterdir())
 
 
@@ -401,7 +402,7 @@ def test_evidence_runner_detects_inventory_change_during_execution(
     monkeypatch.setattr(v2_artifacts.subprocess, "run", fake_run)
     with pytest.raises(V2ArtifactError, match="nothing was published"):
         v2_artifacts.run_test_evidence(root, output_root)
-    assert not (output_root / "evidence" / "v003").exists()
+    assert not (output_root / "evidence" / "v005").exists()
     assert not list((output_root / ".pending").iterdir())
 
 
@@ -425,7 +426,7 @@ def test_evidence_runner_rejects_missing_or_malformed_junit(
     expected_message = "nothing was published" if junit_mode == "missing" else "unreadable"
     with pytest.raises(V2ArtifactError, match=expected_message):
         v2_artifacts.run_test_evidence(root, output_root)
-    assert not (output_root / "evidence" / "v003").exists()
+    assert not (output_root / "evidence" / "v005").exists()
     assert not list((output_root / ".pending").iterdir())
 
 
@@ -471,7 +472,7 @@ def test_evidence_runner_rejects_self_consistent_junit_semantic_bypasses(
     monkeypatch.setattr(v2_artifacts.subprocess, "run", fake_run)
     with pytest.raises(V2ArtifactError, match=expected_message):
         v2_artifacts.run_test_evidence(root, output_root)
-    assert not (output_root / "evidence" / "v003").exists()
+    assert not (output_root / "evidence" / "v005").exists()
     assert not list((output_root / ".pending").iterdir())
 
 
@@ -513,7 +514,7 @@ def test_evidence_and_build_reject_noncanonical_preflight_bytes(
             v2_artifacts.run_test_evidence(root, output_root)
         else:
             build_v2_artifacts(root, output_root)
-    assert not (output_root / "evidence" / "v003").exists()
+    assert not (output_root / "evidence" / "v005").exists()
     assert not (output_root / "candidates" / ARTIFACT_VERSION).exists()
 
 

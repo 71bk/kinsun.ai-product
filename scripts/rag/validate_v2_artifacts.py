@@ -84,8 +84,9 @@ _TEST_EVIDENCE_FIELDS = frozenset(
     }
 )
 _ACTIVE_ARTIFACT_VERSION = "v002"
-_ACTIVE_PREFLIGHT_VERSION = "v003"
-_ACTIVE_EVIDENCE_VERSION = "v003"
+_ACTIVE_PREFLIGHT_VERSION = "v005"
+_ACTIVE_EVIDENCE_VERSION = "v005"
+_ACTIVE_TEST_EVIDENCE_FILENAME = "test-evidence.json"
 _PRIOR_ALLOWLIST_PATH = Path(
     "data/rag-manifest/AI_Reviewed_Embedding_Staging_Allowlist_v002.json"
 )
@@ -115,6 +116,8 @@ _VALIDATION_FIXED_PATHS = (
     Path("data/rag-v2/README.md"),
     Path("data/rag-v2/evidence/README.md"),
     Path("contracts/schemas/rag/rag-chunk-v2.1.schema.json"),
+    Path("contracts/schemas/rag/retrieval-request-v2.schema.json"),
+    Path("contracts/schemas/rag/retrieval-response-v2.schema.json"),
 )
 
 
@@ -325,17 +328,44 @@ def validate_candidate(
         candidate_version=candidate_version,
         records_by_id=records_by_id,
     )
+    prior_artifact_paths = {
+        record["provenance"]["prior_artifact_path"] for record in records
+    }
     _validate_test_evidence(
         candidate,
         candidate_version=candidate_version,
         repository_root=repository_root,
         require_test_evidence=require_test_evidence,
-        prior_artifact_paths={
-            record["provenance"]["prior_artifact_path"] for record in records
-        },
+        prior_artifact_paths=prior_artifact_paths,
+        require_current_inputs=False,
     )
     _validate_checksums(candidate)
     if require_test_evidence and candidate_version == _ACTIVE_ARTIFACT_VERSION:
+        candidate_root = candidate.resolve()
+        if repository_root not in candidate_root.parents:
+            raise CandidateValidationError(
+                "formal validation requires the canonical repository candidate"
+            )
+        locked_candidate_paths = {
+            path.relative_to(repository_root).as_posix()
+            for path in candidate.rglob("*")
+            if path.is_file()
+        }
+        active_evidence_dir = (
+            repository_root / "data" / "rag-v2" / "evidence" / _ACTIVE_EVIDENCE_VERSION
+        )
+        _validate_test_evidence(
+            candidate,
+            candidate_version=candidate_version,
+            repository_root=repository_root,
+            require_test_evidence=True,
+            prior_artifact_paths=prior_artifact_paths | locked_candidate_paths,
+            evidence_path=active_evidence_dir / _ACTIVE_TEST_EVIDENCE_FILENAME,
+            copied_junit_path=active_evidence_dir / "pytest-rag-ingestion.xml",
+            copied_receipt_path=(active_evidence_dir / "pytest-execution-receipt.json"),
+            validate_candidate_report=False,
+            require_current_inputs=True,
+        )
         _validate_deterministic_rebuild(candidate, repository_root=repository_root)
 
     if any(
@@ -1132,9 +1162,17 @@ def _validate_test_evidence(
     repository_root: Path,
     require_test_evidence: bool,
     prior_artifact_paths: set[str] | None = None,
+    evidence_path: Path | None = None,
+    copied_junit_path: Path | None = None,
+    copied_receipt_path: Path | None = None,
+    validate_candidate_report: bool = True,
+    require_current_inputs: bool | None = None,
 ) -> None:
+    if require_current_inputs is None:
+        require_current_inputs = require_test_evidence
     evidence = _read_json(
-        candidate / "reports" / f"test-evidence-{candidate_version}.json"
+        evidence_path
+        or candidate / "reports" / f"test-evidence-{candidate_version}.json"
     )
     status = evidence.get("status")
     if status == "NOT_REQUIRED":
@@ -1166,11 +1204,21 @@ def _validate_test_evidence(
         evidence, "preflight_version", "test evidence"
     )
     evidence_version = _required_version(evidence, "evidence_version", "test evidence")
-    if candidate_version == "v002" and (
-        preflight_version != "v003" or evidence_version != "v003"
+    allowed_v002_evidence = {
+        ("v003", "v003"),
+        (_ACTIVE_PREFLIGHT_VERSION, _ACTIVE_EVIDENCE_VERSION),
+    }
+    if (
+        candidate_version == "v002"
+        and (
+            preflight_version,
+            evidence_version,
+        )
+        not in allowed_v002_evidence
     ):
         raise CandidateValidationError(
-            "v002 candidate requires preflight v003 and evidence v003"
+            "v002 candidate requires its immutable v003 evidence or the active "
+            "formal evidence"
         )
     expected_evidence_path = (
         f"data/rag-v2/evidence/{evidence_version}/pytest-rag-ingestion.xml"
@@ -1217,6 +1265,7 @@ def _validate_test_evidence(
         expected_kind="validation_input_inventory",
         expected_file_sha256=inventory_file_sha256,
         expected_inventory_sha256=inventory_digest,
+        require_current_inputs=require_current_inputs,
     )
     locked_paths = _validate_inventory_evidence(
         repository_root / Path(*PurePosixPath(expected_lock_path).parts),
@@ -1225,32 +1274,34 @@ def _validate_test_evidence(
         expected_kind="prior_artifact_immutable_lock",
         expected_file_sha256=prior_file_sha256,
         expected_inventory_sha256=prior_digest,
+        require_current_inputs=require_current_inputs,
     )
     if prior_artifact_paths is not None and not prior_artifact_paths <= locked_paths:
         raise CandidateValidationError(
             "prior-artifact lock does not cover every candidate provenance path"
         )
 
-    validation_report = _read_json(
-        candidate / "reports" / f"validation-report-{candidate_version}.json"
-    )
-    expected_report_values = {
-        "artifact_version": candidate_version,
-        "preflight_version": preflight_version,
-        "status": "PASS",
-        "fail_count": 0,
-        "validation_input_inventory_sha256": inventory_digest,
-        "prior_artifact_lock_sha256": prior_digest,
-        "production_approved": False,
-    }
-    for field, value in expected_report_values.items():
-        if validation_report.get(field) != value:
-            raise CandidateValidationError(
-                f"validation report {field} does not match test/preflight evidence"
-            )
+    if validate_candidate_report:
+        validation_report = _read_json(
+            candidate / "reports" / f"validation-report-{candidate_version}.json"
+        )
+        expected_report_values = {
+            "artifact_version": candidate_version,
+            "preflight_version": preflight_version,
+            "status": "PASS",
+            "fail_count": 0,
+            "validation_input_inventory_sha256": inventory_digest,
+            "prior_artifact_lock_sha256": prior_digest,
+            "production_approved": False,
+        }
+        for field, value in expected_report_values.items():
+            if validation_report.get(field) != value:
+                raise CandidateValidationError(
+                    f"validation report {field} does not match test/preflight evidence"
+                )
 
     evidence_sha256 = _required_sha256(evidence, "evidence_sha256", "test evidence")
-    copied_junit = (
+    copied_junit = copied_junit_path or (
         candidate / "reports" / f"pytest-rag-ingestion-{candidate_version}.xml"
     )
     active_junit = repository_root / Path(*PurePosixPath(expected_evidence_path).parts)
@@ -1276,6 +1327,7 @@ def _validate_test_evidence(
         prior_digest=prior_digest,
         prior_path=expected_lock_path,
         prior_file_sha256=prior_file_sha256,
+        copied_path_override=copied_receipt_path,
     )
     if evidence.get("command") != execution_receipt["display_command"]:
         raise CandidateValidationError(
@@ -1328,7 +1380,7 @@ def _validate_test_evidence(
         raise CandidateValidationError("test execution time does not match JUnit")
     if evidence.get("production_approved") is not False:
         raise CandidateValidationError("test evidence grants production approval")
-    if require_test_evidence:
+    if require_current_inputs:
         collected = _collect_test_node_evidence(repository_root)
         expected_collected_fields = {
             "collected_test_node_hash_mode": _COLLECTED_TEST_NODE_HASH_MODE,
@@ -1387,6 +1439,7 @@ def _validate_execution_receipt(
     prior_digest: str,
     prior_path: str,
     prior_file_sha256: str,
+    copied_path_override: Path | None = None,
 ) -> dict[str, Any]:
     expected_active_path = (
         f"data/rag-v2/evidence/{evidence_version}/pytest-execution-receipt.json"
@@ -1399,7 +1452,7 @@ def _validate_execution_receipt(
         "test evidence",
     )
     active_path = repository_root / Path(*PurePosixPath(expected_active_path).parts)
-    copied_path = (
+    copied_path = copied_path_override or (
         candidate / "reports" / f"pytest-execution-receipt-{candidate_version}.json"
     )
     _raw_lf_bytes(active_path)
@@ -1532,6 +1585,7 @@ def _validate_inventory_evidence(
     expected_kind: str,
     expected_file_sha256: str,
     expected_inventory_sha256: str,
+    require_current_inputs: bool = True,
 ) -> set[str]:
     _raw_lf_bytes(path)
     if _sha256_file(path) != expected_file_sha256:
@@ -1571,19 +1625,37 @@ def _validate_inventory_evidence(
         pure_path = PurePosixPath(relative_path)
         if pure_path.is_absolute() or ".." in pure_path.parts:
             raise CandidateValidationError(f"unsafe inventory path: {relative_path}")
-        current_path = (root / Path(*pure_path.parts)).resolve()
-        if root not in current_path.parents or not current_path.is_file():
+        if (
+            type(entry.get("size_bytes")) is not int
+            or entry["size_bytes"] < 0
+            or not isinstance(entry.get("sha256"), str)
+            or _SHA256_PATTERN.fullmatch(entry["sha256"]) is None
+        ):
             raise CandidateValidationError(
-                f"inventory path is unavailable: {relative_path}"
+                f"{expected_kind} entry metadata is invalid: {relative_path}"
             )
-        raw_bytes = _raw_lf_bytes(current_path)
-        if entry.get("size_bytes") != len(raw_bytes):
-            raise CandidateValidationError(f"inventory size mismatch: {relative_path}")
-        if entry.get("sha256") != hashlib.sha256(raw_bytes).hexdigest():
-            raise CandidateValidationError(
-                f"inventory SHA-256 mismatch: {relative_path}"
-            )
-    expected_paths = _expected_inventory_paths(root, expected_kind)
+        if require_current_inputs:
+            current_path = (root / Path(*pure_path.parts)).resolve()
+            if root not in current_path.parents or not current_path.is_file():
+                raise CandidateValidationError(
+                    f"inventory path is unavailable: {relative_path}"
+                )
+            raw_bytes = _raw_lf_bytes(current_path)
+            if entry.get("size_bytes") != len(raw_bytes):
+                raise CandidateValidationError(
+                    f"inventory size mismatch: {relative_path}"
+                )
+            if entry.get("sha256") != hashlib.sha256(raw_bytes).hexdigest():
+                raise CandidateValidationError(
+                    f"inventory SHA-256 mismatch: {relative_path}"
+                )
+    if not require_current_inputs:
+        return seen_paths
+    expected_paths = _expected_inventory_paths(
+        root,
+        expected_kind,
+        inventory_version=expected_version,
+    )
     if seen_paths != expected_paths:
         missing = sorted(expected_paths - seen_paths)
         unexpected = sorted(seen_paths - expected_paths)
@@ -1619,24 +1691,40 @@ def _validate_inventory_evidence(
         "entries": current_entries,
     }
     if expected_kind == "prior_artifact_immutable_lock":
-        expected_document["scope"] = (
-            "prior V1 formal inputs and every non-active RagV2 candidate, preflight, "
-            "and evidence file"
-        )
-        expected_document["active_exclusions"] = [
-            {
-                "path": f"data/rag-v2/candidates/{_ACTIVE_ARTIFACT_VERSION}",
-                "reason": "active successor candidate; excluded to avoid self-reference",
-            },
-            {
-                "path": f"data/rag-v2/preflight/{_ACTIVE_PREFLIGHT_VERSION}",
-                "reason": "active preflight; excluded to avoid self-reference",
-            },
-            {
-                "path": f"data/rag-v2/evidence/{_ACTIVE_EVIDENCE_VERSION}",
-                "reason": "active test evidence; bound separately after preflight",
-            },
-        ]
+        if expected_version == "v003":
+            expected_document["scope"] = (
+                "prior V1 formal inputs and every non-active RagV2 candidate, "
+                "preflight, and evidence file"
+            )
+            expected_document["active_exclusions"] = [
+                {
+                    "path": f"data/rag-v2/candidates/{_ACTIVE_ARTIFACT_VERSION}",
+                    "reason": "active successor candidate; excluded to avoid self-reference",
+                },
+                {
+                    "path": "data/rag-v2/preflight/v003",
+                    "reason": "active preflight; excluded to avoid self-reference",
+                },
+                {
+                    "path": "data/rag-v2/evidence/v003",
+                    "reason": "active test evidence; bound separately after preflight",
+                },
+            ]
+        else:
+            expected_document["scope"] = (
+                "prior V1 formal inputs, every RagV2 candidate, and every non-active "
+                "RagV2 preflight and evidence file"
+            )
+            expected_document["active_exclusions"] = [
+                {
+                    "path": f"data/rag-v2/preflight/{expected_version}",
+                    "reason": "active preflight; excluded to avoid self-reference",
+                },
+                {
+                    "path": f"data/rag-v2/evidence/{expected_version}",
+                    "reason": "active test evidence; bound separately after preflight",
+                },
+            ]
     if document != expected_document:
         raise CandidateValidationError(
             f"{expected_kind} document differs from the current deterministic inventory"
@@ -1658,7 +1746,12 @@ def _validate_inventory_evidence(
     return seen_paths
 
 
-def _expected_inventory_paths(repository_root: Path, kind: str) -> set[str]:
+def _expected_inventory_paths(
+    repository_root: Path,
+    kind: str,
+    *,
+    inventory_version: str | None = None,
+) -> set[str]:
     """Rebuild the exact path set used by the active deterministic builder."""
 
     root = repository_root.resolve()
@@ -1690,10 +1783,12 @@ def _expected_inventory_paths(repository_root: Path, kind: str) -> set[str]:
         path.relative_to(root)
         for path in (root / "data/rag-chunks/approved").glob("*.jsonl")
     )
+    version = inventory_version or _ACTIVE_PREFLIGHT_VERSION
+    active_candidate_version = _ACTIVE_ARTIFACT_VERSION if version == "v003" else None
     for family, active_version in (
-        ("candidates", _ACTIVE_ARTIFACT_VERSION),
-        ("preflight", _ACTIVE_PREFLIGHT_VERSION),
-        ("evidence", _ACTIVE_EVIDENCE_VERSION),
+        ("candidates", active_candidate_version),
+        ("preflight", version),
+        ("evidence", version),
     ):
         family_root = root / "data/rag-v2" / family
         if not family_root.is_dir():
@@ -1723,7 +1818,6 @@ def _validate_historical_candidate_checksums(repository_root: Path) -> None:
             version_root.is_dir()
             and version_root.name.startswith("v")
             and version_root.name[1:].isdigit()
-            and version_root.name != _ACTIVE_ARTIFACT_VERSION
         ):
             _validate_checksums(version_root)
 
@@ -2032,9 +2126,15 @@ def _validate_deterministic_rebuild(
         rebuilt = output_root / "candidates" / _ACTIVE_ARTIFACT_VERSION
         excluded = {
             "SHA256SUMS.txt",
+            # Audit-bound reports necessarily change when the frozen inventory
+            # version changes. The active prior lock validates their immutable
+            # candidate bytes; the rebuild comparison covers the chunk/content
+            # artifacts whose deterministic bytes must remain stable.
+            f"governance/enum-evidence-{_ACTIVE_ARTIFACT_VERSION}.json",
             f"reports/test-evidence-{_ACTIVE_ARTIFACT_VERSION}.json",
             f"reports/pytest-rag-ingestion-{_ACTIVE_ARTIFACT_VERSION}.xml",
             f"reports/pytest-execution-receipt-{_ACTIVE_ARTIFACT_VERSION}.json",
+            f"reports/validation-report-{_ACTIVE_ARTIFACT_VERSION}.json",
         }
         candidate_paths = {
             path.relative_to(candidate).as_posix()

@@ -32,14 +32,15 @@ from rag_ingestion.validator import ValidatedChunk, validate_chunks
 SCHEMA_VERSION = "2.1.0"
 ARTIFACT_VERSION = "v002"
 ALLOWLIST_VERSION = "v003"
-PREFLIGHT_VERSION = "v003"
-EVIDENCE_VERSION = "v003"
+PREFLIGHT_VERSION = "v005"
+EVIDENCE_VERSION = "v005"
 
 CANONICAL_TEXT_HASH_MODE = "sha256_utf8_lf_raw_bytes_v1"
 COLLECTED_TEST_NODE_HASH_MODE = "sha256_canonical_json_v1"
 PREFLIGHT_INVENTORY_FILENAME = "validation-input-inventory.json"
 PRIOR_ARTIFACT_LOCK_FILENAME = "prior-artifact-lock.json"
 TEST_EXECUTION_RECEIPT_FILENAME = "pytest-execution-receipt.json"
+TEST_EVIDENCE_SUMMARY_FILENAME = "test-evidence.json"
 
 ALLOWLIST_PATH = Path("data/rag-manifest/AI_Reviewed_Embedding_Staging_Allowlist_v002.json")
 CHUNKS_DIRECTORY = Path("data/rag-chunks/approved")
@@ -91,6 +92,8 @@ _VALIDATION_FIXED_PATHS = (
     Path("data/rag-v2/README.md"),
     Path("data/rag-v2/evidence/README.md"),
     V2_SCHEMA_PATH,
+    Path("contracts/schemas/rag/retrieval-request-v2.schema.json"),
+    Path("contracts/schemas/rag/retrieval-response-v2.schema.json"),
 )
 
 
@@ -345,7 +348,7 @@ def run_test_evidence(repository_root: Path, output_root: Path) -> dict[str, Any
         if status != "PASS":
             raise V2ArtifactError("formal pytest evidence failed; nothing was published")
 
-        _test_evidence_document(
+        test_evidence = _test_evidence_document(
             junit_path,
             execution_receipt_path=receipt_path,
             required=True,
@@ -357,6 +360,10 @@ def run_test_evidence(repository_root: Path, output_root: Path) -> dict[str, Any
             prior_artifact_lock_sha256=prior_lock["inventory_sha256"],
             prior_artifact_lock_path=prior_lock_relative_path,
             prior_artifact_lock_file_sha256=prior_lock_file_sha256,
+        )
+        _write_canonical_json(
+            temporary_evidence / TEST_EVIDENCE_SUMMARY_FILENAME,
+            test_evidence,
         )
         _assert_preflight_unchanged(
             root,
@@ -1759,7 +1766,7 @@ def _prior_lock_entries(root: Path) -> list[dict[str, Any]]:
     paths = set(_PRIOR_FORMAL_PATHS)
     paths.update(path.relative_to(root) for path in (root / CHUNKS_DIRECTORY).glob("*.jsonl"))
     for family, active_version in (
-        ("candidates", ARTIFACT_VERSION),
+        ("candidates", None),
         ("preflight", PREFLIGHT_VERSION),
         ("evidence", EVIDENCE_VERSION),
     ):
@@ -1865,14 +1872,10 @@ def _inventory_document(kind: str, entries: Sequence[dict[str, Any]]) -> dict[st
     }
     if kind == "prior_artifact_immutable_lock":
         document["scope"] = (
-            "prior V1 formal inputs and every non-active RagV2 candidate, preflight, "
-            "and evidence file"
+            "prior V1 formal inputs, every RagV2 candidate, and every non-active "
+            "RagV2 preflight and evidence file"
         )
         document["active_exclusions"] = [
-            {
-                "path": f"data/rag-v2/candidates/{ARTIFACT_VERSION}",
-                "reason": "active successor candidate; excluded to avoid self-reference",
-            },
             {
                 "path": f"data/rag-v2/preflight/{PREFLIGHT_VERSION}",
                 "reason": "active preflight; excluded to avoid self-reference",
