@@ -1,0 +1,48 @@
+{
+  "candidate_artifact_version": "v002",
+  "checks": [
+    {
+      "name": "source_assignment_count",
+      "observed": 17,
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_assignment_count",
+      "observed": 726,
+      "status": "PASS"
+    },
+    {
+      "name": "flagged_assignment_count",
+      "observed": 648,
+      "status": "PASS"
+    },
+    {
+      "name": "baseline_assignment_count",
+      "observed": 78,
+      "status": "PASS"
+    },
+    {
+      "name": "pending_human_decisions",
+      "observed": 726,
+      "status": "PASS"
+    },
+    {
+      "name": "production_approved_false",
+      "observed": 726,
+      "status": "PASS"
+    },
+    {
+      "name": "external_access_not_performed",
+      "observed": true,
+      "status": "PASS"
+    }
+  ],
+  "fail_count": 0,
+  "package_version": "v001",
+  "pass_count": 7,
+  "production_approved": false,
+  "project_owner_risk_acceptance": "NOT_SIGNED",
+  "review_completion_status": "NOT_COMPLETED",
+  "schema_version": "1.0.0",
+  "status": "PASS"
+}

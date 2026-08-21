@@ -109,6 +109,24 @@ UTF-8 bytes, keeps every row in `needs_review`, and never calls Bedrock,
 OpenSearch, cloud storage, or a production service. See `data/rag-v2/README.md`
 for the artifact boundaries and superseded evidence versions.
 
+### RagChunkV2 human-review assignment
+
+The pending-only review package covers all 726 v002 chunks across 17
+source-specific batches. It preserves the existing 648 blocker/warning rows
+and adds 78 baseline assignments; it does not infer that a row without a
+blocker has already been reviewed.
+
+```powershell
+uv run --project services/rag-ingestion python scripts/rag/build_human_review_package.py
+uv run --project services/rag-ingestion python scripts/rag/validate_human_review_package.py
+```
+
+The package records missing local source bytes and performs no external
+access. Every source/chunk decision remains pending, owner acceptance remains
+unsigned, and embedding, indexing, and Production stay blocked. Never edit a
+published review package in place; human decisions require a versioned
+successor submission.
+
 ### Staging ingestion
 
 From the repository root, run the required staging sequence:

@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v002",
+  "preflight_version": "v008",
+  "evidence_version": "v008",
+  "status": "PASS",
+  "display_command": "python -m pytest services/rag-ingestion/tests --junitxml=data/rag-v2/evidence/v008/pytest-rag-ingestion.xml",
+  "executed_argv": [
+    "D:\\Hackthon\\kinsun.ai\\services\\rag-ingestion\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "services/rag-ingestion/tests",
+    "--junitxml=D:\\Hackthon\\kinsun.ai\\data\\rag-v2\\.pending\\evidence-v008-qcfs95_i\\v008\\pytest-rag-ingestion.xml"
+  ],
+  "exit_code": 0,
+  "validation_input_inventory_sha256": "7f82778eb9e151d7389f434092b7810f896dbcdbff290dc93cf133edcfc6adfc",
+  "preflight_inventory_path": "data/rag-v2/preflight/v008/validation-input-inventory.json",
+  "preflight_inventory_file_sha256": "0bfe745f6dd2a4c1dc4e04b0c47973a6dd12e1c8469508cbaea588d3d6bbec59",
+  "prior_artifact_lock_sha256": "439f848260e9a7f1227bbfa16e9740009208e6f7e78cd5dfe70ef5bc7519bfd7",
+  "prior_artifact_lock_path": "data/rag-v2/preflight/v008/prior-artifact-lock.json",
+  "prior_artifact_lock_file_sha256": "b1a08934138a8ac0c372a6b0bfb3704d89ce1dd32acec72b38046b931534f122",
+  "junit_path": "data/rag-v2/evidence/v008/pytest-rag-ingestion.xml",
+  "junit_sha256": "98175c4f7fbf249fec892191644af4181c79733238805c0ebfc65aa1e7b115c2",
+  "started_at": "2026-08-21T17:12:28.497668+08:00",
+  "finished_at": "2026-08-21T17:13:19.000121+08:00",
+  "failure_reasons": [],
+  "production_approved": false
+}

@@ -84,8 +84,8 @@ _TEST_EVIDENCE_FIELDS = frozenset(
     }
 )
 _ACTIVE_ARTIFACT_VERSION = "v002"
-_ACTIVE_PREFLIGHT_VERSION = "v005"
-_ACTIVE_EVIDENCE_VERSION = "v005"
+_ACTIVE_PREFLIGHT_VERSION = "v008"
+_ACTIVE_EVIDENCE_VERSION = "v008"
 _ACTIVE_TEST_EVIDENCE_FILENAME = "test-evidence.json"
 _PRIOR_ALLOWLIST_PATH = Path(
     "data/rag-manifest/AI_Reviewed_Embedding_Staging_Allowlist_v002.json"
@@ -1712,8 +1712,9 @@ def _validate_inventory_evidence(
             ]
         else:
             expected_document["scope"] = (
-                "prior V1 formal inputs, every RagV2 candidate, and every non-active "
-                "RagV2 preflight and evidence file"
+                "prior V1 formal inputs, every RagV2 candidate, human-review package, "
+                "and owner acceptance submission, plus every non-active RagV2 "
+                "preflight and evidence file"
             )
             expected_document["active_exclusions"] = [
                 {
@@ -1787,6 +1788,7 @@ def _expected_inventory_paths(
     active_candidate_version = _ACTIVE_ARTIFACT_VERSION if version == "v003" else None
     for family, active_version in (
         ("candidates", active_candidate_version),
+        ("human-review", None),
         ("preflight", version),
         ("evidence", version),
     ):
@@ -1806,6 +1808,21 @@ def _expected_inventory_paths(
                 for path in version_root.rglob("*")
                 if path.is_file()
             )
+    acceptance_root = root / "data/rag-v2/human-review/acceptance"
+    if acceptance_root.is_dir():
+        for version_root in sorted(
+            acceptance_root.iterdir(), key=lambda path: path.name
+        ):
+            if (
+                version_root.is_dir()
+                and version_root.name.startswith("v")
+                and version_root.name[1:].isdigit()
+            ):
+                paths.update(
+                    path.relative_to(root)
+                    for path in version_root.rglob("*")
+                    if path.is_file()
+                )
     return {path.as_posix() for path in paths}
 
 

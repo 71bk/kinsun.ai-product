@@ -1,0 +1,49 @@
+{
+  "acceptance_scope": "INTERNAL_HUMAN_REVIEW_ONLY",
+  "acceptance_version": "v001",
+  "accepted_artifacts": {
+    "checksums_path": "data/rag-v2/human-review/v001/SHA256SUMS.txt",
+    "checksums_sha256": "011926d6e18b3fe37a87655df21ac683cec77b350f665872dd9e8b39bbe3f834",
+    "manifest_path": "data/rag-v2/human-review/v001/manifest.json",
+    "manifest_sha256": "c8317f6c28cef41bb27a70447e70968bcfc0ce0292d1ae4ca8a451fd64023b4a",
+    "package_inventory_sha256": "f0f248508222ac4e893667e27c7db19a939c457b5533b6dcdb15a7299493d756"
+  },
+  "assignment_package_version": "v001",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statement": "我是 IanHsu，授權簽署風險接受文件。",
+    "statement_sha256": "4ef9ca7be4b9e86749a4054924f4b9f9c89821ebc9ba92809be6792ae12539f2"
+  },
+  "candidate_artifact_version": "v002",
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "cryptographic_signature": null,
+    "intent": "ACCEPT_INTERNAL_HUMAN_REVIEW_RISK",
+    "signature_value": "IanHsu"
+  },
+  "embedding_status": "NOT_STARTED",
+  "external_access_performed": false,
+  "human_source_review": "NOT_COMPLETED",
+  "indexing_status": "NOT_STARTED",
+  "production_approved": false,
+  "production_status": "BLOCKED",
+  "project_owner_id": "IanHsu",
+  "review_status": "needs_review",
+  "risk_acknowledgements": {
+    "accepts_missing_local_source_files": true,
+    "accepts_unreviewed_source_risk": true,
+    "external_access_not_performed": true,
+    "pending_chunk_assignments": 726,
+    "pending_source_assignments": 17
+  },
+  "schema_version": "1.0.0",
+  "signed_at": "2026-08-21T16:53:28+08:00",
+  "signer_role": "PROJECT_OWNER",
+  "status": "SIGNED",
+  "verification_assertions": {
+    "exact_facts_verified": false,
+    "license_verified": false,
+    "source_fidelity_verified": false,
+    "source_version_verified": false
+  }
+}

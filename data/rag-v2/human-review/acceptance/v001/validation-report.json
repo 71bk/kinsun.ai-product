@@ -1,0 +1,50 @@
+{
+  "acceptance_version": "v001",
+  "assignment_package_version": "v001",
+  "candidate_artifact_version": "v002",
+  "checks": [
+    {
+      "name": "base_assignment_checksum_verified",
+      "status": "PASS"
+    },
+    {
+      "name": "base_assignment_prior_lock_matches",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit_owner_authorization_recorded",
+      "status": "PASS"
+    },
+    {
+      "name": "typed_signature_identity_matches_owner",
+      "status": "PASS"
+    },
+    {
+      "name": "acceptance_scope_internal_review_only",
+      "status": "PASS"
+    },
+    {
+      "name": "pending_human_decisions_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "verification_not_asserted",
+      "status": "PASS"
+    },
+    {
+      "name": "production_remains_blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "external_access_not_performed",
+      "status": "PASS"
+    }
+  ],
+  "fail_count": 0,
+  "pass_count": 9,
+  "production_approved": false,
+  "production_status": "BLOCKED",
+  "review_completion_status": "NOT_COMPLETED",
+  "schema_version": "1.0.0",
+  "status": "PASS"
+}

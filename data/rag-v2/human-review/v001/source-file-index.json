@@ -1,0 +1,283 @@
+{
+  "candidate_artifact_version": "v002",
+  "external_access_performed": false,
+  "local_source_file_count": 0,
+  "package_version": "v001",
+  "production_approved": false,
+  "schema_version": "1.0.0",
+  "source_count": 17,
+  "sources": [
+    {
+      "direct_source_urls": [
+        "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0070040"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [
+        "https://law.moj.gov.tw/Service/Copyright.aspx"
+      ],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "moj_long_term_care_services_act_20210609",
+      "source_number": 1,
+      "source_page_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1pFa93kCjvkL1XBNliw9lXqkmzmdHc63r/view?usp=drivesdk"
+      ]
+    },
+    {
+      "direct_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6533-70777-207.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_1966_apply_ltc",
+      "source_number": 2,
+      "source_page_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1MjM-agXNFaDdroOpQbgE0UlN_sCPU36D/view?usp=drivesdk"
+      ]
+    },
+    {
+      "direct_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "source_number": 3,
+      "source_page_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1qJEvb7LWY_WDJsv_P2KoBJbOqQRDJcmp/view?usp=drivesdk"
+      ]
+    },
+    {
+      "direct_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_family_caregiver_support_manual_appendix_202507",
+      "source_number": 4,
+      "source_page_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1_R5OlO9QScLlVKR0xrFCZHv3OW_9IrxC/view?usp=drivesdk"
+      ]
+    },
+    {
+      "direct_source_urls": [
+        "https://www.mohw.gov.tw/dl-78165-87c38eb9-6cd0-4bdc-a664-4315f9304dd7.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_high_burden_caregiver_screening_20231222",
+      "source_number": 5,
+      "source_page_urls": [],
+      "storage_urls": [
+        "https://drive.google.com/file/d/1ts8maIdc0KuyiKEMoNmDC5nluUQnClf3/view?usp=drivesdk"
+      ]
+    },
+    {
+      "direct_source_urls": [
+        "https://www.mohw.gov.tw/dl-78166-3cc0f176-f0d8-4f06-8046-b5809dd2823a.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [
+        "https://1966.gov.tw/LTC/cp-6476-70761-207.html"
+      ],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_high_burden_caregiver_referral_service_flow_20250930",
+      "source_number": 6,
+      "source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "hpa_older_adult_nutrition_manual_20230525",
+      "source_number": 7,
+      "source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/List.aspx?nodeid=170"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "source_number": 8,
+      "source_page_urls": [],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "source_number": 9,
+      "source_page_urls": [],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_home_care_service_supervisor_manual_20260529",
+      "source_number": 10,
+      "source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529",
+      "source_number": 11,
+      "source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529",
+      "source_number": 12,
+      "source_page_urls": [
+        "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=dd29b4b0c54644d788ff66b03cfb3026"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "hpa_elder_fall_prevention_tips_manual_202102",
+      "source_number": 13,
+      "source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=1193"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=160a8428997c4a60b67a1b0d3efe9848"
+      ],
+      "is_official_source": true,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "hpa_dementia_health_education_resource_manual_201610",
+      "source_number": 14,
+      "source_page_urls": [
+        "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=4381"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://backend.fetzer.org/sites/default/files/images/stories/pdf/selfmeasures/Self_Measures_for_Love_and_Compassion_Research_LONELINESS_AND_INTERPERSONAL_PROBLEMS.pdf"
+      ],
+      "is_official_source": false,
+      "license_evidence_urls": [],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "source_number": 15,
+      "source_page_urls": [],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.712251/pdf"
+      ],
+      "is_official_source": false,
+      "license_evidence_urls": [
+        "https://creativecommons.org/licenses/by/4.0/"
+      ],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "frontiers_loneliness_speech_analysis_2021",
+      "source_number": 16,
+      "source_page_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.712251/full"
+      ],
+      "storage_urls": []
+    },
+    {
+      "direct_source_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.728732/pdf"
+      ],
+      "is_official_source": false,
+      "license_evidence_urls": [
+        "https://creativecommons.org/licenses/by/4.0/"
+      ],
+      "local_source_files": [],
+      "local_source_status": "not_available",
+      "source_bytes_sha256": null,
+      "source_id": "frontiers_do_words_matter_loneliness_nlp_2021",
+      "source_number": 17,
+      "source_page_urls": [
+        "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.728732/full"
+      ],
+      "storage_urls": []
+    }
+  ]
+}

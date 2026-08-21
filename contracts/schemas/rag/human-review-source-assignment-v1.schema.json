@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/human-review-source-assignment-v1.schema.json",
+  "title": "RagHumanReviewSourceAssignmentV1",
+  "description": "Immutable source-level assignment for a human reviewer. Programs must not change the pending decision fields or grant approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_version",
+    "candidate_artifact_version",
+    "assignment_id",
+    "source_number",
+    "source_id",
+    "title",
+    "authority_level",
+    "source_type",
+    "is_official_source",
+    "review_track",
+    "chunk_count",
+    "source_versions",
+    "direct_source_urls",
+    "source_page_urls",
+    "license_evidence_urls",
+    "storage_urls",
+    "local_source_status",
+    "human_decision",
+    "production_approved"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "package_version": { "const": "v001" },
+    "candidate_artifact_version": { "const": "v002" },
+    "assignment_id": { "$ref": "#/$defs/Identifier" },
+    "source_number": { "type": "integer", "minimum": 1 },
+    "source_id": { "$ref": "#/$defs/Identifier" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "authority_level": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "source_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "is_official_source": { "type": "boolean" },
+    "review_track": { "enum": ["official_source", "research_evidence"] },
+    "chunk_count": { "type": "integer", "minimum": 1 },
+    "source_versions": { "$ref": "#/$defs/UniqueStrings" },
+    "direct_source_urls": { "$ref": "#/$defs/UniqueUris" },
+    "source_page_urls": { "$ref": "#/$defs/UniqueUris" },
+    "license_evidence_urls": { "$ref": "#/$defs/UniqueUris" },
+    "storage_urls": { "$ref": "#/$defs/UniqueUris" },
+    "local_source_status": { "const": "not_available" },
+    "human_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_status",
+        "source_comparison_status",
+        "reviewer_id",
+        "reviewed_at",
+        "evidence_references",
+        "current_status_recommendation",
+        "version_check_recommendation",
+        "license_status_recommendation",
+        "notes"
+      ],
+      "properties": {
+        "decision_status": { "const": "pending" },
+        "source_comparison_status": { "const": "not_started" },
+        "reviewer_id": { "type": "null" },
+        "reviewed_at": { "type": "null" },
+        "evidence_references": { "type": "array", "maxItems": 0 },
+        "current_status_recommendation": { "type": "null" },
+        "version_check_recommendation": { "type": "null" },
+        "license_status_recommendation": { "type": "null" },
+        "notes": { "type": "null" }
+      }
+    },
+    "production_approved": { "const": false }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "UniqueStrings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 },
+      "uniqueItems": true
+    },
+    "UniqueUris": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri", "pattern": "^https?://" },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "is_official_source": { "const": true } } },
+      "then": { "properties": { "review_track": { "const": "official_source" } } },
+      "else": { "properties": { "review_track": { "const": "research_evidence" } } }
+    }
+  ]
+}

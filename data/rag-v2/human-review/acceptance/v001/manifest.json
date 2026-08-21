@@ -1,0 +1,20 @@
+{
+  "acceptance_path": "owner-risk-acceptance.json",
+  "acceptance_scope": "INTERNAL_HUMAN_REVIEW_ONLY",
+  "acceptance_sha256": "094a1ef45bddfa923f2317d9eadc64ae596c06a465572564b72db783caee0cfe",
+  "acceptance_version": "v001",
+  "assignment_package_version": "v001",
+  "candidate_artifact_version": "v002",
+  "external_access_performed": false,
+  "pending_chunk_assignments": 726,
+  "pending_source_assignments": 17,
+  "prior_artifact_lock_sha256": "f0f248508222ac4e893667e27c7db19a939c457b5533b6dcdb15a7299493d756",
+  "production_approved": false,
+  "production_status": "BLOCKED",
+  "project_owner_id": "IanHsu",
+  "review_completion_status": "NOT_COMPLETED",
+  "schema_version": "1.0.0",
+  "signed_at": "2026-08-21T16:53:28+08:00",
+  "status": "OWNER_RISK_ACCEPTANCE_SIGNED",
+  "validation_input_inventory_sha256": "5a669646d282d8baeeb779ee86decafe1b47520cd11c4ed2fd41bc616c7f6e69"
+}

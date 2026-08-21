@@ -1,0 +1,13 @@
+{
+  "accepted_manifest_sha256": null,
+  "allowed_use": "INTERNAL_HUMAN_REVIEW_ONLY",
+  "candidate_artifact_version": "v002",
+  "human_source_review": "NOT_COMPLETED",
+  "package_version": "v001",
+  "production_approved": false,
+  "production_status": "BLOCKED",
+  "project_owner_id": null,
+  "schema_version": "1.0.0",
+  "signed_at": null,
+  "status": "NOT_SIGNED"
+}

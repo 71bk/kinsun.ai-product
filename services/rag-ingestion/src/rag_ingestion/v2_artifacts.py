@@ -32,8 +32,8 @@ from rag_ingestion.validator import ValidatedChunk, validate_chunks
 SCHEMA_VERSION = "2.1.0"
 ARTIFACT_VERSION = "v002"
 ALLOWLIST_VERSION = "v003"
-PREFLIGHT_VERSION = "v005"
-EVIDENCE_VERSION = "v005"
+PREFLIGHT_VERSION = "v008"
+EVIDENCE_VERSION = "v008"
 
 CANONICAL_TEXT_HASH_MODE = "sha256_utf8_lf_raw_bytes_v1"
 COLLECTED_TEST_NODE_HASH_MODE = "sha256_canonical_json_v1"
@@ -1767,6 +1767,7 @@ def _prior_lock_entries(root: Path) -> list[dict[str, Any]]:
     paths.update(path.relative_to(root) for path in (root / CHUNKS_DIRECTORY).glob("*.jsonl"))
     for family, active_version in (
         ("candidates", None),
+        ("human-review", None),
         ("preflight", PREFLIGHT_VERSION),
         ("evidence", EVIDENCE_VERSION),
     ):
@@ -1785,6 +1786,13 @@ def _prior_lock_entries(root: Path) -> list[dict[str, Any]]:
             paths.update(
                 path.relative_to(root) for path in version_root.rglob("*") if path.is_file()
             )
+    acceptance_root = root / "data/rag-v2/human-review/acceptance"
+    if acceptance_root.is_dir():
+        for version_root in sorted(acceptance_root.iterdir(), key=lambda path: path.name):
+            if version_root.is_dir() and _is_version_directory(version_root.name):
+                paths.update(
+                    path.relative_to(root) for path in version_root.rglob("*") if path.is_file()
+                )
     return _file_entries(root, paths)
 
 
@@ -1872,8 +1880,9 @@ def _inventory_document(kind: str, entries: Sequence[dict[str, Any]]) -> dict[st
     }
     if kind == "prior_artifact_immutable_lock":
         document["scope"] = (
-            "prior V1 formal inputs, every RagV2 candidate, and every non-active "
-            "RagV2 preflight and evidence file"
+            "prior V1 formal inputs, every RagV2 candidate, human-review package, and "
+            "owner acceptance submission, plus every non-active RagV2 preflight and "
+            "evidence file"
         )
         document["active_exclusions"] = [
             {
