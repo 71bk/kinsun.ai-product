@@ -1,6 +1,6 @@
 # AGENTS.md
 
-- 更新日期：2026-08-17
+- 更新日期：2026-08-24
 - 校準基準：`main` at `a2af73e`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
@@ -32,8 +32,13 @@
     開頭的 Vertex AI Express key 必須走 Vertex AI，其他 key 走 Gemini Developer API；兩者不得
     混用 endpoint。provider 設定錯誤或呼叫失敗時都不會 fallback 到 mock。這些 provider 都可使用
     受控 Context／RAG chunk 生成回答，但除本機 synthetic smoke 外尚無真實
-    staging／production 連線證據。staging-only RAG adapter 可呼叫
-    Bedrock embedding／OpenSearch，不接 Neptune，不得描述成 production runtime
+    staging／production 連線證據。RAG Retriever 已以不含 executable DSL 的 provider-neutral
+    `SearchBackend`／bounded plan 隔離搜尋實作；query embedding 也已由 provider-neutral
+    `EmbeddingProvider` 隔離，現有 Bedrock 與 opt-in Google query adapters。Core 已有本機驗證的
+    `rag_public` PostgreSQL／pgvector migration 與 17 sources／726 candidate chunks 的 deterministic、
+    idempotent staging projection importer；尚未套用共享／遠端資料庫，也尚未建立任何 document
+    embedding。Google document embedding／corpus rebuild 與 PostgreSQL search backend 尚未實作；
+    目前唯一 search runtime 組裝仍是 OpenSearch，不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
     agent-runtime 的 **staging-only** RAG 路徑，尚未對真實 AWS／OpenSearch 環境驗證，
@@ -44,7 +49,7 @@
     [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 的 direct Google／LINE
     OIDC＋Core-owned opaque Session application flow 已實作：BFF start／callback／onboarding routes、Core
     verifier／handoff／pending identity、App Session authenticator／logout，以及 Google→LINE explicit
-    linking 都已存在。[ADR 0015](docs/adr/0015-kinsun-email-password-authentication.md) 的 Kinsun-owned
+    linking 都已存在。[ADR 0015](docs/adr/0015-email-password-primary-authenticator.md) 的 Kinsun-owned
     Email＋Password primary flow 也已實作：credential 綁 Actor、password 使用 Argon2id、verification／
     login 採 bounded attempt 與 lockout，Browser 只經 private BFF→Core boundary 換取 Core App Session。
     目前寄信只有 synthetic development delivery；production email delivery、password reset／change、MFA 與

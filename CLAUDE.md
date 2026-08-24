@@ -69,8 +69,13 @@
 - 預設與 staging application template 使用 mock。文字生成可明確選 `bedrock`、`gemini` 或
   `openai-compatible`。原生 `gemini` provider 使用 Google Gen AI SDK，`AQ.` 開頭的 Vertex AI
   Express key 走 Vertex AI，其他 key 走 Gemini Developer API；`openai-compatible` 只依 runtime
-  URL／model／optional Bearer key。provider 錯誤時都不會 fallback 到 mock。真實
-  Bedrock／OpenSearch 仍未驗證，且 RAG retrieval 尚未 provider-neutral 化。
+  URL／model／optional Bearer key。provider 錯誤時都不會 fallback 到 mock。RAG Retriever 已改由
+  provider-neutral `SearchBackend` 接收不含 executable DSL 的 bounded plan；query embedding 由
+  `EmbeddingProvider` 隔離，已有 Bedrock 與 opt-in Google query adapters。Core 已新增並以本機
+  pgvector integration tests 驗證 `rag_public` schema 與 17 sources／726 candidate chunks 的
+  deterministic、idempotent staging projection importer；未套用共享／遠端資料庫，embedding rows
+  仍為 0。Google document embedding／corpus rebuild 與 PostgreSQL hybrid backend 仍未實作，現行
+  唯一 search backend 仍是未經真實環境驗證的 OpenSearch。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
