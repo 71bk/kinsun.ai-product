@@ -1,0 +1,11 @@
+schema_version: '1.0.0'
+embedding:
+  provider: google
+  model_id: gemini-embedding-001
+  model_id_env: GEMINI_EMBEDDING_MODEL_ID
+  dimension: 1024
+  dimension_env: GEMINI_EMBEDDING_DIMENSION
+  document_input_type: RETRIEVAL_DOCUMENT
+  query_input_type: RETRIEVAL_QUERY
+  batch_size: 96
+  truncate: NONE

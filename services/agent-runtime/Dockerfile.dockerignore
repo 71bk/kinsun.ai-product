@@ -1,4 +1,4 @@
-# This Dockerfile builds from the repository root so the four versioned,
+# This Dockerfile builds from the repository root so the versioned,
 # non-secret RAG configuration files can be included. Everything else is
 # excluded before the context reaches the Docker daemon.
 **
@@ -11,6 +11,7 @@
 !config/
 !config/rag/
 !config/rag/embedding.yaml
+!config/rag/embedding-google.yaml
 !config/rag/opensearch-index-v1.json
 !config/rag/hybrid-natural-language.json
 !config/rag/hybrid-legal.json

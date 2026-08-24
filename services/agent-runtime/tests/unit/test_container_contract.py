@@ -38,6 +38,7 @@ def test_docker_context_is_an_explicit_allowlist() -> None:
         "!config/",
         "!config/rag/",
         "!config/rag/embedding.yaml",
+        "!config/rag/embedding-google.yaml",
         "!config/rag/opensearch-index-v1.json",
         "!config/rag/hybrid-natural-language.json",
         "!config/rag/hybrid-legal.json",
@@ -58,6 +59,7 @@ def test_runtime_image_is_non_root_and_safe_by_default() -> None:
     assert "data/rag" not in dockerfile
     for config_name in (
         "embedding.yaml",
+        "embedding-google.yaml",
         "opensearch-index-v1.json",
         "hybrid-natural-language.json",
         "hybrid-legal.json",

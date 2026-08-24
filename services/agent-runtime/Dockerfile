@@ -44,6 +44,7 @@ COPY --from=dependencies --chown=10001:10001 /opt/venv /opt/venv
 COPY --chown=10001:10001 services/agent-runtime/src ./src
 COPY --chown=10001:10001 \
     config/rag/embedding.yaml \
+    config/rag/embedding-google.yaml \
     config/rag/opensearch-index-v1.json \
     config/rag/hybrid-natural-language.json \
     config/rag/hybrid-legal.json \

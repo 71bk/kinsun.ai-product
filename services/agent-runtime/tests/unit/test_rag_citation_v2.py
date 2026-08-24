@@ -24,12 +24,17 @@ class FakeQueryEmbedder:
     async def embed_query(self, text: str) -> list[float]:
         return [0.01] * self.dimension
 
+    async def aclose(self) -> None:
+        return None
+
 
 class FakeOpenSearchTransport:
     def __init__(self, hits: list[dict[str, object]]) -> None:
         self.hits = hits
+        self.kwargs: dict[str, object] | None = None
 
     def search(self, **kwargs: object) -> dict[str, object]:
+        self.kwargs = kwargs
         return {"hits": {"hits": self.hits}}
 
 
@@ -46,23 +51,25 @@ def make_profile(name: str) -> HybridProfileSettings:
     )
 
 
-def make_search() -> HybridSearch:
-    return HybridSearch(
-        HybridSearchSettings(
-            index_alias="rag-staging-current",
-            natural_language=make_profile("natural_language"),
-            legal=HybridProfileSettings(
-                profile="legal",
-                search_pipeline="pipeline-legal",
-                bm25_weight=0.65,
-                vector_weight=0.35,
-                vector_min_score=0.7,
-                top_k=5,
-                agent_chunk_min=3,
-                agent_chunk_max=5,
-            ),
-        )
+def make_search_settings() -> HybridSearchSettings:
+    return HybridSearchSettings(
+        index_alias="rag-staging-current",
+        natural_language=make_profile("natural_language"),
+        legal=HybridProfileSettings(
+            profile="legal",
+            search_pipeline="pipeline-legal",
+            bm25_weight=0.65,
+            vector_weight=0.35,
+            vector_min_score=0.7,
+            top_k=5,
+            agent_chunk_min=3,
+            agent_chunk_max=5,
+        ),
     )
+
+
+def make_search() -> HybridSearch:
+    return HybridSearch(make_search_settings())
 
 
 def make_request() -> RetrievalRequestV2:
@@ -132,8 +139,8 @@ def make_hit(
 
 def make_retriever(hits: list[dict[str, object]], *, allow_needs_review: bool = False) -> Retriever:
     return Retriever(
-        query_embedder=FakeQueryEmbedder(),
-        search_client=OpenSearchClient(FakeOpenSearchTransport(hits)),
+        embedding_provider=FakeQueryEmbedder(),
+        search_backend=OpenSearchClient(FakeOpenSearchTransport(hits), make_search_settings()),
         hybrid_search=make_search(),
         allow_needs_review_citations=allow_needs_review,
     )
@@ -159,7 +166,12 @@ async def test_needs_review_override_returns_complete_governed_citations() -> No
         [0.01] * 1024,
         allow_needs_review=True,
     )
-    serialized_filter = json.dumps(plan.body["query"], sort_keys=True)
+    transport = FakeOpenSearchTransport([])
+    await OpenSearchClient(transport, make_search_settings()).search(plan)
+    assert transport.kwargs is not None
+    body = transport.kwargs["body"]
+    assert isinstance(body, dict)
+    serialized_filter = json.dumps(body["query"], sort_keys=True)
     assert "needs_review" in serialized_filter
     assert "production_approved" in serialized_filter
 

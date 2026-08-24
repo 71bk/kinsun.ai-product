@@ -4,9 +4,11 @@ import asyncio
 import inspect
 import json
 from collections.abc import Mapping
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 import boto3
+from google import genai
+from google.genai import types
 
 from agent_runtime.rag.models import QueryEmbeddingSettings
 
@@ -19,11 +21,16 @@ class BedrockRuntimeClient(Protocol):
     def invoke_model(self, **kwargs: object) -> Mapping[str, object]: ...
 
 
-class QueryEmbedder(Protocol):
+_VERTEX_EXPRESS_KEY_PREFIX = "AQ."
+
+
+class EmbeddingProvider(Protocol):
     @property
     def dimension(self) -> int: ...
 
     async def embed_query(self, text: str) -> list[float]: ...
+
+    async def aclose(self) -> None: ...
 
 
 class BedrockQueryEmbedder:
@@ -67,10 +74,76 @@ class BedrockQueryEmbedder:
             )
         return vector
 
+    async def aclose(self) -> None:
+        return None
+
+
+class GoogleQueryEmbedder:
+    """Google Gen AI query embedding adapter with no credential leakage."""
+
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        settings: QueryEmbeddingSettings,
+        timeout_seconds: float,
+        client: Any | None = None,
+    ) -> None:
+        api_key = api_key.strip()
+        if not api_key:
+            raise ValueError("Google embedding api_key is required")
+        if settings.provider != "google":
+            raise ValueError("GoogleQueryEmbedder requires provider=google")
+        if not 0.0 < timeout_seconds <= 120.0:
+            raise ValueError("timeout_seconds must be between zero and 120")
+
+        self._settings = settings
+        self._owns_client = client is None
+        self._client = client or genai.Client(
+            api_key=api_key,
+            vertexai=api_key.startswith(_VERTEX_EXPRESS_KEY_PREFIX),
+            http_options=types.HttpOptions(timeout=int(timeout_seconds * 1000)),
+        )
+        self._async_models = self._client.aio.models
+
+    @property
+    def dimension(self) -> int:
+        return self._settings.dimension
+
+    async def embed_query(self, text: str) -> list[float]:
+        if not text.strip():
+            raise QueryEmbeddingError("query text cannot be blank")
+        try:
+            response = await self._async_models.embed_content(
+                model=self._settings.model_id,
+                contents=text,
+                config=types.EmbedContentConfig(
+                    task_type="RETRIEVAL_QUERY",
+                    output_dimensionality=self._settings.dimension,
+                ),
+            )
+        except Exception as exc:
+            # Google exceptions may contain project metadata or echo input text.
+            raise QueryEmbeddingError(f"Google embedding failed: {type(exc).__name__}") from exc
+        vector = _extract_google_embedding(response)
+        if len(vector) != self._settings.dimension:
+            raise QueryEmbeddingError(
+                f"expected {self._settings.dimension} dimensions, got {len(vector)}"
+            )
+        return vector
+
+    async def aclose(self) -> None:
+        if not self._owns_client:
+            return
+        await self._client.aio.aclose()
+        self._client.close()
+
 
 def build_bedrock_client(settings: QueryEmbeddingSettings) -> BedrockRuntimeClient:
     """Create a real Bedrock Runtime client via the standard AWS credential chain."""
 
+    if settings.provider != "bedrock" or settings.region is None:
+        raise ValueError("Bedrock client requires provider=bedrock and an AWS region")
     session = boto3.Session(region_name=settings.region)
     return cast(
         BedrockRuntimeClient,
@@ -79,7 +152,26 @@ def build_bedrock_client(settings: QueryEmbeddingSettings) -> BedrockRuntimeClie
 
 
 def build_bedrock_query_embedder(settings: QueryEmbeddingSettings) -> BedrockQueryEmbedder:
+    if settings.provider != "bedrock":
+        raise ValueError("BedrockQueryEmbedder requires provider=bedrock")
     return BedrockQueryEmbedder(build_bedrock_client(settings), settings)
+
+
+def build_embedding_provider(
+    settings: QueryEmbeddingSettings,
+    *,
+    google_api_key: str | None = None,
+    google_timeout_seconds: float = 30.0,
+) -> EmbeddingProvider:
+    if settings.provider == "bedrock":
+        return build_bedrock_query_embedder(settings)
+    if not google_api_key:
+        raise ValueError("Google embedding requires GEMINI_API_KEY")
+    return GoogleQueryEmbedder(
+        api_key=google_api_key,
+        settings=settings,
+        timeout_seconds=google_timeout_seconds,
+    )
 
 
 def _decode_response(response: Mapping[str, object]) -> Mapping[str, object]:
@@ -116,3 +208,24 @@ def _extract_first_float_embedding(payload: Mapping[str, object]) -> list[float]
     if any(isinstance(value, bool) or not isinstance(value, int | float) for value in first):
         raise QueryEmbeddingError("Bedrock response embedding contains non-numeric values")
     return [float(value) for value in first]
+
+
+def _extract_google_embedding(response: object) -> list[float]:
+    embeddings = (
+        response.get("embeddings")
+        if isinstance(response, Mapping)
+        else getattr(response, "embeddings", None)
+    )
+    if not isinstance(embeddings, list) or len(embeddings) != 1:
+        raise QueryEmbeddingError("Google response must contain exactly one embedding")
+    embedding = embeddings[0]
+    values = (
+        embedding.get("values")
+        if isinstance(embedding, Mapping)
+        else getattr(embedding, "values", None)
+    )
+    if not isinstance(values, list) or not values:
+        raise QueryEmbeddingError("Google response embedding is malformed")
+    if any(isinstance(value, bool) or not isinstance(value, int | float) for value in values):
+        raise QueryEmbeddingError("Google response embedding contains non-numeric values")
+    return [float(value) for value in values]

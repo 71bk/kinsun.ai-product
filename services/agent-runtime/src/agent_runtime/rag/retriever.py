@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from pydantic import ValidationError
 
-from agent_runtime.rag.client import OpenSearchClient, build_opensearch_client
+from agent_runtime.rag.client import build_opensearch_client
 from agent_runtime.rag.fallback import (
     failed_response,
     failed_response_v2,
@@ -23,7 +21,8 @@ from agent_runtime.rag.models import (
     RetrievalResultV1,
     RetrievalResultV2,
 )
-from agent_runtime.rag.query_embedder import QueryEmbedder, build_bedrock_query_embedder
+from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
+from agent_runtime.rag.search_backend import SearchBackend, SearchHit
 
 
 class Retriever:
@@ -32,23 +31,26 @@ class Retriever:
     def __init__(
         self,
         *,
-        query_embedder: QueryEmbedder,
-        search_client: OpenSearchClient,
+        embedding_provider: EmbeddingProvider,
+        search_backend: SearchBackend,
         hybrid_search: HybridSearch,
         allow_needs_review_citations: bool = False,
     ) -> None:
-        self._query_embedder = query_embedder
-        self._search_client = search_client
+        self._embedding_provider = embedding_provider
+        self._search_backend = search_backend
         self._hybrid_search = hybrid_search
         self._allow_needs_review_citations = allow_needs_review_citations
 
+    async def aclose(self) -> None:
+        await self._embedding_provider.aclose()
+
     async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1:
         try:
-            vector = await self._query_embedder.embed_query(request.query)
-            if len(vector) != self._query_embedder.dimension:
+            vector = await self._embedding_provider.embed_query(request.query)
+            if len(vector) != self._embedding_provider.dimension:
                 raise ValueError("query embedding has an unexpected dimension")
             plan = self._hybrid_search.build(request, vector)
-            hits = await self._search_client.search(plan)
+            hits = await self._search_backend.search(plan)
         except Exception:
             # The public fallback deliberately excludes provider details and query text.
             return failed_response(request.request_id)
@@ -76,15 +78,15 @@ class Retriever:
         """Retrieve only complete governed citations and never expose a partial batch."""
 
         try:
-            vector = await self._query_embedder.embed_query(request.query)
-            if len(vector) != self._query_embedder.dimension:
+            vector = await self._embedding_provider.embed_query(request.query)
+            if len(vector) != self._embedding_provider.dimension:
                 raise ValueError("query embedding has an unexpected dimension")
             plan = self._hybrid_search.build_v2(
                 request,
                 vector,
                 allow_needs_review=self._allow_needs_review_citations,
             )
-            hits = await self._search_client.search(plan)
+            hits = await self._search_backend.search(plan)
         except Exception:
             return failed_response_v2(request.request_id)
 
@@ -109,20 +111,32 @@ class Retriever:
         )
 
 
-def build_retriever(settings: RagRuntimeSettings) -> Retriever:
-    """Compose the real staging Bedrock and OpenSearch adapters from validated settings."""
+def build_retriever(
+    settings: RagRuntimeSettings,
+    *,
+    google_api_key: str | None = None,
+    google_timeout_seconds: float = 30.0,
+) -> Retriever:
+    """Compose explicitly configured embedding and search adapters."""
 
     return Retriever(
-        query_embedder=build_bedrock_query_embedder(settings.embedding),
-        search_client=build_opensearch_client(settings.opensearch),
+        embedding_provider=build_embedding_provider(
+            settings.embedding,
+            google_api_key=google_api_key,
+            google_timeout_seconds=google_timeout_seconds,
+        ),
+        search_backend=build_opensearch_client(settings.opensearch, settings.hybrid),
         hybrid_search=HybridSearch(settings.hybrid),
         allow_needs_review_citations=settings.allow_needs_review_citations,
     )
 
 
-def _above_relevance_floor(
-    hits: list[Mapping[str, object]], min_score: float
-) -> list[Mapping[str, object]]:
+async def close_retriever(retriever: Retriever | None) -> None:
+    if retriever is not None:
+        await retriever.aclose()
+
+
+def _above_relevance_floor(hits: list[SearchHit], min_score: float) -> list[SearchHit]:
     """Drop hits the configured floor rejects, so a bad query yields NO_DATA.
 
     The floor applies to the pipeline-normalized hybrid score, not to raw
@@ -134,18 +148,15 @@ def _above_relevance_floor(
     floor.
     """
 
-    scored: list[Mapping[str, object]] = []
+    scored: list[SearchHit] = []
     for hit in hits:
-        score = hit.get("_score")
-        if isinstance(score, bool) or not isinstance(score, int | float):
-            continue
-        if float(score) >= min_score:
+        if hit.score >= min_score:
             scored.append(hit)
     return scored
 
 
 def _eligible_unique_results(
-    hits: list[Mapping[str, object]],
+    hits: list[SearchHit],
     top_k: int,
     profile: QueryProfile,
     *,
@@ -155,8 +166,8 @@ def _eligible_unique_results(
     results: list[RetrievalResultV1] = []
     seen: set[str] = set()
     for hit in hits:
-        source = hit.get("_source")
-        if not isinstance(source, Mapping) or not is_normal_rag_eligible(
+        source = hit.source
+        if not is_normal_rag_eligible(
             source,
             profile,
             audience=audience,
@@ -170,7 +181,7 @@ def _eligible_unique_results(
             result = RetrievalResultV1(
                 chunk_id=chunk_id,
                 text=source.get("text"),
-                score=float(hit.get("_score", 0.0)),
+                score=hit.score,
                 document_name=source.get("document_name"),
                 section=source.get("section"),
                 page_start=source.get("page_start"),
@@ -188,7 +199,7 @@ def _eligible_unique_results(
 
 
 def _eligible_unique_results_v2(
-    hits: list[Mapping[str, object]],
+    hits: list[SearchHit],
     top_k: int,
     profile: QueryProfile,
     *,
@@ -201,8 +212,8 @@ def _eligible_unique_results_v2(
     results: list[RetrievalResultV2] = []
     seen: set[str] = set()
     for hit in hits:
-        source = hit.get("_source")
-        if not isinstance(source, Mapping) or not is_normal_rag_eligible(
+        source = hit.source
+        if not is_normal_rag_eligible(
             source,
             profile,
             audience=audience,
@@ -221,7 +232,7 @@ def _eligible_unique_results_v2(
                 chunk_id=chunk_id,
                 source_id=source.get("source_id"),
                 text=source.get("text"),
-                score=float(hit.get("_score", 0.0)),
+                score=hit.score,
                 artifact_version=source.get("artifact_version"),
                 title=source.get("title"),
                 publisher=source.get("publisher"),

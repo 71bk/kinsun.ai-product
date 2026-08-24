@@ -31,12 +31,16 @@ class Settings(BaseSettings):
     RAG_MODE: str = "disabled"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
+    RAG_QUERY_EMBEDDING_CONFIG_PATH: str | None = None
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"
     RAG_HYBRID_NATURAL_CONFIG_PATH: str = "config/rag/hybrid-natural-language.json"
     RAG_HYBRID_LEGAL_CONFIG_PATH: str = "config/rag/hybrid-legal.json"
     AWS_REGION: str | None = None
     BEDROCK_EMBEDDING_MODEL_ID: str | None = None
     BEDROCK_EMBEDDING_DIMENSION: int = 1024
+    GEMINI_EMBEDDING_MODEL_ID: str | None = None
+    GEMINI_EMBEDDING_DIMENSION: int = 1024
+    GEMINI_EMBEDDING_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0.0, le=120.0)
     # No default: choosing a generation model is an owner/ADR decision, and a
     # silent fallback would make an unapproved model look sanctioned.
     BEDROCK_TEXT_MODEL_ID: str | None = None

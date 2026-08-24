@@ -18,13 +18,16 @@ M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證
 `MODEL_PROVIDER=openai-compatible` 則使用 provider-neutral text adapter；base URL、model ID 與
 optional Bearer key 全由 runtime 設定，可接相容本機服務或 Google Gemini API。它只支援文字
 Chat Completions、不跟隨 redirect、錯誤時不會 fallback 到 mock，且帶 key 的遠端 HTTP 會在
-啟動時被拒絕。這不會改變 staging RAG 仍綁 Bedrock／OpenSearch 的現況。
+啟動時被拒絕。RAG Retriever 已透過 provider-neutral `SearchBackend` 與不含 executable DSL 的
+bounded plan 隔離搜尋 provider；目前 runtime factory 仍只組裝 Bedrock／OpenSearch。
 `MODEL_PROVIDER=gemini` 則使用原生 Google Gen AI SDK；`AQ.` 開頭的 Vertex AI Express key 自動
 走 Vertex AI，其他 key 走 Gemini Developer API。這兩種 key 不得混用 endpoint；設定不完整或
 Google provider 失敗時一律 fail closed，不會退回 mock，也不得把上游訊息帶出 provider 邊界。
 
-另有第一版 **staging-only** RAG endpoint、Bedrock query embedding 與 OpenSearch Hybrid
-Retrieval adapter，以及正式 Agent Run 的最小安全整合。只有明確標示
+另有第一版 **staging-only** RAG endpoint、provider-neutral `EmbeddingProvider`／`SearchBackend`
+boundaries、Bedrock 與 opt-in Google query embedding adapters，以及目前唯一的 OpenSearch Hybrid
+adapter。Google document embedding／corpus rebuild 與 PostgreSQL hybrid backend 尚未實作；
+Google query adapter 不得查詢 Cohere document vectors。只有明確標示
 `general_information`／`legal_reference` purpose 的回合會檢索；成功時 3–5 個帶引用 chunk
 進入 Context Manifest，無資料或 provider 失敗時直接 no-guess fallback。未設定 provider
 時明確 fail closed。Supplied Allowlist 尚未簽署；只有 staging 明確設定
@@ -86,7 +89,8 @@ consent。Care Event VERIFIED 不自動 promotion 成 Memory，HIGH 不建立 Me
 - **外部服務只在 Provider／Adapter 邊界出現**。模型邊界包含 `models/provider.py` 的
   `ModelProvider` 介面、`models/mock_provider.py`、`models/bedrock_provider.py` 與
   `models/openai_compatible_provider.py`；共用安全 prompt 位於 `models/prompting.py`。RAG 邊界位於
-  `rag/`。新增或調整 Bedrock、OpenSearch、Neptune 整合時，不要把 SDK 呼叫散進
+  `rag/`，Retriever 只依賴 `SearchBackend`；OpenSearch DSL 必須留在其 adapter。新增或調整
+  Bedrock、Google embedding、OpenSearch、PostgreSQL search 或 Neptune 整合時，不要把 SDK 呼叫散進
   orchestration 或 agent 層。
 - Step／Tool 上限來自 `settings.py`：`MAX_AGENT_DECISIONS`、`MAX_TOOL_ROUNDS`、
   `MAX_TOTAL_TOOLS`、`MAX_REWRITE`。目前 companion 仍只有單一模型決策；Event proposal 是

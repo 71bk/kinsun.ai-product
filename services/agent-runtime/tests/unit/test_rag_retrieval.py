@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -9,7 +10,11 @@ from pydantic import ValidationError
 import agent_runtime.rag.client as opensearch_module
 import agent_runtime.rag.query_embedder as embedder_module
 from agent_runtime.rag.citations import render_citation, render_cited_chunk
-from agent_runtime.rag.client import OpenSearchClient, build_opensearch_transport
+from agent_runtime.rag.client import (
+    OpenSearchClient,
+    build_opensearch_search_body,
+    build_opensearch_transport,
+)
 from agent_runtime.rag.fallback import NO_DATA_MESSAGE
 from agent_runtime.rag.filters import is_normal_rag_eligible
 from agent_runtime.rag.hybrid_search import HybridSearch
@@ -24,10 +29,13 @@ from agent_runtime.rag.models import (
 )
 from agent_runtime.rag.query_embedder import (
     BedrockQueryEmbedder,
+    GoogleQueryEmbedder,
     QueryEmbeddingError,
     build_bedrock_client,
+    build_embedding_provider,
 )
 from agent_runtime.rag.retriever import Retriever
+from agent_runtime.rag.search_backend import SearchBackend
 
 
 def make_profile(name: str) -> HybridProfileSettings:
@@ -125,12 +133,36 @@ class FakeQueryEmbedder:
     async def embed_query(self, text: str) -> list[float]:
         return [0.01] * 1024
 
+    async def aclose(self) -> None:
+        return None
+
 
 class WrongDimensionQueryEmbedder:
     dimension = 1024
 
     async def embed_query(self, text: str) -> list[float]:
         return [0.01] * 3
+
+    async def aclose(self) -> None:
+        return None
+
+
+class FakeGoogleEmbeddingModels:
+    def __init__(self, dimension: int = 1024, *, error: Exception | None = None) -> None:
+        self.dimension = dimension
+        self.error = error
+        self.kwargs: dict[str, object] | None = None
+
+    async def embed_content(self, **kwargs: object):
+        self.kwargs = kwargs
+        if self.error is not None:
+            raise self.error
+        return SimpleNamespace(embeddings=[SimpleNamespace(values=[0.02] * self.dimension)])
+
+
+class FakeGoogleClient:
+    def __init__(self, models: FakeGoogleEmbeddingModels) -> None:
+        self.aio = SimpleNamespace(models=models)
 
 
 class FakeOpenSearchTransport:
@@ -156,8 +188,8 @@ class FakeAwsSession:
 
 def make_retriever(transport: FakeOpenSearchTransport) -> Retriever:
     return Retriever(
-        query_embedder=FakeQueryEmbedder(),
-        search_client=OpenSearchClient(transport),
+        embedding_provider=FakeQueryEmbedder(),
+        search_backend=OpenSearchClient(transport, make_search_settings()),
         hybrid_search=HybridSearch(make_search_settings()),
     )
 
@@ -168,6 +200,7 @@ async def test_bedrock_query_embedder_uses_search_query_and_configured_model() -
     embedder = BedrockQueryEmbedder(
         runtime,
         QueryEmbeddingSettings(
+            provider="bedrock",
             model_id="configured-embed-model",
             region="configured-region",
             dimension=1024,
@@ -189,7 +222,9 @@ async def test_bedrock_query_embedder_uses_search_query_and_configured_model() -
 async def test_query_embedding_with_wrong_dimension_fails_closed() -> None:
     embedder = BedrockQueryEmbedder(
         FakeBedrockRuntime(dimension=3),
-        QueryEmbeddingSettings(model_id="model", region="region", dimension=1024),
+        QueryEmbeddingSettings(
+            provider="bedrock", model_id="model", region="region", dimension=1024
+        ),
     )
 
     with pytest.raises(QueryEmbeddingError, match="expected 1024 dimensions"):
@@ -199,8 +234,8 @@ async def test_query_embedding_with_wrong_dimension_fails_closed() -> None:
 @pytest.mark.asyncio
 async def test_retriever_rejects_wrong_dimension_from_replaceable_embedder() -> None:
     retriever = Retriever(
-        query_embedder=WrongDimensionQueryEmbedder(),
-        search_client=OpenSearchClient(FakeOpenSearchTransport([])),
+        embedding_provider=WrongDimensionQueryEmbedder(),
+        search_backend=OpenSearchClient(FakeOpenSearchTransport([]), make_search_settings()),
         hybrid_search=HybridSearch(make_search_settings()),
     )
 
@@ -214,6 +249,7 @@ async def test_retriever_rejects_wrong_dimension_from_replaceable_embedder() -> 
 def test_bedrock_factory_uses_configured_region(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(embedder_module.boto3, "Session", FakeAwsSession)
     settings = QueryEmbeddingSettings(
+        provider="bedrock",
         model_id="configured-model",
         region="configured-region",
         dimension=1024,
@@ -225,6 +261,63 @@ def test_bedrock_factory_uses_configured_region(monkeypatch: pytest.MonkeyPatch)
         "service_name": "bedrock-runtime",
         "region_name": "configured-region",
     }
+
+
+@pytest.mark.asyncio
+async def test_google_query_embedder_uses_retrieval_task_and_configured_dimension() -> None:
+    models = FakeGoogleEmbeddingModels()
+    embedder = GoogleQueryEmbedder(
+        api_key="synthetic-google-key",
+        settings=QueryEmbeddingSettings(
+            provider="google",
+            model_id="gemini-embedding-001",
+            dimension=1024,
+        ),
+        timeout_seconds=15.0,
+        client=FakeGoogleClient(models),
+    )
+
+    vector = await embedder.embed_query("我要怎麼申請長照？")
+
+    assert len(vector) == 1024
+    assert models.kwargs is not None
+    assert models.kwargs["model"] == "gemini-embedding-001"
+    assert models.kwargs["contents"] == "我要怎麼申請長照？"
+    config = models.kwargs["config"]
+    assert config.task_type == "RETRIEVAL_QUERY"
+    assert config.output_dimensionality == 1024
+
+
+@pytest.mark.asyncio
+async def test_google_embedding_failure_is_scrubbed_and_fails_closed() -> None:
+    models = FakeGoogleEmbeddingModels(error=RuntimeError("sensitive upstream detail"))
+    embedder = GoogleQueryEmbedder(
+        api_key="synthetic-google-key",
+        settings=QueryEmbeddingSettings(
+            provider="google",
+            model_id="gemini-embedding-001",
+            dimension=1024,
+        ),
+        timeout_seconds=15.0,
+        client=FakeGoogleClient(models),
+    )
+
+    with pytest.raises(QueryEmbeddingError, match="RuntimeError") as error:
+        await embedder.embed_query("sensitive query")
+
+    assert "sensitive upstream detail" not in str(error.value)
+    assert "sensitive query" not in str(error.value)
+
+
+def test_google_embedding_factory_requires_explicit_api_key() -> None:
+    settings = QueryEmbeddingSettings(
+        provider="google",
+        model_id="gemini-embedding-001",
+        dimension=1024,
+    )
+
+    with pytest.raises(ValueError, match="GEMINI_API_KEY"):
+        build_embedding_provider(settings)
 
 
 def test_opensearch_factory_uses_sigv4_and_configured_host(
@@ -285,6 +378,7 @@ def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> N
     )
 
     assert settings.embedding.model_id == "configured-model"
+    assert settings.embedding.provider == "bedrock"
     assert settings.embedding.region == "configured-region"
     assert settings.opensearch.host == "https://search.example.test"
     assert settings.opensearch.index_name == "configured-staging-index"
@@ -292,6 +386,33 @@ def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> N
     assert settings.hybrid.natural_language.bm25_weight == 0.4
     assert settings.hybrid.legal.vector_weight == 0.35
     assert settings.hybrid.natural_language.vector_min_score == 0.7
+
+
+def test_runtime_settings_load_google_embedding_without_putting_key_in_config() -> None:
+    repository_root = Path(__file__).resolve().parents[4]
+    config_dir = repository_root / "config" / "rag"
+
+    settings = RagRuntimeSettings.from_config_files(
+        embedding_config_path=config_dir / "embedding-google.yaml",
+        index_config_path=config_dir / "opensearch-index-v1.json",
+        natural_profile_path=config_dir / "hybrid-natural-language.json",
+        legal_profile_path=config_dir / "hybrid-legal.json",
+        environ={
+            "AWS_REGION": "configured-region",
+            "GEMINI_EMBEDDING_MODEL_ID": "configured-google-embedding",
+            "GEMINI_EMBEDDING_DIMENSION": "1024",
+            "OPENSEARCH_HOST": "https://search.example.test",
+            "OPENSEARCH_INDEX": "configured-staging-index",
+            "OPENSEARCH_ALIAS": "configured-staging-alias",
+            "RAG_MODE": "staging",
+        },
+    )
+
+    assert settings.embedding.provider == "google"
+    assert settings.embedding.model_id == "configured-google-embedding"
+    assert settings.embedding.region is None
+    assert settings.embedding.dimension == 1024
+    assert settings.opensearch.region == "configured-region"
 
 
 def test_runtime_settings_reject_production_index_or_alias() -> None:
@@ -317,13 +438,20 @@ def test_hybrid_plan_uses_configured_profile_and_mandatory_filters(
 ) -> None:
     plan = HybridSearch(make_search_settings()).build(make_request(profile), [0.0] * 1024)
 
-    assert plan.search_pipeline == pipeline
+    assert make_search_settings().for_profile(plan.profile).search_pipeline == pipeline
     assert (plan.bm25_weight, plan.vector_weight) == weights
-    # The floor cannot ride on the knn clause, so it travels on the plan and is
-    # applied to the normalized score after the search returns.
+    assert plan.query == "長照服務如何申請？"
+    assert plan.query_vector == [0.0] * 1024
+    assert plan.top_k == 5
+    assert plan.audience == "elder"
+    assert plan.purpose == "general_information"
+    assert plan.governed_citations is False
+    assert plan.allow_needs_review is False
     assert plan.min_score == 0.7
-    assert plan.body["size"] == 5
-    hybrid = plan.body["query"]["hybrid"]
+    assert {"body", "index_alias", "search_pipeline"}.isdisjoint(plan.model_dump())
+    body = build_opensearch_search_body(plan)
+    assert body["size"] == 5
+    hybrid = body["query"]["hybrid"]
     assert hybrid["queries"][0] == {"match": {"text": {"query": "長照服務如何申請？"}}}
     # Serverless rejects min_score/max_distance on a knn clause, so `k` is the
     # only accepted selector. Sending anything else makes every retrieval fail
@@ -350,8 +478,8 @@ def test_high_risk_query_filter_is_applied_to_every_normal_rag_profile() -> None
     )
     legal_plan = HybridSearch(make_search_settings()).build(make_request("legal"), [0.0] * 1024)
 
-    natural_bool = natural_plan.body["query"]["hybrid"]["filter"]["bool"]
-    legal_bool = legal_plan.body["query"]["hybrid"]["filter"]["bool"]
+    natural_bool = build_opensearch_search_body(natural_plan)["query"]["hybrid"]["filter"]["bool"]
+    legal_bool = build_opensearch_search_body(legal_plan)["query"]["hybrid"]["filter"]["bool"]
     expected = {"terms": {"risk_level": ["low", "medium"]}}
     assert expected in natural_bool["must"]
     assert expected in legal_bool["must"]
@@ -362,7 +490,7 @@ def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:
 
     plan = HybridSearch(make_search_settings()).build(request, [0.0] * 1024)
 
-    must = plan.body["query"]["hybrid"]["filter"]["bool"]["must"]
+    must = build_opensearch_search_body(plan)["query"]["hybrid"]["filter"]["bool"]["must"]
     assert {"term": {"allowed_audiences": "elder"}} in must
     assert {"term": {"allowed_purposes": "care_guidance"}} in must
 
@@ -372,7 +500,7 @@ def test_hybrid_plan_without_explicit_scope_matches_nothing() -> None:
 
     plan = HybridSearch(make_search_settings()).build(request, [0.0] * 1024)
 
-    must = plan.body["query"]["hybrid"]["filter"]["bool"]["must"]
+    must = build_opensearch_search_body(plan)["query"]["hybrid"]["filter"]["bool"]["must"]
     assert must.count({"match_none": {}}) == 2
 
 
@@ -380,8 +508,10 @@ def test_hybrid_plan_without_explicit_scope_matches_nothing() -> None:
 async def test_opensearch_uses_staging_alias_and_search_pipeline() -> None:
     transport = FakeOpenSearchTransport([])
     plan = HybridSearch(make_search_settings()).build(make_request(), [0.0] * 1024)
+    backend = OpenSearchClient(transport, make_search_settings())
 
-    await OpenSearchClient(transport).search(plan)
+    assert isinstance(backend, SearchBackend)
+    await backend.search(plan)
 
     assert transport.kwargs is not None
     assert transport.kwargs["index"] == "rag-staging-current"

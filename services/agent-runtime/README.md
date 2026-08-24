@@ -31,8 +31,26 @@ uv run uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
 
 一般無 Tool 的本機回合不需要資料庫、Core API、AWS 憑證或網路；未設定 staging RAG
 provider 時，retrieval endpoint 會明確回傳 `FAILED` fallback 與空結果，不會猜測答案。
-要啟用真實檢索時，依根目錄 `.env.example` 設定 Bedrock、OpenSearch 與四個 RAG config
-路徑。
+要啟用真實檢索時，依根目錄 `.env.example` 設定明確的 embedding provider、search backend 與
+版本化 RAG config 路徑。
+
+### RAG query embedding
+
+預設 `RAG_EMBEDDING_CONFIG_PATH=config/rag/embedding.yaml` 仍選 Bedrock/Cohere。Google query
+embedding 是 opt-in，使用獨立的 Agent Runtime override，不會改動 ingestion 共用設定：
+
+```dotenv
+GEMINI_API_KEY=<runtime-secret>
+GEMINI_EMBEDDING_MODEL_ID=gemini-embedding-001
+GEMINI_EMBEDDING_DIMENSION=1024
+GEMINI_EMBEDDING_TIMEOUT_SECONDS=30
+RAG_QUERY_EMBEDDING_CONFIG_PATH=config/rag/embedding-google.yaml
+```
+
+Google adapter 固定使用 `RETRIEVAL_QUERY` task type，provider error、空回應或維度不符一律 fail
+closed。此設定目前只證明 query adapter；ingestion 尚未產生 Google `RETRIEVAL_DOCUMENT` vectors，
+不得把 Google query vectors 與既有 Bedrock/Cohere corpus 混用。必須先用同一 model／dimension
+重建完整 projection 並通過 evaluation，才可接真實 search backend。
 
 ## 模型設定
 
@@ -139,7 +157,8 @@ curl http://localhost:8001/health
 The container intentionally defaults to `MODEL_PROVIDER=mock` and `RAG_MODE=disabled`. Setting
 `APP_ENV=staging` alone does not enable Bedrock or retrieval. A staging deployment must explicitly
 inject its approved non-secret model/OpenSearch settings and use an ECS task role for AWS access.
-The image includes only `embedding.yaml`, the index mapping, and the natural/legal hybrid profiles;
+The image includes only the Bedrock/Google query embedding configs, the index mapping, and the
+natural/legal hybrid profiles;
 it does not include an Allowlist, source documents, chunks, receipts, or vectors. Never bake `.env`
 or static AWS credentials into the image. Production RAG is not approved; `RAG_MODE=production` is
 not a supported runtime mode and still fails closed.
@@ -165,8 +184,10 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 - **一般 M0 對話不持久化**；只有實際執行 allowlisted Candidate Tool 時，才先建立
   Core-owned AgentRun。模型預設走 `MockModelProvider`；可明確切換 Bedrock 或
   provider-neutral OpenAI-compatible adapter，不會靜默 fallback。
-- **RAG 外部依賴只在 adapter 邊界**：查詢 embedding 使用 Bedrock，hybrid retrieval 使用
-  OpenSearch；設定不完整或 provider 失敗都回 no-guess fallback。
+- **RAG 外部依賴只在 adapter 邊界**：Retriever 只接收 provider-neutral `EmbeddingProvider`、
+  `SearchBackend` 與不含 executable DSL 的 bounded plan；query embedding 可明確選 Bedrock 或
+  Google，唯一 search backend 仍是 OpenSearch。Google document embedding／corpus rebuild 與
+  PostgreSQL hybrid backend 尚未實作；設定不完整或 provider 失敗都回 no-guess fallback。
 - **Safety 是第一版 deterministic 關鍵字規則**，不是完整安全機制。命中時回 200、
   `result_status` 為 `BLOCKED`、`reply_text` 換成安全訊息——拒絕是對話結果，不是傳輸錯誤。
 - **Orchestrator 保持單一模型決策**，並最多執行一次 deterministic Candidate Tool；沒有
@@ -186,8 +207,9 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 
 通用多 Tool 執行迴圈、Memory Candidate、Graph 查詢、Prompt Registry、Model Router、
 完整 Agent Trace 持久化（Core AgentRun register／complete lifecycle 以外）、RAG Evaluation、
-production index。OpenAI-compatible text provider 已完成，但 RAG retrieval 本身仍是 staging-only
-AWS adapter；V2 citation 已用合成 in-process adapter 完成 live verification，並不代表真實
+production index。OpenAI-compatible text provider 與 provider-neutral `SearchBackend` seam 已完成，
+但現行唯一 runtime 組裝仍是 staging-only AWS adapters；V2 citation 已用合成 in-process adapter
+完成 live verification，並不代表真實
 OpenSearch V2 projection、AWS deployment 或 production enablement 已完成。
 
 `contracts/schemas/agent/HandoffEnvelopeV1` 仍是目標形狀；`contracts/schemas/tools/` 現已由

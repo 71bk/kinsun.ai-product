@@ -16,7 +16,7 @@ from agent_runtime.models.openai_compatible_provider import OpenAICompatibleMode
 from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
 from agent_runtime.rag.models import RagRuntimeSettings
-from agent_runtime.rag.retriever import build_retriever
+from agent_runtime.rag.retriever import build_retriever, close_retriever
 from agent_runtime.security.service_identity import ServiceCredentialVerifier
 from agent_runtime.settings import get_settings
 
@@ -86,6 +86,8 @@ def build_configured_rag_retriever():
                 "AWS_REGION": settings.AWS_REGION,
                 "BEDROCK_EMBEDDING_MODEL_ID": settings.BEDROCK_EMBEDDING_MODEL_ID,
                 "BEDROCK_EMBEDDING_DIMENSION": settings.BEDROCK_EMBEDDING_DIMENSION,
+                "GEMINI_EMBEDDING_MODEL_ID": settings.GEMINI_EMBEDDING_MODEL_ID,
+                "GEMINI_EMBEDDING_DIMENSION": settings.GEMINI_EMBEDDING_DIMENSION,
                 "OPENSEARCH_HOST": settings.OPENSEARCH_HOST,
                 "OPENSEARCH_INDEX": settings.OPENSEARCH_INDEX,
                 "OPENSEARCH_ALIAS": settings.OPENSEARCH_ALIAS,
@@ -95,13 +97,24 @@ def build_configured_rag_retriever():
             if value is not None and str(value).strip()
         }
         rag_settings = RagRuntimeSettings.from_config_files(
-            embedding_config_path=_resolve_config_path(settings.RAG_EMBEDDING_CONFIG_PATH),
+            embedding_config_path=_resolve_config_path(
+                settings.RAG_QUERY_EMBEDDING_CONFIG_PATH or settings.RAG_EMBEDDING_CONFIG_PATH
+            ),
             index_config_path=_resolve_config_path(settings.RAG_OPENSEARCH_INDEX_CONFIG_PATH),
             natural_profile_path=_resolve_config_path(settings.RAG_HYBRID_NATURAL_CONFIG_PATH),
             legal_profile_path=_resolve_config_path(settings.RAG_HYBRID_LEGAL_CONFIG_PATH),
             environ=provider_environment,
         )
-        return build_retriever(rag_settings)
+        google_api_key = (
+            settings.GEMINI_API_KEY.get_secret_value()
+            if rag_settings.embedding.provider == "google" and settings.GEMINI_API_KEY
+            else None
+        )
+        return build_retriever(
+            rag_settings,
+            google_api_key=google_api_key,
+            google_timeout_seconds=settings.GEMINI_EMBEDDING_TIMEOUT_SECONDS,
+        )
     except Exception as exc:
         # Never include provider messages: they can contain endpoint/account details.
         logger.warning(
@@ -128,6 +141,7 @@ async def _lifespan(app: FastAPI):
     try:
         yield
     finally:
+        await close_retriever(app.state.rag_retriever)
         await app.state.provider.aclose()
 
 

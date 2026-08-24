@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 
 import agent_runtime.app as app_module
 from agent_runtime.app import _resolve_config_path, create_app
@@ -226,18 +229,24 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         RAG_MODE = "staging"
         RAG_ALLOW_NEEDS_REVIEW_CITATIONS = True
         RAG_EMBEDDING_CONFIG_PATH = "config/rag/embedding.yaml"
+        RAG_QUERY_EMBEDDING_CONFIG_PATH = "config/rag/embedding-google.yaml"
         RAG_OPENSEARCH_INDEX_CONFIG_PATH = "config/rag/opensearch-index-v1.json"
         RAG_HYBRID_NATURAL_CONFIG_PATH = "config/rag/hybrid-natural-language.json"
         RAG_HYBRID_LEGAL_CONFIG_PATH = "config/rag/hybrid-legal.json"
         AWS_REGION = "configured-region"
         BEDROCK_EMBEDDING_MODEL_ID = "configured-model"
         BEDROCK_EMBEDDING_DIMENSION = 1024
+        GEMINI_EMBEDDING_MODEL_ID = "configured-google-embedding"
+        GEMINI_EMBEDDING_DIMENSION = 1024
+        GEMINI_EMBEDDING_TIMEOUT_SECONDS = 30.0
+        GEMINI_API_KEY = SecretStr("synthetic-google-embedding-key")
         OPENSEARCH_HOST = "https://search.example.test"
         OPENSEARCH_INDEX = "configured-staging-index"
         OPENSEARCH_ALIAS = "configured-staging-alias"
 
     captured = {}
-    sentinel_settings = object()
+    captured_builder = {}
+    sentinel_settings = SimpleNamespace(embedding=SimpleNamespace(provider="google"))
     sentinel_retriever = object()
 
     def fake_loader(**kwargs):
@@ -250,22 +259,31 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         "from_config_files",
         classmethod(lambda cls, **kwargs: fake_loader(**kwargs)),
     )
-    monkeypatch.setattr(
-        app_module,
-        "build_retriever",
-        lambda settings: sentinel_retriever if settings is sentinel_settings else None,
-    )
+
+    def fake_builder(settings, **kwargs):
+        captured_builder.update(kwargs)
+        return sentinel_retriever if settings is sentinel_settings else None
+
+    monkeypatch.setattr(app_module, "build_retriever", fake_builder)
 
     result = app_module.build_configured_rag_retriever()
 
     assert result is sentinel_retriever
+    assert captured["embedding_config_path"].name == "embedding-google.yaml"
     assert captured["environ"] == {
         "AWS_REGION": "configured-region",
         "BEDROCK_EMBEDDING_MODEL_ID": "configured-model",
         "BEDROCK_EMBEDDING_DIMENSION": "1024",
+        "GEMINI_EMBEDDING_MODEL_ID": "configured-google-embedding",
+        "GEMINI_EMBEDDING_DIMENSION": "1024",
         "OPENSEARCH_HOST": "https://search.example.test",
         "OPENSEARCH_INDEX": "configured-staging-index",
         "OPENSEARCH_ALIAS": "configured-staging-alias",
         "RAG_MODE": "staging",
         "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": "True",
+    }
+    assert "GEMINI_API_KEY" not in captured["environ"]
+    assert captured_builder == {
+        "google_api_key": "synthetic-google-embedding-key",
+        "google_timeout_seconds": 30.0,
     }

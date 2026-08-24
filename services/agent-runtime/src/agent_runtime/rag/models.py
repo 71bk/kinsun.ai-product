@@ -16,6 +16,7 @@ LANGUAGE_REGEX = r"^[a-z]{2,3}(?:-[A-Za-z]{2})?$"
 
 QueryProfile = Literal["natural_language", "legal"]
 RetrievalStatus = Literal["SUCCESS", "NO_DATA", "FAILED"]
+EmbeddingProviderName = Literal["bedrock", "google"]
 
 
 class RagBaseModel(BaseModel):
@@ -273,11 +274,18 @@ class RetrievalResponseV2(RagBaseModel):
 
 
 class QueryEmbeddingSettings(RagBaseModel):
-    """Bedrock query settings supplied by configuration/environment wiring."""
+    """Provider-neutral query embedding settings without credentials."""
 
+    provider: EmbeddingProviderName
     model_id: str = Field(min_length=1)
-    region: str = Field(min_length=1)
+    region: str | None = Field(default=None, min_length=1)
     dimension: Literal[1024]
+
+    @model_validator(mode="after")
+    def bedrock_requires_region(self) -> QueryEmbeddingSettings:
+        if self.provider == "bedrock" and self.region is None:
+            raise ValueError("Bedrock embedding requires an AWS region")
+        return self
 
 
 class HybridProfileSettings(RagBaseModel):
@@ -383,8 +391,15 @@ class RagRuntimeSettings(RagBaseModel):
 
         embedding_values = _required_mapping(embedding_document, "embedding")
         index_values = _required_mapping(index_document, "index")
+        provider = _as_nonempty_str(
+            embedding_values.get("provider"), "embedding provider"
+        ).casefold()
         model_id = _resolve_config_value(embedding_values, "model_id", "model_id_env", env)
-        region = _resolve_config_value(embedding_values, "region", "region_env", env)
+        region = (
+            _resolve_config_value(embedding_values, "region", "region_env", env)
+            if provider == "bedrock"
+            else None
+        )
         dimension = _resolve_config_value(
             embedding_values,
             "dimension",
@@ -401,13 +416,14 @@ class RagRuntimeSettings(RagBaseModel):
         )
 
         embedding = QueryEmbeddingSettings(
+            provider=provider,
             model_id=_as_nonempty_str(model_id, "embedding model ID"),
-            region=_as_nonempty_str(region, "AWS region"),
+            region=_as_nonempty_str(region, "AWS region") if region is not None else None,
             dimension=_as_int(dimension, "embedding dimension"),
         )
         opensearch = OpenSearchConnectionSettings(
             host=host,
-            region=embedding.region,
+            region=_required_env(env, "AWS_REGION"),
             index_name=_as_nonempty_str(index_name, "OpenSearch index name"),
             index_alias=_as_nonempty_str(index_alias, "OpenSearch index alias"),
             mode=mode,
@@ -427,17 +443,19 @@ class RagRuntimeSettings(RagBaseModel):
 
 
 class HybridSearchPlan(RagBaseModel):
-    """Parameterised OpenSearch request; never accepts caller-provided DSL."""
+    """Provider-neutral bounded search request; never carries executable DSL."""
 
-    index_alias: str = Field(min_length=1)
-    search_pipeline: str = Field(min_length=1)
+    query: str = Field(min_length=1, max_length=2000)
+    query_vector: list[float] = Field(min_length=1)
     profile: QueryProfile
+    top_k: Literal[5]
+    audience: str | None = Field(default=None, min_length=1, max_length=64)
+    purpose: str | None = Field(default=None, min_length=1, max_length=64)
+    governed_citations: bool
+    allow_needs_review: bool
     bm25_weight: float
     vector_weight: float
-    # Applied by Retriever to the pipeline-normalized hit score, because the
-    # collection's knn clause accepts only `k` and cannot carry a floor itself.
     min_score: float = Field(gt=0.0, le=1.0)
-    body: dict[str, object]
 
 
 def _read_yaml_mapping(path: str | Path) -> Mapping[str, object]:
