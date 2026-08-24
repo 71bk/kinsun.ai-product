@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 30
     services:
       postgres:
-        image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        image: pgvector/pgvector:0.8.6-pg16-bookworm@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
         env:
           POSTGRES_DB: kinsun
           POSTGRES_USER: kinsun
@@ -62,6 +62,7 @@ jobs:
           uv sync --frozen --project services/core-api --extra test --extra dev
           uv sync --frozen --project services/agent-runtime --extra test --extra dev
           uv sync --frozen --project services/speech-gateway --extra test --extra dev
+          uv sync --frozen --project services/rag-ingestion --extra test --extra dev
 
       - name: Create disposable integration database
         run: >-
@@ -73,7 +74,8 @@ jobs:
 
       - name: Core API quality and PostgreSQL integration
         run: |
-          uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py
+          uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
+          uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
           uv run --frozen --project services/core-api pytest services/core-api/tests/unit
           uv run --frozen --project services/core-api pytest services/core-api/tests/integration
 
@@ -88,6 +90,12 @@ jobs:
           uv run --frozen --project services/speech-gateway ruff check services/speech-gateway
           uv run --frozen --project services/speech-gateway ruff format --check services/speech-gateway
           uv run --frozen --project services/speech-gateway pytest services/speech-gateway/tests
+
+      - name: RAG Ingestion quality
+        run: |
+          uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
+          uv run --frozen --project services/rag-ingestion ruff format --check services/rag-ingestion
+          uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
 
       - name: Executable contracts
         run: |
