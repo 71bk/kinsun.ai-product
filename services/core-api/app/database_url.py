@@ -30,3 +30,14 @@ def to_psycopg_database_url(database_url: str) -> str:
 
     normalized = url.set(drivername="postgresql+psycopg", query=query)
     return normalized.render_as_string(hide_password=False)
+
+
+def to_psycopg_conninfo(database_url: str) -> str:
+    """Return a libpq URI accepted by ``psycopg.connect`` directly.
+
+    SQLAlchemy requires the ``+psycopg`` driver suffix, while psycopg's own
+    conninfo parser only accepts the standard ``postgresql`` URI scheme.
+    """
+
+    sqlalchemy_url = make_url(to_psycopg_database_url(database_url))
+    return sqlalchemy_url.set(drivername="postgresql").render_as_string(hide_password=False)

@@ -41,6 +41,7 @@ from alembic.config import Config
 # replaced).
 
 SCHEMA_NAME = "eldercare_ai"
+RAG_SCHEMA_NAME = "rag_public"
 
 #: The eight tables that back the identity & elder assignment domain.
 #: The baseline creates 48 tables in total (the wider eldercare_ai product
@@ -65,7 +66,7 @@ _TOTAL_HEAD_TABLE_COUNT = 61
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "c5d7e9f1a234"
+_HEAD_REVISION = "e6f8a0b2c345"
 
 
 def _get_alembic_config() -> Config:
@@ -135,6 +136,7 @@ def _drop_all_tables(connection) -> None:
     docstring) and is only removed here, not by the migration itself.
     """
     connection.execute(text(f"DROP SCHEMA IF EXISTS {SCHEMA_NAME} CASCADE"))
+    connection.execute(text(f"DROP SCHEMA IF EXISTS {RAG_SCHEMA_NAME} CASCADE"))
     connection.execute(text("DROP TABLE IF EXISTS alembic_version CASCADE"))
 
 
@@ -473,6 +475,159 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
     missing = set(_CORE_TABLES) - set(tables)
     assert not missing, f"Expected core tables {_CORE_TABLES} to be a subset, missing: {missing}"
     assert "decision_support_profile" in tables
+
+
+@pytest.mark.asyncio
+async def test_public_rag_projection_migration_isolated_and_vector_ready(test_engine) -> None:
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        extensions = {
+            row.extname: (row.extversion, row.schema_name)
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT e.extname, e.extversion, n.nspname AS schema_name "
+                        "FROM pg_extension e "
+                        "JOIN pg_namespace n ON n.oid = e.extnamespace "
+                        "WHERE extname IN ('vector', 'pg_trgm')"
+                    )
+                )
+            )
+        }
+        rag_tables = {
+            row.table_name
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT table_name FROM information_schema.tables "
+                        "WHERE table_schema = :schema"
+                    ),
+                    {"schema": RAG_SCHEMA_NAME},
+                )
+            )
+        }
+        vector_type = await conn.scalar(
+            text(
+                "SELECT format_type(a.atttypid, a.atttypmod) "
+                "FROM pg_attribute a "
+                "JOIN pg_class c ON c.oid = a.attrelid "
+                "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                "WHERE n.nspname = :schema "
+                "AND c.relname = 'chunk_embedding' "
+                "AND a.attname = 'embedding'"
+            ),
+            {"schema": RAG_SCHEMA_NAME},
+        )
+        public_grant_count = await conn.scalar(
+            text(
+                "SELECT count(*) FROM information_schema.role_table_grants "
+                "WHERE table_schema = :schema AND grantee = 'PUBLIC'"
+            ),
+            {"schema": RAG_SCHEMA_NAME},
+        )
+        indexes = {
+            row.indexname
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT indexname FROM pg_indexes "
+                        "WHERE schemaname = :schema"
+                    ),
+                    {"schema": RAG_SCHEMA_NAME},
+                )
+            )
+        }
+
+    assert set(extensions) == {"pg_trgm", "vector"}
+    assert {schema_name for _, schema_name in extensions.values()} == {"public"}
+    assert rag_tables == {
+        "chunk_embedding",
+        "chunk_projection",
+        "embedding_profile",
+        "ingestion_run",
+        "rag_release",
+    }
+    assert vector_type == "vector(1024)"
+    assert public_grant_count == 0
+    assert {
+        "ix_rag_chunk_embedding_hnsw",
+        "ix_rag_chunk_lexical_trgm",
+        "ix_rag_chunk_search_vector",
+    }.issubset(indexes)
+
+
+@pytest.mark.asyncio
+async def test_public_rag_release_rejects_incompatible_embedding_profile(test_engine) -> None:
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+
+    # Alembic opens its own synchronous connection. Run it after the schema
+    # cleanup transaction commits so the two connections cannot deadlock on
+    # alembic_version.
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO rag_public.embedding_profile "
+                "(embedding_profile_id, provider, model_id, dimension, "
+                "document_task_type, config_version) VALUES "
+                "('google-v1', 'google', 'gemini-embedding-001', 1024, "
+                "'RETRIEVAL_DOCUMENT', 'v1'), "
+                "('other-v1', 'other', 'other-embedding', 1024, "
+                "'RETRIEVAL_DOCUMENT', 'v1')"
+            )
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO rag_public.rag_release "
+                "(release_id, artifact_version, candidate_sha256, source_count, "
+                "chunk_count, release_status, review_status, human_source_review, "
+                "production_approved, embedding_profile_id) VALUES "
+                "('test-v1', 'v001', :digest, 1, 1, 'APPROVED', 'reviewed', "
+                "'COMPLETED', true, 'google-v1')"
+            ),
+            {"digest": "a" * 64},
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO rag_public.chunk_projection "
+                "(release_id, chunk_id, source_id, chunk_index, artifact_version, "
+                "schema_version, document_title, content_type, language, locale, "
+                "chunk_text, embedding_text, text_sha256, embedding_text_sha256, "
+                "record_sha256, review_status, current_status, risk_level, production_approved, "
+                "retrieval_eligible, citation, governance, provenance, retrieval_policy) "
+                "VALUES ('test-v1', 'chunk-1', 'source-1', 1, 'v001', '2.1.0', "
+                "'title', 'guide', 'zh-Hant', 'zh-TW', 'text', 'embedding text', "
+                ":text_digest, :embedding_digest, :record_digest, 'reviewed', 'current', 'low', "
+                "true, true, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)"
+            ),
+            {
+                "text_digest": "b" * 64,
+                "embedding_digest": "c" * 64,
+                "record_digest": "d" * 64,
+            },
+        )
+
+    with pytest.raises(IntegrityError):
+        async with test_engine.begin() as conn:
+            await conn.execute(
+                text(
+                    "INSERT INTO rag_public.chunk_embedding "
+                    "(release_id, chunk_id, embedding_profile_id, "
+                    "embedding_text_sha256, embedding) VALUES "
+                    "('test-v1', 'chunk-1', 'other-v1', :digest, "
+                    "('[' || array_to_string(array_fill(0.0::float8, ARRAY[1024]), ',') "
+                    "|| ']')::vector)"
+                ),
+                {"digest": "c" * 64},
+            )
 
 
 @pytest.mark.asyncio
