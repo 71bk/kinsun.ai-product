@@ -1,6 +1,6 @@
 # AGENTS.md
 
-- 更新日期：2026-08-24
+- 更新日期：2026-08-25
 - 校準基準：`main` at `a2af73e`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
@@ -36,9 +36,17 @@
     `SearchBackend`／bounded plan 隔離搜尋實作；query embedding 也已由 provider-neutral
     `EmbeddingProvider` 隔離，現有 Bedrock 與 opt-in Google query adapters。Core 已有本機驗證的
     `rag_public` PostgreSQL／pgvector migration 與 17 sources／726 candidate chunks 的 deterministic、
-    idempotent staging projection importer；尚未套用共享／遠端資料庫，也尚未建立任何 document
-    embedding。Google document embedding／corpus rebuild 與 PostgreSQL search backend 尚未實作；
-    目前唯一 search runtime 組裝仍是 OpenSearch，不接 Neptune，不得描述成 production runtime
+    idempotent staging projection importer。2026-08-25 已對目前 Supabase development database 套用
+    migration `e6f8a0b2c345`，並匯入 release `rag-v2-v002-bab68588963b`；遠端讀回為 17 sources、
+    726 chunks、全部 record/text/embedding-text hash 一致、`needs_review=726`、
+    `production_approved=0`。2026-08-25 已使用確認的 Google
+    `gemini-embedding-001`／1024／`RETRIEVAL_DOCUMENT` profile 產生 726 成功、0 失敗的 repository 外
+    staging artifact，SHA-256 為
+    `599d194db552433710ec6aff69318e962cb5b4b1c9f7a3050d527b369a3df7d5`；經使用者確認後已以單一
+    transaction 匯入 726 document embeddings，Supabase 獨立讀回的 profile、embedding-text hash 與
+    vector fingerprint 全部 `VERIFIED`。retrieval 仍未授權，Production 仍封鎖。PostgreSQL search
+    backend 尚未實作；目前唯一 search runtime 組裝仍是 OpenSearch，
+    不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
     agent-runtime 的 **staging-only** RAG 路徑，尚未對真實 AWS／OpenSearch 環境驗證，

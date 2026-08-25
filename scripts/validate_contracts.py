@@ -116,6 +116,12 @@ DATA_SCHEMA_FOR = {
     "rag-chunk-missing-embedding-text.json": "rag/rag-chunk.schema.json",
     "ingestion-receipt.json": "rag/ingestion-receipt.schema.json",
     "ingestion-receipt-with-vectors.json": "rag/ingestion-receipt.schema.json",
+    "rag-staging-embedding-authorization.json": (
+        "rag/human-review-owner-acceptance-v2.schema.json"
+    ),
+    "rag-staging-embedding-authorization-production.json": (
+        "rag/human-review-owner-acceptance-v2.schema.json"
+    ),
     "retrieval-request.json": "rag/retrieval-request.schema.json",
     "retrieval-request-top-k-ten.json": "rag/retrieval-request.schema.json",
     "retrieval-response.json": "rag/retrieval-response.schema.json",

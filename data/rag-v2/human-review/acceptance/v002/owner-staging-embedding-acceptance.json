@@ -1,0 +1,65 @@
+{
+  "acceptance_scope": "STAGING_DOCUMENT_EMBEDDING_ONLY",
+  "acceptance_version": "v002",
+  "accepted_artifacts": {
+    "allowlist_path": "data/rag-v2/candidates/v002/manifests/embedding-staging-allowlist-v003.json",
+    "allowlist_sha256": "defc8d79d69befbb6a820d5ff2f13a4107b7f8cf1707a642d31a0c8168a998fc",
+    "allowlist_size_bytes": 714125,
+    "candidate_checksums_path": "data/rag-v2/candidates/v002/SHA256SUMS.txt",
+    "candidate_checksums_sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+    "chunk_count": 726,
+    "chunk_manifest_path": "data/rag-v2/candidates/v002/manifests/chunk-file-manifest-v002.json",
+    "chunk_manifest_sha256": "4418d5240ac8130e5996bfbf811db4a13ca9dc75bb4e237f7020991df5264e72",
+    "prior_acceptance_manifest_path": "data/rag-v2/human-review/acceptance/v001/manifest.json",
+    "prior_acceptance_manifest_sha256": "4206b78eb92b0204efefc9f2aa42f585b95d6614f66d189b46fd7e1ea2c736cb",
+    "source_count": 17
+  },
+  "assignment_package_version": "v001",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statement": "我以復合，簽核",
+    "statement_sha256": "84be67a42be36fc856faf4ae455acf075f3121835a709b686d96798d7f7ed997"
+  },
+  "candidate_artifact_version": "v002",
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "cryptographic_signature": null,
+    "intent": "AUTHORIZE_FIXED_HASH_STAGING_DOCUMENT_EMBEDDING",
+    "signature_value": "IanHsu"
+  },
+  "embedding_authorization": {
+    "allowed_actions": [
+      "HAND_OFF_FIXED_HASH_ALLOWLIST_TO_STAGING_EMBEDDING_JOB",
+      "GENERATE_DOCUMENT_EMBEDDINGS",
+      "WRITE_STAGING_EMBEDDINGS",
+      "VERIFY_STAGING_EMBEDDINGS"
+    ],
+    "allowed_use": "INTERNAL_EMERGENCY_DEMO_ONLY",
+    "environment": "STAGING",
+    "mixed_embedding_profiles_allowed": false,
+    "provider_profile_binding_required": true,
+    "required_dimension": 1024,
+    "required_document_input_type": "RETRIEVAL_DOCUMENT"
+  },
+  "gates": {
+    "embedding_status": "AUTHORIZED_NOT_STARTED",
+    "external_access_performed": false,
+    "indexing_status": "NOT_AUTHORIZED",
+    "production_approved": false,
+    "production_status": "BLOCKED"
+  },
+  "project_owner_id": "IanHsu",
+  "review_assertions": {
+    "assignment_package_status": "PENDING_ONLY",
+    "chunk_assignment_count": 726,
+    "formal_item_level_review_evidence": "NOT_RECORDED",
+    "owner_review_and_signature_statement_recorded": true,
+    "review_status": "needs_review",
+    "source_assignment_count": 17
+  },
+  "schema_version": "2.0.0",
+  "signed_at": "2026-08-25T12:02:19+08:00",
+  "signer_role": "PROJECT_OWNER",
+  "status": "SIGNED",
+  "supersedes_acceptance_version": "v001"
+}

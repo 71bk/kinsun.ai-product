@@ -73,9 +73,16 @@
   provider-neutral `SearchBackend` 接收不含 executable DSL 的 bounded plan；query embedding 由
   `EmbeddingProvider` 隔離，已有 Bedrock 與 opt-in Google query adapters。Core 已新增並以本機
   pgvector integration tests 驗證 `rag_public` schema 與 17 sources／726 candidate chunks 的
-  deterministic、idempotent staging projection importer；未套用共享／遠端資料庫，embedding rows
-  仍為 0。Google document embedding／corpus rebuild 與 PostgreSQL hybrid backend 仍未實作，現行
-  唯一 search backend 仍是未經真實環境驗證的 OpenSearch。
+  deterministic、idempotent staging projection importer。2026-08-25 已對目前 Supabase development
+  database 套用 migration `e6f8a0b2c345`，並匯入 release `rag-v2-v002-bab68588963b`；遠端讀回為
+  17 sources、726 chunks、全部 record/text/embedding-text hash 一致、`needs_review=726`、
+  `production_approved=0`。2026-08-25 已使用確認的 Google
+  `gemini-embedding-001`／1024／`RETRIEVAL_DOCUMENT` profile 產生 726 成功、0 失敗的 repository 外
+  staging artifact，SHA-256 為
+  `599d194db552433710ec6aff69318e962cb5b4b1c9f7a3050d527b369a3df7d5`；經使用者確認後已以單一
+  transaction 匯入 726 document embeddings，Supabase 獨立讀回的 profile、embedding-text hash 與
+  vector fingerprint 全部 `VERIFIED`。retrieval 仍未授權，Production 仍封鎖。PostgreSQL hybrid
+  backend 仍未實作，現行唯一 search backend 仍是未經真實環境驗證的 OpenSearch。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

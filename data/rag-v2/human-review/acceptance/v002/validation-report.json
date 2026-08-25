@@ -1,0 +1,70 @@
+{
+  "acceptance_version": "v002",
+  "allowlist_sha256": "defc8d79d69befbb6a820d5ff2f13a4107b7f8cf1707a642d31a0c8168a998fc",
+  "candidate_artifact_version": "v002",
+  "checks": [
+    {
+      "name": "prior_acceptance_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_acceptance_bytes_locked",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_checksums_verified",
+      "status": "PASS"
+    },
+    {
+      "name": "allowlist_fixed_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_source_count_17",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_chunk_count_726",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit_owner_authorization_recorded",
+      "status": "PASS"
+    },
+    {
+      "name": "typed_signature_identity_matches_owner",
+      "status": "PASS"
+    },
+    {
+      "name": "scope_staging_document_embedding_only",
+      "status": "PASS"
+    },
+    {
+      "name": "formal_item_review_not_inferred",
+      "status": "PASS"
+    },
+    {
+      "name": "indexing_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_remains_blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "external_access_not_performed",
+      "status": "PASS"
+    }
+  ],
+  "chunk_count": 726,
+  "embedding_status": "AUTHORIZED_NOT_STARTED",
+  "fail_count": 0,
+  "indexing_status": "NOT_AUTHORIZED",
+  "pass_count": 13,
+  "production_approved": false,
+  "production_status": "BLOCKED",
+  "review_status": "needs_review",
+  "schema_version": "2.0.0",
+  "source_count": 17,
+  "status": "PASS"
+}

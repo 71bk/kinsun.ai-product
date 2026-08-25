@@ -10,12 +10,13 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
 import yaml
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import (
     BaseSettings,
     DotEnvSettingsSource,
@@ -25,6 +26,8 @@ from pydantic_settings import (
 )
 
 REQUIRED_EMBEDDING_DIMENSION = 1024
+GOOGLE_DOCUMENT_INPUT_TYPE = "RETRIEVAL_DOCUMENT"
+BEDROCK_DOCUMENT_INPUT_TYPE = "search_document"
 
 # Sibling directories of the approved set that hold chunks nobody has cleared
 # for embedding: `pending-revalidation` is awaiting review, `not-authorized` is
@@ -48,6 +51,19 @@ class SettingsError(ValueError):
     """Raised when an operation is missing safe, required configuration."""
 
 
+@dataclass(frozen=True, slots=True)
+class EmbeddingProfile:
+    """Provider identity that must remain stable across a complete corpus."""
+
+    provider: Literal["bedrock", "google"]
+    model_id: str
+    dimension: int
+    document_input_type: str
+    config_version: str
+    batch_size: int
+    truncate: str
+
+
 class IngestionSettings(BaseSettings):
     """RAG ingestion settings sourced from config files and environment."""
 
@@ -56,6 +72,16 @@ class IngestionSettings(BaseSettings):
     bedrock_embedding_dimension: int = Field(
         default=REQUIRED_EMBEDDING_DIMENSION,
         alias="BEDROCK_EMBEDDING_DIMENSION",
+    )
+    gemini_api_key: SecretStr | None = Field(default=None, alias="GEMINI_API_KEY")
+    gemini_embedding_model_id: str | None = Field(default=None, alias="GEMINI_EMBEDDING_MODEL_ID")
+    gemini_embedding_dimension: int = Field(
+        default=REQUIRED_EMBEDDING_DIMENSION,
+        alias="GEMINI_EMBEDDING_DIMENSION",
+    )
+    gemini_embedding_timeout_seconds: float = Field(
+        default=30.0,
+        alias="GEMINI_EMBEDDING_TIMEOUT_SECONDS",
     )
     opensearch_host: str | None = Field(default=None, alias="OPENSEARCH_HOST")
     opensearch_index: str | None = Field(default=None, alias="OPENSEARCH_INDEX")
@@ -85,6 +111,9 @@ class IngestionSettings(BaseSettings):
     )
     rag_smoke_config_path: Path | None = Field(default=None, alias="RAG_SMOKE_CONFIG_PATH")
     agent_runtime_base_url: str | None = Field(default=None, alias="AGENT_RUNTIME_BASE_URL")
+    embedding_provider: Literal["bedrock", "google"] = "bedrock"
+    embedding_document_input_type: str = BEDROCK_DOCUMENT_INPUT_TYPE
+    embedding_config_version: str = "1.0.0"
     embedding_batch_size: int = 96
     embedding_truncate: str = "NONE"
 
@@ -109,11 +138,18 @@ class IngestionSettings(BaseSettings):
 
         return env_settings, dotenv_settings, init_settings, file_secret_settings
 
-    @field_validator("bedrock_embedding_dimension")
+    @field_validator("bedrock_embedding_dimension", "gemini_embedding_dimension")
     @classmethod
     def dimension_must_be_1024(cls, value: int) -> int:
         if value != REQUIRED_EMBEDDING_DIMENSION:
             raise ValueError(f"embedding dimension must be {REQUIRED_EMBEDDING_DIMENSION}")
+        return value
+
+    @field_validator("gemini_embedding_timeout_seconds")
+    @classmethod
+    def google_timeout_must_be_bounded(cls, value: float) -> float:
+        if not 0.0 < value <= 120.0:
+            raise ValueError("Google embedding timeout must be between zero and 120 seconds")
         return value
 
     @field_validator("embedding_batch_size")
@@ -129,6 +165,14 @@ class IngestionSettings(BaseSettings):
         normalized = value.upper()
         if normalized not in {"NONE", "LEFT", "RIGHT"}:
             raise ValueError("embedding truncate must be NONE, LEFT, or RIGHT")
+        return normalized
+
+    @field_validator("embedding_config_version")
+    @classmethod
+    def config_version_must_be_bounded(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized or len(normalized) > 80:
+            raise ValueError("embedding config version is required and must fit 80 characters")
         return normalized
 
     @field_validator("opensearch_host")
@@ -175,6 +219,47 @@ class IngestionSettings(BaseSettings):
             str(self.bedrock_embedding_model_id),
             self.bedrock_embedding_dimension,
         )
+
+    def require_embedding_profile(self) -> EmbeddingProfile:
+        """Return a complete provider profile without exposing any credential."""
+
+        if self.embedding_provider == "bedrock":
+            model_id = self.bedrock_embedding_model_id
+            dimension = self.bedrock_embedding_dimension
+            expected_input_type = BEDROCK_DOCUMENT_INPUT_TYPE
+            provider_label = "Bedrock"
+        else:
+            model_id = self.gemini_embedding_model_id
+            dimension = self.gemini_embedding_dimension
+            expected_input_type = GOOGLE_DOCUMENT_INPUT_TYPE
+            provider_label = "Google"
+        if model_id is None or not model_id.strip():
+            raise SettingsError(f"missing {provider_label} embedding model ID")
+        if self.embedding_document_input_type != expected_input_type:
+            raise SettingsError(
+                f"{provider_label} document input type must be {expected_input_type}"
+            )
+        if self.embedding_provider == "google" and self.embedding_truncate != "NONE":
+            raise SettingsError("Google document embedding requires truncate=NONE")
+        return EmbeddingProfile(
+            provider=self.embedding_provider,
+            model_id=model_id.strip(),
+            dimension=dimension,
+            document_input_type=self.embedding_document_input_type,
+            config_version=self.embedding_config_version,
+            batch_size=self.embedding_batch_size,
+            truncate=self.embedding_truncate,
+        )
+
+    def require_google_api_key(self) -> str:
+        if self.embedding_provider != "google":
+            raise SettingsError("Google API key requested for a non-Google embedding profile")
+        if self.gemini_api_key is None:
+            raise SettingsError("GEMINI_API_KEY is required for Google document embedding")
+        value = self.gemini_api_key.get_secret_value().strip()
+        if not value:
+            raise SettingsError("GEMINI_API_KEY is required for Google document embedding")
+        return value
 
     def require_opensearch(self) -> tuple[str, str, str, str]:
         missing = [
@@ -255,15 +340,35 @@ def load_settings(
     if not all(isinstance(value, dict) for value in (embedding, index, paths)):
         raise SettingsError("embedding, index, and paths configuration must be objects")
 
+    provider = embedding.get("provider", "bedrock")
+    if provider not in {"bedrock", "google"}:
+        raise SettingsError("embedding provider must be bedrock or google")
+    expected_model_env = (
+        "BEDROCK_EMBEDDING_MODEL_ID" if provider == "bedrock" else "GEMINI_EMBEDDING_MODEL_ID"
+    )
+    expected_dimension_env = (
+        "BEDROCK_EMBEDDING_DIMENSION" if provider == "bedrock" else "GEMINI_EMBEDDING_DIMENSION"
+    )
+    if embedding.get("model_id_env") not in {None, expected_model_env}:
+        raise SettingsError(f"{provider} embedding model_id_env must be {expected_model_env}")
+    if embedding.get("dimension_env") not in {None, expected_dimension_env}:
+        raise SettingsError(f"{provider} embedding dimension_env must be {expected_dimension_env}")
+
     values: dict[str, Any] = {
-        "BEDROCK_EMBEDDING_MODEL_ID": embedding.get("model_id"),
-        "BEDROCK_EMBEDDING_DIMENSION": embedding.get("dimension", REQUIRED_EMBEDDING_DIMENSION),
+        "embedding_provider": provider,
+        "embedding_config_version": embedding_config.get("schema_version", "1.0.0"),
+        expected_model_env: embedding.get("model_id"),
+        expected_dimension_env: embedding.get("dimension", REQUIRED_EMBEDDING_DIMENSION),
         "AWS_REGION": embedding.get("region"),
         "OPENSEARCH_INDEX": index.get("name"),
         "OPENSEARCH_ALIAS": index.get("alias"),
         "RAG_MODE": staging_config.get("mode", index_config.get("mode")),
         "RAG_ALLOWLIST_PATH": _resolve_repo_path(paths.get("allowlist"), repository_root),
         "RAG_CHUNKS_DIR": _resolve_repo_path(paths.get("chunks_dir"), repository_root),
+        "embedding_document_input_type": embedding.get(
+            "document_input_type",
+            BEDROCK_DOCUMENT_INPUT_TYPE if provider == "bedrock" else GOOGLE_DOCUMENT_INPUT_TYPE,
+        ),
         "embedding_batch_size": embedding.get("batch_size", 96),
         "embedding_truncate": embedding.get("truncate", "NONE"),
     }
@@ -272,6 +377,10 @@ def load_settings(
         "AWS_REGION",
         "BEDROCK_EMBEDDING_MODEL_ID",
         "BEDROCK_EMBEDDING_DIMENSION",
+        "GEMINI_API_KEY",
+        "GEMINI_EMBEDDING_MODEL_ID",
+        "GEMINI_EMBEDDING_DIMENSION",
+        "GEMINI_EMBEDDING_TIMEOUT_SECONDS",
         "OPENSEARCH_HOST",
         "OPENSEARCH_INDEX",
         "OPENSEARCH_ALIAS",

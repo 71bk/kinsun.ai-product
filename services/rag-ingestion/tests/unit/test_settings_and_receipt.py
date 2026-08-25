@@ -8,7 +8,7 @@ from conftest import write_dataset
 
 from rag_ingestion.allowlist import AllowlistGovernanceError, load_allowlist
 from rag_ingestion.receipt import new_receipt, write_receipt
-from rag_ingestion.settings import IngestionSettings, SettingsError
+from rag_ingestion.settings import IngestionSettings, SettingsError, load_settings
 
 
 def isolated_settings(**values: object) -> IngestionSettings:
@@ -20,6 +20,63 @@ def isolated_settings(**values: object) -> IngestionSettings:
 def test_settings_reject_non_1024_dimension() -> None:
     with pytest.raises(ValueError, match="1024"):
         isolated_settings(BEDROCK_EMBEDDING_DIMENSION=1536)
+
+    with pytest.raises(ValueError, match="1024"):
+        isolated_settings(GEMINI_EMBEDDING_DIMENSION=1536)
+
+
+def test_google_profile_requires_exact_document_task_and_secret() -> None:
+    settings = isolated_settings(
+        embedding_provider="google",
+        embedding_document_input_type="RETRIEVAL_DOCUMENT",
+        GEMINI_EMBEDDING_MODEL_ID="gemini-embedding-001",
+    )
+
+    profile = settings.require_embedding_profile()
+
+    assert profile.provider == "google"
+    assert profile.dimension == 1024
+    assert profile.document_input_type == "RETRIEVAL_DOCUMENT"
+    with pytest.raises(SettingsError, match="GEMINI_API_KEY"):
+        settings.require_google_api_key()
+
+
+def test_google_secret_is_masked_in_settings_representation() -> None:
+    secret = "synthetic-google-secret"
+    settings = isolated_settings(
+        embedding_provider="google",
+        embedding_document_input_type="RETRIEVAL_DOCUMENT",
+        GEMINI_EMBEDDING_MODEL_ID="gemini-embedding-001",
+        GEMINI_API_KEY=secret,
+    )
+
+    assert settings.require_google_api_key() == secret
+    assert secret not in repr(settings)
+    assert secret not in str(settings.model_dump())
+
+
+def test_checked_in_google_config_loads_provider_neutral_profile() -> None:
+    repository_root = Path(__file__).resolve().parents[4]
+    config_dir = repository_root / "config" / "rag"
+    settings = load_settings(
+        embedding_config_path=config_dir / "embedding-google.yaml",
+        index_config_path=config_dir / "opensearch-index-v1.json",
+        staging_config_path=config_dir / "staging-filters.yaml",
+        repository_root=repository_root,
+        environ={
+            "GEMINI_API_KEY": "synthetic-google-secret",
+            "GEMINI_EMBEDDING_MODEL_ID": "gemini-embedding-001",
+            "GEMINI_EMBEDDING_DIMENSION": "1024",
+        },
+    )
+
+    profile = settings.require_embedding_profile()
+
+    assert profile.provider == "google"
+    assert profile.model_id == "gemini-embedding-001"
+    assert profile.dimension == 1024
+    assert profile.document_input_type == "RETRIEVAL_DOCUMENT"
+    assert profile.batch_size == 96
 
 
 def test_settings_reject_production_index_name() -> None:

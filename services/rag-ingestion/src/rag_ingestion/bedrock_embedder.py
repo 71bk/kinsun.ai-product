@@ -7,11 +7,16 @@ import math
 import os
 import uuid
 from collections.abc import Sequence
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
 from rag_ingestion.allowlist import Allowlist
+from rag_ingestion.embedding_types import (
+    DocumentEmbeddingProvider,
+    EmbeddingBatchError,
+    EmbeddingError,
+    EmbeddingResult,
+)
 from rag_ingestion.settings import (
     REQUIRED_EMBEDDING_DIMENSION,
     ensure_artifact_outside_repository,
@@ -21,24 +26,6 @@ from rag_ingestion.validator import ValidatedChunk
 
 class BedrockRuntimeClient(Protocol):
     def invoke_model(self, **kwargs: Any) -> dict[str, Any]: ...
-
-
-class EmbeddingError(RuntimeError):
-    """Raised when embeddings cannot be safely generated or loaded."""
-
-
-class EmbeddingBatchError(EmbeddingError):
-    def __init__(self, message: str, *, success_count: int, failure_count: int) -> None:
-        self.success_count = success_count
-        self.failure_count = failure_count
-        super().__init__(message)
-
-
-@dataclass(frozen=True, slots=True)
-class EmbeddingResult:
-    vectors: tuple[tuple[float, ...], ...]
-    success_count: int
-    failure_count: int
 
 
 class BedrockEmbedder:
@@ -144,7 +131,7 @@ def generate_embedding_artifact(
     rag_mode: str,
     require_owner_signature: bool,
     production_enabled: bool,
-    embedder: BedrockEmbedder,
+    embedder: DocumentEmbeddingProvider,
     chunks: Sequence[ValidatedChunk],
     artifact_path: Path,
     repository_root: Path,

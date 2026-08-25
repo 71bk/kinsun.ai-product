@@ -17,12 +17,13 @@ from opensearchpy.exceptions import RequestError
 
 from rag_ingestion.allowlist import Allowlist, ExecutionGovernance, load_allowlist
 from rag_ingestion.bedrock_embedder import (
-    BedrockEmbedder,
     generate_embedding_artifact,
     read_embedding_artifact,
 )
 from rag_ingestion.bulk_ingester import BulkIngester
 from rag_ingestion.chunk_loader import load_allowlisted_chunks
+from rag_ingestion.embedding_provider import build_document_embedding_provider
+from rag_ingestion.google_embedder import uses_vertex_express
 from rag_ingestion.index_manager import (
     IndexConfigurationError,
     IndexManager,
@@ -47,7 +48,7 @@ COMMANDS = (
     "verify-index",
     "smoke-test",
 )
-DIAGNOSTIC_COMMANDS = ("inspect-pipelines",)
+DIAGNOSTIC_COMMANDS = ("inspect-pipelines", "prepare-provider")
 _MAX_DEPENDENCY_REASON_LENGTH = 512
 _RUN_ID_PATTERN = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
 _LOCAL_CONFIGURATION_ERROR_TYPES = (IndexConfigurationError, SettingsError, SmokeTestError)
@@ -67,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
             "verify-index": _verify_index,
             "smoke-test": _smoke_test,
             "inspect-pipelines": _inspect_pipelines,
+            "prepare-provider": _prepare_provider,
         }
         summary = handlers[args.command](context)
         _print_json(summary)
@@ -231,34 +233,70 @@ def _inspect_pipelines(context: _Context) -> dict[str, Any]:
     }
 
 
+def _prepare_provider(context: _Context) -> dict[str, Any]:
+    """Validate provider configuration and credential presence without an SDK call."""
+
+    context.settings.assert_staging_only_external_execution()
+    profile = context.settings.require_embedding_profile()
+    if profile.provider == "bedrock":
+        context.settings.require_bedrock()
+        credential_status = "STANDARD_AWS_CHAIN_NOT_CONTACTED"
+        api_surface = "BEDROCK_RUNTIME"
+        effective_request_batch_size = profile.batch_size
+    else:
+        api_key = context.settings.require_google_api_key()
+        credential_status = "CONFIGURED_NOT_EXPOSED"
+        vertex_express = uses_vertex_express(api_key)
+        api_surface = "VERTEX_AI_EXPRESS" if vertex_express else "GEMINI_DEVELOPER_API"
+        effective_request_batch_size = 1 if vertex_express else profile.batch_size
+    return {
+        "status": "PROVIDER_CONFIGURATION_READY",
+        "provider": profile.provider,
+        "embedding_model_id": profile.model_id,
+        "embedding_dimension": profile.dimension,
+        "document_input_type": profile.document_input_type,
+        "config_version": profile.config_version,
+        "configured_batch_size": profile.batch_size,
+        "effective_request_batch_size": effective_request_batch_size,
+        "api_surface": api_surface,
+        "credential_status": credential_status,
+        "external_client_initialized": False,
+        "external_access_performed": False,
+        "embedding_status": "NOT_STARTED",
+        "corpus_rebuild_status": "NOT_STARTED",
+        "indexing_status": "NOT_AUTHORIZED",
+        "production_approved": False,
+    }
+
+
 def _generate_embeddings(context: _Context) -> dict[str, Any]:
     allowlist, validation = context.validate()
     decision = _assert_allowlist_execution(context, allowlist)
-    region, model_id, dimension = context.settings.require_bedrock()
+    profile = context.settings.require_embedding_profile()
     artifact_path = context.settings.embedding_artifact_path(context.repository_root)
-    embedder = BedrockEmbedder.from_boto3(
-        region=region,
-        model_id=model_id,
-        dimension=dimension,
-        batch_size=context.settings.embedding_batch_size,
-        truncate=context.settings.embedding_truncate,
-    )
-    result = generate_embedding_artifact(
-        allowlist=allowlist,
-        expected_allowlist_sha256=context.settings.rag_allowlist_expected_sha256,
-        rag_mode=context.settings.rag_mode,
-        require_owner_signature=context.settings.rag_require_owner_signature,
-        production_enabled=context.settings.rag_production_enabled,
-        embedder=embedder,
-        chunks=validation.chunks,
-        artifact_path=artifact_path,
-        repository_root=context.repository_root,
-    )
+    embedder = build_document_embedding_provider(context.settings)
+    try:
+        result = generate_embedding_artifact(
+            allowlist=allowlist,
+            expected_allowlist_sha256=context.settings.rag_allowlist_expected_sha256,
+            rag_mode=context.settings.rag_mode,
+            require_owner_signature=context.settings.rag_require_owner_signature,
+            production_enabled=context.settings.rag_production_enabled,
+            embedder=embedder,
+            chunks=validation.chunks,
+            artifact_path=artifact_path,
+            repository_root=context.repository_root,
+        )
+    finally:
+        close = getattr(embedder, "close", None)
+        if callable(close):
+            close()
     return {
         "status": "EMBEDDED",
         **_governance_log_fields(decision),
-        "embedding_model_id": model_id,
-        "embedding_dimension": dimension,
+        "embedding_provider": profile.provider,
+        "embedding_model_id": profile.model_id,
+        "embedding_dimension": profile.dimension,
         "embedding_success_count": result.success_count,
         "embedding_failure_count": result.failure_count,
         "artifact_location": "external_temp",
@@ -269,8 +307,9 @@ def _ingest(context: _Context) -> dict[str, Any]:
     allowlist, validation = context.validate()
     decision = _assert_allowlist_execution(context, allowlist)
     region, host, index_name, alias_name = context.settings.require_opensearch()
-    model_id = context.settings.bedrock_embedding_model_id or ""
-    dimension = context.settings.bedrock_embedding_dimension
+    profile = context.settings.require_embedding_profile()
+    model_id = profile.model_id
+    dimension = profile.dimension
     artifact_path = context.settings.embedding_artifact_path(context.repository_root)
     vectors = read_embedding_artifact(
         allowlist=allowlist,
@@ -371,13 +410,14 @@ def _verify_index(context: _Context) -> dict[str, Any]:
     allowlist, validation = context.validate()
     decision = _assert_allowlist_execution(context, allowlist)
     _, _, index_name, alias_name = context.settings.require_opensearch()
+    profile = context.settings.require_embedding_profile()
     gateway = context.gateway()
     manager = IndexManager(gateway)
-    manager.verify_mapping_dimension(index_name, context.settings.bedrock_embedding_dimension)
+    manager.verify_mapping_dimension(index_name, profile.dimension)
     pipelines = _load_pipeline_definitions(context)
     manager.verify_search_pipelines(pipelines)
     manager.verify_alias(index_name, alias_name)
-    report = BulkIngester(gateway, dimension=context.settings.bedrock_embedding_dimension).verify(
+    report = BulkIngester(gateway, dimension=profile.dimension).verify(
         index_name=index_name,
         expected_ids=[chunk.chunk_id for chunk in validation.chunks],
         expected_count=allowlist.declared_chunk_count,

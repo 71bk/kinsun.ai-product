@@ -1,0 +1,54 @@
+{
+  "artifact_version": "v002",
+  "entries": [
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/README.md",
+      "sha256": "8cc9868286d6c626ecffa74e7488f86d222574dc497441219fc72a7a9abbcf1d",
+      "size_bytes": 673
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/SHA256SUMS.txt",
+      "sha256": "56d4db0aa9f36620a7c244188c30e766ec0b3fe9aa8e9c10bc4f8b7de7126cbb",
+      "size_bytes": 527
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/manifest.json",
+      "sha256": "4206b78eb92b0204efefc9f2aa42f585b95d6614f66d189b46fd7e1ea2c736cb",
+      "size_bytes": 888
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/owner-risk-acceptance.json",
+      "sha256": "094a1ef45bddfa923f2317d9eadc64ae596c06a465572564b72db783caee0cfe",
+      "size_bytes": 1899
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/prior-artifact-lock.json",
+      "sha256": "ea930529ac64b936d9e6e82898f7e702c50b8600a89e0726a96778400100ffc6",
+      "size_bytes": 7406
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/validation-input-inventory.json",
+      "sha256": "6c677520d63652cb34988c2705e82490d344c4d72ab8adb6030985c399c3b264",
+      "size_bytes": 1654
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/human-review/acceptance/v001/validation-report.json",
+      "sha256": "0eaae0372e5d1aa7443fb993381ab8d9e55b9c79eb5dcbca84d1fdd4782da1dd",
+      "size_bytes": 1111
+    }
+  ],
+  "entry_count": 7,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "135643e95ae8f05ba48b2c0da885dac7d33c05834161c8ca63cc45ca3c22499f",
+  "kind": "staging_embedding_authorization_prior_artifact_immutable_lock",
+  "production_approved": false,
+  "schema_version": "2.0.0",
+  "scope": "immutable v001 owner acceptance package bytes"
+}

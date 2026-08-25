@@ -1,0 +1,48 @@
+{
+  "artifact_version": "v002",
+  "entries": [
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "contracts/schemas/rag/human-review-owner-acceptance-v2.schema.json",
+      "sha256": "af617a51ad709d83ba8b4d2c8571a16aaf6934d03ca4aa13f9ebb10e8f73df69",
+      "size_bytes": 6325
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "data/rag-v2/README.md",
+      "sha256": "c2932b6d7a05376ff9a885ad9fb9d1f045457508c3f20948051e4f1f36afdaf9",
+      "size_bytes": 3814
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "scripts/rag/build_staging_embedding_authorization.py",
+      "sha256": "d58b19678ae1e5c4fe6ab8b358c68d24f79da72642bd427be431f84aa1d9c445",
+      "size_bytes": 2578
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "scripts/rag/validate_staging_embedding_authorization.py",
+      "sha256": "5d8853032c3a79c2ddc860777072013dad266976ba45104fcc75b0015b4164dd",
+      "size_bytes": 1809
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/src/rag_ingestion/staging_embedding_authorization.py",
+      "sha256": "ffe8e4790df3b0954b77056e53eecc88661942aa7b0dc5661fe878f6136984fa",
+      "size_bytes": 23907
+    },
+    {
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+      "path": "services/rag-ingestion/tests/integration/test_staging_embedding_authorization.py",
+      "sha256": "2893d5e719c36ab2ecc2a3e26a51bf706849842e9c7cc50fa5cd98ea22528ced",
+      "size_bytes": 5771
+    }
+  ],
+  "entry_count": 6,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "b72e7f0ed5cbfa3b517e2d5cb288253c845410f20bbcac607295d62b9272b3a4",
+  "kind": "staging_embedding_authorization_validation_input_inventory",
+  "production_approved": false,
+  "schema_version": "2.0.0",
+  "scope": "staging embedding authorization schema, builder, validator, tests, and README"
+}

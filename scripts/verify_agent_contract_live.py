@@ -356,16 +356,18 @@ def build_live_v2_retriever(*, incomplete: bool) -> Retriever:
         agent_chunk_min=3,
         agent_chunk_max=5,
     )
+    hybrid_settings = HybridSearchSettings(
+        index_alias="rag-live-staging",
+        natural_language=natural,
+        legal=legal,
+    )
     return Retriever(
-        query_embedder=LiveQueryEmbedder(),
-        search_client=OpenSearchClient(LiveSearchTransport(incomplete=incomplete)),
-        hybrid_search=HybridSearch(
-            HybridSearchSettings(
-                index_alias="rag-live-staging",
-                natural_language=natural,
-                legal=legal,
-            )
+        embedding_provider=LiveQueryEmbedder(),
+        search_backend=OpenSearchClient(
+            LiveSearchTransport(incomplete=incomplete),
+            hybrid_settings,
         ),
+        hybrid_search=HybridSearch(hybrid_settings),
         allow_needs_review_citations=True,
     )
 

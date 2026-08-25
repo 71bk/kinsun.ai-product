@@ -20,12 +20,13 @@ from rag_ingestion.chunk_loader import load_allowlisted_chunks
 from rag_ingestion.index_manager import IndexConfigurationError, SearchPipelineDefinition
 from rag_ingestion.opensearch_client import BulkOperationError
 from rag_ingestion.receipt import new_receipt
-from rag_ingestion.settings import SettingsError
+from rag_ingestion.settings import EmbeddingProfile, SettingsError
 from rag_ingestion.smoke_test import AgentRuntimeSmokeReport, SmokeTestError
 from rag_ingestion.validator import validate_chunks
 
 
 class FakeSettings:
+    embedding_provider = "bedrock"
     embedding_batch_size = 96
     embedding_truncate = "NONE"
     rag_mode = "staging"
@@ -38,6 +39,17 @@ class FakeSettings:
 
     def require_bedrock(self) -> tuple[str, str, int]:
         return "configured-region", "configured-model-id", 1024
+
+    def require_embedding_profile(self) -> EmbeddingProfile:
+        return EmbeddingProfile(
+            provider="bedrock",
+            model_id="configured-model-id",
+            dimension=1024,
+            document_input_type="search_document",
+            config_version="1.0.0",
+            batch_size=96,
+            truncate="NONE",
+        )
 
     def embedding_artifact_path(self, repository_root: Path) -> Path:
         return self.artifact_path
@@ -363,11 +375,7 @@ def test_generate_embeddings_passes_effective_allowlist_to_guarded_workflow(
     )
     captured: dict[str, Any] = {}
 
-    monkeypatch.setattr(
-        cli.BedrockEmbedder,
-        "from_boto3",
-        lambda **kwargs: object(),
-    )
+    monkeypatch.setattr(cli, "build_document_embedding_provider", lambda settings: object())
 
     def fake_generate_embedding_artifact(**kwargs: Any) -> EmbeddingResult:
         captured.update(kwargs)
@@ -410,9 +418,9 @@ def test_external_commands_check_attestation_before_sdk_initialization(
     )
     sdk_calls: list[str] = []
     monkeypatch.setattr(
-        cli.BedrockEmbedder,
-        "from_boto3",
-        lambda **kwargs: sdk_calls.append("bedrock"),
+        cli,
+        "build_document_embedding_provider",
+        lambda settings: sdk_calls.append("embedding-provider"),
     )
     monkeypatch.setattr(
         cli.OpenSearchGateway,
