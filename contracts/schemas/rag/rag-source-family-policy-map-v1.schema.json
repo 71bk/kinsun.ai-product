@@ -1,0 +1,784 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-source-family-policy-map-v1.schema.json",
+  "title": "RagSourceFamilyPolicyMapV1",
+  "description": "Evidence-bound staging policy for the 17-source v003 public-knowledge corpus. Source-family decisions never bypass chunk-level risk, purpose, assessment, review, or Production gates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_version",
+    "policy_map_version",
+    "status",
+    "acceptance_binding",
+    "audit_preflight_binding",
+    "source_manifest_binding",
+    "global_policy",
+    "source_policies",
+    "summary",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "artifact_version": {
+      "const": "v003"
+    },
+    "policy_map_version": {
+      "const": "v001"
+    },
+    "status": {
+      "const": "STAGING_NEEDS_REVIEW"
+    },
+    "acceptance_binding": {
+      "$ref": "#/$defs/AcceptanceBinding"
+    },
+    "audit_preflight_binding": {
+      "$ref": "#/$defs/AuditPreflightBinding"
+    },
+    "source_manifest_binding": {
+      "$ref": "#/$defs/SourceManifestBinding"
+    },
+    "global_policy": {
+      "$ref": "#/$defs/GlobalPolicy"
+    },
+    "source_policies": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "$ref": "#/$defs/SourcePolicy"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/Summary"
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "review_status",
+        "external_sync",
+        "supabase_release",
+        "production_status",
+        "production_approved"
+      ],
+      "properties": {
+        "environment": {
+          "const": "STAGING"
+        },
+        "review_status": {
+          "const": "needs_review"
+        },
+        "external_sync": {
+          "const": "NOT_AUTHORIZED"
+        },
+        "supabase_release": {
+          "const": "NOT_CREATED"
+        },
+        "production_status": {
+          "const": "BLOCKED"
+        },
+        "production_approved": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "HttpUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "NonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Audience": {
+      "enum": [
+        "care_professional",
+        "elder",
+        "family_caregiver",
+        "system_admin"
+      ]
+    },
+    "Purpose": {
+      "enum": [
+        "care_record",
+        "care_summary",
+        "evaluation",
+        "explainable_evidence",
+        "form_reference",
+        "general_information",
+        "health_education",
+        "human_administered_assessment_design",
+        "legal_reference",
+        "manual_review",
+        "research_reference",
+        "resource_navigation",
+        "safety_routing",
+        "scale_explanation",
+        "source_lookup"
+      ]
+    },
+    "AcceptanceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "acceptance_version",
+        "scope"
+      ],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "acceptance_version": {
+          "const": "v001"
+        },
+        "scope": {
+          "const": "STAGING_PUBLIC_RETRIEVAL_POLICY"
+        }
+      }
+    },
+    "AuditPreflightBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inventory_path",
+        "inventory_sha256",
+        "prior_lock_path",
+        "prior_lock_sha256"
+      ],
+      "properties": {
+        "inventory_path": {
+          "const": "data/rag-v3/governance/source-family-policy/preflight/v001/validation-input-inventory.json"
+        },
+        "inventory_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "prior_lock_path": {
+          "const": "data/rag-v3/governance/source-family-policy/preflight/v001/prior-artifact-lock.json"
+        },
+        "prior_lock_sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
+      }
+    },
+    "SourceManifestBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "source_count",
+        "chunk_count"
+      ],
+      "properties": {
+        "path": {
+          "const": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_count": {
+          "const": 17
+        },
+        "chunk_count": {
+          "const": 726
+        }
+      }
+    },
+    "GlobalPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_approved_public_audiences",
+        "ordinary_rag_current_status",
+        "ordinary_rag_risk_levels",
+        "ordinary_rag_stop_normal_rag",
+        "ordinary_rag_retrieval_eligible",
+        "assessment_null_handling",
+        "license_evidence_required",
+        "high_or_unknown_normal_rag",
+        "research_route",
+        "runtime_safety_from_embedding_similarity",
+        "automatic_official_assessment",
+        "automatic_professional_assessment",
+        "formal_item_review_required",
+        "production_approved"
+      ],
+      "properties": {
+        "owner_approved_public_audiences": {
+          "const": [
+            "elder",
+            "family_caregiver",
+            "care_professional",
+            "system_admin"
+          ]
+        },
+        "ordinary_rag_current_status": {
+          "const": "current"
+        },
+        "ordinary_rag_risk_levels": {
+          "const": [
+            "low",
+            "medium"
+          ]
+        },
+        "ordinary_rag_stop_normal_rag": {
+          "const": false
+        },
+        "ordinary_rag_retrieval_eligible": {
+          "const": true
+        },
+        "assessment_null_handling": {
+          "const": "DENY"
+        },
+        "license_evidence_required": {
+          "const": true
+        },
+        "high_or_unknown_normal_rag": {
+          "const": "DENY"
+        },
+        "research_route": {
+          "const": "INDEPENDENT_RESEARCH_REVIEW_REQUIRED"
+        },
+        "runtime_safety_from_embedding_similarity": {
+          "const": false
+        },
+        "automatic_official_assessment": {
+          "const": false
+        },
+        "automatic_professional_assessment": {
+          "const": false
+        },
+        "formal_item_review_required": {
+          "const": true
+        },
+        "production_approved": {
+          "const": false
+        }
+      }
+    },
+    "SourcePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "title",
+        "source_type",
+        "is_official_source",
+        "distribution_scope",
+        "storage_strategy",
+        "evidence",
+        "policy_decision",
+        "observed_summary",
+        "review_requirements",
+        "review_status",
+        "production_approved"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "source_type": {
+          "enum": [
+            "assessment_scale",
+            "care_manual",
+            "care_manual_appendix",
+            "health_education",
+            "law",
+            "research_article",
+            "risk_rule",
+            "service_guide"
+          ]
+        },
+        "is_official_source": {
+          "type": "boolean"
+        },
+        "distribution_scope": {
+          "enum": [
+            "public_knowledge",
+            "research_evidence"
+          ]
+        },
+        "storage_strategy": {
+          "const": "rag_only"
+        },
+        "evidence": {
+          "$ref": "#/$defs/SourceEvidence"
+        },
+        "policy_decision": {
+          "$ref": "#/$defs/PolicyDecision"
+        },
+        "observed_summary": {
+          "$ref": "#/$defs/ObservedSummary"
+        },
+        "review_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+              "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+              "INDEPENDENT_RESEARCH_ROUTE_REQUIRED",
+              "LICENSE_EVIDENCE_MISSING",
+              "PROFESSIONAL_POLICY_REVIEW_REQUIRED",
+              "RISK_CLASSIFICATION_REQUIRED",
+              "SOURCE_VERSION_REVIEW_REQUIRED",
+              "STOP_NORMAL_RAG_REVIEW_REQUIRED"
+            ]
+          }
+        },
+        "review_status": {
+          "const": "needs_review"
+        },
+        "production_approved": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "is_official_source": {
+                "const": true
+              }
+            },
+            "required": [
+              "is_official_source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "distribution_scope": {
+                "const": "public_knowledge"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "distribution_scope": {
+                "const": "research_evidence"
+              },
+              "policy_decision": {
+                "properties": {
+                  "ordinary_rag_source_status": {
+                    "const": "INDEPENDENT_RESEARCH_ROUTE_ONLY"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SourceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_file_path",
+        "chunk_file_sha256",
+        "source_manifest_path",
+        "direct_source_urls",
+        "official_source_page_urls",
+        "license_evidence_urls",
+        "storage_urls",
+        "local_raw_source_bytes_available"
+      ],
+      "properties": {
+        "chunk_file_path": {
+          "type": "string",
+          "pattern": "^data/rag-v2/candidates/v002/chunks/[A-Za-z0-9._-]+\\.jsonl$"
+        },
+        "chunk_file_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_manifest_path": {
+          "const": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json"
+        },
+        "direct_source_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HttpUrl"
+          },
+          "uniqueItems": true
+        },
+        "official_source_page_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HttpUrl"
+          },
+          "uniqueItems": true
+        },
+        "license_evidence_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HttpUrl"
+          },
+          "uniqueItems": true
+        },
+        "storage_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HttpUrl"
+          },
+          "uniqueItems": true
+        },
+        "local_raw_source_bytes_available": {
+          "const": false
+        }
+      }
+    },
+    "PolicyDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_audiences",
+        "allowed_purposes",
+        "ordinary_rag_source_status",
+        "purpose_handling",
+        "assessment_handling",
+        "risk_handling",
+        "stop_normal_rag_handling",
+        "license_handling",
+        "requires_human_review"
+      ],
+      "properties": {
+        "allowed_audiences": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Audience"
+          }
+        },
+        "allowed_purposes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Purpose"
+          }
+        },
+        "ordinary_rag_source_status": {
+          "enum": [
+            "BLOCKED_LICENSE_EVIDENCE_MISSING",
+            "CANDIDATE_WITH_CHUNK_GATES",
+            "INDEPENDENT_RESEARCH_ROUTE_ONLY",
+            "PROFESSIONAL_ROUTE_ONLY"
+          ]
+        },
+        "purpose_handling": {
+          "const": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES"
+        },
+        "assessment_handling": {
+          "const": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES"
+        },
+        "risk_handling": {
+          "const": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY"
+        },
+        "stop_normal_rag_handling": {
+          "const": "FALSE_ONLY_TRUE_OR_NULL_DENY"
+        },
+        "license_handling": {
+          "enum": [
+            "RECORDED_EVIDENCE_REVIEW_REQUIRED",
+            "MISSING_EVIDENCE_BLOCK"
+          ]
+        },
+        "requires_human_review": {
+          "const": true
+        }
+      }
+    },
+    "ObservedSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_count",
+        "risk_counts",
+        "current_status_counts",
+        "stop_normal_rag_counts",
+        "assessment_null_counts",
+        "license_status_counts",
+        "retrieval_eligible_counts",
+        "observed_allowed_audiences",
+        "observed_allowed_purposes",
+        "low_medium_stop_true_cohort_count",
+        "low_medium_stop_false_non_current_cohort_count",
+        "metadata_cohort_candidate_count",
+        "complete_chunk_gate_candidate_count",
+        "family_policy_candidate_count"
+      ],
+      "properties": {
+        "chunk_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "risk_counts": {
+          "$ref": "#/$defs/RiskCounts"
+        },
+        "current_status_counts": {
+          "$ref": "#/$defs/CurrentStatusCounts"
+        },
+        "stop_normal_rag_counts": {
+          "$ref": "#/$defs/NullableBooleanCounts"
+        },
+        "assessment_null_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "official",
+            "professional"
+          ],
+          "properties": {
+            "official": {
+              "$ref": "#/$defs/NonNegativeInteger"
+            },
+            "professional": {
+              "$ref": "#/$defs/NonNegativeInteger"
+            }
+          }
+        },
+        "license_status_counts": {
+          "$ref": "#/$defs/LicenseStatusCounts"
+        },
+        "retrieval_eligible_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "true_count",
+            "false_count"
+          ],
+          "properties": {
+            "true_count": {
+              "$ref": "#/$defs/NonNegativeInteger"
+            },
+            "false_count": {
+              "$ref": "#/$defs/NonNegativeInteger"
+            }
+          }
+        },
+        "observed_allowed_audiences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observed_allowed_purposes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "low_medium_stop_true_cohort_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "low_medium_stop_false_non_current_cohort_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "metadata_cohort_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "complete_chunk_gate_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "family_policy_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    },
+    "RiskCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "low",
+        "medium",
+        "high",
+        "high_red_line",
+        "unclassified"
+      ],
+      "properties": {
+        "low": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "medium": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "high": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "high_red_line": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "unclassified": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    },
+    "CurrentStatusCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current",
+        "superseded",
+        "unknown"
+      ],
+      "properties": {
+        "current": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "superseded": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "unknown": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    },
+    "NullableBooleanCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "true_count",
+        "false_count",
+        "null_count"
+      ],
+      "properties": {
+        "true_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "false_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "null_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    },
+    "LicenseStatusCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approved",
+        "open",
+        "permission_required",
+        "unknown"
+      ],
+      "properties": {
+        "approved": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "open": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "permission_required": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "unknown": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    },
+    "Summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_count",
+        "chunk_count",
+        "official_source_count",
+        "research_source_count",
+        "risk_high_count",
+        "risk_high_red_line_count",
+        "risk_unclassified_count",
+        "official_raw_stop_normal_rag_true_count",
+        "official_raw_non_current_count",
+        "official_low_medium_stop_true_cohort_count",
+        "official_low_medium_stop_false_non_current_cohort_count",
+        "metadata_cohort_candidate_count",
+        "complete_chunk_gate_candidate_count",
+        "family_policy_candidate_count",
+        "license_evidence_missing_source_count",
+        "ordinary_rag_source_candidate_count"
+      ],
+      "properties": {
+        "source_count": {
+          "const": 17
+        },
+        "chunk_count": {
+          "const": 726
+        },
+        "official_source_count": {
+          "const": 14
+        },
+        "research_source_count": {
+          "const": 3
+        },
+        "risk_high_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "risk_high_red_line_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "risk_unclassified_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "official_raw_stop_normal_rag_true_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "official_raw_non_current_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "official_low_medium_stop_true_cohort_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "official_low_medium_stop_false_non_current_cohort_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "metadata_cohort_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "complete_chunk_gate_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "family_policy_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "license_evidence_missing_source_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        },
+        "ordinary_rag_source_candidate_count": {
+          "$ref": "#/$defs/NonNegativeInteger"
+        }
+      }
+    }
+  }
+}

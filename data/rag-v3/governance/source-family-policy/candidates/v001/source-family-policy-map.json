@@ -1,0 +1,1709 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v001",
+  "status": "STAGING_NEEDS_REVIEW",
+  "acceptance_binding": {
+    "path": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json",
+    "sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+    "acceptance_version": "v001",
+    "scope": "STAGING_PUBLIC_RETRIEVAL_POLICY"
+  },
+  "audit_preflight_binding": {
+    "inventory_path": "data/rag-v3/governance/source-family-policy/preflight/v001/validation-input-inventory.json",
+    "inventory_sha256": "07635d14339401687afe7c0ec114bfa816e686f20da3b162b38cddeae3023de2",
+    "prior_lock_path": "data/rag-v3/governance/source-family-policy/preflight/v001/prior-artifact-lock.json",
+    "prior_lock_sha256": "ecd3198e0a7ee5bd0f704699853074560657ec51d9566b4dfb854266180a4050"
+  },
+  "source_manifest_binding": {
+    "path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+    "sha256": "e83e90376c0d3bab2af03b613758d89aa88ca7c8c64b83bc8278e19b6148b07d",
+    "source_count": 17,
+    "chunk_count": 726
+  },
+  "global_policy": {
+    "owner_approved_public_audiences": [
+      "elder",
+      "family_caregiver",
+      "care_professional",
+      "system_admin"
+    ],
+    "ordinary_rag_current_status": "current",
+    "ordinary_rag_risk_levels": [
+      "low",
+      "medium"
+    ],
+    "ordinary_rag_stop_normal_rag": false,
+    "ordinary_rag_retrieval_eligible": true,
+    "assessment_null_handling": "DENY",
+    "license_evidence_required": true,
+    "high_or_unknown_normal_rag": "DENY",
+    "research_route": "INDEPENDENT_RESEARCH_REVIEW_REQUIRED",
+    "runtime_safety_from_embedding_similarity": false,
+    "automatic_official_assessment": false,
+    "automatic_professional_assessment": false,
+    "formal_item_review_required": true,
+    "production_approved": false
+  },
+  "source_policies": [
+    {
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "title": "Fetzer／UCLA 孤獨量表",
+      "source_type": "assessment_scale",
+      "is_official_source": false,
+      "distribution_scope": "research_evidence",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/fetzer_ucla_loneliness_scale_compendium.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "2cd08f5412e612aa41c1e0ab6743a94338320a6a74987a0ea893a5a336f322d4",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://backend.fetzer.org/sites/default/files/images/stories/pdf/selfmeasures/Self_Measures_for_Love_and_Compassion_Research_LONELINESS_AND_INTERPERSONAL_PROBLEMS.pdf"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "human_administered_assessment_design",
+          "research_reference",
+          "scale_explanation"
+        ],
+        "ordinary_rag_source_status": "INDEPENDENT_RESEARCH_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 10,
+        "risk_counts": {
+          "low": 10,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 10
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 10,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 10,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 10
+        },
+        "observed_allowed_audiences": [],
+        "observed_allowed_purposes": [
+          "evaluation",
+          "human_administered_assessment_design",
+          "research_reference",
+          "scale_explanation"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 10,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "INDEPENDENT_RESEARCH_ROUTE_REQUIRED",
+        "LICENSE_EVIDENCE_MISSING",
+        "PROFESSIONAL_POLICY_REVIEW_REQUIRED",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "frontiers_do_words_matter_loneliness_nlp_2021",
+      "title": "Do Words Matter NLP 研究",
+      "source_type": "research_article",
+      "is_official_source": false,
+      "distribution_scope": "research_evidence",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/frontiers_do_words_matter_loneliness_nlp_2021.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "f9336d7485b3a636381a8268af73e5d837fc443f4f32133cf2808cdcd9f806ff",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.728732/pdf"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [
+          "https://creativecommons.org/licenses/by/4.0/"
+        ],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "explainable_evidence",
+          "research_reference"
+        ],
+        "ordinary_rag_source_status": "INDEPENDENT_RESEARCH_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "RECORDED_EVIDENCE_REVIEW_REQUIRED",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 40,
+        "risk_counts": {
+          "low": 40,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 40,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 40,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 40,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 40,
+          "false_count": 0
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "care_insight_design",
+          "evaluation_dataset_design",
+          "explainable_evidence",
+          "feature_design",
+          "presentation_evidence",
+          "research_reference"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 40,
+        "complete_chunk_gate_candidate_count": 40,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "INDEPENDENT_RESEARCH_ROUTE_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "frontiers_loneliness_speech_analysis_2021",
+      "title": "自動語音孤獨感研究",
+      "source_type": "research_article",
+      "is_official_source": false,
+      "distribution_scope": "research_evidence",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/frontiers_loneliness_speech_analysis_2021.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "ac3abcc3fc942ded48f0688c9653e6edab3a9403ecef7733925608467356bb24",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2021.712251/pdf"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [
+          "https://creativecommons.org/licenses/by/4.0/"
+        ],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "explainable_evidence",
+          "research_reference"
+        ],
+        "ordinary_rag_source_status": "INDEPENDENT_RESEARCH_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "RECORDED_EVIDENCE_REVIEW_REQUIRED",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 25,
+        "risk_counts": {
+          "low": 25,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 25,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 25,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 25
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 25,
+          "false_count": 0
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "observed_allowed_purposes": [
+          "care_insight_design",
+          "evaluation_dataset_design",
+          "explainable_evidence",
+          "feature_design",
+          "presentation_evidence",
+          "research_reference"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 25,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "INDEPENDENT_RESEARCH_ROUTE_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "hpa_dementia_health_education_resource_manual_201610",
+      "title": "失智症衛教及資源手冊",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/hpa_dementia_health_education_resource_manual_201610.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "2a05de60c7cb83ffcc793bfbb8f758e6478fc5e050aa08641687b78e303e5318",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=160a8428997c4a60b67a1b0d3efe9848"
+        ],
+        "official_source_page_urls": [
+          "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=4381"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "health_education",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "BLOCKED_LICENSE_EVIDENCE_MISSING",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 56,
+        "risk_counts": {
+          "low": 15,
+          "medium": 39,
+          "high": 0,
+          "high_red_line": 2,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 56
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 27,
+          "false_count": 29,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 56,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 56
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "low_medium_stop_true_cohort_count": 27,
+        "low_medium_stop_false_non_current_cohort_count": 27,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED",
+        "STOP_NORMAL_RAG_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "hpa_elder_fall_prevention_tips_manual_202102",
+      "title": "長者防跌妙招手冊",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/hpa_elder_fall_prevention_tips_manual_202102.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "454b1d8857c6f8ac4d1d52efbbe851ed32cc9558778ed5789a0abaedc8fff238",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=dd29b4b0c54644d788ff66b03cfb3026"
+        ],
+        "official_source_page_urls": [
+          "https://www.hpa.gov.tw/Pages/EBook.aspx?nodeid=1193"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "health_education",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "BLOCKED_LICENSE_EVIDENCE_MISSING",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 30,
+        "risk_counts": {
+          "low": 11,
+          "medium": 17,
+          "high": 0,
+          "high_red_line": 2,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 30
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 30,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 30
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 30
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver",
+          "older_adult"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "safety_routing",
+          "source_lookup"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 28,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "hpa_older_adult_nutrition_manual_20230525",
+      "title": "老年期營養手冊",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/hpa_older_adult_nutrition_manual_20230525.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "05435a184b45b9d0ea03cdaf64fbad799c4120de41fa8af18c3cd110194158e1",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [],
+        "official_source_page_urls": [
+          "https://www.hpa.gov.tw/Pages/List.aspx?nodeid=170"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "health_education",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "BLOCKED_LICENSE_EVIDENCE_MISSING",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 41,
+        "risk_counts": {
+          "low": 19,
+          "medium": 22,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 41
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 41,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 41
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 41
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver",
+          "older_adult"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "source_lookup"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 41,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_1966_apply_ltc",
+      "title": "申請長照服務",
+      "source_type": "service_guide",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_1966_apply_ltc.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "8dfd9ab0a7dd5a607b929607a434c7cf904f4b8e2a7ac877ddb5da889430f250",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://1966.gov.tw/LTC/cp-6533-70777-207.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [
+          "https://drive.google.com/file/d/1MjM-agXNFaDdroOpQbgE0UlN_sCPU36D/view?usp=drivesdk"
+        ],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "BLOCKED_LICENSE_EVIDENCE_MISSING",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 16,
+        "risk_counts": {
+          "low": 11,
+          "medium": 5,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 16,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 16,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 16
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 16,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 16
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "caregiver",
+          "elder",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "resource_navigation"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 16,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "title": "A 單位核心",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_20230719.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "2d2bc0c6f132486843cafa7267aff1c006c6f24806bd920c3ece9b2a528bdf8c",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 65,
+        "risk_counts": {
+          "low": 0,
+          "medium": 32,
+          "high": 33,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 65,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 65,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 65,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 65
+        },
+        "observed_allowed_audiences": [],
+        "observed_allowed_purposes": [],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 32,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "title": "A 單位第四章附錄及表單",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_appendix_20230719.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "748c7e486841d8e163203e5d27930f04fc65a3825282cd6821b67307f841d483",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://1966.gov.tw/LTC/cp-6459-70023-207.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "form_reference",
+          "manual_review",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 70,
+        "risk_counts": {
+          "low": 0,
+          "medium": 64,
+          "high": 0,
+          "high_red_line": 6,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 70,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 6,
+          "false_count": 64,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 70,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 64,
+          "false_count": 6
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "source_lookup"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 64,
+        "complete_chunk_gate_candidate_count": 64,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "STOP_NORMAL_RAG_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "title": "家庭照顧者支持手冊－核心",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_202507.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "0ddc84548b418a0661638d315734a51ccfff8cfb4a416c40149058d34844465f",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [
+          "https://drive.google.com/file/d/1qJEvb7LWY_WDJsv_P2KoBJbOqQRDJcmp/view?usp=drivesdk"
+        ],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 102,
+        "risk_counts": {
+          "low": 25,
+          "medium": 74,
+          "high": 0,
+          "high_red_line": 3,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 94,
+          "superseded": 1,
+          "unknown": 7
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 1,
+          "false_count": 101,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 102
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 102
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 102
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "caregiver",
+          "elder",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "care_summary",
+          "evaluation",
+          "general_information",
+          "resource_navigation",
+          "safety_routing"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 6,
+        "metadata_cohort_candidate_count": 93,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED",
+        "STOP_NORMAL_RAG_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_appendix_202507",
+      "title": "家庭照顧者支持手冊－附錄",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_appendix_202507.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "9f3710ba34848fd41b24586806bb763b533098e99d7d513f2a24161c2d90388b",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [
+          "https://drive.google.com/file/d/1_R5OlO9QScLlVKR0xrFCZHv3OW_9IrxC/view?usp=drivesdk"
+        ],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "form_reference",
+          "manual_review",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 30,
+        "risk_counts": {
+          "low": 28,
+          "medium": 2,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 17,
+          "superseded": 0,
+          "unknown": 13
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 30,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 30
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 30
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 30
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "care_record",
+          "evaluation",
+          "general_information",
+          "resource_navigation"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 13,
+        "metadata_cohort_candidate_count": 17,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_high_burden_caregiver_referral_service_flow_20250930",
+      "title": "高負荷家庭照顧者轉介流程",
+      "source_type": "risk_rule",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_referral_service_flow_20250930.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "fffa8d7b32dba272c4ea26a870175e4c0d41f3b4d5f2c80c181de8e2f521005a",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.mohw.gov.tw/dl-78166-3cc0f176-f0d8-4f06-8046-b5809dd2823a.html"
+        ],
+        "official_source_page_urls": [
+          "https://1966.gov.tw/LTC/cp-6455-69938-207.html"
+        ],
+        "license_evidence_urls": [
+          "https://1966.gov.tw/LTC/cp-6476-70761-207.html"
+        ],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "manual_review",
+          "safety_routing",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "RECORDED_EVIDENCE_REVIEW_REQUIRED",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 10,
+        "risk_counts": {
+          "low": 9,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 1,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 10,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 10,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 10,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 9,
+          "false_count": 1
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "evaluation",
+          "general_information",
+          "resource_navigation",
+          "safety_routing"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 9,
+        "complete_chunk_gate_candidate_count": 9,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "PROFESSIONAL_POLICY_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_high_burden_caregiver_screening_20231222",
+      "title": "高負荷家庭照顧者初篩指標",
+      "source_type": "risk_rule",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_screening_20231222.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "21ae6630df727340138deda85a77f8c58907b30f2bd6640a80bcb40ccdbffb5c",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.mohw.gov.tw/dl-78165-87c38eb9-6cd0-4bdc-a664-4315f9304dd7.html"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [],
+        "storage_urls": [
+          "https://drive.google.com/file/d/1ts8maIdc0KuyiKEMoNmDC5nluUQnClf3/view?usp=drivesdk"
+        ],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "manual_review",
+          "safety_routing",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 6,
+        "risk_counts": {
+          "low": 1,
+          "medium": 4,
+          "high": 0,
+          "high_red_line": 1,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 6,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 6,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 6
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 5,
+          "false_count": 1
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "evaluation",
+          "general_information",
+          "safety_routing"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 5,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "PROFESSIONAL_POLICY_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_20260529",
+      "title": "居督核心",
+      "source_type": "care_manual",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_20260529.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "93878788dabf11c2fa4e764dac071c500dd05b23082f62db532791f733c9faaa",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+        ],
+        "official_source_page_urls": [
+          "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 122,
+        "risk_counts": {
+          "low": 72,
+          "medium": 36,
+          "high": 0,
+          "high_red_line": 14,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 122
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 122,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 122
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 122
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "legal_reference",
+          "resource_navigation",
+          "safety_routing"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 108,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529",
+      "title": "居督表單附錄",
+      "source_type": "care_manual_appendix",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "44d13aa863d11c0219e7515c2e608dfbb038555c9eb9f6186318f7ff3861ace7",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+        ],
+        "official_source_page_urls": [
+          "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "form_reference",
+          "manual_review",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "PROFESSIONAL_ROUTE_ONLY",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 5,
+        "risk_counts": {
+          "low": 0,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 0,
+          "unclassified": 5
+        },
+        "current_status_counts": {
+          "current": 5,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 5,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 5,
+          "professional": 5
+        },
+        "license_status_counts": {
+          "approved": 5,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 5
+        },
+        "observed_allowed_audiences": [
+          "care_professional"
+        ],
+        "observed_allowed_purposes": [
+          "form_reference",
+          "manual_review"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "RISK_CLASSIFICATION_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529",
+      "title": "居督健康照護附錄",
+      "source_type": "health_education",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_health_appendix_20260529.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "337c0ac45fc6bfc27d696ad47b6f86bd1f266c95518e0ca540f39d7def0e296a",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://www.mohw.gov.tw/dl-100619-d08f6862-e9f4-48be-99cb-a79d0bb0b2f9.html"
+        ],
+        "official_source_page_urls": [
+          "https://1966.gov.tw/LTC/cp-7565-86698-207.html"
+        ],
+        "license_evidence_urls": [],
+        "storage_urls": [],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "health_education",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "BLOCKED_LICENSE_EVIDENCE_MISSING",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "MISSING_EVIDENCE_BLOCK",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 26,
+        "risk_counts": {
+          "low": 1,
+          "medium": 19,
+          "high": 0,
+          "high_red_line": 6,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 0,
+          "superseded": 0,
+          "unknown": 26
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 0,
+          "false_count": 26,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 0
+        },
+        "license_status_counts": {
+          "approved": 0,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 26
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 26
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "caregiver",
+          "family_caregiver",
+          "older_adult"
+        ],
+        "observed_allowed_purposes": [
+          "health_education",
+          "source_lookup"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 20,
+        "metadata_cohort_candidate_count": 0,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "LICENSE_EVIDENCE_MISSING",
+        "SOURCE_VERSION_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    },
+    {
+      "source_id": "moj_long_term_care_services_act_20210609",
+      "title": "長期照顧服務法",
+      "source_type": "law",
+      "is_official_source": true,
+      "distribution_scope": "public_knowledge",
+      "storage_strategy": "rag_only",
+      "evidence": {
+        "chunk_file_path": "data/rag-v2/candidates/v002/chunks/moj_long_term_care_services_act_20210609.rag-chunk-v2.v002.jsonl",
+        "chunk_file_sha256": "1ec7889191906cf7631e6c4dfc60df896f6f9a36d390088fdb2d096658fc6b3f",
+        "source_manifest_path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+        "direct_source_urls": [
+          "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0070040"
+        ],
+        "official_source_page_urls": [],
+        "license_evidence_urls": [
+          "https://law.moj.gov.tw/Service/Copyright.aspx"
+        ],
+        "storage_urls": [
+          "https://drive.google.com/file/d/1pFa93kCjvkL1XBNliw9lXqkmzmdHc63r/view?usp=drivesdk"
+        ],
+        "local_raw_source_bytes_available": false
+      },
+      "policy_decision": {
+        "allowed_audiences": [
+          "elder",
+          "family_caregiver",
+          "care_professional",
+          "system_admin"
+        ],
+        "allowed_purposes": [
+          "general_information",
+          "legal_reference",
+          "source_lookup"
+        ],
+        "ordinary_rag_source_status": "CANDIDATE_WITH_CHUNK_GATES",
+        "purpose_handling": "INTERSECT_SOURCE_AND_CHUNK_PURPOSES",
+        "assessment_handling": "PRESERVE_CHUNK_BOOLEANS_NULL_DENIES",
+        "risk_handling": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY",
+        "stop_normal_rag_handling": "FALSE_ONLY_TRUE_OR_NULL_DENY",
+        "license_handling": "RECORDED_EVIDENCE_REVIEW_REQUIRED",
+        "requires_human_review": true
+      },
+      "observed_summary": {
+        "chunk_count": 72,
+        "risk_counts": {
+          "low": 71,
+          "medium": 0,
+          "high": 0,
+          "high_red_line": 1,
+          "unclassified": 0
+        },
+        "current_status_counts": {
+          "current": 72,
+          "superseded": 0,
+          "unknown": 0
+        },
+        "stop_normal_rag_counts": {
+          "true_count": 1,
+          "false_count": 71,
+          "null_count": 0
+        },
+        "assessment_null_counts": {
+          "official": 0,
+          "professional": 72
+        },
+        "license_status_counts": {
+          "approved": 72,
+          "open": 0,
+          "permission_required": 0,
+          "unknown": 0
+        },
+        "retrieval_eligible_counts": {
+          "true_count": 0,
+          "false_count": 72
+        },
+        "observed_allowed_audiences": [
+          "care_professional",
+          "elder",
+          "family_caregiver",
+          "system_admin"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "legal_reference",
+          "resource_navigation"
+        ],
+        "low_medium_stop_true_cohort_count": 0,
+        "low_medium_stop_false_non_current_cohort_count": 0,
+        "metadata_cohort_candidate_count": 71,
+        "complete_chunk_gate_candidate_count": 0,
+        "family_policy_candidate_count": 0
+      },
+      "review_requirements": [
+        "ASSESSMENT_BOOLEAN_REVIEW_REQUIRED",
+        "FORMAL_ITEM_SOURCE_FIDELITY_NOT_RECORDED",
+        "STOP_NORMAL_RAG_REVIEW_REQUIRED"
+      ],
+      "review_status": "needs_review",
+      "production_approved": false
+    }
+  ],
+  "summary": {
+    "source_count": 17,
+    "chunk_count": 726,
+    "official_source_count": 14,
+    "research_source_count": 3,
+    "risk_high_count": 33,
+    "risk_high_red_line_count": 36,
+    "risk_unclassified_count": 5,
+    "official_raw_stop_normal_rag_true_count": 35,
+    "official_raw_non_current_count": 296,
+    "official_low_medium_stop_true_cohort_count": 27,
+    "official_low_medium_stop_false_non_current_cohort_count": 243,
+    "metadata_cohort_candidate_count": 307,
+    "complete_chunk_gate_candidate_count": 73,
+    "family_policy_candidate_count": 0,
+    "license_evidence_missing_source_count": 13,
+    "ordinary_rag_source_candidate_count": 1
+  },
+  "gates": {
+    "environment": "STAGING",
+    "review_status": "needs_review",
+    "external_sync": "NOT_AUTHORIZED",
+    "supabase_release": "NOT_CREATED",
+    "production_status": "BLOCKED",
+    "production_approved": false
+  }
+}

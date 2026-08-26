@@ -1,0 +1,3 @@
+a8ec53413b71773f9e2f6763b6d2e59ab5ff03a356d6dc37b4c16830fe24b798  README.md
+76fda63cfbde576152aa0ac2b7a7fa21231374524627f3ced7d0092c028fd7b8  prior-artifact-lock.json
+bb347d1653566b42c083349eac142fb0522fda6c9f26acab221218c5af7ee3fa  validation-input-inventory.json

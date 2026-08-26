@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v001",
+  "kind": "source_family_policy_validation_input_inventory",
+  "scope": "17 v002 chunk files plus selected schemas, config, policy code, tests, and evidence",
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_hash_mode": "sha256_canonical_json_v1",
+  "entry_count": 29,
+  "inventory_sha256": "07635d14339401687afe7c0ec114bfa816e686f20da3b162b38cddeae3023de2",
+  "entries": [
+    {
+      "path": "config/rag/staging-filters.yaml",
+      "artifact_kind": "configuration",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 557,
+      "sha256": "8e4ea67aaeebe620c686ce12d5073229c1539e73be9e0ed54736dd6288e4ebec",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "contracts/schemas/rag/rag-chunk-v2.1.schema.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 14053,
+      "sha256": "639d4d3d562980f386dbcd1735fd0d42c5ce9d2633d8784652cf50ff43ce4acb",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "contracts/schemas/rag/rag-chunk-v3.schema.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 8528,
+      "sha256": "3447decd8894ec9065722cbfa31619746d2b63aa2f45ad59c2f67501a228c5cd",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "contracts/schemas/rag/rag-source-family-policy-map-v1.schema.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 20717,
+      "sha256": "6815c3b77cd6982d9930d204c5fd6057ec3b6593a7df2f76c69a83051ba84448",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/fetzer_ucla_loneliness_scale_compendium.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 61231,
+      "sha256": "2cd08f5412e612aa41c1e0ab6743a94338320a6a74987a0ea893a5a336f322d4",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/frontiers_do_words_matter_loneliness_nlp_2021.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "frontiers_do_words_matter_loneliness_nlp_2021",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 223043,
+      "sha256": "f9336d7485b3a636381a8268af73e5d837fc443f4f32133cf2808cdcd9f806ff",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/frontiers_loneliness_speech_analysis_2021.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "frontiers_loneliness_speech_analysis_2021",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 171955,
+      "sha256": "ac3abcc3fc942ded48f0688c9653e6edab3a9403ecef7733925608467356bb24",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_dementia_health_education_resource_manual_201610.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "hpa_dementia_health_education_resource_manual_201610",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 463134,
+      "sha256": "2a05de60c7cb83ffcc793bfbb8f758e6478fc5e050aa08641687b78e303e5318",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_elder_fall_prevention_tips_manual_202102.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "hpa_elder_fall_prevention_tips_manual_202102",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 119490,
+      "sha256": "454b1d8857c6f8ac4d1d52efbbe851ed32cc9558778ed5789a0abaedc8fff238",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_older_adult_nutrition_manual_20230525.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "hpa_older_adult_nutrition_manual_20230525",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 249778,
+      "sha256": "05435a184b45b9d0ea03cdaf64fbad799c4120de41fa8af18c3cd110194158e1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_1966_apply_ltc.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_1966_apply_ltc",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 54949,
+      "sha256": "8dfd9ab0a7dd5a607b929607a434c7cf904f4b8e2a7ac877ddb5da889430f250",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_20230719.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 442130,
+      "sha256": "2d2bc0c6f132486843cafa7267aff1c006c6f24806bd920c3ece9b2a528bdf8c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_appendix_20230719.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 781886,
+      "sha256": "748c7e486841d8e163203e5d27930f04fc65a3825282cd6821b67307f841d483",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_202507.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 620959,
+      "sha256": "0ddc84548b418a0661638d315734a51ccfff8cfb4a416c40149058d34844465f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_appendix_202507.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_family_caregiver_support_manual_appendix_202507",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 119856,
+      "sha256": "9f3710ba34848fd41b24586806bb763b533098e99d7d513f2a24161c2d90388b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_referral_service_flow_20250930.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_high_burden_caregiver_referral_service_flow_20250930",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 38744,
+      "sha256": "fffa8d7b32dba272c4ea26a870175e4c0d41f3b4d5f2c80c181de8e2f521005a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_screening_20231222.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_high_burden_caregiver_screening_20231222",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 24908,
+      "sha256": "21ae6630df727340138deda85a77f8c58907b30f2bd6640a80bcb40ccdbffb5c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_20260529.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_home_care_service_supervisor_manual_20260529",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 864418,
+      "sha256": "93878788dabf11c2fa4e764dac071c500dd05b23082f62db532791f733c9faaa",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_home_care_service_supervisor_manual_forms_appendix_20260529",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 16708,
+      "sha256": "44d13aa863d11c0219e7515c2e608dfbb038555c9eb9f6186318f7ff3861ace7",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_health_appendix_20260529.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "mohw_home_care_service_supervisor_manual_health_appendix_20260529",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 123257,
+      "sha256": "337c0ac45fc6bfc27d696ad47b6f86bd1f266c95518e0ca540f39d7def0e296a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/moj_long_term_care_services_act_20210609.rag-chunk-v2.v002.jsonl",
+      "artifact_kind": "chunk_jsonl",
+      "source_id": "moj_long_term_care_services_act_20210609",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 281822,
+      "sha256": "1ec7889191906cf7631e6c4dfc60df896f6f9a36d390088fdb2d096658fc6b3f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/governance/enum-evidence-v002.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 26796,
+      "sha256": "c0e34dfd66ee8a4110fc6dae012bc6089d123f5ba9502b3da6b43d2f417a8169",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "v002",
+      "size_bytes": 16922,
+      "sha256": "e83e90376c0d3bab2af03b613758d89aa88ca7c8c64b83bc8278e19b6148b07d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "v001",
+      "size_bytes": 2314,
+      "sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "docs/project/rag-v3-public-retrieval-plan.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 12245,
+      "sha256": "4c9d957c88b0e8cd38889908c1eea6da326d2110b8e20e4c9714ec0887d35e2d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "scripts/rag/build_source_family_policy.py",
+      "artifact_kind": "implementation_or_test",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 1727,
+      "sha256": "8d5cddb01f15aaf0d980cc7546664b27ca4b49ebdc54a199afb31c13c06f6764",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "scripts/rag/validate_source_family_policy.py",
+      "artifact_kind": "implementation_or_test",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 1868,
+      "sha256": "60ba5493bb1b39113315db0d073d2626e04fd932bd93bc50471cc873973d4b72",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "services/rag-ingestion/src/rag_ingestion/source_family_policy.py",
+      "artifact_kind": "implementation_or_test",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 44973,
+      "sha256": "4d751ab22499f76f48947f362f6135434f5887f949aa1b8714ab08ba6383e071",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "services/rag-ingestion/tests/integration/test_source_family_policy.py",
+      "artifact_kind": "implementation_or_test",
+      "source_id": "rag-v3-policy",
+      "logical_family": "source_family_policy_audit",
+      "version": "none",
+      "size_bytes": 2879,
+      "sha256": "bd9e772fb81d2daf16d69393f82d970b245c7da9c5a7306813ac28525b428617",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    }
+  ],
+  "review_status": "needs_review",
+  "production_approved": false
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v001",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "policy_schema_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "source_ids_unique_and_complete",
+      "status": "PASS"
+    },
+    {
+      "name": "source_and_chunk_counts_match_manifest",
+      "status": "PASS"
+    },
+    {
+      "name": "high_and_unknown_chunks_fail_closed",
+      "status": "PASS"
+    },
+    {
+      "name": "all_audience_never_bypasses_chunk_gates",
+      "status": "PASS"
+    },
+    {
+      "name": "research_sources_use_independent_route",
+      "status": "PASS"
+    },
+    {
+      "name": "missing_license_evidence_blocks_ordinary_rag",
+      "status": "PASS"
+    },
+    {
+      "name": "assessment_null_denies",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_safety_not_started_from_similarity",
+      "status": "PASS"
+    },
+    {
+      "name": "formal_assessment_not_automated",
+      "status": "PASS"
+    },
+    {
+      "name": "worksheet_covers_all_sources",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 13,
+  "fail_count": 0,
+  "source_count": 17,
+  "chunk_count": 726,
+  "worksheet_row_count": 17,
+  "risk_high_or_unknown_count": 74,
+  "official_raw_stop_normal_rag_true_count": 35,
+  "official_raw_non_current_count": 296,
+  "official_low_medium_stop_true_cohort_count": 27,
+  "official_low_medium_stop_false_non_current_cohort_count": 243,
+  "family_policy_candidate_count": 0,
+  "review_status": "needs_review",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

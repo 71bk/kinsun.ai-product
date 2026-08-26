@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v001",
+  "kind": "source_family_policy_prior_artifact_lock",
+  "scope": "immutable v003 acceptance and preflight v001 bytes",
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_hash_mode": "sha256_canonical_json_v1",
+  "entry_count": 9,
+  "inventory_sha256": "ecd3198e0a7ee5bd0f704699853074560657ec51d9566b4dfb854266180a4050",
+  "entries": [
+    {
+      "path": "data/rag-v3/preflight/v001/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 924,
+      "sha256": "7f6afbc93e00f916feadf4bea4e51016e358ef43ff1ab7bf2ad0e0b3882a7961",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 265,
+      "sha256": "88c47162399345375dccf200741993f35c906133c850f819af24a8392bcfa6f1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/prior-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 48521,
+      "sha256": "5f860b72328b3673a729e6afdfd4db1c13a69aee769fc73030b115379e1f5301",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 53634,
+      "sha256": "655584f07af5cb958efde8d0b77428e54f2cac36fc5dea6fc1a19c5d3bcd1bc9",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 806,
+      "sha256": "b14f1edec8c2f930ba37eda25e1affe8446499d284ed7e1d590b9ffd8db9745d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 344,
+      "sha256": "b830337ccb0b651853109e3c08fff9f7082fdb308911bbef10e76717f5953952",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/manifest.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 868,
+      "sha256": "8c7b9156908b83485f9fe34db7815ffe391b5d96bb7f63f06a47e79f80fe191d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 2314,
+      "sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/validation-report.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy",
+      "logical_family": "rag_v3_prior_governance",
+      "version": "v001",
+      "size_bytes": 1476,
+      "sha256": "9336d32beb087730b42afe720dcca2417a9b3e5572eedd0e1a7dc21a0d45bd13",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    }
+  ],
+  "review_status": "needs_review",
+  "production_approved": false
+}
