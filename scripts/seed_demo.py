@@ -1,4 +1,4 @@
-"""Insert deterministic, synthetic-only Demo personas into an empty local database."""
+"""Insert deterministic, synthetic-only Demo personas without resetting existing data."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 from uuid import UUID
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -38,7 +40,6 @@ from app.models.tenant import Tenant  # noqa: E402
 from app.services.kinsun_identity_codec import KinsunIdentityCodec  # noqa: E402
 from app.services.password_hasher import Argon2idPolicy, PasswordHasher  # noqa: E402
 
-EXPECTED_REVISION = "b8d0e4f6a213"
 MANIFEST_PATH = REPO_ROOT / "data" / "seed" / "demo_ids.json"
 ALLOWED_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 E2E_DATABASE_PREFIX = "kinsun_frontend_e2e_"
@@ -76,9 +77,7 @@ def _database_url() -> str:
         raise RuntimeError(
             "Synthetic E2E demo seed requires KINSUN_ALLOW_SYNTHETIC_E2E_SEED=true"
         )
-    allowed_local_database = is_local and (
-        database_name == "kinsun" or is_e2e_database
-    )
+    allowed_local_database = is_local and (database_name == "kinsun" or is_e2e_database)
     allow_remote = os.getenv("KINSUN_ALLOW_REMOTE_DEMO_SEED", "false").lower() == "true"
     allowed_supabase_database = (
         allow_remote
@@ -96,6 +95,14 @@ def _database_url() -> str:
 
 def _id(value: str) -> UUID:
     return UUID(value)
+
+
+def _repository_head_revision() -> str:
+    config = Config(str(CORE_API_ROOT / "alembic.ini"))
+    revision = ScriptDirectory.from_config(config).get_current_head()
+    if revision is None:
+        raise RuntimeError("The Core API migration repository has no head revision")
+    return revision
 
 
 async def _seed_demo_accounts(
@@ -191,10 +198,11 @@ async def _assert_empty_and_current(
     revision = await session.scalar(
         text("SELECT version_num FROM public.alembic_version")
     )
-    if revision != EXPECTED_REVISION:
+    expected_revision = _repository_head_revision()
+    if revision != expected_revision:
         raise RuntimeError(
-            f"Database revision is {revision!r}; expected {EXPECTED_REVISION}. "
-            "Run scripts/reset_demo.ps1."
+            f"Database revision is {revision!r}; expected repository head "
+            f"{expected_revision}. Run the additive migration before seeding Demo rows."
         )
     exists = await session.scalar(
         select(Tenant.id).where(Tenant.id == daycare_tenant_id)

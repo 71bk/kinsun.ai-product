@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 from uuid import UUID
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -25,7 +27,6 @@ from app.models.password_credential import PasswordCredential  # noqa: E402
 from app.services.kinsun_identity_codec import KinsunIdentityCodec  # noqa: E402
 from app.services.password_hasher import Argon2idPolicy, PasswordHasher  # noqa: E402
 
-EXPECTED_REVISION = "b8d0e4f6a213"
 ALLOWED_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 DEMO_ACCOUNTS = (
     (
@@ -79,10 +80,7 @@ def _database_url() -> str:
         and hostname.endswith(".supabase.com")
         and database_name == "postgres"
     )
-    if (
-        parsed.scheme != "postgresql+asyncpg"
-        or not (local_target or supabase_target)
-    ):
+    if parsed.scheme != "postgresql+asyncpg" or not (local_target or supabase_target):
         raise RuntimeError(
             "Demo account provisioning requires local kinsun or an explicitly opted-in "
             "Supabase development database"
@@ -90,11 +88,23 @@ def _database_url() -> str:
     return value
 
 
+def _repository_head_revision() -> str:
+    config = Config(str(CORE_API_ROOT / "alembic.ini"))
+    revision = ScriptDirectory.from_config(config).get_current_head()
+    if revision is None:
+        raise RuntimeError("The Core API migration repository has no head revision")
+    return revision
+
+
 async def _provision(session: AsyncSession) -> list[str]:
-    revision = await session.scalar(text("SELECT version_num FROM public.alembic_version"))
-    if revision != EXPECTED_REVISION:
+    revision = await session.scalar(
+        text("SELECT version_num FROM public.alembic_version")
+    )
+    expected_revision = _repository_head_revision()
+    if revision != expected_revision:
         raise RuntimeError(
-            f"Database revision is {revision!r}; expected {EXPECTED_REVISION}. "
+            f"Database revision is {revision!r}; expected repository head "
+            f"{expected_revision}. "
             "Run the additive migration before provisioning accounts."
         )
     settings = get_settings()
@@ -120,7 +130,9 @@ async def _provision(session: AsyncSession) -> list[str]:
     for email, actor_id, identity_id, credential_id in DEMO_ACCOUNTS:
         actor = await session.get(Actor, actor_id, with_for_update=True)
         if actor is None:
-            raise RuntimeError(f"Demo actor {actor_id} is missing; run scripts/reset_demo.ps1")
+            raise RuntimeError(
+                f"Demo actor {actor_id} is missing; run scripts/reset_demo.ps1"
+            )
         normalized_email = identity_codec.normalize_email(email)
         if actor.email not in {None, normalized_email}:
             raise RuntimeError(f"Demo actor {actor_id} already has a different email")

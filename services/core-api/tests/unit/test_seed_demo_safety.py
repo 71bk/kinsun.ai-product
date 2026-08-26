@@ -6,7 +6,7 @@ import importlib.util
 import os
 from pathlib import Path
 from types import ModuleType
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -52,3 +52,24 @@ def test_remote_database_is_rejected_even_with_e2e_opt_in() -> None:
     with patch.dict(os.environ, _environment(value, allow_e2e=True), clear=True):
         with pytest.raises(RuntimeError, match="restricted to local"):
             SEED_DEMO._database_url()
+
+
+def test_repository_head_revision_is_discovered_from_alembic_graph() -> None:
+    assert SEED_DEMO._repository_head_revision()
+
+
+@pytest.mark.asyncio
+async def test_seed_rejects_database_before_repository_head() -> None:
+    session = AsyncMock()
+    session.scalar.return_value = "b8d0e4f6a213"
+
+    with patch.object(
+        SEED_DEMO,
+        "_repository_head_revision",
+        return_value="e6f8a0b2c345",
+    ):
+        with pytest.raises(RuntimeError, match="expected repository head e6f8a0b2c345"):
+            await SEED_DEMO._assert_empty_and_current(
+                session,
+                SEED_DEMO._id("10000000-0000-4000-8000-000000000001"),
+            )
