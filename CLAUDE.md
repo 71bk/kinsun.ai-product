@@ -81,8 +81,15 @@
   staging artifact，SHA-256 為
   `599d194db552433710ec6aff69318e962cb5b4b1c9f7a3050d527b369a3df7d5`；經使用者確認後已以單一
   transaction 匯入 726 document embeddings，Supabase 獨立讀回的 profile、embedding-text hash 與
-  vector fingerprint 全部 `VERIFIED`。retrieval 仍未授權，Production 仍封鎖。PostgreSQL hybrid
-  backend 仍未實作，現行唯一 search backend 仍是未經真實環境驗證的 OpenSearch。
+  vector fingerprint 全部 `VERIFIED`。2026-08-25 已新增全參數化、固定模板的 PostgreSQL
+  FTS／trigram＋pgvector hybrid `SearchBackend`，可由 `RAG_SEARCH_BACKEND=postgresql` 精確綁定
+  release／profile；Supabase data-plane smoke 與 Google `RETRIEVAL_QUERY` → Supabase → V2 citation
+  smoke 均回傳 5 筆 staging chunks。現行只有 14 筆 official/public chunks 通過普通 RAG filter，
+  metadata 都只允許 `care_professional`；2026-08-25 經 owner 明確要求，本機 development 以
+  `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時開放有明確 audience 的 Elder／Family／Staff，且 Elder
+  全鏈路 smoke 回傳 5 筆，Production 仍禁止此 override。這不代表 production deployment：獨立 read-only
+  principal、Golden Query／quality gate、human review、activation／rollback 尚未完成，retrieval 與
+  Production 仍封鎖；legacy OpenSearch adapter 保留。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

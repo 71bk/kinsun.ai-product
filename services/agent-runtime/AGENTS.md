@@ -19,15 +19,22 @@ M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證
 optional Bearer key 全由 runtime 設定，可接相容本機服務或 Google Gemini API。它只支援文字
 Chat Completions、不跟隨 redirect、錯誤時不會 fallback 到 mock，且帶 key 的遠端 HTTP 會在
 啟動時被拒絕。RAG Retriever 已透過 provider-neutral `SearchBackend` 與不含 executable DSL 的
-bounded plan 隔離搜尋 provider；目前 runtime factory 仍只組裝 Bedrock／OpenSearch。
+bounded plan 隔離搜尋 provider；runtime factory 可明確選 legacy OpenSearch 或 PostgreSQL。
 `MODEL_PROVIDER=gemini` 則使用原生 Google Gen AI SDK；`AQ.` 開頭的 Vertex AI Express key 自動
 走 Vertex AI，其他 key 走 Gemini Developer API。這兩種 key 不得混用 endpoint；設定不完整或
 Google provider 失敗時一律 fail closed，不會退回 mock，也不得把上游訊息帶出 provider 邊界。
 
 另有第一版 **staging-only** RAG endpoint、provider-neutral `EmbeddingProvider`／`SearchBackend`
-boundaries、Bedrock 與 opt-in Google query embedding adapters，以及目前唯一的 OpenSearch Hybrid
-adapter。Google document embedding／corpus rebuild 與 PostgreSQL hybrid backend 尚未實作；
-Google query adapter 不得查詢 Cohere document vectors。只有明確標示
+boundaries、Bedrock 與 opt-in Google query embedding adapters、legacy OpenSearch Hybrid adapter，
+以及固定模板、全參數化的 PostgreSQL FTS／trigram＋pgvector Hybrid adapter。2026-08-25 已將
+726 個 Google document embeddings 匯入 Supabase development database，並以
+`RAG_SEARCH_BACKEND=postgresql` 對固定 release／profile 完成 data-plane 與 Google query embedding
+全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。現行只有 14 筆 official/public chunks
+通過 ordinary-RAG filter，metadata 全部只允許 `care_professional`。2026-08-25 經 owner 明確要求，
+本機 development 以 `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的
+Elder／Family／Staff 共用仍通過 public／official／risk／purpose gate 的資料；Elder 全鏈路 smoke
+回傳 5 筆。Production 仍禁止此 override。Google query
+adapter 不得查詢 Cohere document vectors。只有明確標示
 `general_information`／`legal_reference` purpose 的回合會檢索；成功時 3–5 個帶引用 chunk
 進入 Context Manifest，無資料或 provider 失敗時直接 no-guess fallback。未設定 provider
 時明確 fail closed。Supplied Allowlist 尚未簽署；只有 staging 明確設定
@@ -35,8 +42,10 @@ Google query adapter 不得查詢 Cohere document vectors。只有明確標示
 不得關閉外部 `RAG_ALLOWLIST_EXPECTED_SHA256` 精確比對，也不得略過來源、Chunk、數量或
 完整 Allowlist 驗證；receipt／log 必須標示
 `governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、`production_approved=false`。
-Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLED=true`。Human Review
-未完成，且尚未對真實 AWS/OpenSearch 環境完成驗證，因此不得描述成已部署或可用於
+Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLED=true`。Human Review、
+獨立 PostgreSQL read-only principal、Golden Query／quality gate、activation／rollback 與正式 runtime
+deployment 均未完成；本機目前暫時重用 Core DB URL。AWS/OpenSearch 亦未完成真實環境驗證，
+因此不得描述成已部署或可用於
 production。
 
 Event／Memory Candidate 採 Core-owned proposal flow：request 的 `requested_outputs` 明確包含
@@ -129,9 +138,10 @@ uv run ruff format --check .
 固定 `APP_ENV=test`、`MODEL_PROVIDER=mock`；不得移除這層隔離，否則 developer `.env` 可能讓
 一般 integration tests 呼叫真實模型並讀取 secret。
 
-2026-08-14 本機基準：296 tests passed；Ruff check、受影響檔案 Ruff format check、靜態 contract
-validator 與本機 Agent live contract verifier 均通過。這是本機程式與 contract 驗證，不代表
-Bedrock／OpenSearch staging 已驗證。
+2026-08-25 本機基準：377 tests passed；Ruff check、完整 Ruff format check、靜態 contract
+validator 與本機 Agent live contract verifier 均通過。另完成一次 PostgreSQL data-plane smoke 與
+一次 Google query embedding → Supabase → V2 citation smoke，各回傳 5 筆受治理 staging chunks。
+這不是 runtime deployment 或 Production 驗證；Bedrock／OpenSearch staging 仍未驗證。
 
 `tests/unit/test_contract_schema_consistency.py` 掃的是 repository 根目錄的
 `contracts/schemas/`，因此它同時會驗證 core-api 的 schema 是否為合法的 JSON Schema。

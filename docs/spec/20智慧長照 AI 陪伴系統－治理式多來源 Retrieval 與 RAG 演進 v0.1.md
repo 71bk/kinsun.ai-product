@@ -2,8 +2,8 @@
 
 - 文件狀態：Accepted Target Architecture；Phase 1 foundation 部分完成
 - 版本：v0.1
-- 日期：2026-08-24
-- 決策狀態：PostgreSQL storage／candidate projection 已完成本機驗證；online retrieval 與 Production 仍未完成
+- 日期：2026-08-25
+- 決策狀態：PostgreSQL storage／embedding import／staging online retrieval smoke 已完成；Production 仍未完成
 - 相關決策：[ADR 0017](../adr/0017-bounded-multi-source-retrieval-planner.md)、[ADR 0018](../adr/0018-postgresql-pgvector-public-knowledge-retrieval.md)
 - 實作計畫：[governed-multi-source-retrieval](../../.kiro/specs/governed-multi-source-retrieval/requirements.md)
 
@@ -11,17 +11,17 @@
 
 本規格把「PDF／Web／DB／API／Docs／Events／CRM → ingestion → Vector／Search／SQL／Graph → Query Understanding／Router → Context → LLM → Citation」的構想納入產品計畫，並調整為符合本專案資料治理與授權邊界的可實作演進路線。
 
-本規格不把 Target Architecture 誤寫成 Current Architecture。Repository 已有受治理、staging-only 的公開知識 RAG，以及本機驗證完成的 PostgreSQL candidate projection storage；PostgreSQL online hybrid backend、多來源 Planner、Core 結構化查詢與 Graph Retrieval 均屬後續階段。
+本規格不把 Target Architecture 誤寫成 Current Architecture。Repository 已有受治理、staging-only 的公開知識 RAG、已匯入 Supabase 的 PostgreSQL projection／Google document embeddings，以及可選用的 PostgreSQL online hybrid backend；多來源 Planner、Core 結構化查詢、Graph Retrieval 與 Production release 均屬後續階段。
 
 ## 2. Current 與 Target 邊界
 
 | 能力 | Current（2026-08-24） | Target |
 | --- | --- | --- |
 | 公開知識來源 | 17 個來源、726 個 `RagChunkV2` candidate；均為 `needs_review`、`production_approved=false` | 僅把完成治理與簽核的 immutable release 投影至搜尋面 |
-| Ingestion | legacy OpenSearch staging workflow；另有固定 hash／count 的 deterministic PostgreSQL importer，可在單一 transaction 投影 17／726 candidate，尚未寫入共享或遠端 DB | versioned connectors、approved release builder、projection receipt、activation 與 rollback |
-| Search store | Runtime 仍只組裝未經真實環境驗證的 OpenSearch adapter；Core 已有本機驗證的 `rag_public` schema、FTS／trigram／HNSW indexes，但尚無 online backend | PostgreSQL 16 + `pgvector` + `pg_trgm` 的獨立 public-knowledge serving schema |
-| Embedding | legacy Bedrock/Cohere workflow 與 opt-in Google query adapter；新 PostgreSQL projection 的 embedding rows 為 0 | Google `RETRIEVAL_DOCUMENT`／`RETRIEVAL_QUERY`、固定 1024 dimensions、versioned compatibility profile；升版重建全部向量 |
-| Online retrieval | 受限 purpose、audience 與 governance filters；top 5；不足 3 個完整 citation 即 fail closed | Query Gate 後的 bounded planner，可選 public knowledge、Core verified data、graph projection |
+| Ingestion | deterministic PostgreSQL importer 已將固定 hash/count 的 17／726 candidate 與 726 embeddings 以 transaction 匯入 Supabase staging release | versioned connectors、approved release builder、projection receipt、activation 與 rollback |
+| Search store | Runtime 可選 legacy OpenSearch 或 PostgreSQL `rag_public` FTS／trigram＋pgvector backend；後者已通過一次 Supabase staging smoke | PostgreSQL 16 + `pgvector` + `pg_trgm` 的獨立 public-knowledge serving schema |
+| Embedding | Google `gemini-embedding-001` document vectors 726／726 已匯入；Google `RETRIEVAL_QUERY` → Supabase smoke 已通過 | 固定 1024 dimensions、versioned compatibility profile；升版重建全部向量 |
+| Online retrieval | 固定 purpose、audience、release/profile 與 governance filters；top 5；不足 3 個完整 citation 即 fail closed。現行僅 14 筆 official/public chunks 可用，且 audience 只有 `care_professional` | Query Gate 後的 bounded planner，可選 public knowledge、Core verified data、graph projection |
 | Query understanding | 未實作通用 intent/entity/rewrite/router | 受限 intent、entity、rewrite 與 filters；輸出結構化 `QueryPlan`，不得輸出任意 DSL |
 | Reranker | 未實作 | 僅在離線評估證明品質提升且 latency／cost 過關後，以 feature flag 導入 |
 | Structured DB retrieval | 未作為 RAG tool 開放 | 透過 Core-owned、模板化且重新授權的 verified-care-data tool；不開放任意 SQL |
@@ -215,9 +215,10 @@ Context Builder 不做跨信任層的單一分數盲目 fusion，而是依下列
 ### Phase 1 — RagChunkV2 → PostgreSQL／pgvector data plane
 
 - 已完成本機 migration：獨立 `rag_public` schema、release／projection／embedding profile／ingestion receipt tables，以及 FTS／trigram／HNSW indexes。
-- 已完成 candidate projection importer：嚴格驗證 canonical hash／schema／identity／count，在單一 transaction 以 idempotent 方式投影 17 sources／726 chunks；不產生 embedding、不批准 Production。
+- 已完成 candidate projection importer：嚴格驗證 canonical hash／schema／identity／count，在單一 transaction 以 idempotent 方式投影 17 sources／726 chunks；不批准 Production。
+- 已完成 Google `RETRIEVAL_DOCUMENT` 726／726 embeddings 的 Supabase transaction import 與獨立讀回驗證。
+- 已完成固定模板、全參數化的 PostgreSQL hybrid `SearchBackend`，並完成 data-plane 與 Google `RETRIEVAL_QUERY` 全鏈路 smoke，各回傳 5 筆受治理 V2 chunks。
 - 完成 candidate 後續 human review 與 signed release 流程。
-- 實作 Google document embedding 與 PostgreSQL hybrid `SearchBackend`。
 - 產生 approved release 驗證收據、smoke evidence、activation 與 rollback evidence。
 - 建立 evaluation dataset、baseline metrics 與 CI gate。
 - 這是後續 query rewrite、reranker、DB／Graph tools 的必要前置。

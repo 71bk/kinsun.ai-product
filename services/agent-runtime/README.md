@@ -48,9 +48,34 @@ RAG_QUERY_EMBEDDING_CONFIG_PATH=config/rag/embedding-google.yaml
 ```
 
 Google adapter 固定使用 `RETRIEVAL_QUERY` task type，provider error、空回應或維度不符一律 fail
-closed。此設定目前只證明 query adapter；ingestion 尚未產生 Google `RETRIEVAL_DOCUMENT` vectors，
-不得把 Google query vectors 與既有 Bedrock/Cohere corpus 混用。必須先用同一 model／dimension
-重建完整 projection 並通過 evaluation，才可接真實 search backend。
+closed。Supabase staging release 已匯入同一 `gemini-embedding-001`／1024 維度的
+`RETRIEVAL_DOCUMENT` vectors；Google query vectors 仍不得與 Bedrock/Cohere corpus 混用。
+
+### PostgreSQL／Supabase search backend
+
+PostgreSQL adapter 預設不啟用；部署時必須注入獨立 read-only credential，並精確綁定已審查的
+release 與 embedding profile：
+
+```dotenv
+RAG_MODE=staging
+RAG_SEARCH_BACKEND=postgresql
+RAG_DATABASE_URL=<read-only-postgresql+asyncpg-url>
+RAG_POSTGRES_RELEASE_ID=rag-v2-v002-bab68588963b
+RAG_POSTGRES_EMBEDDING_PROFILE_ID=ep-google-00a12ec45096fa9d97d9e9b6
+RAG_QUERY_EMBEDDING_CONFIG_PATH=config/rag/embedding-google.yaml
+RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true
+RAG_STAGING_ALLOW_ALL_AUDIENCES=false
+```
+
+`RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 只可用於 staging，且目前來源 metadata 預設只允許
+`care_professional` ordinary-RAG scope。正式部署不得
+重用 Core／migration owner URL；缺少任一 release/profile/receipt/model/dimension evidence 時會
+fail closed。
+
+本機整合測試若經 owner 明確同意，可暫時將
+`RAG_STAGING_ALLOW_ALL_AUDIENCES=true`，讓有明確 audience 的長者、家屬與照護人員共用仍通過
+public／official／risk／purpose gate 的 staging chunks。這個 override 不接受空 audience、不放寬
+restricted knowledge、高風險、用途或引用治理，且不得用於 production。
 
 ## 模型設定
 
@@ -186,8 +211,9 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
   provider-neutral OpenAI-compatible adapter，不會靜默 fallback。
 - **RAG 外部依賴只在 adapter 邊界**：Retriever 只接收 provider-neutral `EmbeddingProvider`、
   `SearchBackend` 與不含 executable DSL 的 bounded plan；query embedding 可明確選 Bedrock 或
-  Google，唯一 search backend 仍是 OpenSearch。Google document embedding／corpus rebuild 與
-  PostgreSQL hybrid backend 尚未實作；設定不完整或 provider 失敗都回 no-guess fallback。
+  Google；search backend 可明確選 legacy OpenSearch 或固定模板、全參數化的 PostgreSQL
+  FTS／trigram＋pgvector hybrid adapter。PostgreSQL 路徑以 release／embedding profile／model／
+  1024 維度與 ingestion receipts 精確綁定；設定不完整或 provider 失敗都回 no-guess fallback。
 - **Safety 是第一版 deterministic 關鍵字規則**，不是完整安全機制。命中時回 200、
   `result_status` 為 `BLOCKED`、`reply_text` 換成安全訊息——拒絕是對話結果，不是傳輸錯誤。
 - **Orchestrator 保持單一模型決策**，並最多執行一次 deterministic Candidate Tool；沒有
@@ -199,18 +225,21 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
   `audience`、`purpose` 必須由已授權的內部 caller 從可信身分與用途推導。
 - **V2 needs-review override 預設關閉**：只有 staging operator 明確設定
   `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 才能回傳 `needs_review` chunk，而且結果仍固定
-  `production_approved=false`。目前沒有執行 V2 OpenSearch reindex 或 alias cutover；在相符的
-  V2 projection 可用前，真實 adapter 會安全地回 `NO_DATA`。
+  `production_approved=false`。2026-08-25 已以 Google query embedding 對 Supabase 固定
+  release/profile 完成一次全鏈路 smoke，回傳 5 筆 `care_professional/general_information` chunks。
+  2026-08-25 另以明確的 development-only audience override 完成 Elder 全鏈路 smoke並回傳 5 筆；
+  關閉 override 後 Elder／Family 仍會依來源 metadata 正確回 `NO_DATA`。這不代表 production
+  deployment 或 approval。
 - 外部服務只能出現在 `models/provider.py`、`core/`、`tools/` 或 `rag/` 的 Adapter 邊界。
 
 ## 尚未實作
 
 通用多 Tool 執行迴圈、Memory Candidate、Graph 查詢、Prompt Registry、Model Router、
 完整 Agent Trace 持久化（Core AgentRun register／complete lifecycle 以外）、RAG Evaluation、
-production index。OpenAI-compatible text provider 與 provider-neutral `SearchBackend` seam 已完成，
-但現行唯一 runtime 組裝仍是 staging-only AWS adapters；V2 citation 已用合成 in-process adapter
-完成 live verification，並不代表真實
-OpenSearch V2 projection、AWS deployment 或 production enablement 已完成。
+獨立 PostgreSQL read-only principal、Golden Query／quality gate、release activation／rollback 與
+production index。OpenAI-compatible text provider 與 provider-neutral `SearchBackend` seam 已完成；
+PostgreSQL adapter 已通過 Supabase staging smoke，但尚未部署 runtime，也不代表 production
+enablement 已完成。legacy OpenSearch V2 projection 與 AWS deployment 仍未驗證。
 
 `contracts/schemas/agent/HandoffEnvelopeV1` 仍是目標形狀；`contracts/schemas/tools/` 現已由
 受控的 Core Tool adapter 使用，但目前只接通 `create_event_candidate`。

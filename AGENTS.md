@@ -44,8 +44,17 @@
     staging artifact，SHA-256 為
     `599d194db552433710ec6aff69318e962cb5b4b1c9f7a3050d527b369a3df7d5`；經使用者確認後已以單一
     transaction 匯入 726 document embeddings，Supabase 獨立讀回的 profile、embedding-text hash 與
-    vector fingerprint 全部 `VERIFIED`。retrieval 仍未授權，Production 仍封鎖。PostgreSQL search
-    backend 尚未實作；目前唯一 search runtime 組裝仍是 OpenSearch，
+    vector fingerprint 全部 `VERIFIED`。2026-08-25 已新增固定模板、全參數化的 PostgreSQL
+    FTS／trigram＋pgvector hybrid `SearchBackend`，runtime 可用
+    `RAG_SEARCH_BACKEND=postgresql` 精確綁定上述 release／profile；Supabase data-plane smoke 與
+    Google `RETRIEVAL_QUERY` → Supabase → V2 citation smoke 均回傳 5 筆合規 staging chunks。
+    現行治理資料只有 14 筆 official/public chunks 通過普通 RAG filter，來源 metadata 全都只允許
+    `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
+    `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
+    public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。
+    Production 仍不得放寬 audience。這不是 production deployment；本機暫時重用 Core DB URL，獨立
+    read-only DB principal、Golden Query／quality gate、human review、
+    activation／rollback 尚未完成，retrieval／Production 仍封鎖。legacy OpenSearch adapter 保留，
     不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
