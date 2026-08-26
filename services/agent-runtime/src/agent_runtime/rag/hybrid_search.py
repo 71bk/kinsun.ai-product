@@ -35,6 +35,7 @@ class HybridSearch:
         *,
         allow_needs_review: bool,
         allow_all_audiences: bool = False,
+        policy_candidate_chunk_ids: tuple[str, ...] | None = None,
     ) -> HybridSearchPlan:
         return self._build(
             request,
@@ -42,6 +43,7 @@ class HybridSearch:
             governed_citations=True,
             allow_needs_review=allow_needs_review,
             allow_all_audiences=allow_all_audiences,
+            policy_candidate_chunk_ids=policy_candidate_chunk_ids,
         )
 
     def _build(
@@ -52,6 +54,7 @@ class HybridSearch:
         governed_citations: bool,
         allow_needs_review: bool = False,
         allow_all_audiences: bool = False,
+        policy_candidate_chunk_ids: tuple[str, ...] | None = None,
     ) -> HybridSearchPlan:
         profile = self._settings.for_profile(request.query_profile)
         return HybridSearchPlan(
@@ -64,6 +67,8 @@ class HybridSearch:
             governed_citations=governed_citations,
             allow_needs_review=allow_needs_review,
             allow_all_audiences=allow_all_audiences,
+            search_result_limit=50 if policy_candidate_chunk_ids is not None else 5,
+            policy_candidate_chunk_ids=policy_candidate_chunk_ids,
             bm25_weight=profile.bm25_weight,
             vector_weight=profile.vector_weight,
             min_score=profile.vector_min_score,

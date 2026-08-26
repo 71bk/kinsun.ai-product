@@ -552,9 +552,31 @@ class HybridSearchPlan(RagBaseModel):
     governed_citations: bool
     allow_needs_review: bool
     allow_all_audiences: bool = False
+    search_result_limit: Literal[5, 50] = 5
+    policy_candidate_chunk_ids: tuple[str, ...] | None = Field(
+        default=None,
+        min_length=554,
+        max_length=554,
+    )
     bm25_weight: float
     vector_weight: float
     min_score: float = Field(gt=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def runtime_policy_candidate_shape_is_fixed(self) -> HybridSearchPlan:
+        if self.policy_candidate_chunk_ids is None:
+            if self.search_result_limit != 5:
+                raise ValueError("unprojected search result limit must remain five")
+            return self
+        if not self.governed_citations:
+            raise ValueError("runtime policy candidates require governed citations")
+        if self.search_result_limit != 50:
+            raise ValueError("runtime policy candidates require the bounded 50-hit pool")
+        if len(set(self.policy_candidate_chunk_ids)) != 554:
+            raise ValueError("runtime policy candidate IDs must be unique")
+        if self.allow_all_audiences:
+            raise ValueError("runtime policy cannot use the legacy audience override")
+        return self
 
 
 def _read_yaml_mapping(path: str | Path) -> Mapping[str, object]:

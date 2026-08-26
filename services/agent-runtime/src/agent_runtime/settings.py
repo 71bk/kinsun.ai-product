@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     RAG_SEARCH_BACKEND: str = "opensearch"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
+    RAG_SOURCE_FAMILY_POLICY_PATH: str | None = None
+    RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256: str | None = None
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
     RAG_QUERY_EMBEDDING_CONFIG_PATH: str | None = None
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"

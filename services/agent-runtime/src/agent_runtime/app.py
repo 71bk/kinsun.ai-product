@@ -17,6 +17,7 @@ from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
 from agent_runtime.rag.models import RagRuntimeSettings
 from agent_runtime.rag.retriever import build_retriever, close_retriever
+from agent_runtime.rag.runtime_policy import load_source_family_runtime_policy
 from agent_runtime.security.service_identity import ServiceCredentialVerifier
 from agent_runtime.settings import get_settings
 
@@ -120,10 +121,34 @@ def build_configured_rag_retriever():
         )
         if rag_settings.allow_all_audiences:
             logger.warning("staging_rag_all_audiences_enabled")
+        policy_path = settings.RAG_SOURCE_FAMILY_POLICY_PATH
+        policy_sha256 = settings.RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256
+        if (policy_path is None) != (policy_sha256 is None):
+            raise ValueError("source-family runtime policy path and SHA-256 are both required")
+        source_family_policy = None
+        if policy_path is not None and policy_sha256 is not None:
+            if rag_settings.allow_all_audiences:
+                raise ValueError(
+                    "source-family runtime policy cannot use the legacy audience override"
+                )
+            source_family_policy = load_source_family_runtime_policy(
+                _resolve_config_path(policy_path),
+                expected_sha256=policy_sha256,
+            )
+            logger.info(
+                "staging_rag_source_family_policy_loaded",
+                extra={
+                    "runtime_policy_version": (
+                        source_family_policy.document.runtime_policy_version
+                    ),
+                    "candidate_count": len(source_family_policy.candidate_chunk_ids),
+                },
+            )
         return build_retriever(
             rag_settings,
             google_api_key=google_api_key,
             google_timeout_seconds=settings.GEMINI_EMBEDDING_TIMEOUT_SECONDS,
+            source_family_policy=source_family_policy,
         )
     except Exception as exc:
         # Never include provider messages: they can contain endpoint/account details.

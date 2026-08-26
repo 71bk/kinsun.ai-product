@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.0.0",
+  "suite_id": "source-family-policy-v002-runtime-golden-v001",
+  "scope": "OFFLINE_POLICY_AND_CITATION_GATE_ONLY",
+  "live_relevance_evaluation": "NOT_EXECUTED",
+  "cases": [
+    {
+      "case_id": "elder_general_information_allowed",
+      "query": "長者平常要怎麼吃得比較均衡？",
+      "audience": "elder",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "family_general_information_allowed",
+      "query": "家中長輩平常要怎麼吃得比較均衡？",
+      "audience": "family_caregiver",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "professional_general_information_allowed",
+      "query": "高齡營養衛教有哪些基本原則？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "admin_general_information_allowed",
+      "query": "列出高齡營養衛教資料來源。",
+      "audience": "system_admin",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "elder_professional_assessment_response_denied",
+      "query": "我是不是已經失智？",
+      "audience": "elder",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "NO_DATA"
+    },
+    {
+      "case_id": "family_professional_assessment_response_denied",
+      "query": "家中長輩是不是已經失智？",
+      "audience": "family_caregiver",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "NO_DATA"
+    },
+    {
+      "case_id": "professional_assessment_material_allowed",
+      "query": "失智衛教手冊有哪些需要專業判斷的內容？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "admin_assessment_material_allowed",
+      "query": "檢查失智衛教專業評估資料的引用。",
+      "audience": "system_admin",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS"
+    },
+    {
+      "case_id": "purpose_checked_after_retrieval",
+      "query": "長者平常要怎麼吃得比較均衡？",
+      "audience": "elder",
+      "purpose": "legal_reference",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "NO_DATA"
+    },
+    {
+      "case_id": "null_assessment_metadata_denies_response",
+      "query": "居家訪視紀錄表怎麼填？",
+      "audience": "care_professional",
+      "purpose": "form_reference",
+      "fixture_prior_chunk_ids": [
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0001",
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0002",
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0003"
+      ],
+      "expected_status": "NO_DATA"
+    }
+  ],
+  "exclusion_cases": [
+    {
+      "case_id": "high_risk_not_in_search_projection",
+      "successor_chunk_id": "hpa_elder_fall_prevention_tips_manual_202102_rag_v3_v003_0023",
+      "expected_projection_presence": false
+    },
+    {
+      "case_id": "research_source_not_in_search_projection",
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "expected_projection_presence": false
+    }
+  ],
+  "production_approved": false
+}

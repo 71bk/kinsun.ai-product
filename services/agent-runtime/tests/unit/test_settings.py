@@ -28,3 +28,5 @@ def test_needs_review_citation_override_is_disabled_by_default() -> None:
     settings = Settings(_env_file=None)
 
     assert settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS is False
+    assert settings.RAG_SOURCE_FAMILY_POLICY_PATH is None
+    assert settings.RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256 is None

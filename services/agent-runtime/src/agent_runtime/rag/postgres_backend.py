@@ -86,33 +86,48 @@ eligible AS (
      AND embedding.chunk_id = projection.chunk_id
      AND embedding.embedding_profile_id = CAST(:embedding_profile_id AS text)
      AND embedding.embedding_text_sha256 = projection.embedding_text_sha256
-    WHERE projection.current_status = 'current'
-      AND projection.stop_normal_rag IS FALSE
-      AND projection.retrieval_eligible IS TRUE
-      AND projection.risk_level IN ('low', 'medium')
-      AND projection.requires_official_assessment IS NOT NULL
-      AND projection.requires_professional_assessment IS NOT NULL
-      AND CAST(:audience AS text) IS NOT NULL
-      AND cardinality(projection.allowed_audiences) > 0
-      AND (
-          CAST(:allow_all_audiences AS boolean) IS TRUE
-          OR CAST(:audience AS text) = ANY(projection.allowed_audiences)
-      )
-      AND CAST(:purpose AS text) IS NOT NULL
-      AND CAST(:purpose AS text) = ANY(projection.allowed_purposes)
-      AND projection.governance ->> 'data_classification' = 'public'
+    WHERE projection.governance ->> 'data_classification' = 'public'
       AND projection.governance ->> 'distribution_scope' = 'public_knowledge'
       AND projection.provenance ->> 'is_official_source' = 'true'
-      AND jsonb_typeof(projection.retrieval_policy -> 'retrieval_block_reasons') = 'array'
-      AND jsonb_array_length(
-          projection.retrieval_policy -> 'retrieval_block_reasons'
-      ) = 0
       AND (
-          (projection.review_status = 'verified' AND projection.production_approved IS TRUE)
+          (
+              CAST(:policy_overlay_enabled AS boolean) IS TRUE
+              AND cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554
+              AND projection.chunk_id = ANY(CAST(:policy_candidate_chunk_ids AS text[]))
+          )
           OR (
-              CAST(:allow_needs_review AS boolean) IS TRUE
-              AND projection.review_status IN ('needs_review', 'verified')
-              AND projection.production_approved IS FALSE
+              CAST(:policy_overlay_enabled AS boolean) IS FALSE
+              AND projection.current_status = 'current'
+              AND projection.stop_normal_rag IS FALSE
+              AND projection.retrieval_eligible IS TRUE
+              AND projection.risk_level IN ('low', 'medium')
+              AND projection.requires_official_assessment IS NOT NULL
+              AND projection.requires_professional_assessment IS NOT NULL
+              AND CAST(:audience AS text) IS NOT NULL
+              AND cardinality(projection.allowed_audiences) > 0
+              AND (
+                  CAST(:allow_all_audiences AS boolean) IS TRUE
+                  OR CAST(:audience AS text) = ANY(projection.allowed_audiences)
+              )
+              AND CAST(:purpose AS text) IS NOT NULL
+              AND CAST(:purpose AS text) = ANY(projection.allowed_purposes)
+              AND jsonb_typeof(
+                  projection.retrieval_policy -> 'retrieval_block_reasons'
+              ) = 'array'
+              AND jsonb_array_length(
+                  projection.retrieval_policy -> 'retrieval_block_reasons'
+              ) = 0
+              AND (
+                  (
+                      projection.review_status = 'verified'
+                      AND projection.production_approved IS TRUE
+                  )
+                  OR (
+                      CAST(:allow_needs_review AS boolean) IS TRUE
+                      AND projection.review_status IN ('needs_review', 'verified')
+                      AND projection.production_approved IS FALSE
+                  )
+              )
           )
       )
 ),
@@ -281,10 +296,12 @@ class PostgresSearchBackend:
             "embedding_dimension": self._embedding_settings.dimension,
             "allow_needs_review": plan.allow_needs_review,
             "allow_all_audiences": plan.allow_all_audiences,
+            "policy_overlay_enabled": plan.policy_candidate_chunk_ids is not None,
+            "policy_candidate_chunk_ids": list(plan.policy_candidate_chunk_ids or ()),
             "audience": plan.audience,
             "purpose": plan.purpose,
             "candidate_limit": POSTGRES_CANDIDATE_LIMIT,
-            "top_k": plan.top_k,
+            "top_k": plan.search_result_limit,
             "min_score": plan.min_score,
             "bm25_weight": plan.bm25_weight,
             "vector_weight": plan.vector_weight,

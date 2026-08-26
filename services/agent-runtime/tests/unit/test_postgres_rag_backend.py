@@ -154,6 +154,32 @@ async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
 
 
 @pytest.mark.asyncio
+async def test_postgres_backend_uses_fixed_runtime_policy_candidate_pool() -> None:
+    candidate_ids = tuple(f"policy-chunk-{number:04d}" for number in range(554))
+    engine = FakeEngine([])
+    backend = PostgresSearchBackend(
+        engine,  # type: ignore[arg-type]
+        make_postgres_settings(),
+        make_embedding_settings(),
+    )
+
+    await backend.search(
+        make_plan(
+            search_result_limit=50,
+            policy_candidate_chunk_ids=candidate_ids,
+        )
+    )
+
+    assert engine.connection.parameters is not None
+    assert engine.connection.parameters["policy_overlay_enabled"] is True
+    assert engine.connection.parameters["policy_candidate_chunk_ids"] == list(candidate_ids)
+    assert engine.connection.parameters["top_k"] == 50
+    assert "cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554" in str(
+        engine.connection.statement
+    )
+
+
+@pytest.mark.asyncio
 async def test_postgres_backend_rejects_bad_vector_before_database_access() -> None:
     engine = FakeEngine([])
     backend = PostgresSearchBackend(

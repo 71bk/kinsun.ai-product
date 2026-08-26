@@ -1,0 +1,212 @@
+{
+  "entries": [
+    {
+      "bytes": 1515,
+      "path": ".gitattributes",
+      "sha256": "c8265093e3123c1ca5a1889c965b6246b75f6a7bdb3f421506d35511943949c0"
+    },
+    {
+      "bytes": 5788,
+      "path": "config/rag/source-family-golden-queries-v001.json",
+      "sha256": "4af368ad9e3fa1ffa4333b865f746b65da5f3e6f19d47688fed9efb284606a5c"
+    },
+    {
+      "bytes": 11000,
+      "path": "contracts/schemas/rag/rag-source-family-runtime-policy-v1.schema.json",
+      "sha256": "8be0d52ca1c54bb9e1d785394023ad8bc0ec634cc2aca79705ee7c298ee085ae"
+    },
+    {
+      "bytes": 72902,
+      "path": "data/rag-v3/candidates/v003/chunks/fetzer_ucla_loneliness_scale_compendium.rag-chunk-v3.v003.jsonl",
+      "sha256": "bf5090b95205a1588fd9b767487744ac30003771cc5b8e0b19ceeb1d23b37bfb"
+    },
+    {
+      "bytes": 271082,
+      "path": "data/rag-v3/candidates/v003/chunks/frontiers_do_words_matter_loneliness_nlp_2021.rag-chunk-v3.v003.jsonl",
+      "sha256": "353f5f2c6c86849e622e9a7ac26d0df244656952d8e8b859022eba3935785b27"
+    },
+    {
+      "bytes": 201953,
+      "path": "data/rag-v3/candidates/v003/chunks/frontiers_loneliness_speech_analysis_2021.rag-chunk-v3.v003.jsonl",
+      "sha256": "a0cc195d6ef5c2fe9ea7374f4d79965a45fbf829f1acae80146b25fac09c65db"
+    },
+    {
+      "bytes": 531402,
+      "path": "data/rag-v3/candidates/v003/chunks/hpa_dementia_health_education_resource_manual_201610.rag-chunk-v3.v003.jsonl",
+      "sha256": "195ad1b292d8c19ab41d194d90fe5bf3ad9f86a7cc58cef2ebcf299c1e10eb1c"
+    },
+    {
+      "bytes": 154643,
+      "path": "data/rag-v3/candidates/v003/chunks/hpa_elder_fall_prevention_tips_manual_202102.rag-chunk-v3.v003.jsonl",
+      "sha256": "7f075ffa06f4e558e61b72c2b3548a035653aaab1f6cbc97288762c76c49479d"
+    },
+    {
+      "bytes": 298770,
+      "path": "data/rag-v3/candidates/v003/chunks/hpa_older_adult_nutrition_manual_20230525.rag-chunk-v3.v003.jsonl",
+      "sha256": "aca566a73c7ba8ea8f487b79bd4fd47505f5113e64ae6f7010ba49b0a258a13b"
+    },
+    {
+      "bytes": 74060,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_1966_apply_ltc.rag-chunk-v3.v003.jsonl",
+      "sha256": "3f3b12bbc5e5b95e72fd6561b03d5934620a716bad1c1ac6d71fc50975db049f"
+    },
+    {
+      "bytes": 522470,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_a_unit_case_manager_manual_20230719.rag-chunk-v3.v003.jsonl",
+      "sha256": "ba01ad0d6675275e225b5fe425399a0062da5697c4a346fd11f79356a3b78dec"
+    },
+    {
+      "bytes": 868686,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_a_unit_case_manager_manual_appendix_20230719.rag-chunk-v3.v003.jsonl",
+      "sha256": "15649a9732b38d3d2c55d3b4ce644526733502925517627ad3e7a390bc86f127"
+    },
+    {
+      "bytes": 743492,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_family_caregiver_support_manual_202507.rag-chunk-v3.v003.jsonl",
+      "sha256": "7a7b1da78f547c0b21dcdeec98ca62732f998f01c4f4ef8cb066ef0f25caec30"
+    },
+    {
+      "bytes": 156621,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_family_caregiver_support_manual_appendix_202507.rag-chunk-v3.v003.jsonl",
+      "sha256": "6043f14e69da9ca4727ed2639e4fbab0280e5e1928c8b3fe9745e87ce13bbb36"
+    },
+    {
+      "bytes": 51074,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_high_burden_caregiver_referral_service_flow_20250930.rag-chunk-v3.v003.jsonl",
+      "sha256": "6d814b4a78c84efa951ba173a83766005a2e8335e1e46cf92dada466447927df"
+    },
+    {
+      "bytes": 32311,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_high_burden_caregiver_screening_20231222.rag-chunk-v3.v003.jsonl",
+      "sha256": "5821ea0ebb679c688747a0a34ff198eb9328dfb2438c7d5d1ac29478dccc596d"
+    },
+    {
+      "bytes": 1011306,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_home_care_service_supervisor_manual_20260529.rag-chunk-v3.v003.jsonl",
+      "sha256": "2402bbf53ea52c95f1c716d34eeaecde818a0e4a7e1e30138d79debabb74200d"
+    },
+    {
+      "bytes": 23013,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.rag-chunk-v3.v003.jsonl",
+      "sha256": "f068c67fa09af05a1cb33f4d6cfc3d79ba1786523d8f90b8a91b6a8c76afe454"
+    },
+    {
+      "bytes": 154362,
+      "path": "data/rag-v3/candidates/v003/chunks/mohw_home_care_service_supervisor_manual_health_appendix_20260529.rag-chunk-v3.v003.jsonl",
+      "sha256": "ff0b106a8dc96f8b22b0cfc6875be8774c53efc905065bdb54d81c46a4bafa29"
+    },
+    {
+      "bytes": 368858,
+      "path": "data/rag-v3/candidates/v003/chunks/moj_long_term_care_services_act_20210609.rag-chunk-v3.v003.jsonl",
+      "sha256": "2abf9eedd4b4567b4537e8bc2c6a880d35cf45ab5535f9a1c5a0d1e623a58671"
+    },
+    {
+      "bytes": 460170,
+      "path": "data/rag-v3/candidates/v003/crosswalk/chunk-id-crosswalk-v003.jsonl",
+      "sha256": "d1363c6150a6ba8418d6e0ec236c537cf37e31d063d6c202fc83d305f3726f78"
+    },
+    {
+      "bytes": 458,
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/SHA256SUMS.txt",
+      "sha256": "78775998eb8ccc77d06a9a79543ab913036fa863265d2d17bb50b14b49c4798c"
+    },
+    {
+      "bytes": 63864,
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+      "sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+    },
+    {
+      "bytes": 883,
+      "path": "scripts/rag/build_source_family_runtime_policy.py",
+      "sha256": "cebef730bebdfcb35d0c7c7d39790a45c4efd8cb3f54e329a35730f3f85d3aaa"
+    },
+    {
+      "bytes": 882,
+      "path": "scripts/rag/validate_source_family_runtime_policy.py",
+      "sha256": "99a268070a952551598c27473d1e59b435ec203ff623376bfb57bdb244f8dc55"
+    },
+    {
+      "bytes": 10073,
+      "path": "services/agent-runtime/src/agent_runtime/app.py",
+      "sha256": "9c785756460991894e8e95f4a17a05aebcb23d14d42344431888428cba9fa9f7"
+    },
+    {
+      "bytes": 7511,
+      "path": "services/agent-runtime/src/agent_runtime/rag/client.py",
+      "sha256": "ccc879777d95a03fddf837523e70f13b2ccee380235c1732b1d359732888dd43"
+    },
+    {
+      "bytes": 5654,
+      "path": "services/agent-runtime/src/agent_runtime/rag/filters.py",
+      "sha256": "9a670f0f7928d195edd08113b558820364360aedb838a929db8a23440be3e04a"
+    },
+    {
+      "bytes": 2443,
+      "path": "services/agent-runtime/src/agent_runtime/rag/hybrid_search.py",
+      "sha256": "35899d83e50ac4a978bc99099f7ea3b9aef472ce09e271fba7e062e96b7877d3"
+    },
+    {
+      "bytes": 27271,
+      "path": "services/agent-runtime/src/agent_runtime/rag/models.py",
+      "sha256": "4c3d1758c54451a5fee0fbc9281800f3342f13e4fcfacaf2f174f6f64336eb8f"
+    },
+    {
+      "bytes": 15521,
+      "path": "services/agent-runtime/src/agent_runtime/rag/postgres_backend.py",
+      "sha256": "b4608d69ab0455cbb28be0134e09da4bb35a4fe88ba70f3b0d2ac6f655d66e0f"
+    },
+    {
+      "bytes": 14027,
+      "path": "services/agent-runtime/src/agent_runtime/rag/retriever.py",
+      "sha256": "5fd921c35b96d62410f25ba2febd16615e255a592adf12ca0990b4e0182e58dc"
+    },
+    {
+      "bytes": 11017,
+      "path": "services/agent-runtime/src/agent_runtime/rag/runtime_policy.py",
+      "sha256": "9855d8f39fce74a8335790a8b1671b8ee99d34282e55c5d338c59060d713af60"
+    },
+    {
+      "bytes": 4172,
+      "path": "services/agent-runtime/src/agent_runtime/settings.py",
+      "sha256": "0562efc7f020fcd0241d3b15b5c029fb5ce430efa816d42e33680f65ff850fd7"
+    },
+    {
+      "bytes": 11458,
+      "path": "services/agent-runtime/tests/integration/test_rag_api.py",
+      "sha256": "7e60f8e99b6bf4909d8d573484149b269802726a8a4684ce209fad602e868f2b"
+    },
+    {
+      "bytes": 12390,
+      "path": "services/agent-runtime/tests/unit/test_postgres_rag_backend.py",
+      "sha256": "b7ae00dc562369c92b8a0512105eafbf614f152b3f0b79619968c830d96acaa9"
+    },
+    {
+      "bytes": 28098,
+      "path": "services/agent-runtime/tests/unit/test_rag_retrieval.py",
+      "sha256": "b217dc49a75eaf7786664850f90a5bbf8db61f6f00e36a939c11bff53fae86b0"
+    },
+    {
+      "bytes": 7276,
+      "path": "services/agent-runtime/tests/unit/test_source_family_runtime_policy.py",
+      "sha256": "c2db9a965f49384b2e44af91d4c2666b396719332677b30febb14a4fd80562be"
+    },
+    {
+      "bytes": 28311,
+      "path": "services/rag-ingestion/src/rag_ingestion/source_family_runtime_policy.py",
+      "sha256": "3e5fe6b5f04f491ccdcc69e709b88138df14d88812c350c313836a19286272d3"
+    },
+    {
+      "bytes": 2531,
+      "path": "services/rag-ingestion/tests/integration/test_source_family_runtime_policy.py",
+      "sha256": "275ab9f728df240998d112654bab23eb25ec4cb5710926d7797c13fd76360368"
+    }
+  ],
+  "entry_count": 40,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "34fec45cba46c8d52a407cd411ea5d5797f02b274d845b261aaf89cd0bc79af3",
+  "kind": "source_family_runtime_policy_validation_input_inventory",
+  "production_approved": false,
+  "runtime_policy_version": "v001",
+  "schema_version": "1.0.0",
+  "scope": "runtime schema, builder, validators, tests, Golden Queries, and formal inputs"
+}

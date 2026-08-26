@@ -157,7 +157,7 @@ def build_opensearch_search_body(plan: HybridSearchPlan) -> dict[str, object]:
 
     source_fields = _V1_SOURCE_FIELDS + (_V2_SOURCE_FIELDS if plan.governed_citations else [])
     return {
-        "size": plan.top_k,
+        "size": plan.search_result_limit,
         "_source": source_fields,
         "query": {
             "hybrid": {
@@ -169,7 +169,7 @@ def build_opensearch_search_body(plan: HybridSearchPlan) -> dict[str, object]:
                                 "vector": plan.query_vector,
                                 # OpenSearch Serverless accepts only `k` here.
                                 # The normalized score floor remains in Retriever.
-                                "k": plan.top_k,
+                                "k": plan.search_result_limit,
                             }
                         }
                     },
@@ -181,6 +181,7 @@ def build_opensearch_search_body(plan: HybridSearchPlan) -> dict[str, object]:
                     governed_citations=plan.governed_citations,
                     allow_needs_review=plan.allow_needs_review,
                     allow_all_audiences=plan.allow_all_audiences,
+                    policy_candidate_chunk_ids=plan.policy_candidate_chunk_ids,
                 ),
             }
         },

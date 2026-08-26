@@ -88,8 +88,8 @@
   metadata 都只允許 `care_professional`；2026-08-25 經 owner 明確要求，本機 development 以
   `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時開放有明確 audience 的 Elder／Family／Staff，且 Elder
   全鏈路 smoke 回傳 5 筆，Production 仍禁止此 override。這不代表 production deployment：獨立 read-only
-  principal、Golden Query／quality gate、v003 Supabase sync、activation／rollback 尚未完成，retrieval 與
-  Production 仍封鎖；legacy OpenSearch adapter 保留。
+  principal、live relevance Golden Query／quality gate、v003 Supabase sync、activation／rollback 尚未完成，
+  外部 runtime activation 與 Production 仍封鎖；legacy OpenSearch adapter 保留。
   2026-08-26 已依 Owner 明確人工確認，在 repository 內產生 immutable successor
   `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
   embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
@@ -98,8 +98,11 @@
   staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
   5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
   14 個官方來源對四種角色形成 554 筆 ordinary retrieval candidates，其中 302 筆 response metadata
-  完整；purpose／assessment 仍於回覆前檢查，高風險、stop 與非 current 內容持續 fail closed。policy
-  尚未接入 runtime，也未跑 Golden Query。
+  完整；purpose／assessment 仍於回覆前檢查，高風險、stop 與非 current 內容持續 fail closed。
+  2026-08-26 已建立 immutable、hash-pinned runtime policy v001 並接入 Agent Runtime V2：先在固定的
+  554 筆 v002 chunk IDs 搜尋最多 50 筆，再依 v003 text SHA-256、角色、purpose 與 assessment metadata
+  決定可回覆的 3–5 筆。四角色與拒絕路徑共 10 個離線 policy／citation Golden cases 已通過；真實
+  backend relevance／ranking Golden Query 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

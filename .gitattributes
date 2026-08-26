@@ -30,4 +30,6 @@ services/rag-ingestion/src/rag_ingestion/chunk_loader.py text eol=lf
 services/rag-ingestion/src/rag_ingestion/v2_artifacts.py text eol=lf
 services/rag-ingestion/tests/integration/test_v2_artifacts.py text eol=lf
 services/rag-ingestion/tests/unit/test_allowlist_and_loader.py text eol=lf
+services/agent-runtime/src/**/*.py text eol=lf
+services/agent-runtime/tests/**/*.py text eol=lf
 docs/project/rag-v3-public-retrieval-plan.md text eol=lf

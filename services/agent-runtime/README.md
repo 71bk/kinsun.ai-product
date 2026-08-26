@@ -65,7 +65,16 @@ RAG_POSTGRES_EMBEDDING_PROFILE_ID=ep-google-00a12ec45096fa9d97d9e9b6
 RAG_QUERY_EMBEDDING_CONFIG_PATH=config/rag/embedding-google.yaml
 RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true
 RAG_STAGING_ALLOW_ALL_AUDIENCES=false
+RAG_SOURCE_FAMILY_POLICY_PATH=data/rag-v3/governance/source-family-policy/runtime/candidates/v001/source-family-runtime-policy.json
+RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256=<independently-pinned-lowercase-sha256>
 ```
+
+Source-family runtime policy 必須同時設定 path 與 SHA-256，且不得與
+`RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 併用。啟用後，V2 會先在固定的 554 筆官方公開候選中
+搜尋最多 50 筆，再依角色、purpose、assessment metadata 與文字 SHA-256 決定可回覆的 3–5 筆；
+high／unknown、`stop_normal_rag`、非 current 與 research 來源不會進入普通搜尋候選。這仍是
+staging-only，`production_approved` 固定為 false。Runtime image 不內建 `data/rag*`；container
+測試必須以唯讀 config mount 注入 policy，再設定同一個獨立 SHA-256 pin。
 
 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 只可用於 staging，且目前來源 metadata 預設只允許
 `care_professional` ordinary-RAG scope。正式部署不得

@@ -15,8 +15,18 @@ def build_normal_rag_filter(
     governed_citations: bool = False,
     allow_needs_review: bool = False,
     allow_all_audiences: bool = False,
+    policy_candidate_chunk_ids: tuple[str, ...] | None = None,
 ) -> dict[str, object]:
     """Return mandatory fail-closed filters for ordinary RAG answers."""
+
+    if policy_candidate_chunk_ids is not None:
+        return {
+            "bool": {
+                "must": [
+                    {"terms": {"chunk_id": list(policy_candidate_chunk_ids)}},
+                ]
+            }
+        }
 
     must: list[dict[str, object]] = [
         {"term": {"current_status": "current"}},

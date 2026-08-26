@@ -1,0 +1,88 @@
+{
+  "checks": [
+    {
+      "name": "source_policy_v002_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "source_policy_sha256_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_immutable_lock_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "crosswalk_726_unique_and_byte_preserving",
+      "status": "PASS"
+    },
+    {
+      "name": "embedding_reuse_release_and_profile_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "official_sources_only",
+      "status": "PASS"
+    },
+    {
+      "name": "all_four_public_roles_present",
+      "status": "PASS"
+    },
+    {
+      "name": "retrieve_before_response_policy_enabled",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_gate_after_retrieval",
+      "status": "PASS"
+    },
+    {
+      "name": "assessment_null_denies_response",
+      "status": "PASS"
+    },
+    {
+      "name": "high_and_unknown_risk_excluded",
+      "status": "PASS"
+    },
+    {
+      "name": "stop_normal_rag_excluded",
+      "status": "PASS"
+    },
+    {
+      "name": "research_route_excluded",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_projection_554_unique_chunks",
+      "status": "PASS"
+    },
+    {
+      "name": "response_metadata_ready_302",
+      "status": "PASS"
+    },
+    {
+      "name": "five_owner_risk_overlays_applied",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "chunk_count": 554,
+  "external_sync": "NOT_AUTHORIZED",
+  "fail_count": 0,
+  "golden_query": "NOT_EXECUTED",
+  "pass_count": 18,
+  "production_approved": false,
+  "response_metadata_ready_count": 302,
+  "runtime_integration": "READY_FOR_STAGING_TEST",
+  "runtime_policy_version": "v001",
+  "schema_version": "1.0.0",
+  "source_count": 14,
+  "status": "PASS"
+}

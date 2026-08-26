@@ -23,6 +23,7 @@ from agent_runtime.rag.models import (
 )
 from agent_runtime.rag.postgres_backend import build_postgres_search_backend
 from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
+from agent_runtime.rag.runtime_policy import SourceFamilyRuntimePolicy
 from agent_runtime.rag.search_backend import SearchBackend, SearchHit
 
 
@@ -37,12 +38,14 @@ class Retriever:
         hybrid_search: HybridSearch,
         allow_needs_review_citations: bool = False,
         allow_all_audiences: bool = False,
+        source_family_policy: SourceFamilyRuntimePolicy | None = None,
     ) -> None:
         self._embedding_provider = embedding_provider
         self._search_backend = search_backend
         self._hybrid_search = hybrid_search
         self._allow_needs_review_citations = allow_needs_review_citations
         self._allow_all_audiences = allow_all_audiences
+        self._source_family_policy = source_family_policy
 
     async def aclose(self) -> None:
         try:
@@ -97,6 +100,11 @@ class Retriever:
                 vector,
                 allow_needs_review=self._allow_needs_review_citations,
                 allow_all_audiences=self._allow_all_audiences,
+                policy_candidate_chunk_ids=(
+                    self._source_family_policy.candidate_chunk_ids
+                    if self._source_family_policy is not None
+                    else None
+                ),
             )
             hits = await self._search_backend.search(plan)
         except Exception:
@@ -110,6 +118,7 @@ class Retriever:
             purpose=request.purpose,
             allow_needs_review=self._allow_needs_review_citations,
             allow_all_audiences=self._allow_all_audiences,
+            source_family_policy=self._source_family_policy,
         )
         if results is None or not results:
             return no_data_response_v2(request.request_id)
@@ -129,6 +138,7 @@ def build_retriever(
     *,
     google_api_key: str | None = None,
     google_timeout_seconds: float = 30.0,
+    source_family_policy: SourceFamilyRuntimePolicy | None = None,
 ) -> Retriever:
     """Compose explicitly configured embedding and search adapters."""
 
@@ -153,6 +163,7 @@ def build_retriever(
         hybrid_search=HybridSearch(settings.hybrid),
         allow_needs_review_citations=settings.allow_needs_review_citations,
         allow_all_audiences=settings.allow_all_audiences,
+        source_family_policy=source_family_policy,
     )
 
 
@@ -234,6 +245,7 @@ def _eligible_unique_results_v2(
     purpose: str | None,
     allow_needs_review: bool,
     allow_all_audiences: bool,
+    source_family_policy: SourceFamilyRuntimePolicy | None,
 ) -> list[RetrievalResultV2] | None:
     """Return governed results, or ``None`` when any selected citation is defective."""
 
@@ -241,6 +253,53 @@ def _eligible_unique_results_v2(
     seen: set[str] = set()
     for hit in hits:
         source = hit.source
+        if source_family_policy is not None:
+            candidate = source_family_policy.response_candidate(
+                source,
+                audience=audience,
+                purpose=purpose,
+            )
+            if candidate is None:
+                continue
+            citation = candidate.citation
+            try:
+                result = RetrievalResultV2(
+                    chunk_id=candidate.chunk_id,
+                    source_id=candidate.source_id,
+                    text=source.get("text"),
+                    score=hit.score,
+                    artifact_version=citation.artifact_version,
+                    title=citation.title,
+                    publisher=citation.publisher,
+                    section=citation.section,
+                    physical_page_start=citation.physical_page_start,
+                    physical_page_end=citation.physical_page_end,
+                    printed_page_start=citation.printed_page_start,
+                    printed_page_end=citation.printed_page_end,
+                    source_locator=citation.source_locator,
+                    direct_official_source_url=citation.direct_official_source_url,
+                    official_source_page_url=citation.official_source_page_url,
+                    direct_source_url=citation.direct_source_url,
+                    source_page_url=citation.source_page_url,
+                    is_official_source=citation.is_official_source,
+                    source_version=citation.source_version,
+                    source_version_date=citation.source_version_date,
+                    version_published_at=citation.version_published_at,
+                    source_page_updated_at=citation.source_page_updated_at,
+                    published_at=citation.published_at,
+                    last_verified_at=citation.last_verified_at,
+                    review_status=citation.review_status,
+                    production_approved=citation.production_approved,
+                )
+            except (TypeError, ValueError, ValidationError):
+                return None
+            if candidate.prior_chunk_id in seen:
+                continue
+            seen.add(candidate.prior_chunk_id)
+            results.append(result)
+            if len(results) == top_k:
+                break
+            continue
         if not is_normal_rag_eligible(
             source,
             profile,

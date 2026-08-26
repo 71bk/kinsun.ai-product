@@ -1,6 +1,6 @@
 # AGENTS.md — agent-runtime
 
-- 更新日期：2026-08-14
+- 更新日期：2026-08-26
 - 校準基準：`main` at `4f6b4ae`
 
 本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
@@ -29,11 +29,16 @@ boundaries、Bedrock 與 opt-in Google query embedding adapters、legacy OpenSea
 以及固定模板、全參數化的 PostgreSQL FTS／trigram＋pgvector Hybrid adapter。2026-08-25 已將
 726 個 Google document embeddings 匯入 Supabase development database，並以
 `RAG_SEARCH_BACKEND=postgresql` 對固定 release／profile 完成 data-plane 與 Google query embedding
-全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。現行只有 14 筆 official/public chunks
+全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。遠端現行只有 14 筆 official/public chunks
 通過 ordinary-RAG filter，metadata 全部只允許 `care_professional`。2026-08-25 經 owner 明確要求，
 本機 development 以 `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的
 Elder／Family／Staff 共用仍通過 public／official／risk／purpose gate 的資料；Elder 全鏈路 smoke
-回傳 5 筆。Production 仍禁止此 override。Google query
+回傳 5 筆。Production 仍禁止此 override。2026-08-26 已把本機 source-family policy v002 投影為
+immutable、hash-pinned runtime policy v001 並接入 V2：search backend 先在固定 554 筆 v002 chunk IDs
+搜尋最多 50 筆，Retriever 再以 v003 text SHA-256、四角色、purpose 與 assessment metadata 決定
+3–5 筆回覆；high／unknown、stop、非 current 與 research 不在搜尋 projection。policy 啟用時不得與
+legacy all-audience override 併用。10 個離線 policy／citation Golden cases 已通過，但真實 backend
+relevance／ranking Golden Query 尚未執行。Google query
 adapter 不得查詢 Cohere document vectors。只有明確標示
 `general_information`／`legal_reference` purpose 的回合會檢索；成功時 3–5 個帶引用 chunk
 進入 Context Manifest，無資料或 provider 失敗時直接 no-guess fallback。未設定 provider
@@ -42,8 +47,8 @@ adapter 不得查詢 Cohere document vectors。只有明確標示
 不得關閉外部 `RAG_ALLOWLIST_EXPECTED_SHA256` 精確比對，也不得略過來源、Chunk、數量或
 完整 Allowlist 驗證；receipt／log 必須標示
 `governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、`production_approved=false`。
-Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLED=true`。Human Review、
-獨立 PostgreSQL read-only principal、Golden Query／quality gate、activation／rollback 與正式 runtime
+Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLED=true`。獨立 PostgreSQL
+read-only principal、live relevance Golden Query／quality gate、activation／rollback 與正式 runtime
 deployment 均未完成；本機目前暫時重用 Core DB URL。AWS/OpenSearch 亦未完成真實環境驗證，
 因此不得描述成已部署或可用於
 production。

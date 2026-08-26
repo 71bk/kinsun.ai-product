@@ -485,6 +485,26 @@ def test_high_risk_query_filter_is_applied_to_every_normal_rag_profile() -> None
     assert expected in legal_bool["must"]
 
 
+def test_runtime_policy_searches_fixed_candidates_before_response_gates() -> None:
+    candidate_ids = tuple(f"policy-chunk-{number:04d}" for number in range(554))
+    request = make_request(audience="elder", purpose="general_information")
+
+    plan = HybridSearch(make_search_settings()).build_v2(
+        request,
+        [0.0] * 1024,
+        allow_needs_review=True,
+        policy_candidate_chunk_ids=candidate_ids,
+    )
+    body = build_opensearch_search_body(plan)
+
+    assert plan.search_result_limit == 50
+    assert body["size"] == 50
+    assert body["query"]["hybrid"]["queries"][1]["knn"]["embedding"]["k"] == 50
+    assert body["query"]["hybrid"]["filter"] == {
+        "bool": {"must": [{"terms": {"chunk_id": list(candidate_ids)}}]}
+    }
+
+
 def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:
     request = make_request(audience="elder", purpose="care_guidance")
 
