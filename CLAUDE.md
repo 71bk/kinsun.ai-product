@@ -88,8 +88,12 @@
   metadata 都只允許 `care_professional`；2026-08-25 經 owner 明確要求，本機 development 以
   `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時開放有明確 audience 的 Elder／Family／Staff，且 Elder
   全鏈路 smoke 回傳 5 筆，Production 仍禁止此 override。這不代表 production deployment：獨立 read-only
-  principal、Golden Query／quality gate、human review、activation／rollback 尚未完成，retrieval 與
+  principal、Golden Query／quality gate、v003 Supabase sync、activation／rollback 尚未完成，retrieval 與
   Production 仍封鎖；legacy OpenSearch adapter 保留。
+  2026-08-26 已依 Owner 明確人工確認，在 repository 內產生 immutable successor
+  `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
+  embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
+  本機 staging candidate，Supabase 目前仍維持上述 v002／`needs_review=726`。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

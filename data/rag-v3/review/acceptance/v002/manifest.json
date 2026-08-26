@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "acceptance_version": "v002",
+  "acceptance_path": "owner-human-review-acceptance.json",
+  "acceptance_sha256": "1eba9b8eabc5e6d4df205d1888c41ad56dd071adbb53be9ffb16ac219e0aaf3d",
+  "authorization_statements_sha256": "a9ce73caab9921da82a3c125538b33f311ab448b46d9ae74161d56c2617ce172",
+  "source_count": 17,
+  "chunk_count": 726,
+  "review_status": "verified",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_status": "BLOCKED",
+  "production_approved": false
+}

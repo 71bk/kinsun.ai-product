@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "prior_artifact_lock_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "validation_input_inventory_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "owner_manual_review_acceptance_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "source_count_17",
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_count_726",
+      "status": "PASS"
+    },
+    {
+      "name": "review_status_verified_726",
+      "status": "PASS"
+    },
+    {
+      "name": "source_text_unchanged_726",
+      "status": "PASS"
+    },
+    {
+      "name": "embedding_text_unchanged_726",
+      "status": "PASS"
+    },
+    {
+      "name": "content_hashes_valid_726",
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_ids_unique_and_indexes_continuous",
+      "status": "PASS"
+    },
+    {
+      "name": "lineage_complete_726",
+      "status": "PASS"
+    },
+    {
+      "name": "review_decisions_complete_726",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit_superseded_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "license_statuses_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "risk_assessment_and_stop_fields_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "embedding_reuse_hash_bound_726",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 18,
+  "fail_count": 0,
+  "source_count": 17,
+  "chunk_count": 726,
+  "verified_chunk_count": 726,
+  "current_chunk_count": 725,
+  "superseded_chunk_count": 1,
+  "retrieval_eligible_count": 367,
+  "remaining_governance_gaps": {
+    "risk_level_null": 5,
+    "requires_official_assessment_null": 5,
+    "requires_professional_assessment_null": 225,
+    "allowed_audiences_empty": 75,
+    "allowed_purposes_empty": 65
+  },
+  "acceptance_sha256": "1eba9b8eabc5e6d4df205d1888c41ad56dd071adbb53be9ffb16ac219e0aaf3d",
+  "validation_inventory_sha256": "5cbbdbd8e81615b3855339c0ea2a847896d4a451b6d08ba4e9f884a9595eb117",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_status": "BLOCKED",
+  "production_approved": false
+}

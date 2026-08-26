@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v3.1.schema.json",
+  "title": "RagChunkV3Verified",
+  "description": "Human-verified v003 staging successor with immutable v002 lineage and hash-bound embedding reuse. Production remains blocked.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_version",
+    "identity",
+    "content",
+    "citation",
+    "retrieval_policy",
+    "governance",
+    "review_evidence",
+    "embedding_reuse",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": "3.1.0" },
+    "artifact_version": { "const": "v003" },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_id",
+        "prior_chunk_id",
+        "source_id",
+        "chunk_file_id",
+        "prior_chunk_file_id",
+        "chunk_index"
+      ],
+      "properties": {
+        "chunk_id": { "$ref": "#/$defs/Identifier" },
+        "prior_chunk_id": { "$ref": "#/$defs/Identifier" },
+        "source_id": { "$ref": "#/$defs/Identifier" },
+        "chunk_file_id": { "$ref": "#/$defs/Identifier" },
+        "prior_chunk_file_id": { "$ref": "#/$defs/Identifier" },
+        "chunk_index": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "content": {
+      "$ref": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v2.1.schema.json#/properties/content"
+    },
+    "citation": {
+      "$ref": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v2.1.schema.json#/properties/citation"
+    },
+    "retrieval_policy": {
+      "$ref": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v2.1.schema.json#/properties/retrieval_policy"
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_status",
+        "current_status",
+        "version_check_status",
+        "license_status",
+        "embedding_status",
+        "ingestion_status",
+        "human_source_review",
+        "production_gate",
+        "production_approved",
+        "data_classification",
+        "distribution_scope",
+        "storage_target"
+      ],
+      "properties": {
+        "review_status": { "const": "verified" },
+        "current_status": { "enum": ["current", "superseded", "unknown"] },
+        "version_check_status": { "enum": ["pending", "verified_official_source"] },
+        "license_status": {
+          "enum": ["approved", "open", "permission_required", "unknown"]
+        },
+        "embedding_status": { "const": "reuse_verified" },
+        "ingestion_status": { "const": "staging" },
+        "human_source_review": { "const": "owner_manual_review_completed" },
+        "production_gate": { "const": "blocked" },
+        "production_approved": { "const": false },
+        "data_classification": { "const": "public" },
+        "distribution_scope": { "enum": ["public_knowledge", "research_evidence"] },
+        "storage_target": { "const": "local_pending_upload" }
+      }
+    },
+    "review_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acceptance_id",
+        "acceptance_path",
+        "acceptance_sha256",
+        "scope",
+        "decision",
+        "reviewer_id",
+        "reviewer_role",
+        "reviewed_at",
+        "authorization_statements_sha256",
+        "source_fidelity",
+        "exact_facts",
+        "source_versions",
+        "production_approved"
+      ],
+      "properties": {
+        "acceptance_id": { "const": "rag-v3-owner-human-review-v002" },
+        "acceptance_path": {
+          "const": "data/rag-v3/review/acceptance/v002/owner-human-review-acceptance.json"
+        },
+        "acceptance_sha256": { "$ref": "#/$defs/Sha256" },
+        "scope": { "const": "ALL_726_CHUNKS_HUMAN_REVIEW" },
+        "decision": { "const": "VERIFIED" },
+        "reviewer_id": { "$ref": "#/$defs/Identifier" },
+        "reviewer_role": { "const": "PROJECT_OWNER" },
+        "reviewed_at": { "type": "string", "format": "date-time" },
+        "authorization_statements_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_fidelity": { "const": "VERIFIED_BY_PROJECT_OWNER" },
+        "exact_facts": { "const": "VERIFIED_BY_PROJECT_OWNER" },
+        "source_versions": { "const": "LATEST_AVAILABLE_CONFIRMED_BY_PROJECT_OWNER" },
+        "production_approved": { "const": false }
+      }
+    },
+    "embedding_reuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "source_release_id",
+        "source_artifact_version",
+        "source_chunk_id",
+        "match_key",
+        "source_embedding_text_sha256",
+        "embedding_profile_id",
+        "provider",
+        "model_id",
+        "dimension",
+        "document_task_type"
+      ],
+      "properties": {
+        "status": { "const": "REUSE_VERIFIED" },
+        "source_release_id": { "const": "rag-v2-v002-bab68588963b" },
+        "source_artifact_version": { "const": "v002" },
+        "source_chunk_id": { "$ref": "#/$defs/Identifier" },
+        "match_key": { "const": "embedding_text_sha256" },
+        "source_embedding_text_sha256": { "$ref": "#/$defs/Sha256" },
+        "embedding_profile_id": { "const": "ep-google-00a12ec45096fa9d97d9e9b6" },
+        "provider": { "const": "google" },
+        "model_id": { "const": "gemini-embedding-001" },
+        "dimension": { "const": 1024 },
+        "document_task_type": { "const": "RETRIEVAL_DOCUMENT" }
+      }
+    },
+    "provenance": {
+      "$ref": "https://kinsun.ai/contracts/schemas/rag/rag-chunk-v2.1.schema.json#/properties/provenance"
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provenance": {
+            "properties": { "is_official_source": { "const": true } },
+            "required": ["is_official_source"]
+          }
+        },
+        "required": ["provenance"]
+      },
+      "then": {
+        "properties": {
+          "governance": {
+            "properties": { "distribution_scope": { "const": "public_knowledge" } }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "governance": {
+            "properties": { "distribution_scope": { "const": "research_evidence" } }
+          }
+        }
+      }
+    }
+  ]
+}

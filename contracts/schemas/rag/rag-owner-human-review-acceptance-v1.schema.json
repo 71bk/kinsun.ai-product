@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-owner-human-review-acceptance-v1.schema.json",
+  "title": "RagOwnerHumanReviewAcceptanceV1",
+  "description": "Project-owner evidence for the completed manual review of all 726 v002 chunks. It authorizes a local verified v003 staging successor, but never external synchronization or Production.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "acceptance_version",
+    "candidate_artifact_version",
+    "status",
+    "project_owner_id",
+    "signer_role",
+    "signed_at",
+    "authorization",
+    "electronic_signature",
+    "accepted_artifacts",
+    "review_assertions",
+    "version_status_decision",
+    "license_policy_decision",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "acceptance_version": { "const": "v002" },
+    "candidate_artifact_version": { "const": "v003" },
+    "status": { "const": "SIGNED" },
+    "project_owner_id": { "$ref": "#/$defs/Identifier" },
+    "signer_role": { "const": "PROJECT_OWNER" },
+    "signed_at": { "type": "string", "format": "date-time" },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "statements", "statements_sha256"],
+      "properties": {
+        "channel": { "const": "interactive_user_instruction" },
+        "statements": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1, "maxLength": 1024 }
+        },
+        "statements_sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "electronic_signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assurance", "signature_value", "intent", "cryptographic_signature"],
+      "properties": {
+        "assurance": { "const": "RECORDED_EXPLICIT_USER_AUTHORIZATION" },
+        "signature_value": { "$ref": "#/$defs/Identifier" },
+        "intent": { "const": "AUTHORIZE_V003_726_CHUNK_HUMAN_REVIEW" },
+        "cryptographic_signature": { "type": "null" }
+      }
+    },
+    "accepted_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_candidate_path",
+        "prior_candidate_checksums_sha256",
+        "prior_public_use_acceptance_path",
+        "prior_public_use_acceptance_sha256",
+        "prior_source_family_policy_path",
+        "prior_source_family_policy_sha256",
+        "source_count",
+        "chunk_count",
+        "official_source_count",
+        "official_chunk_count",
+        "research_source_count",
+        "research_chunk_count"
+      ],
+      "properties": {
+        "prior_candidate_path": { "const": "data/rag-v2/candidates/v002" },
+        "prior_candidate_checksums_sha256": { "$ref": "#/$defs/Sha256" },
+        "prior_public_use_acceptance_path": {
+          "const": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json"
+        },
+        "prior_public_use_acceptance_sha256": { "$ref": "#/$defs/Sha256" },
+        "prior_source_family_policy_path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json"
+        },
+        "prior_source_family_policy_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_count": { "const": 17 },
+        "chunk_count": { "const": 726 },
+        "official_source_count": { "const": 14 },
+        "official_chunk_count": { "const": 651 },
+        "research_source_count": { "const": 3 },
+        "research_chunk_count": { "const": 75 }
+      }
+    },
+    "review_assertions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_method",
+        "source_fidelity_verified",
+        "exact_facts_verified",
+        "source_versions_latest_confirmed",
+        "reviewed_chunk_count",
+        "review_status"
+      ],
+      "properties": {
+        "review_method": { "const": "MANUAL_PROJECT_OWNER_REVIEW" },
+        "source_fidelity_verified": { "const": true },
+        "exact_facts_verified": { "const": true },
+        "source_versions_latest_confirmed": { "const": true },
+        "reviewed_chunk_count": { "const": 726 },
+        "review_status": { "const": "verified" }
+      }
+    },
+    "version_status_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "promote_unknown_current_status",
+        "preserve_explicit_superseded",
+        "official_version_check_status",
+        "research_version_check_status"
+      ],
+      "properties": {
+        "promote_unknown_current_status": { "const": true },
+        "preserve_explicit_superseded": { "const": true },
+        "official_version_check_status": { "const": "verified_official_source" },
+        "research_version_check_status": { "const": "pending" }
+      }
+    },
+    "license_policy_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_party_public_use_review_completed",
+        "missing_license_url_automatic_block",
+        "affected_source_count",
+        "license_status_mutation_authorized"
+      ],
+      "properties": {
+        "source_party_public_use_review_completed": { "const": true },
+        "missing_license_url_automatic_block": { "const": false },
+        "affected_source_count": { "const": 13 },
+        "license_status_mutation_authorized": { "const": false }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "candidate_build",
+        "external_sync",
+        "production_status",
+        "production_approved"
+      ],
+      "properties": {
+        "environment": { "const": "STAGING" },
+        "candidate_build": { "const": "AUTHORIZED" },
+        "external_sync": { "const": "NOT_AUTHORIZED" },
+        "production_status": { "const": "BLOCKED" },
+        "production_approved": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

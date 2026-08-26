@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "acceptance_version": "v002",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "owner_acceptance_schema_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "authorization_statements_hash_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_candidate_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_public_use_acceptance_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_source_family_policy_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "manual_review_covers_726_chunks",
+      "status": "PASS"
+    },
+    {
+      "name": "source_fidelity_verified_by_owner",
+      "status": "PASS"
+    },
+    {
+      "name": "exact_facts_verified_by_owner",
+      "status": "PASS"
+    },
+    {
+      "name": "source_versions_latest_confirmed_by_owner",
+      "status": "PASS"
+    },
+    {
+      "name": "missing_license_url_not_automatic_block",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 12,
+  "fail_count": 0,
+  "review_status": "verified",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_status": "BLOCKED",
+  "production_approved": false
+}

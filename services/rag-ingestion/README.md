@@ -25,6 +25,10 @@ staging alias.
   production switch; this first release still refuses every non-staging target.
 - The current supplied Allowlist records Human Review as `NOT_COMPLETED`; the
   service carries that state into receipts and never upgrades it.
+- The repository also contains the owner-reviewed, immutable local successor at
+  `data/rag-v3/candidates/v003/`, where all 726 chunks are `verified`. It is not
+  the currently supplied ingestion Allowlist and has not been synchronized to a
+  Supabase release or activated by this service.
 - Missing, empty, or unsupported normal-RAG policy metadata never inherits a
   permissive default. Documents remain available in the staging index for
   review, but only documents with explicit current status, low/medium risk,

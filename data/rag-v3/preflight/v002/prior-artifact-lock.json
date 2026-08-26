@@ -1,0 +1,546 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "preflight_version": "v002",
+  "kind": "rag_v3_verified_prior_artifact_lock",
+  "scope": "immutable v002 and v003-v001 formal artifacts",
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_hash_mode": "sha256_canonical_json_v1",
+  "entry_count": 88,
+  "source_count": 17,
+  "chunk_count": 726,
+  "inventory_sha256": "c236576c654c9b598f7bc2980d6ef7ab1bb45e5ba9ac7409a92b14ebeb35334f",
+  "entries": [
+    {
+      "path": "data/rag-v2/candidates/v002/README.md",
+      "size_bytes": 626,
+      "sha256": "5ce962c8748262c91f08cc45771fa556c0a28bfaae5d4164dbd9ed15d05efc71",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/SHA256SUMS.txt",
+      "size_bytes": 3687,
+      "sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/fetzer_ucla_loneliness_scale_compendium.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 61231,
+      "sha256": "2cd08f5412e612aa41c1e0ab6743a94338320a6a74987a0ea893a5a336f322d4",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/frontiers_do_words_matter_loneliness_nlp_2021.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 223043,
+      "sha256": "f9336d7485b3a636381a8268af73e5d837fc443f4f32133cf2808cdcd9f806ff",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/frontiers_loneliness_speech_analysis_2021.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 171955,
+      "sha256": "ac3abcc3fc942ded48f0688c9653e6edab3a9403ecef7733925608467356bb24",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_dementia_health_education_resource_manual_201610.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 463134,
+      "sha256": "2a05de60c7cb83ffcc793bfbb8f758e6478fc5e050aa08641687b78e303e5318",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_elder_fall_prevention_tips_manual_202102.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 119490,
+      "sha256": "454b1d8857c6f8ac4d1d52efbbe851ed32cc9558778ed5789a0abaedc8fff238",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/hpa_older_adult_nutrition_manual_20230525.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 249778,
+      "sha256": "05435a184b45b9d0ea03cdaf64fbad799c4120de41fa8af18c3cd110194158e1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_1966_apply_ltc.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 54949,
+      "sha256": "8dfd9ab0a7dd5a607b929607a434c7cf904f4b8e2a7ac877ddb5da889430f250",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_20230719.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 442130,
+      "sha256": "2d2bc0c6f132486843cafa7267aff1c006c6f24806bd920c3ece9b2a528bdf8c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_a_unit_case_manager_manual_appendix_20230719.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 781886,
+      "sha256": "748c7e486841d8e163203e5d27930f04fc65a3825282cd6821b67307f841d483",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_202507.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 620959,
+      "sha256": "0ddc84548b418a0661638d315734a51ccfff8cfb4a416c40149058d34844465f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_family_caregiver_support_manual_appendix_202507.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 119856,
+      "sha256": "9f3710ba34848fd41b24586806bb763b533098e99d7d513f2a24161c2d90388b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_referral_service_flow_20250930.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 38744,
+      "sha256": "fffa8d7b32dba272c4ea26a870175e4c0d41f3b4d5f2c80c181de8e2f521005a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_high_burden_caregiver_screening_20231222.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 24908,
+      "sha256": "21ae6630df727340138deda85a77f8c58907b30f2bd6640a80bcb40ccdbffb5c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_20260529.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 864418,
+      "sha256": "93878788dabf11c2fa4e764dac071c500dd05b23082f62db532791f733c9faaa",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 16708,
+      "sha256": "44d13aa863d11c0219e7515c2e608dfbb038555c9eb9f6186318f7ff3861ace7",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/mohw_home_care_service_supervisor_manual_health_appendix_20260529.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 123257,
+      "sha256": "337c0ac45fc6bfc27d696ad47b6f86bd1f266c95518e0ca540f39d7def0e296a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/chunks/moj_long_term_care_services_act_20210609.rag-chunk-v2.v002.jsonl",
+      "size_bytes": 281822,
+      "sha256": "1ec7889191906cf7631e6c4dfc60df896f6f9a36d390088fdb2d096658fc6b3f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/crosswalk/chunk-id-crosswalk-v002.jsonl",
+      "size_bytes": 512857,
+      "sha256": "0a124ad43340874177d62757aee7ee245557565d311b5a3d561b2a79e225bea4",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/governance/enum-evidence-v002.json",
+      "size_bytes": 26796,
+      "sha256": "c0e34dfd66ee8a4110fc6dae012bc6089d123f5ba9502b3da6b43d2f417a8169",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/manifests/chunk-file-manifest-v002.json",
+      "size_bytes": 15696,
+      "sha256": "4418d5240ac8130e5996bfbf811db4a13ca9dc75bb4e237f7020991df5264e72",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/manifests/embedding-staging-allowlist-v003.json",
+      "size_bytes": 714125,
+      "sha256": "defc8d79d69befbb6a820d5ff2f13a4107b7f8cf1707a642d31a0c8168a998fc",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/manifests/source-manifest-v002.json",
+      "size_bytes": 16922,
+      "sha256": "e83e90376c0d3bab2af03b613758d89aa88ca7c8c64b83bc8278e19b6148b07d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/reports/pytest-execution-receipt-v002.json",
+      "size_bytes": 1514,
+      "sha256": "8bd4146d23af54abc1bce30daa55425009b1e7e670137689c6c39c0cf6feddbd",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/reports/pytest-rag-ingestion-v002.xml",
+      "size_bytes": 35701,
+      "sha256": "9a1206217149f3ba80307c3602963079ac30870de4b67767ec40e8fe388797d4",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/reports/test-evidence-v002.json",
+      "size_bytes": 3575,
+      "sha256": "96e1a3a275d344038472ab921a16b830f5b9f2ef54fa9e6a6cd08109ab900bb0",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/reports/validation-report-v002.json",
+      "size_bytes": 1196,
+      "sha256": "be4b6781800036f9a7d081b6b6f329bd085cbb5a86ecf0bdf6cfd2a296bf9968",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/reports/version-difference-summary-v002.json",
+      "size_bytes": 1963,
+      "sha256": "7a066a4fbdb50c9215fc2084c418b061589cf56d9c88692dd410573ddfef43f6",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/candidates/v002/review/human-review-worksheet-v002.jsonl",
+      "size_bytes": 291549,
+      "sha256": "723dd379a6c5f79afd2642a1d544f0447b6a51788105d4e284a6f07f1f14a34e",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/README.md",
+      "size_bytes": 673,
+      "sha256": "8cc9868286d6c626ecffa74e7488f86d222574dc497441219fc72a7a9abbcf1d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/SHA256SUMS.txt",
+      "size_bytes": 527,
+      "sha256": "56d4db0aa9f36620a7c244188c30e766ec0b3fe9aa8e9c10bc4f8b7de7126cbb",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/manifest.json",
+      "size_bytes": 888,
+      "sha256": "4206b78eb92b0204efefc9f2aa42f585b95d6614f66d189b46fd7e1ea2c736cb",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/owner-risk-acceptance.json",
+      "size_bytes": 1899,
+      "sha256": "094a1ef45bddfa923f2317d9eadc64ae596c06a465572564b72db783caee0cfe",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/prior-artifact-lock.json",
+      "size_bytes": 7406,
+      "sha256": "ea930529ac64b936d9e6e82898f7e702c50b8600a89e0726a96778400100ffc6",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/validation-input-inventory.json",
+      "size_bytes": 1654,
+      "sha256": "6c677520d63652cb34988c2705e82490d344c4d72ab8adb6030985c399c3b264",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v001/validation-report.json",
+      "size_bytes": 1111,
+      "sha256": "0eaae0372e5d1aa7443fb993381ab8d9e55b9c79eb5dcbca84d1fdd4782da1dd",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/README.md",
+      "size_bytes": 959,
+      "sha256": "9639bf0050ef30413912c4593dedce889e110b18f27843973da466353803f29f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/SHA256SUMS.txt",
+      "size_bytes": 540,
+      "sha256": "dc6ab4213f04f060ab6c68c8db4c15c15e30e4d631d9240347331e8c37c2c335",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/manifest.json",
+      "size_bytes": 989,
+      "sha256": "0a75869cbfa47894f62ec603a55a050dc29354a181b844b2a4486194210b8c2a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/owner-staging-embedding-acceptance.json",
+      "size_bytes": 2713,
+      "sha256": "2d1fe36ea3a9b2f1cad525978c486f15b656a3000276d2dbc4ec8af16d1341d1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/prior-artifact-lock.json",
+      "size_bytes": 2157,
+      "sha256": "bd8c27f941aea7ee2f2b3a953a291cd563c62ba2724f48c8e92d4ced51b98e8d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/validation-input-inventory.json",
+      "size_bytes": 1923,
+      "sha256": "4e77f68d20bacbc50b30d20eb143533cefbb67cf2933aafa9edb77428f08a35b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/acceptance/v002/validation-report.json",
+      "size_bytes": 1581,
+      "sha256": "3c7d0b5eff00532f6b66567622762274a96f73fb13a44db08c0c88fd237a846a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/README.md",
+      "size_bytes": 896,
+      "sha256": "d52b3cb0d206fc0f07dd470c37ed1240895d6cd902c7a8c02e484952e0b2fc48",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/SHA256SUMS.txt",
+      "size_bytes": 2932,
+      "sha256": "011926d6e18b3fe37a87655df21ac683cec77b350f665872dd9e8b39bbe3f834",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/fetzer_ucla_loneliness_scale_compendium.jsonl",
+      "size_bytes": 25392,
+      "sha256": "1005121da45affbf4b6bf05ee65690164ed2d6b7f34cdf7a843017f902c81e2d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/frontiers_do_words_matter_loneliness_nlp_2021.jsonl",
+      "size_bytes": 100632,
+      "sha256": "5a939a878ac34532a789a10f5e2cf00bafcceddda50046630448267622280673",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/frontiers_loneliness_speech_analysis_2021.jsonl",
+      "size_bytes": 61370,
+      "sha256": "ecba306e8132dfed7699cf3b442381623d643fffae120a30003fe45351ba4be9",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/hpa_dementia_health_education_resource_manual_201610.jsonl",
+      "size_bytes": 137320,
+      "sha256": "e10164db15f46557e18a83c87d2b9b1bdcfa9848a0610a5e583707cea2c60e17",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/hpa_elder_fall_prevention_tips_manual_202102.jsonl",
+      "size_bytes": 71175,
+      "sha256": "0650322a851a7f5acb8fb7f1509ac881a7f6d0501d8c7d36e13afbbd0a3405e0",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/hpa_older_adult_nutrition_manual_20230525.jsonl",
+      "size_bytes": 91300,
+      "sha256": "deadff158fee29615bc17fa732ba079c33aff4aca523caf46f12dae0367409d9",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_1966_apply_ltc.jsonl",
+      "size_bytes": 35538,
+      "sha256": "00cdab551d7e833e06633229665b805eb61a0e92bfe54b99a259f7932b486c6d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_a_unit_case_manager_manual_20230719.jsonl",
+      "size_bytes": 144663,
+      "sha256": "fcf35254b939392e7cf523c9f9cfcb4a30fc116362b0670d22fc00438193c717",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_a_unit_case_manager_manual_appendix_20230719.jsonl",
+      "size_bytes": 157623,
+      "sha256": "b1eec9016d998633326e53513267501b05561bd4be75107d20048d3abe7d2d3f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_family_caregiver_support_manual_202507.jsonl",
+      "size_bytes": 238828,
+      "sha256": "21f9c2ba82e62f0bd4cc1a1ecbb41e5d654e4804054f72457da9ebfb37f2065f",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_family_caregiver_support_manual_appendix_202507.jsonl",
+      "size_bytes": 71851,
+      "sha256": "5e49ab8869bea89929cae0fc35c05a98e2b5654d10bde35102f8754b4018b225",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_high_burden_caregiver_referral_service_flow_20250930.jsonl",
+      "size_bytes": 24084,
+      "sha256": "a84c5113873bca1d470be5185d55317e70041fc8a6a3b18839d9eb41f91d506c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_high_burden_caregiver_screening_20231222.jsonl",
+      "size_bytes": 13829,
+      "sha256": "42c2f5d6f4ce8935407a0c26f9a8136e8dce73249477865ce2a4e0b0a0107ce4",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_home_care_service_supervisor_manual_20260529.jsonl",
+      "size_bytes": 305058,
+      "sha256": "c2505c2ff297042b70b07c5654eb4656cf3fba27df27275f6f4c375e84352f18",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_home_care_service_supervisor_manual_forms_appendix_20260529.jsonl",
+      "size_bytes": 12455,
+      "sha256": "d8d424426606a5945d6f614fe032dc5c43dcb4ead4a1e78691459c47a792eaf2",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/mohw_home_care_service_supervisor_manual_health_appendix_20260529.jsonl",
+      "size_bytes": 64093,
+      "sha256": "3e0e4428a0c9442a60b1cc3d4d7ae8d10a1536d084bd7d0c3baf587c28abd7e0",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/assignments/moj_long_term_care_services_act_20210609.jsonl",
+      "size_bytes": 170125,
+      "sha256": "e952dc21b8ba007be698edc09c6e84219c517d05c0092ebe57e95d98bd7ffb4d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/manifest.json",
+      "size_bytes": 8642,
+      "sha256": "c8317f6c28cef41bb27a70447e70968bcfc0ce0292d1ae4ca8a451fd64023b4a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/owner-acceptance.json",
+      "size_bytes": 367,
+      "sha256": "2bfcbcf865acb2f3c5745100d548120193e225c773a87f9e6bb376686f6882d0",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/prior-artifact-lock.json",
+      "size_bytes": 8662,
+      "sha256": "26b415fc7004b1ffa03d7600f99d597c068d741d33ceda47320ccedac3f18c2a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/source-assignments.jsonl",
+      "size_bytes": 17891,
+      "sha256": "4be9205d9d89d566c88aa0670ed7e1a81b158cd1bafc58a312b05545f1b1e16c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/source-file-index.json",
+      "size_bytes": 9576,
+      "sha256": "a9abfa97d0da2a5295574501c6fda961ab2ddd5e88304ef103f9887b8c81705b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/validation-input-inventory.json",
+      "size_bytes": 10585,
+      "sha256": "8b3ce9ba82cdea5932e6ba06f73af68bea9ddcb0bf551af2948c0281a8cda7be",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v2/human-review/v001/validation-report.json",
+      "size_bytes": 1014,
+      "sha256": "e8c6968d84f0b1a6b5b13dddc9eb14376ab5404d4db2557ef20b9459c6c73c0c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v001/README.md",
+      "size_bytes": 721,
+      "sha256": "6fad12505e6eec8dc56a08650804f93bf96e48a2e7b1e55d9521ecaf559857fe",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v001/SHA256SUMS.txt",
+      "size_bytes": 360,
+      "sha256": "f47d9645690ef2e2f4fc55d9d65ec06e996bec5a0aa21533a5c8f9283e89f13b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v001/remaining-review-worksheet.jsonl",
+      "size_bytes": 55797,
+      "sha256": "8dae9e3c7c8912aba62d45d549f391fd5e8c005fd072dbb42bef03181efafb95",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json",
+      "size_bytes": 59110,
+      "sha256": "d877324aee592b1c4b22d7878aefcad1a806ea5970bcb7b612a63adc15bf70ef",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v001/validation-report.json",
+      "size_bytes": 1744,
+      "sha256": "da6ca80e9480ff7888e735ad22fbdd3500d8ff275048a8de8b4511cc10bd3cad",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v001/README.md",
+      "size_bytes": 622,
+      "sha256": "a8ec53413b71773f9e2f6763b6d2e59ab5ff03a356d6dc37b4c16830fe24b798",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v001/SHA256SUMS.txt",
+      "size_bytes": 265,
+      "sha256": "42a790de9c29a88679d423268c349cb3d0453fbc55e19d8adf8057d30cb3e7a3",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v001/prior-artifact-lock.json",
+      "size_bytes": 4106,
+      "sha256": "76fda63cfbde576152aa0ac2b7a7fa21231374524627f3ced7d0092c028fd7b8",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v001/validation-input-inventory.json",
+      "size_bytes": 13660,
+      "sha256": "bb347d1653566b42c083349eac142fb0522fda6c9f26acab221218c5af7ee3fa",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/README.md",
+      "size_bytes": 924,
+      "sha256": "7f6afbc93e00f916feadf4bea4e51016e358ef43ff1ab7bf2ad0e0b3882a7961",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/SHA256SUMS.txt",
+      "size_bytes": 265,
+      "sha256": "88c47162399345375dccf200741993f35c906133c850f819af24a8392bcfa6f1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/prior-artifact-lock.json",
+      "size_bytes": 48521,
+      "sha256": "5f860b72328b3673a729e6afdfd4db1c13a69aee769fc73030b115379e1f5301",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/preflight/v001/validation-input-inventory.json",
+      "size_bytes": 53634,
+      "sha256": "655584f07af5cb958efde8d0b77428e54f2cac36fc5dea6fc1a19c5d3bcd1bc9",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/README.md",
+      "size_bytes": 806,
+      "sha256": "b14f1edec8c2f930ba37eda25e1affe8446499d284ed7e1d590b9ffd8db9745d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/SHA256SUMS.txt",
+      "size_bytes": 344,
+      "sha256": "b830337ccb0b651853109e3c08fff9f7082fdb308911bbef10e76717f5953952",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/manifest.json",
+      "size_bytes": 868,
+      "sha256": "8c7b9156908b83485f9fe34db7815ffe391b5d96bb7f63f06a47e79f80fe191d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json",
+      "size_bytes": 2314,
+      "sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v001/validation-report.json",
+      "size_bytes": 1476,
+      "sha256": "9336d32beb087730b42afe720dcca2417a9b3e5572eedd0e1a7dc21a0d45bd13",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    }
+  ],
+  "review_status": "verified",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

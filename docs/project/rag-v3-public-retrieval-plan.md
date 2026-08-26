@@ -179,7 +179,8 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 
 ## 10. 實行狀態（截至 2026-08-26）
 
-下列項目仍為待辦；不得因計畫、schema 或單元測試已存在，就視為資料已產生、Supabase 已同步或 staging 已切換。
+本機 v003 candidate 已產生並完成資料級驗證；Supabase 同步與 staging cutover 仍未執行，不得將本機完成
+誤述為已上線。
 
 ### 10.1 本地資料與審核產物
 
@@ -190,26 +191,34 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   檔案大小與 SHA-256；本機沒有 raw source bytes，已明確記錄為不可用而非假裝完成原始檔驗證。
 - [x] 建立並驗證 v002 immutable lock，鎖定 local v002 candidate、human-review 與 owner-acceptance
   formal artifacts；目前共 70 個 prior artifact entries。
+- [x] 建立 `data/rag-v3/review/acceptance/v002/`，以固定 hash 保存 Owner 對 726 筆人工審核完成、
+  來源版本為最新及 13 個公開來源可供本專案使用的明確決策；沒有 license URL 不再被視為單獨否決理由，
+  但本批不自動改寫既有 `license_status`。
+- [x] 建立 `data/rag-v3/preflight/v002/` 與 `data/rag-v3/audits/v001/preflight/`，分別鎖定建置輸入、
+  v002 prior artifacts、格式化後的 validator 輸入及 immutable v003 candidate。
 - [ ] 建立 source-family policy map，逐來源記錄 purpose、assessment、risk 與 license 決策證據。
 - [ ] 人工完成 5 筆 `risk_level=null` 的分類；完成前維持一般 RAG deny。
 - [ ] 人工複核 27 筆 `stop_normal_rag=true`；不得自動改成可檢索。
-- [ ] 驗證 243 筆非 current 內容的版本狀態；完成前維持 blocked。
-- [ ] 實作 v003 generator、validator 與命令列執行入口。
-- [ ] 產生 726 筆 v003 Chunk JSONL。
-- [ ] 產生 Source Manifest、Chunk File Manifest、embedding reuse manifest、v002→v003 ID crosswalk、remaining-review worksheet、版本差異、validation report、test evidence 與 `SHA256SUMS.txt`。
+- [x] 依 Owner 的最新版本確認更新版本狀態：725 筆 `current`、1 筆保留 `superseded`。
+- [x] 實作 v003 verified-candidate generator、validator 與命令列執行入口。
+- [x] 產生 726 筆 v003（schema 3.1.0）Chunk JSONL；全部 `review_status=verified`、
+  `production_approved=false`。
+- [x] 產生 Source Manifest、Chunk File Manifest、v002→v003 ID crosswalk、human-review decisions、
+  版本差異、validation report 與 `SHA256SUMS.txt`。
 - [ ] 若需交付封裝，建立自含式 v003 ZIP，並在封裝後再次驗證 immutable lock 與 checksum。
 
 ### 10.2 尚未完成的驗證
 
-- [ ] 以 v003 schema 驗證全部 726 筆候選資料；目前尚無 v003 candidate 可驗。
-- [ ] 驗證全部 `text` 與 `embedding_text` 對 v002 的 hash 相等，目標變更數皆為 0。
+- [x] 以 v3.1 schema 驗證全部 726 筆候選資料；17 個 source files、726 筆均通過。
+- [x] 驗證全部 `text` 與 `embedding_text` 對 v002 的 hash 相等；變更數皆為 0。
 - [ ] 驗證 69 筆高風險及 5 筆未分類資料在一般 RAG 中全部 fail closed。
 - [ ] 驗證 all-audience 設定不會繞過 purpose、assessment、risk 與 stop gate。
-- [ ] 驗證第一批最多 307 筆 current、low／medium、`stop_normal_rag=false` 的官方內容可依完整 policy gate 檢索。
-- [x] 執行完整 RAG ingestion 測試：2026-08-26 共 271 項通過；另有 v003 acceptance／preflight
-  validator、9 項針對性測試及 contracts 全量 validation 通過。
+- [ ] 驗證目前 367 筆通過 candidate metadata filter 的內容可依 runtime 完整 policy gate 檢索。
+- [x] 執行完整 RAG ingestion 測試：2026-08-26 共 286 項通過；candidate validator、Ruff check／format
+  及 contracts 全量 validation 均通過，candidate validation report 為 18 PASS／0 FAIL。
 - [ ] 執行 Golden Query、no-data、high-risk、authorization、citation 與 rollback 測試。
-- [ ] 驗證 embedding reuse 為 726／726，且 provider、model、dimension、task type 與 fingerprint 完全相同。
+- [x] 驗證 embedding reuse 為 726／726，且 provider、model、dimension、task type 與 fingerprint 完全相同；
+  本批未呼叫 embedding provider。
 
 ### 10.3 Supabase、release 與外部狀態
 
@@ -222,7 +231,7 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 - [ ] 切換後執行 live smoke tests；通過前不得宣稱 RAG v003 已上線。
 - [ ] 尚未進行 Production 核准或 Production 部署。
 - [ ] 尚未同步外部管理紀錄或雲端交付資料夾。
-- [ ] 尚未建立本次 v003 實作的 Git commit。
+- [x] 本次 v003 verified-candidate 實作納入獨立 Git commit；未推送遠端。
 
 ### 10.4 已完成的基線（非上線證據）
 
@@ -236,7 +245,10 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   Production blocked。
 - [x] 建立 v003 preflight v001；17 sources／726 chunks、70 個 prior artifact entries 與完整 input
   inventory 均通過 hash read-back 驗證。
+- [x] 建立 v3.1 verified successor contract、Owner human-review acceptance v002、preflight v002、
+  v003 candidate 與 audit preflight v001；舊 acceptance／preflight／v002 candidate 均保持 immutable。
 
-目前結論：v003 已完成計畫、資料契約、Owner staging public-use acceptance、preflight 與 v002
-immutable lock；source-family policy map、人工風險／版本複核、726 筆資料產生與資料級完整驗證、
-Supabase 同步及 staging cutover 均尚未實行。
+目前結論：本機 v003 已完成 726 筆 Owner 人工審核狀態升級、來源版本決策、candidate 產生與資料級完整
+驗證，全部為 `verified`，且 Production 固定 blocked。source-family policy map、5 筆風險分類、27 筆
+`stop_normal_rag` 複核、runtime／Golden Query 測試、Supabase 同步及 staging cutover 仍尚未實行；
+遠端 Supabase 仍是 v002／`needs_review=726`。

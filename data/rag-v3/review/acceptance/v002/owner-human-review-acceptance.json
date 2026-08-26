@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "acceptance_version": "v002",
+  "candidate_artifact_version": "v003",
+  "status": "SIGNED",
+  "project_owner_id": "IanHsu",
+  "signer_role": "PROJECT_OWNER",
+  "signed_at": "2026-08-26T14:40:03+08:00",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statements": [
+      "13 個來源缺授權證據，檢核過了來源方為公開資料可以使用",
+      "amily policy 仍把「沒有 license URL」直接將這個規則給取消嗎",
+      "726 筆資料仍是 needs_review，尚未由人工改成 verified，我以看過可以改了，來源版本都是最新的，74筆現在可以來分類，27筆需要重新復合什麼，欄位還沒確認的列出來給我，事實檢查已經都檢查過了，golden query等測試是需要測試什麼，帳號等等你直接建立，將以上問題整理條列給我看",
+      "好從第一點開始"
+    ],
+    "statements_sha256": "a9ce73caab9921da82a3c125538b33f311ab448b46d9ae74161d56c2617ce172"
+  },
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "signature_value": "IanHsu",
+    "intent": "AUTHORIZE_V003_726_CHUNK_HUMAN_REVIEW",
+    "cryptographic_signature": null
+  },
+  "accepted_artifacts": {
+    "prior_candidate_path": "data/rag-v2/candidates/v002",
+    "prior_candidate_checksums_sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+    "prior_public_use_acceptance_path": "data/rag-v3/review/acceptance/v001/owner-public-use-acceptance.json",
+    "prior_public_use_acceptance_sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+    "prior_source_family_policy_path": "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json",
+    "prior_source_family_policy_sha256": "d877324aee592b1c4b22d7878aefcad1a806ea5970bcb7b612a63adc15bf70ef",
+    "source_count": 17,
+    "chunk_count": 726,
+    "official_source_count": 14,
+    "official_chunk_count": 651,
+    "research_source_count": 3,
+    "research_chunk_count": 75
+  },
+  "review_assertions": {
+    "review_method": "MANUAL_PROJECT_OWNER_REVIEW",
+    "source_fidelity_verified": true,
+    "exact_facts_verified": true,
+    "source_versions_latest_confirmed": true,
+    "reviewed_chunk_count": 726,
+    "review_status": "verified"
+  },
+  "version_status_decision": {
+    "promote_unknown_current_status": true,
+    "preserve_explicit_superseded": true,
+    "official_version_check_status": "verified_official_source",
+    "research_version_check_status": "pending"
+  },
+  "license_policy_decision": {
+    "source_party_public_use_review_completed": true,
+    "missing_license_url_automatic_block": false,
+    "affected_source_count": 13,
+    "license_status_mutation_authorized": false
+  },
+  "gates": {
+    "environment": "STAGING",
+    "candidate_build": "AUTHORIZED",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_status": "BLOCKED",
+    "production_approved": false
+  }
+}

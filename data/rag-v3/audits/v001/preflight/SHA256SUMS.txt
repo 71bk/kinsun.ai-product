@@ -1,0 +1,3 @@
+45ad7dc35aec3caab6ba72d22583db28a904c6797770f3ca333aa14f935748fe  README.md
+8414cc1e8acc8bd51f064c65218fccecf89e4eeda55b63fce2f927e33c055348  candidate-artifact-lock.json
+aba8ad0d3d99a9683bd9c5c8f37abde20badae22188bf0670dd58cc9888f49cd  validation-input-inventory.json
