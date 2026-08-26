@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "acceptance_version": "v001",
+  "acceptance_path": "owner-public-use-acceptance.json",
+  "acceptance_sha256": "0c58b128f3f21f6a252a4a83ebef95b8784ffec1eea66259a63c5aedb76b68e6",
+  "authorization_statements_sha256": "30e80f32eaa5fc372cb56efa1240a05015d91f820e4cba932460ea676d936db3",
+  "candidate_artifact_version": "v003",
+  "prior_candidate_checksums_sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+  "prior_allowlist_sha256": "defc8d79d69befbb6a820d5ff2f13a4107b7f8cf1707a642d31a0c8168a998fc",
+  "prior_acceptance_sha256": "2d1fe36ea3a9b2f1cad525978c486f15b656a3000276d2dbc4ec8af16d1341d1",
+  "source_count": 17,
+  "chunk_count": 726,
+  "review_status": "needs_review",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_status": "BLOCKED",
+  "production_approved": false
+}

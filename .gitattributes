@@ -10,6 +10,7 @@ docs/project/*.sql text eol=lf
 
 # RagChunkV2 byte-level manifests and their versioned validation inputs.
 data/rag-v2/** text eol=lf
+data/rag-v3/** text eol=lf
 data/rag-chunks/** text eol=lf
 data/rag-manifest/** text eol=lf
 config/rag/** text eol=lf
@@ -29,3 +30,4 @@ services/rag-ingestion/src/rag_ingestion/chunk_loader.py text eol=lf
 services/rag-ingestion/src/rag_ingestion/v2_artifacts.py text eol=lf
 services/rag-ingestion/tests/integration/test_v2_artifacts.py text eol=lf
 services/rag-ingestion/tests/unit/test_allowlist_and_loader.py text eol=lf
+docs/project/rag-v3-public-retrieval-plan.md text eol=lf

@@ -1,0 +1,65 @@
+{
+  "schema_version": "3.0.0",
+  "acceptance_version": "v001",
+  "candidate_artifact_version": "v003",
+  "status": "SIGNED",
+  "project_owner_id": "IanHsu",
+  "signer_role": "PROJECT_OWNER",
+  "signed_at": "2026-08-26T10:07:20+08:00",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statements": [
+      "先不用一到新的branch從第2部開始"
+    ],
+    "statements_sha256": "30e80f32eaa5fc372cb56efa1240a05015d91f820e4cba932460ea676d936db3"
+  },
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "signature_value": "IanHsu",
+    "intent": "AUTHORIZE_V003_STAGING_PUBLIC_RETRIEVAL_POLICY",
+    "cryptographic_signature": null
+  },
+  "accepted_artifacts": {
+    "prior_candidate_path": "data/rag-v2/candidates/v002",
+    "prior_candidate_checksums_sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+    "prior_allowlist_sha256": "defc8d79d69befbb6a820d5ff2f13a4107b7f8cf1707a642d31a0c8168a998fc",
+    "prior_acceptance_path": "data/rag-v2/human-review/acceptance/v002/owner-staging-embedding-acceptance.json",
+    "prior_acceptance_sha256": "2d1fe36ea3a9b2f1cad525978c486f15b656a3000276d2dbc4ec8af16d1341d1",
+    "source_count": 17,
+    "chunk_count": 726,
+    "official_source_count": 14,
+    "official_chunk_count": 651,
+    "research_source_count": 3,
+    "research_chunk_count": 75
+  },
+  "acceptance_scope": "STAGING_PUBLIC_RETRIEVAL_POLICY",
+  "public_use_decision": {
+    "public_source_review_completed": true,
+    "project_use_approved": true,
+    "owner_approval_replaces_source_evidence": false
+  },
+  "retrieval_policy_decision": {
+    "allowed_audiences": [
+      "elder",
+      "family_caregiver",
+      "care_professional",
+      "system_admin"
+    ],
+    "high_or_unknown_normal_rag": "DENY",
+    "audience_override_bypasses_risk": false,
+    "embedding_reuse_allowed": true
+  },
+  "review_assertions": {
+    "formal_item_level_source_fidelity": "NOT_RECORDED",
+    "exact_facts_verified": "NOT_RECORDED",
+    "source_version_verified": "PRESERVE_EXISTING_EVIDENCE",
+    "review_status": "needs_review"
+  },
+  "gates": {
+    "environment": "STAGING",
+    "candidate_build": "AUTHORIZED",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_status": "BLOCKED",
+    "production_approved": false
+  }
+}

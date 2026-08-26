@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "acceptance_version": "v001",
+  "checks": [
+    {
+      "name": "owner_acceptance_schema_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "authorization_statements_hash_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "v002_candidate_checksums_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "v002_candidate_checksums_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "v002_allowlist_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "v002_owner_acceptance_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "source_count_17",
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_count_726",
+      "status": "PASS"
+    },
+    {
+      "name": "official_and_research_counts_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "owner_approval_does_not_replace_source_evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "formal_item_review_not_inferred",
+      "status": "PASS"
+    },
+    {
+      "name": "high_or_unknown_normal_rag_denied",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 14,
+  "fail_count": 0,
+  "review_status": "needs_review",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_status": "BLOCKED",
+  "production_approved": false,
+  "status": "PASS"
+}
