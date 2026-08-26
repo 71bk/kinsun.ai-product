@@ -52,7 +52,13 @@
     `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
     embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
     本機 staging candidate，Supabase 目前仍維持上述 v002／`needs_review=726`。
-    現行治理資料只有 14 筆 official/public chunks 通過普通 RAG filter，來源 metadata 全都只允許
+    2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
+    staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
+    5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
+    14 個官方來源對 Elder／Family／Care Professional／System Admin 形成 554 筆 ordinary retrieval
+    candidates，其中 302 筆 response metadata 完整；purpose／assessment 仍於回覆前檢查，69 筆 high／
+    high-red-line、`stop_normal_rag` 與非 current 內容持續 fail closed。policy 尚未接入 runtime，也未跑
+    Golden Query。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源 metadata 全都只允許
     `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
     `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
     public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。

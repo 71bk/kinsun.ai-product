@@ -29,7 +29,7 @@ from rag_ingestion.human_review_package import (
     _write_checksums,
     _write_json,
     _write_text,
-    validate_human_review_package,
+    validate_human_review_package_build_snapshot,
 )
 
 ACCEPTANCE_VERSION = "v001"
@@ -120,7 +120,7 @@ def build_human_review_acceptance(
     _validate_signature_inputs(project_owner_id, signed_at, authorization_statement)
 
     assignment_package = root / ASSIGNMENT_PACKAGE_PATH
-    assignment_result = validate_human_review_package(root, assignment_package)
+    assignment_result = validate_human_review_package_build_snapshot(root, assignment_package)
     if (
         assignment_result["source_assignment_count"] != EXPECTED_SOURCE_COUNT
         or assignment_result["chunk_assignment_count"] != EXPECTED_CHUNK_COUNT
@@ -196,6 +196,8 @@ def build_human_review_acceptance(
 def validate_human_review_acceptance(
     repository_root: Path,
     package: Path,
+    *,
+    _validate_build_snapshot: bool = False,
 ) -> dict[str, Any]:
     """Validate the owner identity, signature scope, hashes, and blocked gates."""
 
@@ -215,7 +217,7 @@ def validate_human_review_acceptance(
     _validate_checksums(package_root)
 
     assignment_package = root / ASSIGNMENT_PACKAGE_PATH
-    assignment_result = validate_human_review_package(root, assignment_package)
+    assignment_result = validate_human_review_package_build_snapshot(root, assignment_package)
     if (
         assignment_result["review_completion_status"] != "NOT_COMPLETED"
         or assignment_result["project_owner_risk_acceptance"] != "NOT_SIGNED"
@@ -229,12 +231,18 @@ def validate_human_review_acceptance(
         expected_kind="human_review_acceptance_prior_artifact_immutable_lock",
         current_entries=prior_entries,
     )
-    input_entries = _file_entries(root, _VALIDATION_FIXED_PATHS)
-    _validate_inventory_document(
-        package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
-        expected_kind="human_review_acceptance_validation_input_inventory",
-        current_entries=input_entries,
-    )
+    if _validate_build_snapshot:
+        _validate_inventory_snapshot_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="human_review_acceptance_validation_input_inventory",
+        )
+    else:
+        input_entries = _file_entries(root, _VALIDATION_FIXED_PATHS)
+        _validate_inventory_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="human_review_acceptance_validation_input_inventory",
+            current_entries=input_entries,
+        )
 
     schema = _load_schema(root / SCHEMA_PATH)
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
@@ -383,6 +391,19 @@ def _manifest(
     }
 
 
+def validate_human_review_acceptance_build_snapshot(
+    repository_root: Path,
+    package: Path,
+) -> dict[str, Any]:
+    """Validate historical signing inputs without claiming current-input equality."""
+
+    return validate_human_review_acceptance(
+        repository_root,
+        package,
+        _validate_build_snapshot=True,
+    )
+
+
 def _validation_report() -> dict[str, Any]:
     checks = [
         {"name": "base_assignment_checksum_verified", "status": "PASS"},
@@ -458,6 +479,19 @@ def _validate_inventory_document(
     expected = _inventory_document(expected_kind, current_entries)
     if _read_json(path) != expected:
         raise HumanReviewAcceptanceError(f"{expected_kind} changed after signing")
+
+
+def _validate_inventory_snapshot_document(path: Path, *, expected_kind: str) -> None:
+    document = _read_json(path)
+    if document.get("kind") != expected_kind:
+        raise HumanReviewAcceptanceError(f"{expected_kind} kind mismatch")
+    entries = document.get("entries")
+    if not isinstance(entries, list) or document.get("entry_count") != len(entries):
+        raise HumanReviewAcceptanceError(f"{expected_kind} entry count mismatch")
+    if document.get("inventory_sha256") != _inventory_sha256(entries):
+        raise HumanReviewAcceptanceError(f"{expected_kind} stored digest mismatch")
+    if document.get("production_approved") is not False:
+        raise HumanReviewAcceptanceError(f"{expected_kind} approved Production")
 
 
 def _inventory_sha256(entries: Sequence[Mapping[str, Any]]) -> str:

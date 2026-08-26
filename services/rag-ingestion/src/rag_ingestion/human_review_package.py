@@ -242,6 +242,7 @@ def validate_human_review_package(
     package: Path,
     *,
     output_root: Path | None = None,
+    _validate_build_snapshot: bool = False,
 ) -> dict[str, Any]:
     """Validate assignment coverage, immutable locks, schemas, and pending-only gates."""
 
@@ -253,11 +254,17 @@ def validate_human_review_package(
 
     _assert_text_tree(package_root)
     _validate_checksums(package_root)
-    _validate_inventory_document(
-        package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
-        expected_kind="human_review_validation_input_inventory",
-        current_entries=_validation_input_entries(root),
-    )
+    if _validate_build_snapshot:
+        _validate_inventory_snapshot_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="human_review_validation_input_inventory",
+        )
+    else:
+        _validate_inventory_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="human_review_validation_input_inventory",
+            current_entries=_validation_input_entries(root),
+        )
     _validate_inventory_document(
         package_root / PRIOR_ARTIFACT_LOCK_FILENAME,
         expected_kind="human_review_prior_artifact_immutable_lock",
@@ -351,6 +358,22 @@ def validate_human_review_package(
         "project_owner_risk_acceptance": "NOT_SIGNED",
         "production_approved": False,
     }
+
+
+def validate_human_review_package_build_snapshot(
+    repository_root: Path,
+    package: Path,
+    *,
+    output_root: Path | None = None,
+) -> dict[str, Any]:
+    """Validate historical build inputs without claiming current-input equality."""
+
+    return validate_human_review_package(
+        repository_root,
+        package,
+        output_root=output_root,
+        _validate_build_snapshot=True,
+    )
 
 
 def _source_assignment(source: Mapping[str, Any]) -> dict[str, Any]:
@@ -800,6 +823,21 @@ def _validate_inventory_document(
         raise HumanReviewPackageError(f"{expected_kind} changed after packaging")
     expected_bytes = _json_bytes(expected)
     if path.read_bytes() != expected_bytes:
+        raise HumanReviewPackageError(f"{expected_kind} is not deterministic JSON")
+
+
+def _validate_inventory_snapshot_document(path: Path, *, expected_kind: str) -> None:
+    document = _read_json(path)
+    if document.get("kind") != expected_kind:
+        raise HumanReviewPackageError(f"{expected_kind} kind mismatch")
+    entries = document.get("entries")
+    if not isinstance(entries, list) or document.get("entry_count") != len(entries):
+        raise HumanReviewPackageError(f"{expected_kind} entry count mismatch")
+    if document.get("inventory_sha256") != _inventory_sha256(entries):
+        raise HumanReviewPackageError(f"{expected_kind} stored digest mismatch")
+    if document.get("production_approved") is not False:
+        raise HumanReviewPackageError(f"{expected_kind} approved Production")
+    if path.read_bytes() != _json_bytes(document):
         raise HumanReviewPackageError(f"{expected_kind} is not deterministic JSON")
 
 

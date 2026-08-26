@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "prior_policy_map_version": "v001",
+  "successor_policy_map_version": "v002",
+  "prior_policy_status": "STAGING_NEEDS_REVIEW",
+  "successor_policy_status": "STAGING_OWNER_APPROVED",
+  "missing_license_url_automatic_block_before": true,
+  "missing_license_url_automatic_block_after": false,
+  "missing_license_url_source_count": 13,
+  "risk_decision_count": 5,
+  "risk_unclassified_before": 5,
+  "risk_unclassified_after": 0,
+  "ordinary_retrieval_source_candidate_count_before": 0,
+  "ordinary_retrieval_source_candidate_count_after": 14,
+  "ordinary_retrieval_chunk_candidate_count_after": 554,
+  "response_metadata_ready_count": 302,
+  "chunk_bytes_changed_count": 0,
+  "license_status_changed_count": 0,
+  "runtime_integration": "NOT_STARTED",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

@@ -13,6 +13,7 @@ from rag_ingestion.human_review_package import (
     HumanReviewPackageError,
     build_human_review_package,
     validate_human_review_package,
+    validate_human_review_package_build_snapshot,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -127,7 +128,7 @@ def test_validator_rejects_a_forged_human_approval_even_with_rewritten_checksums
 
 
 def test_committed_human_review_package_is_valid() -> None:
-    result = validate_human_review_package(REPOSITORY_ROOT, CANONICAL_PACKAGE)
+    result = validate_human_review_package_build_snapshot(REPOSITORY_ROOT, CANONICAL_PACKAGE)
 
     assert result["status"] == "PASS"
     assert result["chunk_assignment_count"] == EXPECTED_CHUNK_COUNT

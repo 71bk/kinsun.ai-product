@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-source-family-policy-map-v2.schema.json",
+  "title": "RagSourceFamilyPolicyMapV2",
+  "description": "Owner-authorized staging source-family retrieval policy over immutable RAG v003 chunks. It separates retrieval from response policy, records five risk overlays, and keeps high-risk, stop, research, external-sync, and Production gates deterministic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_version",
+    "policy_map_version",
+    "status",
+    "acceptance_binding",
+    "audit_preflight_binding",
+    "candidate_binding",
+    "prior_policy_binding",
+    "global_policy",
+    "chunk_risk_decisions",
+    "source_policies",
+    "summary",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": { "const": "2.0.0" },
+    "artifact_version": { "const": "v003" },
+    "policy_map_version": { "const": "v002" },
+    "status": { "const": "STAGING_OWNER_APPROVED" },
+    "acceptance_binding": { "$ref": "#/$defs/AcceptanceBinding" },
+    "audit_preflight_binding": { "$ref": "#/$defs/AuditPreflightBinding" },
+    "candidate_binding": { "$ref": "#/$defs/CandidateBinding" },
+    "prior_policy_binding": { "$ref": "#/$defs/PriorPolicyBinding" },
+    "global_policy": { "$ref": "#/$defs/GlobalPolicy" },
+    "chunk_risk_decisions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/RiskDecision" }
+    },
+    "source_policies": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": { "$ref": "#/$defs/SourcePolicy" }
+    },
+    "summary": { "$ref": "#/$defs/Summary" },
+    "gates": { "$ref": "#/$defs/Gates" }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "HttpsUrl": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "Count": { "type": "integer", "minimum": 0 },
+    "Audience": {
+      "enum": ["elder", "family_caregiver", "care_professional", "system_admin"]
+    },
+    "Purpose": {
+      "enum": [
+        "care_record",
+        "care_summary",
+        "evaluation",
+        "explainable_evidence",
+        "form_reference",
+        "general_information",
+        "health_education",
+        "human_administered_assessment_design",
+        "legal_reference",
+        "manual_review",
+        "research_reference",
+        "resource_navigation",
+        "safety_routing",
+        "scale_explanation",
+        "source_lookup"
+      ]
+    },
+    "AcceptanceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "acceptance_version", "scope"],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/review/acceptance/v003/owner-source-family-policy-acceptance.json"
+        },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "acceptance_version": { "const": "v003" },
+        "scope": { "const": "STAGING_SOURCE_FAMILY_POLICY_V002" }
+      }
+    },
+    "AuditPreflightBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventory_path", "inventory_sha256", "prior_lock_path", "prior_lock_sha256"],
+      "properties": {
+        "inventory_path": {
+          "const": "data/rag-v3/governance/source-family-policy/preflight/v002/validation-input-inventory.json"
+        },
+        "inventory_sha256": { "$ref": "#/$defs/Sha256" },
+        "prior_lock_path": {
+          "const": "data/rag-v3/governance/source-family-policy/preflight/v002/prior-artifact-lock.json"
+        },
+        "prior_lock_sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "CandidateBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "checksums_sha256", "candidate_lock_path", "candidate_lock_sha256", "source_manifest_path", "source_manifest_sha256", "source_count", "chunk_count"],
+      "properties": {
+        "path": { "const": "data/rag-v3/candidates/v003" },
+        "checksums_sha256": { "$ref": "#/$defs/Sha256" },
+        "candidate_lock_path": {
+          "const": "data/rag-v3/audits/v001/preflight/candidate-artifact-lock.json"
+        },
+        "candidate_lock_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_manifest_path": {
+          "const": "data/rag-v3/candidates/v003/manifests/source-manifest-v003.json"
+        },
+        "source_manifest_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_count": { "const": 17 },
+        "chunk_count": { "const": 726 }
+      }
+    },
+    "PriorPolicyBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "policy_map_version", "relationship"],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json"
+        },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "policy_map_version": { "const": "v001" },
+        "relationship": { "const": "SUPERSEDES_POLICY_WITHOUT_MUTATING_PRIOR_BYTES" }
+      }
+    },
+    "GlobalPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinary_public_retrieval_audiences",
+        "retrieve_before_response_policy",
+        "ordinary_retrieval_current_status",
+        "ordinary_retrieval_risk_levels",
+        "ordinary_retrieval_stop_normal_rag",
+        "missing_license_url_automatic_block",
+        "project_use_authorization_required",
+        "purpose_response_gate",
+        "assessment_response_gate",
+        "high_or_unknown_normal_rag",
+        "research_route",
+        "runtime_safety_from_embedding_similarity",
+        "automatic_official_assessment",
+        "automatic_professional_assessment",
+        "production_approved"
+      ],
+      "properties": {
+        "ordinary_public_retrieval_audiences": {
+          "const": ["elder", "family_caregiver", "care_professional", "system_admin"]
+        },
+        "retrieve_before_response_policy": { "const": true },
+        "ordinary_retrieval_current_status": { "const": "current" },
+        "ordinary_retrieval_risk_levels": { "const": ["low", "medium"] },
+        "ordinary_retrieval_stop_normal_rag": { "const": false },
+        "missing_license_url_automatic_block": { "const": false },
+        "project_use_authorization_required": { "const": true },
+        "purpose_response_gate": { "const": "EVALUATE_AFTER_RETRIEVAL" },
+        "assessment_response_gate": {
+          "const": "EVALUATE_AFTER_RETRIEVAL_NULL_DENIES_RESPONSE"
+        },
+        "high_or_unknown_normal_rag": { "const": "DENY" },
+        "research_route": { "const": "INDEPENDENT_RESEARCH_REVIEW_REQUIRED" },
+        "runtime_safety_from_embedding_similarity": { "const": false },
+        "automatic_official_assessment": { "const": false },
+        "automatic_professional_assessment": { "const": false },
+        "production_approved": { "const": false }
+      }
+    },
+    "RiskDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunk_id", "source_id", "prior_risk_level", "effective_risk_level", "owner_label", "decision_basis", "acceptance_path", "acceptance_sha256", "review_status", "formal_assessment_performed", "production_approved"],
+      "properties": {
+        "chunk_id": { "$ref": "#/$defs/Identifier" },
+        "source_id": { "$ref": "#/$defs/Identifier" },
+        "prior_risk_level": { "type": "null" },
+        "effective_risk_level": { "const": "low" },
+        "owner_label": { "const": "一般風險值" },
+        "decision_basis": { "const": "OWNER_GENERAL_RISK_CLASSIFICATION_TO_CANONICAL_LOW" },
+        "acceptance_path": {
+          "const": "data/rag-v3/review/acceptance/v003/owner-source-family-policy-acceptance.json"
+        },
+        "acceptance_sha256": { "$ref": "#/$defs/Sha256" },
+        "review_status": { "const": "verified" },
+        "formal_assessment_performed": { "const": false },
+        "production_approved": { "const": false }
+      }
+    },
+    "SourcePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "title", "source_type", "is_official_source", "distribution_scope", "evidence", "project_use_authorization", "policy_decision", "observed_summary", "remaining_requirements", "review_status", "production_approved"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/Identifier" },
+        "title": { "type": "string", "minLength": 1 },
+        "source_type": {
+          "enum": ["assessment_scale", "care_manual", "care_manual_appendix", "health_education", "law", "research_article", "risk_rule", "service_guide"]
+        },
+        "is_official_source": { "type": "boolean" },
+        "distribution_scope": { "enum": ["public_knowledge", "research_evidence"] },
+        "evidence": { "$ref": "#/$defs/SourceEvidence" },
+        "project_use_authorization": { "$ref": "#/$defs/ProjectUseAuthorization" },
+        "policy_decision": { "$ref": "#/$defs/PolicyDecision" },
+        "observed_summary": { "$ref": "#/$defs/ObservedSummary" },
+        "remaining_requirements": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["ASSESSMENT_RESPONSE_FIELDS_REQUIRED", "GOLDEN_QUERY_REQUIRED", "INDEPENDENT_RESEARCH_ROUTE_VALIDATION_REQUIRED", "STOP_NORMAL_RAG_REVIEW_REQUIRED"]
+          }
+        },
+        "review_status": { "const": "verified" },
+        "production_approved": { "const": false }
+      }
+    },
+    "SourceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunk_file_path", "chunk_file_sha256", "source_manifest_path", "direct_source_urls", "official_source_page_urls", "license_evidence_urls", "storage_urls", "local_raw_source_bytes_available"],
+      "properties": {
+        "chunk_file_path": {
+          "type": "string",
+          "pattern": "^data/rag-v3/candidates/v003/chunks/[A-Za-z0-9._-]+\\.jsonl$"
+        },
+        "chunk_file_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_manifest_path": {
+          "const": "data/rag-v3/candidates/v003/manifests/source-manifest-v003.json"
+        },
+        "direct_source_urls": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/HttpsUrl" } },
+        "official_source_page_urls": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/HttpsUrl" } },
+        "license_evidence_urls": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/HttpsUrl" } },
+        "storage_urls": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/HttpsUrl" } },
+        "local_raw_source_bytes_available": { "const": false }
+      }
+    },
+    "ProjectUseAuthorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "scope", "acceptance_path", "acceptance_sha256", "missing_license_url_automatic_block", "license_status_mutated"],
+      "properties": {
+        "status": { "enum": ["RECORDED_LICENSE_EVIDENCE", "OWNER_REVIEWED_PUBLIC_USE"] },
+        "scope": { "const": "STAGING_PROJECT_USE" },
+        "acceptance_path": {
+          "const": "data/rag-v3/review/acceptance/v003/owner-source-family-policy-acceptance.json"
+        },
+        "acceptance_sha256": { "$ref": "#/$defs/Sha256" },
+        "missing_license_url_automatic_block": { "const": false },
+        "license_status_mutated": { "const": false }
+      }
+    },
+    "PolicyDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retrieval_audiences", "allowed_purposes", "ordinary_retrieval_source_status", "audience_handling", "purpose_handling", "assessment_handling", "risk_handling", "stop_normal_rag_handling", "license_handling", "citation_required", "diagnosis_allowed"],
+      "properties": {
+        "retrieval_audiences": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Audience" }
+        },
+        "allowed_purposes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Purpose" }
+        },
+        "ordinary_retrieval_source_status": {
+          "enum": ["CANDIDATE_WITH_CHUNK_GATES", "INDEPENDENT_RESEARCH_ROUTE_ONLY"]
+        },
+        "audience_handling": {
+          "const": "SOURCE_POLICY_GRANTS_PUBLIC_ROLES_RESPONSE_POLICY_STILL_REQUIRED"
+        },
+        "purpose_handling": { "const": "EVALUATE_AFTER_RETRIEVAL" },
+        "assessment_handling": {
+          "const": "EVALUATE_AFTER_RETRIEVAL_NULL_DENIES_RESPONSE"
+        },
+        "risk_handling": { "const": "LOW_MEDIUM_ONLY_HIGH_UNKNOWN_DENY" },
+        "stop_normal_rag_handling": { "const": "FALSE_ONLY_TRUE_OR_NULL_DENY" },
+        "license_handling": {
+          "enum": ["RECORDED_LICENSE_EVIDENCE", "OWNER_PUBLIC_USE_REVIEW_MISSING_URL_NOT_AUTOMATIC_BLOCK"]
+        },
+        "citation_required": { "const": true },
+        "diagnosis_allowed": { "const": false }
+      }
+    },
+    "ObservedSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunk_count", "risk_observed", "risk_effective", "current_status", "stop_normal_rag", "assessment_null", "risk_decision_count", "ordinary_retrieval_candidate_count", "response_metadata_ready_count"],
+      "properties": {
+        "chunk_count": { "$ref": "#/$defs/Count" },
+        "risk_observed": { "$ref": "#/$defs/RiskCounts" },
+        "risk_effective": { "$ref": "#/$defs/RiskCounts" },
+        "current_status": { "$ref": "#/$defs/CurrentCounts" },
+        "stop_normal_rag": { "$ref": "#/$defs/BooleanCounts" },
+        "assessment_null": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["official", "professional"],
+          "properties": {
+            "official": { "$ref": "#/$defs/Count" },
+            "professional": { "$ref": "#/$defs/Count" }
+          }
+        },
+        "risk_decision_count": { "$ref": "#/$defs/Count" },
+        "ordinary_retrieval_candidate_count": { "$ref": "#/$defs/Count" },
+        "response_metadata_ready_count": { "$ref": "#/$defs/Count" }
+      }
+    },
+    "RiskCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["low", "medium", "high", "high_red_line", "unclassified"],
+      "properties": {
+        "low": { "$ref": "#/$defs/Count" },
+        "medium": { "$ref": "#/$defs/Count" },
+        "high": { "$ref": "#/$defs/Count" },
+        "high_red_line": { "$ref": "#/$defs/Count" },
+        "unclassified": { "$ref": "#/$defs/Count" }
+      }
+    },
+    "CurrentCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "superseded", "unknown"],
+      "properties": {
+        "current": { "$ref": "#/$defs/Count" },
+        "superseded": { "$ref": "#/$defs/Count" },
+        "unknown": { "$ref": "#/$defs/Count" }
+      }
+    },
+    "BooleanCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["true_count", "false_count", "null_count"],
+      "properties": {
+        "true_count": { "$ref": "#/$defs/Count" },
+        "false_count": { "$ref": "#/$defs/Count" },
+        "null_count": { "$ref": "#/$defs/Count" }
+      }
+    },
+    "Summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_count", "chunk_count", "official_source_count", "research_source_count", "license_evidence_missing_source_count", "missing_license_url_blocked_source_count", "project_use_authorized_source_count", "risk_unclassified_observed_count", "risk_unclassified_effective_count", "risk_decision_count", "risk_high_count", "risk_high_red_line_count", "stop_normal_rag_true_count", "current_count", "superseded_count", "ordinary_retrieval_source_candidate_count", "ordinary_retrieval_chunk_candidate_count", "response_metadata_ready_count"],
+      "properties": {
+        "source_count": { "const": 17 },
+        "chunk_count": { "const": 726 },
+        "official_source_count": { "const": 14 },
+        "research_source_count": { "const": 3 },
+        "license_evidence_missing_source_count": { "const": 13 },
+        "missing_license_url_blocked_source_count": { "const": 0 },
+        "project_use_authorized_source_count": { "const": 17 },
+        "risk_unclassified_observed_count": { "const": 5 },
+        "risk_unclassified_effective_count": { "const": 0 },
+        "risk_decision_count": { "const": 5 },
+        "risk_high_count": { "const": 33 },
+        "risk_high_red_line_count": { "const": 36 },
+        "stop_normal_rag_true_count": { "const": 35 },
+        "current_count": { "const": 725 },
+        "superseded_count": { "const": 1 },
+        "ordinary_retrieval_source_candidate_count": { "const": 14 },
+        "ordinary_retrieval_chunk_candidate_count": { "const": 554 },
+        "response_metadata_ready_count": { "const": 302 }
+      }
+    },
+    "Gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "review_status", "runtime_integration", "golden_query", "external_sync", "supabase_release", "production_status", "production_approved"],
+      "properties": {
+        "environment": { "const": "STAGING" },
+        "review_status": { "const": "verified" },
+        "runtime_integration": { "const": "NOT_STARTED" },
+        "golden_query": { "const": "NOT_STARTED" },
+        "external_sync": { "const": "NOT_AUTHORIZED" },
+        "supabase_release": { "const": "NOT_CREATED" },
+        "production_status": { "const": "BLOCKED" },
+        "production_approved": { "const": false }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "source_policies": { "contains": { "properties": { "is_official_source": { "const": false }, "policy_decision": { "properties": { "ordinary_retrieval_source_status": { "const": "CANDIDATE_WITH_CHUNK_GATES" } } } } } } }
+      },
+      "then": false
+    }
+  ]
+}

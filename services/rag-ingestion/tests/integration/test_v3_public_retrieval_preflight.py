@@ -9,7 +9,7 @@ from rag_ingestion.v3_public_retrieval_preflight import (
     build_v3_owner_public_use_acceptance,
     build_v3_preflight,
     validate_v3_owner_public_use_acceptance,
-    validate_v3_preflight,
+    validate_v3_preflight_build_snapshot,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -26,9 +26,9 @@ def test_committed_v3_owner_acceptance_is_valid() -> None:
 
 
 def test_committed_v3_preflight_is_valid() -> None:
-    result = validate_v3_preflight(REPOSITORY_ROOT)
+    result = validate_v3_preflight_build_snapshot(REPOSITORY_ROOT)
 
-    assert result["status"] == "PASS"
+    assert result["status"] == "PASS_BUILD_SNAPSHOT"
     assert result["source_count"] == 17
     assert result["chunk_count"] == 726
     assert result["prior_artifact_entry_count"] > 0

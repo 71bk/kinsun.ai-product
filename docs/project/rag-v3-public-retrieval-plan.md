@@ -5,7 +5,7 @@
 - Project owner：`IanHsu`
 - 前一版：`data/rag-v2/candidates/v002/`
 - 目標 artifact version：`v003`
-- 目標 schema version：`3.0.0`
+- 目前 Chunk schema version：`3.1.0`
 - 環境：staging；Production 持續 blocked
 
 ## 1. Owner 決策
@@ -60,7 +60,8 @@ Owner 同意的 retrieval 方向如下：
 
 - `data_classification=public`
 - `distribution_scope=public_knowledge`
-- `license_status=approved` 或 `open`，並保存實際授權依據與 owner staging approval
+- 保存既有 `license_status`、可用的 license evidence 與 Owner staging project-use review；缺少
+  license URL 不再是單獨的 staging deny reason，但 Production 仍須另外證明 license permits use
 - `production_approved=false`
 
 公開研究來源：
@@ -108,7 +109,7 @@ Purpose 不做全 corpus 單一預設。v003 保留既有有效用途，並依�
 - `stop_normal_rag=false`。
 - audience、purpose 非空且包含呼叫情境。
 - assessment 欄位為原生 JSON Boolean。
-- license 與 owner review evidence 完整。
+- project-use authorization 完整；license URL 缺少本身不構成 staging 自動封鎖。
 - `retrieval_block_reasons=[]`。
 
 ## 5. 新契約與產物
@@ -161,7 +162,8 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 - 726 筆 JSONL 通過 schema、duplicate-key、blank-line、Boolean、ID 與連續 index 驗證。
 - `text_changed_count=0`、`embedding_text_changed_count=0`。
 - embedding reuse match 為 726／726；不呼叫 embedding provider。
-- 69 筆高風險與 5 筆未分類資料在一般 RAG 測試中均為 deny。
+- 69 筆高風險資料在一般 RAG 中均為 deny；5 筆 Owner 判定的一般風險表單範例以 policy overlay
+  映射為 `low`，且 assessment 欄位不完整時仍不得回覆。
 - all-audience 開放不會繞過 risk／purpose／assessment gate。
 - 研究來源不會被標成官方來源。
 - staging 回應保留完整 citation 與 `production_approved=false`。
@@ -196,8 +198,10 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   但本批不自動改寫既有 `license_status`。
 - [x] 建立 `data/rag-v3/preflight/v002/` 與 `data/rag-v3/audits/v001/preflight/`，分別鎖定建置輸入、
   v002 prior artifacts、格式化後的 validator 輸入及 immutable v003 candidate。
-- [ ] 建立 source-family policy map，逐來源記錄 purpose、assessment、risk 與 license 決策證據。
-- [ ] 人工完成 5 筆 `risk_level=null` 的分類；完成前維持一般 RAG deny。
+- [x] 建立 `source-family-policy/candidates/v002/`，逐來源記錄 purpose、assessment、risk、角色與
+  project-use 決策；13 個缺少 license URL 的來源不再因 URL 缺少而自動封鎖。
+- [x] 依 Owner 的「一般風險值」決策，將 5 筆表單範例以 policy overlay 映射為 canonical `low`；
+  v003 Chunk bytes 與既有 `license_status` 均未改寫。
 - [ ] 人工複核 27 筆 `stop_normal_rag=true`；不得自動改成可檢索。
 - [x] 依 Owner 的最新版本確認更新版本狀態：725 筆 `current`、1 筆保留 `superseded`。
 - [x] 實作 v003 verified-candidate generator、validator 與命令列執行入口。
@@ -211,11 +215,16 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 
 - [x] 以 v3.1 schema 驗證全部 726 筆候選資料；17 個 source files、726 筆均通過。
 - [x] 驗證全部 `text` 與 `embedding_text` 對 v002 的 hash 相等；變更數皆為 0。
-- [ ] 驗證 69 筆高風險及 5 筆未分類資料在一般 RAG 中全部 fail closed。
-- [ ] 驗證 all-audience 設定不會繞過 purpose、assessment、risk 與 stop gate。
-- [ ] 驗證目前 367 筆通過 candidate metadata filter 的內容可依 runtime 完整 policy gate 檢索。
+- [x] 以 deterministic policy evaluator 驗證 69 筆 high／high-red-line、stop 與非 current 內容均
+  無法進 ordinary retrieval；5 筆 owner risk overlay 的 effective unclassified count 為 0。
+- [x] 以 policy-level tests 驗證四種角色可搜尋合規官方候選，但 purpose／assessment 回覆 gate 不會
+  被繞過；runtime 尚未接入，仍不得視為 live E2E。
+- [ ] 將 policy v002 接入 runtime，驗證 554 筆 ordinary retrieval candidates 與其中 302 筆
+  response-metadata-ready candidates 的完整後端 gate。
 - [x] 執行完整 RAG ingestion 測試：2026-08-26 共 286 項通過；candidate validator、Ruff check／format
   及 contracts 全量 validation 均通過，candidate validation report 為 18 PASS／0 FAIL。
+- [x] source-family policy v002 的 schema 單元測試 4 項與 v001／v002 targeted integration 14 項通過；
+  policy validation report 為 21 PASS／0 FAIL。
 - [ ] 執行 Golden Query、no-data、high-risk、authorization、citation 與 rollback 測試。
 - [x] 驗證 embedding reuse 為 726／726，且 provider、model、dimension、task type 與 fingerprint 完全相同；
   本批未呼叫 embedding provider。
@@ -247,8 +256,11 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   inventory 均通過 hash read-back 驗證。
 - [x] 建立 v3.1 verified successor contract、Owner human-review acceptance v002、preflight v002、
   v003 candidate 與 audit preflight v001；舊 acceptance／preflight／v002 candidate 均保持 immutable。
+- [x] 建立 Owner source-family policy acceptance v003、policy preflight v002、source-family policy
+  candidate v002 與 current-input audit preflight；policy v001 與 v003 Chunk candidate 保持 immutable。
 
 目前結論：本機 v003 已完成 726 筆 Owner 人工審核狀態升級、來源版本決策、candidate 產生與資料級完整
-驗證，全部為 `verified`，且 Production 固定 blocked。source-family policy map、5 筆風險分類、27 筆
-`stop_normal_rag` 複核、runtime／Golden Query 測試、Supabase 同步及 staging cutover 仍尚未實行；
-遠端 Supabase 仍是 v002／`needs_review=726`。
+驗證，全部為 `verified`；source-family policy v002 也已完成 Owner project-use evidence、四角色 retrieval
+方向及 5 筆 canonical `low` overlay。27 筆 low／medium `stop_normal_rag` 複核、runtime integration、
+Golden Query、Supabase 同步及 staging cutover 仍尚未實行，Production 固定 blocked；遠端 Supabase
+仍是 v002／`needs_review=726`。

@@ -13,7 +13,9 @@ from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from rag_ingestion.human_review_acceptance import validate_human_review_acceptance
+from rag_ingestion.human_review_acceptance import (
+    validate_human_review_acceptance_build_snapshot,
+)
 from rag_ingestion.human_review_package import (
     EXPECTED_CHUNK_COUNT,
     EXPECTED_SOURCE_COUNT,
@@ -194,6 +196,8 @@ def build_staging_embedding_authorization(
 def validate_staging_embedding_authorization(
     repository_root: Path,
     package: Path,
+    *,
+    _validate_build_snapshot: bool = False,
 ) -> dict[str, Any]:
     """Validate owner identity, fixed hashes, immutable history, and blocked gates."""
 
@@ -222,11 +226,17 @@ def validate_staging_embedding_authorization(
         expected_kind="staging_embedding_authorization_prior_artifact_immutable_lock",
         current_entries=_prior_acceptance_entries(root),
     )
-    _validate_inventory_document(
-        package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
-        expected_kind="staging_embedding_authorization_validation_input_inventory",
-        current_entries=_file_entries(root, _VALIDATION_FIXED_PATHS),
-    )
+    if _validate_build_snapshot:
+        _validate_inventory_snapshot_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="staging_embedding_authorization_validation_input_inventory",
+        )
+    else:
+        _validate_inventory_document(
+            package_root / VALIDATION_INPUT_INVENTORY_FILENAME,
+            expected_kind="staging_embedding_authorization_validation_input_inventory",
+            current_entries=_file_entries(root, _VALIDATION_FIXED_PATHS),
+        )
 
     schema = _load_schema(root / SCHEMA_PATH)
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
@@ -404,6 +414,19 @@ def _manifest(
     }
 
 
+def validate_staging_embedding_authorization_build_snapshot(
+    repository_root: Path,
+    package: Path,
+) -> dict[str, Any]:
+    """Validate historical signing inputs without claiming current-input equality."""
+
+    return validate_staging_embedding_authorization(
+        repository_root,
+        package,
+        _validate_build_snapshot=True,
+    )
+
+
 def _validation_report(acceptance: Mapping[str, Any]) -> dict[str, Any]:
     checks = [
         {"name": "prior_acceptance_valid", "status": "PASS"},
@@ -462,7 +485,10 @@ def _readme(acceptance: Mapping[str, Any]) -> str:
 
 
 def _validate_prior_acceptance(root: Path) -> None:
-    result = validate_human_review_acceptance(root, root / PRIOR_ACCEPTANCE_PATH)
+    result = validate_human_review_acceptance_build_snapshot(
+        root,
+        root / PRIOR_ACCEPTANCE_PATH,
+    )
     if (
         result["status"] != "PASS"
         or result["project_owner_id"] != "IanHsu"
@@ -538,6 +564,19 @@ def _validate_inventory_document(
     expected = _inventory_document(expected_kind, current_entries)
     if _read_json(path) != expected:
         raise StagingEmbeddingAuthorizationError(f"{expected_kind} changed after signing")
+
+
+def _validate_inventory_snapshot_document(path: Path, *, expected_kind: str) -> None:
+    document = _read_json(path)
+    if document.get("kind") != expected_kind:
+        raise StagingEmbeddingAuthorizationError(f"{expected_kind} kind mismatch")
+    entries = document.get("entries")
+    if not isinstance(entries, list) or document.get("entry_count") != len(entries):
+        raise StagingEmbeddingAuthorizationError(f"{expected_kind} entry count mismatch")
+    if document.get("inventory_sha256") != _inventory_sha256(entries):
+        raise StagingEmbeddingAuthorizationError(f"{expected_kind} stored digest mismatch")
+    if document.get("production_approved") is not False:
+        raise StagingEmbeddingAuthorizationError(f"{expected_kind} approved Production")
 
 
 def _inventory_sha256(entries: Sequence[Mapping[str, Any]]) -> str:

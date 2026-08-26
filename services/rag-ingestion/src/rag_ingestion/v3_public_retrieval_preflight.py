@@ -305,6 +305,52 @@ def validate_v3_preflight(
     }
 
 
+def validate_v3_preflight_build_snapshot(
+    repository_root: Path,
+    package_path: Path | None = None,
+) -> dict[str, Any]:
+    """Validate historical build evidence without claiming current-input equality."""
+
+    root = repository_root.resolve()
+    package = (
+        package_path.resolve()
+        if package_path is not None
+        else (root / PREFLIGHT_RELATIVE_PATH).resolve()
+    )
+    validate_v3_owner_public_use_acceptance(root)
+    _validate_package_checksums(package)
+    stored_lock = _read_json(package / "prior-artifact-lock.json")
+    stored_inventory = _read_json(package / "validation-input-inventory.json")
+    current_lock = _inventory_document(
+        kind="rag_v3_prior_artifact_immutable_lock",
+        entries=_prior_artifact_entries(root),
+        source_inventory=_source_inventory(root),
+        scope="local v002 candidate, human-review, and owner-acceptance formal artifacts",
+    )
+    if stored_lock != current_lock:
+        raise V3PublicRetrievalPreflightError(
+            "v003 build snapshot prior-artifact immutable lock mismatch"
+        )
+    stored_digest_payload = {
+        "entries": stored_inventory["entries"],
+        "source_inventory": stored_inventory["source_inventory"],
+    }
+    if stored_inventory["inventory_sha256"] != _canonical_sha256(stored_digest_payload):
+        raise V3PublicRetrievalPreflightError(
+            "v003 build snapshot stored inventory digest mismatch"
+        )
+    return {
+        "chunk_count": 726,
+        "inventory_entry_count": stored_inventory["entry_count"],
+        "inventory_sha256": stored_inventory["inventory_sha256"],
+        "prior_artifact_entry_count": stored_lock["entry_count"],
+        "prior_lock_sha256": stored_lock["inventory_sha256"],
+        "production_approved": False,
+        "source_count": 17,
+        "status": "PASS_BUILD_SNAPSHOT",
+    }
+
+
 def _owner_acceptance_document(
     root: Path,
     *,

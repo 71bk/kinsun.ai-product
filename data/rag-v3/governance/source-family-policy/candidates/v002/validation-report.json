@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v002",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "policy_schema_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "owner_acceptance_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_policy_v001_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "source_ids_unique_and_complete",
+      "status": "PASS"
+    },
+    {
+      "name": "all_official_sources_grant_four_retrieval_roles",
+      "status": "PASS"
+    },
+    {
+      "name": "research_sources_use_independent_route",
+      "status": "PASS"
+    },
+    {
+      "name": "missing_license_url_not_automatic_block",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy_license_status_not_mutated",
+      "status": "PASS"
+    },
+    {
+      "name": "five_owner_risk_decisions_exact",
+      "status": "PASS"
+    },
+    {
+      "name": "effective_unclassified_risk_zero",
+      "status": "PASS"
+    },
+    {
+      "name": "high_risk_denied_from_ordinary_retrieval",
+      "status": "PASS"
+    },
+    {
+      "name": "stop_normal_rag_denied_from_ordinary_retrieval",
+      "status": "PASS"
+    },
+    {
+      "name": "non_current_denied_from_ordinary_retrieval",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_and_assessment_response_gates_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_safety_not_started_from_similarity",
+      "status": "PASS"
+    },
+    {
+      "name": "worksheet_covers_all_sources",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_integration_not_started",
+      "status": "PASS"
+    },
+    {
+      "name": "golden_query_not_started",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 21,
+  "fail_count": 0,
+  "source_count": 17,
+  "chunk_count": 726,
+  "worksheet_row_count": 17,
+  "license_evidence_missing_source_count": 13,
+  "missing_license_url_blocked_source_count": 0,
+  "risk_decision_count": 5,
+  "risk_unclassified_effective_count": 0,
+  "ordinary_retrieval_chunk_candidate_count": 554,
+  "response_metadata_ready_count": 302,
+  "review_status": "verified",
+  "runtime_integration": "NOT_STARTED",
+  "golden_query": "NOT_STARTED",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

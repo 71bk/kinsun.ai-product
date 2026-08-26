@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "acceptance_version": "v003",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "acceptance_schema_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "owner_statements_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "v003_candidate_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "v003_candidate_audit_lock_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_acceptance_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_policy_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "thirteen_missing_license_url_sources_recorded",
+      "status": "PASS"
+    },
+    {
+      "name": "missing_license_url_not_automatic_block",
+      "status": "PASS"
+    },
+    {
+      "name": "five_general_risk_decisions_recorded",
+      "status": "PASS"
+    },
+    {
+      "name": "general_risk_mapped_to_canonical_low",
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_bytes_not_mutated",
+      "status": "PASS"
+    },
+    {
+      "name": "all_public_roles_retrieval_direction_recorded",
+      "status": "PASS"
+    },
+    {
+      "name": "high_and_stop_gates_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 15,
+  "fail_count": 0,
+  "affected_license_source_count": 13,
+  "risk_decision_count": 5,
+  "review_status": "verified",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

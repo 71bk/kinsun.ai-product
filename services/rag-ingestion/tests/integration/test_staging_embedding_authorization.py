@@ -10,6 +10,7 @@ from rag_ingestion.staging_embedding_authorization import (
     StagingEmbeddingAuthorizationError,
     build_staging_embedding_authorization,
     validate_staging_embedding_authorization,
+    validate_staging_embedding_authorization_build_snapshot,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -128,7 +129,7 @@ def test_validator_rejects_unbound_allowlist_hash_with_rewritten_checksums(
 
 
 def test_committed_staging_embedding_authorization_is_valid() -> None:
-    result = validate_staging_embedding_authorization(
+    result = validate_staging_embedding_authorization_build_snapshot(
         REPOSITORY_ROOT,
         CANONICAL_AUTHORIZATION,
     )

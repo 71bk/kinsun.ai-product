@@ -10,6 +10,7 @@ from rag_ingestion.human_review_acceptance import (
     HumanReviewAcceptanceError,
     build_human_review_acceptance,
     validate_human_review_acceptance,
+    validate_human_review_acceptance_build_snapshot,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -115,7 +116,10 @@ def test_validator_rejects_signature_identity_mismatch_with_rewritten_checksums(
 
 
 def test_committed_owner_acceptance_is_valid() -> None:
-    result = validate_human_review_acceptance(REPOSITORY_ROOT, CANONICAL_ACCEPTANCE)
+    result = validate_human_review_acceptance_build_snapshot(
+        REPOSITORY_ROOT,
+        CANONICAL_ACCEPTANCE,
+    )
 
     assert result["status"] == "PASS"
     assert result["project_owner_id"] == OWNER_ID

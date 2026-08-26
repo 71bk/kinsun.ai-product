@@ -9,16 +9,16 @@ from rag_ingestion.source_family_policy import (
     build_source_family_policy,
     prepare_source_family_policy_preflight,
     validate_source_family_policy,
-    validate_source_family_policy_preflight,
+    validate_source_family_policy_build_preflight_snapshot,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
 
 def test_committed_source_family_policy_preflight_is_valid() -> None:
-    result = validate_source_family_policy_preflight(REPOSITORY_ROOT)
+    result = validate_source_family_policy_build_preflight_snapshot(REPOSITORY_ROOT)
 
-    assert result["status"] == "PASS"
+    assert result["status"] == "PASS_BUILD_SNAPSHOT"
     assert result["source_count"] == 17
     assert result["chunk_count"] == 726
     assert result["production_approved"] is False

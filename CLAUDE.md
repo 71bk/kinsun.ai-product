@@ -94,6 +94,12 @@
   `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
   embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
   本機 staging candidate，Supabase 目前仍維持上述 v002／`needs_review=726`。
+  2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
+  staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
+  5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
+  14 個官方來源對四種角色形成 554 筆 ordinary retrieval candidates，其中 302 筆 response metadata
+  完整；purpose／assessment 仍於回覆前檢查，高風險、stop 與非 current 內容持續 fail closed。policy
+  尚未接入 runtime，也未跑 Golden Query。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

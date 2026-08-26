@@ -29,6 +29,12 @@ staging alias.
   `data/rag-v3/candidates/v003/`, where all 726 chunks are `verified`. It is not
   the currently supplied ingestion Allowlist and has not been synchronized to a
   Supabase release or activated by this service.
+- Source-family policy v002 is a separate immutable staging overlay. It records
+  owner-reviewed project use for 13 sources without a license URL, so the
+  missing URL is not an automatic source block; legacy `license_status` values
+  remain unchanged. Five owner-labelled general-risk form examples map to
+  canonical `low` in policy only. Runtime integration and Golden Queries remain
+  incomplete, so the overlay is not yet used by the current retrieval service.
 - Missing, empty, or unsupported normal-RAG policy metadata never inherits a
   permissive default. Documents remain available in the staging index for
   review, but only documents with explicit current status, low/medium risk,

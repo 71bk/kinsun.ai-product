@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "acceptance_version": "v003",
+  "files": [
+    "owner-source-family-policy-acceptance.json",
+    "validation-report.json"
+  ],
+  "acceptance_sha256": "fc88af885943bf0d3c91d2a1c3338e6c40faf197ef642fbba79d17a8965eeffc",
+  "external_sync": "NOT_AUTHORIZED",
+  "production_approved": false
+}

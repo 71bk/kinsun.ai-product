@@ -18,6 +18,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from rag_ingestion.v3_public_retrieval_preflight import (
     validate_v3_owner_public_use_acceptance,
     validate_v3_preflight,
+    validate_v3_preflight_build_snapshot,
 )
 
 HASH_MODE = "sha256_utf8_lf_raw_bytes_v1"
@@ -205,6 +206,48 @@ def validate_source_family_policy_preflight(
     }
 
 
+def validate_source_family_policy_build_preflight_snapshot(
+    repository_root: Path,
+    package_path: Path | None = None,
+) -> dict[str, Any]:
+    """Validate immutable v001 build evidence after successor inputs advance."""
+
+    root = repository_root.resolve()
+    package = (
+        package_path.resolve()
+        if package_path is not None
+        else (root / AUDIT_PREFLIGHT_PATH).resolve()
+    )
+    validate_v3_owner_public_use_acceptance(root)
+    validate_v3_preflight_build_snapshot(root)
+    _validate_package_checksums(package)
+    prior_lock = _read_json(package / "prior-artifact-lock.json")
+    inventory = _read_json(package / "validation-input-inventory.json")
+    expected_lock = _inventory_document(
+        "source_family_policy_prior_artifact_lock",
+        _entries_for_roots(root, PRIOR_POLICY_INPUT_ROOTS, "rag_v3_prior_governance"),
+        "immutable v003 acceptance and preflight v001 bytes",
+    )
+    if prior_lock != expected_lock:
+        raise SourceFamilyPolicyError(
+            "source-family policy build snapshot prior artifact lock mismatch"
+        )
+    if inventory["inventory_sha256"] != _canonical_sha256(inventory["entries"]):
+        raise SourceFamilyPolicyError(
+            "source-family policy build snapshot stored inventory digest mismatch"
+        )
+    return {
+        "chunk_count": 726,
+        "inventory_entry_count": inventory["entry_count"],
+        "inventory_sha256": inventory["inventory_sha256"],
+        "prior_artifact_entry_count": prior_lock["entry_count"],
+        "prior_lock_sha256": prior_lock["inventory_sha256"],
+        "production_approved": False,
+        "source_count": 17,
+        "status": "PASS_BUILD_SNAPSHOT",
+    }
+
+
 def build_source_family_policy(
     repository_root: Path,
     *,
@@ -261,7 +304,7 @@ def validate_source_family_policy(
         if package_path is not None
         else (root / POLICY_PACKAGE_PATH).resolve()
     )
-    preflight = validate_source_family_policy_preflight(root)
+    preflight = validate_source_family_policy_build_preflight_snapshot(root)
     _validate_package_checksums(package)
     policy = _read_json(package / "source-family-policy-map.json")
     worksheet = _read_jsonl(package / "remaining-review-worksheet.jsonl")
