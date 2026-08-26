@@ -14,6 +14,7 @@ def build_normal_rag_filter(
     purpose: str | None = None,
     governed_citations: bool = False,
     allow_needs_review: bool = False,
+    allow_all_audiences: bool = False,
 ) -> dict[str, object]:
     """Return mandatory fail-closed filters for ordinary RAG answers."""
 
@@ -23,7 +24,12 @@ def build_normal_rag_filter(
         {"term": {"retrieval_eligible": True}},
         {"terms": {"risk_level": list(NORMAL_RAG_RISK_LEVELS)}},
     ]
-    must.append(_scope_filter("allowed_audiences", audience))
+    must.append(
+        _audience_filter(
+            audience,
+            allow_all_audiences=allow_all_audiences,
+        )
+    )
     must.append(_scope_filter("allowed_purposes", purpose))
     if governed_citations:
         must.append(_governance_filter(allow_needs_review=allow_needs_review))
@@ -39,6 +45,7 @@ def is_normal_rag_eligible(
     purpose: str | None = None,
     governed_citations: bool = False,
     allow_needs_review: bool = False,
+    allow_all_audiences: bool = False,
 ) -> bool:
     """Defence-in-depth after search; missing policy fields are denied."""
 
@@ -57,7 +64,11 @@ def is_normal_rag_eligible(
         return False
     if not isinstance(source.get("requires_professional_assessment"), bool):
         return False
-    if not _scope_allows(source.get("allowed_audiences"), audience):
+    if not _audience_allows(
+        source.get("allowed_audiences"),
+        audience,
+        allow_all_audiences=allow_all_audiences,
+    ):
         return False
     if not _scope_allows(source.get("allowed_purposes"), purpose):
         return False
@@ -85,6 +96,35 @@ def _scope_filter(field: str, requested: str | None) -> dict[str, object]:
     if not isinstance(requested, str) or not requested.strip():
         return {"match_none": {}}
     return {"term": {field: requested}}
+
+
+def _audience_filter(
+    requested: str | None,
+    *,
+    allow_all_audiences: bool,
+) -> dict[str, object]:
+    """Require a caller audience while permitting an audited staging override."""
+
+    if not isinstance(requested, str) or not requested.strip():
+        return {"match_none": {}}
+    if allow_all_audiences:
+        return {"exists": {"field": "allowed_audiences"}}
+    return {"term": {"allowed_audiences": requested}}
+
+
+def _audience_allows(
+    raw_allowed: object,
+    requested: str | None,
+    *,
+    allow_all_audiences: bool,
+) -> bool:
+    if not isinstance(requested, str) or not requested.strip():
+        return False
+    if not isinstance(raw_allowed, list) or not raw_allowed:
+        return False
+    if any(not isinstance(value, str) or not value.strip() for value in raw_allowed):
+        return False
+    return allow_all_audiences or requested in raw_allowed
 
 
 def _governance_filter(*, allow_needs_review: bool) -> dict[str, object]:

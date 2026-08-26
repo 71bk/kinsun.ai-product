@@ -92,7 +92,14 @@ def build_configured_rag_retriever():
                 "OPENSEARCH_INDEX": settings.OPENSEARCH_INDEX,
                 "OPENSEARCH_ALIAS": settings.OPENSEARCH_ALIAS,
                 "RAG_MODE": settings.RAG_MODE,
+                "RAG_SEARCH_BACKEND": settings.RAG_SEARCH_BACKEND,
                 "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS,
+                "RAG_STAGING_ALLOW_ALL_AUDIENCES": (settings.RAG_STAGING_ALLOW_ALL_AUDIENCES),
+                "RAG_POSTGRES_RELEASE_ID": settings.RAG_POSTGRES_RELEASE_ID,
+                "RAG_POSTGRES_EMBEDDING_PROFILE_ID": (settings.RAG_POSTGRES_EMBEDDING_PROFILE_ID),
+                "RAG_POSTGRES_STATEMENT_TIMEOUT_MS": (settings.RAG_POSTGRES_STATEMENT_TIMEOUT_MS),
+                "RAG_POSTGRES_POOL_MIN_SIZE": settings.RAG_POSTGRES_POOL_MIN_SIZE,
+                "RAG_POSTGRES_POOL_MAX_SIZE": settings.RAG_POSTGRES_POOL_MAX_SIZE,
             }.items()
             if value is not None and str(value).strip()
         }
@@ -104,12 +111,15 @@ def build_configured_rag_retriever():
             natural_profile_path=_resolve_config_path(settings.RAG_HYBRID_NATURAL_CONFIG_PATH),
             legal_profile_path=_resolve_config_path(settings.RAG_HYBRID_LEGAL_CONFIG_PATH),
             environ=provider_environment,
+            database_url=settings.RAG_DATABASE_URL,
         )
         google_api_key = (
             settings.GEMINI_API_KEY.get_secret_value()
             if rag_settings.embedding.provider == "google" and settings.GEMINI_API_KEY
             else None
         )
+        if rag_settings.allow_all_audiences:
+            logger.warning("staging_rag_all_audiences_enabled")
         return build_retriever(
             rag_settings,
             google_api_key=google_api_key,

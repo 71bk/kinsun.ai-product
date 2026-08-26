@@ -495,6 +495,44 @@ def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:
     assert {"term": {"allowed_purposes": "care_guidance"}} in must
 
 
+def test_staging_all_audience_override_keeps_explicit_scope_and_policy_metadata() -> None:
+    request = make_request(audience="elder", purpose="general_information")
+    plan = HybridSearch(make_search_settings()).build(
+        request,
+        [0.0] * 1024,
+        allow_all_audiences=True,
+    )
+
+    must = build_opensearch_search_body(plan)["query"]["hybrid"]["filter"]["bool"]["must"]
+    assert {"exists": {"field": "allowed_audiences"}} in must
+    assert {"term": {"allowed_audiences": "elder"}} not in must
+
+    source = make_hit(
+        "staff-scoped-public-chunk",
+        allowed_audiences=["care_professional"],
+    )["_source"]
+    assert (
+        is_normal_rag_eligible(
+            source,
+            "natural_language",
+            audience="elder",
+            purpose="general_information",
+            allow_all_audiences=True,
+        )
+        is True
+    )
+    assert (
+        is_normal_rag_eligible(
+            source,
+            "natural_language",
+            audience=None,
+            purpose="general_information",
+            allow_all_audiences=True,
+        )
+        is False
+    )
+
+
 def test_hybrid_plan_without_explicit_scope_matches_nothing() -> None:
     request = make_request(audience=None, purpose=None)
 

@@ -110,6 +110,14 @@ class OpenSearchClient:
             raise OpenSearchClientError("OpenSearch returned a malformed hit")
         return _to_search_hits(cast(list[Mapping[str, object]], hits))
 
+    async def aclose(self) -> None:
+        close = getattr(self._transport, "close", None)
+        if close is None:
+            return
+        response = await asyncio.to_thread(close)
+        if inspect.isawaitable(response):
+            await response
+
 
 def build_opensearch_transport(settings: OpenSearchConnectionSettings) -> OpenSearchTransport:
     """Build a SigV4-authenticated OpenSearch transport for the configured staging host."""
@@ -172,6 +180,7 @@ def build_opensearch_search_body(plan: HybridSearchPlan) -> dict[str, object]:
                     purpose=plan.purpose,
                     governed_citations=plan.governed_citations,
                     allow_needs_review=plan.allow_needs_review,
+                    allow_all_audiences=plan.allow_all_audiences,
                 ),
             }
         },

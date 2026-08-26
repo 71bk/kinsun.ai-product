@@ -14,8 +14,19 @@ class HybridSearch:
     def __init__(self, settings: HybridSearchSettings) -> None:
         self._settings = settings
 
-    def build(self, request: RetrievalRequestV1, query_vector: list[float]) -> HybridSearchPlan:
-        return self._build(request, query_vector, governed_citations=False)
+    def build(
+        self,
+        request: RetrievalRequestV1,
+        query_vector: list[float],
+        *,
+        allow_all_audiences: bool = False,
+    ) -> HybridSearchPlan:
+        return self._build(
+            request,
+            query_vector,
+            governed_citations=False,
+            allow_all_audiences=allow_all_audiences,
+        )
 
     def build_v2(
         self,
@@ -23,12 +34,14 @@ class HybridSearch:
         query_vector: list[float],
         *,
         allow_needs_review: bool,
+        allow_all_audiences: bool = False,
     ) -> HybridSearchPlan:
         return self._build(
             request,
             query_vector,
             governed_citations=True,
             allow_needs_review=allow_needs_review,
+            allow_all_audiences=allow_all_audiences,
         )
 
     def _build(
@@ -38,6 +51,7 @@ class HybridSearch:
         *,
         governed_citations: bool,
         allow_needs_review: bool = False,
+        allow_all_audiences: bool = False,
     ) -> HybridSearchPlan:
         profile = self._settings.for_profile(request.query_profile)
         return HybridSearchPlan(
@@ -49,6 +63,7 @@ class HybridSearch:
             purpose=request.purpose,
             governed_citations=governed_citations,
             allow_needs_review=allow_needs_review,
+            allow_all_audiences=allow_all_audiences,
             bm25_weight=profile.bm25_weight,
             vector_weight=profile.vector_weight,
             min_score=profile.vector_min_score,

@@ -8,7 +8,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
 SCHEMA_VERSION = "1.0.0"
 ID_REGEX = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
@@ -17,6 +17,7 @@ LANGUAGE_REGEX = r"^[a-z]{2,3}(?:-[A-Za-z]{2})?$"
 QueryProfile = Literal["natural_language", "legal"]
 RetrievalStatus = Literal["SUCCESS", "NO_DATA", "FAILED"]
 EmbeddingProviderName = Literal["bedrock", "google"]
+SearchBackendName = Literal["opensearch", "postgresql"]
 
 
 class RagBaseModel(BaseModel):
@@ -325,9 +326,9 @@ class HybridProfileSettings(RagBaseModel):
 
 
 class HybridSearchSettings(RagBaseModel):
-    """Both approved search profiles and their configured index alias."""
+    """Both approved search profiles and an optional legacy OpenSearch alias."""
 
-    index_alias: str = Field(min_length=1)
+    index_alias: str | None = Field(default=None, min_length=1)
     natural_language: HybridProfileSettings
     legal: HybridProfileSettings
 
@@ -363,13 +364,64 @@ class OpenSearchConnectionSettings(RagBaseModel):
         return value
 
 
+class PostgresSearchSettings(RagBaseModel):
+    """Exact staging projection and bounded PostgreSQL connection settings."""
+
+    database_url: SecretStr
+    release_id: str = Field(min_length=1, max_length=160, pattern=ID_REGEX)
+    embedding_profile_id: str = Field(min_length=1, max_length=160, pattern=ID_REGEX)
+    statement_timeout_ms: int = Field(default=10_000, ge=1_000, le=60_000)
+    pool_min_size: int = Field(default=1, ge=1, le=5)
+    pool_max_size: int = Field(default=5, ge=1, le=10)
+    mode: Literal["staging"]
+
+    @field_validator("database_url")
+    @classmethod
+    def database_url_must_use_async_postgresql(cls, value: SecretStr) -> SecretStr:
+        raw = value.get_secret_value()
+        if not raw.startswith(("postgresql+asyncpg://", "postgresql://")):
+            raise ValueError("RAG_DATABASE_URL must use PostgreSQL with asyncpg")
+        parsed = urlsplit(raw.replace("postgresql+asyncpg://", "postgresql://", 1))
+        if (
+            parsed.hostname is None
+            or parsed.username is None
+            or not parsed.path.strip("/")
+            or parsed.fragment
+        ):
+            raise ValueError("RAG_DATABASE_URL is incomplete")
+        return value
+
+    @model_validator(mode="after")
+    def pool_bounds_must_be_ordered(self) -> PostgresSearchSettings:
+        if self.pool_max_size < self.pool_min_size:
+            raise ValueError("PostgreSQL pool_max_size must be at least pool_min_size")
+        return self
+
+
 class RagRuntimeSettings(RagBaseModel):
     """Complete online retrieval settings with no provider values baked into code."""
 
+    search_backend: SearchBackendName = "opensearch"
     embedding: QueryEmbeddingSettings
-    opensearch: OpenSearchConnectionSettings
+    opensearch: OpenSearchConnectionSettings | None = None
+    postgres: PostgresSearchSettings | None = None
     hybrid: HybridSearchSettings
     allow_needs_review_citations: bool = False
+    allow_all_audiences: bool = False
+
+    @model_validator(mode="after")
+    def exactly_one_search_backend_must_be_configured(self) -> RagRuntimeSettings:
+        if self.search_backend == "opensearch":
+            if self.opensearch is None or self.postgres is not None:
+                raise ValueError("OpenSearch backend requires only OpenSearch settings")
+            if self.hybrid.index_alias != self.opensearch.index_alias:
+                raise ValueError("OpenSearch alias must match the hybrid settings")
+        elif self.postgres is None or self.opensearch is not None:
+            raise ValueError("PostgreSQL backend requires only PostgreSQL settings")
+        backend_mode = self.postgres.mode if self.postgres is not None else self.opensearch.mode
+        if self.allow_all_audiences and backend_mode != "staging":
+            raise ValueError("all-audience retrieval is allowed only in staging")
+        return self
 
     @classmethod
     def from_config_files(
@@ -380,17 +432,22 @@ class RagRuntimeSettings(RagBaseModel):
         natural_profile_path: str | Path,
         legal_profile_path: str | Path,
         environ: Mapping[str, str] | None = None,
+        database_url: SecretStr | str | None = None,
     ) -> RagRuntimeSettings:
         """Load explicit paths and let named environment values override file values."""
 
         env = os.environ if environ is None else environ
         embedding_document = _read_yaml_mapping(embedding_config_path)
-        index_document = _read_json_mapping(index_config_path)
         natural_document = _read_json_mapping(natural_profile_path)
         legal_document = _read_json_mapping(legal_profile_path)
 
         embedding_values = _required_mapping(embedding_document, "embedding")
-        index_values = _required_mapping(index_document, "index")
+        search_backend = _as_nonempty_str(
+            env.get("RAG_SEARCH_BACKEND", "opensearch"),
+            "RAG_SEARCH_BACKEND",
+        ).casefold()
+        if search_backend not in {"opensearch", "postgresql"}:
+            raise ValueError("RAG_SEARCH_BACKEND must be opensearch or postgresql")
         provider = _as_nonempty_str(
             embedding_values.get("provider"), "embedding provider"
         ).casefold()
@@ -406,13 +463,13 @@ class RagRuntimeSettings(RagBaseModel):
             "dimension_env",
             env,
         )
-        index_name = _resolve_config_value(index_values, "name", "name_env", env)
-        index_alias = _resolve_config_value(index_values, "alias", "alias_env", env)
-        host = _required_env(env, "OPENSEARCH_HOST")
-        mode = env.get("RAG_MODE") or index_document.get("mode")
         allow_needs_review_citations = _as_bool(
             env.get("RAG_ALLOW_NEEDS_REVIEW_CITATIONS", "false"),
             "RAG_ALLOW_NEEDS_REVIEW_CITATIONS",
+        )
+        allow_all_audiences = _as_bool(
+            env.get("RAG_STAGING_ALLOW_ALL_AUDIENCES", "false"),
+            "RAG_STAGING_ALLOW_ALL_AUDIENCES",
         )
 
         embedding = QueryEmbeddingSettings(
@@ -421,24 +478,65 @@ class RagRuntimeSettings(RagBaseModel):
             region=_as_nonempty_str(region, "AWS region") if region is not None else None,
             dimension=_as_int(dimension, "embedding dimension"),
         )
-        opensearch = OpenSearchConnectionSettings(
-            host=host,
-            region=_required_env(env, "AWS_REGION"),
-            index_name=_as_nonempty_str(index_name, "OpenSearch index name"),
-            index_alias=_as_nonempty_str(index_alias, "OpenSearch index alias"),
-            mode=mode,
-        )
         natural = HybridProfileSettings.from_config(natural_document)
         legal = HybridProfileSettings.from_config(legal_document)
+        opensearch: OpenSearchConnectionSettings | None = None
+        postgres: PostgresSearchSettings | None = None
+        index_alias: str | None = None
+        if search_backend == "opensearch":
+            index_document = _read_json_mapping(index_config_path)
+            index_values = _required_mapping(index_document, "index")
+            index_name = _resolve_config_value(index_values, "name", "name_env", env)
+            index_alias = _resolve_config_value(index_values, "alias", "alias_env", env)
+            opensearch = OpenSearchConnectionSettings(
+                host=_required_env(env, "OPENSEARCH_HOST"),
+                region=_required_env(env, "AWS_REGION"),
+                index_name=_as_nonempty_str(index_name, "OpenSearch index name"),
+                index_alias=_as_nonempty_str(index_alias, "OpenSearch index alias"),
+                mode=env.get("RAG_MODE") or index_document.get("mode"),
+            )
+            index_alias = opensearch.index_alias
+        else:
+            raw_database_url = (
+                database_url.get_secret_value()
+                if isinstance(database_url, SecretStr)
+                else database_url
+            )
+            if raw_database_url is None:
+                raw_database_url = env.get("RAG_DATABASE_URL")
+            postgres = PostgresSearchSettings(
+                database_url=SecretStr(_as_nonempty_str(raw_database_url, "RAG_DATABASE_URL")),
+                release_id=_required_env(env, "RAG_POSTGRES_RELEASE_ID"),
+                embedding_profile_id=_required_env(
+                    env,
+                    "RAG_POSTGRES_EMBEDDING_PROFILE_ID",
+                ),
+                statement_timeout_ms=_as_int(
+                    env.get("RAG_POSTGRES_STATEMENT_TIMEOUT_MS", "10000"),
+                    "RAG_POSTGRES_STATEMENT_TIMEOUT_MS",
+                ),
+                pool_min_size=_as_int(
+                    env.get("RAG_POSTGRES_POOL_MIN_SIZE", "1"),
+                    "RAG_POSTGRES_POOL_MIN_SIZE",
+                ),
+                pool_max_size=_as_int(
+                    env.get("RAG_POSTGRES_POOL_MAX_SIZE", "5"),
+                    "RAG_POSTGRES_POOL_MAX_SIZE",
+                ),
+                mode=_required_env(env, "RAG_MODE"),
+            )
         return cls(
+            search_backend=search_backend,
             embedding=embedding,
             opensearch=opensearch,
+            postgres=postgres,
             hybrid=HybridSearchSettings(
-                index_alias=opensearch.index_alias,
+                index_alias=index_alias,
                 natural_language=natural,
                 legal=legal,
             ),
             allow_needs_review_citations=allow_needs_review_citations,
+            allow_all_audiences=allow_all_audiences,
         )
 
 
@@ -453,6 +551,7 @@ class HybridSearchPlan(RagBaseModel):
     purpose: str | None = Field(default=None, min_length=1, max_length=64)
     governed_citations: bool
     allow_needs_review: bool
+    allow_all_audiences: bool = False
     bm25_weight: float
     vector_weight: float
     min_score: float = Field(gt=0.0, le=1.0)

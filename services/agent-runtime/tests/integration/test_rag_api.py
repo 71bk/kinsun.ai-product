@@ -227,12 +227,20 @@ def test_repo_relative_rag_config_paths_work_from_service_directory(
 def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypatch) -> None:
     class StubSettings:
         RAG_MODE = "staging"
+        RAG_SEARCH_BACKEND = "opensearch"
         RAG_ALLOW_NEEDS_REVIEW_CITATIONS = True
+        RAG_STAGING_ALLOW_ALL_AUDIENCES = True
         RAG_EMBEDDING_CONFIG_PATH = "config/rag/embedding.yaml"
         RAG_QUERY_EMBEDDING_CONFIG_PATH = "config/rag/embedding-google.yaml"
         RAG_OPENSEARCH_INDEX_CONFIG_PATH = "config/rag/opensearch-index-v1.json"
         RAG_HYBRID_NATURAL_CONFIG_PATH = "config/rag/hybrid-natural-language.json"
         RAG_HYBRID_LEGAL_CONFIG_PATH = "config/rag/hybrid-legal.json"
+        RAG_DATABASE_URL = None
+        RAG_POSTGRES_RELEASE_ID = None
+        RAG_POSTGRES_EMBEDDING_PROFILE_ID = None
+        RAG_POSTGRES_STATEMENT_TIMEOUT_MS = 10_000
+        RAG_POSTGRES_POOL_MIN_SIZE = 1
+        RAG_POSTGRES_POOL_MAX_SIZE = 5
         AWS_REGION = "configured-region"
         BEDROCK_EMBEDDING_MODEL_ID = "configured-model"
         BEDROCK_EMBEDDING_DIMENSION = 1024
@@ -246,7 +254,10 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
 
     captured = {}
     captured_builder = {}
-    sentinel_settings = SimpleNamespace(embedding=SimpleNamespace(provider="google"))
+    sentinel_settings = SimpleNamespace(
+        embedding=SimpleNamespace(provider="google"),
+        allow_all_audiences=True,
+    )
     sentinel_retriever = object()
 
     def fake_loader(**kwargs):
@@ -280,9 +291,15 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         "OPENSEARCH_INDEX": "configured-staging-index",
         "OPENSEARCH_ALIAS": "configured-staging-alias",
         "RAG_MODE": "staging",
+        "RAG_SEARCH_BACKEND": "opensearch",
         "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": "True",
+        "RAG_STAGING_ALLOW_ALL_AUDIENCES": "True",
+        "RAG_POSTGRES_STATEMENT_TIMEOUT_MS": "10000",
+        "RAG_POSTGRES_POOL_MIN_SIZE": "1",
+        "RAG_POSTGRES_POOL_MAX_SIZE": "5",
     }
     assert "GEMINI_API_KEY" not in captured["environ"]
+    assert captured["database_url"] is None
     assert captured_builder == {
         "google_api_key": "synthetic-google-embedding-key",
         "google_timeout_seconds": 30.0,

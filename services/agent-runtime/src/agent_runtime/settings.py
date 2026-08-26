@@ -29,12 +29,20 @@ class Settings(BaseSettings):
     SERVICE_IDENTITY_ISSUER: str = Field(default="kinsun-local", min_length=1, max_length=80)
     SERVICE_IDENTITY_TTL_SECONDS: int = Field(default=30, ge=1, le=60)
     RAG_MODE: str = "disabled"
+    RAG_SEARCH_BACKEND: str = "opensearch"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
+    RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
     RAG_QUERY_EMBEDDING_CONFIG_PATH: str | None = None
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"
     RAG_HYBRID_NATURAL_CONFIG_PATH: str = "config/rag/hybrid-natural-language.json"
     RAG_HYBRID_LEGAL_CONFIG_PATH: str = "config/rag/hybrid-legal.json"
+    RAG_DATABASE_URL: SecretStr | None = None
+    RAG_POSTGRES_RELEASE_ID: str | None = None
+    RAG_POSTGRES_EMBEDDING_PROFILE_ID: str | None = None
+    RAG_POSTGRES_STATEMENT_TIMEOUT_MS: int = Field(default=10_000, ge=1_000, le=60_000)
+    RAG_POSTGRES_POOL_MIN_SIZE: int = Field(default=1, ge=1, le=5)
+    RAG_POSTGRES_POOL_MAX_SIZE: int = Field(default=5, ge=1, le=10)
     AWS_REGION: str | None = None
     BEDROCK_EMBEDDING_MODEL_ID: str | None = None
     BEDROCK_EMBEDDING_DIMENSION: int = 1024

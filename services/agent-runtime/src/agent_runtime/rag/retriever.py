@@ -21,6 +21,7 @@ from agent_runtime.rag.models import (
     RetrievalResultV1,
     RetrievalResultV2,
 )
+from agent_runtime.rag.postgres_backend import build_postgres_search_backend
 from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
 from agent_runtime.rag.search_backend import SearchBackend, SearchHit
 
@@ -35,21 +36,30 @@ class Retriever:
         search_backend: SearchBackend,
         hybrid_search: HybridSearch,
         allow_needs_review_citations: bool = False,
+        allow_all_audiences: bool = False,
     ) -> None:
         self._embedding_provider = embedding_provider
         self._search_backend = search_backend
         self._hybrid_search = hybrid_search
         self._allow_needs_review_citations = allow_needs_review_citations
+        self._allow_all_audiences = allow_all_audiences
 
     async def aclose(self) -> None:
-        await self._embedding_provider.aclose()
+        try:
+            await self._embedding_provider.aclose()
+        finally:
+            await self._search_backend.aclose()
 
     async def retrieve(self, request: RetrievalRequestV1) -> RetrievalResponseV1:
         try:
             vector = await self._embedding_provider.embed_query(request.query)
             if len(vector) != self._embedding_provider.dimension:
                 raise ValueError("query embedding has an unexpected dimension")
-            plan = self._hybrid_search.build(request, vector)
+            plan = self._hybrid_search.build(
+                request,
+                vector,
+                allow_all_audiences=self._allow_all_audiences,
+            )
             hits = await self._search_backend.search(plan)
         except Exception:
             # The public fallback deliberately excludes provider details and query text.
@@ -61,6 +71,7 @@ class Retriever:
             request.query_profile,
             audience=request.audience,
             purpose=request.purpose,
+            allow_all_audiences=self._allow_all_audiences,
         )
         if not results:
             return no_data_response(request.request_id)
@@ -85,6 +96,7 @@ class Retriever:
                 request,
                 vector,
                 allow_needs_review=self._allow_needs_review_citations,
+                allow_all_audiences=self._allow_all_audiences,
             )
             hits = await self._search_backend.search(plan)
         except Exception:
@@ -97,6 +109,7 @@ class Retriever:
             audience=request.audience,
             purpose=request.purpose,
             allow_needs_review=self._allow_needs_review_citations,
+            allow_all_audiences=self._allow_all_audiences,
         )
         if results is None or not results:
             return no_data_response_v2(request.request_id)
@@ -119,15 +132,27 @@ def build_retriever(
 ) -> Retriever:
     """Compose explicitly configured embedding and search adapters."""
 
+    if settings.search_backend == "postgresql":
+        if settings.postgres is None:
+            raise ValueError("PostgreSQL search settings are unavailable")
+        search_backend: SearchBackend = build_postgres_search_backend(
+            settings.postgres,
+            settings.embedding,
+        )
+    else:
+        if settings.opensearch is None:
+            raise ValueError("OpenSearch settings are unavailable")
+        search_backend = build_opensearch_client(settings.opensearch, settings.hybrid)
     return Retriever(
         embedding_provider=build_embedding_provider(
             settings.embedding,
             google_api_key=google_api_key,
             google_timeout_seconds=google_timeout_seconds,
         ),
-        search_backend=build_opensearch_client(settings.opensearch, settings.hybrid),
+        search_backend=search_backend,
         hybrid_search=HybridSearch(settings.hybrid),
         allow_needs_review_citations=settings.allow_needs_review_citations,
+        allow_all_audiences=settings.allow_all_audiences,
     )
 
 
@@ -162,6 +187,7 @@ def _eligible_unique_results(
     *,
     audience: str | None,
     purpose: str | None,
+    allow_all_audiences: bool,
 ) -> list[RetrievalResultV1]:
     results: list[RetrievalResultV1] = []
     seen: set[str] = set()
@@ -172,6 +198,7 @@ def _eligible_unique_results(
             profile,
             audience=audience,
             purpose=purpose,
+            allow_all_audiences=allow_all_audiences,
         ):
             continue
         chunk_id = source.get("chunk_id")
@@ -206,6 +233,7 @@ def _eligible_unique_results_v2(
     audience: str | None,
     purpose: str | None,
     allow_needs_review: bool,
+    allow_all_audiences: bool,
 ) -> list[RetrievalResultV2] | None:
     """Return governed results, or ``None`` when any selected citation is defective."""
 
@@ -220,6 +248,7 @@ def _eligible_unique_results_v2(
             purpose=purpose,
             governed_citations=True,
             allow_needs_review=allow_needs_review,
+            allow_all_audiences=allow_all_audiences,
         ):
             continue
         chunk_id = source.get("chunk_id")
