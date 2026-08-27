@@ -1,7 +1,7 @@
 # AGENTS.md
 
-- 更新日期：2026-08-25
-- 校準基準：`main` at `a2af73e`
+- 更新日期：2026-08-27
+- 校準基準：`main` at `a2b2b96`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
 
@@ -65,7 +65,21 @@
     assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases 已通過；
     2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
     chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
-    Query suite 仍為 `NOT_EXECUTED`。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
+    Query suite 仍為 `NOT_EXECUTED`。2026-08-27 已在其上建立 successor runtime policy v003，不改寫
+    v002 bytes：以 staging-only purpose overlay 分類原本空白的 32 筆 A 單位手冊 chunks，沿用既有
+    enum 並讓來源層與 chunk 層都含 `general_information`，554 筆因此全部具備 response metadata
+    （v002 為 522），Core 的自然語言知識提問才能通過 purpose gate。這 32 筆仍標記 `needs_review`，
+    不等於人工確認或 Production 核准，v003 Chunk bytes 未修改。啟用必須同時提供
+    `RAG_SOURCE_FAMILY_POLICY_PATH`（`data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json`）
+    與 `RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256`；path／digest 缺一或不符、或仍開著
+    `RAG_STAGING_ALLOW_ALL_AUDIENCES`，Agent Runtime 就不建立 Retriever 並 fail closed。Runtime
+    image 不內建任何 `data/rag*`，container staging 必須以唯讀 config mount 注入。
+    `config/rag/source-family-golden-queries-v003.json` 固定 10 個離線 case ＋ 2 個 exclusion case，
+    本機全部通過。完整啟用方式、限制與尚未解除的封鎖（Supabase／外部 backend 未同步、32 筆
+    purpose 待 Owner 逐筆確認、獨立 read-only principal 與 activation／rollback 未建立、Production
+    不得使用 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true`）見
+    [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)。
+    遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
     metadata 全都只允許 `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
     `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
     public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。
@@ -704,6 +718,13 @@ format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 
 通過。完整 Frontend ESLint 仍有一個本次未修改的既有 unused argument；完整 Core Ruff 仍有兩個本次未
 修改的既有問題。沒有獨立 `TEST_DATABASE_URL`，未執行破壞性的 integration rebuild；本機 Docker
 設定檔因執行環境權限無法讀取，`docker compose config --quiet` 本次未驗證。
+
+2026-08-27 runtime policy v003 併入 `main`（`a2b2b96`）後的本機校準結果：Core unit `913 passed`、
+Agent Runtime `406 passed`、RAG ingestion `311 passed`、Frontend `224 passed`（35 files）；Frontend
+ESLint 與 typecheck 通過。Speech Gateway、Infra、Frontend production build、兩支 live contract
+verifier 與靜態 contract validator 本次未重跑。沒有獨立 `TEST_DATABASE_URL`，未執行 Core
+integration 或破壞性 rebuild；v003 runtime policy 只有離線 policy／citation Golden cases 與單筆長者
+live smoke，完整 live relevance／ranking Golden Query 仍為 `NOT_EXECUTED`。
 
 每次變更至少執行：
 

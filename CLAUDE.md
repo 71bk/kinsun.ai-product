@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-- 更新日期：2026-08-17
-- 校準基準：`main` at `a2af73e`
+- 更新日期：2026-08-27
+- 校準基準：`main` at `a2b2b96`
 - 適用範圍：整個 `kinsun.ai` repository
 
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
@@ -107,6 +107,15 @@
   2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
   chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
   Query suite 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
+  2026-08-27 已在其上建立 successor runtime policy v003，不改寫 v002 bytes：staging-only purpose
+  overlay 分類原本空白的 32 筆 A 單位手冊 chunks，554 筆全部具備 response metadata（v002 為 522），
+  Core 自然語言知識提問才能通過 purpose gate；這 32 筆仍是 `needs_review` 的 AI-assisted staging
+  classification，不等於人工確認或 Production 核准。啟用必須同時給
+  `RAG_SOURCE_FAMILY_POLICY_PATH` 與 `RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256`，缺一、digest 不符
+  或仍開著 `RAG_STAGING_ALLOW_ALL_AUDIENCES` 就 fail closed 且不建立 Retriever；Runtime image 不
+  內建 `data/rag*`。`config/rag/source-family-golden-queries-v003.json` 的 10 個離線 case ＋ 2 個
+  exclusion case 本機通過。細節與未解除封鎖見
+  [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
@@ -238,6 +247,12 @@ Frontend typecheck／production build、static contract 與 Core live verifier�
 Frontend ESLint 仍有一個本次未修改的既有 unused argument，完整 Core Ruff 仍有兩個本次未修改的既有
 問題。沒有獨立 `TEST_DATABASE_URL`，未重建 integration DB；本機 Docker 設定檔受執行環境權限限制，
 `docker compose config --quiet` 未驗證。這個快照同樣不可取代當次驗證。
+
+2026-08-27 runtime policy v003 併入 `main`（`a2b2b96`）後當次結果：Core unit 913、Agent Runtime 406、
+RAG ingestion 311、Frontend 224 tests passed；Frontend ESLint 與 typecheck 通過。Speech Gateway、
+Infra、Frontend production build、static contract 與兩支 live verifier 本次未重跑。沒有獨立
+`TEST_DATABASE_URL`，未跑 Core integration；v003 只有離線 policy／citation Golden cases 與單筆長者
+live smoke。這個快照同樣不可取代當次驗證。
 
 ## 交付前自我審查
 
