@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from app.policies.memory_policy import (
+    GatedVoiceTurnFacts,
     derive_turn_speaker_evidence,
     evaluate_memory_candidate,
 )
@@ -59,6 +60,78 @@ def test_family_text_and_unverified_voice_cannot_become_elder_speaker() -> None:
     assert family.verification_level == "THIRD_PARTY"
     assert voice.verification_level == "UNKNOWN"
     assert voice.speaker_actor_id is None
+
+
+def test_gated_elder_only_voice_session_derives_verified_elder_speaker() -> None:
+    elder_actor_id = uuid4()
+    session_id = uuid4()
+    gate_evidence_id = uuid4()
+
+    evidence = derive_turn_speaker_evidence(
+        input_mode="voice",
+        actor_role="ELDER",
+        actor_id=elder_actor_id,
+        session_id=session_id,
+        turn_reference="run-voice",
+        voice_turn=GatedVoiceTurnFacts(
+            asr_gate_evidence_id=gate_evidence_id,
+            initiator_actor_id=elder_actor_id,
+            elder_actor_id=elder_actor_id,
+        ),
+    )
+
+    assert evidence.verification_level == "VERIFIED_ELDER"
+    assert evidence.speaker_actor_id == elder_actor_id
+    assert evidence.verification_method == "ELDER_ONLY_VOICE_SESSION"
+    assert str(session_id) in evidence.evidence_reference
+    assert str(gate_evidence_id) in evidence.evidence_reference
+
+
+def test_gated_voice_without_elder_only_session_stays_unknown() -> None:
+    elder_actor_id = uuid4()
+    staff_actor_id = uuid4()
+    gate_evidence_id = uuid4()
+
+    def _derive(*, actor_role: str, actor_id, initiator_actor_id, elder_id):
+        return derive_turn_speaker_evidence(
+            input_mode="voice_with_text_fallback",
+            actor_role=actor_role,
+            actor_id=actor_id,
+            session_id=uuid4(),
+            turn_reference="run-voice",
+            voice_turn=GatedVoiceTurnFacts(
+                asr_gate_evidence_id=gate_evidence_id,
+                initiator_actor_id=initiator_actor_id,
+                elder_actor_id=elder_id,
+            ),
+        )
+
+    # A caregiver opened the session, so Spec 18 6.2 leaves initiator evidence only.
+    staff_initiated = _derive(
+        actor_role="ELDER",
+        actor_id=elder_actor_id,
+        initiator_actor_id=staff_actor_id,
+        elder_id=elder_actor_id,
+    )
+    # The speaking actor is not the elder this session belongs to.
+    third_party_actor = _derive(
+        actor_role="DAYCARE_CARE_WORKER",
+        actor_id=staff_actor_id,
+        initiator_actor_id=staff_actor_id,
+        elder_id=elder_actor_id,
+    )
+    # The elder record carries no actor, so ownership cannot be established.
+    unlinked_elder = _derive(
+        actor_role="ELDER",
+        actor_id=elder_actor_id,
+        initiator_actor_id=elder_actor_id,
+        elder_id=None,
+    )
+
+    for evidence in (staff_initiated, third_party_actor, unlinked_elder):
+        assert evidence.verification_level == "UNKNOWN"
+        assert evidence.speaker_actor_id is None
+        assert evidence.evidence_reference is None
 
 
 def test_low_all_of_auto_activates_but_medium_requires_elder_confirmation() -> None:

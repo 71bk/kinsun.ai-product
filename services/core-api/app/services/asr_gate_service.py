@@ -139,8 +139,12 @@ class AsrGateService:
             return False
         return True
 
-    async def authorize_agent_input(self, *, conversation, input_text: str) -> None:
-        """Bind Agent input to the exact transcript that passed the Core gate."""
+    async def authorize_agent_input(self, *, conversation, input_text: str) -> AsrGateEvidence:
+        """Bind Agent input to the exact transcript that passed the Core gate.
+
+        Returns the accepted evidence so callers can reference it without
+        re-querying or re-deriving any part of this gate.
+        """
         if (
             conversation.input_mode not in {"voice", "voice_with_text_fallback"}
             or conversation.state != "PROCESSING"
@@ -161,6 +165,7 @@ class AsrGateService:
             )
         ):
             raise AuthenticationError("ASR input is unavailable")
+        return evidence
 
     async def confirm(
         self,

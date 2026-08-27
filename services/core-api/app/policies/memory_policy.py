@@ -98,6 +98,19 @@ class SourceSpeakerEvidence:
 
 
 @dataclass(frozen=True)
+class GatedVoiceTurnFacts:
+    """Core-resolved facts about a voice turn that already passed the ASR Gate.
+
+    The caller must resolve these only after ``AsrGateService`` accepted the
+    exact transcript handed to the Agent; this policy never re-derives them.
+    """
+
+    asr_gate_evidence_id: UUID
+    initiator_actor_id: UUID | None
+    elder_actor_id: UUID | None
+
+
+@dataclass(frozen=True)
 class MemoryCandidatePolicyDecision:
     """A bounded policy result; Agent hints are deliberately absent."""
 
@@ -117,12 +130,18 @@ def derive_turn_speaker_evidence(
     actor_id: UUID,
     session_id: UUID,
     turn_reference: str,
+    voice_turn: GatedVoiceTurnFacts | None = None,
 ) -> SourceSpeakerEvidence:
     """Derive statement ownership after the caller authorizes the elder scope.
 
     An authenticated elder text turn binds the statement to the elder account.
-    An authenticated non-elder text turn remains third-party. Voice remains
-    UNKNOWN until candidate-specific speaker verification is implemented.
+    An authenticated non-elder text turn remains third-party.
+
+    A voice turn binds to the elder only as the Elder-only session Spec 18 §3.4
+    allows in place of voice biometrics: the authenticated actor is the elder,
+    that same elder actor opened the session, and Core's ASR Gate accepted this
+    exact transcript. Any other voice turn stays UNKNOWN, so a staff-, family-
+    or device-initiated session creates initiator evidence only (§6.2).
     """
     if input_mode == "text":
         level = "VERIFIED_ELDER" if actor_role == "ELDER" else "THIRD_PARTY"
@@ -134,6 +153,23 @@ def derive_turn_speaker_evidence(
             speaker_role=actor_role,
             speaker_actor_id=actor_id,
             verification_method="AUTHENTICATED_TEXT",
+        )
+    if (
+        voice_turn is not None
+        and actor_role == "ELDER"
+        and voice_turn.elder_actor_id is not None
+        and voice_turn.initiator_actor_id == voice_turn.elder_actor_id
+        and voice_turn.initiator_actor_id == actor_id
+    ):
+        return SourceSpeakerEvidence(
+            verification_level="VERIFIED_ELDER",
+            evidence_reference=(
+                f"conversation-session:{session_id}:turn:{turn_reference}"
+                f":asr-gate:{voice_turn.asr_gate_evidence_id}"
+            ),
+            speaker_role=actor_role,
+            speaker_actor_id=actor_id,
+            verification_method="ELDER_ONLY_VOICE_SESSION",
         )
     return SourceSpeakerEvidence(
         verification_level="UNKNOWN",

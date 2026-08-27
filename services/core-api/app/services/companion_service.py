@@ -19,10 +19,16 @@ from app.core.exceptions import (
 )
 from app.domain.consent import ConsentPurpose
 from app.models.agent import AgentRun
+from app.models.asr_gate import AsrGateEvidence
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.safety import SafetyEvaluation
-from app.policies.memory_policy import derive_turn_speaker_evidence
+from app.policies.memory_policy import (
+    TRUSTED_SPEAKER_LEVELS,
+    GatedVoiceTurnFacts,
+    SourceSpeakerEvidence,
+    derive_turn_speaker_evidence,
+)
 from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
@@ -137,6 +143,7 @@ class CompanionService:
         *,
         conversation: ConversationSession,
         actor_context: ActorContext,
+        speaker_evidence: SourceSpeakerEvidence,
     ) -> list[str]:
         """Derive proposal scope from current Core authorization and consent."""
         try:
@@ -153,7 +160,7 @@ class CompanionService:
         except NotFoundError:
             return []
         requested_outputs = ["event_candidate"]
-        if conversation.input_mode != "text" or actor_context.actor_role != "ELDER":
+        if speaker_evidence.verification_level not in TRUSTED_SPEAKER_LEVELS:
             return requested_outputs
         try:
             await authorize_elder(
@@ -220,11 +227,11 @@ class CompanionService:
         *,
         conversation: ConversationSession,
         input_text: str,
-    ) -> None:
+    ) -> AsrGateEvidence:
         settings = get_settings()
         if not settings.asr_gate_enabled:
             raise AuthenticationError("ASR input is unavailable")
-        await AsrGateService(
+        return await AsrGateService(
             self._session,
             self._tenant_id,
             digest_secret=settings.asr_gate_hmac_secret,
@@ -233,6 +240,34 @@ class CompanionService:
         ).authorize_agent_input(
             conversation=conversation,
             input_text=input_text,
+        )
+
+    async def _speaker_evidence(
+        self,
+        *,
+        conversation: ConversationSession,
+        actor_context: ActorContext,
+        turn_reference: str,
+        asr_evidence: AsrGateEvidence | None,
+    ) -> SourceSpeakerEvidence:
+        """Resolve statement ownership once, for both the request and the write."""
+        voice_turn: GatedVoiceTurnFacts | None = None
+        if asr_evidence is not None:
+            elder = await ElderRepository(self._session, self._tenant_id).get_by_id(
+                conversation.elder_id
+            )
+            voice_turn = GatedVoiceTurnFacts(
+                asr_gate_evidence_id=asr_evidence.id,
+                initiator_actor_id=conversation.initiator_actor_id,
+                elder_actor_id=elder.actor_id if elder is not None else None,
+            )
+        return derive_turn_speaker_evidence(
+            input_mode=conversation.input_mode,
+            actor_role=actor_context.actor_role,
+            actor_id=actor_context.actor_id,
+            session_id=conversation.id,
+            turn_reference=turn_reference,
+            voice_turn=voice_turn,
         )
 
     async def run_turn(
@@ -259,8 +294,9 @@ class CompanionService:
             raise ConflictError("Companion turn is not ready for Agent Runtime")
         if not conversation.policy_version:
             raise ConflictError("Voice session has no policy version")
+        asr_evidence: AsrGateEvidence | None = None
         if is_gated_voice_turn:
-            await self._authorize_asr_input(
+            asr_evidence = await self._authorize_asr_input(
                 conversation=conversation,
                 input_text=input_text,
             )
@@ -268,9 +304,16 @@ class CompanionService:
         request_id = f"req-{uuid5(NAMESPACE_URL, f'kinsun:companion:{idempotency_key}')}"
         agent_run_id = uuid5(NAMESPACE_URL, f"kinsun:agent-run:{idempotency_key}")
         agent_run_wire_id = f"run-{agent_run_id}"
+        speaker_evidence = await self._speaker_evidence(
+            conversation=conversation,
+            actor_context=actor_context,
+            turn_reference=str(agent_run_id),
+            asr_evidence=asr_evidence,
+        )
         requested_outputs = await self._requested_outputs(
             conversation=conversation,
             actor_context=actor_context,
+            speaker_evidence=speaker_evidence,
         )
         # The Agent Runtime selects a retrieval profile from `purpose`
         # (rag_integration.RAG_PURPOSES) and does not infer intent itself, so an
@@ -436,13 +479,7 @@ class CompanionService:
                         if memory_proposal is not None and "memory_candidate" in requested_outputs
                         else None
                     ),
-                    source_speaker_evidence=derive_turn_speaker_evidence(
-                        input_mode=conversation.input_mode,
-                        actor_role=actor_context.actor_role,
-                        actor_id=actor_context.actor_id,
-                        session_id=conversation.id,
-                        turn_reference=str(agent_run_id),
-                    ),
+                    source_speaker_evidence=speaker_evidence,
                 )
 
         return CompanionTurnResponse(

@@ -18,6 +18,10 @@ from app.core.exceptions import ConflictError, NotFoundError, ServiceUnavailable
 from app.middleware.auth import ActorContext
 from app.models.agent import AgentRun
 from app.models.safety import SafetyEvaluation
+from app.policies.memory_policy import (
+    GatedVoiceTurnFacts,
+    derive_turn_speaker_evidence,
+)
 from app.repositories.care_event_repo import VerifiedCareEventContextRecord
 from app.repositories.memory_repo import ConfirmedMemoryContextRecord
 from app.services import companion_service
@@ -309,9 +313,10 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
 
 
 @pytest.mark.asyncio
-async def test_non_elder_or_voice_turn_never_requests_memory_proposal(
+async def test_untrusted_speaker_never_requests_memory_proposal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Only a trusted speaker level unlocks the memory proposal request."""
     tenant_id = uuid4()
     authorize, require_active = _install_candidate_capability(monkeypatch)
     service = CompanionService(MagicMock(), tenant_id, SimpleNamespace(), "mock")
@@ -325,16 +330,61 @@ async def test_non_elder_or_voice_turn_never_requests_memory_proposal(
     family_outputs = await service._requested_outputs(
         conversation=_conversation(input_mode="text"),
         actor_context=family,
+        speaker_evidence=derive_turn_speaker_evidence(
+            input_mode="text",
+            actor_role=family.actor_role,
+            actor_id=family.actor_id,
+            session_id=uuid4(),
+            turn_reference="run-family",
+        ),
     )
+    # No gated-voice facts: the ASR Gate never accepted this turn.
     voice_outputs = await service._requested_outputs(
         conversation=_conversation(input_mode="voice"),
         actor_context=elder,
+        speaker_evidence=derive_turn_speaker_evidence(
+            input_mode="voice",
+            actor_role=elder.actor_role,
+            actor_id=elder.actor_id,
+            session_id=uuid4(),
+            turn_reference="run-voice",
+        ),
     )
 
     assert family_outputs == ["event_candidate"]
     assert voice_outputs == ["event_candidate"]
     assert authorize.await_count == 2
     assert require_active.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_gated_elder_only_voice_turn_requests_memory_proposal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Spec 18 3.4 lets a gated Elder-only voice session own its statements."""
+    tenant_id = uuid4()
+    _install_candidate_capability(monkeypatch)
+    service = CompanionService(MagicMock(), tenant_id, SimpleNamespace(), "mock")
+    elder = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
+
+    outputs = await service._requested_outputs(
+        conversation=_conversation(input_mode="voice"),
+        actor_context=elder,
+        speaker_evidence=derive_turn_speaker_evidence(
+            input_mode="voice",
+            actor_role=elder.actor_role,
+            actor_id=elder.actor_id,
+            session_id=uuid4(),
+            turn_reference="run-voice",
+            voice_turn=GatedVoiceTurnFacts(
+                asr_gate_evidence_id=uuid4(),
+                initiator_actor_id=elder.actor_id,
+                elder_actor_id=elder.actor_id,
+            ),
+        ),
+    )
+
+    assert outputs == ["event_candidate", "memory_candidate"]
 
 
 @pytest.mark.asyncio
