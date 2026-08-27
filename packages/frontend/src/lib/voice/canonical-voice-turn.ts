@@ -1,6 +1,7 @@
 import type { ApiConfig } from '@/lib/api/client';
 import { cancelVoiceSession, issueVoiceTicket, runCompanionTurn } from '@/lib/api/companion';
 import { blobToPcm16Base64 } from './recorder';
+import { companionReplyForSpeech } from './reply-presentation';
 import {
   canSynthesize,
   LanguageUnavailableError,
@@ -121,7 +122,7 @@ export async function speakTurn(
   let audioUrl: string | null = null;
   if (synthesizable) {
     try {
-      const audio = await synthesizeSpeech(turn.reply_text, language);
+      const audio = await synthesizeSpeech(companionReplyForSpeech(turn.reply_text), language);
       audioUrl = audioBase64ToUrl(audio.audioBase64, audio.contentType);
     } catch {
       audioUrl = null;

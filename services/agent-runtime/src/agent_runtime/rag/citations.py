@@ -7,6 +7,12 @@ from agent_runtime.rag.models import RetrievalResultV1, RetrievalResultV2
 
 RetrievalCitationResult = RetrievalResultV1 | RetrievalResultV2
 
+PUBLISHER_LABELS = {
+    "hpa": "國民健康署",
+    "mohw": "衛生福利部",
+    "moj": "全國法規資料庫",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class Citation:
@@ -69,7 +75,7 @@ def render_citation(result: RetrievalCitationResult) -> str:
     reviewer inspects.
     """
 
-    page = _location_label(result)
+    page = _page_label(result.page_start, result.page_end)
     section = f"，{result.section}"
     return f"- [{_document_label(result)}{section}{page}]({result.source_url})"
 
@@ -146,5 +152,6 @@ def _document_label(result: RetrievalCitationResult) -> str:
         and result.publisher is not None
         and result.publisher != result.title
     ):
-        return f"{result.publisher}｜{result.title}"
+        publisher = PUBLISHER_LABELS.get(result.publisher, result.publisher)
+        return f"{publisher}《{result.title}》"
     return result.document_name

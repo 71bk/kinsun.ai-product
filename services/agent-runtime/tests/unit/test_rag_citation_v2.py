@@ -237,10 +237,22 @@ def test_official_citation_uses_only_official_url_and_displays_publisher() -> No
 
     rendered = render_citation(result)
 
-    assert "Synthetic Health Authority｜Synthetic Governed Guide" in rendered
-    assert "定位：PDF physical page 10, Synthetic section" in rendered
+    assert "Synthetic Health Authority《Synthetic Governed Guide》" in rendered
+    assert "p. 10" in rendered
+    assert "定位：" not in rendered
     assert "](https://example.test/official/guide)" in rendered
     assert "research.example.test" not in rendered
+
+
+def test_known_publisher_code_has_a_readable_public_label() -> None:
+    payload = make_hit("official-readable-publisher")["_source"]
+    assert isinstance(payload, dict)
+    payload["publisher"] = "hpa"
+    result = RetrievalResultV2.model_validate(_public_result_payload(payload))
+
+    rendered = render_citation(result)
+
+    assert "國民健康署《Synthetic Governed Guide》" in rendered
 
 
 @pytest.mark.parametrize("value", ["https://", "ftp://example.test/file", "https://bad host.test"])
