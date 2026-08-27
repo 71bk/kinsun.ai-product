@@ -36,8 +36,9 @@ def authenticate_elder(client: httpx.Client) -> str:
     )
     if login.status_code != 303:
         raise RuntimeError(f"BFF login returned {login.status_code}")
-    if login.headers.get("location") != "/onboarding/resolve":
-        raise RuntimeError("BFF login did not return the onboarding route")
+    location = login.headers.get("location")
+    if location != "/onboarding/resolve":
+        raise RuntimeError(f"BFF login returned unexpected safe route: {location!r}")
     if not client.cookies:
         raise RuntimeError("BFF login did not establish an application session cookie")
     session_cookie = next(iter(client.cookies.jar), None)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from uuid import uuid4
 
 import httpx
@@ -14,7 +15,9 @@ from verify_elder_login import (
     verify_elder_profile,
 )
 
-QUERY = "長者平常要怎麼吃得比較均衡？"
+QUERY = os.getenv("ELDER_RAG_QUERY", "長者平常要怎麼吃得比較均衡？")
+QUERY_CASE = os.getenv("ELDER_RAG_QUERY_CASE", "elder_general_information_allowed")
+EXPECT_ADVISORY = os.getenv("ELDER_RAG_EXPECT_ADVISORY", "false").casefold() == "true"
 
 
 def _data(response: httpx.Response, operation: str) -> dict:
@@ -86,16 +89,22 @@ def main() -> None:
             raise RuntimeError("RAG turn did not pass output safety")
         if "引用來源：" not in reply or citation_count < 1:
             raise RuntimeError("RAG turn returned no user-facing citations")
+        has_advisory = "提醒：" in reply and (
+            "主管機關" in reply or "專業人員" in reply
+        )
+        if EXPECT_ADVISORY and not has_advisory:
+            raise RuntimeError("RAG turn returned no deterministic assessment advisory")
 
     print(
         json.dumps(
             {
                 "ok": True,
-                "query_case": "elder_general_information_allowed",
+                "query_case": QUERY_CASE,
                 "result_status": turn["result_status"],
                 "safety_decision": turn["safety_decision"],
                 "risk_level": turn["risk_level"],
                 "citation_count": citation_count,
+                "assessment_advisory": has_advisory,
                 "context_manifest": "present",
                 "session_state": turn["session_state"],
                 "reason_codes": turn["reason_codes"],

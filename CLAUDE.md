@@ -97,12 +97,16 @@
   2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
   staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
   5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
-  14 個官方來源對四種角色形成 554 筆 ordinary retrieval candidates，其中 302 筆 response metadata
-  完整；purpose／assessment 仍於回覆前檢查，高風險、stop 與非 current 內容持續 fail closed。
-  2026-08-26 已建立 immutable、hash-pinned runtime policy v001 並接入 Agent Runtime V2：先在固定的
-  554 筆 v002 chunk IDs 搜尋最多 50 筆，再依 v003 text SHA-256、角色、purpose 與 assessment metadata
-  決定可回覆的 3–5 筆。四角色與拒絕路徑共 10 個離線 policy／citation Golden cases 已通過；真實
-  backend relevance／ranking Golden Query 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
+  14 個官方來源對四種角色形成 554 筆 ordinary retrieval candidates。2026-08-27 已依 Owner 明確決定
+  建立 immutable、hash-pinned runtime policy v002：220 筆 professional assessment null 與 5 筆
+  official assessment null 映射為 true，不改寫 v003 Chunk bytes；522 筆具完整 response metadata，
+  其中 372 筆命中時由 Runtime 固定附主管機關／專業人員諮詢提醒。個人診斷、長照資格、等級與
+  補助額度仍禁止由 AI 判定；32 筆空 purpose、高風險、stop 與非 current 內容持續 fail closed。
+  Runtime 先在固定 554 筆 v002 chunk IDs 搜尋最多 50 筆，再依 v003 text SHA-256、角色、purpose 與
+  assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases已通過；
+  2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
+  chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
+  Query suite 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice

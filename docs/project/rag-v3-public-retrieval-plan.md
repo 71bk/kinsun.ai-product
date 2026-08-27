@@ -219,13 +219,15 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   無法進 ordinary retrieval；5 筆 owner risk overlay 的 effective unclassified count 為 0。
 - [x] 以 policy-level tests 驗證四種角色可搜尋合規官方候選，但 purpose／assessment 回覆 gate 不會
   被繞過；runtime 尚未接入，仍不得視為 live E2E。
-- [ ] 將 policy v002 接入 runtime，驗證 554 筆 ordinary retrieval candidates 與其中 302 筆
-  response-metadata-ready candidates 的完整後端 gate。
+- [x] 2026-08-27 建立並接入 runtime policy v002：554 筆 ordinary retrieval candidates 中有 522 筆
+  response-metadata-ready；assessment=true 可回覆一般資訊並由 Runtime 固定附 advisory，空 purpose
+  與缺失／非 boolean assessment 仍 fail closed。完整 live backend relevance gate 尚待 E2E。
 - [x] 執行完整 RAG ingestion 測試：2026-08-26 共 286 項通過；candidate validator、Ruff check／format
   及 contracts 全量 validation 均通過，candidate validation report 為 18 PASS／0 FAIL。
 - [x] source-family policy v002 的 schema 單元測試 4 項與 v001／v002 targeted integration 14 項通過；
   policy validation report 為 21 PASS／0 FAIL。
-- [ ] 執行 Golden Query、no-data、high-risk、authorization、citation 與 rollback 測試。
+- [x] 執行 9 個離線 Golden policy／advisory／citation cases；no-data、high-risk、角色與 purpose gate
+  均通過。live relevance、遠端 activation 與 rollback 測試仍待完成。
 - [x] 驗證 embedding reuse 為 726／726，且 provider、model、dimension、task type 與 fingerprint 完全相同；
   本批未呼叫 embedding provider。
 
