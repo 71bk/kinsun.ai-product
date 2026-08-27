@@ -21,6 +21,10 @@ from agent_runtime.rag.search_backend import SearchHit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 POLICY_PATH = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/"
+    "source-family-runtime-policy.json"
+)
+V2_POLICY_PATH = (
     REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/"
     "source-family-runtime-policy.json"
 )
@@ -28,7 +32,7 @@ V1_POLICY_PATH = (
     REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/"
     "source-family-runtime-policy.json"
 )
-GOLDEN_PATH = REPOSITORY_ROOT / "config/rag/source-family-golden-queries-v002.json"
+GOLDEN_PATH = REPOSITORY_ROOT / "config/rag/source-family-golden-queries-v003.json"
 CHUNK_ROOT = REPOSITORY_ROOT / "data/rag-v3/candidates/v003/chunks"
 
 
@@ -104,8 +108,10 @@ def test_runtime_policy_is_hash_pinned_and_has_fixed_candidate_scope() -> None:
     assert len(policy.candidate_chunk_ids) == 554
     assert len(set(policy.candidate_chunk_ids)) == 554
     assert policy.document.summary.source_count == 14
-    assert policy.document.runtime_policy_version == "v002"
-    assert policy.document.summary.response_metadata_ready_count == 522
+    assert policy.document.runtime_policy_version == "v003"
+    assert policy.document.summary.response_metadata_ready_count == 554
+    assert policy.document.summary.purpose_overlay_count == 32
+    assert policy.document.summary.purpose_needs_review_count == 32
     assert policy.document.global_policy.retrieval_audiences == (
         "elder",
         "family_caregiver",
@@ -121,6 +127,14 @@ def test_runtime_v001_remains_loadable_without_mutating_prior_semantics() -> Non
 
     assert policy.document.runtime_policy_version == "v001"
     assert policy.document.summary.response_metadata_ready_count == 302
+
+
+def test_runtime_v002_remains_loadable_without_mutating_prior_semantics() -> None:
+    digest = hashlib.sha256(V2_POLICY_PATH.read_bytes()).hexdigest()
+    policy = load_source_family_runtime_policy(V2_POLICY_PATH, expected_sha256=digest)
+
+    assert policy.document.runtime_policy_version == "v002"
+    assert policy.document.summary.response_metadata_ready_count == 522
 
 
 def test_runtime_policy_rejects_bad_digest_and_production_forgery(tmp_path: Path) -> None:
@@ -150,7 +164,7 @@ async def test_offline_golden_queries_retrieve_before_response_policy() -> None:
 
     assert golden["scope"] == "OFFLINE_POLICY_ADVISORY_AND_CITATION_GATE_ONLY"
     assert golden["live_relevance_evaluation"] == "NOT_EXECUTED"
-    assert len(golden["cases"]) == 9
+    assert len(golden["cases"]) == 10
     for case in golden["cases"]:
         hits = []
         for number, prior_chunk_id in enumerate(case["fixture_prior_chunk_ids"]):

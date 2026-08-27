@@ -36,7 +36,7 @@ PRIOR_ACCEPTANCE_PATH = Path(
     "data/rag-v3/review/acceptance/v002/owner-human-review-acceptance.json"
 )
 PRIOR_POLICY_PATH = Path(
-    "data/rag-v3/governance/source-family-policy/candidates/v001/" "source-family-policy-map.json"
+    "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json"
 )
 ACCEPTANCE_SCHEMA_PATH = Path(
     "contracts/schemas/rag/rag-owner-source-family-policy-acceptance-v1.schema.json"
@@ -517,15 +517,21 @@ def validate_source_family_policy_v2_audit_preflight(
             "and audit preflight v001 bytes"
         ),
     )
-    expected_inventory = _inventory_document(
-        "source_family_policy_v002_current_validation_input_inventory",
-        _audit_input_entries(root),
-        "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
-    )
     if lock != expected_lock:
         raise SourceFamilyPolicyV2Error("source-family policy v002 candidate lock mismatch")
-    if inventory != expected_inventory:
-        raise SourceFamilyPolicyV2Error("source-family policy v002 audit input mismatch")
+    if package == (root / POLICY_AUDIT_ROOT).resolve():
+        _validate_frozen_audit_inventory(
+            inventory,
+            "source_family_policy_v002_current_validation_input_inventory",
+        )
+    else:
+        expected_inventory = _inventory_document(
+            "source_family_policy_v002_current_validation_input_inventory",
+            _audit_input_entries(root),
+            "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
+        )
+        if inventory != expected_inventory:
+            raise SourceFamilyPolicyV2Error("source-family policy v002 audit input mismatch")
     return {
         "candidate_artifact_entry_count": lock["entry_count"],
         "candidate_lock_sha256": lock["inventory_sha256"],
@@ -1019,10 +1025,12 @@ def _remaining_review_worksheet(
                 ),
                 "risk_unclassified_effective_chunk_ids": _chunk_ids(
                     records,
-                    lambda row: effective_risks.get(
-                        row["identity"]["chunk_id"], row["retrieval_policy"]["risk_level"]
-                    )
-                    is None,
+                    lambda row: (
+                        effective_risks.get(
+                            row["identity"]["chunk_id"], row["retrieval_policy"]["risk_level"]
+                        )
+                        is None
+                    ),
                 ),
                 "risk_high_chunk_ids": _chunk_ids(
                     records,
@@ -1456,6 +1464,18 @@ def _inventory_document(
         "review_status": "verified",
         "production_approved": False,
     }
+
+
+def _validate_frozen_audit_inventory(document: Mapping[str, Any], expected_kind: str) -> None:
+    """Validate sealed historical evidence without comparing it to successor inputs."""
+
+    entries = document.get("entries")
+    scope = document.get("scope")
+    if not isinstance(entries, list) or not isinstance(scope, str):
+        raise SourceFamilyPolicyV2Error("source-family frozen audit inventory is malformed")
+    expected = _inventory_document(expected_kind, entries, scope)
+    if document != expected:
+        raise SourceFamilyPolicyV2Error("source-family frozen audit inventory is invalid")
 
 
 def _risk_counts(counter: Counter[str]) -> dict[str, int]:

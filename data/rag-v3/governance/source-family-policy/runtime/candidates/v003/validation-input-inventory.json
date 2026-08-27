@@ -1,0 +1,97 @@
+{
+  "entries": [
+    {
+      "bytes": 1515,
+      "path": ".gitattributes",
+      "sha256": "c8265093e3123c1ca5a1889c965b6246b75f6a7bdb3f421506d35511943949c0"
+    },
+    {
+      "bytes": 6046,
+      "path": "config/rag/source-family-golden-queries-v003.json",
+      "sha256": "be1bd409a79abd725955673f808e9e9bf5565492d9644c61aa549e6794b6c4f6"
+    },
+    {
+      "bytes": 6339,
+      "path": "contracts/schemas/rag/rag-owner-purpose-classification-acceptance-v1.schema.json",
+      "sha256": "0fc5c1c062106a126a4f2531de5829911625b27928103dcc20de2e7194fdc203"
+    },
+    {
+      "bytes": 11661,
+      "path": "contracts/schemas/rag/rag-source-family-runtime-policy-v3.schema.json",
+      "sha256": "fac68218252b6736a3c2d440100b6d710e49caa169bfa241765771c7d4e6071d"
+    },
+    {
+      "bytes": 3161,
+      "path": "data/rag-v3/candidates/v003/SHA256SUMS.txt",
+      "sha256": "8dc7fc5268dc35df4b0cd9f8b8a380761ddfdf3a0e06360d2cc0ebe8977e55c3"
+    },
+    {
+      "bytes": 63864,
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+      "sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+    },
+    {
+      "bytes": 1151255,
+      "path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/source-family-runtime-policy.json",
+      "sha256": "1b6fafb32b3111feaab4773838ae12f5c6538b0527e6a07769bbce126a9662b8"
+    },
+    {
+      "bytes": 21152,
+      "path": "data/rag-v3/review/acceptance/v005/owner-purpose-classification-acceptance.json",
+      "sha256": "a447aede1d6b871afd40294f5ab39b4ad81e4fa96b9a00a83b7897576af5cd24"
+    },
+    {
+      "bytes": 992,
+      "path": "scripts/rag/build_source_family_runtime_policy_v3.py",
+      "sha256": "785fc6e15f05af6175a0510cfd9e2eed54a61309e3458db2d8930961a06b62ba"
+    },
+    {
+      "bytes": 1133,
+      "path": "scripts/rag/validate_source_family_runtime_policy_v3.py",
+      "sha256": "d7fa925270fe32c1718a39463ddf5e0203ffc92184b37ed3a791a2da2a8daac4"
+    },
+    {
+      "bytes": 17442,
+      "path": "services/agent-runtime/src/agent_runtime/rag/runtime_policy.py",
+      "sha256": "4620907bf982e6fe6b83815c05ee35702b251357e30031e8f089e9167d04c878"
+    },
+    {
+      "bytes": 8754,
+      "path": "services/agent-runtime/tests/unit/test_source_family_runtime_policy.py",
+      "sha256": "3ffe69a7863062d7e6ea22a715a1687fd885aad2e31fc474b6f2bc2dc346ea6c"
+    },
+    {
+      "bytes": 30657,
+      "path": "services/rag-ingestion/src/rag_ingestion/source_family_runtime_policy.py",
+      "sha256": "cfe2509483ece5f6f0ffe1d976f2ecfbd69fda11a9074339ada18c37569d55fa"
+    },
+    {
+      "bytes": 30643,
+      "path": "services/rag-ingestion/src/rag_ingestion/source_family_runtime_policy_v2.py",
+      "sha256": "75988ca5dfa6b14731506688958e8ef2de4c4ab3205a52b7268ede9f4b9e4c2f"
+    },
+    {
+      "bytes": 29782,
+      "path": "services/rag-ingestion/src/rag_ingestion/source_family_runtime_policy_v3.py",
+      "sha256": "437da73f05ef30fa7cf2bc1ea2364a62785578635df33aaa7f5c8b96c4002ebc"
+    },
+    {
+      "bytes": 3647,
+      "path": "services/rag-ingestion/tests/integration/test_source_family_runtime_policy_v3.py",
+      "sha256": "a7332430a33a8800756a9aec0f7a1189b86c3790e022e41da2e679c2716670f1"
+    },
+    {
+      "bytes": 2865,
+      "path": "services/rag-ingestion/tests/unit/test_source_family_policy_v2_schema.py",
+      "sha256": "e13b399ba1a1d0c14e542ee6f209e945acbd9d768bc186037921dd7f44936b07"
+    }
+  ],
+  "entry_count": 17,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "6ce5f9c8460013798364cca46936cf68e9621c673c7d363aaf485a5bad3785da",
+  "kind": "source_family_runtime_policy_v003_validation_input_inventory",
+  "production_approved": false,
+  "runtime_policy_version": "v002",
+  "schema_version": "1.0.0",
+  "scope": "v003 schemas, decisions, runtime code, tests, Golden cases, and formal inputs"
+}

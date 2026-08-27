@@ -1,0 +1,527 @@
+{
+  "acceptance_version": "v005",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statements": [
+      "32 筆缺 purpose 仍封鎖。perpose次啥",
+      "好處理開始"
+    ],
+    "statements_sha256": "f12a1397b5fe01fee6a5e956dd59cec128f93f97ce6ff84eac4da974ec9b2917"
+  },
+  "bindings": {
+    "affected_chunk_count": 32,
+    "candidate_checksums_sha256": "8dc7fc5268dc35df4b0cd9f8b8a380761ddfdf3a0e06360d2cc0ebe8977e55c3",
+    "candidate_path": "data/rag-v3/candidates/v003",
+    "prior_runtime_policy_path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/source-family-runtime-policy.json",
+    "prior_runtime_policy_sha256": "1b6fafb32b3111feaab4773838ae12f5c6538b0527e6a07769bbce126a9662b8",
+    "source_id": "mohw_a_unit_case_manager_manual_20230719",
+    "source_policy_path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+    "source_policy_sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+  },
+  "candidate_artifact_version": "v003",
+  "classification_policy": {
+    "activation_scope": "STAGING_ONLY",
+    "candidate_chunk_bytes_mutated": false,
+    "empty_purpose_count_after": 0,
+    "empty_purpose_count_before": 32,
+    "human_verified_classification_count": 0,
+    "method": "AI_ASSISTED_EXISTING_ENUM_MAPPING",
+    "needs_review_classification_count": 32,
+    "purpose_gate_preserved": true,
+    "source_allowed_purpose_overlay": [
+      "general_information"
+    ]
+  },
+  "decisions": [
+    {
+      "allowed_purposes": [
+        "general_information",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0001",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0001",
+      "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "41c4bba213c1f236c373124cc2a9885e4647bdf20d3858571eb3ed9c9fac9f71"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0002",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0002",
+      "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "2f4c8c3c5e0e9a1573b30bafc490788546992a271a55ed6916d4951aaaeb655a"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0003",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0003",
+      "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "7a93990e5d02160041119d6490ed60c969664d6811eb4d30eab51a7b8da2500a"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0005",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0005",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "68947e8b5b6e144636d68a1f4cb302b524ef1f4ef84783120b1d9aa3fd62e7d5"
+    },
+    {
+      "allowed_purposes": [
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0007",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0007",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "5f72a3dcece59cf848c3cdb4790a6d7d19b645f339becca9f67a2f63001de2e7"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0008",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0008",
+      "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "cf2e9ae6f29a3acf2ab59608d542c42f4e5e925e3f647824adeb0ade119da11c"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0009",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0009",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "fff9fe0428f80421ce46cbe708d28f4f1360f6e33a6c98332e9fbbef4287a8f9"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0011",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0011",
+      "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "7edd8ebc680980abd0b7b97696e7236321379be4a4b46f56a47edc8d4d2104b3"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0012",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0012",
+      "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "0b80e9eeaaeb9abbb2f1a337eb9660f325f7fffc32875dadd33a13d71abf8c46"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0016",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0016",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "62fd3cdc5e81adc796ff565519c456ece573b8049a0c1b78669e23cb3e5938a1"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0017",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0017",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "77c521f11bfb6b2cb255d99e3d313445ab7a244c5ff22dbfff2117aadb5845cc"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0019",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0019",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "bde8389c5995f3538fe1f462806af8fd10e5c477ae317d34479fe5aa5bab2c9d"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0020",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0020",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "99b0bd386da6179ed49f287a36ce9e3ab50e3f67ba3510afdf9a701a16007aa9"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0023",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0023",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "a5b45759806be88527627c702463417c2cc77e44323285dd7961a301c72fecab"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0024",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0024",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "564cc0469a9fc0c23106f9f2da6068502f3d323de875b893fccfcc3c6ace62ef"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0025",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0025",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "2ce9a7736457b5a7a467a08c15406761a435cb9c9a002c827d1ceaafed7ab635"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0026",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0026",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "8b88dcfcab63c1cfb5622f53c3770ec8051e5c8f4712151d4ef81a09a0c73210"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0030",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0030",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "6a9a51673c4542a7e0e0278cbc7816c2d21b49535682807a531207e8a9b83df6"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0031",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0031",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "449bd1d0674db3c1ac1b1cb17b2337945674a9af5c5709a755b0fef66965a902"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0032",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0032",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "0096f08b75e1c358b2974ee1461a63076ff3eaa40912ddbcab1352721de90f03"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0036",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0036",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "883cd74997d9569daafb559314f692d907402532df726b5bedc0b626acf8094a"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0037",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0037",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "0b7feb99f7180a5e9f3745c643e972a5fe4b183116a155833deddabc84a5a698"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0039",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0039",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "7aeda7d72284ffd4382e7876242bba5df423326ebbb575f5c83a87b8ea4b2fb7"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0040",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0040",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "e26c170ec16dd30906c6bdaedf139426589c7ea1dff85d67d86be4d3009a0e37"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0046",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0046",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "5c6b4f6258e9b49cbcfc758119c7d74143a07472cec5e56e784e7293b60262c8"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0057",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0057",
+      "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "20a27f0664e1d206f2fd5c397c8cd6aa88a87ec24ec48c9908b61c88b65811bd"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0060",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0060",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "0653077fc7b25f495b61e23dad6cfbf75aaf263712e44c2f6bd09894540abffa"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0061",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0061",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "1ffd03a61b9e4ba378a76f4b1b3ba3db853a478a939ffe83718058c1dc8de84c"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0062",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0062",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "62cfc568fc0901ee7e3812f0c13df3811c8f4ca9b10e0f581ed3e78ca3840e28"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0063",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0063",
+      "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "20994fe63861020e9c75b63c0cad6831a0d99e9b5e35eae956af4169ab1e90d1"
+    },
+    {
+      "allowed_purposes": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0064",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0064",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "b9b522832a76248555c634e36ef249918a45b47905f5dd6edb68ab9ee26f6374"
+    },
+    {
+      "allowed_purposes": [
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ],
+      "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0065",
+      "decision_review_status": "needs_review",
+      "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0065",
+      "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+      "source_id": "mohw_a_unit_case_manager_manual_20230719",
+      "text_sha256": "6083192e349f30bc2e6d2c834300cfe61e618f703236e72c3b232c579bd878e1"
+    }
+  ],
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "cryptographic_signature": null,
+    "intent": "AUTHORIZE_AI_ASSISTED_PURPOSE_CLASSIFICATION_FOR_STAGING",
+    "signature_value": "IanHsu"
+  },
+  "gates": {
+    "environment": "STAGING",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_approved": false,
+    "production_status": "BLOCKED"
+  },
+  "project_owner_id": "IanHsu",
+  "runtime_policy_version": "v003",
+  "schema_version": "1.0.0",
+  "signed_at": "2026-08-27T17:23:48+08:00",
+  "signer_role": "PROJECT_OWNER",
+  "status": "SIGNED_STAGING_AUTHORIZATION"
+}
