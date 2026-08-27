@@ -1,0 +1,68 @@
+.field {
+  margin-top: var(--space-4);
+}
+
+.field:first-child {
+  margin-top: 0;
+}
+
+.labelRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.label {
+  display: block;
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+.control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  margin-top: var(--space-2);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.control:has(.input:only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--color-foreground);
+  font-size: var(--text-base);
+}
+
+.input::placeholder {
+  color: var(--color-muted-foreground);
+  opacity: 1;
+}
+
+.toggle {
+  display: inline-flex;
+  min-inline-size: var(--touch-min);
+  min-height: var(--touch-min);
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  color: var(--color-primary-text);
+}

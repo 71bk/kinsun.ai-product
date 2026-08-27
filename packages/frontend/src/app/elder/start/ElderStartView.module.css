@@ -1,0 +1,156 @@
+.shell {
+  min-height: 100dvh;
+  background: var(--color-background);
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 100;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  transform: translateY(-160%);
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100dvh;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-8);
+  overflow: hidden;
+  padding: var(--space-8);
+  background: linear-gradient(160deg, var(--color-primary-strong) 0%, var(--color-foreground) 100%);
+  color: var(--color-on-primary);
+}
+
+.wordmark {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.glow {
+  position: absolute;
+  inset-block-start: -20%;
+  inset-inline-end: -10%;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-on-primary) 16%, transparent);
+  filter: blur(48px);
+}
+
+.sunBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-16);
+  height: var(--space-16);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+  color: var(--color-on-primary);
+}
+
+.heroHeadline {
+  max-width: 30ch;
+  margin: var(--space-6) 0 0;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.heroPoints {
+  margin: var(--space-6) 0 0;
+  padding: 0;
+}
+
+.formPanel {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+}
+
+.formInner {
+  width: 100%;
+  max-width: 30rem;
+}
+
+.formInner:focus {
+  outline: none;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--color-muted-foreground);
+  font-weight: 700;
+}
+
+.title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-3xl);
+  line-height: 1.3;
+}
+
+.subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted-foreground);
+  line-height: var(--leading-body);
+}
+
+.toggleRow {
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.toggleButton {
+  color: var(--color-primary-text);
+  font: inherit;
+  font-weight: 700;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-2);
+}
+
+.footer {
+  margin-top: var(--space-8);
+  text-align: center;
+}
+
+/* MASTER.md §6.1: a bare inline link renders ~26-32px, half the voice-surface
+   floor. --touch-min resolves per surface, matching `touch-link.ts`. */
+.footer a {
+  align-items: center;
+  color: var(--color-muted-foreground);
+  display: inline-flex;
+  justify-content: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+}
+
+@media (min-width: 64rem) {
+  .grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+
+  .hero {
+    padding: var(--space-16);
+  }
+}

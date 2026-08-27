@@ -40,6 +40,8 @@ const zhHant = {
   'common.retry': '重試',
   'common.confirm': '確認',
   'common.cancel': '取消',
+  'common.email': 'Email',
+  'common.password': '密碼',
   'common.dismiss': '關閉提示',
   'common.emptyTitle': '目前沒有資料',
   'common.errorTitle': '目前無法顯示內容',
@@ -341,6 +343,10 @@ const zhHant = {
   'join.lineHint': '此按鈕不會使用上方邀請碼；首次加入家屬服務仍須使用 Google。',
   'familySignIn.title': '家屬登入',
   'familySignIn.body': '登入後只會顯示長者已同意分享、且仍在您授權範圍內的正式報表。',
+  'familySignIn.subtitle': '繼續查看長者的日常與正式報表',
+  'familySignIn.heroHeadline': '掌握長者的日常，不打擾長者的生活。',
+  'familySignIn.heroPoint1': '只看得到長者已同意分享的正式報表',
+  'familySignIn.heroPoint2': '草稿與待覆核內容不會出現在您的畫面',
   'familySignIn.lineButton': '使用已連結的 LINE 登入',
   'familySignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
   'googleComplete.elderTitle': '建立長者帳號',
@@ -371,9 +377,22 @@ const zhHant = {
   'staffSignIn.title': '照服員／居服員登入',
   'staffSignIn.body':
     '此帳號需要由所屬機構啟用。登入後，系統會依目前有效的機構歸屬與派案範圍顯示資料。',
+  'staffSignIn.subtitle': '依派案與授權範圍查看長者資料',
+  'staffSignIn.heroHeadline': '在授權範圍內，安心完成每一次照護紀錄。',
+  'staffSignIn.heroPoint1': '帳號由所屬機構建立與啟用',
+  'staffSignIn.heroPoint2': '只能查看目前有效派案範圍內的資料',
   'staffSignIn.notActivated': '尚未啟用帳號？請聯絡所屬服務單位。',
   'staffSignIn.lineButton': '使用已連結的 LINE 登入',
   'staffSignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
+
+  // ---- shared sign-in layout (elder/start split screen + family/staff card) ----
+  'authLayout.welcomeBack': '歡迎回來',
+  'authLayout.signIn': '登入',
+  'authLayout.divider': '或',
+  'authLayout.forgotPassword': '忘記密碼？',
+  'authLayout.forgotPasswordHint': '尚未開放',
+  'authLayout.showPassword': '顯示密碼',
+  'authLayout.hidePassword': '隱藏密碼',
 
   // ---- public surface (登入前行銷／法遵頁, MASTER.md §3 / §7.3) ----
   'a11y.skipToContent': '跳到主要內容',
@@ -648,6 +667,8 @@ const en: Record<MessageKey, string> = {
   'common.retry': 'Retry',
   'common.confirm': 'Confirm',
   'common.cancel': 'Cancel',
+  'common.email': 'Email',
+  'common.password': 'Password',
   'common.dismiss': 'Dismiss',
   'common.emptyTitle': 'No data yet',
   'common.errorTitle': 'Content is unavailable',
@@ -938,6 +959,10 @@ const en: Record<MessageKey, string> = {
   'familySignIn.title': 'Family sign-in',
   'familySignIn.body':
     'After signing in you will only see formal reports the elder has consented to share and that remain within your authorization.',
+  'familySignIn.subtitle': "Continue to your elder's daily updates and formal reports",
+  'familySignIn.heroHeadline': "Stay close to your elder's day, without intruding on it.",
+  'familySignIn.heroPoint1': 'You only see formal reports the elder agreed to share',
+  'familySignIn.heroPoint2': 'Drafts and unreviewed items never reach your screen',
   'familySignIn.lineButton': 'Sign in with linked LINE',
   'familySignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
   'googleComplete.elderTitle': 'Create your elder account',
@@ -974,9 +999,22 @@ const en: Record<MessageKey, string> = {
   'staffSignIn.title': 'Care worker sign-in',
   'staffSignIn.body':
     'This account must be activated by your organization. After signing in, data is shown according to your current organization membership and assignments.',
+  'staffSignIn.subtitle': 'View elder data within your assignments and authorization',
+  'staffSignIn.heroHeadline': 'Complete every care record with confidence, within scope.',
+  'staffSignIn.heroPoint1': 'Accounts are created and activated by your organization',
+  'staffSignIn.heroPoint2': 'You only see data within your current active assignments',
   'staffSignIn.notActivated': 'Account not activated yet? Please contact your service provider.',
   'staffSignIn.lineButton': 'Sign in with linked LINE',
   'staffSignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
+
+  // ---- shared sign-in layout ----
+  'authLayout.welcomeBack': 'Welcome back',
+  'authLayout.signIn': 'Sign in',
+  'authLayout.divider': 'or',
+  'authLayout.forgotPassword': 'Forgot password?',
+  'authLayout.forgotPasswordHint': 'Not available yet',
+  'authLayout.showPassword': 'Show password',
+  'authLayout.hidePassword': 'Hide password',
 
   // ---- public surface ----
   'a11y.skipToContent': 'Skip to main content',

@@ -1,0 +1,73 @@
+/* Compact single-column sign-in card for family/staff (nested inside
+   SurfaceShell, whose content area is capped at --content-max — no room for
+   a literal side-by-side split there). elder/start uses its own full-bleed
+   two-panel layout instead; see ElderStartView.module.css. */
+
+.wrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-2);
+}
+
+.hero {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-primary-weak);
+}
+
+.heroIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+
+.heroHeadline {
+  margin: 0;
+  color: var(--color-foreground);
+  font-weight: 700;
+  line-height: var(--leading-body);
+}
+
+.heroPoints {
+  margin: 0;
+  padding: 0;
+}
+
+.formArea {
+  padding: var(--space-6);
+}
+
+.eyebrow {
+  display: block;
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-2xl);
+  line-height: 1.3;
+}
+
+.subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted-foreground);
+  line-height: var(--leading-body);
+}

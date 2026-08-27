@@ -1,16 +1,14 @@
 'use client';
 
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
+import { AuthCard } from '@/components/auth/AuthCard';
+import { AuthDivider } from '@/components/auth/AuthDivider';
+import { AuthField } from '@/components/auth/AuthField';
+import { ForgotPasswordHint } from '@/components/auth/ForgotPasswordHint';
+import { LineContinueButton } from '@/components/auth/OAuthButtons';
+import { TrustPoint } from '@/components/auth/TrustPoint';
 import { touchLinkStyle } from '@/components/touch-link';
 import { useLocale } from '@/lib/i18n/locale-context';
-
-const inputStyle = {
-  boxSizing: 'border-box' as const,
-  fontSize: 18,
-  marginBottom: 16,
-  padding: 12,
-  width: '100%',
-};
 
 export function FamilySignInView({
   nativeEnabled,
@@ -22,83 +20,119 @@ export function FamilySignInView({
   const { t } = useLocale();
 
   return (
-    <main style={{ margin: '80px auto', maxWidth: 520, padding: 24, textAlign: 'center' }}>
-      <h1 style={{ fontSize: 28 }}>{t('familySignIn.title')}</h1>
-      <p style={{ color: 'var(--color-foreground)', lineHeight: 1.7, margin: '20px 0' }}>
+    <AuthCard
+      eyebrow={t('authLayout.welcomeBack')}
+      heroHeadline={t('familySignIn.heroHeadline')}
+      heroPoints={
+        <>
+          <TrustPoint>{t('familySignIn.heroPoint1')}</TrustPoint>
+          <TrustPoint>{t('familySignIn.heroPoint2')}</TrustPoint>
+        </>
+      }
+      subtitle={t('familySignIn.subtitle')}
+      title={t('familySignIn.title')}
+    >
+      <p
+        style={{
+          color: 'var(--color-muted-foreground)',
+          lineHeight: 'var(--leading-body)',
+          margin: 'var(--space-4) 0 0',
+        }}
+      >
         {t('familySignIn.body')}
       </p>
+
       <form
         action={nativeEnabled ? '/backend/auth/kinsun/login' : '/backend/auth/login'}
         method="post"
+        style={{ marginTop: 'var(--space-4)' }}
       >
         {!nativeEnabled && <input name="intent" type="hidden" value="FAMILY" />}
         {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         {nativeEnabled && (
           <>
-            <input
-              aria-label="Email"
+            <AuthField
               autoComplete="email"
+              label={t('common.email')}
               maxLength={254}
               name="email"
-              placeholder="Email"
               required
-              style={inputStyle}
               type="email"
             />
-            <input
-              aria-label="密碼"
+            <AuthField
               autoComplete="current-password"
+              hidePasswordLabel={t('authLayout.hidePassword')}
+              label={t('common.password')}
+              labelSuffix={
+                <ForgotPasswordHint
+                  hint={t('authLayout.forgotPasswordHint')}
+                  label={t('authLayout.forgotPassword')}
+                />
+              }
               maxLength={128}
               minLength={12}
               name="password"
-              placeholder="密碼 / Password"
               required
-              style={inputStyle}
+              showPasswordLabel={t('authLayout.showPassword')}
               type="password"
             />
           </>
         )}
-        <AuthSubmitButton>
-          {nativeEnabled ? '登入 / Sign in' : t('common.continueWithGoogle')}
-        </AuthSubmitButton>
+        <div style={{ marginTop: 'var(--space-6)' }}>
+          <AuthSubmitButton>
+            {nativeEnabled ? t('authLayout.signIn') : t('common.continueWithGoogle')}
+          </AuthSubmitButton>
+        </div>
       </form>
+
       {nativeEnabled && (
-        <p style={{ marginTop: 'var(--space-4)' }}>
+        <p style={{ marginTop: 'var(--space-4)', textAlign: 'center' }}>
           尚未建立帳號？請使用家屬邀請碼{' '}
           <a href="/family/join" style={touchLinkStyle}>
             建立家屬帳號 / Join
           </a>
         </p>
       )}
+
       {showLine && (
-        <form action="/backend/auth/login" method="post" style={{ marginTop: 'var(--space-4)' }}>
-          <input name="intent" type="hidden" value="FAMILY" />
-          <input name="provider" type="hidden" value="LINE" />
-          <input name="returnTo" type="hidden" value="/onboarding/resolve" />
-          <button
+        <>
+          <AuthDivider label={t('authLayout.divider')} />
+          <form action="/backend/auth/login" method="post">
+            <input name="intent" type="hidden" value="FAMILY" />
+            <input name="provider" type="hidden" value="LINE" />
+            <input name="returnTo" type="hidden" value="/onboarding/resolve" />
+            <LineContinueButton label={t('familySignIn.lineButton')} />
+          </form>
+          <p
             style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border-strong)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--color-primary-text)',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 'var(--text-base)',
-              minHeight: 'var(--touch-min)',
-              padding: 'var(--space-3) var(--space-6)',
+              color: 'var(--color-muted-foreground)',
+              fontSize: 'var(--text-sm)',
+              marginTop: 'var(--space-3)',
+              textAlign: 'center',
             }}
-            type="submit"
           >
-            {t('familySignIn.lineButton')}
-          </button>
-        </form>
+            {t('familySignIn.lineHint')}
+          </p>
+        </>
       )}
-      {showLine && (
-        <p style={{ color: 'var(--color-foreground)', marginTop: 'var(--space-3)' }}>
-          {t('familySignIn.lineHint')}
-        </p>
-      )}
-    </main>
+
+      <p
+        style={{
+          color: 'var(--color-muted-foreground)',
+          fontSize: 'var(--text-sm)',
+          marginTop: 'var(--space-6)',
+          textAlign: 'center',
+        }}
+      >
+        <a href="/privacy" style={{ ...touchLinkStyle, color: 'inherit' }}>
+          {t('public.nav.privacy')}
+        </a>
+        {' · '}
+        <a href="/terms" style={{ ...touchLinkStyle, color: 'inherit' }}>
+          {t('public.nav.terms')}
+        </a>
+      </p>
+    </AuthCard>
   );
 }
