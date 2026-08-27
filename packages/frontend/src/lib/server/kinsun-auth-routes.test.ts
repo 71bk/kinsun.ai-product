@@ -13,6 +13,8 @@ const handoffSecret = 'synthetic-kinsun-handoff-secret-material-32-bytes';
 const password = 'Synthetic-only-password-1';
 
 function configure(): void {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-08-17T10:00:00Z'));
   vi.stubEnv('NODE_ENV', 'development');
   vi.stubEnv('FRONTEND_ORIGIN', 'http://localhost:3000');
   vi.stubEnv('KINSUN_NATIVE_AUTH_ENABLED', 'true');
@@ -86,8 +88,6 @@ describe('Kinsun Email and password BFF routes', () => {
 
   it('starts registration through the private Core boundary without reflecting Email', async () => {
     configure();
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-08-17T10:00:00Z'));
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
       Response.json({
         data: {
