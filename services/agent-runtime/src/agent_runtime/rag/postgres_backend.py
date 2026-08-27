@@ -172,6 +172,7 @@ vector_raw AS (
 vector_normalized AS (
     SELECT
         chunk_id,
+        raw_score,
         CASE
             WHEN max(raw_score) OVER () > min(raw_score) OVER ()
                 THEN (raw_score - min(raw_score) OVER ())
@@ -184,6 +185,7 @@ vector_normalized AS (
 fused AS (
     SELECT
         coalesce(lexical.chunk_id, vector.chunk_id) AS chunk_id,
+        coalesce(vector.raw_score, 0.0) AS raw_vector_score,
         CAST(:bm25_weight AS double precision)
             * coalesce(lexical.normalized_score, 0.0)
             + CAST(:vector_weight AS double precision)
@@ -192,14 +194,16 @@ fused AS (
     FULL OUTER JOIN vector_normalized AS vector USING (chunk_id)
 ),
 ranked AS (
-    SELECT chunk_id, score
+    SELECT chunk_id, score, raw_vector_score
     FROM fused
     WHERE score >= CAST(:min_score AS double precision)
+       OR raw_vector_score >= CAST(:min_score AS double precision)
     ORDER BY score DESC, chunk_id
     LIMIT CAST(:top_k AS integer)
 )
 SELECT
     ranked.score,
+    ranked.raw_vector_score,
     eligible.chunk_id,
     eligible.source_id,
     eligible.chunk_text AS text,
@@ -374,7 +378,25 @@ def _to_search_hits(rows: list[Mapping[str, object]]) -> list[SearchHit]:
             raise PostgresSearchBackendError("PostgreSQL search returned a malformed score")
         if not math.isfinite(float(score)):
             raise PostgresSearchBackendError("PostgreSQL search returned a non-finite score")
+        raw_vector_score = row.get("raw_vector_score")
+        if raw_vector_score is not None and (
+            isinstance(raw_vector_score, bool)
+            or not isinstance(raw_vector_score, int | float)
+            or not math.isfinite(float(raw_vector_score))
+        ):
+            raise PostgresSearchBackendError(
+                "PostgreSQL search returned a malformed raw vector score"
+            )
         source = dict(row)
         source.pop("score", None)
-        hits.append(SearchHit(score=float(score), source=source))
+        source.pop("raw_vector_score", None)
+        hits.append(
+            SearchHit(
+                score=float(score),
+                source=source,
+                raw_vector_score=(
+                    float(raw_vector_score) if raw_vector_score is not None else None
+                ),
+            )
+        )
     return hits

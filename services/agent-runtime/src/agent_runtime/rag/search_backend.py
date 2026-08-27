@@ -13,6 +13,7 @@ class SearchHit:
 
     score: float
     source: Mapping[str, object]
+    raw_vector_score: float | None = None
 
 
 @runtime_checkable

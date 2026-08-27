@@ -23,6 +23,7 @@ sys.path.insert(0, str(CORE_API_ROOT))
 from app.core.config import get_settings  # noqa: E402
 from app.models.actor import Actor  # noqa: E402
 from app.models.line_identity import ExternalIdentity  # noqa: E402
+from app.models.membership import ActorTenantMembership  # noqa: E402
 from app.models.password_credential import PasswordCredential  # noqa: E402
 from app.services.kinsun_identity_codec import KinsunIdentityCodec  # noqa: E402
 from app.services.password_hasher import Argon2idPolicy, PasswordHasher  # noqa: E402
@@ -34,18 +35,27 @@ DEMO_ACCOUNTS = (
         UUID("20000000-0000-4000-8000-000000000001"),
         UUID("29000000-0000-4000-8000-000000000001"),
         UUID("2a000000-0000-4000-8000-000000000001"),
+        UUID("50000000-0000-4000-8000-000000000001"),
+        UUID("10000000-0000-4000-8000-000000000001"),
+        "ELDER",
     ),
     (
         "staff.demo@kinsun.local",
         UUID("20000000-0000-4000-8000-000000000010"),
         UUID("29000000-0000-4000-8000-000000000010"),
         UUID("2a000000-0000-4000-8000-000000000010"),
+        UUID("50000000-0000-4000-8000-000000000010"),
+        UUID("10000000-0000-4000-8000-000000000001"),
+        "DAYCARE_CARE_WORKER",
     ),
     (
         "family.demo@kinsun.local",
         UUID("20000000-0000-4000-8000-000000000012"),
         UUID("29000000-0000-4000-8000-000000000012"),
         UUID("2a000000-0000-4000-8000-000000000012"),
+        UUID("50000000-0000-4000-8000-000000000013"),
+        UUID("10000000-0000-4000-8000-000000000002"),
+        "FAMILY_MEMBER",
     ),
 )
 
@@ -96,6 +106,33 @@ def _repository_head_revision() -> str:
     return revision
 
 
+async def _reconcile_demo_membership(
+    session: AsyncSession,
+    *,
+    actor: Actor,
+    membership_id: UUID,
+    tenant_id: UUID,
+    expected_role: str,
+) -> None:
+    if actor.actor_type != expected_role:
+        raise RuntimeError(f"Demo actor {actor.id} has an unexpected actor type")
+    membership = await session.get(
+        ActorTenantMembership,
+        membership_id,
+        with_for_update=True,
+    )
+    if membership is None:
+        raise RuntimeError(f"Demo membership {membership_id} is missing")
+    if (
+        membership.actor_id != actor.id
+        or membership.tenant_id != tenant_id
+        or membership.care_unit_id is not None
+        or membership.status != "ACTIVE"
+    ):
+        raise RuntimeError(f"Demo membership {membership_id} is incompatible")
+    membership.role_code = expected_role
+
+
 async def _provision(session: AsyncSession) -> list[str]:
     revision = await session.scalar(
         text("SELECT version_num FROM public.alembic_version")
@@ -127,7 +164,15 @@ async def _provision(session: AsyncSession) -> list[str]:
     )
     now = datetime.now(UTC)
     emails: list[str] = []
-    for email, actor_id, identity_id, credential_id in DEMO_ACCOUNTS:
+    for (
+        email,
+        actor_id,
+        identity_id,
+        credential_id,
+        membership_id,
+        tenant_id,
+        expected_role,
+    ) in DEMO_ACCOUNTS:
         actor = await session.get(Actor, actor_id, with_for_update=True)
         if actor is None:
             raise RuntimeError(
@@ -136,6 +181,13 @@ async def _provision(session: AsyncSession) -> list[str]:
         normalized_email = identity_codec.normalize_email(email)
         if actor.email not in {None, normalized_email}:
             raise RuntimeError(f"Demo actor {actor_id} already has a different email")
+        await _reconcile_demo_membership(
+            session,
+            actor=actor,
+            membership_id=membership_id,
+            tenant_id=tenant_id,
+            expected_role=expected_role,
+        )
         subject_digest = identity_codec.digest_email(normalized_email)
         identity = await session.scalar(
             select(ExternalIdentity)
@@ -205,7 +257,7 @@ async def _provision(session: AsyncSession) -> list[str]:
 
 
 async def main() -> None:
-    engine = create_async_engine(_database_url())
+    engine = create_async_engine(_database_url(), hide_parameters=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with session_factory() as session:

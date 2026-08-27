@@ -18,7 +18,14 @@ class SafetyEvaluator:
     ]
     UNSAFE_REPLY_PATTERNS = [
         r"(?:可能|應該|大概|會不會)是.{0,20}(?:造成|引起|因為|沒睡好|太累)",
-        r"(?:先|可以|建議|不妨).{0,16}(?:喝水|喝點|吃|服用|休息|熱敷|冰敷|停藥|改藥)",
+        r"(?:先|可以|建議|不妨).{0,16}(?:服用|吃藥|停藥|改藥)",
+    ]
+    SYMPTOM_CONTEXT_PATTERNS = [
+        r"(?:痛|不舒服|發燒|發冷|頭暈|暈眩|噁心|嘔吐|喘|胸悶|心悸)",
+        r"(?:出血|跌倒|受傷|失眠|睡不著|沒睡好|太累|無力|脫水|便祕|便秘|腹瀉)",
+    ]
+    UNSAFE_SELF_CARE_REPLY_PATTERNS = [
+        r"(?:先|可以|建議|不妨).{0,16}(?:喝水|喝點|吃|休息|熱敷|冰敷)",
     ]
 
     def evaluate(self, request: AgentRunRequest, candidate_reply: str) -> SafetyEvaluation:
@@ -30,6 +37,12 @@ class SafetyEvaluator:
         reply_matches = [
             pattern for pattern in self.UNSAFE_REPLY_PATTERNS if re.search(pattern, candidate_reply)
         ]
+        if any(re.search(pattern, request.input_text) for pattern in self.SYMPTOM_CONTEXT_PATTERNS):
+            reply_matches.extend(
+                pattern
+                for pattern in self.UNSAFE_SELF_CARE_REPLY_PATTERNS
+                if re.search(pattern, candidate_reply)
+            )
         matched = request_matches + reply_matches
 
         if matched:

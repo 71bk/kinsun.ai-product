@@ -84,6 +84,30 @@ def test_safety_evaluator_blocks_model_generated_cause_and_self_treatment() -> N
     assert result.reason_codes == ["UNSAFE_MEDICAL_REPLY"]
 
 
+def test_safety_evaluator_allows_general_nutrition_guidance() -> None:
+    req = make_request()
+    req.purpose = "general_information"
+    req.input_text = "長者平常要怎麼吃得比較均衡？"
+
+    result = SafetyEvaluator().evaluate(
+        req,
+        "建議每天均衡吃六大類食物，也可以依日常需要適量喝水。",
+    )
+
+    assert result.decision.value == "ALLOW"
+    assert result.reason_codes == ["ALLOW"]
+
+
+def test_safety_evaluator_still_blocks_medication_advice_without_symptom_words() -> None:
+    req = make_request()
+    req.input_text = "請提供一般資訊。"
+
+    result = SafetyEvaluator().evaluate(req, "建議先服用藥物再觀察。")
+
+    assert result.decision.value == "BLOCK"
+    assert result.reason_codes == ["UNSAFE_MEDICAL_REPLY"]
+
+
 def test_companion_prompt_uses_neutral_address_when_profile_has_none() -> None:
     req = make_request()
     manifest = ContextManifest(

@@ -124,7 +124,15 @@ class FakeEngine:
 @pytest.mark.asyncio
 async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
     query = "測試' OR true; SELECT private_data"
-    engine = FakeEngine([{"score": 0.91, "chunk_id": "synthetic-public-chunk"}])
+    engine = FakeEngine(
+        [
+            {
+                "score": 0.6,
+                "raw_vector_score": 0.81,
+                "chunk_id": "synthetic-public-chunk",
+            }
+        ]
+    )
     backend = PostgresSearchBackend(
         engine,  # type: ignore[arg-type]
         make_postgres_settings(),
@@ -135,7 +143,8 @@ async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
 
     assert isinstance(backend, SearchBackend)
     assert len(hits) == 1
-    assert hits[0].score == 0.91
+    assert hits[0].score == 0.6
+    assert hits[0].raw_vector_score == 0.81
     assert hits[0].source == {"chunk_id": "synthetic-public-chunk"}
     rendered_sql = str(engine.connection.statement)
     assert query not in rendered_sql
@@ -175,6 +184,9 @@ async def test_postgres_backend_uses_fixed_runtime_policy_candidate_pool() -> No
     assert engine.connection.parameters["policy_candidate_chunk_ids"] == list(candidate_ids)
     assert engine.connection.parameters["top_k"] == 50
     assert "cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554" in str(
+        engine.connection.statement
+    )
+    assert "raw_vector_score >= CAST(:min_score AS double precision)" in str(
         engine.connection.statement
     )
 

@@ -175,18 +175,16 @@ async def close_retriever(retriever: Retriever | None) -> None:
 def _above_relevance_floor(hits: list[SearchHit], min_score: float) -> list[SearchHit]:
     """Drop hits the configured floor rejects, so a bad query yields NO_DATA.
 
-    The floor applies to the pipeline-normalized hybrid score, not to raw
-    cosine similarity: the collection's knn clause accepts only ``k``, so it
-    always returns that many neighbours no matter how poor the match. Without
-    this, a query matching nothing still produced five cited chunks reported as
-    SUCCESS. A hit that satisfies only one retrieval leg cannot exceed that
-    leg's configured weight, which is what keeps unmatched queries below the
-    floor.
+    PostgreSQL exposes both its pipeline-normalized hybrid score and bounded raw
+    vector similarity. The latter prevents a strongly relevant Chinese semantic
+    match from being erased merely because the lexical leg cannot segment the
+    natural-language question. Other backends retain the hybrid-only gate.
     """
 
     scored: list[SearchHit] = []
     for hit in hits:
-        if hit.score >= min_score:
+        raw_vector_passes = hit.raw_vector_score is not None and hit.raw_vector_score >= min_score
+        if hit.score >= min_score or raw_vector_passes:
             scored.append(hit)
     return scored
 
