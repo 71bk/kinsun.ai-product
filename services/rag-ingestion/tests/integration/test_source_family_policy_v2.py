@@ -21,6 +21,9 @@ from rag_ingestion.source_family_policy_v2 import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 POLICY_ROOT = REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/candidates/v002"
+POLICY_AUDIT_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v002/preflight"
+)
 
 
 def _policy() -> dict[str, object]:
@@ -50,6 +53,21 @@ def test_committed_policy_v2_packages_are_valid() -> None:
     assert policy["ordinary_retrieval_chunk_candidate_count"] == 554
     assert policy["response_metadata_ready_count"] == 302
     assert policy["production_approved"] is False
+    assert audit["candidate_artifact_entry_count"] == 19
+    lock = json.loads((POLICY_AUDIT_ROOT / "candidate-artifact-lock.json").read_text("utf-8"))
+    locked_paths = {entry["path"] for entry in lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v001/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v001/preflight/SHA256SUMS.txt",
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v001/preflight/"
+            "candidate-artifact-lock.json"
+        ),
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v001/preflight/"
+            "validation-input-inventory.json"
+        ),
+    } <= locked_paths
 
 
 def test_missing_license_url_is_not_an_automatic_source_block() -> None:
