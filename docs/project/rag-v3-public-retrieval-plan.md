@@ -198,6 +198,9 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   但本批不自動改寫既有 `license_status`。
 - [x] 建立 `data/rag-v3/preflight/v002/` 與 `data/rag-v3/audits/v001/preflight/`，分別鎖定建置輸入、
   v002 prior artifacts、格式化後的 validator 輸入及 immutable v003 candidate。
+- [x] 後續 runtime policy 測試與 live smoke 文件使 source-family audit v001 的 current-input inventory
+  依設計失效；保留 v001 bytes，並建立 `source-family-policy/audits/v002/preflight/` successor，鎖定
+  audit v001、既有 policy candidate 與更新後的 29 個 validation inputs。
 - [x] 建立 `source-family-policy/candidates/v002/`，逐來源記錄 purpose、assessment、risk、角色與
   project-use 決策；13 個缺少 license URL 的來源不再因 URL 缺少而自動封鎖。
 - [x] 依 Owner 的「一般風險值」決策，將 5 筆表單範例以 policy overlay 映射為 canonical `low`；
@@ -219,13 +222,18 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   無法進 ordinary retrieval；5 筆 owner risk overlay 的 effective unclassified count 為 0。
 - [x] 以 policy-level tests 驗證四種角色可搜尋合規官方候選，但 purpose／assessment 回覆 gate 不會
   被繞過；runtime 尚未接入，仍不得視為 live E2E。
-- [ ] 將 policy v002 接入 runtime，驗證 554 筆 ordinary retrieval candidates 與其中 302 筆
-  response-metadata-ready candidates 的完整後端 gate。
-- [x] 執行完整 RAG ingestion 測試：2026-08-26 共 286 項通過；candidate validator、Ruff check／format
+- [x] 2026-08-27 建立並接入 runtime policy v002：554 筆 ordinary retrieval candidates 中有 522 筆
+  response-metadata-ready；assessment=true 可回覆一般資訊並由 Runtime 固定附 advisory，空 purpose
+  與缺失／非 boolean assessment 仍 fail closed。完整 live backend relevance gate 尚待 E2E。
+- [x] 2026-08-27 建立 runtime policy v003 staging successor：以既有 enum 分類 A 單位手冊原本空白的
+  32 筆 purpose，並補齊來源層 `general_information` 交集；554／554 筆具備 response metadata，purpose
+  gate、高風險與 research 排除保持。32 筆分類仍為 `needs_review`，Production 不因此解鎖。
+- [x] 執行完整 RAG ingestion 測試：2026-08-27 共 304 項通過；candidate validator、Ruff check／format
   及 contracts 全量 validation 均通過，candidate validation report 為 18 PASS／0 FAIL。
 - [x] source-family policy v002 的 schema 單元測試 4 項與 v001／v002 targeted integration 14 項通過；
   policy validation report 為 21 PASS／0 FAIL。
-- [ ] 執行 Golden Query、no-data、high-risk、authorization、citation 與 rollback 測試。
+- [x] 執行 10 個離線 Golden policy／advisory／citation cases；no-data、high-risk、角色與 purpose gate
+  均通過。live relevance、遠端 activation 與 rollback 測試仍待完成。
 - [x] 驗證 embedding reuse 為 726／726，且 provider、model、dimension、task type 與 fingerprint 完全相同；
   本批未呼叫 embedding provider。
 
@@ -257,10 +265,13 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 - [x] 建立 v3.1 verified successor contract、Owner human-review acceptance v002、preflight v002、
   v003 candidate 與 audit preflight v001；舊 acceptance／preflight／v002 candidate 均保持 immutable。
 - [x] 建立 Owner source-family policy acceptance v003、policy preflight v002、source-family policy
-  candidate v002 與 current-input audit preflight；policy v001 與 v003 Chunk candidate 保持 immutable。
+  candidate v002 與 current-input audit preflight v002／v003 successors；audit v001／v002、policy v001 與
+  v003 Chunk candidate 保持 immutable。audit v003 鎖定本次 purpose-classification 後的 32 個目前輸入。
 
 目前結論：本機 v003 已完成 726 筆 Owner 人工審核狀態升級、來源版本決策、candidate 產生與資料級完整
 驗證，全部為 `verified`；source-family policy v002 也已完成 Owner project-use evidence、四角色 retrieval
-方向及 5 筆 canonical `low` overlay。27 筆 low／medium `stop_normal_rag` 複核、runtime integration、
-Golden Query、Supabase 同步及 staging cutover 仍尚未實行，Production 固定 blocked；遠端 Supabase
-仍是 v002／`needs_review=726`。
+方向及 5 筆 canonical `low` overlay。27 筆 low／medium `stop_normal_rag` 仍待複核；hash-pinned runtime
+policy v003、10 個離線 Golden cases 與長者長照法 live smoke 已完成，但 32 筆 purpose 分類仍待
+Owner 逐筆確認，完整 live relevance Golden
+Query、Supabase 同步及 staging cutover 仍尚未實行。Production 固定 blocked；遠端 Supabase 仍是
+v002／`needs_review=726`。

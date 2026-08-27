@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-source-family-runtime-policy-v2.schema.json",
+  "title": "RagSourceFamilyRuntimePolicyV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "runtime_policy_version",
+    "source_policy_map_version",
+    "candidate_artifact_version",
+    "status",
+    "source_policy_binding",
+    "candidate_binding",
+    "assessment_acceptance_binding",
+    "prior_runtime_policy_binding",
+    "global_policy",
+    "chunks",
+    "summary",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": { "const": "2.0.0" },
+    "runtime_policy_version": { "const": "v002" },
+    "source_policy_map_version": { "const": "v002" },
+    "candidate_artifact_version": { "const": "v003" },
+    "status": { "const": "STAGING_RUNTIME_CANDIDATE" },
+    "source_policy_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json"
+        },
+        "sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "candidate_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "checksums_sha256",
+        "crosswalk_path",
+        "crosswalk_sha256",
+        "source_release_id",
+        "embedding_profile_id"
+      ],
+      "properties": {
+        "path": { "const": "data/rag-v3/candidates/v003" },
+        "checksums_sha256": { "$ref": "#/$defs/Sha256" },
+        "crosswalk_path": {
+          "const": "data/rag-v3/candidates/v003/crosswalk/chunk-id-crosswalk-v003.jsonl"
+        },
+        "crosswalk_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_release_id": { "const": "rag-v2-v002-bab68588963b" },
+        "embedding_profile_id": { "const": "ep-google-00a12ec45096fa9d97d9e9b6" }
+      }
+    },
+    "assessment_acceptance_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "acceptance_version"],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/review/acceptance/v004/owner-assessment-response-policy-acceptance.json"
+        },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "acceptance_version": { "const": "v004" }
+      }
+    },
+    "prior_runtime_policy_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "runtime_policy_version", "relationship"],
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/source-family-runtime-policy.json"
+        },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "runtime_policy_version": { "const": "v001" },
+        "relationship": { "const": "SUPERSEDES_WITHOUT_MUTATING_PRIOR_BYTES" }
+      }
+    },
+    "global_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retrieval_audiences",
+        "retrieve_before_response_policy",
+        "ordinary_retrieval_risk_levels",
+        "ordinary_retrieval_stop_normal_rag",
+        "purpose_response_gate",
+        "assessment_response_gate",
+        "high_or_unknown_normal_rag",
+        "research_route",
+        "runtime_safety_from_embedding_similarity",
+        "production_approved"
+      ],
+      "properties": {
+        "retrieval_audiences": {
+          "const": ["elder", "family_caregiver", "care_professional", "system_admin"]
+        },
+        "retrieve_before_response_policy": { "const": true },
+        "ordinary_retrieval_risk_levels": { "const": ["low", "medium"] },
+        "ordinary_retrieval_stop_normal_rag": { "const": false },
+        "purpose_response_gate": { "const": "EVALUATE_AFTER_RETRIEVAL" },
+        "assessment_response_gate": {
+          "const": "ALLOW_GENERAL_INFORMATION_TRUE_REQUIRES_DETERMINISTIC_ADVISORY_NULL_DENIES"
+        },
+        "high_or_unknown_normal_rag": { "const": "DENY" },
+        "research_route": { "const": "INDEPENDENT_RESEARCH_REVIEW_REQUIRED" },
+        "runtime_safety_from_embedding_similarity": { "const": false },
+        "production_approved": { "const": false }
+      }
+    },
+    "chunks": {
+      "type": "array",
+      "minItems": 554,
+      "maxItems": 554,
+      "items": { "$ref": "#/$defs/RuntimeChunk" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_count",
+        "chunk_count",
+        "response_metadata_ready_count",
+        "risk_overlay_count",
+        "professional_null_to_true_count",
+        "official_null_to_true_count",
+        "assessment_advisory_chunk_count"
+      ],
+      "properties": {
+        "source_count": { "const": 14 },
+        "chunk_count": { "const": 554 },
+        "response_metadata_ready_count": { "const": 522 },
+        "risk_overlay_count": { "const": 5 },
+        "professional_null_to_true_count": { "const": 220 },
+        "official_null_to_true_count": { "const": 5 },
+        "assessment_advisory_chunk_count": { "const": 372 }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "runtime_integration",
+        "golden_query",
+        "external_sync",
+        "production_status",
+        "production_approved"
+      ],
+      "properties": {
+        "environment": { "const": "STAGING" },
+        "runtime_integration": { "const": "READY_FOR_STAGING_TEST" },
+        "golden_query": { "const": "NOT_EXECUTED" },
+        "external_sync": { "const": "NOT_AUTHORIZED" },
+        "production_status": { "const": "BLOCKED" },
+        "production_approved": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Audience": {
+      "enum": ["elder", "family_caregiver", "care_professional", "system_admin"]
+    },
+    "Purpose": {
+      "enum": [
+        "care_record",
+        "care_summary",
+        "evaluation",
+        "explainable_evidence",
+        "form_reference",
+        "general_information",
+        "health_education",
+        "human_administered_assessment_design",
+        "legal_reference",
+        "manual_review",
+        "research_reference",
+        "resource_navigation",
+        "safety_routing",
+        "scale_explanation",
+        "source_lookup"
+      ]
+    },
+    "NullableHttpUrl": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "pattern": "^https?://",
+      "maxLength": 4096
+    },
+    "NullableText": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "\\S"
+    },
+    "NullablePositiveInteger": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "RuntimeChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_chunk_id",
+        "chunk_id",
+        "source_id",
+        "text_sha256",
+        "embedding_text_sha256",
+        "effective_risk_level",
+        "retrieval_audiences",
+        "source_allowed_purposes",
+        "chunk_allowed_purposes",
+        "requires_official_assessment",
+        "requires_professional_assessment",
+        "citation"
+      ],
+      "properties": {
+        "prior_chunk_id": { "$ref": "#/$defs/Identifier" },
+        "chunk_id": { "$ref": "#/$defs/Identifier" },
+        "source_id": { "$ref": "#/$defs/Identifier" },
+        "text_sha256": { "$ref": "#/$defs/Sha256" },
+        "embedding_text_sha256": { "$ref": "#/$defs/Sha256" },
+        "effective_risk_level": { "enum": ["low", "medium"] },
+        "retrieval_audiences": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Audience" }
+        },
+        "source_allowed_purposes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Purpose" }
+        },
+        "chunk_allowed_purposes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Purpose" }
+        },
+        "requires_official_assessment": { "type": "boolean" },
+        "requires_professional_assessment": { "type": "boolean" },
+        "citation": { "$ref": "#/$defs/Citation" }
+      }
+    },
+    "Citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_version",
+        "title",
+        "publisher",
+        "section",
+        "physical_page_start",
+        "physical_page_end",
+        "printed_page_start",
+        "printed_page_end",
+        "source_locator",
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+        "is_official_source",
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+        "review_status",
+        "production_approved"
+      ],
+      "properties": {
+        "artifact_version": { "const": "v003" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "publisher": { "$ref": "#/$defs/NullableText" },
+        "section": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "physical_page_start": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "physical_page_end": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "printed_page_start": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "printed_page_end": { "$ref": "#/$defs/NullablePositiveInteger" },
+        "source_locator": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "direct_official_source_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "official_source_page_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "direct_source_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "source_page_url": { "$ref": "#/$defs/NullableHttpUrl" },
+        "is_official_source": { "const": true },
+        "source_version": { "$ref": "#/$defs/NullableText" },
+        "source_version_date": { "$ref": "#/$defs/NullableText" },
+        "version_published_at": { "$ref": "#/$defs/NullableText" },
+        "source_page_updated_at": { "$ref": "#/$defs/NullableText" },
+        "published_at": { "$ref": "#/$defs/NullableText" },
+        "last_verified_at": { "$ref": "#/$defs/NullableText" },
+        "review_status": { "const": "verified" },
+        "production_approved": { "const": false }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "physical_page_start": { "type": "integer" },
+                "physical_page_end": { "type": "integer" }
+              }
+            },
+            {
+              "properties": {
+                "physical_page_start": { "type": "null" },
+                "physical_page_end": { "type": "null" }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "printed_page_start": { "type": "integer" },
+                "printed_page_end": { "type": "integer" }
+              }
+            },
+            {
+              "properties": {
+                "printed_page_start": { "type": "null" },
+                "printed_page_end": { "type": "null" }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            { "properties": { "direct_source_url": { "type": "string" } } },
+            { "properties": { "source_page_url": { "type": "string" } } }
+          ]
+        },
+        {
+          "anyOf": [
+            { "properties": { "direct_official_source_url": { "type": "string" } } },
+            { "properties": { "official_source_page_url": { "type": "string" } } }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "acceptance_version": "v004",
+  "assessment_null_decision": {
+    "candidate_chunk_bytes_mutated": false,
+    "excluded_high_stop_research_rows_mutated": false,
+    "official_affected_chunk_count": 5,
+    "professional_affected_chunk_count": 220,
+    "requires_official_assessment_null_value": true,
+    "requires_professional_assessment_null_value": true,
+    "scope": "ORDINARY_RUNTIME_CANDIDATES_ONLY"
+  },
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statements": [
+      "確認完為true，還有其他欄位也是這樣的嗎",
+      "應該是true的話要加詳細要問專業人士吧",
+      "好那現在null幫我進行更改"
+    ],
+    "statements_sha256": "072673e9e8423ebb203bcef770eb53de1bfd2daef42d27a1c81617be50b15b25"
+  },
+  "bindings": {
+    "candidate_checksums_sha256": "8dc7fc5268dc35df4b0cd9f8b8a380761ddfdf3a0e06360d2cc0ebe8977e55c3",
+    "candidate_path": "data/rag-v3/candidates/v003",
+    "chunk_count": 554,
+    "prior_runtime_policy_path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/source-family-runtime-policy.json",
+    "prior_runtime_policy_sha256": "125b9d4c28371dc516610916bbe58ff43b2ab8c3843e02a5e439e1c2fc0f4c79",
+    "source_count": 14,
+    "source_policy_path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+    "source_policy_sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+  },
+  "candidate_artifact_version": "v003",
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "cryptographic_signature": null,
+    "intent": "AUTHORIZE_ASSESSMENT_RESPONSE_POLICY_V002",
+    "signature_value": "IanHsu"
+  },
+  "gates": {
+    "environment": "STAGING",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_approved": false,
+    "production_status": "BLOCKED"
+  },
+  "project_owner_id": "IanHsu",
+  "response_policy_decision": {
+    "advisory_delivery": "DETERMINISTIC_RUNTIME_APPEND",
+    "empty_purpose_behavior": "DENY_RESPONSE",
+    "false_behavior": "ALLOW_GENERAL_INFORMATION",
+    "null_behavior": "DENY_RESPONSE",
+    "personalized_diagnosis": "DENY",
+    "personalized_eligibility_level_benefit_determination": "DENY",
+    "true_behavior": "ALLOW_GENERAL_INFORMATION_WITH_MANDATORY_ADVISORY"
+  },
+  "runtime_policy_version": "v002",
+  "schema_version": "1.0.0",
+  "signed_at": "2026-08-27T11:44:29+08:00",
+  "signer_role": "PROJECT_OWNER",
+  "status": "SIGNED"
+}

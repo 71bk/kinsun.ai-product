@@ -92,6 +92,23 @@ describe('canonical voice turn', () => {
     objectUrl.mockRestore();
   });
 
+  it('keeps citations on screen but excludes them from synthesized speech', async () => {
+    const replyText =
+      '回答內容\n\n引用來源：\n- [國民健康署《手冊》](https://example.test/guide)';
+    mocks.runCompanionTurn.mockResolvedValueOnce({
+      reply_text: replyText,
+      result_status: 'SUCCESS',
+      safety_decision: 'ALLOW',
+    });
+    const objectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:synthetic-audio');
+
+    const reply = await speakTurn(config, 'session-1', 'confirmed transcript', 'zh-TW');
+
+    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith('回答內容', 'zh-TW');
+    expect(reply.replyText).toBe(replyText);
+    objectUrl.mockRestore();
+  });
+
   it('cancels the Core session when ASR is aborted after ticket issuance', async () => {
     const controller = new AbortController();
     mocks.transcribeAudio.mockImplementationOnce(async () => {

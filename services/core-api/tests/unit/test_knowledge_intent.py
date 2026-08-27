@@ -42,6 +42,7 @@ def test_statute_questions_route_to_legal_profile(utterance: str) -> None:
         "失智症有什麼照顧建議",
         "老人家防跌要注意什麼",
         "吞嚥困難的飲食要怎麼準備",
+        "長者平常要怎麼吃得比較均衡？",
         "家庭照顧者有沒有喘息服務",
         "壓傷要如何預防呢",
         "鼻胃管照顧的方式是什麼",

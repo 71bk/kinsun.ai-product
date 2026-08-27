@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     RAG_SEARCH_BACKEND: str = "opensearch"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
+    # Immutable runtime policy path and independently pinned digest must move together.
     RAG_SOURCE_FAMILY_POLICY_PATH: str | None = None
     RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256: str | None = None
     RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"

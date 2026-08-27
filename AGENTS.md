@@ -56,12 +56,16 @@
     staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
     5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
     14 個官方來源對 Elder／Family／Care Professional／System Admin 形成 554 筆 ordinary retrieval
-    candidates，其中 302 筆 response metadata 完整；purpose／assessment 仍於回覆前檢查，69 筆 high／
-    high-red-line、`stop_normal_rag` 與非 current 內容持續 fail closed。2026-08-26 已建立 hash-pinned
-    runtime policy v001 並接入 Agent Runtime V2：先在固定 554 筆 v002 chunk IDs 搜尋最多 50 筆，再以
-    v003 text SHA-256、角色、purpose 與 assessment metadata 決定可回覆的 3–5 筆。四角色與拒絕路徑共
-    10 個離線 policy／citation Golden cases 已通過；真實 backend relevance／ranking Golden Query 仍為
-    `NOT_EXECUTED`。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
+    candidates。2026-08-27 已依 Owner 明確決定建立 hash-pinned runtime policy v002：ordinary runtime
+    candidates 的 220 筆 professional assessment null 與 5 筆 official assessment null 映射為 true，
+    不改寫 v003 Chunk bytes；522 筆具完整 response metadata，其中 372 筆命中時由 Runtime 固定附上
+    主管機關／專業人員諮詢提醒，個人診斷、長照資格、等級與補助額度仍禁止由 AI 判定。32 筆空
+    purpose、69 筆 high／high-red-line、`stop_normal_rag` 與非 current 內容持續 fail closed。Runtime
+    先在固定 554 筆 v002 chunk IDs 搜尋最多 50 筆，再以 v003 text SHA-256、角色、purpose 與
+    assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases 已通過；
+    2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
+    chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
+    Query suite 仍為 `NOT_EXECUTED`。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
     metadata 全都只允許 `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
     `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
     public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。

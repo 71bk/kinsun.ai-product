@@ -16,6 +16,16 @@ RAG_PURPOSES: dict[str, QueryProfile] = {
     "legal_reference": "legal",
 }
 
+LEGAL_QUERY_MARKERS = (
+    "長照法",
+    "長期照顧服務法",
+    "長照服務法",
+    "法規",
+    "法律",
+    "條文",
+    "施行細則",
+)
+
 AUDIENCE_BY_ROLE = {
     ActorRole.ELDER: "elder",
     ActorRole.FAMILY: "family_caregiver",
@@ -36,11 +46,11 @@ def is_rag_request(request: AgentRunRequest) -> bool:
 
 def build_retrieval_request(request: AgentRunRequest) -> RetrievalRequestV2:
     purpose = _normalized_purpose(request.purpose)
-    profile = RAG_PURPOSES[purpose]
+    profile = _query_profile(purpose, request.input_text)
     return RetrievalRequestV2(
         schema_version="2.0.0",
         request_id=request.request_id,
-        query=request.input_text,
+        query=_retrieval_query(profile, request.input_text),
         query_profile=profile,
         top_k=5,
         audience=AUDIENCE_BY_ROLE[request.actor_role],
@@ -84,3 +94,18 @@ def retrieval_fallback_safety(response: RetrievalResponseV2) -> SafetyEvaluation
 
 def _normalized_purpose(value: str) -> str:
     return value.strip().casefold().replace("-", "_")
+
+
+def _query_profile(purpose: str, query: str) -> QueryProfile:
+    configured = RAG_PURPOSES[purpose]
+    if configured == "legal" or any(marker in query for marker in LEGAL_QUERY_MARKERS):
+        return "legal"
+    return configured
+
+
+def _retrieval_query(profile: QueryProfile, query: str) -> str:
+    """Expand common statute aliases for retrieval without changing the user's question."""
+
+    if profile != "legal":
+        return query
+    return query.replace("長照服務法", "長期照顧服務法").replace("長照法", "長期照顧服務法")

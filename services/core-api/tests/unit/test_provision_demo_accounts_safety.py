@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
 import pytest
 
@@ -38,3 +39,52 @@ async def test_provision_rejects_database_before_repository_head() -> None:
     ):
         with pytest.raises(RuntimeError, match="expected repository head e6f8a0b2c345"):
             await PROVISION_DEMO_ACCOUNTS._provision(session)
+
+
+@pytest.mark.asyncio
+async def test_reconcile_demo_membership_repairs_seed_role_code() -> None:
+    actor_id = UUID("20000000-0000-4000-8000-000000000001")
+    tenant_id = UUID("10000000-0000-4000-8000-000000000001")
+    membership = SimpleNamespace(
+        actor_id=actor_id,
+        tenant_id=tenant_id,
+        care_unit_id=None,
+        status="ACTIVE",
+        role_code="LIN_ELDER",
+    )
+    session = SimpleNamespace(get=AsyncMock(return_value=membership))
+    actor = SimpleNamespace(id=actor_id, actor_type="ELDER")
+
+    await PROVISION_DEMO_ACCOUNTS._reconcile_demo_membership(
+        session,
+        actor=actor,
+        membership_id=UUID("50000000-0000-4000-8000-000000000001"),
+        tenant_id=tenant_id,
+        expected_role="ELDER",
+    )
+
+    assert membership.role_code == "ELDER"
+
+
+@pytest.mark.asyncio
+async def test_reconcile_demo_membership_rejects_non_active_row() -> None:
+    actor_id = UUID("20000000-0000-4000-8000-000000000001")
+    tenant_id = UUID("10000000-0000-4000-8000-000000000001")
+    membership = SimpleNamespace(
+        actor_id=actor_id,
+        tenant_id=tenant_id,
+        care_unit_id=None,
+        status="INACTIVE",
+        role_code="LIN_ELDER",
+    )
+    session = SimpleNamespace(get=AsyncMock(return_value=membership))
+    actor = SimpleNamespace(id=actor_id, actor_type="ELDER")
+
+    with pytest.raises(RuntimeError, match="incompatible"):
+        await PROVISION_DEMO_ACCOUNTS._reconcile_demo_membership(
+            session,
+            actor=actor,
+            membership_id=UUID("50000000-0000-4000-8000-000000000001"),
+            tenant_id=tenant_id,
+            expected_role="ELDER",
+        )

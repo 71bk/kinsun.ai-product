@@ -1,0 +1,11 @@
+{
+  "acceptance_sha256": "dcc923a3910e556c535a26856644fabc097a78b36e2a2492409ee987ce106c69",
+  "acceptance_version": "v004",
+  "external_sync": "NOT_AUTHORIZED",
+  "files": [
+    "owner-assessment-response-policy-acceptance.json",
+    "validation-report.json"
+  ],
+  "production_approved": false,
+  "schema_version": "1.0.0"
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { presentCompanionReply } from '@/lib/voice/reply-presentation';
 import styles from './CompanionCharacter.module.css';
 
 /** Presentation-only animation states. Mapped from `VoicePageState` at the call
@@ -34,6 +35,7 @@ export function CompanionCharacter({
 }: CompanionCharacterProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoSrc = STATE_VIDEO[state];
+  const presentedMessage = message ? presentCompanionReply(message) : null;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -91,7 +93,21 @@ export function CompanionCharacter({
       {/* Speech bubble */}
       {message && state !== 'sleeping' && (
         <div className={styles.speechBubble}>
-          <p className={styles.messageText}>{message}</p>
+          <p className={styles.messageText}>{presentedMessage?.body}</p>
+          {presentedMessage && presentedMessage.citations.length > 0 && (
+            <details className={styles.citations}>
+              <summary>查看資料來源（{presentedMessage.citations.length}）</summary>
+              <ul>
+                {presentedMessage.citations.map((citation) => (
+                  <li key={`${citation.href}-${citation.label}`}>
+                    <a href={citation.href} target="_blank" rel="noreferrer">
+                      {citation.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       )}
 

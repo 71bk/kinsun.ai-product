@@ -34,8 +34,8 @@ from agent_runtime.rag.query_embedder import (
     build_bedrock_client,
     build_embedding_provider,
 )
-from agent_runtime.rag.retriever import Retriever
-from agent_runtime.rag.search_backend import SearchBackend
+from agent_runtime.rag.retriever import Retriever, _above_relevance_floor
+from agent_runtime.rag.search_backend import SearchBackend, SearchHit
 
 
 def make_profile(name: str) -> HybridProfileSettings:
@@ -652,6 +652,61 @@ async def test_only_hits_at_or_above_the_configured_floor_reach_the_agent() -> N
         "strong-0",
         "strong-1",
         "strong-2",
+    }
+
+
+def test_raw_vector_relevance_can_pass_when_chinese_lexical_score_is_weak() -> None:
+    hits = [
+        SearchHit(
+            score=0.6,
+            source={"chunk_id": f"semantic-{number}"},
+            raw_vector_score=0.75 - number / 100,
+        )
+        for number in range(3)
+    ]
+    hits.extend(
+        SearchHit(
+            score=0.6,
+            source={"chunk_id": f"weak-{number}"},
+            raw_vector_score=0.69,
+        )
+        for number in range(2)
+    )
+
+    relevant = _above_relevance_floor(hits, 0.7)
+
+    assert {hit.source["chunk_id"] for hit in relevant} == {
+        "semantic-0",
+        "semantic-1",
+        "semantic-2",
+    }
+
+
+def test_raw_lexical_relevance_can_pass_when_normalized_hybrid_score_is_lower() -> None:
+    hits = [
+        SearchHit(
+            score=0.65,
+            source={"chunk_id": f"exact-law-{number}"},
+            raw_lexical_score=1.0 - number / 100,
+            raw_vector_score=0.5,
+        )
+        for number in range(3)
+    ]
+    hits.append(
+        SearchHit(
+            score=0.65,
+            source={"chunk_id": "weak-law"},
+            raw_lexical_score=0.69,
+            raw_vector_score=0.5,
+        )
+    )
+
+    relevant = _above_relevance_floor(hits, 0.7)
+
+    assert {hit.source["chunk_id"] for hit in relevant} == {
+        "exact-law-0",
+        "exact-law-1",
+        "exact-law-2",
     }
 
 

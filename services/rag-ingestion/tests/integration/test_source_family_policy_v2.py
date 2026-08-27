@@ -5,6 +5,10 @@ from pathlib import Path
 
 import pytest
 
+from rag_ingestion.source_family_policy_audit_v3 import (
+    build_source_family_policy_audit_v3,
+    validate_source_family_policy_audit_v3,
+)
 from rag_ingestion.source_family_policy_v2 import (
     RISK_DECISION_CHUNK_IDS,
     SourceFamilyPolicyV2Error,
@@ -21,6 +25,12 @@ from rag_ingestion.source_family_policy_v2 import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 POLICY_ROOT = REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/candidates/v002"
+POLICY_AUDIT_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v002/preflight"
+)
+POLICY_AUDIT_V3_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v003/preflight"
+)
 
 
 def _policy() -> dict[str, object]:
@@ -41,7 +51,8 @@ def test_committed_policy_v2_packages_are_valid() -> None:
     acceptance = validate_owner_source_family_policy_acceptance(REPOSITORY_ROOT)
     preflight = validate_source_family_policy_v2_build_preflight_snapshot(REPOSITORY_ROOT)
     policy = validate_source_family_policy_v2(REPOSITORY_ROOT)
-    audit = validate_source_family_policy_v2_audit_preflight(REPOSITORY_ROOT)
+    sealed_audit = validate_source_family_policy_v2_audit_preflight(REPOSITORY_ROOT)
+    audit = validate_source_family_policy_audit_v3(REPOSITORY_ROOT)
 
     assert acceptance["status"] == "PASS"
     assert preflight["status"] == "PASS_BUILD_SNAPSHOT"
@@ -50,6 +61,39 @@ def test_committed_policy_v2_packages_are_valid() -> None:
     assert policy["ordinary_retrieval_chunk_candidate_count"] == 554
     assert policy["response_metadata_ready_count"] == 302
     assert policy["production_approved"] is False
+    assert sealed_audit["candidate_artifact_entry_count"] == 19
+    assert audit["candidate_artifact_entry_count"] == 23
+    assert audit["inventory_entry_count"] == 32
+    lock = json.loads((POLICY_AUDIT_ROOT / "candidate-artifact-lock.json").read_text("utf-8"))
+    locked_paths = {entry["path"] for entry in lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v001/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v001/preflight/SHA256SUMS.txt",
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v001/preflight/"
+            "candidate-artifact-lock.json"
+        ),
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v001/preflight/"
+            "validation-input-inventory.json"
+        ),
+    } <= locked_paths
+    successor_lock = json.loads(
+        (POLICY_AUDIT_V3_ROOT / "candidate-artifact-lock.json").read_text("utf-8")
+    )
+    successor_paths = {entry["path"] for entry in successor_lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v002/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v002/preflight/SHA256SUMS.txt",
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v002/preflight/"
+            "candidate-artifact-lock.json"
+        ),
+        (
+            "data/rag-v3/governance/source-family-policy/audits/v002/preflight/"
+            "validation-input-inventory.json"
+        ),
+    } <= successor_paths
 
 
 def test_missing_license_url_is_not_an_automatic_source_block() -> None:
@@ -154,6 +198,7 @@ def test_policy_v2_formal_outputs_refuse_overwrite() -> None:
         build_source_family_policy_v2_preflight,
         build_source_family_policy_v2,
         build_source_family_policy_v2_audit_preflight,
+        build_source_family_policy_audit_v3,
     )
     for builder in builders:
         with pytest.raises(SourceFamilyPolicyV2Error, match="refuse to overwrite"):

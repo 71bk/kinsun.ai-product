@@ -8,6 +8,7 @@ import os
 import sys
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from types import MappingProxyType
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -31,7 +32,6 @@ from app.models.elder import Elder  # noqa: E402
 from app.models.line_identity import ExternalIdentity  # noqa: E402
 from app.models.membership import ActorTenantMembership  # noqa: E402
 from app.models.memory import Memory, MemoryVersion  # noqa: E402
-from app.models.outbox import OutboxEvent  # noqa: E402
 from app.models.password_credential import PasswordCredential  # noqa: E402
 from app.models.policy import PolicyRegistry  # noqa: E402
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: E402
@@ -43,6 +43,12 @@ from app.services.password_hasher import Argon2idPolicy, PasswordHasher  # noqa:
 MANIFEST_PATH = REPO_ROOT / "data" / "seed" / "demo_ids.json"
 ALLOWED_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 E2E_DATABASE_PREFIX = "kinsun_frontend_e2e_"
+DEMO_POLICY_ID = UUID("80000000-0000-4000-8000-000000000001")
+DEMO_POLICY_CODE = "demo-consent-policy"
+DEMO_POLICY_VERSION = "demo-consent-v1"
+DEMO_POLICY_PAYLOAD = MappingProxyType(
+    {"synthetic_only": True, "purpose_specific": True}
+)
 
 
 def _load_repo_env() -> None:
@@ -192,6 +198,54 @@ async def _seed_demo_accounts(
     return emails
 
 
+async def _get_or_create_demo_policy(
+    session: AsyncSession,
+    *,
+    approved_by_actor_id: UUID,
+    now: datetime,
+) -> UUID:
+    existing = await session.scalar(
+        select(PolicyRegistry).where(
+            PolicyRegistry.owner_tenant_id.is_(None),
+            PolicyRegistry.policy_code == DEMO_POLICY_CODE,
+            PolicyRegistry.version == DEMO_POLICY_VERSION,
+        )
+    )
+    if existing is not None:
+        existing_payload = existing.policy_payload
+        if (
+            existing.policy_type != "CONSENT"
+            or existing.status != "ACTIVE"
+            or not isinstance(existing_payload, dict)
+            or any(
+                existing_payload.get(key) != value
+                for key, value in DEMO_POLICY_PAYLOAD.items()
+            )
+            or existing_payload.get("production_approved") is True
+        ):
+            raise RuntimeError(
+                "Existing demo-consent-policy is incompatible with the synthetic "
+                "Demo seed"
+            )
+        return existing.id
+
+    session.add(
+        PolicyRegistry(
+            id=DEMO_POLICY_ID,
+            owner_tenant_id=None,
+            policy_code=DEMO_POLICY_CODE,
+            policy_type="CONSENT",
+            version=DEMO_POLICY_VERSION,
+            status="ACTIVE",
+            policy_payload=dict(DEMO_POLICY_PAYLOAD),
+            effective_from=now - timedelta(days=30),
+            approved_by_actor_id=approved_by_actor_id,
+        )
+    )
+    await session.flush()
+    return DEMO_POLICY_ID
+
+
 async def _assert_empty_and_current(
     session: AsyncSession, daycare_tenant_id: UUID
 ) -> None:
@@ -270,11 +324,6 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
     session.add_all([*tenants, *actors])
     await session.flush()
     actors_by_key = dict(zip(actor_ids, actors, strict=True))
-    demo_accounts = await _seed_demo_accounts(
-        session,
-        actors=actors_by_key,
-        now=now,
-    )
 
     units = [
         CareUnit(
@@ -375,7 +424,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
                 actor_id=actor_ids[actor_key],
                 tenant_id=tenant_id,
                 care_unit_id=care_unit_id,
-                role_code=actor_key.upper(),
+                role_code=actors_by_key[actor_key].actor_type,
                 status="ACTIVE",
                 effective_from=now - timedelta(days=30),
             )
@@ -459,20 +508,11 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
     ]
     session.add_all(relationships)
 
-    policy_id = _id("80000000-0000-4000-8000-000000000001")
-    policy = PolicyRegistry(
-        id=policy_id,
-        owner_tenant_id=None,
-        policy_code="demo-consent-policy",
-        policy_type="CONSENT",
-        version="demo-consent-v1",
-        status="ACTIVE",
-        policy_payload={"synthetic_only": True, "purpose_specific": True},
-        effective_from=now - timedelta(days=30),
+    policy_id = await _get_or_create_demo_policy(
+        session,
         approved_by_actor_id=actor_ids["assignment_service"],
+        now=now,
     )
-    session.add(policy)
-    await session.flush()
 
     consent_ids = {key: _id(value) for key, value in manifest["consents"].items()}
     active_consent_specs = [
@@ -702,7 +742,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
             )
         )
 
-    memory_id = _id(manifest["memory"]["林阿嬤_女兒每週日通話_ACTIVE"])
+    memory_id = _id(manifest["memory"]["林阿嬤_女兒每週日通話_LEGACY_NEEDS_REVIEW"])
     memory_version_id = _id("93100000-0000-4000-8000-000000000001")
     session.add(
         Memory(
@@ -710,11 +750,11 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
             tenant_id=daycare_tenant_id,
             elder_id=elder_ids["林阿嬤"],
             memory_type="IMPORTANT_RELATIONSHIP",
-            status="ACTIVE",
+            evidence_state="LEGACY_NEEDS_REVIEW",
+            status="INACTIVE",
             current_version=1,
-            confirmed_by_actor_id=actor_ids["lin_elder"],
-            confirmed_at=now - timedelta(days=1),
-            activated_at=now - timedelta(days=1),
+            deactivated_at=now - timedelta(days=1),
+            lifecycle_reason="LEGACY_NEEDS_REVIEW",
             consent_version=1,
         )
     )
@@ -803,33 +843,6 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
             )
         )
 
-    outbox_id = _id(manifest["outbox"]["memory_confirmed"])
-    session.add(
-        OutboxEvent(
-            outbox_event_id=outbox_id,
-            event_id=_id("98100000-0000-4000-8000-000000000001"),
-            event_type="memory.confirmed.v1",
-            aggregate_type="memory",
-            aggregate_id=memory_id,
-            aggregate_version=1,
-            tenant_id=daycare_tenant_id,
-            elder_id=elder_ids["林阿嬤"],
-            actor_id=actor_ids["lin_elder"],
-            purpose="LONG_TERM_MEMORY",
-            consent_version=1,
-            trace_id="synthetic-seed-memory-confirmed",
-            correlation_id="synthetic-seed-memory-confirmed",
-            idempotency_key="synthetic-seed-memory-confirmed",
-            classification="CONFIDENTIAL",
-            payload={
-                "memory_id": str(memory_id),
-                "status": "ACTIVE",
-                "version": 1,
-            },
-            delivery_status="PENDING",
-            occurred_at=now - timedelta(days=1),
-        )
-    )
     await session.flush()
 
     await session.execute(
@@ -852,7 +865,6 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
             "elder_id": elder_ids["陳伯伯"],
         },
     )
-    return demo_accounts
     notification_ids = {
         key: _id(value) for key, value in manifest["notifications"].items()
     }
@@ -907,13 +919,19 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
             "source_id": memory_id,
         },
     )
+    demo_accounts = await _seed_demo_accounts(
+        session,
+        actors=actors_by_key,
+        now=now,
+    )
+    return demo_accounts
 
 
 async def main() -> None:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     if manifest.get("synthetic_only") is not True:
         raise RuntimeError("Seed manifest must declare synthetic_only=true")
-    engine = create_async_engine(_database_url())
+    engine = create_async_engine(_database_url(), hide_parameters=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with session_factory() as session:

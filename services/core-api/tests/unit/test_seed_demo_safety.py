@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
-from types import ModuleType
-from unittest.mock import AsyncMock, patch
+from types import ModuleType, SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
+from uuid import UUID
 
 import pytest
 
@@ -73,3 +76,65 @@ async def test_seed_rejects_database_before_repository_head() -> None:
                 session,
                 SEED_DEMO._id("10000000-0000-4000-8000-000000000001"),
             )
+
+
+@pytest.mark.asyncio
+async def test_matching_global_demo_policy_with_safe_metadata_is_reused() -> None:
+    existing_id = UUID("81000000-0000-4000-8000-000000000010")
+    session = SimpleNamespace(
+        scalar=AsyncMock(
+            return_value=SimpleNamespace(
+                id=existing_id,
+                policy_type="CONSENT",
+                status="ACTIVE",
+                policy_payload={
+                    "synthetic_only": True,
+                    "purpose_specific": True,
+                    "production_approved": False,
+                    "supported_purposes": ["BASIC_VOICE"],
+                },
+            )
+        ),
+        add=Mock(),
+        flush=AsyncMock(),
+    )
+
+    result = await SEED_DEMO._get_or_create_demo_policy(
+        session,
+        approved_by_actor_id=UUID("20000000-0000-4000-8000-000000000013"),
+        now=datetime.now(UTC),
+    )
+
+    assert result == existing_id
+    session.add.assert_not_called()
+    session.flush.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_incompatible_global_demo_policy_is_rejected() -> None:
+    session = SimpleNamespace(
+        scalar=AsyncMock(
+            return_value=SimpleNamespace(
+                id=UUID("81000000-0000-4000-8000-000000000010"),
+                policy_type="CONSENT",
+                status="ACTIVE",
+                policy_payload={"synthetic_only": False},
+            )
+        ),
+        add=Mock(),
+        flush=AsyncMock(),
+    )
+
+    with pytest.raises(RuntimeError, match="incompatible"):
+        await SEED_DEMO._get_or_create_demo_policy(
+            session,
+            approved_by_actor_id=UUID("20000000-0000-4000-8000-000000000013"),
+            now=datetime.now(UTC),
+        )
+
+
+def test_demo_manifest_does_not_claim_legacy_memory_is_active() -> None:
+    manifest = json.loads(SEED_DEMO.MANIFEST_PATH.read_text(encoding="utf-8"))
+
+    assert "林阿嬤_女兒每週日通話_LEGACY_NEEDS_REVIEW" in manifest["memory"]
+    assert "outbox" not in manifest

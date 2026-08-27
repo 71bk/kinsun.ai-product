@@ -36,7 +36,7 @@ PRIOR_ACCEPTANCE_PATH = Path(
     "data/rag-v3/review/acceptance/v002/owner-human-review-acceptance.json"
 )
 PRIOR_POLICY_PATH = Path(
-    "data/rag-v3/governance/source-family-policy/candidates/v001/" "source-family-policy-map.json"
+    "data/rag-v3/governance/source-family-policy/candidates/v001/source-family-policy-map.json"
 )
 ACCEPTANCE_SCHEMA_PATH = Path(
     "contracts/schemas/rag/rag-owner-source-family-policy-acceptance-v1.schema.json"
@@ -47,7 +47,8 @@ ACCEPTANCE_FILE = ACCEPTANCE_ROOT / "owner-source-family-policy-acceptance.json"
 POLICY_ROOT = Path("data/rag-v3/governance/source-family-policy")
 POLICY_PREFLIGHT_ROOT = POLICY_ROOT / "preflight/v002"
 POLICY_PACKAGE_ROOT = POLICY_ROOT / "candidates/v002"
-POLICY_AUDIT_ROOT = POLICY_ROOT / "audits/v001/preflight"
+PRIOR_POLICY_AUDIT_ROOT = POLICY_ROOT / "audits/v001/preflight"
+POLICY_AUDIT_ROOT = POLICY_ROOT / "audits/v002/preflight"
 
 OWNER_STATEMENTS = (
     "13 個來源缺授權證據，檢核過了來源方為公開資料可以使用",
@@ -116,6 +117,7 @@ AUDIT_FORMAL_ROOTS = (
     ACCEPTANCE_ROOT,
     POLICY_PREFLIGHT_ROOT,
     POLICY_PACKAGE_ROOT,
+    PRIOR_POLICY_AUDIT_ROOT,
 )
 
 
@@ -445,12 +447,13 @@ def build_source_family_policy_v2_audit_preflight(
     *,
     output_path: Path | None = None,
 ) -> PolicyArtifactSummary:
-    """Bind the immutable candidate to the current formatted validator and tests."""
+    """Bind the immutable candidate and prior audit to current validation inputs."""
 
     root = repository_root.resolve()
     destination = _destination(root, output_path, POLICY_AUDIT_ROOT)
-    _refuse_overwrite(destination, "source-family policy v002 audit preflight")
+    _refuse_overwrite(destination, "source-family policy v002 audit preflight v002")
     validate_source_family_policy_v2(root)
+    _validate_package_checksums(root / PRIOR_POLICY_AUDIT_ROOT)
     candidate_entries = _entries_for_roots(
         root,
         AUDIT_FORMAL_ROOTS,
@@ -460,7 +463,10 @@ def build_source_family_policy_v2_audit_preflight(
     candidate_lock = _inventory_document(
         "source_family_policy_v002_candidate_artifact_lock",
         candidate_entries,
-        "immutable acceptance v003, policy preflight v002, and policy candidate v002 bytes",
+        (
+            "immutable acceptance v003, policy preflight v002, policy candidate v002, "
+            "and audit preflight v001 bytes"
+        ),
     )
     inventory = _inventory_document(
         "source_family_policy_v002_current_validation_input_inventory",
@@ -478,7 +484,7 @@ def build_source_family_policy_v2_audit_preflight(
     finally:
         _cleanup_staging_directory(root, staged)
     return PolicyArtifactSummary(
-        artifact="source_family_policy_v002_audit_preflight",
+        artifact="source_family_policy_v002_audit_preflight_v002",
         output_path=destination,
         inventory_sha256=inventory["inventory_sha256"],
         prior_lock_sha256=candidate_lock["inventory_sha256"],
@@ -495,6 +501,7 @@ def validate_source_family_policy_v2_audit_preflight(
     package = _destination(root, package_path, POLICY_AUDIT_ROOT)
     validate_owner_source_family_policy_acceptance(root)
     validate_source_family_policy_v2_build_preflight_snapshot(root)
+    _validate_package_checksums(root / PRIOR_POLICY_AUDIT_ROOT)
     _validate_package_checksums(package)
     lock = _read_json(package / "candidate-artifact-lock.json")
     inventory = _read_json(package / "validation-input-inventory.json")
@@ -505,17 +512,26 @@ def validate_source_family_policy_v2_audit_preflight(
             AUDIT_FORMAL_ROOTS,
             "source_family_policy_v002_formal_artifacts",
         ),
-        "immutable acceptance v003, policy preflight v002, and policy candidate v002 bytes",
-    )
-    expected_inventory = _inventory_document(
-        "source_family_policy_v002_current_validation_input_inventory",
-        _audit_input_entries(root),
-        "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
+        (
+            "immutable acceptance v003, policy preflight v002, policy candidate v002, "
+            "and audit preflight v001 bytes"
+        ),
     )
     if lock != expected_lock:
         raise SourceFamilyPolicyV2Error("source-family policy v002 candidate lock mismatch")
-    if inventory != expected_inventory:
-        raise SourceFamilyPolicyV2Error("source-family policy v002 audit input mismatch")
+    if package == (root / POLICY_AUDIT_ROOT).resolve():
+        _validate_frozen_audit_inventory(
+            inventory,
+            "source_family_policy_v002_current_validation_input_inventory",
+        )
+    else:
+        expected_inventory = _inventory_document(
+            "source_family_policy_v002_current_validation_input_inventory",
+            _audit_input_entries(root),
+            "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
+        )
+        if inventory != expected_inventory:
+            raise SourceFamilyPolicyV2Error("source-family policy v002 audit input mismatch")
     return {
         "candidate_artifact_entry_count": lock["entry_count"],
         "candidate_lock_sha256": lock["inventory_sha256"],
@@ -1009,10 +1025,12 @@ def _remaining_review_worksheet(
                 ),
                 "risk_unclassified_effective_chunk_ids": _chunk_ids(
                     records,
-                    lambda row: effective_risks.get(
-                        row["identity"]["chunk_id"], row["retrieval_policy"]["risk_level"]
-                    )
-                    is None,
+                    lambda row: (
+                        effective_risks.get(
+                            row["identity"]["chunk_id"], row["retrieval_policy"]["risk_level"]
+                        )
+                        is None
+                    ),
                 ),
                 "risk_high_chunk_ids": _chunk_ids(
                     records,
@@ -1312,15 +1330,15 @@ def _preflight_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> 
 
 def _audit_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> str:
     return (
-        "# Source-family policy v002 audit preflight v001\n\n"
-        "This package keeps the original build preflight immutable while binding the completed "
-        "policy candidate to the current formatted schemas, config, code, tests, evidence, and "
-        "v003 chunk inventory.\n\n"
+        "# Source-family policy v002 audit preflight v002\n\n"
+        "This successor keeps the original build preflight and audit preflight v001 immutable "
+        "while binding the completed policy candidate to the current formatted schemas, config, "
+        "code, tests, evidence, and v003 chunk inventory.\n\n"
         f"- Current validation inputs: `{inventory['entry_count']}`\n"
         f"- Current inventory SHA-256: `{inventory['inventory_sha256']}`\n"
         f"- Candidate artifact entries: `{lock['entry_count']}`\n"
         f"- Candidate lock SHA-256: `{lock['inventory_sha256']}`\n"
-        "- Runtime integration: not started\n"
+        "- Runtime integration: local hash-pinned runtime policy v002 integrated\n"
         "- External synchronization: not authorized\n"
         "- Production: blocked\n"
     )
@@ -1446,6 +1464,18 @@ def _inventory_document(
         "review_status": "verified",
         "production_approved": False,
     }
+
+
+def _validate_frozen_audit_inventory(document: Mapping[str, Any], expected_kind: str) -> None:
+    """Validate sealed historical evidence without comparing it to successor inputs."""
+
+    entries = document.get("entries")
+    scope = document.get("scope")
+    if not isinstance(entries, list) or not isinstance(scope, str):
+        raise SourceFamilyPolicyV2Error("source-family frozen audit inventory is malformed")
+    expected = _inventory_document(expected_kind, entries, scope)
+    if document != expected:
+        raise SourceFamilyPolicyV2Error("source-family frozen audit inventory is invalid")
 
 
 def _risk_counts(counter: Counter[str]) -> dict[str, int]:

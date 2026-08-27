@@ -124,7 +124,16 @@ class FakeEngine:
 @pytest.mark.asyncio
 async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
     query = "測試' OR true; SELECT private_data"
-    engine = FakeEngine([{"score": 0.91, "chunk_id": "synthetic-public-chunk"}])
+    engine = FakeEngine(
+        [
+            {
+                "score": 0.6,
+                "raw_vector_score": 0.81,
+                "raw_lexical_score": 0.92,
+                "chunk_id": "synthetic-public-chunk",
+            }
+        ]
+    )
     backend = PostgresSearchBackend(
         engine,  # type: ignore[arg-type]
         make_postgres_settings(),
@@ -135,11 +144,14 @@ async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
 
     assert isinstance(backend, SearchBackend)
     assert len(hits) == 1
-    assert hits[0].score == 0.91
+    assert hits[0].score == 0.6
+    assert hits[0].raw_vector_score == 0.81
+    assert hits[0].raw_lexical_score == 0.92
     assert hits[0].source == {"chunk_id": "synthetic-public-chunk"}
     rendered_sql = str(engine.connection.statement)
     assert query not in rendered_sql
     assert ":query" in rendered_sql
+    assert "lower(eligible.document_title)" in rendered_sql
     assert "rag_public.chunk_projection" in rendered_sql
     assert "eldercare_ai" not in rendered_sql
     assert engine.connection.parameters is not None
@@ -175,6 +187,19 @@ async def test_postgres_backend_uses_fixed_runtime_policy_candidate_pool() -> No
     assert engine.connection.parameters["policy_candidate_chunk_ids"] == list(candidate_ids)
     assert engine.connection.parameters["top_k"] == 50
     assert "cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554" in str(
+        engine.connection.statement
+    )
+    eligible_clause = str(engine.connection.statement).split("eligible AS (", maxsplit=1)[1]
+    eligible_clause = eligible_clause.split("),\nlexical_raw AS (", maxsplit=1)[0]
+    policy_branch, legacy_branch = eligible_clause.split("OR (", maxsplit=1)
+    assert "data_classification" not in policy_branch
+    assert "data_classification" in legacy_branch
+    assert "distribution_scope" in legacy_branch
+    assert "is_official_source" in legacy_branch
+    assert "raw_vector_score >= CAST(:min_score AS double precision)" in str(
+        engine.connection.statement
+    )
+    assert "raw_lexical_score >= CAST(:min_score AS double precision)" in str(
         engine.connection.statement
     )
 

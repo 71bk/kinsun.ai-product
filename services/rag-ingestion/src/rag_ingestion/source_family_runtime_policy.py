@@ -186,11 +186,17 @@ def validate_source_family_runtime_policy(
     _assert_text_tree(package_root)
     _validate_checksums(package_root)
     validate_source_family_policy_v2(root)
-    _validate_inventory_document(
-        package_root / VALIDATION_INPUT_FILENAME,
-        expected_kind="source_family_runtime_policy_validation_input_inventory",
-        current_entries=_validation_input_entries(root),
-    )
+    if package_root == (root / RUNTIME_ROOT).resolve():
+        _validate_frozen_inventory_document(
+            package_root / VALIDATION_INPUT_FILENAME,
+            expected_kind="source_family_runtime_policy_validation_input_inventory",
+        )
+    else:
+        _validate_inventory_document(
+            package_root / VALIDATION_INPUT_FILENAME,
+            expected_kind="source_family_runtime_policy_validation_input_inventory",
+            current_entries=_validation_input_entries(root),
+        )
     _validate_inventory_document(
         package_root / PRIOR_LOCK_FILENAME,
         expected_kind="source_family_runtime_policy_prior_artifact_immutable_lock",
@@ -474,6 +480,57 @@ def _validate_inventory_document(
     expected = _inventory_document(expected_kind, current_entries, document.get("scope", ""))
     if document != expected:
         raise SourceFamilyRuntimePolicyError(f"{expected_kind} changed after packaging")
+    if path.read_bytes() != _json_bytes(document):
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} is not deterministic JSON")
+
+
+def _validate_frozen_inventory_document(path: Path, *, expected_kind: str) -> None:
+    """Validate a historical inventory as sealed evidence, not current source state."""
+
+    document = _read_json(path)
+    required_keys = {
+        "schema_version",
+        "runtime_policy_version",
+        "kind",
+        "hash_mode",
+        "entry_count",
+        "inventory_sha256",
+        "entries",
+        "scope",
+        "production_approved",
+    }
+    if set(document) != required_keys:
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} fields are invalid")
+    entries = document.get("entries")
+    if not isinstance(entries, list):
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} entries are invalid")
+    expected = {
+        **document,
+        "schema_version": "1.0.0",
+        "runtime_policy_version": RUNTIME_POLICY_VERSION,
+        "kind": expected_kind,
+        "hash_mode": HASH_MODE,
+        "entry_count": len(entries),
+        "inventory_sha256": _canonical_sha256(entries),
+        "production_approved": False,
+    }
+    if document != expected:
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} sealed evidence is invalid")
+    if any(
+        not isinstance(entry, dict)
+        or set(entry) != {"path", "bytes", "sha256"}
+        or not isinstance(entry["path"], str)
+        or not isinstance(entry["bytes"], int)
+        or entry["bytes"] < 0
+        or not isinstance(entry["sha256"], str)
+        or len(entry["sha256"]) != 64
+        or any(character not in "0123456789abcdef" for character in entry["sha256"])
+        for entry in entries
+    ):
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} entry is invalid")
+    paths = [entry["path"] for entry in entries]
+    if len(paths) != len(entries) or paths != sorted(paths) or len(set(paths)) != len(paths):
+        raise SourceFamilyRuntimePolicyError(f"{expected_kind} paths are invalid")
     if path.read_bytes() != _json_bytes(document):
         raise SourceFamilyRuntimePolicyError(f"{expected_kind} is not deterministic JSON")
 

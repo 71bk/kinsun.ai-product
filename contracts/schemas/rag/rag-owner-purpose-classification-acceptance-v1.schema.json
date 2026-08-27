@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-owner-purpose-classification-acceptance-v1.schema.json",
+  "title": "RagOwnerPurposeClassificationAcceptanceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "acceptance_version",
+    "runtime_policy_version",
+    "candidate_artifact_version",
+    "status",
+    "project_owner_id",
+    "signer_role",
+    "signed_at",
+    "authorization",
+    "electronic_signature",
+    "bindings",
+    "classification_policy",
+    "decisions",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "acceptance_version": { "const": "v005" },
+    "runtime_policy_version": { "const": "v003" },
+    "candidate_artifact_version": { "const": "v003" },
+    "status": { "const": "SIGNED_STAGING_AUTHORIZATION" },
+    "project_owner_id": { "$ref": "#/$defs/Identifier" },
+    "signer_role": { "const": "PROJECT_OWNER" },
+    "signed_at": { "type": "string", "format": "date-time" },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "statements", "statements_sha256"],
+      "properties": {
+        "channel": { "const": "interactive_user_instruction" },
+        "statements": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "statements_sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "electronic_signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assurance", "signature_value", "intent", "cryptographic_signature"],
+      "properties": {
+        "assurance": { "const": "RECORDED_EXPLICIT_USER_AUTHORIZATION" },
+        "signature_value": { "$ref": "#/$defs/Identifier" },
+        "intent": { "const": "AUTHORIZE_AI_ASSISTED_PURPOSE_CLASSIFICATION_FOR_STAGING" },
+        "cryptographic_signature": { "type": "null" }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_runtime_policy_path",
+        "prior_runtime_policy_sha256",
+        "source_policy_path",
+        "source_policy_sha256",
+        "candidate_path",
+        "candidate_checksums_sha256",
+        "source_id",
+        "affected_chunk_count"
+      ],
+      "properties": {
+        "prior_runtime_policy_path": {
+          "const": "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/source-family-runtime-policy.json"
+        },
+        "prior_runtime_policy_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_policy_path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json"
+        },
+        "source_policy_sha256": { "$ref": "#/$defs/Sha256" },
+        "candidate_path": { "const": "data/rag-v3/candidates/v003" },
+        "candidate_checksums_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_id": { "const": "mohw_a_unit_case_manager_manual_20230719" },
+        "affected_chunk_count": { "const": 32 }
+      }
+    },
+    "classification_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "activation_scope",
+        "source_allowed_purpose_overlay",
+        "empty_purpose_count_before",
+        "empty_purpose_count_after",
+        "human_verified_classification_count",
+        "needs_review_classification_count",
+        "purpose_gate_preserved",
+        "candidate_chunk_bytes_mutated"
+      ],
+      "properties": {
+        "method": { "const": "AI_ASSISTED_EXISTING_ENUM_MAPPING" },
+        "activation_scope": { "const": "STAGING_ONLY" },
+        "source_allowed_purpose_overlay": { "const": ["general_information"] },
+        "empty_purpose_count_before": { "const": 32 },
+        "empty_purpose_count_after": { "const": 0 },
+        "human_verified_classification_count": { "const": 0 },
+        "needs_review_classification_count": { "const": 32 },
+        "purpose_gate_preserved": { "const": true },
+        "candidate_chunk_bytes_mutated": { "const": false }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/Decision" }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "external_sync", "production_status", "production_approved"],
+      "properties": {
+        "environment": { "const": "STAGING" },
+        "external_sync": { "const": "NOT_AUTHORIZED" },
+        "production_status": { "const": "BLOCKED" },
+        "production_approved": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Purpose": {
+      "enum": [
+        "care_record",
+        "care_summary",
+        "general_information",
+        "manual_review",
+        "resource_navigation",
+        "source_lookup"
+      ]
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_chunk_id",
+        "chunk_id",
+        "source_id",
+        "text_sha256",
+        "allowed_purposes",
+        "rationale_code",
+        "decision_review_status"
+      ],
+      "properties": {
+        "prior_chunk_id": { "$ref": "#/$defs/Identifier" },
+        "chunk_id": { "$ref": "#/$defs/Identifier" },
+        "source_id": { "const": "mohw_a_unit_case_manager_manual_20230719" },
+        "text_sha256": { "$ref": "#/$defs/Sha256" },
+        "allowed_purposes": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "contains": { "const": "general_information" },
+          "items": { "$ref": "#/$defs/Purpose" }
+        },
+        "rationale_code": {
+          "enum": [
+            "BACKGROUND_AND_SOURCE_CONTEXT",
+            "POLICY_OR_TRAINING_MANUAL",
+            "CASE_MANAGEMENT_WORKFLOW",
+            "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+            "FOLLOWUP_QUALITY_OR_COORDINATION"
+          ]
+        },
+        "decision_review_status": { "const": "needs_review" }
+      }
+    }
+  }
+}

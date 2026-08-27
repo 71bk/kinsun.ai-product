@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "name": "purpose_acceptance_v005_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_runtime_v002_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "source_policy_v002_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_projection_554_unique_chunks",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_empty_32_overlaid_with_existing_enums",
+      "status": "PASS"
+    },
+    {
+      "name": "source_and_chunk_general_information_intersection_present",
+      "status": "PASS"
+    },
+    {
+      "name": "response_metadata_ready_554",
+      "status": "PASS"
+    },
+    {
+      "name": "assessment_advisory_semantics_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_gate_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "high_stop_research_exclusions_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "chunk_count": 554,
+  "external_sync": "NOT_AUTHORIZED",
+  "fail_count": 0,
+  "golden_query": "NOT_EXECUTED",
+  "pass_count": 13,
+  "production_approved": false,
+  "purpose_needs_review_count": 32,
+  "purpose_overlay_count": 32,
+  "response_metadata_ready_count": 554,
+  "runtime_integration": "READY_FOR_STAGING_TEST",
+  "runtime_policy_version": "v003",
+  "schema_version": "3.0.0",
+  "source_count": 14,
+  "status": "PASS"
+}

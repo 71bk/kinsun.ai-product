@@ -8,7 +8,15 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 SCHEMA_VERSION = "1.0.0"
 ID_REGEX = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
@@ -125,6 +133,28 @@ class RetrievalResultV2(RagBaseModel):
     last_verified_at: str | None = Field(max_length=512)
     review_status: Literal["needs_review", "verified"]
     production_approved: bool
+
+    # These response-policy flags stay inside the in-process orchestration path.
+    # The public retrieval V2 wire contract intentionally exposes citation evidence,
+    # not internal policy decisions. Runtime policy bytes remain the audit authority.
+    _requires_official_assessment: bool = PrivateAttr(default=False)
+    _requires_professional_assessment: bool = PrivateAttr(default=False)
+
+    def bind_assessment_requirements(self, *, official: bool, professional: bool) -> None:
+        self._requires_official_assessment = official
+        self._requires_professional_assessment = professional
+
+    @property
+    def requires_official_assessment(self) -> bool:
+        return self._requires_official_assessment
+
+    @property
+    def requires_professional_assessment(self) -> bool:
+        return self._requires_professional_assessment
+
+    @property
+    def assessment_advisory_required(self) -> bool:
+        return self._requires_official_assessment or self._requires_professional_assessment
 
     @property
     def document_name(self) -> str:

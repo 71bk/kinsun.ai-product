@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/rag-owner-assessment-response-policy-acceptance-v1.schema.json",
+  "title": "RagOwnerAssessmentResponsePolicyAcceptanceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "acceptance_version",
+    "runtime_policy_version",
+    "candidate_artifact_version",
+    "status",
+    "project_owner_id",
+    "signer_role",
+    "signed_at",
+    "authorization",
+    "electronic_signature",
+    "bindings",
+    "assessment_null_decision",
+    "response_policy_decision",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "acceptance_version": { "const": "v004" },
+    "runtime_policy_version": { "const": "v002" },
+    "candidate_artifact_version": { "const": "v003" },
+    "status": { "const": "SIGNED" },
+    "project_owner_id": { "$ref": "#/$defs/Identifier" },
+    "signer_role": { "const": "PROJECT_OWNER" },
+    "signed_at": { "type": "string", "format": "date-time" },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "statements", "statements_sha256"],
+      "properties": {
+        "channel": { "const": "interactive_user_instruction" },
+        "statements": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "statements_sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "electronic_signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assurance", "signature_value", "intent", "cryptographic_signature"],
+      "properties": {
+        "assurance": { "const": "RECORDED_EXPLICIT_USER_AUTHORIZATION" },
+        "signature_value": { "$ref": "#/$defs/Identifier" },
+        "intent": { "const": "AUTHORIZE_ASSESSMENT_RESPONSE_POLICY_V002" },
+        "cryptographic_signature": { "type": "null" }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_runtime_policy_path",
+        "prior_runtime_policy_sha256",
+        "source_policy_path",
+        "source_policy_sha256",
+        "candidate_path",
+        "candidate_checksums_sha256",
+        "source_count",
+        "chunk_count"
+      ],
+      "properties": {
+        "prior_runtime_policy_path": {
+          "const": "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/source-family-runtime-policy.json"
+        },
+        "prior_runtime_policy_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_policy_path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json"
+        },
+        "source_policy_sha256": { "$ref": "#/$defs/Sha256" },
+        "candidate_path": { "const": "data/rag-v3/candidates/v003" },
+        "candidate_checksums_sha256": { "$ref": "#/$defs/Sha256" },
+        "source_count": { "const": 14 },
+        "chunk_count": { "const": 554 }
+      }
+    },
+    "assessment_null_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requires_professional_assessment_null_value",
+        "professional_affected_chunk_count",
+        "requires_official_assessment_null_value",
+        "official_affected_chunk_count",
+        "scope",
+        "candidate_chunk_bytes_mutated",
+        "excluded_high_stop_research_rows_mutated"
+      ],
+      "properties": {
+        "requires_professional_assessment_null_value": { "const": true },
+        "professional_affected_chunk_count": { "const": 220 },
+        "requires_official_assessment_null_value": { "const": true },
+        "official_affected_chunk_count": { "const": 5 },
+        "scope": { "const": "ORDINARY_RUNTIME_CANDIDATES_ONLY" },
+        "candidate_chunk_bytes_mutated": { "const": false },
+        "excluded_high_stop_research_rows_mutated": { "const": false }
+      }
+    },
+    "response_policy_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "false_behavior",
+        "true_behavior",
+        "null_behavior",
+        "personalized_diagnosis",
+        "personalized_eligibility_level_benefit_determination",
+        "empty_purpose_behavior",
+        "advisory_delivery"
+      ],
+      "properties": {
+        "false_behavior": { "const": "ALLOW_GENERAL_INFORMATION" },
+        "true_behavior": {
+          "const": "ALLOW_GENERAL_INFORMATION_WITH_MANDATORY_ADVISORY"
+        },
+        "null_behavior": { "const": "DENY_RESPONSE" },
+        "personalized_diagnosis": { "const": "DENY" },
+        "personalized_eligibility_level_benefit_determination": { "const": "DENY" },
+        "empty_purpose_behavior": { "const": "DENY_RESPONSE" },
+        "advisory_delivery": { "const": "DETERMINISTIC_RUNTIME_APPEND" }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "external_sync", "production_status", "production_approved"],
+      "properties": {
+        "environment": { "const": "STAGING" },
+        "external_sync": { "const": "NOT_AUTHORIZED" },
+        "production_status": { "const": "BLOCKED" },
+        "production_approved": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}
