@@ -21,10 +21,14 @@ from agent_runtime.rag.search_backend import SearchHit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 POLICY_PATH = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/"
+    "source-family-runtime-policy.json"
+)
+V1_POLICY_PATH = (
     REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/"
     "source-family-runtime-policy.json"
 )
-GOLDEN_PATH = REPOSITORY_ROOT / "config/rag/source-family-golden-queries-v001.json"
+GOLDEN_PATH = REPOSITORY_ROOT / "config/rag/source-family-golden-queries-v002.json"
 CHUNK_ROOT = REPOSITORY_ROOT / "data/rag-v3/candidates/v003/chunks"
 
 
@@ -100,7 +104,8 @@ def test_runtime_policy_is_hash_pinned_and_has_fixed_candidate_scope() -> None:
     assert len(policy.candidate_chunk_ids) == 554
     assert len(set(policy.candidate_chunk_ids)) == 554
     assert policy.document.summary.source_count == 14
-    assert policy.document.summary.response_metadata_ready_count == 302
+    assert policy.document.runtime_policy_version == "v002"
+    assert policy.document.summary.response_metadata_ready_count == 522
     assert policy.document.global_policy.retrieval_audiences == (
         "elder",
         "family_caregiver",
@@ -108,6 +113,14 @@ def test_runtime_policy_is_hash_pinned_and_has_fixed_candidate_scope() -> None:
         "system_admin",
     )
     assert policy.document.gates.production_approved is False
+
+
+def test_runtime_v001_remains_loadable_without_mutating_prior_semantics() -> None:
+    digest = hashlib.sha256(V1_POLICY_PATH.read_bytes()).hexdigest()
+    policy = load_source_family_runtime_policy(V1_POLICY_PATH, expected_sha256=digest)
+
+    assert policy.document.runtime_policy_version == "v001"
+    assert policy.document.summary.response_metadata_ready_count == 302
 
 
 def test_runtime_policy_rejects_bad_digest_and_production_forgery(tmp_path: Path) -> None:
@@ -135,9 +148,9 @@ async def test_offline_golden_queries_retrieve_before_response_policy() -> None:
     text_by_chunk = _text_by_successor_chunk_id()
     by_prior = {candidate.prior_chunk_id: candidate for candidate in policy.document.chunks}
 
-    assert golden["scope"] == "OFFLINE_POLICY_AND_CITATION_GATE_ONLY"
+    assert golden["scope"] == "OFFLINE_POLICY_ADVISORY_AND_CITATION_GATE_ONLY"
     assert golden["live_relevance_evaluation"] == "NOT_EXECUTED"
-    assert len(golden["cases"]) == 10
+    assert len(golden["cases"]) == 9
     for case in golden["cases"]:
         hits = []
         for number, prior_chunk_id in enumerate(case["fixture_prior_chunk_ids"]):
@@ -185,8 +198,13 @@ async def test_offline_golden_queries_retrieve_before_response_policy() -> None:
             assert all(result.artifact_version == "v003" for result in response.results)
             assert all(result.review_status == "verified" for result in response.results)
             assert not any(result.production_approved for result in response.results)
+            assert (
+                any(result.assessment_advisory_required for result in response.results)
+                is case["expected_advisory"]
+            )
         else:
             assert response.results == []
+            assert case["expected_advisory"] is False
 
 
 def test_high_risk_and_research_exclusions_are_absent_from_search_projection() -> None:

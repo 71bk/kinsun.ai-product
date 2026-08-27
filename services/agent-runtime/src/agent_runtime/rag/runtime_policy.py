@@ -109,7 +109,7 @@ class _CandidateBinding(_StrictModel):
     embedding_profile_id: Literal["ep-google-00a12ec45096fa9d97d9e9b6"]
 
 
-class _GlobalPolicy(_StrictModel):
+class _GlobalPolicyV1(_StrictModel):
     retrieval_audiences: tuple[Audience, ...]
     retrieve_before_response_policy: Literal[True]
     ordinary_retrieval_risk_levels: tuple[Literal["low", "medium"], ...]
@@ -122,7 +122,7 @@ class _GlobalPolicy(_StrictModel):
     production_approved: Literal[False]
 
 
-class _Summary(_StrictModel):
+class _SummaryV1(_StrictModel):
     source_count: Literal[14]
     chunk_count: Literal[554]
     response_metadata_ready_count: Literal[302]
@@ -138,7 +138,7 @@ class _Gates(_StrictModel):
     production_approved: Literal[False]
 
 
-class RuntimePolicyDocument(_StrictModel):
+class RuntimePolicyDocumentV1(_StrictModel):
     schema_version: Literal["1.0.0"]
     runtime_policy_version: Literal["v001"]
     source_policy_map_version: Literal["v002"]
@@ -146,10 +146,78 @@ class RuntimePolicyDocument(_StrictModel):
     status: Literal["STAGING_RUNTIME_CANDIDATE"]
     source_policy_binding: _SourcePolicyBinding
     candidate_binding: _CandidateBinding
-    global_policy: _GlobalPolicy
+    global_policy: _GlobalPolicyV1
     chunks: tuple[RuntimePolicyChunk, ...] = Field(min_length=554, max_length=554)
-    summary: _Summary
+    summary: _SummaryV1
     gates: _Gates
+
+
+class RuntimePolicyChunkV2(RuntimePolicyChunk):
+    requires_official_assessment: bool
+    requires_professional_assessment: bool
+
+
+class _AssessmentAcceptanceBinding(_StrictModel):
+    path: Literal[
+        "data/rag-v3/review/acceptance/v004/" "owner-assessment-response-policy-acceptance.json"
+    ]
+    sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    acceptance_version: Literal["v004"]
+
+
+class _PriorRuntimePolicyBinding(_StrictModel):
+    path: Literal[
+        "data/rag-v3/governance/source-family-policy/runtime/candidates/v001/"
+        "source-family-runtime-policy.json"
+    ]
+    sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    runtime_policy_version: Literal["v001"]
+    relationship: Literal["SUPERSEDES_WITHOUT_MUTATING_PRIOR_BYTES"]
+
+
+class _GlobalPolicyV2(_StrictModel):
+    retrieval_audiences: tuple[Audience, ...]
+    retrieve_before_response_policy: Literal[True]
+    ordinary_retrieval_risk_levels: tuple[Literal["low", "medium"], ...]
+    ordinary_retrieval_stop_normal_rag: Literal[False]
+    purpose_response_gate: Literal["EVALUATE_AFTER_RETRIEVAL"]
+    assessment_response_gate: Literal[
+        "ALLOW_GENERAL_INFORMATION_TRUE_REQUIRES_DETERMINISTIC_ADVISORY_NULL_DENIES"
+    ]
+    high_or_unknown_normal_rag: Literal["DENY"]
+    research_route: Literal["INDEPENDENT_RESEARCH_REVIEW_REQUIRED"]
+    runtime_safety_from_embedding_similarity: Literal[False]
+    production_approved: Literal[False]
+
+
+class _SummaryV2(_StrictModel):
+    source_count: Literal[14]
+    chunk_count: Literal[554]
+    response_metadata_ready_count: Literal[522]
+    risk_overlay_count: Literal[5]
+    professional_null_to_true_count: Literal[220]
+    official_null_to_true_count: Literal[5]
+    assessment_advisory_chunk_count: Literal[372]
+
+
+class RuntimePolicyDocumentV2(_StrictModel):
+    schema_version: Literal["2.0.0"]
+    runtime_policy_version: Literal["v002"]
+    source_policy_map_version: Literal["v002"]
+    candidate_artifact_version: Literal["v003"]
+    status: Literal["STAGING_RUNTIME_CANDIDATE"]
+    source_policy_binding: _SourcePolicyBinding
+    candidate_binding: _CandidateBinding
+    assessment_acceptance_binding: _AssessmentAcceptanceBinding
+    prior_runtime_policy_binding: _PriorRuntimePolicyBinding
+    global_policy: _GlobalPolicyV2
+    chunks: tuple[RuntimePolicyChunkV2, ...] = Field(min_length=554, max_length=554)
+    summary: _SummaryV2
+    gates: _Gates
+
+
+RuntimePolicyDocument = RuntimePolicyDocumentV1 | RuntimePolicyDocumentV2
+RuntimePolicyCandidate = RuntimePolicyChunk | RuntimePolicyChunkV2
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,7 +226,7 @@ class SourceFamilyRuntimePolicy:
 
     document: RuntimePolicyDocument
     sha256: str
-    _by_prior_chunk_id: Mapping[str, RuntimePolicyChunk]
+    _by_prior_chunk_id: Mapping[str, RuntimePolicyCandidate]
 
     @property
     def candidate_chunk_ids(self) -> tuple[str, ...]:
@@ -170,7 +238,7 @@ class SourceFamilyRuntimePolicy:
         *,
         audience: str | None,
         purpose: str | None,
-    ) -> RuntimePolicyChunk | None:
+    ) -> RuntimePolicyCandidate | None:
         """Apply post-retrieval role, purpose, assessment, and byte-integrity gates."""
 
         prior_chunk_id = source.get("chunk_id")
@@ -197,7 +265,11 @@ class SourceFamilyRuntimePolicy:
         professional = candidate.requires_professional_assessment
         if not isinstance(official, bool) or not isinstance(professional, bool):
             return None
-        if audience in NON_PROFESSIONAL_AUDIENCES and (official or professional):
+        if (
+            isinstance(self.document, RuntimePolicyDocumentV1)
+            and audience in NON_PROFESSIONAL_AUDIENCES
+            and (official or professional)
+        ):
             return None
         return candidate
 
@@ -224,13 +296,21 @@ def load_source_family_runtime_policy(
     if raw.startswith(b"\xef\xbb\xbf") or b"\r" in raw:
         raise RuntimePolicyError("source-family runtime policy must be UTF-8 LF-only without BOM")
     try:
-        json.loads(raw, object_pairs_hook=_unique_object)
+        payload = json.loads(raw, object_pairs_hook=_unique_object)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise RuntimePolicyError("source-family runtime policy is not valid UTF-8 JSON") from exc
     try:
         # JSON mode preserves strict scalar validation while accepting JSON arrays
         # for immutable tuple fields.
-        document = RuntimePolicyDocument.model_validate_json(raw)
+        if not isinstance(payload, dict):
+            raise RuntimePolicyError("source-family runtime policy root must be an object")
+        version = payload.get("runtime_policy_version")
+        if version == "v001":
+            document: RuntimePolicyDocument = RuntimePolicyDocumentV1.model_validate_json(raw)
+        elif version == "v002":
+            document = RuntimePolicyDocumentV2.model_validate_json(raw)
+        else:
+            raise RuntimePolicyError("source-family runtime policy version is unsupported")
     except ValidationError as exc:
         raise RuntimePolicyError("source-family runtime policy contract is invalid") from exc
     _validate_semantics(document)
@@ -263,8 +343,20 @@ def _validate_semantics(document: RuntimePolicyDocument) -> None:
         and bool(candidate.chunk_allowed_purposes)
         for candidate in document.chunks
     )
-    if response_ready != 302:
+    expected_ready = 302 if isinstance(document, RuntimePolicyDocumentV1) else 522
+    if response_ready != expected_ready:
         raise RuntimePolicyError("runtime response-metadata-ready count diverged")
+    if isinstance(document, RuntimePolicyDocumentV2):
+        professional_true = sum(
+            candidate.requires_professional_assessment for candidate in document.chunks
+        )
+        official_true = sum(candidate.requires_official_assessment for candidate in document.chunks)
+        advisory_count = sum(
+            candidate.requires_official_assessment or candidate.requires_professional_assessment
+            for candidate in document.chunks
+        )
+        if professional_true != 362 or official_true != 61 or advisory_count != 372:
+            raise RuntimePolicyError("runtime v002 assessment overlay semantics diverged")
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:

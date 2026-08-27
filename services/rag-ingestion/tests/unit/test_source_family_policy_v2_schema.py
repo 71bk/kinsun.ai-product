@@ -23,6 +23,16 @@ def test_source_family_policy_v2_schema_is_valid() -> None:
     Draft202012Validator.check_schema(_schema("rag-source-family-policy-map-v2.schema.json"))
 
 
+def test_owner_assessment_response_policy_acceptance_schema_is_valid() -> None:
+    Draft202012Validator.check_schema(
+        _schema("rag-owner-assessment-response-policy-acceptance-v1.schema.json")
+    )
+
+
+def test_source_family_runtime_policy_v2_schema_is_valid() -> None:
+    Draft202012Validator.check_schema(_schema("rag-source-family-runtime-policy-v2.schema.json"))
+
+
 def test_policy_v2_schema_fixes_production_and_external_gates() -> None:
     schema = _schema("rag-source-family-policy-map-v2.schema.json")
     gates = schema["$defs"]["Gates"]["properties"]

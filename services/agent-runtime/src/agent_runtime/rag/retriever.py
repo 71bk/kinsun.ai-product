@@ -175,16 +175,19 @@ async def close_retriever(retriever: Retriever | None) -> None:
 def _above_relevance_floor(hits: list[SearchHit], min_score: float) -> list[SearchHit]:
     """Drop hits the configured floor rejects, so a bad query yields NO_DATA.
 
-    PostgreSQL exposes both its pipeline-normalized hybrid score and bounded raw
-    vector similarity. The latter prevents a strongly relevant Chinese semantic
-    match from being erased merely because the lexical leg cannot segment the
-    natural-language question. Other backends retain the hybrid-only gate.
+    PostgreSQL exposes its pipeline-normalized hybrid score plus bounded raw
+    vector and lexical similarity. The raw legs prevent a strong Chinese semantic
+    or exact-title match from being erased by cross-leg score normalization.
+    Other backends retain the hybrid-only gate.
     """
 
     scored: list[SearchHit] = []
     for hit in hits:
         raw_vector_passes = hit.raw_vector_score is not None and hit.raw_vector_score >= min_score
-        if hit.score >= min_score or raw_vector_passes:
+        raw_lexical_passes = (
+            hit.raw_lexical_score is not None and hit.raw_lexical_score >= min_score
+        )
+        if hit.score >= min_score or raw_vector_passes or raw_lexical_passes:
             scored.append(hit)
     return scored
 
@@ -291,6 +294,10 @@ def _eligible_unique_results_v2(
                 )
             except (TypeError, ValueError, ValidationError):
                 return None
+            result.bind_assessment_requirements(
+                official=candidate.requires_official_assessment,
+                professional=candidate.requires_professional_assessment,
+            )
             if candidate.prior_chunk_id in seen:
                 continue
             seen.add(candidate.prior_chunk_id)
@@ -344,6 +351,14 @@ def _eligible_unique_results_v2(
             )
         except (TypeError, ValueError, ValidationError):
             return None
+        official = source.get("requires_official_assessment")
+        professional = source.get("requires_professional_assessment")
+        if not isinstance(official, bool) or not isinstance(professional, bool):
+            return None
+        result.bind_assessment_requirements(
+            official=official,
+            professional=professional,
+        )
         seen.add(chunk_id)
         results.append(result)
         if len(results) == top_k:

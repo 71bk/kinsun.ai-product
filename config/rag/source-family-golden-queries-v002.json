@@ -1,0 +1,138 @@
+{
+  "schema_version": "2.0.0",
+  "suite_id": "source-family-runtime-v002-golden-v002",
+  "scope": "OFFLINE_POLICY_ADVISORY_AND_CITATION_GATE_ONLY",
+  "live_relevance_evaluation": "NOT_EXECUTED",
+  "cases": [
+    {
+      "case_id": "elder_general_information_no_advisory",
+      "query": "長者平常要怎麼吃得比較均衡？",
+      "audience": "elder",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": false
+    },
+    {
+      "case_id": "elder_professional_material_with_advisory",
+      "query": "失智評估通常會看哪些事情？",
+      "audience": "elder",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "family_professional_material_with_advisory",
+      "query": "失智評估通常會看哪些事情？",
+      "audience": "family_caregiver",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "professional_material_with_advisory",
+      "query": "失智衛教手冊有哪些需要專業判斷的內容？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "admin_material_with_advisory",
+      "query": "檢查失智衛教專業評估資料的引用。",
+      "audience": "system_admin",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0007",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0008",
+        "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0009"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "elder_legal_reference_null_overlay_with_advisory",
+      "query": "長照法是什麼？",
+      "audience": "elder",
+      "purpose": "legal_reference",
+      "fixture_prior_chunk_ids": [
+        "moj_long_term_care_services_act_20210609_rag_v2_v002_0001",
+        "moj_long_term_care_services_act_20210609_rag_v2_v002_0002",
+        "moj_long_term_care_services_act_20210609_rag_v2_v002_0003"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "official_and_professional_null_overlay_with_advisory",
+      "query": "居家訪視紀錄表怎麼填？",
+      "audience": "care_professional",
+      "purpose": "form_reference",
+      "fixture_prior_chunk_ids": [
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0001",
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0002",
+        "mohw_home_care_service_supervisor_manual_forms_appendix_20260529_rag_v2_v002_0003"
+      ],
+      "expected_status": "SUCCESS",
+      "expected_advisory": true
+    },
+    {
+      "case_id": "purpose_mismatch_still_denied",
+      "query": "長者平常要怎麼吃得比較均衡？",
+      "audience": "elder",
+      "purpose": "legal_reference",
+      "fixture_prior_chunk_ids": [
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0001",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0007",
+        "hpa_older_adult_nutrition_manual_20230525_rag_v2_v002_0008"
+      ],
+      "expected_status": "NO_DATA",
+      "expected_advisory": false
+    },
+    {
+      "case_id": "empty_chunk_purpose_still_denied",
+      "query": "A 單位個案管理手冊的工作內容是什麼？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "fixture_prior_chunk_ids": [
+        "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0001",
+        "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0002",
+        "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0003"
+      ],
+      "expected_status": "NO_DATA",
+      "expected_advisory": false
+    }
+  ],
+  "exclusion_cases": [
+    {
+      "case_id": "high_risk_not_in_search_projection",
+      "successor_chunk_id": "hpa_elder_fall_prevention_tips_manual_202102_rag_v3_v003_0023",
+      "expected_projection_presence": false
+    },
+    {
+      "case_id": "research_source_not_in_search_projection",
+      "source_id": "fetzer_ucla_loneliness_scale_compendium",
+      "expected_projection_presence": false
+    }
+  ],
+  "production_approved": false
+}

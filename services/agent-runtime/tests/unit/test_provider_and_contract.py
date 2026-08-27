@@ -172,6 +172,8 @@ def test_knowledge_prompt_requires_readable_body_without_model_citations() -> No
     assert "第一行先用一句話直接回答" in system_prompt
     assert "每行重點以「• 」開頭" in system_prompt
     assert "不要輸出標題、Markdown 連結或「引用來源」清單" in system_prompt
+    assert "不得替任何人判定長照申請資格、長照等級、補助額度" in system_prompt
+    assert "官方或專業評估提醒會由系統另外附上" in system_prompt
 
 
 @pytest.mark.asyncio

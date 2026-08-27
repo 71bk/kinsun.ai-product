@@ -1,0 +1,74 @@
+{
+  "checks": [
+    {
+      "name": "owner_acceptance_v004_valid",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_runtime_v001_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "source_policy_v002_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_projection_554_unique_chunks",
+      "status": "PASS"
+    },
+    {
+      "name": "professional_null_220_overlaid_true",
+      "status": "PASS"
+    },
+    {
+      "name": "official_null_5_overlaid_true",
+      "status": "PASS"
+    },
+    {
+      "name": "assessment_null_count_zero",
+      "status": "PASS"
+    },
+    {
+      "name": "empty_purpose_32_still_denied",
+      "status": "PASS"
+    },
+    {
+      "name": "response_metadata_ready_522",
+      "status": "PASS"
+    },
+    {
+      "name": "true_requires_deterministic_advisory",
+      "status": "PASS"
+    },
+    {
+      "name": "high_stop_research_exclusions_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "chunk_count": 554,
+  "external_sync": "NOT_AUTHORIZED",
+  "fail_count": 0,
+  "golden_query": "NOT_EXECUTED",
+  "official_null_to_true_count": 5,
+  "pass_count": 14,
+  "production_approved": false,
+  "professional_null_to_true_count": 220,
+  "response_metadata_ready_count": 522,
+  "runtime_integration": "READY_FOR_STAGING_TEST",
+  "runtime_policy_version": "v002",
+  "schema_version": "2.0.0",
+  "source_count": 14,
+  "status": "PASS"
+}

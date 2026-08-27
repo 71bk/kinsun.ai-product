@@ -682,6 +682,34 @@ def test_raw_vector_relevance_can_pass_when_chinese_lexical_score_is_weak() -> N
     }
 
 
+def test_raw_lexical_relevance_can_pass_when_normalized_hybrid_score_is_lower() -> None:
+    hits = [
+        SearchHit(
+            score=0.65,
+            source={"chunk_id": f"exact-law-{number}"},
+            raw_lexical_score=1.0 - number / 100,
+            raw_vector_score=0.5,
+        )
+        for number in range(3)
+    ]
+    hits.append(
+        SearchHit(
+            score=0.65,
+            source={"chunk_id": "weak-law"},
+            raw_lexical_score=0.69,
+            raw_vector_score=0.5,
+        )
+    )
+
+    relevant = _above_relevance_floor(hits, 0.7)
+
+    assert {hit.source["chunk_id"] for hit in relevant} == {
+        "exact-law-0",
+        "exact-law-1",
+        "exact-law-2",
+    }
+
+
 @pytest.mark.asyncio
 async def test_stop_normal_rag_is_rejected_for_every_profile() -> None:
     for profile in ("natural_language", "legal"):

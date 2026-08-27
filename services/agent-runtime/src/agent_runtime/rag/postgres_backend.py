@@ -86,17 +86,17 @@ eligible AS (
      AND embedding.chunk_id = projection.chunk_id
      AND embedding.embedding_profile_id = CAST(:embedding_profile_id AS text)
      AND embedding.embedding_text_sha256 = projection.embedding_text_sha256
-    WHERE projection.governance ->> 'data_classification' = 'public'
-      AND projection.governance ->> 'distribution_scope' = 'public_knowledge'
-      AND projection.provenance ->> 'is_official_source' = 'true'
-      AND (
-          (
-              CAST(:policy_overlay_enabled AS boolean) IS TRUE
-              AND cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554
-              AND projection.chunk_id = ANY(CAST(:policy_candidate_chunk_ids AS text[]))
-          )
-          OR (
+    WHERE (
+        (
+            CAST(:policy_overlay_enabled AS boolean) IS TRUE
+            AND cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554
+            AND projection.chunk_id = ANY(CAST(:policy_candidate_chunk_ids AS text[]))
+        )
+        OR (
               CAST(:policy_overlay_enabled AS boolean) IS FALSE
+              AND projection.governance ->> 'data_classification' = 'public'
+              AND projection.governance ->> 'distribution_scope' = 'public_knowledge'
+              AND projection.provenance ->> 'is_official_source' = 'true'
               AND projection.current_status = 'current'
               AND projection.stop_normal_rag IS FALSE
               AND projection.retrieval_eligible IS TRUE
@@ -128,16 +128,22 @@ eligible AS (
                       AND projection.production_approved IS FALSE
                   )
               )
-          )
-      )
+        )
+    )
 ),
 lexical_raw AS (
     SELECT
         eligible.chunk_id,
-        greatest(
-            ts_rank_cd(eligible.search_vector, query_input.ts_query, 32),
-            public.word_similarity(query_input.lexical_query, eligible.lexical_text)
-        ) AS raw_score
+        CASE
+            WHEN query_input.lexical_query LIKE
+                '%' || lower(eligible.document_title) || '%'
+                THEN 1.0
+            ELSE 0.0
+        END
+        + greatest(
+              ts_rank_cd(eligible.search_vector, query_input.ts_query, 32),
+              public.word_similarity(query_input.lexical_query, eligible.lexical_text)
+          ) AS raw_score
     FROM eligible
     CROSS JOIN query_input
     WHERE eligible.search_vector @@ query_input.ts_query
@@ -148,6 +154,7 @@ lexical_raw AS (
 lexical_normalized AS (
     SELECT
         chunk_id,
+        raw_score,
         CASE
             WHEN max(raw_score) OVER () > min(raw_score) OVER ()
                 THEN (raw_score - min(raw_score) OVER ())
@@ -185,6 +192,7 @@ vector_normalized AS (
 fused AS (
     SELECT
         coalesce(lexical.chunk_id, vector.chunk_id) AS chunk_id,
+        coalesce(lexical.raw_score, 0.0) AS raw_lexical_score,
         coalesce(vector.raw_score, 0.0) AS raw_vector_score,
         CAST(:bm25_weight AS double precision)
             * coalesce(lexical.normalized_score, 0.0)
@@ -194,15 +202,17 @@ fused AS (
     FULL OUTER JOIN vector_normalized AS vector USING (chunk_id)
 ),
 ranked AS (
-    SELECT chunk_id, score, raw_vector_score
+    SELECT chunk_id, score, raw_lexical_score, raw_vector_score
     FROM fused
     WHERE score >= CAST(:min_score AS double precision)
+       OR raw_lexical_score >= CAST(:min_score AS double precision)
        OR raw_vector_score >= CAST(:min_score AS double precision)
     ORDER BY score DESC, chunk_id
     LIMIT CAST(:top_k AS integer)
 )
 SELECT
     ranked.score,
+    ranked.raw_lexical_score,
     ranked.raw_vector_score,
     eligible.chunk_id,
     eligible.source_id,
@@ -387,15 +397,28 @@ def _to_search_hits(rows: list[Mapping[str, object]]) -> list[SearchHit]:
             raise PostgresSearchBackendError(
                 "PostgreSQL search returned a malformed raw vector score"
             )
+        raw_lexical_score = row.get("raw_lexical_score")
+        if raw_lexical_score is not None and (
+            isinstance(raw_lexical_score, bool)
+            or not isinstance(raw_lexical_score, int | float)
+            or not math.isfinite(float(raw_lexical_score))
+        ):
+            raise PostgresSearchBackendError(
+                "PostgreSQL search returned a malformed raw lexical score"
+            )
         source = dict(row)
         source.pop("score", None)
         source.pop("raw_vector_score", None)
+        source.pop("raw_lexical_score", None)
         hits.append(
             SearchHit(
                 score=float(score),
                 source=source,
                 raw_vector_score=(
                     float(raw_vector_score) if raw_vector_score is not None else None
+                ),
+                raw_lexical_score=(
+                    float(raw_lexical_score) if raw_lexical_score is not None else None
                 ),
             )
         )

@@ -1,0 +1,57 @@
+{
+  "acceptance_version": "v004",
+  "checks": [
+    {
+      "name": "owner_statements_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_runtime_v001_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "source_policy_v002_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "professional_null_220_authorized_true",
+      "status": "PASS"
+    },
+    {
+      "name": "official_null_5_authorized_true",
+      "status": "PASS"
+    },
+    {
+      "name": "true_requires_deterministic_advisory",
+      "status": "PASS"
+    },
+    {
+      "name": "personalized_diagnosis_and_eligibility_denied",
+      "status": "PASS"
+    },
+    {
+      "name": "chunk_bytes_not_mutated",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "external_sync": "NOT_AUTHORIZED",
+  "fail_count": 0,
+  "official_null_to_true_count": 5,
+  "pass_count": 11,
+  "production_approved": false,
+  "professional_null_to_true_count": 220,
+  "schema_version": "1.0.0",
+  "status": "PASS"
+}

@@ -67,9 +67,15 @@ def make_request(**overrides: object) -> AgentRunRequest:
     return AgentRunRequest.model_validate(values)
 
 
-def make_result(position: int, *, text: str | None = None) -> RetrievalResultV2:
+def make_result(
+    position: int,
+    *,
+    text: str | None = None,
+    official_assessment: bool = False,
+    professional_assessment: bool = False,
+) -> RetrievalResultV2:
     source_url = f"https://example.invalid/long-term-care/{position}"
-    return RetrievalResultV2(
+    result = RetrievalResultV2(
         chunk_id=f"SYNTHETIC-CHUNK-{position:03d}",
         source_id="SYNTHETIC-SOURCE",
         text=text or f"這是第 {position} 筆合成的長照申請資訊。",
@@ -97,6 +103,11 @@ def make_result(position: int, *, text: str | None = None) -> RetrievalResultV2:
         review_status="needs_review",
         production_approved=False,
     )
+    result.bind_assessment_requirements(
+        official=official_assessment,
+        professional=professional_assessment,
+    )
+    return result
 
 
 def success_response(request_id: str, count: int = 4) -> RetrievalResponseV2:
@@ -144,6 +155,37 @@ async def test_successful_rag_chunks_reach_agent_context_and_reply_cites_every_s
         assert "合成衛生機關" in response.reply_text
         assert f"合成長照指引 {position}" in response.reply_text
         assert f"https://example.invalid/long-term-care/{position}" in response.reply_text
+
+
+@pytest.mark.asyncio
+async def test_assessment_required_rag_adds_deterministic_advisory() -> None:
+    request = make_request(input_text="長照法是什麼？")
+    provider = CapturingProvider(reply="法規資料列出長照服務的適用原則。")
+    retrieval = RetrievalResponseV2(
+        schema_version="2.0.0",
+        request_id=request.request_id,
+        status="SUCCESS",
+        fallback_message=None,
+        results=[make_result(position, official_assessment=True) for position in range(1, 4)],
+    )
+    retriever = StubRetriever(retrieval)
+
+    response = await AgentOrchestrator(provider, max_steps=3).run(
+        request,
+        rag_retriever=retriever,
+    )
+
+    assert response.result_status == ResultStatus.SUCCESS
+    assert retriever.requests[0].query_profile == "legal"
+    assert retriever.requests[0].purpose == "general_information"
+    assert retriever.requests[0].query == "長期照顧服務法是什麼？"
+    assert "提醒：這些資料涉及主管機關的正式評估" in response.reply_text
+    assert response.reply_text.index("提醒：") < response.reply_text.index("引用來源：")
+    assert provider.context_manifest is not None
+    rag_item = next(
+        item for item in provider.context_manifest.items if item.source_type == "rag-approved"
+    )
+    assert "只能說明一般資訊" in rag_item.content
 
 
 @pytest.mark.asyncio

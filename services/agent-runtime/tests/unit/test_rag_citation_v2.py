@@ -6,7 +6,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agent_runtime.rag.citations import render_citation
+from agent_runtime.rag.citations import (
+    append_citations,
+    render_citation,
+    render_controlled_cited_chunk,
+)
 from agent_runtime.rag.client import OpenSearchClient
 from agent_runtime.rag.hybrid_search import HybridSearch
 from agent_runtime.rag.models import (
@@ -253,6 +257,23 @@ def test_known_publisher_code_has_a_readable_public_label() -> None:
     rendered = render_citation(result)
 
     assert "國民健康署《Synthetic Governed Guide》" in rendered
+
+
+def test_assessment_flags_add_advisory_without_changing_public_contract() -> None:
+    payload = make_hit("assessment-advisory")["_source"]
+    assert isinstance(payload, dict)
+    result = RetrievalResultV2.model_validate(_public_result_payload(payload))
+    result.bind_assessment_requirements(official=True, professional=True)
+
+    context = render_controlled_cited_chunk(result)
+    reply = append_citations("這是一般資訊。", [result])
+
+    assert "只能說明一般資訊" in context
+    assert "不得替任何人判定診斷、資格、長照等級、補助額度" in context
+    assert "提醒：這些資料涉及主管機關或專業人員的評估" in reply
+    assert reply.index("提醒：") < reply.index("引用來源：")
+    assert "requires_official_assessment" not in result.model_dump()
+    assert "requires_professional_assessment" not in result.model_dump()
 
 
 @pytest.mark.parametrize("value", ["https://", "ftp://example.test/file", "https://bad host.test"])
