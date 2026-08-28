@@ -11,6 +11,13 @@
   --cyan-600: #0891b2;
   --cyan-700: #0e7490;
   --cyan-900: #164e63;
+  --blue-50: #e8f4f8;
+  --blue-100: #d0e3ed;
+  --blue-600: #1565c0;
+  --blue-800: #0d47a1;
+  --blue-slate-700: #2c3e50;
+  --blue-slate-500: #6c757d;
+  --blue-canvas: #f0f7fa;
   --forest-950: #0b3b35;
   --forest-900: #114f46;
   --forest-800: #17665a;
@@ -159,7 +166,23 @@
 /* ---- surface: care (professional). Deliberately more neutral background —
        a saturated background fatigues over a long shift (§4.1). ---- */
 [data-surface='care'] {
-  --color-background: var(--slate-25);
+  --color-primary: var(--blue-600);
+  --color-primary-strong: var(--blue-800);
+  --color-primary-text: var(--blue-800);
+  --color-primary-weak: var(--blue-50);
+  --color-foreground: var(--blue-slate-700);
+  --color-muted-foreground: var(--blue-slate-500);
+  --color-background: var(--blue-canvas);
+  --color-border: var(--blue-100);
+  --color-border-strong: var(--blue-600);
+  --color-ring: var(--blue-600);
+  --color-surface-subtle: var(--blue-50);
+  --color-interactive-border: var(--blue-800);
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-1: 0 2px 8px rgba(13, 71, 161, 0.08);
+  --shadow-2: 0 5px 16px rgba(13, 71, 161, 0.1);
+  --shadow-3: 0 12px 32px rgba(13, 71, 161, 0.14);
   --text-xs: 12px;
   --text-sm: 14px;
   --text-base: 16px;

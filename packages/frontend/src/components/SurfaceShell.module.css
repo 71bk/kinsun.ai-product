@@ -21,6 +21,16 @@
   background: var(--color-surface);
 }
 
+.shell[data-surface='care'] .header {
+  min-height: 70px;
+  padding: var(--space-3) var(--space-6);
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+.shell[data-surface='care'] .surfaceLabel {
+  color: var(--color-primary-text);
+}
+
 .surfaceLabel {
   color: var(--color-foreground);
   font-size: var(--text-lg);
@@ -78,5 +88,9 @@
   .utilities {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .shell[data-surface='care'] .header {
+    padding-inline: var(--space-4);
   }
 }

@@ -20,7 +20,8 @@ export function CareSidebar({ children }: { children: ReactNode }) {
     const Icon = item.icon;
     const active =
       item.href === '/dashboard'
-        ? pathname === '/dashboard' || /^\/dashboard\/[^/]+$/.test(pathname)
+        ? pathname === '/dashboard' ||
+          (pathname !== '/dashboard/assignments' && /^\/dashboard\/[^/]+$/.test(pathname))
         : pathname.startsWith(item.href);
 
     return (

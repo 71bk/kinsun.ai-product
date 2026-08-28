@@ -3,7 +3,7 @@
   gap: var(--space-4);
   min-width: 0;
   padding: var(--card-pad);
-  border: 2px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: var(--shadow-1);
@@ -82,13 +82,13 @@
 }
 
 .elderLink {
-  border: 2px solid var(--color-interactive-border);
+  border: 1px solid var(--color-interactive-border);
   color: var(--color-primary-text);
   text-decoration: none;
 }
 
 .command {
-  border: 2px solid var(--color-primary-strong);
+  border: 1px solid var(--color-primary-strong);
   background: var(--color-primary-strong);
   color: var(--color-on-primary);
   cursor: pointer;

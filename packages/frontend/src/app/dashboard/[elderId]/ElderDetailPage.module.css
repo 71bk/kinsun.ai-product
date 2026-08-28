@@ -22,7 +22,7 @@
 
 .backLink,
 .secondaryButton {
-  border: 2px solid var(--color-interactive-border);
+  border: 1px solid var(--color-interactive-border);
   background: var(--color-surface);
   color: var(--color-primary-text);
 }
@@ -32,7 +32,7 @@
 }
 
 .primaryButton {
-  border: 2px solid var(--color-primary-strong);
+  border: 1px solid var(--color-primary-strong);
   background: var(--color-primary-strong);
   color: var(--color-on-primary);
   cursor: pointer;
@@ -56,14 +56,19 @@
   display: flex;
   gap: var(--space-1);
   margin-block-end: var(--space-5);
-  border-block-end: 1px solid var(--color-border);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
 }
 
 .tab {
   min-height: var(--touch-min);
   padding: var(--space-2) var(--space-4);
   border: 0;
-  border-block-end: 3px solid transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-muted-foreground);
   font-weight: 700;
@@ -71,8 +76,8 @@
 }
 
 .tab[aria-selected='true'] {
-  border-block-end-color: var(--color-primary);
-  color: var(--color-primary-text);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .tab:hover {
@@ -111,17 +116,17 @@
 @media (max-width: 39rem) {
   .tabs {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    border-block-end: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--color-border);
   }
 
   .tab {
-    border: 2px solid var(--color-interactive-border);
-    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    padding-inline: var(--space-2);
   }
 
   .tab[aria-selected='true'] {
-    border-color: var(--color-interactive-border);
-    background: var(--color-primary-weak);
+    border-color: var(--color-primary);
+    background: var(--color-primary);
   }
 }
