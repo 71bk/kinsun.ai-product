@@ -1,0 +1,77 @@
+{
+  "entries": [
+    {
+      "bytes": 1515,
+      "path": ".gitattributes",
+      "sha256": "c8265093e3123c1ca5a1889c965b6246b75f6a7bdb3f421506d35511943949c0"
+    },
+    {
+      "bytes": 8600,
+      "path": "contracts/schemas/rag/rag-owner-rag-closeout-acceptance-v1.schema.json",
+      "sha256": "1ab6cd5a53b47c25d2aede0903355e782a6147efe387a2fc8830705f35def34b"
+    },
+    {
+      "bytes": 3161,
+      "path": "data/rag-v3/candidates/v003/SHA256SUMS.txt",
+      "sha256": "8dc7fc5268dc35df4b0cd9f8b8a380761ddfdf3a0e06360d2cc0ebe8977e55c3"
+    },
+    {
+      "bytes": 458,
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/SHA256SUMS.txt",
+      "sha256": "78775998eb8ccc77d06a9a79543ab913036fa863265d2d17bb50b14b49c4798c"
+    },
+    {
+      "bytes": 63864,
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+      "sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+    },
+    {
+      "bytes": 454,
+      "path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/SHA256SUMS.txt",
+      "sha256": "38cf007e9c1c1889b4b8bdeaa0e49dba7ea7d814229ba06d37e61bf4eac09092"
+    },
+    {
+      "bytes": 1156781,
+      "path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json",
+      "sha256": "99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd"
+    },
+    {
+      "bytes": 356,
+      "path": "data/rag-v3/review/acceptance/v005/SHA256SUMS.txt",
+      "sha256": "52fadc07e0d9a3e77a42682702ed5a33690a92a5fdaafe32f0ac0a45b46a393e"
+    },
+    {
+      "bytes": 21152,
+      "path": "data/rag-v3/review/acceptance/v005/owner-purpose-classification-acceptance.json",
+      "sha256": "a447aede1d6b871afd40294f5ab39b4ad81e4fa96b9a00a83b7897576af5cd24"
+    },
+    {
+      "bytes": 881,
+      "path": "scripts/rag/build_rag_governance_closeout_acceptance.py",
+      "sha256": "9d23af45e901c0532d9cd26d513b4f767c6d79c4afd5b4e1c3e98b9c872a83fd"
+    },
+    {
+      "bytes": 880,
+      "path": "scripts/rag/validate_rag_governance_closeout_acceptance.py",
+      "sha256": "c478a6d40342d371060fb1417c7624a1ca829678212b662f087eb7cf01a51257"
+    },
+    {
+      "bytes": 18931,
+      "path": "services/rag-ingestion/src/rag_ingestion/rag_governance_closeout_acceptance.py",
+      "sha256": "c5f3d998d01a650e49a432831ffeda26df59e91b566cddb15168242dbe480315"
+    },
+    {
+      "bytes": 2900,
+      "path": "services/rag-ingestion/tests/integration/test_rag_governance_closeout_acceptance.py",
+      "sha256": "e79ffef1b45e94feed87a9c9b8ae90eae7b6659794aaa9f940e16dd8c6a63b4b"
+    }
+  ],
+  "entry_count": 13,
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_sha256": "b5487cfb6dbeac8602ee5cef4a6e473896f6e52b31ad02b22390773542eaef83",
+  "kind": "rag_governance_closeout_acceptance_v006_validation_input_inventory",
+  "production_approved": false,
+  "runtime_policy_version": "v002",
+  "schema_version": "1.0.0",
+  "scope": "v006 schema, builder, validator, tests, and hash-bound formal inputs"
+}

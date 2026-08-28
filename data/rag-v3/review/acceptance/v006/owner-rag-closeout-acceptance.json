@@ -1,0 +1,1123 @@
+{
+  "acceptance_version": "v006",
+  "authorization": {
+    "channel": "interactive_user_instruction",
+    "statements": [
+      "27 筆 stop_normal_rag=true，可以開放只是到時候在根據身份別確認可以檢索的內容，32筆A檢核通過"
+    ],
+    "statements_sha256": "fcdea9c4eedb88d1f24c394137f070455539ccdeb23831428bd923164c896925"
+  },
+  "bindings": {
+    "candidate_checksums_sha256": "8dc7fc5268dc35df4b0cd9f8b8a380761ddfdf3a0e06360d2cc0ebe8977e55c3",
+    "candidate_path": "data/rag-v3/candidates/v003",
+    "prior_purpose_acceptance_path": "data/rag-v3/review/acceptance/v005/owner-purpose-classification-acceptance.json",
+    "prior_purpose_acceptance_sha256": "a447aede1d6b871afd40294f5ab39b4ad81e4fa96b9a00a83b7897576af5cd24",
+    "prior_runtime_policy_path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json",
+    "prior_runtime_policy_sha256": "99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd",
+    "source_policy_path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+    "source_policy_sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071"
+  },
+  "conditional_stop_decision": {
+    "affected_chunk_count": 27,
+    "audience_review_pending_count": 27,
+    "decisions": [
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0020",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0020",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "c81fd4d8828b406dc6a5f30359b0b32916f6d6a355df362314b5020e446e811d"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0021",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0021",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "2c1f6bdb1627959bfda2f3089a29225ab21104bb36c4e60cf06fb4157715abfb"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0022",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0022",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "3c2bf5b943e05cec886e91ec4575ed45ffc24810be7e38b2485d9ca964763331"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0023",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0023",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "6553e321243f72c1f387fc975fb4087860b8fb8e77d9f846ba68d0cab2ef9db1"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0024",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0024",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "7a606694f57d938c7caae34675ac93c04b1a6973ce8773cd71b0fa4d87c948b6"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0025",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0025",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "3fae887004b5633dcd4da0b0d04a888c2d05b153d1fbc3ef901370bb15b0110f"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0026",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0026",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "09ff54aad8b72d6dc6ad911d4a87b11e2b131bac6dfe2f58e33aa0f35e67491c"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0037",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0037",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "3f866700f14e9ca15b53649ec31a57a1a944c9382bc4aec72b6308d684cbe3f2"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0038",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0038",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "63edbd82fda37dc2014a00f9bf13ab89a906384663ec5b866925dc7d804bb75e"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0039",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0039",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "c2777b307384d67e5505b81476b256b50d49dad6996e2abc668bb829ec1b2a72"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0040",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0040",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "e328b79716ef23c1a3cc9c5ae88b67df60594074e3a285ff773aed36eedbda99"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0041",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0041",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "31132f54bd3e5b5c4d364e2ddfa292230f1728cf9a8f2fa0ed0428ab6f379888"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0042",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0042",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "a59c7dd492c1a8fb5cb9bd0e4829900c1d7e9a9ff49794c62ac8019e2d5b122f"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0043",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0043",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "deb3feb64128ec75c35fc377c578f52d141938db73e7b477ac3100fd633c266a"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0044",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0044",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "d07f95110f241a50c89bcfdfc7eef7940628a391fb8f6fd97df6ff858006d346"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0045",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0045",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "c16a0e4384c8e763e17c2aeaf5ee12c9b05e88391a21cfb4ed67aee09bbc644b"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0046",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0046",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "f19272060bedd4c0bce13477206757088d766beed5cdfa1eb75d2da85de82323"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0047",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0047",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "a33e461cab46156e5d7df75c6579c19afedb74d22acffe2eada851b78c1fbc39"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0048",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0048",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "84e77e43736fb43e798d01475df878c25dd26041eb5f0322e5ae523280c4077b"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0049",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0049",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "cd932bfd521875b6ae48d49ace723d687110a52adaf7d9cb8f97e254cb6153bf"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0050",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0050",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "b7a5fec90cc4e07abb6f54ffd164f414dd9e097c6c9dcfea9c5572a56700d849"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0051",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0051",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "77a011c93a22a1fb006d3215e12909414e3d7c86561a54f4bf0946ecc378b7ae"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0052",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0052",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "dfc436f81a8752fbf12defc508acd5455e25964867725520caccff85a899912b"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0053",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0053",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "9c79e1696cd2243e44cdb78b387d8267a298217f92dcee6a7848c1ea39ae36bd"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0054",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0054",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "2af58da0f7772ea721cf954f96113a060c704b3e397b623341a8b1d161ea4b40"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0055",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0055",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "1abd4808fcb4e48ed1dc9019da76c39c4355c8b4dde5871e36d9cdd8908c49e6"
+      },
+      {
+        "audience_review_status": "needs_review",
+        "chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v3_v003_0056",
+        "effective_risk_level": "medium",
+        "observed_allowed_audiences": [
+          "care_professional",
+          "family_caregiver"
+        ],
+        "observed_allowed_purposes": [
+          "general_information",
+          "health_education",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+        "prior_chunk_id": "hpa_dementia_health_education_resource_manual_201610_rag_v2_v002_0056",
+        "required_next_gate": "PER_CHUNK_AUDIENCE_AND_PURPOSE_VERIFICATION",
+        "runtime_retrieval_active": false,
+        "source_id": "hpa_dementia_health_education_resource_manual_201610",
+        "stop_normal_rag_preserved": true,
+        "text_sha256": "42d27ab735be28d5e6f2a0bc2531177d0f37d45067c873b6a2788b7cd51ef439"
+      }
+    ],
+    "owner_disposition": "CONDITIONALLY_RELEASABLE_AFTER_AUDIENCE_REVIEW",
+    "runtime_activation": "DENIED_PENDING_AUDIENCE_REVIEW",
+    "runtime_policy_candidate_count": 0,
+    "stop_normal_rag_preserved": true
+  },
+  "electronic_signature": {
+    "assurance": "RECORDED_EXPLICIT_USER_AUTHORIZATION",
+    "cryptographic_signature": null,
+    "intent": "VERIFY_PURPOSE_AND_AUTHORIZE_CONDITIONAL_STOP_REVIEW",
+    "signature_value": "IanHsu"
+  },
+  "gates": {
+    "environment": "STAGING",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_approved": false,
+    "production_status": "BLOCKED",
+    "runtime_policy_change": "NOT_AUTHORIZED_BY_THIS_ACCEPTANCE"
+  },
+  "project_owner_id": "IanHsu",
+  "purpose_verification": {
+    "affected_chunk_count": 32,
+    "candidate_chunk_bytes_mutated": false,
+    "decisions": [
+      {
+        "allowed_purposes": [
+          "general_information",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0001",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0001",
+        "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "41c4bba213c1f236c373124cc2a9885e4647bdf20d3858571eb3ed9c9fac9f71"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0002",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0002",
+        "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "2f4c8c3c5e0e9a1573b30bafc490788546992a271a55ed6916d4951aaaeb655a"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0003",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0003",
+        "rationale_code": "BACKGROUND_AND_SOURCE_CONTEXT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "7a93990e5d02160041119d6490ed60c969664d6811eb4d30eab51a7b8da2500a"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0005",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0005",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "68947e8b5b6e144636d68a1f4cb302b524ef1f4ef84783120b1d9aa3fd62e7d5"
+      },
+      {
+        "allowed_purposes": [
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0007",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0007",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "5f72a3dcece59cf848c3cdb4790a6d7d19b645f339becca9f67a2f63001de2e7"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0008",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0008",
+        "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "cf2e9ae6f29a3acf2ab59608d542c42f4e5e925e3f647824adeb0ade119da11c"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0009",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0009",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "fff9fe0428f80421ce46cbe708d28f4f1360f6e33a6c98332e9fbbef4287a8f9"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0011",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0011",
+        "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "7edd8ebc680980abd0b7b97696e7236321379be4a4b46f56a47edc8d4d2104b3"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0012",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0012",
+        "rationale_code": "POLICY_OR_TRAINING_MANUAL",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "0b80e9eeaaeb9abbb2f1a337eb9660f325f7fffc32875dadd33a13d71abf8c46"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0016",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0016",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "62fd3cdc5e81adc796ff565519c456ece573b8049a0c1b78669e23cb3e5938a1"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0017",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0017",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "77c521f11bfb6b2cb255d99e3d313445ab7a244c5ff22dbfff2117aadb5845cc"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0019",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0019",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "bde8389c5995f3538fe1f462806af8fd10e5c477ae317d34479fe5aa5bab2c9d"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0020",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0020",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "99b0bd386da6179ed49f287a36ce9e3ab50e3f67ba3510afdf9a701a16007aa9"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0023",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0023",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "a5b45759806be88527627c702463417c2cc77e44323285dd7961a301c72fecab"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0024",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0024",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "564cc0469a9fc0c23106f9f2da6068502f3d323de875b893fccfcc3c6ace62ef"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0025",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0025",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "2ce9a7736457b5a7a467a08c15406761a435cb9c9a002c827d1ceaafed7ab635"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0026",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0026",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "8b88dcfcab63c1cfb5622f53c3770ec8051e5c8f4712151d4ef81a09a0c73210"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0030",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0030",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "6a9a51673c4542a7e0e0278cbc7816c2d21b49535682807a531207e8a9b83df6"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0031",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0031",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "449bd1d0674db3c1ac1b1cb17b2337945674a9af5c5709a755b0fef66965a902"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0032",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0032",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "0096f08b75e1c358b2974ee1461a63076ff3eaa40912ddbcab1352721de90f03"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0036",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0036",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "883cd74997d9569daafb559314f692d907402532df726b5bedc0b626acf8094a"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0037",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0037",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "0b7feb99f7180a5e9f3745c643e972a5fe4b183116a155833deddabc84a5a698"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0039",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0039",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "7aeda7d72284ffd4382e7876242bba5df423326ebbb575f5c83a87b8ea4b2fb7"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0040",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0040",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "e26c170ec16dd30906c6bdaedf139426589c7ea1dff85d67d86be4d3009a0e37"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0046",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0046",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "5c6b4f6258e9b49cbcfc758119c7d74143a07472cec5e56e784e7293b60262c8"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0057",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0057",
+        "rationale_code": "CASE_MANAGEMENT_WORKFLOW",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "20a27f0664e1d206f2fd5c397c8cd6aa88a87ec24ec48c9908b61c88b65811bd"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0060",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0060",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "0653077fc7b25f495b61e23dad6cfbf75aaf263712e44c2f6bd09894540abffa"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0061",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0061",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "1ffd03a61b9e4ba378a76f4b1b3ba3db853a478a939ffe83718058c1dc8de84c"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0062",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0062",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "62cfc568fc0901ee7e3812f0c13df3811c8f4ca9b10e0f581ed3e78ca3840e28"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0063",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0063",
+        "rationale_code": "FOLLOWUP_QUALITY_OR_COORDINATION",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "20994fe63861020e9c75b63c0cad6831a0d99e9b5e35eae956af4169ab1e90d1"
+      },
+      {
+        "allowed_purposes": [
+          "care_record",
+          "care_summary",
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0064",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0064",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "b9b522832a76248555c634e36ef249918a45b47905f5dd6edb68ab9ee26f6374"
+      },
+      {
+        "allowed_purposes": [
+          "general_information",
+          "manual_review",
+          "resource_navigation",
+          "source_lookup"
+        ],
+        "chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v3_v003_0065",
+        "decision_review_status": "verified",
+        "prior_chunk_id": "mohw_a_unit_case_manager_manual_20230719_rag_v2_v002_0065",
+        "rationale_code": "RESOURCE_REFERRAL_OR_ASSIGNMENT",
+        "source_id": "mohw_a_unit_case_manager_manual_20230719",
+        "text_sha256": "6083192e349f30bc2e6d2c834300cfe61e618f703236e72c3b232c579bd878e1"
+      }
+    ],
+    "human_verified_classification_count": 32,
+    "method": "OWNER_VERIFIED_PRIOR_AI_ASSISTED_CLASSIFICATION",
+    "needs_review_classification_count": 0
+  },
+  "schema_version": "1.0.0",
+  "signed_at": "2026-08-28T09:43:47+08:00",
+  "signer_role": "PROJECT_OWNER",
+  "status": "SIGNED_STAGING_GOVERNANCE_DECISION"
+}

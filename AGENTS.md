@@ -65,7 +65,11 @@
     assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases 已通過；
     2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
     chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
-    Query suite 仍為 `NOT_EXECUTED`。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
+    Query suite 仍為 `NOT_EXECUTED`。2026-08-27 runtime policy v003 已補齊 32 筆 A 單位 purpose，
+    使 554／554 筆具 response metadata 並通過 10 個離線 cases；2026-08-28 Owner v006 closeout
+    acceptance 已人工確認這 32 筆分類，另核准 27 筆 `stop_normal_rag=true` 進入身份別條件開放複核。
+    這 27 筆在逐筆 audience／purpose 驗證完成前仍不進 current 554 筆 runtime pool，v003 policy bytes
+    與 Supabase 均未因此改動。遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
     metadata 全都只允許 `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
     `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
     public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。

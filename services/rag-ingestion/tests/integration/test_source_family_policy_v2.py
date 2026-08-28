@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from rag_ingestion.source_family_policy_audit_v3 import (
-    build_source_family_policy_audit_v3,
-    validate_source_family_policy_audit_v3,
+from rag_ingestion.source_family_policy_audit_v6 import (
+    build_source_family_policy_audit_v6,
+    validate_source_family_policy_audit_v6,
 )
 from rag_ingestion.source_family_policy_v2 import (
     RISK_DECISION_CHUNK_IDS,
@@ -31,6 +31,15 @@ POLICY_AUDIT_ROOT = (
 POLICY_AUDIT_V3_ROOT = (
     REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v003/preflight"
 )
+POLICY_AUDIT_V4_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v004/preflight"
+)
+POLICY_AUDIT_V5_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v005/preflight"
+)
+POLICY_AUDIT_V6_ROOT = (
+    REPOSITORY_ROOT / "data/rag-v3/governance/source-family-policy/audits/v006/preflight"
+)
 
 
 def _policy() -> dict[str, object]:
@@ -52,7 +61,7 @@ def test_committed_policy_v2_packages_are_valid() -> None:
     preflight = validate_source_family_policy_v2_build_preflight_snapshot(REPOSITORY_ROOT)
     policy = validate_source_family_policy_v2(REPOSITORY_ROOT)
     sealed_audit = validate_source_family_policy_v2_audit_preflight(REPOSITORY_ROOT)
-    audit = validate_source_family_policy_audit_v3(REPOSITORY_ROOT)
+    audit = validate_source_family_policy_audit_v6(REPOSITORY_ROOT)
 
     assert acceptance["status"] == "PASS"
     assert preflight["status"] == "PASS_BUILD_SNAPSHOT"
@@ -62,8 +71,8 @@ def test_committed_policy_v2_packages_are_valid() -> None:
     assert policy["response_metadata_ready_count"] == 302
     assert policy["production_approved"] is False
     assert sealed_audit["candidate_artifact_entry_count"] == 19
-    assert audit["candidate_artifact_entry_count"] == 23
-    assert audit["inventory_entry_count"] == 32
+    assert audit["candidate_artifact_entry_count"] == 42
+    assert audit["inventory_entry_count"] == 49
     lock = json.loads((POLICY_AUDIT_ROOT / "candidate-artifact-lock.json").read_text("utf-8"))
     locked_paths = {entry["path"] for entry in lock["entries"]}
     assert {
@@ -94,6 +103,31 @@ def test_committed_policy_v2_packages_are_valid() -> None:
             "validation-input-inventory.json"
         ),
     } <= successor_paths
+    closeout_lock = json.loads(
+        (POLICY_AUDIT_V4_ROOT / "candidate-artifact-lock.json").read_text("utf-8")
+    )
+    closeout_paths = {entry["path"] for entry in closeout_lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v003/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v003/preflight/SHA256SUMS.txt",
+        "data/rag-v3/review/acceptance/v006/owner-rag-closeout-acceptance.json",
+    } <= closeout_paths
+    final_lock = json.loads(
+        (POLICY_AUDIT_V5_ROOT / "candidate-artifact-lock.json").read_text("utf-8")
+    )
+    final_paths = {entry["path"] for entry in final_lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v004/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v004/preflight/SHA256SUMS.txt",
+    } <= final_paths
+    sealed_final_lock = json.loads(
+        (POLICY_AUDIT_V6_ROOT / "candidate-artifact-lock.json").read_text("utf-8")
+    )
+    sealed_final_paths = {entry["path"] for entry in sealed_final_lock["entries"]}
+    assert {
+        "data/rag-v3/governance/source-family-policy/audits/v005/preflight/README.md",
+        "data/rag-v3/governance/source-family-policy/audits/v005/preflight/SHA256SUMS.txt",
+    } <= sealed_final_paths
 
 
 def test_missing_license_url_is_not_an_automatic_source_block() -> None:
@@ -198,7 +232,7 @@ def test_policy_v2_formal_outputs_refuse_overwrite() -> None:
         build_source_family_policy_v2_preflight,
         build_source_family_policy_v2,
         build_source_family_policy_v2_audit_preflight,
-        build_source_family_policy_audit_v3,
+        build_source_family_policy_audit_v6,
     )
     for builder in builders:
         with pytest.raises(SourceFamilyPolicyV2Error, match="refuse to overwrite"):

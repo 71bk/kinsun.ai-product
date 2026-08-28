@@ -38,7 +38,10 @@ immutable、hash-pinned runtime policy v001 並接入 V2：search backend 先在
 搜尋最多 50 筆，Retriever 再以 v003 text SHA-256、四角色、purpose 與 assessment metadata 決定
 3–5 筆回覆；high／unknown、stop、非 current 與 research 不在搜尋 projection。policy 啟用時不得與
 legacy all-audience override 併用。10 個離線 policy／citation Golden cases 已通過，但真實 backend
-relevance／ranking Golden Query 尚未執行。Google query
+relevance／ranking Golden Query 尚未執行。2026-08-28 Owner v006 closeout acceptance 已人工確認
+runtime v003 中 32 筆 A 單位 purpose，並核准 27 筆 `stop_normal_rag=true` 進入身份別條件開放複核；
+此 acceptance 沒有修改 runtime v003，27 筆在逐筆 audience／purpose 驗證完成前仍不進 current 554 筆
+候選池。Google query
 adapter 不得查詢 Cohere document vectors。只有明確標示
 `general_information`／`legal_reference` purpose 的回合會檢索；成功時 3–5 個帶引用 chunk
 進入 Context Manifest，無資料或 provider 失敗時直接 no-guess fallback。未設定 provider

@@ -106,7 +106,10 @@
   assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases已通過；
   2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
   chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
-  Query suite 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
+  Query suite 仍為 `NOT_EXECUTED`。2026-08-27 runtime policy v003 已補齊 32 筆 A 單位 purpose 並使
+  554／554 筆具 response metadata；2026-08-28 Owner v006 closeout acceptance 已人工確認這 32 筆分類，
+  並核准 27 筆 `stop_normal_rag=true` 進入身份別條件開放複核。27 筆逐筆 audience／purpose 驗證完成前
+  仍維持 runtime deny；v003 policy bytes、外部同步與 Production 均未因此解鎖。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
