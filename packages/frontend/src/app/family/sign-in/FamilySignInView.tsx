@@ -1,5 +1,6 @@
 'use client';
 
+import { type FormEvent, useState } from 'react';
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
 import { touchLinkStyle } from '@/components/touch-link';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -20,6 +21,22 @@ export function FamilySignInView({
   showLine: boolean;
 }) {
   const { t } = useLocale();
+  const [pendingProvider, setPendingProvider] = useState<'password' | 'google' | 'line' | null>(
+    null,
+  );
+  const isSubmitting = pendingProvider !== null;
+
+  const submitAfterPendingPaint = (
+    event: FormEvent<HTMLFormElement>,
+    provider: 'password' | 'google' | 'line',
+  ) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    const form = event.currentTarget;
+    setPendingProvider(provider);
+    requestAnimationFrame(() => form.submit());
+  };
 
   return (
     <main style={{ margin: '80px auto', maxWidth: 520, padding: 24, textAlign: 'center' }}>
@@ -30,6 +47,7 @@ export function FamilySignInView({
       <form
         action={nativeEnabled ? '/backend/auth/kinsun/login' : '/backend/auth/login'}
         method="post"
+        onSubmit={(event) => submitAfterPendingPaint(event, nativeEnabled ? 'password' : 'google')}
       >
         {!nativeEnabled && <input name="intent" type="hidden" value="FAMILY" />}
         {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
@@ -59,7 +77,11 @@ export function FamilySignInView({
             />
           </>
         )}
-        <AuthSubmitButton>
+        <AuthSubmitButton
+          disabled={isSubmitting}
+          pending={pendingProvider === (nativeEnabled ? 'password' : 'google')}
+          pendingLabel={nativeEnabled ? t('common.signingIn') : t('common.redirecting')}
+        >
           {nativeEnabled ? '登入 / Sign in' : t('common.continueWithGoogle')}
         </AuthSubmitButton>
       </form>
@@ -72,25 +94,34 @@ export function FamilySignInView({
         </p>
       )}
       {showLine && (
-        <form action="/backend/auth/login" method="post" style={{ marginTop: 'var(--space-4)' }}>
+        <form
+          action="/backend/auth/login"
+          method="post"
+          onSubmit={(event) => submitAfterPendingPaint(event, 'line')}
+          style={{ marginTop: 'var(--space-4)' }}
+        >
           <input name="intent" type="hidden" value="FAMILY" />
           <input name="provider" type="hidden" value="LINE" />
           <input name="returnTo" type="hidden" value="/onboarding/resolve" />
           <button
+            aria-busy={pendingProvider === 'line'}
+            aria-live="polite"
+            disabled={isSubmitting}
             style={{
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border-strong)',
               borderRadius: 'var(--radius-md)',
               color: 'var(--color-primary-text)',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'wait' : 'pointer',
               fontFamily: 'inherit',
               fontSize: 'var(--text-base)',
               minHeight: 'var(--touch-min)',
+              opacity: isSubmitting ? 0.72 : 1,
               padding: 'var(--space-3) var(--space-6)',
             }}
             type="submit"
           >
-            {t('familySignIn.lineButton')}
+            {pendingProvider === 'line' ? t('common.redirecting') : t('familySignIn.lineButton')}
           </button>
         </form>
       )}
