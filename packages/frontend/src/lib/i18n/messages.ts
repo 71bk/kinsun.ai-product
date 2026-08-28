@@ -398,6 +398,10 @@ const zhHant = {
     '結合語音互動、生活紀錄與照護者後台，用溫和不評判的方式陪伴長者，也讓家屬與照服員即時掌握近況。',
   'landing.hero.ctaPrimary': '開始使用',
   'landing.hero.ctaSecondary': '了解我們怎麼保護資料',
+  'landing.proof.label': '目前可驗證的核心原則',
+  'landing.proof.voice': '語音體驗與文字陪伴可展示',
+  'landing.proof.memory': '事件與記憶皆須確認',
+  'landing.proof.review': '人工覆核後才成為正式資料',
 
   'landing.modules.title': '這個系統做什麼',
   'landing.modules.subtitle':
@@ -407,10 +411,10 @@ const zhHant = {
   'landing.modules.status.planned': '規劃中',
   'landing.modules.a.title': 'Module A · 語音互動陪伴',
   'landing.modules.a.body':
-    '文字陪伴對話已可使用；語音辨識（ASR）與語音合成（TTS）規劃中，目前互動以文字進行。',
+    '文字陪伴與展示用語音流程已可體驗；真實語音供應商、低信心處理與品質門檻仍須在部署環境完成驗證。',
   'landing.modules.b.title': 'Module B · 生活記錄與智慧摘要',
   'landing.modules.b.body':
-    '對話中的照護事件可產生待覆核候選紀錄，經人工覆核後才成為正式紀錄；每日摘要為覆核後之正式內容，非模型任意生成。',
+    '對話可產生待覆核的事件與記憶候選；經明確確認或人工覆核後才成為正式資料，摘要也會保留來源證據。',
   'landing.modules.c.title': 'Module C · 照護者資訊介面',
   'landing.modules.c.body':
     '長者總覽、長者詳情、事件時間軸、覆核作業與家屬報表中心皆已可用，並依登入身分與正式授權顯示對應範圍的資料。',
@@ -447,7 +451,7 @@ const zhHant = {
 
   'landing.closing.title': '準備好了嗎？',
   'landing.closing.body': '選擇上方的身分開始，或先閱讀我們的隱私權政策與資料權利說明。',
-  'landing.closing.cta': '前往登入 →',
+  'landing.closing.cta': '前往登入',
 
   // ---- public legal / compliance information ----
   'legal.common.kicker': '公開法遵資訊',
@@ -1001,6 +1005,10 @@ const en: Record<MessageKey, string> = {
     'Voice interaction, daily-life records, and a caregiver dashboard work together to support elders warmly and without judgment, while keeping family and care staff informed.',
   'landing.hero.ctaPrimary': 'Get started',
   'landing.hero.ctaSecondary': 'See how we protect your data',
+  'landing.proof.label': 'Core principles you can verify today',
+  'landing.proof.voice': 'Demo voice and text companionship',
+  'landing.proof.memory': 'Events and memories require confirmation',
+  'landing.proof.review': 'Only human-reviewed content becomes official',
 
   'landing.modules.title': 'What this system does',
   'landing.modules.subtitle':
@@ -1010,10 +1018,10 @@ const en: Record<MessageKey, string> = {
   'landing.modules.status.planned': 'Planned',
   'landing.modules.a.title': 'Module A · Voice companionship',
   'landing.modules.a.body':
-    'Text-based companion conversation works today. Speech recognition (ASR) and speech synthesis (TTS) are planned; interaction is currently text-only.',
+    'Text companionship and a demo voice flow are available. A real speech provider, low-confidence handling, and quality thresholds still require deployment-environment validation.',
   'landing.modules.b.title': 'Module B · Life records & smart summaries',
   'landing.modules.b.body':
-    'Conversations can produce candidate care-event records awaiting human review; only reviewed records become official. Daily summaries are formally reviewed content, not free-form model output.',
+    'Conversations can produce candidate events and memories. They become official only after explicit confirmation or human review, and summaries retain their source evidence.',
   'landing.modules.c.title': 'Module C · Caregiver information interface',
   'landing.modules.c.body':
     'Elder overview, elder detail, event timeline, review workflow, and the family report centre are all available today, scoped to the signed-in identity’s formal authorization.',
@@ -1062,7 +1070,7 @@ const en: Record<MessageKey, string> = {
   'landing.closing.title': 'Ready to begin?',
   'landing.closing.body':
     'Choose a role above, or read our privacy policy and data-rights page first.',
-  'landing.closing.cta': 'Go to sign-in →',
+  'landing.closing.cta': 'Go to sign-in',
 
   // ---- public legal / compliance information ----
   'legal.common.kicker': 'Public legal and compliance information',
