@@ -85,6 +85,7 @@ describe('Elder Surface styling boundary', () => {
     '../../app/consent/ConsentPage.module.css',
     '../../app/elder/memories/ElderMemoriesPage.module.css',
     '../../app/elder/family-access/FamilyAccessPage.module.css',
+    '../../app/elder/start/ElderAuthView.module.css',
   ])('%s uses tokens instead of raw hex colours', (relativePath) => {
     const css = source(relativePath);
     expect(css).not.toMatch(/#(?:[0-9a-fA-F]{3,4}){1,2}\b/);

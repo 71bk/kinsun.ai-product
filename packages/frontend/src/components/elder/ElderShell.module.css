@@ -106,12 +106,6 @@
   color: var(--color-primary-text);
 }
 
-@media (max-width: 26rem) {
-  .mobileNav {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (min-width: 64rem) {
   .shell {
     display: grid;
