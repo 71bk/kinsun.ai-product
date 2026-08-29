@@ -3,9 +3,9 @@
   "profile": "ADR-0009-synthetic",
   "provider": "synthetic",
   "production_approved": false,
-  "generated_at": "2026-08-19T03:00:25.086323+00:00",
-  "revision": "3e2a15d152bba2a4fa4dda8b4f13f416c98169d7",
-  "working_tree_dirty": true,
+  "generated_at": "2026-08-29T14:52:47.471048+00:00",
+  "revision": "a877e5bf2cd13019f3c52e796737fc7d4cc4c41b",
+  "working_tree_dirty": false,
   "fixture": {
     "path": ".kiro/specs/gate-1-agent-vertical-slice/fixtures/gate1-synthetic-v1.json",
     "schema_version": "1.0.0",
@@ -23,14 +23,23 @@
     "production availability",
     "production model quality",
     "production data region",
-    "production cost"
+    "production cost",
+    "Core authorization and consent gating",
+    "Core speaker evidence and requested_outputs derivation",
+    "Voice Ticket, ASR Gate and any voice input mode",
+    "Core database state and Domain writes"
   ],
+  "scope": {
+    "covers": "Core AgentRuntimeClient adapter to Agent Runtime HTTP boundary",
+    "input_mode": "text",
+    "core_side_note": "This harness builds the request payload itself, including requested_outputs, so CompanionService never runs. Core's authorization, consent, ASR Gate and speaker-evidence decisions cannot fail these runs. They are covered by services/core-api/tests/integration/test_companion_voice_memory_path.py."
+  },
   "browser_direct_denied": true,
   "runs": [
     {
       "run": 1,
       "passed": true,
-      "duration_ms": 646.29,
+      "duration_ms": 309.57,
       "agent_run_authority_preserved": true,
       "bounded_event_proposal": true,
       "bounded_memory_proposal": true,
@@ -40,7 +49,7 @@
     {
       "run": 2,
       "passed": true,
-      "duration_ms": 1009.15,
+      "duration_ms": 331.59,
       "agent_run_authority_preserved": true,
       "bounded_event_proposal": true,
       "bounded_memory_proposal": true,
@@ -50,7 +59,7 @@
     {
       "run": 3,
       "passed": true,
-      "duration_ms": 3242.13,
+      "duration_ms": 413.03,
       "agent_run_authority_preserved": true,
       "bounded_event_proposal": true,
       "bounded_memory_proposal": true,
@@ -60,7 +69,7 @@
     {
       "run": 4,
       "passed": true,
-      "duration_ms": 863.18,
+      "duration_ms": 506.83,
       "agent_run_authority_preserved": true,
       "bounded_event_proposal": true,
       "bounded_memory_proposal": true,
@@ -70,7 +79,7 @@
     {
       "run": 5,
       "passed": true,
-      "duration_ms": 592.27,
+      "duration_ms": 598.04,
       "agent_run_authority_preserved": true,
       "bounded_event_proposal": true,
       "bounded_memory_proposal": true,
