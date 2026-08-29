@@ -1,7 +1,7 @@
 # AGENTS.md
 
-- 更新日期：2026-08-27
-- 校準基準：`main` at `a2b2b96`
+- 更新日期：2026-08-29
+- 校準基準：`main` at `9f5bbe6`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
 
@@ -138,14 +138,27 @@
   [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
   production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
   不代表 ECR push、provider callback、application deploy 或公開流量 gate 已完成。
-- 尚未建立 CI quality gate。`.github/workflows-disabled/pr.yml` 是**未啟用的草稿**，GitHub
-  不會讀 `workflows-disabled/` 這個目錄名。它已知有問題：`infra/package-lock.json` 不存在
-  （`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）、
-  `verify_contract_live.py` 未先啟動服務就呼叫。啟用前必須先修這些，否則一定紅。
-  （`working-directory: infra` 曾經是錯的，2026-08-06 目錄由 `infrastructure/` 改名為
-  `infra/` 後已正確。）原 `deploy-dev.yml`／`deploy-staging.yml`
-  指向 ADR 0007 廢棄的 legacy stack 與錯誤 region（`ap-northeast-1`，staging 應為
-  `us-west-2`），已於 2026-08-06 移除。
+- **CI quality gate 已啟用**：`.github/workflows/gate1.yml`（Gate 1 Quality Gate）於 2026-08-26
+  建立，在對 `main` 的 pull request 與 push 觸發，在 `ubuntu-latest` 搭 pinned pgvector service
+  container 執行，timeout 30 分鐘。涵蓋範圍：
+  - Core API `ruff check`、`scripts/rag/project_postgres.py dry-run`、`tests/unit` 與
+    **`tests/integration`**。CI 自建 disposable `kinsun_test` database，**這是目前唯一會實際執行
+    Core integration 測試的環境**；本機因為沒有獨立 `TEST_DATABASE_URL` 一直略過。
+  - Agent Runtime、Speech Gateway、RAG Ingestion 三者各自的 `ruff check` ＋ `ruff format --check`
+    ＋ `pytest`。
+  - 靜態 `validate_contracts.py` 與兩支 live verifier。live verifier 以 `httpx.ASGITransport`
+    就地 `create_app()`，不需要另外啟動服務。
+  - 五輪 synthetic Core-to-Agent 證據（`scripts/verify_gate1_cross_service.py`），成功時上傳
+    artifact 保留 30 天。
+  - Frontend `npm ci`／typecheck／test／lint／production build。
+  - **注意：core-api 只跑 `ruff check`，不跑 `ruff format --check`**，所以本機 format 未通過的
+    既有檔案不會擋 CI；不要因為 CI 綠燈就認定 core-api format 是乾淨的。
+- `.github/workflows-disabled/pr.yml` 仍是**未啟用的草稿**（GitHub 不會讀 `workflows-disabled/`
+  這個目錄名），且已被 `gate1.yml` 取代，沒有理由再啟用它。它殘留的 `infra/package-lock.json`
+  路徑問題仍未修（`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）；至於舊
+  紀錄說的「`verify_contract_live.py` 未先啟動服務就呼叫」已不成立，該腳本現在自帶 in-process
+  transport。原 `deploy-dev.yml`／`deploy-staging.yml` 指向 ADR 0007 廢棄的 legacy stack 與錯誤
+  region（`ap-northeast-1`，staging 應為 `us-west-2`），已於 2026-08-06 移除。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
 - 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
 
@@ -485,7 +498,7 @@ adapter、前端 label 與測試，不能只改其中一層。
 
 ```text
 kinsun.ai/
-├── .github/               CI；workflows-disabled/pr.yml 是未啟用草稿，見 §1
+├── .github/               CI；workflows/gate1.yml 已啟用，workflows-disabled/pr.yml 是廢棄草稿，見 §1
 ├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
 ├── config/                RAG 與 LINE 設定；config/rag 由 agent-runtime、rag-ingestion 共用
 ├── contracts/             OpenAPI、AsyncAPI、JSON Schema、valid/invalid examples
@@ -696,8 +709,13 @@ npm run synth:application --workspace @elderly-care/infrastructure
 均為 Synthetic，不得改用任何真實長者資料。
 
 尚未建立的項目（不要描述成已完成）：Python Type Check（mypy／pyright）、自動化 browser E2E、
-真實 AWS staging 跨服務 E2E、CI Quality Gate。Frontend／IaC TypeScript typecheck、靜態 Contract
-validator 與兩支 live contract verifier 已存在，但不能取代上述 E2E。
+真實 AWS staging 跨服務 E2E。Frontend／IaC TypeScript typecheck、靜態 Contract validator 與兩支
+live contract verifier 已存在，但不能取代上述 E2E。
+
+CI Quality Gate 已於 2026-08-26 啟用（§1 的 `gate1.yml`），它涵蓋四個 Python 服務的 lint／測試、
+Core integration、contract 三支驗證、五輪 synthetic Core-to-Agent 證據與完整 Frontend build。
+但它跑的仍是 synthetic in-process 驗證，**不等於真實 AWS staging 跨服務 E2E**，也不含 browser
+E2E 與 Python type check；IaC 的 typecheck／test／synth 目前不在 CI 內，仍須本機執行。
 
 Contract 驗證分三支：`scripts/validate_contracts.py` 驗 schema 與範例的自我一致性
 （會掃 `contracts/openapi/` 底下所有文件）；`scripts/verify_contract_live.py` 對執行中的
@@ -725,6 +743,19 @@ ESLint 與 typecheck 通過。Speech Gateway、Infra、Frontend production build
 verifier 與靜態 contract validator 本次未重跑。沒有獨立 `TEST_DATABASE_URL`，未執行 Core
 integration 或破壞性 rebuild；v003 runtime policy 只有離線 policy／citation Golden cases 與單筆長者
 live smoke，完整 live relevance／ranking Golden Query 仍為 `NOT_EXECUTED`。
+
+2026-08-29 將 `origin/main` 合併回本機 `main`（合併後 `9f5bbe6`）後的本機校準結果：Core unit
+`916 passed`、Agent Runtime `407 passed`、RAG ingestion `320 passed`、Speech Gateway `81 passed`、
+Frontend `230 passed`（37 files）。Agent Runtime／Speech Gateway／RAG ingestion 的 `ruff check` 與
+`ruff format --check` 全數通過；Core `ruff check` 通過，但完整 `ruff format --check` 仍指出 5 個
+**既有**檔案（`app/core/config.py`、`app/services/kinsun_email_auth_service.py`、
+`scripts/redrive_legacy_family_invitation_events.py`、`tests/integration/test_migrations.py`、
+`tests/unit/test_memory_candidate_metadata.py`）——這 5 個在 `ba7569b..9f5bbe6` 之間完全未被修改，
+與本次合併無關，且 CI 不對 core-api 跑 format check。Frontend typecheck、ESLint 與 production
+build 通過，靜態 `validate_contracts.py` 全數通過。本次**未執行**：Core integration（仍無獨立
+`TEST_DATABASE_URL`）、兩支 live contract verifier、Infra typecheck／test／synth，以及
+`scripts/verify_gate1_cross_service.py` 的五輪 synthetic 證據——後三者會在 push 觸發 `gate1.yml`
+時於 CI 執行，屆時以 CI 結果為準。
 
 每次變更至少執行：
 

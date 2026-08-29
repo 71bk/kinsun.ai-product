@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-- 更新日期：2026-08-27
-- 校準基準：`main` at `a2b2b96`
+- 更新日期：2026-08-29
+- 校準基準：`main` at `9f5bbe6`
 - 適用範圍：整個 `kinsun.ai` repository
 
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
@@ -161,7 +161,11 @@
 - `infra` 保留 AWS CDK v2 deployment profile；application stack 的 `desiredCount` 預設 0。黑客松 AWS
   帳號目前無法操作，Cognito 已從 IaC 移除，OpenSearch 仍是 external reference。沒有使用者明確要求
   與新的可操作帳號，不部署、不 push image、不變更 AWS resource，也不把 synth 結果描述成已上線。
-- `.github/workflows-disabled/pr.yml` 代表 CI 目前停用；本機通過不等於 PR gate 已啟用。
+- CI 已啟用：`.github/workflows/gate1.yml` 在對 `main` 的 PR 與 push 觸發，跑四個 Python 服務的
+  lint／pytest、Core `tests/integration`（CI 自建 disposable `kinsun_test`）、三支 contract 驗證、
+  五輪 synthetic Core-to-Agent 證據與完整 Frontend build。細節見 `AGENTS.md` §1。兩個要記住的
+  邊界：core-api 在 CI 只跑 `ruff check` 不跑 `ruff format --check`；IaC 完全不在 CI 內，仍須本機
+  跑 typecheck／test／synth。`.github/workflows-disabled/pr.yml` 是已被取代的廢棄草稿。
 
 ## 驗證矩陣
 
@@ -253,6 +257,13 @@ RAG ingestion 311、Frontend 224 tests passed；Frontend ESLint 與 typecheck �
 Infra、Frontend production build、static contract 與兩支 live verifier 本次未重跑。沒有獨立
 `TEST_DATABASE_URL`，未跑 Core integration；v003 只有離線 policy／citation Golden cases 與單筆長者
 live smoke。這個快照同樣不可取代當次驗證。
+
+2026-08-29 合併 `origin/main`（合併後 `9f5bbe6`）當次結果：Core unit 916、Agent Runtime 407、
+RAG ingestion 320、Speech Gateway 81、Frontend 230 tests passed（37 files）。Agent／Speech／RAG 的
+ruff check＋format 全過；Core ruff check 過，完整 format check 仍有 5 個既有檔案未過，且與本次
+合併無關。Frontend typecheck／ESLint／production build 與靜態 contract validator 通過。未跑：Core
+integration（無獨立 `TEST_DATABASE_URL`）、兩支 live verifier、Infra、五輪 synthetic 證據，這幾項
+交由 push 後的 `gate1.yml` 執行。這個快照同樣不可取代當次驗證。
 
 ## 交付前自我審查
 
