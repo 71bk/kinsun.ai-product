@@ -33,6 +33,11 @@ v003 再以 staging-only purpose overlay 分類原本空白的 32 筆 A 單位�
 完成後 554 筆均具備 response metadata。5 筆「一般風險值」仍由 policy overlay 映射為 `low`；high／unknown、
 `stop_normal_rag=true`、非 current 與 3 個 research sources 不在普通搜尋候選內。
 
+2026-08-28 Owner 已以 v006 closeout acceptance 完成上述 32 筆 purpose 的人工檢核，32／32 為
+`verified`。同一 acceptance 核准 27 筆 low／medium、`stop_normal_rag=true` 內容進入後續身份別條件
+開放複核，但沒有授權立即檢索：27 筆仍保留原值、均不在 current 554 筆 runtime pool，且需逐筆完成
+audience／purpose verification 後才能建立 runtime successor。v003 policy bytes 與目前啟用方式不變。
+
 ## 啟用方式
 
 本機 repository 執行時設定：
@@ -77,6 +82,7 @@ Query suite。
 
 - 尚未將 v003 與 runtime policy 同步至 Supabase 或其他外部 search backend。
 - 尚未使用長者登入介面跑完整真實端到端 Golden Query；離線 policy cases 已通過。
-- A 單位 32 筆 purpose 是 AI-assisted staging classification，仍需 Owner 逐筆確認後再建立 verified successor。
+- A 單位 32 筆 purpose 已由 Owner 在 v006 acceptance 完成檢核；尚未建立綁定 v006 的 runtime successor。
+- 27 筆 conditional-stop chunks 尚待逐筆 audience／purpose 驗證，current runtime 繼續 deny。
 - 尚未建立獨立 read-only database principal、activation／rollback 與 Production approval。
 - Production 不得使用 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true`，也不得由此 candidate 自動升級。

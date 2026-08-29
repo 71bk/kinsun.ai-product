@@ -1,25 +1,35 @@
 /* Hero — docs/design-system/MASTER.md §7.3 public surface. Tokens only (§14). */
 
 .hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-4);
-  max-width: 720px;
+  display: grid;
+  grid-template-areas:
+    'title mascot'
+    'subtitle mascot'
+    'actions mascot';
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
+  gap: var(--space-4) var(--space-8);
+  max-width: 1120px;
   margin: 0 auto;
-  padding: var(--space-10) var(--space-4) var(--space-8);
+  padding: var(--space-12) var(--space-8);
 }
 
 .mascot {
-  width: 160px;
-  height: 160px;
+  grid-area: mascot;
+  align-self: center;
+  justify-self: center;
+  width: clamp(220px, 24vw, 320px);
+  height: clamp(220px, 24vw, 320px);
   object-fit: cover;
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-1);
+  background: var(--color-primary-weak);
+  box-shadow:
+    0 0 0 var(--space-4) var(--color-primary-weak),
+    var(--shadow-2);
 }
 
 .title {
+  grid-area: title;
+  align-self: end;
   margin: 0;
   font-size: var(--text-3xl);
   font-weight: 700;
@@ -27,6 +37,7 @@
 }
 
 .subtitle {
+  grid-area: subtitle;
   margin: 0;
   font-size: var(--text-lg);
   line-height: var(--leading-body);
@@ -34,9 +45,9 @@
 }
 
 .actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--space-4);
   margin-top: var(--space-2);
 }
@@ -82,6 +93,41 @@
 .secondary:hover,
 .secondary:focus-visible {
   background: var(--color-primary-weak);
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    grid-template-areas:
+      'mascot'
+      'title'
+      'subtitle'
+      'actions';
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+  }
+
+  .mascot {
+    width: 180px;
+    height: 180px;
+  }
+
+  .actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 32rem) {
+  .hero {
+    padding-inline: var(--space-4);
+  }
+
+  .actions,
+  .primary,
+  .secondary {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

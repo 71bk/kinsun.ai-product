@@ -1,0 +1,13 @@
+{
+  "acceptance_sha256": "782b6eb1715b79fda07d8fd2a14955e76406347f782b06dc7b54edca710f9524",
+  "acceptance_version": "v006",
+  "external_sync": "NOT_AUTHORIZED",
+  "files": [
+    "owner-rag-closeout-acceptance.json",
+    "validation-input-inventory.json",
+    "prior-artifact-lock.json",
+    "validation-report.json"
+  ],
+  "production_approved": false,
+  "schema_version": "1.0.0"
+}

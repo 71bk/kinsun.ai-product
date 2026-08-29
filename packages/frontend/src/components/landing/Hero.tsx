@@ -13,10 +13,12 @@ export function Hero() {
   const { t } = useLocale();
 
   return (
-    <section className={styles.hero}>
+    <section className={styles.hero} aria-labelledby="landing-hero-title">
       {/* Decorative: the brand name right below already says the same thing. */}
       <img src="/mascot.png" alt="" width={160} height={160} className={styles.mascot} />
-      <h1 className={styles.title}>{t('landing.hero.title')}</h1>
+      <h1 id="landing-hero-title" className={styles.title}>
+        {t('landing.hero.title')}
+      </h1>
       <p className={styles.subtitle}>{t('landing.hero.subtitle')}</p>
       <div className={styles.actions}>
         <Link href="/sign-in" className={styles.primary}>

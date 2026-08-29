@@ -205,7 +205,9 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
   project-use 決策；13 個缺少 license URL 的來源不再因 URL 缺少而自動封鎖。
 - [x] 依 Owner 的「一般風險值」決策，將 5 筆表單範例以 policy overlay 映射為 canonical `low`；
   v003 Chunk bytes 與既有 `license_status` 均未改寫。
-- [ ] 人工複核 27 筆 `stop_normal_rag=true`；不得自動改成可檢索。
+- [x] 2026-08-28 Owner 核准 27 筆 low／medium、`stop_normal_rag=true` 內容可進入「依身份別逐筆確認」的
+  條件開放複核；本次不等於直接啟用。v006 acceptance 維持原 Chunk bytes、`stop_normal_rag=true` 與
+  current runtime deny，27／27 均標記 audience／purpose review pending，完成 verified successor 前不得檢索。
 - [x] 依 Owner 的最新版本確認更新版本狀態：725 筆 `current`、1 筆保留 `superseded`。
 - [x] 實作 v003 verified-candidate generator、validator 與命令列執行入口。
 - [x] 產生 726 筆 v003（schema 3.1.0）Chunk JSONL；全部 `review_status=verified`、
@@ -228,6 +230,9 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 - [x] 2026-08-27 建立 runtime policy v003 staging successor：以既有 enum 分類 A 單位手冊原本空白的
   32 筆 purpose，並補齊來源層 `general_information` 交集；554／554 筆具備 response metadata，purpose
   gate、高風險與 research 排除保持。32 筆分類仍為 `needs_review`，Production 不因此解鎖。
+- [x] 2026-08-28 Owner 已完成人工檢核並核准上述 32 筆 purpose 分類；immutable v006 closeout
+  acceptance 將 32／32 記錄為 `verified`、`needs_review=0`。本次沒有改寫 v003 runtime policy；後續若
+  發布 runtime successor，必須 hash-bind v006 並維持既有 purpose／assessment gates。
 - [x] 執行完整 RAG ingestion 測試：2026-08-27 共 304 項通過；candidate validator、Ruff check／format
   及 contracts 全量 validation 均通過，candidate validation report 為 18 PASS／0 FAIL。
 - [x] source-family policy v002 的 schema 單元測試 4 項與 v001／v002 targeted integration 14 項通過；
@@ -243,6 +248,8 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 - [ ] 匯入 v003 release projection，並以 hash 驗證方式複製／綁定既有向量。
 - [ ] 完成 Supabase 寫入後 read-back 驗證與數量、metadata、vector dimension 檢查。
 - [ ] 建立並驗證 import、embedding reuse 與 rollback runbook。
+- [ ] 依 v006 對 27 筆 conditional-stop chunks 逐筆完成 audience／purpose 驗證，建立 versioned runtime
+  successor；在此之前 current runtime candidate pool 固定維持 554 筆。
 - [ ] 取得 owner 對實際 staging cutover 的明確授權。
 - [ ] 切換 staging release ID，並保留 v002 作為 rollback 版本。
 - [ ] 切換後執行 live smoke tests；通過前不得宣稱 RAG v003 已上線。
@@ -270,8 +277,9 @@ v003 使用新的 version-qualified Chunk ID，因此 Supabase 不直接改寫 v
 
 目前結論：本機 v003 已完成 726 筆 Owner 人工審核狀態升級、來源版本決策、candidate 產生與資料級完整
 驗證，全部為 `verified`；source-family policy v002 也已完成 Owner project-use evidence、四角色 retrieval
-方向及 5 筆 canonical `low` overlay。27 筆 low／medium `stop_normal_rag` 仍待複核；hash-pinned runtime
-policy v003、10 個離線 Golden cases 與長者長照法 live smoke 已完成，但 32 筆 purpose 分類仍待
-Owner 逐筆確認，完整 live relevance Golden
-Query、Supabase 同步及 staging cutover 仍尚未實行。Production 固定 blocked；遠端 Supabase 仍是
-v002／`needs_review=726`。
+方向及 5 筆 canonical `low` overlay。2026-08-28 v006 closeout acceptance 已把 32 筆 A 單位 purpose
+分類升級為 Owner `verified`，並記錄 27 筆 `stop_normal_rag=true` 為可進入身份別條件開放複核；27 筆在
+逐筆 audience／purpose 驗證完成前仍維持 runtime deny。hash-pinned runtime policy v003、10 個離線
+Golden cases 與長者長照法 live smoke 已完成；完整 live relevance Golden Query、runtime successor、
+Supabase 同步及 staging cutover 仍尚未實行。Production 固定 blocked；依目前 repository 證據，遠端
+Supabase 仍是 v002／`needs_review=726`。

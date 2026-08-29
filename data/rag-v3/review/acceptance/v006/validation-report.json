@@ -1,0 +1,81 @@
+{
+  "acceptance_version": "v006",
+  "audience_review_pending_count": 27,
+  "checks": [
+    {
+      "name": "owner_instruction_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_purpose_acceptance_v005_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_runtime_policy_v003_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "source_policy_v002_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_v003_immutable",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_decisions_32_exact_and_unique",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_decisions_32_owner_verified",
+      "status": "PASS"
+    },
+    {
+      "name": "purpose_needs_review_zero",
+      "status": "PASS"
+    },
+    {
+      "name": "conditional_stop_27_exact_and_unique",
+      "status": "PASS"
+    },
+    {
+      "name": "conditional_stop_source_text_hash_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "conditional_stop_runtime_inactive",
+      "status": "PASS"
+    },
+    {
+      "name": "conditional_stop_audience_review_pending",
+      "status": "PASS"
+    },
+    {
+      "name": "stop_normal_rag_bytes_preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime_policy_unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "external_sync_not_authorized",
+      "status": "PASS"
+    },
+    {
+      "name": "production_blocked",
+      "status": "PASS"
+    }
+  ],
+  "conditional_stop_active_count": 0,
+  "conditional_stop_count": 27,
+  "external_sync": "NOT_AUTHORIZED",
+  "fail_count": 0,
+  "pass_count": 16,
+  "production_approved": false,
+  "purpose_needs_review_count": 0,
+  "purpose_verified_count": 32,
+  "runtime_policy_change": "NOT_AUTHORIZED_BY_THIS_ACCEPTANCE",
+  "schema_version": "1.0.0",
+  "status": "PASS"
+}
