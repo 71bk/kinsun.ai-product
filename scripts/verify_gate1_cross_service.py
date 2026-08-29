@@ -4,6 +4,15 @@ The verifier starts the real Agent Runtime HTTP process with its deterministic
 mock provider, calls it through Core's production adapter and signed service
 credential, exercises a blocked failure path, and writes bounded evidence.
 It never connects to AWS and never stores the synthetic turn text in evidence.
+
+Scope, because a passing run is narrower than "Gate 1 works": this exercises the
+``AgentRuntimeClient`` -> Agent Runtime HTTP boundary only. The request payload
+below is built here, ``requested_outputs`` included, so ``CompanionService``
+never runs and Core's authorization, consent, ASR Gate and speaker-evidence
+decisions are outside what these five runs can fail on. Every turn is text.
+Those Core seams are covered by
+``services/core-api/tests/integration/test_companion_voice_memory_path.py``;
+keep both in mind before reading a green run as end-to-end coverage.
 """
 
 from __future__ import annotations
@@ -340,7 +349,25 @@ async def main() -> int:
             "production model quality",
             "production data region",
             "production cost",
+            "Core authorization and consent gating",
+            "Core speaker evidence and requested_outputs derivation",
+            "Voice Ticket, ASR Gate and any voice input mode",
+            "Core database state and Domain writes",
         ],
+        "scope": {
+            "covers": (
+                "Core AgentRuntimeClient adapter to Agent Runtime HTTP boundary"
+            ),
+            "input_mode": "text",
+            "core_side_note": (
+                "This harness builds the request payload itself, including "
+                "requested_outputs, so CompanionService never runs. Core's "
+                "authorization, consent, ASR Gate and speaker-evidence "
+                "decisions cannot fail these runs. They are covered by "
+                "services/core-api/tests/integration/"
+                "test_companion_voice_memory_path.py."
+            ),
+        },
         "browser_direct_denied": True,
         "runs": runs,
     }
