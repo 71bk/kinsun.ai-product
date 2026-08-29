@@ -1,7 +1,17 @@
 # RAG Metadata 修正計畫
 
-- 文件狀態：Approved / PR 1 實作中
+- 文件狀態：Approved / 本計畫範圍已完成。PR1–PR3 於 2026-08-20～21 合併，human-review 留痕工具
+  2026-08-21 追加。下方「前置目標」所列的 `pgvector` migration 已不再是待辦：migration
+  `e6f8a0b2c345` 已於 2026-08-25 套用至 Supabase development database，726 筆 document embedding
+  同日匯入並經獨立讀回驗證，PostgreSQL FTS／trigram＋pgvector hybrid `SearchBackend` 亦已建立。
+  其後的 v003 candidates、source-family policy v002 與 runtime policy v002／v003 已超出本計畫範圍，
+  現況一律以 `AGENTS.md` §1 與
+  [`rag-v3-runtime-policy-integration.md`](rag-v3-runtime-policy-integration.md) 為準。
+  完整 live relevance／ranking Golden Query 仍為 `NOT_EXECUTED`，Production 仍封鎖。
 - 建立日期：2026-08-19
+- 最後校對：2026-08-29（接續 2026-08-26 一筆未落地的本機編輯完成；該編輯當時寫的「`pgvector`
+  migration 尚未開始」在 08-25 之後已不成立，故未沿用其措辭。本次只校對狀態抬頭，第 1 節以下
+  各節內容未逐條重新核實。）
 - 適用範圍：`data/rag-chunks/`、`data/rag-manifest/`、`contracts/schemas/rag/`、
   `services/rag-ingestion/`、`services/agent-runtime/src/agent_runtime/rag/`
 - 前置目標：先修正 metadata contract、fail-closed retrieval 與引用完整性，再評估
