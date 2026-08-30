@@ -66,6 +66,7 @@ def _grant(
         purpose_code=purpose.value,
         status="GRANTED",
         version=1,
+        scope={},  # NOT NULL JSONB; see the PolicyRegistry note in the fixture.
         granted_by_actor_id=actor_id,
         policy_id=policy_id,
         granted_at=granted_at,
@@ -150,6 +151,11 @@ async def voice_seed(db_session) -> VoiceSeed:
                 policy_code="synthetic-consent-policy",
                 policy_type="CONSENT",
                 version="v1",
+                # JSONB columns are declared NOT NULL with only a server
+                # default, and the ORM sends an explicit NULL for them rather
+                # than omitting them, so set every one here.
+                status="DRAFT",
+                policy_payload={},
             ),
         ]
     )
