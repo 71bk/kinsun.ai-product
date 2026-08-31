@@ -377,6 +377,8 @@ CORE_API_SERVICE_IDENTITY_TTL_SECONDS=30
 CORE_API_TIMEOUT_SECONDS=5
 SAGEMAKER_ASR_ENDPOINT=
 SAGEMAKER_TTS_ENDPOINT=
+AZURE_SPEECH_KEY=<Speech-resource-Key-1-or-Key-2>
+AZURE_SPEECH_REGION=<same-Speech-resource-region>
 ```
 
 Frontend `.env.local`：
@@ -405,6 +407,9 @@ SPEECH_SERVICE_IDENTITY_TTL_SECONDS=30
   `CORE_API_SERVICE_IDENTITY_HMAC_SECRET` 與 root `SPEECH_SERVICE_IDENTITY_HMAC_SECRET` 相同，且不得與
   Core → Agent Runtime、Voice Ticket、ASR Gate、OAuth 或 provider secret 共用。
 - 台語／客語還需要已通過 license 與 Synthetic smoke gates 的私有 SageMaker endpoint。
+- 國語／英文 TTS 預設走 Azure Speech；`AZURE_SPEECH_KEY` 必須是 Speech resource 的
+  Key 1／Key 2，且 `AZURE_SPEECH_REGION` 必須與該 resource 的 region 相同。Azure 拒絕憑證時
+  Gateway 回 503；只有未部署該語言時才回 501。
 
 Gate 1 local/test credential 最長 60 秒，並綁定 issuer、subject、audience、method、path、body digest、
 correlation ID 與單次 credential ID。Production IAM／mTLS 等 credential mechanism 仍待 Owner 核准；

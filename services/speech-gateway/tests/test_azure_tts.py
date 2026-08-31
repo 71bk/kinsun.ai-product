@@ -153,8 +153,8 @@ async def test_low_resource_language_is_refused_before_http(
 @pytest.mark.parametrize(
     ("status_code", "category"),
     [
-        (401, ProviderErrorCategory.MISCONFIGURED),
-        (403, ProviderErrorCategory.MISCONFIGURED),
+        (401, ProviderErrorCategory.AUTHENTICATION),
+        (403, ProviderErrorCategory.AUTHENTICATION),
         (400, ProviderErrorCategory.INVALID_RESPONSE),
         (415, ProviderErrorCategory.INVALID_RESPONSE),
         (429, ProviderErrorCategory.UNAVAILABLE),

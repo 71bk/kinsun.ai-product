@@ -31,6 +31,7 @@ async def test_client_consumes_ticket_then_accepts_safe_core_decision() -> None:
                 200,
                 json={"data": {"session_id": str(SESSION_ID), "state": "RECORDING"}},
             )
+        assert json.loads(request.content)["confidence"] == 0.8765
         return httpx.Response(
             200,
             json={
@@ -58,7 +59,7 @@ async def test_client_consumes_ticket_then_accepts_safe_core_decision() -> None:
         session_id=SESSION_ID,
         language_route="ZH_TW",
         model_version="synthetic-asr-v1",
-        confidence=0.42,
+        confidence=0.876543,
         transcript="synthetic transcript",
     )
 

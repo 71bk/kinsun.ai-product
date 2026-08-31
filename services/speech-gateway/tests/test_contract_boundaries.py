@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from speech_gateway.app import create_app
 from speech_gateway.core_voice_gate import CoreGateDecision, CoreMemoryDecision
 from speech_gateway.models import TranscriptSegment
+from speech_gateway.provider_contracts import ProviderErrorCategory, SpeechProviderError
 from speech_gateway.settings import get_settings
 
 SESSION_ID = UUID("51000000-0000-4000-8000-000000000001")
@@ -290,6 +291,28 @@ def test_hokkien_and_hakka_synthesis_without_endpoint_fails_closed(
         json={"text": "汝食飽未", "language": language},
     )
     assert response.status_code == 501
+
+
+def test_tts_provider_authentication_failure_is_service_unavailable() -> None:
+    class AuthenticationRejectedRouter:
+        async def synthesize(self, _request):  # noqa: ANN001, ANN202
+            raise SpeechProviderError(
+                "synthetic-tts",
+                ProviderErrorCategory.AUTHENTICATION,
+            )
+
+    response = TestClient(
+        create_app(
+            core_client=FakeCoreGate(),
+            provider_router=AuthenticationRejectedRouter(),  # type: ignore[arg-type]
+        )
+    ).post(
+        "/api/v1/speech/syntheses",
+        json={"text": "synthetic text", "language": "zh-TW"},
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "speech synthesis unavailable"}
 
 
 @pytest.mark.parametrize("language", ["nan-TW", "hak-TW"])

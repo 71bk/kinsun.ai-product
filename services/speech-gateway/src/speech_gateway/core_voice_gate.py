@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
@@ -15,6 +16,8 @@ from speech_gateway.service_identity import (
     ServiceCredentialSigner,
 )
 
+_ASR_CONFIDENCE_QUANTUM = Decimal("0.0001")
+
 
 class CoreGateRejectedError(Exception):
     """Core refused the ticket, session, consent, or ASR evidence."""
@@ -22,6 +25,14 @@ class CoreGateRejectedError(Exception):
 
 class CoreGateUnavailableError(Exception):
     """Core could not provide a trustworthy gate decision."""
+
+
+def _canonicalize_asr_confidence(confidence: float) -> float:
+    """Match Core's Numeric(5, 4) contract before serializing JSON."""
+    value = Decimal(str(confidence))
+    if not value.is_finite() or not Decimal("0") <= value <= Decimal("1"):
+        raise CoreGateUnavailableError("ASR confidence is invalid")
+    return float(value.quantize(_ASR_CONFIDENCE_QUANTUM))
 
 
 class CoreGateDecision(BaseModel):
@@ -140,7 +151,7 @@ class CoreVoiceGateClient:
                 "session_id": str(session_id),
                 "language_route": language_route,
                 "asr_model_version": model_version,
-                "confidence": confidence,
+                "confidence": _canonicalize_asr_confidence(confidence),
                 "transcript": transcript,
             },
         )

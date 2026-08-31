@@ -18,6 +18,7 @@ class ProviderErrorCategory(StrEnum):
     """Bounded provider failures safe to use in logs and HTTP mapping."""
 
     MISCONFIGURED = "misconfigured"
+    AUTHENTICATION = "authentication"
     UNSUPPORTED_LANGUAGE = "unsupported_language"
     TIMEOUT = "timeout"
     UNAVAILABLE = "unavailable"

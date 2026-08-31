@@ -87,7 +87,7 @@ class AzureSpeechTtsProvider:
             raise SpeechProviderError(self.key, ProviderErrorCategory.UNAVAILABLE) from exc
 
         if response.status_code in {401, 403}:
-            raise SpeechProviderError(self.key, ProviderErrorCategory.MISCONFIGURED)
+            raise SpeechProviderError(self.key, ProviderErrorCategory.AUTHENTICATION)
         if response.status_code == 429 or response.status_code >= 500:
             raise SpeechProviderError(self.key, ProviderErrorCategory.UNAVAILABLE)
         if not 200 <= response.status_code < 300:

@@ -173,6 +173,11 @@ def create_app(
                 },
             )
             await _fail_consumed_session(core, payload.session_id)
+            if exc.category == ProviderErrorCategory.AUTHENTICATION:
+                raise HTTPException(
+                    status_code=503,
+                    detail="speech recognition unavailable",
+                ) from exc
             if exc.category in {
                 ProviderErrorCategory.MISCONFIGURED,
                 ProviderErrorCategory.UNSUPPORTED_LANGUAGE,
@@ -273,6 +278,11 @@ def create_app(
                     "language": payload.language,
                 },
             )
+            if exc.category == ProviderErrorCategory.AUTHENTICATION:
+                raise HTTPException(
+                    status_code=503,
+                    detail="speech synthesis unavailable",
+                ) from exc
             if exc.category in {
                 ProviderErrorCategory.MISCONFIGURED,
                 ProviderErrorCategory.UNSUPPORTED_LANGUAGE,
