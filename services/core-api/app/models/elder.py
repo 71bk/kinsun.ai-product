@@ -57,9 +57,11 @@ class Elder(BaseModel, TenantScopedMixin):
         String(120),
         nullable=False,
     )
+    # No server_default: the baseline declares this NOT NULL with no DEFAULT,
+    # so the caller must state the care setting. Claiming a default here would
+    # make SQLAlchemy omit the column and let PostgreSQL reject the INSERT.
     primary_care_setting: Mapped[str] = mapped_column(
         String(32),
-        server_default=sa.text("'DAYCARE'"),
         nullable=False,
     )
     status: Mapped[str] = mapped_column(

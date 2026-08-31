@@ -42,9 +42,11 @@ class PolicyRegistry(BaseModel):
         ForeignKey(f"{SCHEMA_NAME}.knowledge_source_version.source_version_id"),
         nullable=True,
     )
+    # No server_default: the baseline declares this NOT NULL with no DEFAULT,
+    # so the caller must supply the payload. Claiming a default here would make
+    # SQLAlchemy omit the column and let PostgreSQL reject the INSERT.
     policy_payload: Mapped[dict] = mapped_column(
         JSONB,
-        server_default=sa.text("'{}'::jsonb"),
         nullable=False,
     )
     effective_from: Mapped[datetime | None] = mapped_column(
