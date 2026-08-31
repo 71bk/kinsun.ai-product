@@ -37,6 +37,7 @@ _MAX_TOKEN_LENGTH = 16_384
 _MIN_NONCE_LENGTH = 32
 _MAX_NONCE_LENGTH = 512
 _MAX_KID_LENGTH = 256
+_MAX_TOKEN_CLOCK_SKEW_SECONDS = 60
 _CACHE_MAX_AGE_PATTERN = re.compile(r"(?:^|,)\s*max-age=(\d+)\s*(?:,|$)", re.IGNORECASE)
 logger = logging.getLogger(__name__)
 
@@ -210,7 +211,22 @@ class GoogleOidcJwtVerifier(GoogleTokenVerifier):
                 raise _InvalidGoogleClaimError("AUDIENCE")
             issued_at = claims.get("iat")
             expires_at = claims.get("exp")
-            if type(issued_at) is not int or type(expires_at) is not int or issued_at >= expires_at:
+            not_before = claims.get("nbf")
+            now = datetime.now(UTC).timestamp()
+            if (
+                type(issued_at) is not int
+                or type(expires_at) is not int
+                or issued_at >= expires_at
+                or issued_at > now + _MAX_TOKEN_CLOCK_SKEW_SECONDS
+                or (
+                    not_before is not None
+                    and (
+                        type(not_before) is not int
+                        or not_before >= expires_at
+                        or not_before > now + _MAX_TOKEN_CLOCK_SKEW_SECONDS
+                    )
+                )
+            ):
                 raise _InvalidGoogleClaimError("TOKEN_TIME")
             nonce = claims.get("nonce")
             if (
@@ -272,6 +288,11 @@ class GoogleOidcJwtVerifier(GoogleTokenVerifier):
             options={
                 "require": ["aud", "exp", "iat", "iss", "nonce", "sub"],
                 "verify_iss": False,
+                # Keep expiration strict. Provider and verifier clocks may differ
+                # slightly, so iat/nbf receive a separate bounded future-skew
+                # check after signature and exp verification.
+                "verify_iat": False,
+                "verify_nbf": False,
             },
         )
 

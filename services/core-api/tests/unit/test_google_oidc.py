@@ -116,6 +116,25 @@ async def test_valid_id_token_returns_only_bounded_verified_identity() -> None:
 
 
 @pytest.mark.asyncio
+async def test_small_future_provider_clock_skew_is_accepted_without_expiry_leeway() -> None:
+    now = datetime.now(UTC)
+    token, jwk = _signed_token(
+        claims=_claims(
+            iat=int((now + timedelta(seconds=30)).timestamp()),
+            nbf=int((now + timedelta(seconds=30)).timestamp()),
+            exp=int((now + timedelta(minutes=5)).timestamp()),
+        )
+    )
+
+    identity = await _verifier(_StaticJwksCache(jwk)).verify_id_token(
+        token,
+        expected_nonce=_NONCE,
+    )
+
+    assert identity.subject == "107691503500061507151"
+
+
+@pytest.mark.asyncio
 async def test_legacy_issuer_and_signed_string_email_verification_are_supported() -> None:
     token, jwk = _signed_token(
         claims=_claims(
@@ -179,8 +198,14 @@ async def test_provider_specific_claim_mismatches_fail_closed(claim_overrides: d
         {"exp": int((datetime.now(UTC) - timedelta(seconds=1)).timestamp())},
         {"iat": int((datetime.now(UTC) + timedelta(minutes=5)).timestamp())},
         {"iat": "not-an-integer"},
+        {"nbf": int((datetime.now(UTC) + timedelta(minutes=5)).timestamp())},
+        {"nbf": "not-an-integer"},
         {
             "iat": int((datetime.now(UTC) + timedelta(minutes=4)).timestamp()),
+            "exp": int((datetime.now(UTC) + timedelta(minutes=3)).timestamp()),
+        },
+        {
+            "nbf": int((datetime.now(UTC) + timedelta(minutes=4)).timestamp()),
             "exp": int((datetime.now(UTC) + timedelta(minutes=3)).timestamp()),
         },
     ],
