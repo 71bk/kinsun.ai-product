@@ -1,0 +1,85 @@
+/* Shared by app/not-found.tsx, app/error.tsx and app/global-error.tsx.
+ *
+ * All three render inside (or in global-error's case, in place of) the root
+ * layout, which is data-surface="voice". So the elder scale applies and touch
+ * targets follow MASTER.md §6.1's 64px rather than the generic 44px.
+ *
+ * The audience is unknown here — a mistyped URL or a crash can reach anyone —
+ * and §5.1's reasoning for /sign-in holds: too large costs a care worker
+ * nothing, too small costs a 75+ user the page.
+ */
+
+.page {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--block-gap);
+  /* §7.4: dvh, never vh. */
+  min-height: 100dvh;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--page-gutter);
+  text-align: center;
+}
+
+.icon {
+  color: var(--color-primary-text);
+}
+
+.title {
+  margin: 0;
+  color: var(--color-foreground);
+  font-size: var(--text-2xl);
+  line-height: 1.3;
+}
+
+.body {
+  /* §7.3 keeps the reading measure short; 35ch is the low end of the range
+     MASTER.md gives for Chinese body text. */
+  max-width: 35ch;
+  margin: 0;
+  color: var(--color-foreground);
+  font-size: var(--text-base);
+  line-height: 1.75;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  /* §6.1 voice spacing: at least 16px between targets. */
+  gap: var(--space-4);
+  justify-content: center;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--text-lg);
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary {
+  /* --color-primary-strong (5.36:1) rather than --color-primary (3.68:1).
+     §4.1 permits primary for labels ≥24px, which the voice scale satisfies,
+     but strong passes the 4.5:1 body threshold at every scale — so this stays
+     correct if the component is ever reached on a smaller surface. */
+  border: 2px solid var(--color-primary-strong);
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+
+.secondary {
+  /* Outline is this control's only boundary, so §4.1 requires at least 3:1:
+     --color-border-strong is 1.45:1 and would be decoration, not an edge. */
+  border: 2px solid var(--color-primary-strong);
+  background: transparent;
+  color: var(--color-primary-text);
+}

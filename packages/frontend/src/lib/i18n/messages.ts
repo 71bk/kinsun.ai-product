@@ -87,6 +87,10 @@ const zhHant = {
   'error.reviewSummaryFailed': '目前無法送出摘要覆核，請重新載入後再試。',
   'error.assignmentAccess': '目前身分沒有可查看的居家派案，或派案已失效。',
   'error.loadAssignmentsFailed': '目前無法讀取派案，請稍後重試。',
+  /* Route-boundary copy. Deliberately says nothing about the cause: on the
+     family surface this is what a FamilyDataRedlineError renders as, and
+     MASTER.md §11 forbids leaving any trace that content was withheld. */
+  'error.routeBoundary': '目前沒辦法顯示這一頁的內容，請稍後再試一次。',
 
   // ---- toast (non-blocking write-action confirmation) ----
   'toast.eventReviewed': '事件覆核已送出。',
@@ -720,6 +724,7 @@ const en: Record<MessageKey, string> = {
   'error.assignmentAccess':
     'This account has no home-care assignments it may view, or the assignment has expired.',
   'error.loadAssignmentsFailed': 'Assignments are unavailable right now. Please try again later.',
+  'error.routeBoundary': 'This page cannot be shown right now. Please try again shortly.',
 
   'toast.eventReviewed': 'Event review submitted.',
   'toast.memoryRejected': 'This candidate memory was rejected.',

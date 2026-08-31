@@ -1,0 +1,23 @@
+.page {
+  display: grid;
+  gap: var(--block-gap);
+  padding: var(--page-gutter);
+}
+
+/* Same shape as the per-page retry buttons on the care and family surfaces
+   (FamilyHomePage.module.css, DashboardPage.module.css) so a boundary does not
+   read as a different product from the page it replaced. */
+.retryButton {
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background: var(--color-primary-weak);
+}

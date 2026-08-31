@@ -135,6 +135,11 @@ describe('shared design foundation styling boundary', () => {
     '../ui/ErrorState.module.css',
     '../ui/ConfirmationDialog.module.css',
     '../ui/Toast.module.css',
+    '../ui/RouteErrorBoundary.module.css',
+    /* The root fallbacks live under app/ rather than components/, but §14's
+       no-raw-hex rule is about where the colour is written, not which folder
+       it sits in — and a crash page is a bad place to discover a stray hex. */
+    '../../app/RouteFallback.module.css',
   ])('%s contains no raw hex colours', (relativePath) => {
     const css = readFileSync(
       fileURLToPath(new URL(`../layout/${relativePath}`, import.meta.url)),
