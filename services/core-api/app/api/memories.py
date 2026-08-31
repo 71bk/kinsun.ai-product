@@ -7,12 +7,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.adapters.service_identity import ServicePrincipal
 from app.api.responses import get_correlation_id, success
 from app.core.auth import ActorContext
 from app.core.cursor import decode_cursor, encode_cursor
 from app.core.exceptions import NotFoundError, ValidationError
 from app.db.session import get_db_session
-from app.middleware.actor_guard import require_active_actor, require_system_service_actor
+from app.middleware.actor_guard import require_active_actor
+from app.middleware.speech_service_auth import require_speech_service
+from app.models.actor import Actor
+from app.models.conversation import ConversationSession
 from app.policies.memory_retrieval import memory_content_digest
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.consent import ConsentPurpose
@@ -299,15 +303,28 @@ async def decide_memory_by_voice(
     elder_id: UUID = Path(...),
     memory_id: UUID = Path(...),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    actor_context: ActorContext = Depends(require_system_service_actor),
+    _service_principal: ServicePrincipal = Depends(require_speech_service),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Accept a bounded voice decision only from the trusted Speech service."""
-    await authorize_elder(
-        session,
-        actor_context,
-        elder_id,
-        "memory:voice-confirm",
+    conversation = await session.get(ConversationSession, request.session_id)
+    actor = (
+        await session.get(Actor, conversation.initiator_actor_id)
+        if conversation is not None and conversation.initiator_actor_id is not None
+        else None
+    )
+    if (
+        conversation is None
+        or conversation.elder_id != elder_id
+        or actor is None
+        or actor.status != "ACTIVE"
+    ):
+        raise NotFoundError("Resource not found")
+    actor_context = ActorContext(
+        actor_id=actor.id,
+        actor_role=actor.actor_type,
+        tenant_id=conversation.tenant_id,
+        status=actor.status,
     )
     service = MemoryService(session, actor_context.tenant_id)
     memory = await service.get(elder_id, memory_id)

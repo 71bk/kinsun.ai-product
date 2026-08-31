@@ -95,6 +95,12 @@ class TestSettingsConstruction:
             AGENT_RUNTIME_URL="http://127.0.0.1:8001",
             AGENT_RUNTIME_TIMEOUT_SECONDS="8",
             AGENT_RUNTIME_MODEL_ID="mock-v1",
+            SPEECH_SERVICE_IDENTITY_ENABLED="true",
+            SPEECH_SERVICE_IDENTITY_HMAC_SECRET=(
+                "speech-core-service-identity-secret-material-32-bytes"
+            ),
+            SPEECH_SERVICE_IDENTITY_ISSUER="kinsun-speech-test",
+            SPEECH_SERVICE_IDENTITY_TTL_SECONDS="20",
             EVIDENCE_AWARE_MEMORY="true",
             AUTO_LOW_RISK_MEMORY="true",
         )
@@ -140,6 +146,9 @@ class TestSettingsConstruction:
         assert s.agent_runtime_url == "http://127.0.0.1:8001"
         assert s.agent_runtime_timeout_seconds == 8
         assert s.agent_runtime_model_id == "mock-v1"
+        assert s.speech_service_identity_enabled is True
+        assert s.speech_service_identity_issuer == "kinsun-speech-test"
+        assert s.speech_service_identity_ttl_seconds == 20
         assert s.evidence_aware_memory is True
         assert s.auto_low_risk_memory is True
 
@@ -360,6 +369,22 @@ class TestValidation:
                 ASR_GATE_HMAC_SECRET="shared-secret-material-at-least-32-bytes",
             )
 
+    def test_enabled_speech_service_identity_requires_an_independent_secret(self) -> None:
+        with pytest.raises(ValidationError, match="SPEECH_SERVICE_IDENTITY_HMAC_SECRET"):
+            _make_settings(
+                SPEECH_SERVICE_IDENTITY_ENABLED="true",
+                SPEECH_SERVICE_IDENTITY_HMAC_SECRET="too-short",
+            )
+        with pytest.raises(ValidationError, match="independent"):
+            _make_settings(
+                SERVICE_IDENTITY_ENABLED="true",
+                SERVICE_IDENTITY_HMAC_SECRET="shared-service-secret-material-at-least-32-bytes",
+                SPEECH_SERVICE_IDENTITY_ENABLED="true",
+                SPEECH_SERVICE_IDENTITY_HMAC_SECRET=(
+                    "shared-service-secret-material-at-least-32-bytes"
+                ),
+            )
+
     @pytest.mark.parametrize("ttl", ["14", "121"])
     def test_voice_ticket_ttl_is_bounded(self, ttl: str) -> None:
         with pytest.raises(ValidationError):
@@ -409,6 +434,12 @@ class TestSecretRedaction:
         secret = "test-independent-asr-gate-secret-material-32-bytes"
         settings = _make_settings(ASR_GATE_HMAC_SECRET=secret)
         assert settings.model_dump()["asr_gate_hmac_secret"] == "***"
+        assert secret not in repr(settings)
+
+    def test_speech_service_identity_secret_is_redacted(self) -> None:
+        secret = "speech-core-service-identity-secret-material-32-bytes"
+        settings = _make_settings(SPEECH_SERVICE_IDENTITY_HMAC_SECRET=secret)
+        assert settings.model_dump()["speech_service_identity_hmac_secret"] == "***"
         assert secret not in repr(settings)
 
     def test_google_handoff_secrets_are_redacted(self) -> None:

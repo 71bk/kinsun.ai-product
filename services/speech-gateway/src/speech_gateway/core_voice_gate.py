@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
 import httpx
 from pydantic import BaseModel, ConfigDict
+
+from speech_gateway.service_identity import (
+    SERVICE_CREDENTIAL_HEADER,
+    ServiceCredentialSigner,
+)
 
 
 class CoreGateRejectedError(Exception):
@@ -45,11 +51,15 @@ class CoreVoiceGateClient:
         base_url: str,
         timeout_seconds: float,
         service_token: str = "",
+        service_signer: ServiceCredentialSigner | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
+        if service_token and service_signer is not None:
+            raise ValueError("Configure either a bearer token or request-bound identity")
         self._base_url = base_url.rstrip("/")
         self._timeout_seconds = timeout_seconds
         self._service_token = service_token
+        self._service_signer = service_signer
         self._transport = transport
 
     def _headers(self, extra: dict[str, str] | None = None) -> dict[str, str]:
@@ -65,17 +75,29 @@ class CoreVoiceGateClient:
         payload: dict[str, object],
         headers: dict[str, str] | None = None,
     ) -> dict:
+        correlation_id = str(uuid.uuid4())
         try:
             async with httpx.AsyncClient(
                 base_url=self._base_url,
                 timeout=self._timeout_seconds,
                 transport=self._transport,
             ) as client:
-                response = await client.post(
+                request_headers = self._headers(headers)
+                request_headers["X-Correlation-ID"] = correlation_id
+                request = client.build_request(
+                    "POST",
                     path,
                     json=payload,
-                    headers=self._headers(headers),
+                    headers=request_headers,
                 )
+                if self._service_signer is not None:
+                    request.headers[SERVICE_CREDENTIAL_HEADER] = self._service_signer.sign(
+                        method=request.method,
+                        path=request.url.path,
+                        body=request.content,
+                        correlation_id=correlation_id,
+                    )
+                response = await client.send(request)
         except httpx.HTTPError as exc:
             raise CoreGateUnavailableError("Core ASR gate is unavailable") from exc
 

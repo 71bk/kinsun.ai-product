@@ -50,6 +50,7 @@ from speech_gateway.provider_contracts import (
 from speech_gateway.provider_router import SpeechProviderRouter
 from speech_gateway.sagemaker_asr import transcribe_via_sagemaker
 from speech_gateway.sagemaker_tts import synthesize_via_sagemaker
+from speech_gateway.service_identity import ServiceCredentialSigner
 from speech_gateway.settings import get_settings
 from speech_gateway.tts import synthesize
 
@@ -93,6 +94,15 @@ def create_app(
         base_url=settings.CORE_API_BASE_URL,
         timeout_seconds=settings.CORE_API_TIMEOUT_SECONDS,
         service_token=settings.CORE_API_SERVICE_TOKEN,
+        service_signer=(
+            ServiceCredentialSigner(
+                secret=settings.CORE_API_SERVICE_IDENTITY_HMAC_SECRET,
+                issuer=settings.CORE_API_SERVICE_IDENTITY_ISSUER,
+                ttl_seconds=settings.CORE_API_SERVICE_IDENTITY_TTL_SECONDS,
+            )
+            if settings.CORE_API_SERVICE_IDENTITY_ENABLED
+            else None
+        ),
     )
     app = FastAPI(title="kinsun-speech-gateway", version="0.1.0")
 

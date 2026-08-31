@@ -175,6 +175,14 @@ class Settings(BaseSettings):
     service_identity_hmac_secret: str = ""
     service_identity_issuer: str = Field(default="kinsun-local", min_length=1, max_length=80)
     service_identity_ttl_seconds: int = Field(default=30, ge=1, le=60)
+    speech_service_identity_enabled: bool = False
+    speech_service_identity_hmac_secret: str = ""
+    speech_service_identity_issuer: str = Field(
+        default="kinsun-local",
+        min_length=1,
+        max_length=80,
+    )
+    speech_service_identity_ttl_seconds: int = Field(default=30, ge=1, le=60)
 
     # Evidence-aware Memory is an explicit rollout. Both gates default off so a
     # new runtime revision cannot silently activate or retrieve long-term
@@ -433,6 +441,22 @@ class Settings(BaseSettings):
             }:
                 raise ValueError(
                     "SERVICE_IDENTITY_HMAC_SECRET must be independent from other secrets"
+                )
+        if self.speech_service_identity_enabled:
+            if len(self.speech_service_identity_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "SPEECH_SERVICE_IDENTITY_HMAC_SECRET must contain at least 32 bytes "
+                    "when enabled"
+                )
+            if self.speech_service_identity_hmac_secret in {
+                self.service_identity_hmac_secret,
+                self.voice_ticket_hmac_secret,
+                self.asr_gate_hmac_secret,
+                self.google_oidc_handoff_secret,
+                self.line_oidc_handoff_secret,
+            }:
+                raise ValueError(
+                    "SPEECH_SERVICE_IDENTITY_HMAC_SECRET must be independent from other secrets"
                 )
         if self.auto_low_risk_memory and not self.evidence_aware_memory:
             raise ValueError(

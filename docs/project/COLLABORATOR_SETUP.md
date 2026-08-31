@@ -370,7 +370,10 @@ uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002
 APP_ENV=local
 AWS_REGION=us-west-2
 CORE_API_BASE_URL=http://127.0.0.1:8000
-CORE_API_SERVICE_TOKEN=
+CORE_API_SERVICE_IDENTITY_ENABLED=true
+CORE_API_SERVICE_IDENTITY_HMAC_SECRET=<same-as-root-SPEECH_SERVICE_IDENTITY_HMAC_SECRET>
+CORE_API_SERVICE_IDENTITY_ISSUER=kinsun-local
+CORE_API_SERVICE_IDENTITY_TTL_SECONDS=30
 CORE_API_TIMEOUT_SECONDS=5
 SAGEMAKER_ASR_ENDPOINT=
 SAGEMAKER_TTS_ENDPOINT=
@@ -389,17 +392,23 @@ VOICE_TICKET_ENABLED=true
 VOICE_TICKET_HMAC_SECRET=<unique-32-byte-secret>
 ASR_GATE_ENABLED=true
 ASR_GATE_HMAC_SECRET=<different-unique-32-byte-secret>
+SPEECH_SERVICE_IDENTITY_ENABLED=true
+SPEECH_SERVICE_IDENTITY_HMAC_SECRET=<third-independent-32-byte-secret>
+SPEECH_SERVICE_IDENTITY_ISSUER=kinsun-local
+SPEECH_SERVICE_IDENTITY_TTL_SECONDS=30
 ```
 
 語音完整閉環另外需要：
 
 - 標準 AWS credential provider chain 可用，且具有 Transcribe／Polly 權限。
-- `CORE_API_SERVICE_TOKEN` 必須是 Core 正式核發、能解析為 `SYSTEM_SERVICE` actor 的 credential。
+- Gate 1 local/test 的 Speech Gateway 必須啟用 request-bound service identity；
+  `CORE_API_SERVICE_IDENTITY_HMAC_SECRET` 與 root `SPEECH_SERVICE_IDENTITY_HMAC_SECRET` 相同，且不得與
+  Core → Agent Runtime、Voice Ticket、ASR Gate、OAuth 或 provider secret 共用。
 - 台語／客語還需要已通過 license 與 Synthetic smoke gates 的私有 SageMaker endpoint。
 
-Repository 目前沒有「自動建立 Speech system credential」的本機 bootstrap。沒有正式
-`CORE_API_SERVICE_TOKEN` 時，Speech health 可以通過，但 ASR → Core gate 必須 fail closed；不可用
-假 Token 或跳過 Voice Ticket／ASR Gate。
+Gate 1 local/test credential 最長 60 秒，並綁定 issuer、subject、audience、method、path、body digest、
+correlation ID 與單次 credential ID。Production IAM／mTLS 等 credential mechanism 仍待 Owner 核准；
+不可把此 synthetic/local 機制宣稱為 production ready，也不可用假 Token 或跳過 Voice Ticket／ASR Gate。
 
 ## 12. 真實文字模型（選配）
 

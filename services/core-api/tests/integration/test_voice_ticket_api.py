@@ -11,6 +11,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.adapters.service_identity import ServicePrincipal
+from app.middleware.speech_service_auth import require_speech_service
 from app.models.actor import Actor
 from app.models.care_assignment import CareAssignment
 from app.models.care_unit import CareUnit
@@ -170,6 +172,13 @@ def _app(
         tenant_id=ids[tenant_key],
     )
     app.dependency_overrides[get_voice_ticket_codec] = lambda: codec
+    app.dependency_overrides[require_speech_service] = lambda: ServicePrincipal(
+        issuer="kinsun-test",
+        subject="speech-gateway",
+        audience="core-api",
+        credential_id=str(uuid4()),
+        correlation_id="voice-integration",
+    )
     return app
 
 

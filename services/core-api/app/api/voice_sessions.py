@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.agent_runtime import get_agent_runtime_client
+from app.adapters.service_identity import ServicePrincipal
 from app.api.responses import get_correlation_id, success
 from app.core.agent_runtime import AgentRuntimePort
 from app.core.auth import ActorContext
@@ -17,8 +18,9 @@ from app.db.session import get_db_session
 from app.domain.conversation import ConversationStartCommand
 from app.middleware.actor_guard import (
     require_active_actor,
-    require_system_service_actor,
 )
+from app.middleware.speech_service_auth import require_speech_service
+from app.models.conversation import ConversationSession
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.asr_gate import ConfirmAsrGateRequest, SubmitAsrResultRequest
 from app.schemas.conversation import (
@@ -75,6 +77,17 @@ def _ticket_response(conversation, issued: IssuedVoiceTicket) -> dict:
         voice_ticket=issued.value,
         expires_at=issued.expires_at,
     ).model_dump(mode="json")
+
+
+async def _trusted_speech_conversation(
+    session: AsyncSession,
+    session_id: UUID,
+) -> ConversationSession:
+    """Resolve tenant scope only after request-bound Speech authentication."""
+    conversation = await session.get(ConversationSession, session_id)
+    if conversation is None or conversation.initiator_actor_id is None:
+        raise AuthenticationError("Voice session is unavailable")
+    return conversation
 
 
 @router.post(
@@ -178,18 +191,19 @@ async def issue_voice_ticket(
 @router.post("/internal/voice-tickets/consume")
 async def consume_voice_ticket(
     request: ConsumeVoiceTicketRequest,
-    actor_context: ActorContext = Depends(require_system_service_actor),
+    _service_principal: ServicePrincipal = Depends(require_speech_service),
     session: AsyncSession = Depends(get_db_session),
     codec: VoiceTicketCodec = Depends(get_voice_ticket_codec),
 ) -> dict:
     """Consume a Ticket once after service identity and live-consent checks."""
+    trusted = await _trusted_speech_conversation(session, request.session_id)
     conversation = await ConversationService(
         session,
-        actor_context.tenant_id,
+        trusted.tenant_id,
     ).consume_ticket(
         session_id=request.session_id,
         value=request.voice_ticket,
-        actor_id=actor_context.actor_id,
+        actor_id=trusted.initiator_actor_id,
         trace_id=get_correlation_id(),
         codec=codec,
     )
@@ -199,13 +213,14 @@ async def consume_voice_ticket(
 @router.post("/internal/asr-results")
 async def submit_asr_result(
     request: SubmitAsrResultRequest,
-    actor_context: ActorContext = Depends(require_system_service_actor),
+    _service_principal: ServicePrincipal = Depends(require_speech_service),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Accept ASR Final only for a consumed, recording voice session."""
-    decision = await _asr_gate_service(session, actor_context.tenant_id).submit(
+    trusted = await _trusted_speech_conversation(session, request.session_id)
+    decision = await _asr_gate_service(session, trusted.tenant_id).submit(
         request=request,
-        actor_id=actor_context.actor_id,
+        actor_id=trusted.initiator_actor_id,
         correlation_id=get_correlation_id(),
     )
     return success(decision.model_dump(mode="json"))
@@ -332,16 +347,39 @@ async def transition_voice_session(
     request: TransitionVoiceSessionRequest,
     session_id: UUID = Path(...),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    actor_context: ActorContext = Depends(require_system_service_actor),
+    _service_principal: ServicePrincipal = Depends(require_speech_service),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    return await _transition_voice_session(
-        session_id=session_id,
-        target_state=request.target_state,
-        idempotency_key=idempotency_key,
-        actor_context=actor_context,
-        session=session,
+    """Allow Speech Gateway to fail a consumed session, and nothing broader."""
+    if request.target_state != "FAILED":
+        raise NotFoundError("Resource not found")
+    conversation = await _trusted_speech_conversation(session, session_id)
+    idem = IdempotencyRepository(
+        session,
+        conversation.tenant_id,
+        conversation.initiator_actor_id,
     )
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="voice_session_failed_by_speech",
+        payload={"session_id": session_id},
+    )
+    if not replay.replayed:
+        conversation = await ConversationService(session, conversation.tenant_id).transition(
+            conversation=conversation,
+            target_state="FAILED",
+            actor_id=conversation.initiator_actor_id,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+        )
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="conversation_session",
+            resource_id=conversation.id,
+            response_status=200,
+            response_body=_response(conversation),
+        )
+    return success(_response(conversation))
 
 
 @router.post("/voice-sessions/{session_id}/complete")

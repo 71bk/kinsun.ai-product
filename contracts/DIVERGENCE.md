@@ -167,10 +167,12 @@ Core 已實作 Voice Session metadata、受控狀態轉移，以及 dedicated Vo
 - `BASIC_VOICE` 撤回或被新 grant 取代時，同交易取消相關 active Voice Session，使未使用 Ticket
   立即失效。這不影響其他 Consent Purpose。
 
-目前 `SYSTEM_SERVICE` guard 已可執行，但 ADR 0009 的 production service credential mechanism
-（例如 IAM 或 mTLS）仍待 Owner 核准；因此 internal consume contract 不代表 production service
-identity 已部署。Core 的 private ASR Final evidence 與低信心 elder confirmation 已實作：
-Speech Gateway 必須先 consume Ticket，再由 `SYSTEM_SERVICE` 送入 ASR result；Core 重新檢查
+Gate 1 local/test 的 Speech → Core 已使用短效、request-bound HMAC service credential，綁定
+issuer／subject／audience、method、path、body digest、correlation ID 與單次 credential ID；它不核發
+browser App Session，也不依賴每個 tenant 建立 `SYSTEM_SERVICE` actor。ADR 0009 的 production service
+credential mechanism（例如 IAM 或 mTLS）仍待 Owner 核准，因此 internal consume contract 不代表
+production service identity 已部署。Core 的 private ASR Final evidence 與低信心 elder confirmation 已實作：
+Speech Gateway 必須先 consume Ticket，再以通過驗證的 service principal 送入 ASR result；Core 重新檢查
 `BASIC_VOICE`、input mode、語言與版本化 threshold，未確認不得進入 `PROCESSING`，且 Agent input
 必須與通過 Gate 的 keyed digest 完全相符。原文只在 `TRANSCRIPT_STORAGE` Consent 有效時保存，
 public decision 不回傳 confidence、ticket、digest 或 audio。

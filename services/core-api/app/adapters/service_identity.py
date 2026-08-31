@@ -14,9 +14,27 @@ import json
 import time
 import uuid
 from dataclasses import dataclass
+from typing import Any
+
+from app.core.exceptions import AuthenticationError
 
 SERVICE_CREDENTIAL_HEADER = "X-Kinsun-Service-Credential"
 _TOKEN_PREFIX = "ksvc1"
+_REQUIRED_CLAIMS = frozenset(
+    {
+        "aud",
+        "body_sha256",
+        "correlation_id",
+        "exp",
+        "iat",
+        "iss",
+        "jti",
+        "method",
+        "path",
+        "sub",
+        "v",
+    }
+)
 
 
 def canonical_json_bytes(value: object) -> bytes:
@@ -32,6 +50,11 @@ def canonical_json_bytes(value: object) -> bytes:
 
 def _b64url(value: bytes) -> str:
     return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+
+def _decode_b64url(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(value + padding)
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,3 +99,113 @@ class ServiceCredentialSigner:
         signed = f"{_TOKEN_PREFIX}.{encoded_claims}".encode("ascii")
         signature = hmac.new(self.secret.encode("utf-8"), signed, hashlib.sha256).digest()
         return f"{signed.decode('ascii')}.{_b64url(signature)}"
+
+
+@dataclass(frozen=True, slots=True)
+class ServicePrincipal:
+    issuer: str
+    subject: str
+    audience: str
+    credential_id: str
+    correlation_id: str
+
+
+class ServiceCredentialVerifier:
+    """Verify one short-lived, request-bound synthetic service credential.
+
+    Replay state is intentionally process-local. ADR 0009 requires a different
+    credential mechanism before a multi-replica production deployment.
+    """
+
+    def __init__(
+        self,
+        *,
+        secret: str,
+        issuer: str,
+        expected_subject: str,
+        audience: str,
+        max_ttl_seconds: int = 60,
+        clock_skew_seconds: int = 5,
+    ) -> None:
+        if len(secret.encode("utf-8")) < 32:
+            raise ValueError("Service identity secret must contain at least 32 bytes")
+        if not 1 <= max_ttl_seconds <= 60:
+            raise ValueError("Service credential max TTL must be between 1 and 60 seconds")
+        self._secret = secret.encode("utf-8")
+        self._issuer = issuer
+        self._expected_subject = expected_subject
+        self._audience = audience
+        self._max_ttl_seconds = max_ttl_seconds
+        self._clock_skew_seconds = clock_skew_seconds
+        self._seen: dict[str, int] = {}
+
+    def verify(
+        self,
+        token: str | None,
+        *,
+        method: str,
+        path: str,
+        body: bytes,
+        correlation_id: str,
+        now: int | None = None,
+    ) -> ServicePrincipal:
+        if not token or len(token) > 4096:
+            raise AuthenticationError("Authentication required")
+        try:
+            prefix, encoded_claims, encoded_signature = token.split(".", 2)
+            if prefix != _TOKEN_PREFIX:
+                raise ValueError("wrong credential version")
+            signed = f"{prefix}.{encoded_claims}".encode("ascii")
+            supplied_signature = _decode_b64url(encoded_signature)
+            expected_signature = hmac.new(self._secret, signed, hashlib.sha256).digest()
+            if not hmac.compare_digest(supplied_signature, expected_signature):
+                raise ValueError("signature mismatch")
+            claims: Any = json.loads(_decode_b64url(encoded_claims))
+        except (ValueError, TypeError, UnicodeError, json.JSONDecodeError) as exc:
+            raise AuthenticationError("Authentication required") from exc
+
+        if not isinstance(claims, dict) or set(claims) != _REQUIRED_CLAIMS:
+            raise AuthenticationError("Authentication required")
+        if (
+            type(claims["iat"]) is not int
+            or type(claims["exp"]) is not int
+            or type(claims["v"]) is not int
+            or not isinstance(claims["jti"], str)
+        ):
+            raise AuthenticationError("Authentication required")
+        current_time = int(time.time()) if now is None else now
+        issued_at = claims["iat"]
+        expires_at = claims["exp"]
+        credential_id = claims["jti"]
+        try:
+            uuid.UUID(credential_id)
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise AuthenticationError("Authentication required") from exc
+        if (
+            claims["v"] != 1
+            or claims["iss"] != self._issuer
+            or claims["sub"] != self._expected_subject
+            or claims["aud"] != self._audience
+            or claims["method"] != method.upper()
+            or claims["path"] != path
+            or claims["correlation_id"] != correlation_id
+            or claims["body_sha256"] != hashlib.sha256(body).hexdigest()
+            or not credential_id
+            or issued_at > current_time + self._clock_skew_seconds
+            or expires_at <= current_time
+            or expires_at <= issued_at
+            or expires_at - issued_at > self._max_ttl_seconds
+        ):
+            raise AuthenticationError("Authentication required")
+
+        self._seen = {key: expiry for key, expiry in self._seen.items() if expiry >= current_time}
+        if credential_id in self._seen:
+            raise AuthenticationError("Authentication required")
+        self._seen[credential_id] = expires_at
+        return ServicePrincipal(
+            issuer=str(claims["iss"]),
+            subject=str(claims["sub"]),
+            audience=str(claims["aud"]),
+            credential_id=credential_id,
+            correlation_id=correlation_id,
+        )

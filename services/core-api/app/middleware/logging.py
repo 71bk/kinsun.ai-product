@@ -42,6 +42,7 @@ SENSITIVE_HEADERS: frozenset[str] = frozenset(
         "authorization",
         "cookie",
         "x-api-key",
+        "x-kinsun-service-credential",
     }
 )
 

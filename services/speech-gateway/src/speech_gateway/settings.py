@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from speech_gateway.models import SpeechLanguage
@@ -49,11 +52,15 @@ class Settings(BaseSettings):
     AZURE_SPEECH_TTS_VOICE_ZH_TW: str = "zh-TW-HsiaoChenNeural"
     AZURE_SPEECH_TTS_VOICE_EN_US: str = "en-US-JennyNeural"
 
-    # Core is the only threshold and formal-state authority. This bearer value
-    # is a Core-issued service credential, not
-    # a browser token, and must never be returned or logged.
+    # Core is the only threshold and formal-state authority. Local/Gate 1 calls
+    # use an independent short-lived credential bound to method, path, body and correlation.
+    # The legacy bearer setting remains migration-only and must not be logged.
     CORE_API_BASE_URL: str = "http://127.0.0.1:8000"
     CORE_API_SERVICE_TOKEN: str = ""
+    CORE_API_SERVICE_IDENTITY_ENABLED: bool = False
+    CORE_API_SERVICE_IDENTITY_HMAC_SECRET: str = ""
+    CORE_API_SERVICE_IDENTITY_ISSUER: str = "kinsun-local"
+    CORE_API_SERVICE_IDENTITY_TTL_SECONDS: int = 30
     CORE_API_TIMEOUT_SECONDS: float = 5.0
 
     model_config = SettingsConfigDict(
@@ -62,6 +69,22 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_core_service_identity(self) -> Settings:
+        if self.CORE_API_SERVICE_IDENTITY_ENABLED:
+            if len(self.CORE_API_SERVICE_IDENTITY_HMAC_SECRET.encode("utf-8")) < 32:
+                raise ValueError(
+                    "CORE_API_SERVICE_IDENTITY_HMAC_SECRET must contain at least 32 bytes"
+                )
+            if not 1 <= self.CORE_API_SERVICE_IDENTITY_TTL_SECONDS <= 60:
+                raise ValueError("CORE_API_SERVICE_IDENTITY_TTL_SECONDS must be between 1 and 60")
+            if self.CORE_API_SERVICE_TOKEN:
+                raise ValueError(
+                    "CORE_API_SERVICE_TOKEN and request-bound service identity "
+                    "are mutually exclusive"
+                )
+        return self
 
     def asr_provider_routes(self) -> dict[SpeechLanguage, str]:
         return {
