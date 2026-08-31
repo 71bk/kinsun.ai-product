@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { ArrowRight, UserCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ export function ElderCard({ elder }: { elder: DashboardElder }) {
         <span className={styles.authorizationLabel}>{t('dashboard.authorizationLabel')}</span>
         <span>{elder.authorizationSummary ?? t('dashboard.authorized')}</span>
       </div>
-      <Link className={styles.link} href={`/dashboard/${elder.elderId}`}>
+      <Link className={styles.link} href={`/staff/elders/${elder.elderId}`}>
         <span>{t('dashboard.openElder')}</span>
         <ArrowRight size={20} weight="bold" aria-hidden="true" />
       </Link>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -67,7 +67,7 @@ export default function CaregiverDashboardPage() {
       <PageHeader
         actions={
           dashboard?.actorRole === 'HOME_CARE_WORKER' ? (
-            <Link className={styles.assignmentLink} href="/dashboard/assignments">
+            <Link className={styles.assignmentLink} href="/staff/assignments">
               {t('dashboard.viewAssignments')}
             </Link>
           ) : undefined

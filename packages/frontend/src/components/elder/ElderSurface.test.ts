@@ -31,7 +31,7 @@ describe('Elder Surface safety semantics', () => {
     const shell = source('./ElderShell.tsx');
 
     expect(shell).toContain("href: '/elder/memories'");
-    expect(shell).toContain("href: '/consent'");
+    expect(shell).toContain("href: '/elder/consent'");
     expect(shell).toContain("href: '/elder/family-access'");
     expect(shell).not.toMatch(/href:\s*['"]\/(health|schedule|emergency|sos)/i);
     expect(shell).not.toMatch(/ambulance|救護車/i);
@@ -59,8 +59,8 @@ describe('Elder Surface safety semantics', () => {
 
   it('states the voice, consent and family-sharing product boundaries explicitly', () => {
     const voice = source('../voice/VoiceHomeClient.tsx');
-    const consent = source('../../app/consent/page.tsx');
-    const family = source('../../app/elder/family-access/page.tsx');
+    const consent = source('../../app/elder/(app)/consent/page.tsx');
+    const family = source('../../app/elder/(app)/family-access/page.tsx');
 
     expect(voice).toMatch(/不會診斷、改藥、停藥/);
     expect(voice).toMatch(/緊急服務/);
@@ -82,9 +82,9 @@ describe('Elder Surface styling boundary', () => {
     '../voice/MicPermissionGuide.module.css',
     '../InputModeToggle.module.css',
     '../companion/CompanionTextPanel.module.css',
-    '../../app/consent/ConsentPage.module.css',
-    '../../app/elder/memories/ElderMemoriesPage.module.css',
-    '../../app/elder/family-access/FamilyAccessPage.module.css',
+    '../../app/elder/(app)/consent/ConsentPage.module.css',
+    '../../app/elder/(app)/memories/ElderMemoriesPage.module.css',
+    '../../app/elder/(app)/family-access/FamilyAccessPage.module.css',
     '../../app/elder/start/ElderAuthView.module.css',
   ])('%s uses tokens instead of raw hex colours', (relativePath) => {
     const css = source(relativePath);

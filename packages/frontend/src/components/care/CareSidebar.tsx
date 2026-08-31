@@ -8,8 +8,8 @@ import { useLocale } from '@/lib/i18n/locale-context';
 import styles from './CareSidebar.module.css';
 
 const NAV_ITEMS = [
-  { href: '/dashboard', key: 'careNav.elders', icon: UsersThree },
-  { href: '/dashboard/assignments', key: 'careNav.assignments', icon: CalendarCheck },
+  { href: '/staff', key: 'careNav.elders', icon: UsersThree },
+  { href: '/staff/assignments', key: 'careNav.assignments', icon: CalendarCheck },
 ] as const;
 
 export function CareSidebar({ children }: { children: ReactNode }) {
@@ -18,10 +18,13 @@ export function CareSidebar({ children }: { children: ReactNode }) {
 
   const navigation = NAV_ITEMS.map((item) => {
     const Icon = item.icon;
+    /* "Elders" stays current on a specific elder's page. That used to need a
+       regex excluding /dashboard/assignments, because the elder id sat directly
+       under the section root; /staff/elders/<id> makes the containment explicit
+       and the exclusion unnecessary (MASTER.md §13 / skill §9 nav-state-active). */
     const active =
-      item.href === '/dashboard'
-        ? pathname === '/dashboard' ||
-          (pathname !== '/dashboard/assignments' && /^\/dashboard\/[^/]+$/.test(pathname))
+      item.href === '/staff'
+        ? pathname === '/staff' || pathname.startsWith('/staff/elders')
         : pathname.startsWith(item.href);
 
     return (

@@ -114,7 +114,7 @@ describe('VoiceHomeClient startup state', () => {
 
     await screen.findByText('請先決定是否開啟陪伴');
     expect(screen.getByRole('link', { name: '前往同意設定' }).getAttribute('href')).toBe(
-      '/consent',
+      '/elder/consent',
     );
     expect(mocks.companionPanel).not.toHaveBeenCalled();
     expect(mocks.voicePanel).not.toHaveBeenCalled();

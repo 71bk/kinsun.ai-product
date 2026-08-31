@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,7 +21,7 @@ function destinationFor(profile: ActorProfile): string | null {
   const role = profile.role ?? profile.actor_type;
   if (role === 'ELDER') return '/';
   if (role === 'FAMILY_MEMBER') return '/family';
-  if (role === 'DAYCARE_CARE_WORKER' || role === 'HOME_CARE_WORKER') return '/dashboard';
+  if (role === 'DAYCARE_CARE_WORKER' || role === 'HOME_CARE_WORKER') return '/staff';
   return null;
 }
 

@@ -1,13 +1,18 @@
 import { createHash } from 'node:crypto';
+/* Exact post-sign-in destinations, not prefixes. The old '/consent' and
+   '/dashboard' entries moved with the routes to '/elder/consent' and '/staff';
+   they are not kept as aliases, because next.config.mjs redirects the old paths
+   and an allowlist that accepts a URL the app no longer serves is just a
+   larger surface to reason about. */
 const ALLOWED_RETURN_PATHS = new Set([
   '/',
   '/account/sign-in-methods',
-  '/consent',
-  '/dashboard',
+  '/elder/consent',
   '/family',
   '/line/account-link',
   '/onboarding/resolve',
   '/sign-in',
+  '/staff',
 ]);
 
 export type LoginProvider = 'GOOGLE' | 'LINE';
