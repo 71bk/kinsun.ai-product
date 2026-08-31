@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState } from 'react';
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useLocale } from '@/lib/i18n/locale-context';
 
 const inputStyle = {
@@ -63,8 +64,8 @@ export function StaffSignInView({
               style={inputStyle}
               type="email"
             />
-            <input
-              aria-label="密碼"
+            <PasswordInput
+              ariaLabel="密碼"
               autoComplete="current-password"
               maxLength={128}
               minLength={12}
@@ -72,7 +73,6 @@ export function StaffSignInView({
               placeholder="密碼 / Password"
               required
               style={inputStyle}
-              type="password"
             />
           </>
         )}

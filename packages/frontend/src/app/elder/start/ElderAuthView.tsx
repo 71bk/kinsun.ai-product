@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { type KeyboardEvent, useRef, useState } from 'react';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import styles from './ElderAuthView.module.css';
 
 type AuthTab = 'login' | 'register';
@@ -159,7 +160,7 @@ export function ElderAuthView({ nativeEnabled, showGoogle, showLine }: ElderAuth
                         <LockKey size={25} weight="bold" aria-hidden="true" />
                         密碼
                       </label>
-                      <input
+                      <PasswordInput
                         autoComplete="current-password"
                         id="loginPassword"
                         maxLength={128}
@@ -167,7 +168,6 @@ export function ElderAuthView({ nativeEnabled, showGoogle, showLine }: ElderAuth
                         name="password"
                         placeholder="請輸入密碼"
                         required
-                        type="password"
                       />
                     </div>
                     <button className={styles.primaryButton} type="submit">
