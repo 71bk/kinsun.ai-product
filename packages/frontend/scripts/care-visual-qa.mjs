@@ -413,11 +413,11 @@ for (const viewport of VIEWPORTS.filter(
     const problems = [];
 
     try {
-      await page.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 90_000 });
+      await page.goto(`${BASE}/staff`, { waitUntil: 'load', timeout: 90_000 });
       await settle(page, ELDER.display_name);
       await capture(page, viewport, locale, 'dashboard', problems);
 
-      await page.goto(`${BASE}/dashboard/${ELDER_ID}`, { waitUntil: 'load', timeout: 90_000 });
+      await page.goto(`${BASE}/staff/elders/${ELDER_ID}`, { waitUntil: 'load', timeout: 90_000 });
       await settle(page, '早餐紀錄仍待照護人員確認。');
       await capture(page, viewport, locale, 'elder-events', problems);
 
@@ -429,7 +429,7 @@ for (const viewport of VIEWPORTS.filter(
       await settle(page, '早餐資訊來自待確認事件，請照護人員複核。');
       await capture(page, viewport, locale, 'elder-summaries', problems);
 
-      await page.goto(`${BASE}/dashboard/assignments`, { waitUntil: 'load', timeout: 90_000 });
+      await page.goto(`${BASE}/staff/assignments`, { waitUntil: 'load', timeout: 90_000 });
       await page.locator('article[data-status]').first().waitFor({ timeout: 20_000 });
       await page.waitForTimeout(250);
       await page.locator('article button').first().click();
@@ -449,7 +449,7 @@ for (const viewport of VIEWPORTS.filter(
       await page.evaluate(() => window.scrollTo(0, 0));
       await capture(page, viewport, locale, 'assignments', problems);
 
-      await page.goto(`${BASE}/dashboard/${FORBIDDEN_ID}`, { waitUntil: 'load', timeout: 90_000 });
+      await page.goto(`${BASE}/staff/elders/${FORBIDDEN_ID}`, { waitUntil: 'load', timeout: 90_000 });
       await page.waitForSelector('main');
       await page.waitForTimeout(350);
       if ((await page.locator(`text=${PRIVATE_NAME}`).count()) > 0) {

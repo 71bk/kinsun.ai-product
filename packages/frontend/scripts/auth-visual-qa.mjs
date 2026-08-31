@@ -143,14 +143,21 @@ for (const viewport of VIEWPORTS) {
       await page.locator('h1').waitFor({ timeout: 20_000 });
       await capture(page, 'elder-start-login', viewport, locale, problems, ['小暖 Kinsun']);
 
-      // --- /elder/start : register mode (client-side toggle) ---
-      const toggle = page.getByRole('button', { name: '建立帳號' });
+      // --- /elder/start : register mode (client-side tab) ---
+      /* 146b090 turned this from a "建立帳號" button into a tablist, so the old
+         button selector matched nothing and reported a missing control on every
+         viewport. Assert the tab's own selected state rather than a heading:
+         both modes share the "開始使用 Kinsun" heading, so a heading wait would
+         pass without the tab having switched. */
+      const toggle = page.getByRole('tab', { name: '註冊' });
       if ((await toggle.count()) > 0) {
         await toggle.first().click();
-        await page.getByRole('heading', { name: '建立帳號' }).waitFor({ timeout: 10_000 });
+        await page
+          .getByRole('tab', { name: '註冊', selected: true })
+          .waitFor({ timeout: 10_000 });
         await capture(page, 'elder-start-register', viewport, locale, problems);
       } else {
-        problems.push('elder-start: register toggle button not found');
+        problems.push('elder-start: register tab not found');
       }
 
       // --- /elder/start : password visibility toggle ---
