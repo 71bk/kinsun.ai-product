@@ -23,7 +23,12 @@ Domain、Security 與 Test 規格轉成可執行工作，不取代下列權威�
 舊 `.kiro/specs/elderly-care-ai-companion/tasks.legacy.md`、`legacy/backend`（原
 `packages/backend`）與 legacy Lambda／DynamoDB stack 不屬於本 Spec 的完成證據。
 
-**狀態：Draft，需完成 Requirements Review 與 Owner Decisions 後才執行 tasks。**
+**狀態：Implemented for canonical synthetic Gate 1（2026-08-31）。**
+Tasks 1–9 已完成；Acceptance／State／Security／Test 證據與適用邊界以
+[`traceability.md`](traceability.md) 及
+[`evidence/gate1-synthetic-five-run.json`](evidence/gate1-synthetic-five-run.json) 為準。
+Production provider、AWS staging deployment、真實跨服務 E2E、語言品質、latency、availability、
+data region 與成本門檻仍為 `RELEASE_BLOCKED`，不得由此狀態推論為 production ready。
 
 ## 2. 目標與成功條件
 
