@@ -74,8 +74,12 @@ class CareRelationship(BaseModel, TenantScopedMixin):
         server_default=sa.text("'ACTIVE'"),
         nullable=False,
     )
+    # The baseline declares DEFAULT now(). Without the matching claim here
+    # SQLAlchemy sends an explicit NULL for an unset attribute instead of
+    # omitting the column, so the database default would never apply.
     effective_from: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        server_default=sa.func.now(),
         nullable=False,
     )
     effective_to: Mapped[datetime | None] = mapped_column(
