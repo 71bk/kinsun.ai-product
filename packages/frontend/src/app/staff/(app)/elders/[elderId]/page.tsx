@@ -267,7 +267,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
       <main className={styles.denied}>
         <ErrorState
           action={
-            <Link className={styles.backLink} href="/dashboard">
+            <Link className={styles.backLink} href="/staff">
               {t('denied.back')}
             </Link>
           }

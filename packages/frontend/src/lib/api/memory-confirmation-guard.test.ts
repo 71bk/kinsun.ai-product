@@ -24,7 +24,7 @@ describe('caregiver memory confirmation guard', () => {
 
   it('does not render or wire a confirmation action on the caregiver dashboard', () => {
     const memoryListSource = source('../../components/dashboard/MemoryList.tsx');
-    const dashboardSource = source('../../app/dashboard/[elderId]/page.tsx');
+    const dashboardSource = source('../../app/staff/(app)/elders/[elderId]/page.tsx');
 
     expect(memoryListSource).not.toContain("t('memory.confirm')");
     expect(memoryListSource).not.toContain('confirmMemoryAsElder');

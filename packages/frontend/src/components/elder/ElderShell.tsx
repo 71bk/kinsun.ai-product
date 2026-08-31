@@ -17,7 +17,7 @@ import styles from './ElderShell.module.css';
 const NAV_ITEMS = [
   { href: '/', label: '陪我聊天', icon: ChatCircleDots },
   { href: '/elder/memories', label: '我的記憶', icon: Brain },
-  { href: '/consent', label: '同意設定', icon: ShieldCheck },
+  { href: '/elder/consent', label: '同意設定', icon: ShieldCheck },
   { href: '/elder/family-access', label: '家屬分享', icon: UsersThree },
 ] as const;
 

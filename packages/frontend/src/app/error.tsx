@@ -8,10 +8,10 @@ import styles from './RouteFallback.module.css';
 /**
  * Root error boundary — the last catch below the root layout.
  *
- * It covers the elder surface (/, /consent, /elder/*) plus the pages that sit
- * outside a surface layout (/sign-in, /account/*, /onboarding/*). The care and
- * family subtrees have their own boundaries so they can keep their shell,
- * locale and 資料紅線 copy.
+ * It covers the voice home at / plus the pages that sit outside a surface
+ * layout (/sign-in, /account/*, /onboarding/*). The elder, care and family
+ * subtrees have their own boundaries so they can keep their shell, locale and
+ * 資料紅線 copy.
  *
  * This one cannot use `ErrorState`: that component calls `useLocale()`, which
  * throws outside a `LocaleProvider`, and the root layout deliberately has none

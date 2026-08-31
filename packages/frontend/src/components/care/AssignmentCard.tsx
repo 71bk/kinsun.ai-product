@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { CalendarCheck, CheckCircle, ClockCountdown, Prohibit, Timer } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -77,7 +77,7 @@ export function AssignmentCard({ assignment, onCommand }: AssignmentCardProps) {
         </div>
       </dl>
       <div className={styles.actions}>
-        <Link className={styles.elderLink} href={`/dashboard/${assignment.elderId}`}>
+        <Link className={styles.elderLink} href={`/staff/elders/${assignment.elderId}`}>
           {t('assignments.openElder')}
         </Link>
         {availableCommand && (
