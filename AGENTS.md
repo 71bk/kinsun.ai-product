@@ -1,7 +1,7 @@
 # AGENTS.md
 
-- 更新日期：2026-08-29
-- 校準基準：`main` at `9f5bbe6`
+- 更新日期：2026-09-01
+- 校準基準：`main` at `25f8d77`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
 
@@ -16,6 +16,30 @@
     Ticket／ASR Gate、Care Event、Memory、Daily Summary、Family Report、Assignment、Deletion、Agent
     Run、受控 Tool、LINE Messaging／通知，以及 transactional outbox 與 provider-neutral event
     publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
+    2026-09-01 另加入兩條軸線，兩者都**預設關閉**：
+    - **Staff-assisted accountless Elder Session**（migration `f7a9b1c3d456`）：新增
+      `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session` 三張表與
+      `app/api/assisted_elders.py` 的 8 個 route。照服員可建立沒有 Actor／identity 的長者，
+      再發一次性 `ep1_` pairing token 換成 HttpOnly `es1_` Elder Session；`ks1_`／`ep1_`／`es1_`
+      是三種不同憑證，一般 Core endpoint 只收 `ks1_`。Token 不攜帶任何可信 role／tenant／elder／
+      scope／expiry claim，每次請求都由 Core 重建 initiator 的 live ActorContext 再跑既有
+      ElderAccessPolicy。migration `b8c2d4e5f607` additive 補上 `consent_grant` 的
+      `confirmation_method`／`recorded_by_actor_id`／`assisted_session_id`：
+      `ASSISTED_TABLET_ACKNOWLEDGEMENT` 要求 `granted_by_actor_id` 為 NULL，只會建立
+      `BASIC_VOICE`，不得授予 Memory、event extraction、family sharing 或 Care Profile projection。
+      無帳號長者沒有 Elder Actor，speaker gate 無法判定為 verified Elder speech，Event／Memory
+      proposal 因此維持關閉。`ASSISTED_ELDER_SESSIONS_ENABLED` 預設 `false` 且在
+      `APP_ENV=production` 一律拒絕。Kiro spec 為 `.kiro/specs/staff-assisted-elder-session/`，
+      7 項任務全部完成，release blocker 見該目錄 `traceability.md`。
+    - **Speech Gateway → Core request-bound service identity**（`app/middleware/speech_service_auth.py`
+      ＋ `app/adapters/service_identity.py`）：取代原本 `require_system_service_actor` 的長效
+      bearer。憑證綁 issuer／subject／audience／method／path／body SHA-256／correlation ID 與
+      single-use credential ID，TTL 1–60s，claim 必須完全相符，比對用 `hmac.compare_digest`，
+      所有失敗都回同一句 "Authentication required"，不得當成資源存在與否的 oracle。replay state
+      是 process-local，ADR 0009 要求多 replica 部署前換掉。`SPEECH_SERVICE_IDENTITY_ENABLED`／
+      `CORE_API_SERVICE_IDENTITY_ENABLED` 兩側都預設關閉，secret 必須相等且**不得**重用
+      Core→Agent Runtime 或任何 Voice／OAuth／provider secret；`X-Kinsun-Service-Credential`
+      已加入 log redaction。legacy bearer 只保留給遷移，不得與 request-bound identity 併用。
   - `services/agent-runtime`：M0 單輪閉環——contract 驗證、受控 Orchestrator、Companion Agent、
     deterministic Safety Evaluator、Event Candidate proposal 與明確固定早餐習慣的 bounded
     Memory Candidate proposal。Memory proposal 先私下綁在 Event Candidate version；只有照護者
@@ -25,6 +49,11 @@
     與 [ADR 0014](docs/adr/0014-risk-tiered-memory-speaker-verification.md) 改為總體 Consent＋Core
     deterministic risk policy＋Speaker Gate＋version-bound confirmation：LOW 嚴格 all-of 可自動保存、
     MEDIUM 由長者確認固定版本、HIGH 不建立 Memory row。尚未實作前不得把 Target 當 Current。
+    2026-09-01 另加入 bounded `trusted_care_profile` context：只有 `BASIC_VOICE` purpose、只有
+    `CARE_PROFILE_AI_CONTEXT_ENABLED=true`（預設 `false`）、且只取目前 tenant／elder 的
+    `RECORDED`／`VERIFIED` 未退場條目，Runtime 以 source-labelled context item 帶入並固定加上
+    prompt 規則：健康資料只是安全互動的背景，不是診斷、治療、用藥建議、症狀推論或指令的依據。
+    Care Profile 與 Memory 表之間沒有任何關聯或寫入。
     `MODEL_PROVIDER=mock` 是本機及目前
     staging application template 的預設；程式另有 `BedrockModelProvider`，以及只依 runtime
     URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`，以及原生
@@ -110,6 +139,21 @@
     已部署驗證。
     前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
     `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
+    2026-08-31 起三個角色各自只有一個 route prefix，且 shell 由 route group layout 擁有：
+    `app/elder/(app)/*`（layout＝ElderShell）、`app/staff/(app)/*`（layout＝CareSidebar）、
+    `app/family/(app)/*`；sign-in 頁刻意留在 group 外，因為 shell 帶著登出與尚無 session 時
+    沒有意義的連結。`data-surface="voice"` 由 layout 統一掛上，**不要在 page 自行 import
+    ElderShell 或手寫該屬性**——那正是舊寫法讓新頁面靜默失去 640px measure、64px 觸控目標
+    （MASTER.md §6.1）與較粗 focus ring 的原因。舊 URL（`/dashboard*`、`/consent` 等）由
+    `next.config.mjs` 以 **307 暫時** redirect 承接，IA 未定案前不得改成永久 redirect；
+    `src/lib/server/oauth-transaction.ts` 的登入後 allowlist 隨 route 搬移而**不是**新增別名。
+    route 搬移由 `src/lib/server/route-migration.test.ts` 釘住 redirect map 與 allowlist。
+    2026-09-01 新增平板交接路徑：`/staff/elders/new`（建立長者＋一次性交接）、`/elder/pair`
+    （由 URL fragment 或手動貼上 token，POST 給同源 BFF 交換）、`/elder/session`（首次使用
+    白話說明、文字陪伴、二次確認的停止、明確結束），BFF 邊界在
+    `app/backend/elder-session/*`。BFF 固定 acknowledgement body，**不接受 client 指定的
+    policy、actor、reason、deletion、tenant 或 elder scope**；交換 token 時會先清掉該瀏覽器
+    既有的 App Session cookie，再設定獨立的 Elder Session cookie。
     ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
     2026-08-06 移除，警告改由本檔承載。要拆成獨立部署單元請先寫 ADR 推翻 0006。
   - `packages/shared`：前端使用的 TypeScript 型別（原本也被已刪除的 legacy backend 共用，
@@ -121,6 +165,11 @@
     ASR Final 交給 Core 判定，前端不得自行 threshold。華語／英語 managed adapter 與台語／客語
     SageMaker adapter 已有程式與本機測試；WebSocket binary transport、production service credential、
     真實 endpoint、成本與 quality gate 尚未部署／驗證，不得描述成 production 語音路徑。
+    2026-09-01 起對 Core 的私有呼叫改用 `src/speech_gateway/service_identity.py` 簽出的
+    request-bound 短效憑證（見上方 core-api 條目）；secret 少於 32 bytes 或 TTL 不在 1–60s
+    會在啟動時失敗，不是等到第一次呼叫。`/internal/.../voice-confirmation` 與 voice-session
+    endpoint 現在於認證後從已存的 ConversationSession 解析 tenant／actor scope，不再信任
+    呼叫端傳入的任何值。
   - `services/notification-worker`：只有 LINE Daily Notification 的 scheduler boundary README；可執行
     job 邏輯仍在 Core。沒有 Worker framework，也沒有 Scheduler／SQS／DLQ deployment。
   `projection-worker` 與 `report-worker` 目前不存在；需要時依 §9 的結構與 ADR 建立，不要先放空殼。
@@ -153,6 +202,14 @@
   - Frontend `npm ci`／typecheck／test／lint／production build。
   - **注意：core-api 只跑 `ruff check`，不跑 `ruff format --check`**，所以本機 format 未通過的
     既有檔案不會擋 CI；不要因為 CI 綠燈就認定 core-api format 是乾淨的。
+  - **新增 router／model 時，import 字母序是 CI 等級的地雷。** `8adba0f` 把
+    `assisted_elders` 排在 `assignments` 之前、`assisted_elder_session` 排在 `asr_gate` 之前，
+    使 `app/main.py` 與 `app/models/__init__.py` 各出現一個 `I001`；`ruff check` **在 CI 內**，
+    等於直接擋住 gate1。同一個 commit 也讓 agent-runtime 的 `context/manifest.py` 與
+    `contracts/models.py` 沒過 `ruff format --check`，那項對 agent-runtime **同樣在 CI 內**。
+    兩者已於 2026-09-01 修掉。排序是 ASCII 比較（`assignments` < `assisted_*`、
+    `asr_gate` < `assisted_*`），肉眼很容易排錯：新增 import 後先跑一次該服務的
+    `ruff check`／`ruff format --check`，不要靠 review 目測。
 - `.github/workflows-disabled/pr.yml` 仍是**未啟用的草稿**（GitHub 不會讀 `workflows-disabled/`
   這個目錄名），且已被 `gate1.yml` 取代，沒有理由再啟用它。它殘留的 `infra/package-lock.json`
   路徑問題仍未修（`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）；至於舊
@@ -358,9 +415,14 @@ Wave 順序：
 **改動 contract 或 API 之前先讀那份清單並跑 validator**；其更新日期與末段「尚未實作」摘要可能
 落後於 2026-08-10 之後的 Voice／LINE／Auth 變更，不能只看單一段落判定現況。
 
-2026-08-17 靜態驗證基準：Core OpenAPI 67 paths、Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；
-Core app 實際有 72 operations（同一路徑可含多個 method）。數字會隨實作變更，應以
-`scripts/validate_contracts.py` 與 live verifier 的當次輸出為準，不要手動維護第二份 operation 清單。
+2026-09-01 靜態驗證基準：Core OpenAPI 76 paths／81 operations（`info.version` 1.6.0）、
+Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；Core app 實際有 80 paths／85 operations
+（同一路徑可含多個 method）。多出來的 4 條全部是 FastAPI 自動掛的 `/docs`、
+`/docs/oauth2-redirect`、`/openapi.json`、`/redoc`——**每一條實際 API path 都已登記在 contract**，
+反向也沒有 contract 有而 app 沒有的 path。`contracts/openapi/core-api.v1.yaml` 副檔名是 `.yaml` 但
+**內容其實是 JSON**（由 `scripts/export_core_openapi.py` 產生），用 YAML 縮排規則 grep 會得到 0。
+數字會隨實作變更，應以 `scripts/validate_contracts.py` 與 live verifier 的當次輸出為準，
+不要手動維護第二份 operation 清單。
 
 若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
 
@@ -483,7 +545,7 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
 | Agent actor role | `elder`／`family`／`system`，其他可信角色映成 `staff` | `ELDER`／`FAMILY_MEMBER`／`SYSTEM_SERVICE` 等正式 actor role |
 | 語言 | `zh-TW`／`nan-TW`／`hak-TW`／`en-US` | `ZH_TW`／`NAN_TW`／`HAK_TW`／`EN_US`；`MIXED`、`UNKNOWN` 暫映 `zh-TW` |
 | Agent result | `SUCCESS`／`BLOCKED`／`SAFE_FALLBACK`／`FAILED` | AgentRun 保存 `SUCCESS`／`BLOCKED`／`HUMAN_REVIEW`／`DEPENDENCY_FAILED` |
-| Auth credential | `ks1_` Core App Session；不接受其他 bearer token | Session／Actor／Membership 每次由 live DB 重查；失敗不得 fallback |
+| Auth credential | 一般 endpoint 只收 `ks1_` Core App Session；`ep1_`（一次性 pairing）與 `es1_`（Elder Session）只由 assisted-session 專屬 dependency 解析，另有 `X-Kinsun-Service-Credential` 供 Speech→Core | Session／Actor／Membership 每次由 live DB 重查；assisted 憑證不帶可信 claim，initiator ActorContext 由 Core 重建；失敗不得 fallback |
 
 上述 mapping 的 executable authority 分別位於 `services/core-api/app/services/companion_service.py`、
 `services/core-api/app/middleware/auth.py` 與各 ORM model；跨層改值時要同時更新 contract、migration、
@@ -494,12 +556,13 @@ adapter、前端 label 與測試，不能只改其中一層。
 - 已核准的主線不得自行替換：Core／Agent／Speech 用 Python＋FastAPI＋uv，Frontend 用 Next.js＋npm
   workspaces，IaC 用 AWS CDK v2；staging region 固定 `us-west-2`。新服務的 framework、production
   region 或尚未定案的外部 Provider 若需選擇，先提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
-- Repository 結構（2026-08-13 實際狀態，非文件 12 的原始骨架）：
+- Repository 結構（2026-09-01 實際狀態，非文件 12 的原始骨架）：
 
 ```text
 kinsun.ai/
 ├── .github/               CI；workflows/gate1.yml 已啟用，workflows-disabled/pr.yml 是廢棄草稿，見 §1
 ├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
+├── .qa/                   手動執行的 smoke／schema 驗證腳本（Supabase、登入、RAG、assisted session）
 ├── config/                RAG 與 LINE 設定；config/rag 由 agent-runtime、rag-ingestion 共用
 ├── contracts/             OpenAPI、AsyncAPI、JSON Schema、valid/invalid examples
 ├── data/                  RAG chunks、manifest、seed
@@ -586,8 +649,12 @@ kinsun.ai/
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - models 目前涵蓋 48 張 baseline table 中的 43 張，`alembic revision --autogenerate`
-    仍會把未映射 table 誤判為應刪除；產生的 migration 一律需人工檢查後才可使用。
+  - 2026-09-01 工作樹有 27 個 revision，head 是 `b8c2d4e5f607`
+    （`e6f8a0b2c345` → `f7a9b1c3d456` → `b8c2d4e5f607`）。baseline 仍是 48 張 table，
+    後續 revision 另外加了 `elder_enrollment`、`elder_care_profile_entry`、
+    `assisted_elder_session` 等表；`app/models/` 目前宣告 50 個 `__tablename__`。
+    `alembic revision --autogenerate` 仍會把未映射 table 誤判為應刪除；產生的 migration
+    一律需人工檢查後才可使用。
 - 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：
   - Next.js 16 App Router + React 19 + TypeScript。**不是 Vite，不用 Tailwind**；
     樣式一律 CSS Modules ＋ `src/app/tokens.css` 的 CSS 變數。
@@ -614,6 +681,10 @@ kinsun.ai/
 | --- | --- |
 | Core routes／services／repositories | `services/core-api/app/api/`、`app/services/`、`app/repositories/` |
 | Authentication／Session | `services/core-api/app/middleware/auth.py`、`app/adapters/auth/`、`app/services/*identity*`、`*session*` |
+| Service-to-service identity | `services/core-api/app/adapters/service_identity.py`、`app/middleware/speech_service_auth.py`、`services/speech-gateway/src/speech_gateway/service_identity.py` |
+| Assisted Elder Session | `services/core-api/app/api/assisted_elders.py`、`app/services/assisted_elder_session_service.py`、`app/services/assisted_session_tokens.py`、`app/services/elder_onboarding_service.py` |
+| 平板交接前端／BFF | `packages/frontend/src/app/elder/pair/`、`src/app/elder/session/`、`src/app/backend/elder-session/`、`src/lib/server/elder-session-cookie.ts` |
+| 手動 smoke／schema 驗證 | `.qa/`（需要真實 Supabase 連線，不在 CI 內，執行前先確認是唯讀或可回復） |
 | DB models／migration | `services/core-api/app/models/`、`services/core-api/alembic/versions/` |
 | Agent request／orchestration／provider | `services/agent-runtime/src/agent_runtime/contracts/`、`orchestration/`、`models/` |
 | RAG config／runtime／ingestion | `config/rag/`、`services/agent-runtime/src/agent_runtime/rag/`、`services/rag-ingestion/` |
@@ -631,6 +702,8 @@ kinsun.ai/
 - Cross-elder／Cross-tenant／Expired assignment／Revoked share 的 Negative Test。
 - 不符合 Spec 18 final gate 的 Memory（含 unverified Speaker、MEDIUM unconfirmed／stale、HIGH、失效
   Consent、expired／inactive／deleted／cross-scope）、Unreviewed Event 與 Draft Report 無法進入正式讀取路徑。
+- Assisted Elder Session 的憑證分離（`ks1_`／`ep1_`／`es1_` 不可互換）、pairing token 單次使用、
+  replay、過期、重新發放、cross-tenant，以及 acknowledgement 撤回後既有對話確實被取消。
 - Agent Tool Allowlist、Schema、Max-step、Timeout、Fallback 與 Core reauthorization。
 - Outbox、Consumer Idempotency、DLQ、Projection Lag 與 Rebuild 行為。
 - Delete／Revoke 後資料不會被 Retry、Replay 或 Restore 復活。
@@ -756,6 +829,33 @@ build 通過，靜態 `validate_contracts.py` 全數通過。本次**未執行**
 `TEST_DATABASE_URL`）、兩支 live contract verifier、Infra typecheck／test／synth，以及
 `scripts/verify_gate1_cross_service.py` 的五輪 synthetic 證據——後三者會在 push 觸發 `gate1.yml`
 時於 CI 執行，屆時以 CI 結果為準。
+
+2026-09-01 對 `25f8d77` 的本機校準結果。同批另修掉兩個擋 CI 的 lint 失敗（見 §1）：
+core-api `ruff check --fix` 調整 `app/main.py`、`app/models/__init__.py` 的 import 順序，
+agent-runtime `ruff format` 重排 `context/manifest.py`、`contracts/models.py`；四個都只是
+排序／換行，沒有語意變更。表中結果為修正後重跑：
+
+| 項目 | 結果 |
+| --- | --- |
+| Core API `pytest tests/unit` | `953 passed` |
+| Core API `ruff check` | 通過（修正前有 2 個 `I001`） |
+| Core API `ruff format --check` | FAILED——12 檔（5 個 08-29 就有的既有檔案 ＋ 7 個 `9f5bbe6..25f8d77` 之間新增／修改的檔案）。**CI 不跑此項**，本次刻意不整批重排，以免混入與需求無關的 diff |
+| Agent Runtime `pytest` | `426 passed` |
+| Agent Runtime `ruff check` | 通過 |
+| Agent Runtime `ruff format --check` | 通過（修正前有 2 檔未過；此項在 CI 內） |
+| RAG Ingestion | `320 passed`；`ruff check`＋`format` 通過 |
+| Speech Gateway | `83 passed`；`ruff check`＋`format` 通過 |
+| Frontend | typecheck 通過、`277 passed`（44 files）、ESLint 乾淨、production build 通過 |
+| Infra | typecheck 通過、`7 passed`、`synth` 與 `synth:application` 皆成功 |
+| `scripts/validate_contracts.py` | all contract checks passed |
+| `scripts/verify_contract_live.py` | all live contract checks passed |
+| `scripts/verify_agent_contract_live.py` | all live contract checks passed |
+
+本次**未執行**：Core `tests/integration`（仍無獨立 `TEST_DATABASE_URL`）、
+`scripts/verify_gate1_cross_service.py` 五輪 synthetic 證據、`.qa/` 需要真實 Supabase 的
+smoke、live RAG relevance／ranking Golden Query、Playwright 視覺 QA。
+Frontend ESLint 在此次為完全乾淨，先前紀錄的那個既有 unused argument 已不存在。
+這個快照同樣不可取代當次驗證。
 
 每次變更至少執行：
 

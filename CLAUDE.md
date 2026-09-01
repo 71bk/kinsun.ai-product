@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-- 更新日期：2026-08-29
-- 校準基準：`main` at `9f5bbe6`
+- 更新日期：2026-09-01
+- 校準基準：`main` at `25f8d77`
 - 適用範圍：整個 `kinsun.ai` repository
 
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
@@ -14,8 +14,10 @@
 1. 先確認工作區，不覆蓋使用者既有變更。
 
    ```powershell
-   git -c safe.directory=D:/Hackthon/kinsun.ai status --short
-   git -c safe.directory=D:/Hackthon/kinsun.ai log -5 --oneline
+   # 把 <repo> 換成這台機器上的實際 checkout 路徑（不要沿用舊紀錄裡的 D:/Hackthon/kinsun.ai，
+   # 那個路徑不一定存在；scoped safe.directory 的用意是不去動全域 Git 設定）。
+   git -c safe.directory=<repo> -C <repo> status --short
+   git -c safe.directory=<repo> -C <repo> log -5 --oneline
    ```
 
    開發與登入／註冊 E2E 預設由 repository 根目錄 `.env` 的 `DATABASE_URL` 直接連 Supabase
@@ -50,8 +52,20 @@
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-08-17 工作樹基準為 19 個 revisions、48 張 baseline tables 中 43 張已有 SQLAlchemy mapping。
-  model attribute `id` 常透過 `__pk_name__` 對應 DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
+  2026-09-01 工作樹基準為 27 個 revisions、head `b8c2d4e5f607`；baseline 仍是 48 張 table，
+  後續 revision 另加 `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session`，
+  `app/models/` 目前宣告 50 個 `__tablename__`。model attribute `id` 常透過 `__pk_name__` 對應
+  DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
+- Staff-assisted accountless Elder Session（`f7a9b1c3d456`／`b8c2d4e5f607`）預設關閉，且在
+  `APP_ENV=production` 一律拒絕。`ks1_`／`ep1_`／`es1_` 是三種不同憑證，assisted token 不帶任何
+  可信 role／tenant／elder／scope／expiry claim，每次都由 Core 重建 initiator 的 live ActorContext
+  再跑既有 ElderAccessPolicy。`ASSISTED_TABLET_ACKNOWLEDGEMENT` 的 consent 只能建立 `BASIC_VOICE`，
+  `granted_by_actor_id` 必須為 NULL——照服員是記錄者，不是同意的當事人。無帳號長者沒有 Elder
+  Actor，speaker gate 無法判定 verified Elder speech，Event／Memory proposal 維持關閉。
+- Speech Gateway → Core 私有呼叫改用 request-bound 短效 HMAC 憑證（綁 method／path／body digest／
+  correlation ID／single-use ID，TTL 1–60s），兩側預設關閉、secret 必須相等且不得重用
+  Core→Agent Runtime 或任何 Voice／OAuth／provider secret。replay state 是 process-local，
+  ADR 0009 要求多 replica 前換掉。legacy bearer 只供遷移，不得與 request-bound identity 併用。
 - 不用未經檢查的 autogenerate。migration SQL 維持 LF、可重建、可升級，並保留 RLS、grant、trigger、
   constraint 與 state-machine 規則。
 
@@ -116,6 +130,11 @@
   內建 `data/rag*`。`config/rag/source-family-golden-queries-v003.json` 的 10 個離線 case ＋ 2 個
   exclusion case 本機通過。細節與未解除封鎖見
   [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)。
+- `trusted_care_profile` 是另一條 bounded context：只有 `BASIC_VOICE`、只有
+  `CARE_PROFILE_AI_CONTEXT_ENABLED=true`（預設 `false`）、只取當前 tenant／elder 的
+  `RECORDED`／`VERIFIED` 未退場條目。Runtime 以 source-labelled item 帶入並固定加上 prompt 規則：
+  健康資料只是安全互動的背景，不是診斷、治療、用藥建議、症狀推論或指令的依據。Care Profile
+  與 Memory 表沒有任何關聯或寫入。
 - 現行 `BASIC_VOICE` context 除本輪輸入外，可由 Core 在重驗 `memory:read` 與 active
   `LONG_TERM_MEMORY` Consent 後帶入最多 5 筆同 tenant／elder、current `ACTIVE` version 的
   Confirmed Memory；Knowledge／RAG purpose 由契約與 Core 雙重禁止夾帶私人記憶。這個 first slice
@@ -131,6 +150,16 @@
 
 - 前端是 `packages/frontend` 的單一 multi-role Next.js 16 App Router PWA；不要重建已移除的
   `apps/elder-web`、`apps/care-web`、`apps/family-web`。
+- 每個角色只有一個 route prefix，shell 由 route group layout 擁有：`app/elder/(app)/*`＝ElderShell、
+  `app/staff/(app)/*`＝CareSidebar、`app/family/(app)/*`；sign-in 頁刻意在 group 外。**不要在 page
+  自行 import ElderShell 或手寫 `data-surface="voice"`**——那會讓新頁面靜默失去 640px measure、
+  64px 觸控目標與較粗 focus ring。舊 URL 由 `next.config.mjs` 以 307 暫時 redirect 承接，
+  搬 route 時同步 `route-migration.test.ts` 的 redirect map 與 `oauth-transaction.ts` 的登入後
+  allowlist（是搬移，不是新增別名）。
+- 平板交接流程：`/staff/elders/new` → `/elder/pair` → `/elder/session`，BFF 邊界只在
+  `app/backend/elder-session/*`。BFF 固定 acknowledgement body，不接受 client 指定 policy、actor、
+  reason、deletion、tenant 或 elder scope；交換時先清掉該瀏覽器的 App Session cookie，再設定
+  獨立的 Elder Session cookie。
 - Browser 只透過同源 BFF 呼叫後端；token、provider secret 與 session credential 不進 client bundle、
   URL、log 或錯誤訊息。新環境變數必須同步 `.env.example`，只放安全假值。
 - Kinsun Email／Password 是 primary flow；BFF 以獨立 private credential 呼叫 Core，Browser 只收到
@@ -156,8 +185,11 @@
 - OpenAPI、AsyncAPI、JSON Schema、Pydantic model、實際 route 與 live verifier 必須一起演進。
   不可實作未登記 API；不相容變更必須有新 major version 或正式 migration plan。
 - [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 是差異說明，不是 executable truth，而且局部摘要
-  可能落後；改動前後都跑 validator。2026-08-17 快照：Core OpenAPI 67 paths、Agent 3 paths、
-  AsyncAPI 1 channel，Core app 實際 72 operations。
+  可能落後；改動前後都跑 validator。2026-09-01 快照：Core OpenAPI 76 paths／81 operations、
+  Agent 3 paths、AsyncAPI 1 channel，Core app 實際 80 paths／85 operations——多的 4 條是 FastAPI
+  的 `/docs`、`/docs/oauth2-redirect`、`/openapi.json`、`/redoc`，實際 API path 已全部登記。
+  `contracts/openapi/core-api.v1.yaml` 副檔名是 `.yaml` 但內容是 JSON（由
+  `scripts/export_core_openapi.py` 產生），用 YAML 縮排 grep 會得到 0。
 - `infra` 保留 AWS CDK v2 deployment profile；application stack 的 `desiredCount` 預設 0。黑客松 AWS
   帳號目前無法操作，Cognito 已從 IaC 移除，OpenSearch 仍是 external reference。沒有使用者明確要求
   與新的可操作帳號，不部署、不 push image、不變更 AWS resource，也不把 synth 結果描述成已上線。
@@ -166,6 +198,11 @@
   五輪 synthetic Core-to-Agent 證據與完整 Frontend build。細節見 `AGENTS.md` §1。兩個要記住的
   邊界：core-api 在 CI 只跑 `ruff check` 不跑 `ruff format --check`；IaC 完全不在 CI 內，仍須本機
   跑 typecheck／test／synth。`.github/workflows-disabled/pr.yml` 是已被取代的廢棄草稿。
+  **新增 import 時字母序是 CI 等級的地雷**：`8adba0f` 讓 core-api `ruff check` 出現 2 個 `I001`
+  （`assisted_elders` 排在 `assignments` 前、`assisted_elder_session` 排在 `asr_gate` 前），
+  同時讓 agent-runtime 的 `context/manifest.py`、`contracts/models.py` 沒過
+  `ruff format --check`——這兩項對各自服務**都在 CI 內**。2026-09-01 已修。加完 import 後
+  先跑該服務的 `ruff check`／`ruff format --check`，不要靠目測。
 
 ## 驗證矩陣
 
@@ -265,6 +302,19 @@ ruff check＋format 全過；Core ruff check 過，完整 format check 仍有 5 
 integration（無獨立 `TEST_DATABASE_URL`）、兩支 live verifier、Infra、五輪 synthetic 證據，這幾項
 交由 push 後的 `gate1.yml` 執行。這個快照同樣不可取代當次驗證。
 
+2026-09-01 對 `25f8d77` 的文件校準重跑結果：Core unit `953 passed`、Agent Runtime `426 passed`、
+RAG ingestion `320 passed`、Speech Gateway `83 passed`、Frontend `277 passed`（44 files）、
+Infra `7 passed`。Frontend typecheck／ESLint／production build、Infra typecheck 與兩個 synth、
+靜態 `validate_contracts.py`、`verify_contract_live.py`、`verify_agent_contract_live.py` 全數通過。
+RAG ingestion、Speech Gateway、Agent Runtime 的 `ruff check`＋`format` 全過，core-api `ruff check`
+通過。同批修掉兩個擋 CI 的 lint 失敗：`ruff check --fix` 調整 `app/main.py`、
+`app/models/__init__.py` 的 import 順序，`ruff format` 重排 agent-runtime 的
+`context/manifest.py`、`contracts/models.py`；四個都只是排序／換行，修正後兩個 suite 重跑
+仍是 953／426 passed。**仍未通過**：core-api `ruff format --check`（12 檔，5 個既有），該項不在
+CI 內，本次刻意不整批重排。未執行：Core integration（仍無獨立 `TEST_DATABASE_URL`）、五輪
+synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwright 視覺 QA。
+這個快照同樣不可取代當次驗證。
+
 ## 交付前自我審查
 
 - `git diff` 只包含本次需求；沒有重寫或刪除使用者既有變更。
@@ -288,8 +338,8 @@ integration（無獨立 `TEST_DATABASE_URL`）、兩支 live verifier、Infra、
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
 - 不為了 Windows Git ownership 問題改 repository owner 或全域安全設定；命令使用 scoped
-  `git -c safe.directory=D:/Hackthon/kinsun.ai ...`。若 Supabase、網路、AWS 或沙箱受限，記錄限制，
-  不以關閉安全檢查繞過。
+  `git -c safe.directory=<repo> ...`（`<repo>` 是這台機器上的實際 checkout 路徑）。若 Supabase、
+  網路、AWS 或沙箱受限，記錄限制，不以關閉安全檢查繞過。
 - 本機直接啟動 Speech Gateway 要使用
   `uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002`；其
   `pyproject.toml` 設定 `tool.uv.package = false`，不可省略 `--app-dir src`。
