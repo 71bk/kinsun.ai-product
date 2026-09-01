@@ -25,6 +25,7 @@ from fastapi import FastAPI
 
 from app.api.agent_runs import router as agent_runs_router
 from app.api.app_sessions import router as app_sessions_router
+from app.api.assisted_elders import router as assisted_elders_router
 from app.api.assignments import router as assignments_router
 from app.api.care_events import router as care_events_router
 from app.api.consents import router as consents_router
@@ -175,6 +176,7 @@ def create_app() -> FastAPI:
     app.include_router(line_links_router)
     app.include_router(identity_router)
     app.include_router(elders_router)
+    app.include_router(assisted_elders_router)
     app.include_router(family_invitations_router)
     app.include_router(consents_router)
     app.include_router(deletions_router)

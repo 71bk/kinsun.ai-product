@@ -30,6 +30,7 @@ from app.policies.memory_policy import (
     derive_turn_speaker_evidence,
 )
 from app.repositories.care_event_repo import CareEventRepository
+from app.repositories.care_profile_repo import CareProfileRepository
 from app.repositories.elder_repo import ElderRepository
 from app.repositories.memory_repo import MemoryRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
@@ -222,6 +223,36 @@ class CompanionService:
             for record in records
         ]
 
+    async def _trusted_care_profile_context(
+        self,
+        *,
+        elder_id: UUID,
+        turn_purpose: str,
+    ) -> list[dict[str, object]]:
+        """Load bounded provenance-preserving Care Profile data behind rollout."""
+        settings = get_settings()
+        if turn_purpose != "BASIC_VOICE" or not getattr(
+            settings,
+            "care_profile_ai_context_enabled",
+            False,
+        ):
+            return []
+        records = await CareProfileRepository(
+            self._session,
+            self._tenant_id,
+        ).list_active_ai_context(elder_id=elder_id, limit=20)
+        return [
+            {
+                "care_profile_entry_id": str(record.id),
+                "version": record.version,
+                "category": record.category,
+                "content": record.content,
+                "source_type": record.source_type,
+                "verification_status": record.verification_status,
+            }
+            for record in records
+        ]
+
     async def _authorize_asr_input(
         self,
         *,
@@ -330,6 +361,10 @@ class CompanionService:
             actor_context=actor_context,
             turn_purpose=turn_purpose,
         )
+        trusted_care_profile = await self._trusted_care_profile_context(
+            elder_id=conversation.elder_id,
+            turn_purpose=turn_purpose,
+        )
         preferred_address, response_length = await self._trusted_profile(conversation.elder_id)
         request_payload = build_companion_runtime_request(
             conversation=conversation,
@@ -342,6 +377,7 @@ class CompanionService:
             input_text=input_text,
             confirmed_memories=confirmed_memories,
             verified_care_events=verified_care_events,
+            trusted_care_profile=trusted_care_profile,
             requested_outputs=requested_outputs,
             latency_budget_ms=latency_budget_ms,
         )

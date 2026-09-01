@@ -56,6 +56,10 @@ MODEL_FILES = {
     "ConfirmAsrGateRequest": "domain/ConfirmAsrGateRequestV1.json",
     "TransitionVoiceSessionRequest": "domain/TransitionVoiceSessionRequestV1.json",
     "CompanionTurnRequest": "domain/CompanionTurnRequestV1.json",
+    "CreateAccountlessElderRequest": "domain/CreateAccountlessElderRequestV1.json",
+    "IssueAssistedSessionRequest": "domain/IssueAssistedSessionRequestV1.json",
+    "ExchangeAssistedSessionRequest": "domain/ExchangeAssistedSessionRequestV1.json",
+    "AssistedCompanionTurnRequest": "domain/AssistedCompanionTurnRequestV1.json",
     "CreateCareEventCandidateRequest": "domain/CreateCareEventCandidateRequestV1.json",
     "ReviewCareEventRequest": "domain/ReviewCareEventRequestV1.json",
     "CreateMemoryCandidateRequest": "domain/CreateMemoryCandidateRequestV1.json",
@@ -153,6 +157,24 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "create_companion_turn_api_v1_voice_sessions__session_id__companion_turns_post": (
         "CompanionTurnEnvelopeV1"
     ),
+    "create_accountless_elder_api_v1_organizations__organization_id__elders_post": (
+        "AccountlessElderEnvelopeV1"
+    ),
+    "issue_assisted_session_api_v1_elders__elder_id__assisted_sessions_post": (
+        "IssuedAssistedSessionEnvelopeV1"
+    ),
+    "exchange_assisted_session_api_v1_assisted_elder_sessions_exchange_post": (
+        "ActivatedAssistedSessionEnvelopeV1"
+    ),
+    "get_current_assisted_session_api_v1_assisted_elder_sessions_current_get": (
+        "CurrentAssistedSessionEnvelopeV1"
+    ),
+    "create_assisted_companion_turn_api_v1_assisted_elder_sessions_current_companion_turns_post": (
+        "CompanionTurnEnvelopeV1"
+    ),
+    "end_assisted_session_api_v1_assisted_elder_sessions_current_end_post": (
+        "EndAssistedSessionEnvelopeV1"
+    ),
     "create_care_event_candidate_api_v1_elders__elder_id__care_event_candidates_post": (
         "CareEventEnvelopeV1"
     ),
@@ -234,6 +256,8 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
 HTTP_METHODS = {"get", "post", "patch", "delete"}
 LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
 KINSUN_AUTH_PATH_PREFIX = "/api/v1/internal/auth/kinsun/"
+ASSISTED_SESSION_PATH_PREFIX = "/api/v1/assisted-elder-sessions/current"
+ASSISTED_SESSION_EXCHANGE_PATH = "/api/v1/assisted-elder-sessions/exchange"
 
 
 def replace_model_refs(node: object) -> None:
@@ -267,10 +291,10 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.5.0",
+        "version": "1.6.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
-            "security and outbox APIs."
+            "security, assisted Elder Session and outbox APIs."
         ),
         "description": (
             "Current executable Core API contract. Every protected operation "
@@ -320,6 +344,16 @@ def main() -> None:
             "description": (
                 "Private BFF-to-Core bearer secret. The header value is `Bearer <secret>`; "
                 "it is never exposed to the browser and is independent from App Sessions."
+            ),
+        },
+        "assistedElderSessionAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "es1_ opaque assisted Elder session",
+            "description": (
+                "Short-lived es1_ tablet session created only after a one-time ep1_ "
+                "handoff token is exchanged. Core re-evaluates the initiating staff "
+                "actor, enrollment and Elder relationship on every request."
             ),
         },
     }
@@ -433,6 +467,10 @@ def main() -> None:
                     operation["security"] = [{"lineSignature": []}]
                 elif path.startswith(KINSUN_AUTH_PATH_PREFIX):
                     operation["security"] = [{"kinsunBffAuth": []}]
+                elif path == ASSISTED_SESSION_EXCHANGE_PATH:
+                    operation["security"] = []
+                elif path.startswith(ASSISTED_SESSION_PATH_PREFIX):
+                    operation["security"] = [{"assistedElderSessionAuth": []}]
                 else:
                     operation["security"] = [{"bearerAuth": []}]
                 operation["responses"].update(

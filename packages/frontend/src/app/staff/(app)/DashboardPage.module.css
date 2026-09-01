@@ -36,3 +36,9 @@
   grid-template-columns: minmax(220px, 360px);
   margin-block-end: var(--block-gap);
 }
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

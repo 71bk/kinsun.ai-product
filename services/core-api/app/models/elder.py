@@ -41,6 +41,9 @@ class Elder(BaseModel, TenantScopedMixin):
 
     __tablename__ = "elder"
     __pk_name__ = "elder_id"
+    __table_args__ = (
+        sa.UniqueConstraint("elder_id", "tenant_id", name="uq_elder_scope"),
+    )
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),

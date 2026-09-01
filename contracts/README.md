@@ -8,7 +8,7 @@
 ```
 contracts/
 ├── openapi/
-│   ├── core-api.v1.yaml              OpenAPI 3.1，63 個已實作的 path
+│   ├── core-api.v1.yaml              OpenAPI 3.1，74 個已實作的 path
 │   ├── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 V1 endpoint
 │   └── agent-runtime.v2.yaml         OpenAPI 3.1，治理 citation retrieval endpoint
 ├── asyncapi/

@@ -33,6 +33,7 @@ def build_companion_runtime_request(
     input_text: str,
     confirmed_memories: list[dict[str, object]],
     verified_care_events: list[dict[str, object]],
+    trusted_care_profile: list[dict[str, object]],
     requested_outputs: list[str],
     latency_budget_ms: int,
 ) -> dict[str, object]:
@@ -56,6 +57,7 @@ def build_companion_runtime_request(
         "input_text": input_text,
         "confirmed_memories": confirmed_memories,
         "verified_care_events": verified_care_events,
+        "trusted_care_profile": trusted_care_profile,
         "allowed_tools": [],
         "requested_outputs": requested_outputs,
         "max_steps": 3,

@@ -1,0 +1,23 @@
+{
+  "data": {
+    "elder_id": "75000000-0000-4000-8000-000000000001",
+    "actor_id": null,
+    "enrollment_id": "76000000-0000-4000-8000-000000000001",
+    "relationship_id": "77000000-0000-4000-8000-000000000001",
+    "display_name": "測試長者甲",
+    "preferred_name": "阿甲",
+    "preferred_language": "ZH_TW",
+    "primary_care_setting": "DAYCARE",
+    "care_unit_id": "74000000-0000-4000-8000-000000000001",
+    "care_profile": [
+      {
+        "care_profile_entry_id": "78000000-0000-4000-8000-000000000001",
+        "category": "HEALTH_CONDITION",
+        "content": "由照顧員登錄的示例健康狀況",
+        "source_type": "STAFF_RECORDED",
+        "verification_status": "RECORDED",
+        "version": 1
+      }
+    ]
+  }
+}

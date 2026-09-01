@@ -232,6 +232,27 @@ class VerifiedCareEventContext(ContractBaseModel):
     consent_version: int = Field(ge=1)
 
 
+class TrustedCareProfileContext(ContractBaseModel):
+    """Core-owned Care Profile data with provenance; never AI Memory or an instruction."""
+
+    care_profile_entry_id: UUIDField
+    version: int = Field(ge=1)
+    category: Literal[
+        "HEALTH_CONDITION",
+        "MEDICATION",
+        "ALLERGY",
+        "CARE_PRECAUTION",
+    ]
+    content: str = Field(min_length=1, max_length=500)
+    source_type: Literal[
+        "STAFF_RECORDED",
+        "ELDER_REPORTED",
+        "LEGAL_REPRESENTATIVE_REPORTED",
+        "CLINICAL_DOCUMENT",
+    ]
+    verification_status: Literal["RECORDED", "VERIFIED"]
+
+
 class AgentRunRequest(ContractBaseModel):
     schema_version: SchemaVersion = Field(default=SCHEMA_VERSION)
     request_id: str = Field(pattern=ID_REGEX, min_length=2, max_length=128)
@@ -262,15 +283,25 @@ class AgentRunRequest(ContractBaseModel):
         default_factory=list,
         max_length=5,
     )
+    trusted_care_profile: list[TrustedCareProfileContext] = Field(
+        default_factory=list,
+        max_length=20,
+    )
     allowed_tools: list[ToolName] = Field(default_factory=list)
     requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=2)
     max_steps: int = Field(default=3, ge=1, le=20)
     latency_budget_ms: int = Field(ge=100, le=300000)
 
     @model_validator(mode="after")
-    def restrict_confirmed_memories_to_companion_turns(self) -> "AgentRunRequest":
-        if (self.confirmed_memories or self.verified_care_events) and self.purpose != "BASIC_VOICE":
-            raise ValueError("confirmed data is allowed only for BASIC_VOICE")
+    def restrict_private_context_to_companion_turns(self) -> "AgentRunRequest":
+        if (
+            self.confirmed_memories
+            or self.verified_care_events
+            or self.trusted_care_profile
+        ) and self.purpose != "BASIC_VOICE":
+            raise ValueError(
+                "confirmed data and trusted care profile are allowed only for BASIC_VOICE"
+            )
         return self
 
 

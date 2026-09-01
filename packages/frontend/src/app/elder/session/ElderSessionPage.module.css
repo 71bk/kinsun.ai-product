@@ -1,0 +1,187 @@
+.page,
+.centered {
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  padding: var(--page-gutter);
+}
+.page {
+  display: grid;
+  grid-template-rows: auto minmax(18rem, 1fr) auto auto;
+  gap: var(--space-5);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+.centered {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.centered h1,
+.centered p {
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.header h1,
+.eyebrow {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--color-primary-text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.endButton,
+.linkButton,
+.composer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: var(--space-2) var(--space-4);
+  text-decoration: none;
+}
+
+.endButton,
+.linkButton {
+  border: 2px solid var(--color-primary-strong);
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+}
+
+.chat,
+.composer,
+.safetyNote {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+  padding: var(--card-pad);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+}
+
+.welcome {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  margin: auto;
+  color: var(--color-primary-text);
+  text-align: center;
+}
+
+.welcome h2,
+.welcome p {
+  margin: 0;
+}
+
+.elderMessage,
+.aiMessage {
+  display: grid;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: 88%;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.elderMessage {
+  align-self: flex-end;
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+
+.aiMessage {
+  align-self: flex-start;
+  background: var(--color-primary-weak);
+  color: var(--color-foreground);
+}
+
+.composer {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.composer label {
+  font-weight: 800;
+}
+
+.composer div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+}
+
+.composer textarea {
+  width: 100%;
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+  padding: var(--space-3);
+  resize: vertical;
+}
+
+.composer button {
+  align-self: stretch;
+  border: 0;
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+
+.composer button:disabled,
+.endButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.error {
+  border-radius: var(--radius-md);
+  background: var(--state-withdrawn-bg);
+  color: var(--state-withdrawn-fg);
+  padding: var(--space-3);
+}
+
+.safetyNote {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 640px) {
+  .header,
+  .composer div {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .endButton,
+  .linkButton,
+  .composer button {
+    width: 100%;
+  }
+}

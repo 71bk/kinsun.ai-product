@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.5.0",
-    "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security and outbox APIs.",
+    "version": "1.6.0",
+    "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security, assisted Elder Session and outbox APIs.",
     "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
@@ -664,6 +664,350 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/organizations/{organization_id}/elders": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Create Accountless Elder",
+        "operationId": "create_accountless_elder_api_v1_organizations__organization_id__elders_post",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/CreateAccountlessElderRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/AccountlessElderEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/assisted-sessions": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Issue Assisted Session",
+        "operationId": "issue_assisted_session_api_v1_elders__elder_id__assisted_sessions_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/IssueAssistedSessionRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/IssuedAssistedSessionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assisted-elder-sessions/exchange": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Exchange Assisted Session",
+        "operationId": "exchange_assisted_session_api_v1_assisted_elder_sessions_exchange_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/ExchangeAssistedSessionRequestV1.json"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/ActivatedAssistedSessionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/assisted-elder-sessions/current": {
+      "get": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Get Current Assisted Session",
+        "operationId": "get_current_assisted_session_api_v1_assisted_elder_sessions_current_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CurrentAssistedSessionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "assistedElderSessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assisted-elder-sessions/current/companion-turns": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Create Assisted Companion Turn",
+        "operationId": "create_assisted_companion_turn_api_v1_assisted_elder_sessions_current_companion_turns_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/AssistedCompanionTurnRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CompanionTurnEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "assistedElderSessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assisted-elder-sessions/current/end": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "End Assisted Session",
+        "operationId": "end_assisted_session_api_v1_assisted_elder_sessions_current_end_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/EndAssistedSessionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "assistedElderSessionAuth": []
           }
         ]
       }
@@ -1616,6 +1960,7 @@
           "voice-sessions"
         ],
         "summary": "Transition Voice Session",
+        "description": "Allow Speech Gateway to fail a consumed session, and nothing broader.",
         "operationId": "transition_voice_session_api_v1_internal_voice_sessions__session_id__transition_post",
         "parameters": [
           {
@@ -5134,6 +5479,33 @@
         ],
         "title": "CareEventType"
       },
+      "CareProfileEntryInput": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "HEALTH_CONDITION",
+              "MEDICATION",
+              "ALLERGY",
+              "CARE_PRECAUTION"
+            ],
+            "title": "Category"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "category",
+          "content"
+        ],
+        "title": "CareProfileEntryInput"
+      },
       "CompleteGoogleOnboardingRequest": {
         "properties": {
           "pending_token": {
@@ -5532,6 +5904,12 @@
         "in": "header",
         "name": "X-Kinsun-BFF-Authorization",
         "description": "Private BFF-to-Core bearer secret. The header value is `Bearer <secret>`; it is never exposed to the browser and is independent from App Sessions."
+      },
+      "assistedElderSessionAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "es1_ opaque assisted Elder session",
+        "description": "Short-lived es1_ tablet session created only after a one-time ep1_ handoff token is exchanged. Core re-evaluates the initiating staff actor, enrollment and Elder relationship on every request."
       }
     },
     "responses": {

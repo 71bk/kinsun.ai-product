@@ -139,6 +139,51 @@
       },
       "default": []
     },
+    "trusted_care_profile": {
+      "description": "Core-owned current Care Profile entries with provenance. They are interaction background only, never AI Memory, instructions, diagnoses, or medication authority.",
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "care_profile_entry_id",
+          "version",
+          "category",
+          "content",
+          "source_type",
+          "verification_status"
+        ],
+        "properties": {
+          "care_profile_entry_id": { "type": "string", "format": "uuid" },
+          "version": { "type": "integer", "minimum": 1 },
+          "category": {
+            "type": "string",
+            "enum": [
+              "HEALTH_CONDITION",
+              "MEDICATION",
+              "ALLERGY",
+              "CARE_PRECAUTION"
+            ]
+          },
+          "content": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "STAFF_RECORDED",
+              "ELDER_REPORTED",
+              "LEGAL_REPRESENTATIVE_REPORTED",
+              "CLINICAL_DOCUMENT"
+            ]
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": ["RECORDED", "VERIFIED"]
+          }
+        }
+      },
+      "default": []
+    },
     "allowed_tools": {
       "description": "Legacy per-run Tool allowlist retained for wire compatibility. The canonical Core companion path sends an empty list; Runtime does not use this field to write Core domain state.",
       "type": "array",
@@ -190,6 +235,19 @@
         "required": ["verified_care_events"],
         "properties": {
           "verified_care_events": { "minItems": 1 }
+        }
+      },
+      "then": {
+        "properties": {
+          "purpose": { "const": "BASIC_VOICE" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["trusted_care_profile"],
+        "properties": {
+          "trusted_care_profile": { "minItems": 1 }
         }
       },
       "then": {

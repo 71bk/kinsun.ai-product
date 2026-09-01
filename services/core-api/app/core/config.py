@@ -139,6 +139,14 @@ class Settings(BaseSettings):
     app_session_recent_auth_window_seconds: int = Field(default=600, ge=60, le=3_600)
     app_session_max_active_per_actor: int = Field(default=5, ge=1, le=20)
 
+    # Non-production first slice for staff-created, accountless Elder tablet
+    # handoff. These remain independent from normal actor App Sessions.
+    assisted_elder_sessions_enabled: bool = False
+    assisted_elder_pairing_ttl_seconds: int = Field(default=600, ge=60, le=1_800)
+    assisted_elder_idle_ttl_seconds: int = Field(default=1_800, ge=300, le=14_400)
+    assisted_elder_absolute_ttl_seconds: int = Field(default=28_800, ge=300, le=86_400)
+    care_profile_ai_context_enabled: bool = False
+
     # ─── LINE Messaging API (disabled until routes and provider are approved) ─────
     line_channel_secret: str = ""
     line_channel_access_token: str = ""
@@ -222,6 +230,17 @@ class Settings(BaseSettings):
                     f"APP_SESSION_TOUCH_INTERVAL_SECONDS must be shorter than the {label} "
                     "idle TTL"
                 )
+
+        if self.assisted_elder_idle_ttl_seconds > self.assisted_elder_absolute_ttl_seconds:
+            raise ValueError(
+                "Assisted Elder Session idle TTL must not exceed its absolute TTL"
+            )
+        if self.app_env == AppEnv.PRODUCTION and (
+            self.assisted_elder_sessions_enabled or self.care_profile_ai_context_enabled
+        ):
+            raise ValueError(
+                "Assisted Elder Session and Care Profile AI context are non-production only"
+            )
 
         if self.google_identity_hmac_key_version != 1:
             raise ValueError(

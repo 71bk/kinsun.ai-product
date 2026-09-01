@@ -9,8 +9,10 @@ from app.models.account_merge import AccountMergeRequest  # noqa: F401
 from app.models.actor import Actor  # noqa: F401
 from app.models.agent import AgentRun, AgentToolCall  # noqa: F401
 from app.models.app_session import AppSession  # noqa: F401
+from app.models.assisted_elder_session import AssistedElderSession  # noqa: F401
 from app.models.asr_gate import AsrGateEvidence  # noqa: F401
 from app.models.care_assignment import CareAssignment  # noqa: F401
+from app.models.care_profile import ElderCareProfileEntry  # noqa: F401
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision  # noqa: F401
 from app.models.care_relationship import CareRelationship  # noqa: F401
 from app.models.care_unit import CareUnit  # noqa: F401
@@ -24,6 +26,7 @@ from app.models.deletion import (  # noqa: F401
     DeletionTombstone,
 )
 from app.models.elder import Elder  # noqa: F401
+from app.models.elder_enrollment import ElderEnrollment  # noqa: F401
 from app.models.family_invitation import FamilyInvitation  # noqa: F401
 from app.models.graph_projection import GraphProjectionRecord  # noqa: F401
 from app.models.idempotency import IdempotencyRecord  # noqa: F401

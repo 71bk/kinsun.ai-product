@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assisted_session_id": {
+      "format": "uuid",
+      "title": "Assisted Session Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "preferred_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preferred Name"
+    },
+    "status": {
+      "const": "ACTIVE",
+      "title": "Status",
+      "type": "string"
+    },
+    "idle_expires_at": {
+      "format": "date-time",
+      "title": "Idle Expires At",
+      "type": "string"
+    },
+    "absolute_expires_at": {
+      "format": "date-time",
+      "title": "Absolute Expires At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assisted_session_id",
+    "elder_id",
+    "display_name",
+    "preferred_name",
+    "status",
+    "idle_expires_at",
+    "absolute_expires_at"
+  ],
+  "title": "CurrentAssistedSessionV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CurrentAssistedSessionV1.json"
+}

@@ -62,11 +62,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 61
+_TOTAL_HEAD_TABLE_COUNT = 64
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "e6f8a0b2c345"
+_HEAD_REVISION = "f7a9b1c3d456"
 
 
 def _get_alembic_config() -> Config:
@@ -475,6 +475,11 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
     missing = set(_CORE_TABLES) - set(tables)
     assert not missing, f"Expected core tables {_CORE_TABLES} to be a subset, missing: {missing}"
     assert "decision_support_profile" in tables
+    assert {
+        "elder_enrollment",
+        "elder_care_profile_entry",
+        "assisted_elder_session",
+    } <= set(tables)
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "client_timezone": {
+      "default": "Asia/Taipei",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Client Timezone",
+      "type": "string"
+    }
+  },
+  "title": "IssueAssistedSessionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/IssueAssistedSessionRequestV1.json"
+}

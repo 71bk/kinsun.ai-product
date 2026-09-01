@@ -23,6 +23,16 @@
         "consent_version": 3
       }
     ],
+    "trusted_care_profile": [
+      {
+        "care_profile_entry_id": "8d6f8f60-2cf6-4d79-8bb9-9c37a2633454",
+        "version": 1,
+        "category": "CARE_PRECAUTION",
+        "content": "轉位時需要兩人協助。",
+        "source_type": "STAFF_RECORDED",
+        "verification_status": "RECORDED"
+      }
+    ],
     "allowed_tools": [],
     "requested_outputs": [
       "event_candidate"

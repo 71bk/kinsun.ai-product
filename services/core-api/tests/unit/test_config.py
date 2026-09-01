@@ -161,6 +161,35 @@ class TestSettingsConstruction:
         assert s.evidence_aware_memory is False
         assert s.auto_low_risk_memory is False
 
+    def test_assisted_elder_session_rollout_defaults_off(self) -> None:
+        settings = _make_settings()
+
+        assert settings.assisted_elder_sessions_enabled is False
+        assert settings.care_profile_ai_context_enabled is False
+        assert settings.assisted_elder_pairing_ttl_seconds == 600
+        assert settings.assisted_elder_idle_ttl_seconds == 1800
+        assert settings.assisted_elder_absolute_ttl_seconds == 28800
+
+    def test_assisted_elder_session_rollout_is_non_production_only(self) -> None:
+        with pytest.raises(ValidationError, match="non-production"):
+            _make_settings(
+                APP_ENV="production",
+                ASSISTED_ELDER_SESSIONS_ENABLED="true",
+            )
+
+        with pytest.raises(ValidationError, match="non-production"):
+            _make_settings(
+                APP_ENV="production",
+                CARE_PROFILE_AI_CONTEXT_ENABLED="true",
+            )
+
+    def test_assisted_elder_idle_ttl_must_not_exceed_absolute_ttl(self) -> None:
+        with pytest.raises(ValidationError, match="Assisted Elder Session idle TTL"):
+            _make_settings(
+                ASSISTED_ELDER_IDLE_TTL_SECONDS="3600",
+                ASSISTED_ELDER_ABSOLUTE_TTL_SECONDS="1800",
+            )
+
     def test_auto_low_memory_requires_parent_rollout_gate(self) -> None:
         with pytest.raises(ValidationError, match="EVIDENCE_AWARE_MEMORY"):
             _make_settings(

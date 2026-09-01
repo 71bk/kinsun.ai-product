@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assisted_session_id": {
+      "format": "uuid",
+      "title": "Assisted Session Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "pairing_token": {
+      "pattern": "^ep1_[A-Za-z0-9_-]{43}$",
+      "title": "Pairing Token",
+      "type": "string"
+    },
+    "pairing_expires_at": {
+      "format": "date-time",
+      "title": "Pairing Expires At",
+      "type": "string"
+    },
+    "absolute_expires_at": {
+      "format": "date-time",
+      "title": "Absolute Expires At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assisted_session_id",
+    "elder_id",
+    "pairing_token",
+    "pairing_expires_at",
+    "absolute_expires_at"
+  ],
+  "title": "IssuedAssistedSessionV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/IssuedAssistedSessionV1.json"
+}

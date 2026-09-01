@@ -1,0 +1,11 @@
+{
+  "data": {
+    "assisted_session_id": "79000000-0000-4000-8000-000000000001",
+    "elder_id": "75000000-0000-4000-8000-000000000001",
+    "display_name": "測試長者甲",
+    "preferred_name": "阿甲",
+    "status": "ACTIVE",
+    "idle_expires_at": "2026-09-01T04:40:00Z",
+    "absolute_expires_at": "2026-09-01T12:00:00Z"
+  }
+}

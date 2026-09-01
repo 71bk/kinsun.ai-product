@@ -6,6 +6,8 @@ type ElderMode = 'daycare' | 'home-care' | 'family';
 interface ActorProfile {
   role: ActorRole;
   display_name: string;
+  tenant_id: string;
+  care_unit_ids: string[];
 }
 
 interface AuthorizedElderItem {
@@ -35,6 +37,8 @@ export interface CaregiverDashboard {
   elders: DashboardElder[];
   actorRole: ActorRole;
   actorName: string;
+  tenantId: string;
+  careUnitIds: string[];
   hasMore: boolean;
 }
 
@@ -60,6 +64,8 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
   return {
     actorRole: profile.role,
     actorName: profile.display_name,
+    tenantId: profile.tenant_id,
+    careUnitIds: profile.care_unit_ids,
     hasMore: result.page.has_more,
     elders: result.items.map((item) => ({
       elderId: item.elder_id,

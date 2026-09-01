@@ -50,6 +50,16 @@ def _build(
         input_text="今天早餐吃稀飯。",
         confirmed_memories=[{"memory_id": "memory-1", "statement": "早餐喜歡稀飯"}],
         verified_care_events=[{"event_id": "event-1", "summary": "已確認按時用餐"}],
+        trusted_care_profile=[
+            {
+                "care_profile_entry_id": "profile-1",
+                "version": 1,
+                "category": "CARE_PRECAUTION",
+                "content": "轉位時需要兩人協助",
+                "source_type": "STAFF_RECORDED",
+                "verification_status": "RECORDED",
+            }
+        ],
         requested_outputs=["event_candidate", "memory_candidate"],
         latency_budget_ms=1_800,
     )
@@ -77,12 +87,22 @@ def test_build_companion_runtime_request_preserves_complete_payload() -> None:
         "input_text": "今天早餐吃稀飯。",
         "confirmed_memories": [{"memory_id": "memory-1", "statement": "早餐喜歡稀飯"}],
         "verified_care_events": [{"event_id": "event-1", "summary": "已確認按時用餐"}],
+        "trusted_care_profile": [
+            {
+                "care_profile_entry_id": "profile-1",
+                "version": 1,
+                "category": "CARE_PRECAUTION",
+                "content": "轉位時需要兩人協助",
+                "source_type": "STAFF_RECORDED",
+                "verification_status": "RECORDED",
+            }
+        ],
         "allowed_tools": [],
         "requested_outputs": ["event_candidate", "memory_candidate"],
         "max_steps": 3,
         "latency_budget_ms": 1_800,
     }
-    assert len(payload) == 22
+    assert len(payload) == 23
     assert payload == expected
 
 

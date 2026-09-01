@@ -1,0 +1,21 @@
+{
+  "data": {
+    "display_name": "測試長者甲",
+    "preferred_name": "阿甲",
+    "preferred_language": "ZH_TW",
+    "primary_care_setting": "DAYCARE",
+    "care_unit_id": "74000000-0000-4000-8000-000000000001",
+    "response_length_preference": "SHORT",
+    "timezone": "Asia/Taipei",
+    "care_profile": [
+      {
+        "category": "HEALTH_CONDITION",
+        "content": "由照顧員登錄的示例健康狀況"
+      },
+      {
+        "category": "CARE_PRECAUTION",
+        "content": "由照顧員登錄的示例注意事項"
+      }
+    ]
+  }
+}

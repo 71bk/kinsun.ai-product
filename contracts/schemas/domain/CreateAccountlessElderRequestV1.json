@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "CareProfileEntryInput": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "HEALTH_CONDITION",
+            "MEDICATION",
+            "ALLERGY",
+            "CARE_PRECAUTION"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "content": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "content"
+      ],
+      "title": "CareProfileEntryInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "display_name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "preferred_name": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Preferred Name"
+    },
+    "preferred_language": {
+      "default": "ZH_TW",
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "Preferred Language",
+      "type": "string"
+    },
+    "primary_care_setting": {
+      "default": "DAYCARE",
+      "enum": [
+        "DAYCARE",
+        "COMMUNITY",
+        "HOME_CARE",
+        "INDEPENDENT"
+      ],
+      "title": "Primary Care Setting",
+      "type": "string"
+    },
+    "care_unit_id": {
+      "format": "uuid",
+      "title": "Care Unit Id",
+      "type": "string"
+    },
+    "response_length_preference": {
+      "default": "STANDARD",
+      "enum": [
+        "SHORT",
+        "STANDARD",
+        "DETAILED"
+      ],
+      "title": "Response Length Preference",
+      "type": "string"
+    },
+    "timezone": {
+      "default": "Asia/Taipei",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "care_profile": {
+      "items": {
+        "$ref": "#/$defs/CareProfileEntryInput"
+      },
+      "maxItems": 20,
+      "title": "Care Profile",
+      "type": "array"
+    }
+  },
+  "required": [
+    "display_name",
+    "care_unit_id"
+  ],
+  "title": "CreateAccountlessElderRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateAccountlessElderRequestV1.json"
+}

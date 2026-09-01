@@ -1,0 +1,145 @@
+{
+  "$defs": {
+    "CareProfileEntryResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "care_profile_entry_id": {
+          "format": "uuid",
+          "title": "Care Profile Entry Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "HEALTH_CONDITION",
+            "MEDICATION",
+            "ALLERGY",
+            "CARE_PRECAUTION"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "source_type": {
+          "const": "STAFF_RECORDED",
+          "title": "Source Type",
+          "type": "string"
+        },
+        "verification_status": {
+          "enum": [
+            "RECORDED",
+            "VERIFIED",
+            "DISPUTED",
+            "RETIRED"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "care_profile_entry_id",
+        "category",
+        "content",
+        "source_type",
+        "verification_status",
+        "version"
+      ],
+      "title": "CareProfileEntryResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "actor_id": {
+      "title": "Actor Id",
+      "type": "null"
+    },
+    "enrollment_id": {
+      "format": "uuid",
+      "title": "Enrollment Id",
+      "type": "string"
+    },
+    "relationship_id": {
+      "format": "uuid",
+      "title": "Relationship Id",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "preferred_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preferred Name"
+    },
+    "preferred_language": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "Preferred Language",
+      "type": "string"
+    },
+    "primary_care_setting": {
+      "enum": [
+        "DAYCARE",
+        "COMMUNITY",
+        "HOME_CARE",
+        "INDEPENDENT"
+      ],
+      "title": "Primary Care Setting",
+      "type": "string"
+    },
+    "care_unit_id": {
+      "format": "uuid",
+      "title": "Care Unit Id",
+      "type": "string"
+    },
+    "care_profile": {
+      "items": {
+        "$ref": "#/$defs/CareProfileEntryResponse"
+      },
+      "title": "Care Profile",
+      "type": "array"
+    }
+  },
+  "required": [
+    "elder_id",
+    "actor_id",
+    "enrollment_id",
+    "relationship_id",
+    "display_name",
+    "preferred_name",
+    "preferred_language",
+    "primary_care_setting",
+    "care_unit_id",
+    "care_profile"
+  ],
+  "title": "AccountlessElderV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AccountlessElderV1.json"
+}

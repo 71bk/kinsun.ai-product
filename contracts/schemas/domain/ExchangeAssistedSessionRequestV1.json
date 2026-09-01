@@ -1,0 +1,17 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "pairing_token": {
+      "pattern": "^ep1_[A-Za-z0-9_-]{43}$",
+      "title": "Pairing Token",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pairing_token"
+  ],
+  "title": "ExchangeAssistedSessionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ExchangeAssistedSessionRequestV1.json"
+}

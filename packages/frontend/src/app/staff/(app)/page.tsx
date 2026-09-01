@@ -66,10 +66,19 @@ export default function CaregiverDashboardPage() {
     <main className={styles.page}>
       <PageHeader
         actions={
-          dashboard?.actorRole === 'HOME_CARE_WORKER' ? (
-            <Link className={styles.assignmentLink} href="/staff/assignments">
-              {t('dashboard.viewAssignments')}
-            </Link>
+          dashboard ? (
+            <div className={styles.headerActions}>
+              {dashboard.actorRole === 'DAYCARE_CARE_WORKER' && (
+                <Link className={styles.assignmentLink} href="/staff/elders/new">
+                  {t('dashboard.createElder')}
+                </Link>
+              )}
+              {dashboard.actorRole === 'HOME_CARE_WORKER' && (
+                <Link className={styles.assignmentLink} href="/staff/assignments">
+                  {t('dashboard.viewAssignments')}
+                </Link>
+              )}
+            </div>
           ) : undefined
         }
         description={t('dashboard.subtitle')}

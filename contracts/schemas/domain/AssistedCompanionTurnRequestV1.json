@@ -1,0 +1,18 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "input_text": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Input Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "input_text"
+  ],
+  "title": "AssistedCompanionTurnRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AssistedCompanionTurnRequestV1.json"
+}

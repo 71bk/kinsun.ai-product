@@ -1,0 +1,173 @@
+.page {
+  min-width: 0;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.card,
+.successCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-5);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+  padding-block-end: var(--space-2);
+  border-block-end: 2px solid var(--color-primary-strong);
+  color: var(--color-primary-text);
+}
+
+.sectionTitle h2,
+.successCard h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.grid,
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea,
+.copyRow input {
+  width: 100%;
+  min-height: var(--touch-min);
+  border: 1px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+  font-weight: 400;
+  padding: var(--space-2) var(--space-3);
+}
+
+.field textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.field small,
+.meta {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.notice,
+.securityNotice {
+  border-radius: var(--radius-md);
+  background: var(--color-primary-weak);
+  color: var(--color-foreground);
+  padding: var(--space-3) var(--space-4);
+}
+
+.notice {
+  margin: 0 0 var(--space-4);
+}
+
+.primaryButton,
+.secondaryButton,
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primaryButton {
+  justify-self: end;
+  border: 1px solid var(--color-primary-strong);
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.secondaryButton,
+.backLink {
+  border: 1px solid var(--color-primary-strong);
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  cursor: pointer;
+}
+
+.successCard {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 54rem;
+}
+
+.successIcon {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-weak);
+  color: var(--color-primary-text);
+  padding: var(--space-3);
+}
+
+.label {
+  font-weight: 700;
+}
+
+.copyRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.successText {
+  margin: 0;
+  color: var(--color-accent-text);
+  font-weight: 700;
+}
+
+.securityNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .grid,
+  .profileGrid,
+  .copyRow {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .backLink {
+    width: 100%;
+  }
+}

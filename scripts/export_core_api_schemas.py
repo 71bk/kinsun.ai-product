@@ -16,6 +16,17 @@ from app.schemas.agent_run import (  # noqa: E402
     CompleteAgentRunRequest,
     RegisterAgentRunRequest,
 )
+from app.schemas.assisted_elder import (  # noqa: E402
+    AccountlessElderResponse,
+    ActivatedAssistedSessionResponse,
+    AssistedCompanionTurnRequest,
+    CreateAccountlessElderRequest,
+    CurrentAssistedSessionResponse,
+    EndAssistedSessionResponse,
+    ExchangeAssistedSessionRequest,
+    IssueAssistedSessionRequest,
+    IssuedAssistedSessionResponse,
+)
 from app.schemas.assignment import (  # noqa: E402
     AssignmentCommandRequest,
     AssignmentListResponse,
@@ -144,6 +155,15 @@ EXPORTS = {
         "CareAssignmentV1": AssignmentResponse,
         "CareAssignmentListV1": AssignmentListResponse,
         "DeletionRequestV1": DeletionRequestResponse,
+        "CreateAccountlessElderRequestV1": CreateAccountlessElderRequest,
+        "AccountlessElderV1": AccountlessElderResponse,
+        "IssueAssistedSessionRequestV1": IssueAssistedSessionRequest,
+        "IssuedAssistedSessionV1": IssuedAssistedSessionResponse,
+        "ExchangeAssistedSessionRequestV1": ExchangeAssistedSessionRequest,
+        "ActivatedAssistedSessionV1": ActivatedAssistedSessionResponse,
+        "CurrentAssistedSessionV1": CurrentAssistedSessionResponse,
+        "AssistedCompanionTurnRequestV1": AssistedCompanionTurnRequest,
+        "EndAssistedSessionV1": EndAssistedSessionResponse,
     },
     "tools": {
         "ToolRequestV1": ToolRequest,
@@ -183,6 +203,11 @@ SUCCESS_ENVELOPES = {
     "CareAssignmentEnvelopeV1": "domain/CareAssignmentV1.json",
     "CareAssignmentListEnvelopeV1": "domain/CareAssignmentListV1.json",
     "DeletionRequestEnvelopeV1": "domain/DeletionRequestV1.json",
+    "AccountlessElderEnvelopeV1": "domain/AccountlessElderV1.json",
+    "IssuedAssistedSessionEnvelopeV1": "domain/IssuedAssistedSessionV1.json",
+    "ActivatedAssistedSessionEnvelopeV1": "domain/ActivatedAssistedSessionV1.json",
+    "CurrentAssistedSessionEnvelopeV1": "domain/CurrentAssistedSessionV1.json",
+    "EndAssistedSessionEnvelopeV1": "domain/EndAssistedSessionV1.json",
     "ToolResultEnvelopeV1": "tools/ToolResultV1.json",
 }
 

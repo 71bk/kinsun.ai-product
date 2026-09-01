@@ -1,0 +1,9 @@
+{
+  "data": {
+    "assisted_session_id": "79000000-0000-4000-8000-000000000001",
+    "elder_id": "75000000-0000-4000-8000-000000000001",
+    "pairing_token": "ep1_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "pairing_expires_at": "2026-09-01T04:10:00Z",
+    "absolute_expires_at": "2026-09-01T12:00:00Z"
+  }
+}
