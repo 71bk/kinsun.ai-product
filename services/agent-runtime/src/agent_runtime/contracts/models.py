@@ -295,9 +295,7 @@ class AgentRunRequest(ContractBaseModel):
     @model_validator(mode="after")
     def restrict_private_context_to_companion_turns(self) -> "AgentRunRequest":
         if (
-            self.confirmed_memories
-            or self.verified_care_events
-            or self.trusted_care_profile
+            self.confirmed_memories or self.verified_care_events or self.trusted_care_profile
         ) and self.purpose != "BASIC_VOICE":
             raise ValueError(
                 "confirmed data and trusted care profile are allowed only for BASIC_VOICE"

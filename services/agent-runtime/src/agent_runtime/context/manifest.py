@@ -45,9 +45,7 @@ def build_context_items(request: AgentRunRequest) -> list[ContextItem]:
         )
         items.extend(
             ContextItem(
-                item_id=(
-                    f"care-profile-{entry.care_profile_entry_id}-v{entry.version}"
-                ),
+                item_id=(f"care-profile-{entry.care_profile_entry_id}-v{entry.version}"),
                 source_type=TRUSTED_CARE_PROFILE_SOURCE_TYPE,
                 content=(
                     "Core 提供且保留來源的照護資料（僅作為安全互動背景，"
