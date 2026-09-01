@@ -138,6 +138,9 @@ class ConsentService:
                 version=version,
                 scope={"share_scopes": request.share_scopes},
                 granted_by_actor_id=actor_id,
+                confirmation_method="ACTOR_CONFIRMATION",
+                recorded_by_actor_id=actor_id,
+                assisted_session_id=None,
                 policy_id=policy.id,
                 granted_at=now,
                 effective_at=request.effective_at or now,
@@ -167,6 +170,131 @@ class ConsentService:
             )
             created.append(grant)
         return created
+
+    async def acknowledge_assisted_basic_voice(
+        self,
+        *,
+        elder_id: UUID,
+        recorded_by_actor_id: UUID,
+        assisted_session_id: UUID,
+        policy_version: str,
+        trace_id: str,
+        idempotency_key: str,
+    ) -> ConsentGrant:
+        now = datetime.now(UTC)
+        active = await self._consents.get_active(
+            elder_id=elder_id,
+            purpose_code=ConsentPurpose.BASIC_VOICE.value,
+            current_time=now,
+        )
+        if active is not None:
+            return active
+
+        policy = await self._policies.find_active_consent_policy(
+            version=policy_version,
+            current_time=now,
+        )
+        if policy is None:
+            raise NotFoundError("Active consent policy not found")
+
+        version = await self._consents.next_version(
+            elder_id,
+            ConsentPurpose.BASIC_VOICE.value,
+        )
+        grant = ConsentGrant(
+            elder_id=elder_id,
+            purpose_code=ConsentPurpose.BASIC_VOICE.value,
+            status="GRANTED",
+            version=version,
+            scope={"share_scopes": []},
+            granted_by_actor_id=None,
+            confirmation_method="ASSISTED_TABLET_ACKNOWLEDGEMENT",
+            recorded_by_actor_id=recorded_by_actor_id,
+            assisted_session_id=assisted_session_id,
+            policy_id=policy.id,
+            granted_at=now,
+            effective_at=now,
+            expires_at=None,
+        )
+        self._consents.add(grant)
+        await self._session.flush()
+        await write_outbox_entry(
+            self._session,
+            event_type="consent.granted.v1",
+            aggregate_type="consent_grant",
+            aggregate_id=grant.id,
+            aggregate_version=grant.version,
+            tenant_id=self._tenant_id,
+            elder_id=elder_id,
+            actor_id=recorded_by_actor_id,
+            purpose=grant.purpose_code,
+            consent_version=grant.version,
+            payload={
+                "consent_id": str(grant.id),
+                "purpose_code": grant.purpose_code,
+                "status": grant.status,
+                "confirmation_method": grant.confirmation_method,
+                "assisted_session_id": str(assisted_session_id),
+            },
+            trace_id=trace_id,
+            correlation_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
+        return grant
+
+    async def revoke_assisted_basic_voice(
+        self,
+        *,
+        elder_id: UUID,
+        recorded_by_actor_id: UUID,
+        assisted_session_id: UUID,
+        trace_id: str,
+        idempotency_key: str,
+    ) -> ConsentGrant:
+        now = datetime.now(UTC)
+        consent = await self._consents.get_active(
+            elder_id=elder_id,
+            purpose_code=ConsentPurpose.BASIC_VOICE.value,
+            current_time=now,
+        )
+        if consent is None:
+            latest = await self._consents.get_latest_for_purpose(
+                elder_id=elder_id,
+                purpose_code=ConsentPurpose.BASIC_VOICE.value,
+            )
+            if latest is not None and latest.status == "REVOKED":
+                return latest
+            raise NotFoundError("Required consent is not active")
+
+        consent.status = "REVOKED"
+        consent.revoked_at = now
+        await self._cancel_active_basic_voice_sessions(consent, now)
+        await self._session.flush()
+        await write_outbox_entry(
+            self._session,
+            event_type="consent.revoked.v1",
+            aggregate_type="consent_grant",
+            aggregate_id=consent.id,
+            aggregate_version=consent.version,
+            tenant_id=self._tenant_id,
+            elder_id=elder_id,
+            actor_id=recorded_by_actor_id,
+            purpose=consent.purpose_code,
+            consent_version=consent.version,
+            payload={
+                "consent_id": str(consent.id),
+                "purpose_code": consent.purpose_code,
+                "status": "REVOKED",
+                "reason_code": "ELDER_TABLET_REQUESTED_STOP",
+                "request_deletion": False,
+                "revocation_method": "ASSISTED_TABLET_ACKNOWLEDGEMENT",
+                "assisted_session_id": str(assisted_session_id),
+            },
+            trace_id=trace_id,
+            correlation_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
+        return consent
 
     async def revoke(
         self,

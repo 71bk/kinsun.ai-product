@@ -3,28 +3,40 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.core.auth import ActorContext
-from app.core.config import get_settings
-from app.core.exceptions import AuthenticationError
-from app.models.actor import Actor
-from app.models.care_unit import CareUnit
-from app.models.membership import ActorTenantMembership
-from app.models.tenant import Tenant
-from app.schemas.assisted_elder import (
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "services" / "core-api"))
+
+from app.core.auth import ActorContext  # noqa: E402
+from app.core.config import get_settings  # noqa: E402
+from app.core.exceptions import AuthenticationError, NotFoundError  # noqa: E402
+from app.domain.conversation import (  # noqa: E402
+    ConversationStartCommand,
+    LanguageRoute,
+)
+from app.models.actor import Actor  # noqa: E402
+from app.models.care_unit import CareUnit  # noqa: E402
+from app.models.membership import ActorTenantMembership  # noqa: E402
+from app.models.policy import PolicyRegistry  # noqa: E402
+from app.models.tenant import Tenant  # noqa: E402
+from app.schemas.assisted_elder import (  # noqa: E402
     CareProfileEntryInput,
     CreateAccountlessElderRequest,
 )
-from app.services.assisted_elder_session_service import (
+from app.services.assisted_elder_session_service import (  # noqa: E402
     AssistedElderSessionPolicy,
     AssistedElderSessionService,
 )
-from app.services.elder_onboarding_service import ElderOnboardingService
+from app.services.consent_service import ConsentService  # noqa: E402
+from app.services.conversation_service import ConversationService  # noqa: E402
+from app.services.elder_onboarding_service import ElderOnboardingService  # noqa: E402
 
 
 async def run() -> None:
@@ -55,6 +67,19 @@ async def run() -> None:
                 ),
             ]
         )
+        await session.flush()
+        policy = PolicyRegistry(
+            id=uuid4(),
+            owner_tenant_id=tenant_id,
+            policy_code="SYNTHETIC_ASSISTED_TABLET_ACKNOWLEDGEMENT",
+            policy_type="CONSENT",
+            version=get_settings().assisted_elder_acknowledgement_policy_version,
+            status="ACTIVE",
+            policy_payload={"synthetic": True, "purpose": "BASIC_VOICE"},
+            effective_from=effective_from,
+            approved_by_actor_id=actor_id,
+        )
+        session.add(policy)
         await session.flush()
         session.add(
             CareUnit(
@@ -140,6 +165,78 @@ async def run() -> None:
         assert resolved.elder.id == bundle.elder.id
         assert resolved.actor_context.actor_id == actor_id
 
+        conversation_service = ConversationService(session, tenant_id)
+        missing_acknowledgement_rejected = False
+        try:
+            await conversation_service.create(
+                elder_id=bundle.elder.id,
+                actor_id=actor_id,
+                actor_role=actor_context.actor_role,
+                command=ConversationStartCommand(
+                    language_route=LanguageRoute.ZH_TW,
+                    input_mode="text",
+                ),
+                trace_id=f"synthetic-before-ack-{uuid4()}",
+                idempotency_key=f"synthetic-before-ack-{uuid4()}",
+            )
+        except NotFoundError:
+            missing_acknowledgement_rejected = True
+        assert missing_acknowledgement_rejected
+
+        consent_service = ConsentService(session, tenant_id)
+        consent = await consent_service.acknowledge_assisted_basic_voice(
+            elder_id=bundle.elder.id,
+            recorded_by_actor_id=actor_id,
+            assisted_session_id=resolved.assisted_session.id,
+            policy_version=policy.version,
+            trace_id=f"synthetic-ack-{uuid4()}",
+            idempotency_key=f"synthetic-ack-{uuid4()}",
+        )
+        assert consent.granted_by_actor_id is None
+        assert consent.recorded_by_actor_id == actor_id
+        assert consent.assisted_session_id == resolved.assisted_session.id
+        assert consent.confirmation_method == "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+
+        conversation = await conversation_service.create(
+            elder_id=bundle.elder.id,
+            actor_id=actor_id,
+            actor_role=actor_context.actor_role,
+            command=ConversationStartCommand(
+                language_route=LanguageRoute.ZH_TW,
+                input_mode="text",
+            ),
+            trace_id=f"synthetic-after-ack-{uuid4()}",
+            idempotency_key=f"synthetic-after-ack-{uuid4()}",
+        )
+        assert conversation.consent_id == consent.id
+        assert conversation.consent_version == consent.version
+        assert conversation.policy_version == policy.version
+
+        await consent_service.revoke_assisted_basic_voice(
+            elder_id=bundle.elder.id,
+            recorded_by_actor_id=actor_id,
+            assisted_session_id=resolved.assisted_session.id,
+            trace_id=f"synthetic-revoke-{uuid4()}",
+            idempotency_key=f"synthetic-revoke-{uuid4()}",
+        )
+        assert conversation.state == "CANCELLED"
+        revoked_acknowledgement_rejected = False
+        try:
+            await conversation_service.create(
+                elder_id=bundle.elder.id,
+                actor_id=actor_id,
+                actor_role=actor_context.actor_role,
+                command=ConversationStartCommand(
+                    language_route=LanguageRoute.ZH_TW,
+                    input_mode="text",
+                ),
+                trace_id=f"synthetic-after-revoke-{uuid4()}",
+                idempotency_key=f"synthetic-after-revoke-{uuid4()}",
+            )
+        except NotFoundError:
+            revoked_acknowledgement_rejected = True
+        assert revoked_acknowledgement_rejected
+
         reused_pairing_rejected = False
         try:
             await assisted.exchange(issued.pairing_token)
@@ -152,6 +249,10 @@ async def run() -> None:
         print("care_profile_provenance_preserved=true")
         print("pairing_single_use=true")
         print("elder_session_scope_rechecked=true")
+        print("companion_blocked_before_acknowledgement=true")
+        print("assisted_acknowledgement_provenance_preserved=true")
+        print("companion_cancelled_on_revoke=true")
+        print("companion_blocked_after_revoke=true")
     finally:
         await session.close()
         await transaction.rollback()

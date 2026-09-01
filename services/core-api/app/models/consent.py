@@ -36,10 +36,28 @@ class ConsentGrant(BaseModel):
         server_default=sa.text("'{}'::jsonb"),
         nullable=False,
     )
-    granted_by_actor_id: Mapped[uuid.UUID] = mapped_column(
+    granted_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey(f"{SCHEMA_NAME}.actor.actor_id"),
+        nullable=True,
+    )
+    confirmation_method: Mapped[str] = mapped_column(
+        String(48),
+        server_default=sa.text("'ACTOR_CONFIRMATION'"),
         nullable=False,
+    )
+    recorded_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.actor.actor_id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    assisted_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            f"{SCHEMA_NAME}.assisted_elder_session.assisted_session_id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
     )
     policy_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

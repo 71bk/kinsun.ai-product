@@ -67,6 +67,12 @@ os.environ["VOICE_TICKET_ENABLED"] = "true"
 os.environ["VOICE_TICKET_HMAC_SECRET"] = (
     "live-contract-voice-ticket-secret-material-32-bytes"
 )
+# Internal speech endpoints should exercise their authentication edge rather
+# than stop at a disabled-feature 503. The verifier never creates a credential.
+os.environ["SPEECH_SERVICE_IDENTITY_ENABLED"] = "true"
+os.environ["SPEECH_SERVICE_IDENTITY_HMAC_SECRET"] = (
+    "live-contract-speech-service-secret-material-32-bytes"
+)
 
 from app.main import create_app  # noqa: E402 - path must be installed before app import
 
@@ -198,6 +204,49 @@ async def main() -> int:
             print("ok    POST companion turn fails closed with 401")
         check(
             "POST companion turn 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/assisted-elder-sessions/current/first-use-acknowledgement",
+            headers={"Idempotency-Key": "live-contract-assisted-acknowledgement"},
+            json={"acknowledged": True},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST assisted first-use acknowledgement did not fail closed with 401: "
+                f"returned {response.status_code}"
+            )
+            print(
+                "FAIL  POST assisted first-use acknowledgement fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST assisted first-use acknowledgement fails closed with 401")
+        check(
+            "POST assisted first-use acknowledgement 401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/assisted-elder-sessions/current/first-use-acknowledgement/revoke",
+            headers={"Idempotency-Key": "live-contract-assisted-acknowledgement-revoke"},
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST assisted acknowledgement revoke did not fail closed with 401: "
+                f"returned {response.status_code}"
+            )
+            print(
+                "FAIL  POST assisted acknowledgement revoke fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print("ok    POST assisted acknowledgement revoke fails closed with 401")
+        check(
+            "POST assisted acknowledgement revoke 401 body vs ErrorEnvelopeV1",
             response.json(),
             load("common/ErrorEnvelopeV1.json"),
         )

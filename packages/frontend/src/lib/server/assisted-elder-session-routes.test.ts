@@ -1,5 +1,9 @@
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  DELETE as revokeAcknowledgement,
+  POST as createAcknowledgement,
+} from '../../app/backend/elder-session/acknowledgement/route';
 import { POST as companionTurn } from '../../app/backend/elder-session/companion-turns/route';
 import { DELETE as endSession, GET as currentSession } from '../../app/backend/elder-session/current/route';
 import { POST as exchangePairing } from '../../app/backend/elder-session/exchange/route';
@@ -131,6 +135,81 @@ describe('assisted Elder Session BFF boundary', () => {
     );
 
     expect(response.status).toBe(200);
+  });
+
+  it('creates tablet acknowledgement from a server-selected payload only', async () => {
+    configure();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toBe(
+        'http://127.0.0.1:8000/api/v1/assisted-elder-sessions/current/first-use-acknowledgement',
+      );
+      expect(new Headers(init?.headers).get('Authorization')).toBe(`Bearer ${SESSION_TOKEN}`);
+      expect(JSON.parse(String(init?.body))).toEqual({ acknowledged: true });
+      return Response.json({ data: { status: 'ACKNOWLEDGED' }, meta: {} });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await createAcknowledgement(
+      request('/backend/elder-session/acknowledgement', {
+        method: 'POST',
+        headers: {
+          Cookie: `${elderSessionCookieName()}=${SESSION_TOKEN}`,
+          Origin: 'http://localhost:3000',
+        },
+        body: JSON.stringify({
+          acknowledged: false,
+          policy_version: 'client-must-not-select-this',
+          granted_by_actor_id: 'client-must-not-select-this',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('revoke forwards no client-selected reason or deletion scope', async () => {
+    configure();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toBe(
+        'http://127.0.0.1:8000/api/v1/assisted-elder-sessions/current/first-use-acknowledgement/revoke',
+      );
+      expect(init?.method).toBe('POST');
+      expect(init?.body).toBeUndefined();
+      return Response.json({ data: { status: 'REQUIRED' }, meta: {} });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await revokeAcknowledgement(
+      request('/backend/elder-session/acknowledgement', {
+        method: 'DELETE',
+        headers: {
+          Cookie: `${elderSessionCookieName()}=${SESSION_TOKEN}`,
+          Origin: 'http://localhost:3000',
+        },
+        body: JSON.stringify({ reason_code: 'client-must-not-select-this' }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('rejects cross-origin acknowledgement before contacting Core', async () => {
+    configure();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await createAcknowledgement(
+      request('/backend/elder-session/acknowledgement', {
+        method: 'POST',
+        headers: {
+          Cookie: `${elderSessionCookieName()}=${SESSION_TOKEN}`,
+          Origin: 'https://attacker.invalid',
+        },
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('revokes Core state before clearing the Elder Session cookie', async () => {

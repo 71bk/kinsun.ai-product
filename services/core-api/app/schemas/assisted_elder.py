@@ -16,6 +16,11 @@ CareProfileCategory = Literal[
 ]
 LanguageCode = Literal["ZH_TW", "NAN_TW", "HAK_TW", "EN_US", "MIXED", "UNKNOWN"]
 PrimaryCareSetting = Literal["DAYCARE", "COMMUNITY", "HOME_CARE", "INDEPENDENT"]
+AcknowledgementStatus = Literal["REQUIRED", "ACKNOWLEDGED"]
+AcknowledgementMethod = Literal[
+    "ACTOR_CONFIRMATION",
+    "ASSISTED_TABLET_ACKNOWLEDGEMENT",
+]
 
 
 class CareProfileEntryInput(BaseModel):
@@ -129,6 +134,35 @@ class ActivatedAssistedSessionResponse(BaseModel):
     absolute_expires_at: datetime
 
 
+class AcknowledgeFirstUseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    acknowledged: Literal[True]
+
+
+class FirstUseAcknowledgementResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: AcknowledgementStatus
+    policy_version: str = Field(min_length=1, max_length=40)
+    consent_version: int | None = Field(default=None, ge=1)
+    acknowledged_at: datetime | None = None
+    confirmation_method: AcknowledgementMethod | None = None
+
+    @model_validator(mode="after")
+    def validate_status_evidence(self) -> FirstUseAcknowledgementResponse:
+        evidence = (
+            self.consent_version,
+            self.acknowledged_at,
+            self.confirmation_method,
+        )
+        if self.status == "ACKNOWLEDGED" and any(value is None for value in evidence):
+            raise ValueError("ACKNOWLEDGED status requires acknowledgement evidence")
+        if self.status == "REQUIRED" and any(value is not None for value in evidence):
+            raise ValueError("REQUIRED status must not include acknowledgement evidence")
+        return self
+
+
 class CurrentAssistedSessionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -139,6 +173,7 @@ class CurrentAssistedSessionResponse(BaseModel):
     status: Literal["ACTIVE"]
     idle_expires_at: datetime
     absolute_expires_at: datetime
+    first_use_acknowledgement: FirstUseAcknowledgementResponse
 
 
 class AssistedCompanionTurnRequest(BaseModel):

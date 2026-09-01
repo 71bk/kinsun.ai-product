@@ -74,6 +74,12 @@ DATA_SCHEMA_FOR = {
     "assisted-session-exchange.json": "domain/ExchangeAssistedSessionRequestV1.json",
     "assisted-session-activated.json": "domain/ActivatedAssistedSessionV1.json",
     "assisted-session-current.json": "domain/CurrentAssistedSessionV1.json",
+    "assisted-first-use-acknowledge.json": "domain/AcknowledgeFirstUseRequestV1.json",
+    "assisted-first-use-acknowledged.json": "domain/FirstUseAcknowledgementV1.json",
+    "assisted-first-use-required.json": "domain/FirstUseAcknowledgementV1.json",
+    "assisted-first-use-acknowledged-without-evidence.json": (
+        "domain/FirstUseAcknowledgementV1.json"
+    ),
     "assisted-companion-turn-request.json": "domain/AssistedCompanionTurnRequestV1.json",
     "assisted-session-ended.json": "domain/EndAssistedSessionV1.json",
     "voice-ticket-issue-request.json": "domain/CreateVoiceTicketRequestV1.json",

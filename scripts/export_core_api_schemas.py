@@ -16,22 +16,24 @@ from app.schemas.agent_run import (  # noqa: E402
     CompleteAgentRunRequest,
     RegisterAgentRunRequest,
 )
+from app.schemas.assignment import (  # noqa: E402
+    AssignmentCommandRequest,
+    AssignmentListResponse,
+    AssignmentResponse,
+    CreateAssignmentRequest,
+)
 from app.schemas.assisted_elder import (  # noqa: E402
     AccountlessElderResponse,
+    AcknowledgeFirstUseRequest,
     ActivatedAssistedSessionResponse,
     AssistedCompanionTurnRequest,
     CreateAccountlessElderRequest,
     CurrentAssistedSessionResponse,
     EndAssistedSessionResponse,
     ExchangeAssistedSessionRequest,
+    FirstUseAcknowledgementResponse,
     IssueAssistedSessionRequest,
     IssuedAssistedSessionResponse,
-)
-from app.schemas.assignment import (  # noqa: E402
-    AssignmentCommandRequest,
-    AssignmentListResponse,
-    AssignmentResponse,
-    CreateAssignmentRequest,
 )
 from app.schemas.care_event import (  # noqa: E402
     CareEventListResponse,
@@ -162,6 +164,8 @@ EXPORTS = {
         "ExchangeAssistedSessionRequestV1": ExchangeAssistedSessionRequest,
         "ActivatedAssistedSessionV1": ActivatedAssistedSessionResponse,
         "CurrentAssistedSessionV1": CurrentAssistedSessionResponse,
+        "AcknowledgeFirstUseRequestV1": AcknowledgeFirstUseRequest,
+        "FirstUseAcknowledgementV1": FirstUseAcknowledgementResponse,
         "AssistedCompanionTurnRequestV1": AssistedCompanionTurnRequest,
         "EndAssistedSessionV1": EndAssistedSessionResponse,
     },
@@ -207,6 +211,7 @@ SUCCESS_ENVELOPES = {
     "IssuedAssistedSessionEnvelopeV1": "domain/IssuedAssistedSessionV1.json",
     "ActivatedAssistedSessionEnvelopeV1": "domain/ActivatedAssistedSessionV1.json",
     "CurrentAssistedSessionEnvelopeV1": "domain/CurrentAssistedSessionV1.json",
+    "FirstUseAcknowledgementEnvelopeV1": "domain/FirstUseAcknowledgementV1.json",
     "EndAssistedSessionEnvelopeV1": "domain/EndAssistedSessionV1.json",
     "ToolResultEnvelopeV1": "tools/ToolResultV1.json",
 }
@@ -464,6 +469,46 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                     }
                 },
             },
+        ]
+    elif title in {"FirstUseAcknowledgementV1", "CurrentAssistedSessionV1"}:
+        acknowledgement = (
+            schema["$defs"]["FirstUseAcknowledgementResponse"]
+            if title == "CurrentAssistedSessionV1"
+            else schema
+        )
+        evidence_fields = [
+            "consent_version",
+            "acknowledged_at",
+            "confirmation_method",
+        ]
+        acknowledgement["allOf"] = [
+            {
+                "if": {
+                    "properties": {"status": {"const": "ACKNOWLEDGED"}},
+                    "required": ["status"],
+                },
+                "then": {
+                    "required": evidence_fields,
+                    "properties": {
+                        "consent_version": {"type": "integer", "minimum": 1},
+                        "acknowledged_at": {"type": "string", "format": "date-time"},
+                        "confirmation_method": {
+                            "enum": [
+                                "ACTOR_CONFIRMATION",
+                                "ASSISTED_TABLET_ACKNOWLEDGEMENT",
+                            ]
+                        },
+                    },
+                },
+                "else": {
+                    "required": evidence_fields,
+                    "properties": {
+                        "consent_version": {"type": "null"},
+                        "acknowledged_at": {"type": "null"},
+                        "confirmation_method": {"type": "null"},
+                    },
+                },
+            }
         ]
 
 

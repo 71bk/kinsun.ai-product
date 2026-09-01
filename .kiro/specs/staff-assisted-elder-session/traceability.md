@@ -8,8 +8,8 @@ Updated: 2026-09-01
 | R2 Care Profile boundary | `elder_care_profile_entry`; no Memory FK/write | Core model tests plus Agent contract/manifest/prompt tests | VERIFIED |
 | R3 One-time handoff | `assisted_elder_session`, token codecs | digest, exchange/replay/expiry/reissue tests and Supabase smoke | VERIFIED |
 | R4 Elder-mode constraint | dedicated assisted-session dependency | cross-tenant, expiry, reissue, live-scope and cookie-boundary tests | VERIFIED |
-| R5 Safe companion | existing Consent/Conversation/Companion authority | existing consent gate plus third-party speaker/Memory policy suites; dedicated assisted route | VERIFIED |
-| R6 Frontend boundary | Next.js BFF HttpOnly elder-session cookie | BFF cookie, credential-separation, CSRF and client-scope stripping tests | VERIFIED |
+| R5 Safe companion | Consent acknowledgement provenance plus existing Conversation/Companion authority | explicit tablet acknowledgement, no fabricated consent actor, pre/post-revoke gate, conversation cancellation and third-party speaker/Memory policy suites | VERIFIED |
+| R6 Frontend boundary | Next.js BFF HttpOnly elder-session cookie | first-use UI, two-step stop, BFF cookie, credential-separation, CSRF and client-scope stripping tests | VERIFIED |
 | R7 Release boundary | settings flags, contracts, CI | production rejection, static/live contracts, build, Supabase schema verification | VERIFIED |
 
 ## Source linkage
@@ -23,6 +23,6 @@ Updated: 2026-09-01
 ## Explicit release blockers
 
 - formal service entitlement and billing authority;
-- legal representative/consent evidence model;
+- reviewed production lawful-basis, capacity and legal-representative evidence model where required;
 - durable managed-device enrollment and remote revocation;
 - production voice transport, rate limiting, monitoring, retention, and deployment evidence.

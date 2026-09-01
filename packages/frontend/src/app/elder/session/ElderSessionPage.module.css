@@ -1,9 +1,17 @@
 .page,
-.centered {
+.centered,
+.noticePage {
   min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-foreground);
   padding: var(--page-gutter);
+}
+.noticePage {
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
 .page {
   display: grid;
@@ -46,7 +54,11 @@
 
 .endButton,
 .linkButton,
-.composer button {
+.composer button,
+.primaryButton,
+.secondaryButton,
+.destructiveButton,
+.stopButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -61,20 +73,82 @@
 }
 
 .endButton,
-.linkButton {
+.linkButton,
+.secondaryButton {
   border: 2px solid var(--color-primary-strong);
   background: var(--color-surface);
   color: var(--color-primary-text);
 }
 
+.primaryButton {
+  border: 0;
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+
+.destructiveButton {
+  border: 0;
+  background: var(--color-destructive);
+  color: var(--color-on-primary);
+}
+
+.stopButton {
+  border: 2px solid var(--color-destructive);
+  background: var(--color-surface);
+  color: var(--color-destructive);
+}
+
 .chat,
 .composer,
-.safetyNote {
+.safetyNote,
+.noticeCard,
+.stopConfirmation {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-1);
   padding: var(--card-pad);
+}
+
+.noticeCard {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.noticeCard h2,
+.noticeCard p,
+.stopConfirmation h2,
+.stopConfirmation p,
+.safetyNote p {
+  margin: 0;
+}
+
+.noticeCard ul {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding-inline-start: var(--space-8);
+}
+
+.noticeIcon {
+  color: var(--color-primary-text);
+}
+
+.plainLanguageNote {
+  border-left: 4px solid var(--color-primary-strong);
+  background: var(--color-primary-weak);
+  padding: var(--space-4);
+}
+
+.policyVersion {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.noticeActions,
+.confirmActions {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .chat {
@@ -168,8 +242,31 @@
 }
 
 .safetyNote {
+  display: grid;
+  gap: var(--space-4);
   color: var(--color-muted-foreground);
   font-size: var(--text-sm);
+}
+
+.stopConfirmation {
+  display: grid;
+  gap: var(--space-4);
+  border-color: var(--color-destructive);
+  background: var(--state-withdrawn-bg);
+  color: var(--state-withdrawn-fg);
+}
+
+.stopConfirmation .secondaryButton {
+  border-color: var(--color-destructive);
+  color: var(--color-destructive);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.destructiveButton:disabled,
+.stopButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 @media (max-width: 640px) {
@@ -181,7 +278,11 @@
 
   .endButton,
   .linkButton,
-  .composer button {
+  .composer button,
+  .primaryButton,
+  .secondaryButton,
+  .destructiveButton,
+  .stopButton {
     width: 100%;
   }
 }

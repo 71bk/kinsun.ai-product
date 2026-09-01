@@ -68,6 +68,9 @@ def _grant(
         version=1,
         scope={},  # Stated rather than left to the baseline's DEFAULT '{}'.
         granted_by_actor_id=actor_id,
+        confirmation_method="ACTOR_CONFIRMATION",
+        recorded_by_actor_id=actor_id,
+        assisted_session_id=None,
         policy_id=policy_id,
         granted_at=granted_at,
         effective_at=granted_at,

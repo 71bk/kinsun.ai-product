@@ -1,0 +1,124 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "REQUIRED",
+        "ACKNOWLEDGED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "policy_version": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "consent_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Consent Version"
+    },
+    "acknowledged_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Acknowledged At"
+    },
+    "confirmation_method": {
+      "anyOf": [
+        {
+          "enum": [
+            "ACTOR_CONFIRMATION",
+            "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confirmation Method"
+    }
+  },
+  "required": [
+    "status",
+    "policy_version"
+  ],
+  "title": "FirstUseAcknowledgementV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FirstUseAcknowledgementV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ACKNOWLEDGED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "consent_version",
+          "acknowledged_at",
+          "confirmation_method"
+        ],
+        "properties": {
+          "consent_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "acknowledged_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmation_method": {
+            "enum": [
+              "ACTOR_CONFIRMATION",
+              "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+            ]
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "consent_version",
+          "acknowledged_at",
+          "confirmation_method"
+        ],
+        "properties": {
+          "consent_version": {
+            "type": "null"
+          },
+          "acknowledged_at": {
+            "type": "null"
+          },
+          "confirmation_method": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

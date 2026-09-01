@@ -148,7 +148,7 @@ const zhHant = {
   'elderCreate.precautions': '照護注意事項',
   'elderCreate.onePerLine': '每行一項；內容會標記為照顧員登錄，並保留來源。',
   'elderCreate.recordedNotice':
-    '疾病、用藥與注意事項屬於 Care Profile，不是 AI Memory，也不代表系統已完成醫療驗證。',
+    '疾病、用藥與注意事項屬於 Care Profile，不是 AI Memory，也不代表系統已完成醫療驗證；目前不會送給 AI。',
   'elderCreate.submit': '建立並產生平板交付連結',
   'elderCreate.submitting': '正在建立…',
   'elderCreate.successTitle': '長者資料已建立',
@@ -811,7 +811,7 @@ const en: Record<MessageKey, string> = {
   'elderCreate.precautions': 'Care precautions',
   'elderCreate.onePerLine': 'Enter one item per line. Each item keeps its staff-recorded source.',
   'elderCreate.recordedNotice':
-    'Conditions, medications, and precautions are Care Profile data, not AI Memory or clinical verification.',
+    'Conditions, medications, and precautions are Care Profile data, not AI Memory or clinical verification, and are not currently sent to AI.',
   'elderCreate.submit': 'Create and issue tablet handoff',
   'elderCreate.submitting': 'Creating…',
   'elderCreate.successTitle': 'Elder profile created',

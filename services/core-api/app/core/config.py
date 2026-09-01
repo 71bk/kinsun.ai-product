@@ -145,6 +145,11 @@ class Settings(BaseSettings):
     assisted_elder_pairing_ttl_seconds: int = Field(default=600, ge=60, le=1_800)
     assisted_elder_idle_ttl_seconds: int = Field(default=1_800, ge=300, le=14_400)
     assisted_elder_absolute_ttl_seconds: int = Field(default=28_800, ge=300, le=86_400)
+    assisted_elder_acknowledgement_policy_version: str = Field(
+        default="demo-consent-v1",
+        min_length=1,
+        max_length=40,
+    )
     care_profile_ai_context_enabled: bool = False
 
     # ─── LINE Messaging API (disabled until routes and provider are approved) ─────

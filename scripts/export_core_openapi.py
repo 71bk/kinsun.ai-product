@@ -59,6 +59,7 @@ MODEL_FILES = {
     "CreateAccountlessElderRequest": "domain/CreateAccountlessElderRequestV1.json",
     "IssueAssistedSessionRequest": "domain/IssueAssistedSessionRequestV1.json",
     "ExchangeAssistedSessionRequest": "domain/ExchangeAssistedSessionRequestV1.json",
+    "AcknowledgeFirstUseRequest": "domain/AcknowledgeFirstUseRequestV1.json",
     "AssistedCompanionTurnRequest": "domain/AssistedCompanionTurnRequestV1.json",
     "CreateCareEventCandidateRequest": "domain/CreateCareEventCandidateRequestV1.json",
     "ReviewCareEventRequest": "domain/ReviewCareEventRequestV1.json",
@@ -168,6 +169,18 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     ),
     "get_current_assisted_session_api_v1_assisted_elder_sessions_current_get": (
         "CurrentAssistedSessionEnvelopeV1"
+    ),
+    (
+        "acknowledge_assisted_first_use_api_v1_assisted_elder_sessions_current_"
+        "first_use_acknowledgement_post"
+    ): (
+        "FirstUseAcknowledgementEnvelopeV1"
+    ),
+    (
+        "revoke_assisted_first_use_api_v1_assisted_elder_sessions_current_"
+        "first_use_acknowledgement_revoke_post"
+    ): (
+        "FirstUseAcknowledgementEnvelopeV1"
     ),
     "create_assisted_companion_turn_api_v1_assisted_elder_sessions_current_companion_turns_post": (
         "CompanionTurnEnvelopeV1"

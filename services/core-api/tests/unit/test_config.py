@@ -169,6 +169,7 @@ class TestSettingsConstruction:
         assert settings.assisted_elder_pairing_ttl_seconds == 600
         assert settings.assisted_elder_idle_ttl_seconds == 1800
         assert settings.assisted_elder_absolute_ttl_seconds == 28800
+        assert settings.assisted_elder_acknowledgement_policy_version == "demo-consent-v1"
 
     def test_assisted_elder_session_rollout_is_non_production_only(self) -> None:
         with pytest.raises(ValidationError, match="non-production"):

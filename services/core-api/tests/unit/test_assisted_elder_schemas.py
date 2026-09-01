@@ -8,9 +8,11 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.assisted_elder import (
+    AcknowledgeFirstUseRequest,
     CareProfileEntryInput,
     CreateAccountlessElderRequest,
     ExchangeAssistedSessionRequest,
+    FirstUseAcknowledgementResponse,
 )
 
 
@@ -42,3 +44,23 @@ def test_pairing_exchange_accepts_only_pairing_credential_shape() -> None:
 
     with pytest.raises(ValidationError):
         ExchangeAssistedSessionRequest(pairing_token="es1_" + "a" * 43)
+
+
+def test_first_use_acknowledgement_requires_explicit_true() -> None:
+    AcknowledgeFirstUseRequest(acknowledged=True)
+
+    with pytest.raises(ValidationError):
+        AcknowledgeFirstUseRequest(acknowledged=False)
+
+
+def test_first_use_acknowledgement_status_requires_matching_evidence() -> None:
+    FirstUseAcknowledgementResponse(
+        status="REQUIRED",
+        policy_version="demo-consent-v1",
+    )
+
+    with pytest.raises(ValidationError, match="requires acknowledgement evidence"):
+        FirstUseAcknowledgementResponse(
+            status="ACKNOWLEDGED",
+            policy_version="demo-consent-v1",
+        )

@@ -31,6 +31,17 @@ export interface IssuedAssistedSession {
   absolute_expires_at: string;
 }
 
+export interface TabletFirstUseAcknowledgement {
+  status: 'REQUIRED' | 'ACKNOWLEDGED';
+  policy_version: string;
+  consent_version: number | null;
+  acknowledged_at: string | null;
+  confirmation_method:
+    | 'ACTOR_CONFIRMATION'
+    | 'ASSISTED_TABLET_ACKNOWLEDGEMENT'
+    | null;
+}
+
 export interface TabletSession {
   assisted_session_id: string;
   elder_id: string;
@@ -38,6 +49,7 @@ export interface TabletSession {
   preferred_name: string | null;
   idle_expires_at: string;
   absolute_expires_at: string;
+  first_use_acknowledgement: TabletFirstUseAcknowledgement;
 }
 
 interface CurrentTabletSession extends TabletSession {
@@ -80,7 +92,7 @@ export function issueAssistedSession(
   });
 }
 
-export async function exchangeTabletPairing(pairingToken: string): Promise<TabletSession> {
+export async function exchangeTabletPairing(pairingToken: string): Promise<void> {
   const response = await fetch('/backend/elder-session/exchange', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -88,7 +100,7 @@ export async function exchangeTabletPairing(pairingToken: string): Promise<Table
     body: JSON.stringify({ pairing_token: pairingToken }),
   });
   if (!response.ok) throw new Error(`PAIRING_${response.status}`);
-  return (await response.json()) as TabletSession;
+  await response.json();
 }
 
 export function getCurrentTabletSession(): Promise<CurrentTabletSession> {
@@ -106,6 +118,28 @@ export function runAssistedCompanionTurn(inputText: string): Promise<AssistedCom
       method: 'POST',
       headers: { 'Idempotency-Key': createIdempotencyKey('elder-turn') },
       body: JSON.stringify({ input_text: inputText }),
+    },
+  );
+}
+
+export function acknowledgeTabletFirstUse(): Promise<TabletFirstUseAcknowledgement> {
+  return apiFetch<TabletFirstUseAcknowledgement>(
+    { apiBaseUrl: '/backend/elder-session' },
+    '/acknowledgement',
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('elder-ack') },
+    },
+  );
+}
+
+export function revokeTabletFirstUseAcknowledgement(): Promise<TabletFirstUseAcknowledgement> {
+  return apiFetch<TabletFirstUseAcknowledgement>(
+    { apiBaseUrl: '/backend/elder-session' },
+    '/acknowledgement',
+    {
+      method: 'DELETE',
+      headers: { 'Idempotency-Key': createIdempotencyKey('elder-ack-revoke') },
     },
   );
 }

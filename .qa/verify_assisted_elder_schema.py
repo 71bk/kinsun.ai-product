@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 from sqlalchemy import create_engine, text
 
-from app.core.config import get_settings
-from app.database_url import to_psycopg_database_url
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "services" / "core-api"))
+
+from app.core.config import get_settings  # noqa: E402
+from app.database_url import to_psycopg_database_url  # noqa: E402
 
 EXPECTED_TABLES = {
     "assisted_elder_session",
@@ -19,6 +25,14 @@ EXPECTED_CONSTRAINTS = {
     "fk_elder_care_profile_elder_tenant",
     "fk_elder_enrollment_elder_tenant",
     "uq_elder_scope",
+    "ck_consent_confirmation_provenance",
+    "fk_consent_assisted_session",
+    "fk_consent_recorded_by_actor",
+}
+EXPECTED_CONSENT_COLUMNS = {
+    "confirmation_method",
+    "recorded_by_actor_id",
+    "assisted_session_id",
 }
 
 
@@ -51,15 +65,28 @@ def main() -> None:
                     {"names": sorted(EXPECTED_CONSTRAINTS)},
                 ).scalars()
             )
+            consent_columns = set(
+                connection.execute(
+                    text(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_schema = 'eldercare_ai' "
+                        "AND table_name = 'consent_grant' "
+                        "AND column_name = ANY(:names)"
+                    ),
+                    {"names": sorted(EXPECTED_CONSENT_COLUMNS)},
+                ).scalars()
+            )
     finally:
         engine.dispose()
 
-    assert revision == "f7a9b1c3d456", revision
+    assert revision == "b8c2d4e5f607", revision
     assert tables == EXPECTED_TABLES, sorted(tables)
     assert constraints == EXPECTED_CONSTRAINTS, sorted(constraints)
+    assert consent_columns == EXPECTED_CONSENT_COLUMNS, sorted(consent_columns)
     print(f"revision={revision}")
     print(f"verified_tables={len(tables)}")
     print(f"verified_constraints={len(constraints)}")
+    print(f"verified_consent_columns={len(consent_columns)}")
 
 
 if __name__ == "__main__":

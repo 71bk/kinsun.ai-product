@@ -1,4 +1,128 @@
 {
+  "$defs": {
+    "FirstUseAcknowledgementResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "REQUIRED",
+            "ACKNOWLEDGED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "policy_version": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "consent_version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Consent Version"
+        },
+        "acknowledged_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Acknowledged At"
+        },
+        "confirmation_method": {
+          "anyOf": [
+            {
+              "enum": [
+                "ACTOR_CONFIRMATION",
+                "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmation Method"
+        }
+      },
+      "required": [
+        "status",
+        "policy_version"
+      ],
+      "title": "FirstUseAcknowledgementResponse",
+      "type": "object",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ACKNOWLEDGED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "consent_version",
+              "acknowledged_at",
+              "confirmation_method"
+            ],
+            "properties": {
+              "consent_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "acknowledged_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "confirmation_method": {
+                "enum": [
+                  "ACTOR_CONFIRMATION",
+                  "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+                ]
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "consent_version",
+              "acknowledged_at",
+              "confirmation_method"
+            ],
+            "properties": {
+              "consent_version": {
+                "type": "null"
+              },
+              "acknowledged_at": {
+                "type": "null"
+              },
+              "confirmation_method": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "assisted_session_id": {
@@ -40,6 +164,9 @@
       "format": "date-time",
       "title": "Absolute Expires At",
       "type": "string"
+    },
+    "first_use_acknowledgement": {
+      "$ref": "#/$defs/FirstUseAcknowledgementResponse"
     }
   },
   "required": [
@@ -49,7 +176,8 @@
     "preferred_name",
     "status",
     "idle_expires_at",
-    "absolute_expires_at"
+    "absolute_expires_at",
+    "first_use_acknowledgement"
   ],
   "title": "CurrentAssistedSessionV1",
   "type": "object",

@@ -68,6 +68,24 @@ class ConsentRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_latest_for_purpose(
+        self,
+        *,
+        elder_id: UUID,
+        purpose_code: str,
+    ) -> ConsentGrant | None:
+        result = await self._session.execute(
+            select(ConsentGrant)
+            .where(
+                ConsentGrant.elder_id == elder_id,
+                ConsentGrant.purpose_code == purpose_code,
+                self._tenant_clause(),
+            )
+            .order_by(ConsentGrant.version.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def next_version(self, elder_id: UUID, purpose_code: str) -> int:
         result = await self._session.execute(
             select(func.coalesce(func.max(ConsentGrant.version), 0)).where(

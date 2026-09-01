@@ -19,11 +19,14 @@ from app.core.exceptions import (
     ServiceUnavailableError,
 )
 from app.db.session import get_db_session
+from app.domain.consent import ConsentPurpose
 from app.domain.conversation import ConversationStartCommand, LanguageRoute
 from app.middleware.actor_guard import require_active_actor
+from app.models.policy import PolicyRegistry
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.assisted_elder import (
     AccountlessElderResponse,
+    AcknowledgeFirstUseRequest,
     ActivatedAssistedSessionResponse,
     AssistedCompanionTurnRequest,
     CareProfileEntryResponse,
@@ -31,6 +34,7 @@ from app.schemas.assisted_elder import (
     CurrentAssistedSessionResponse,
     EndAssistedSessionResponse,
     ExchangeAssistedSessionRequest,
+    FirstUseAcknowledgementResponse,
     IssueAssistedSessionRequest,
     IssuedAssistedSessionResponse,
 )
@@ -40,6 +44,7 @@ from app.services.assisted_elder_session_service import (
 )
 from app.services.assisted_session_tokens import AssistedSessionTokenCodec
 from app.services.companion_service import CompanionService
+from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.elder_onboarding_service import (
     AccountlessElderBundle,
@@ -92,6 +97,38 @@ def _accountless_elder_response(bundle: AccountlessElderBundle) -> dict:
             for entry in bundle.care_profile
         ],
     ).model_dump(mode="json")
+
+
+async def _first_use_acknowledgement(
+    session: AsyncSession,
+    *,
+    tenant_id: UUID,
+    elder_id: UUID,
+) -> FirstUseAcknowledgementResponse:
+    settings = get_settings()
+    try:
+        consent = await ConsentService(session, tenant_id).require_active(
+            elder_id=elder_id,
+            purpose=ConsentPurpose.BASIC_VOICE,
+        )
+    except NotFoundError:
+        return FirstUseAcknowledgementResponse(
+            status="REQUIRED",
+            policy_version=settings.assisted_elder_acknowledgement_policy_version,
+        )
+
+    policy = await session.get(PolicyRegistry, consent.policy_id)
+    return FirstUseAcknowledgementResponse(
+        status="ACKNOWLEDGED",
+        policy_version=(
+            policy.version
+            if policy is not None
+            else settings.assisted_elder_acknowledgement_policy_version
+        ),
+        consent_version=consent.version,
+        acknowledged_at=consent.granted_at,
+        confirmation_method=consent.confirmation_method,
+    )
 
 
 def assisted_session_bearer(request: Request) -> str:
@@ -214,6 +251,11 @@ async def get_current_assisted_session(
         requested_action="voice_session:read",
     )
     _no_store(response)
+    acknowledgement = await _first_use_acknowledgement(
+        session,
+        tenant_id=resolved.actor_context.tenant_id,
+        elder_id=resolved.elder.id,
+    )
     return success(
         CurrentAssistedSessionResponse(
             assisted_session_id=resolved.assisted_session.id,
@@ -223,8 +265,126 @@ async def get_current_assisted_session(
             status="ACTIVE",
             idle_expires_at=resolved.assisted_session.idle_expires_at,
             absolute_expires_at=resolved.assisted_session.absolute_expires_at,
+            first_use_acknowledgement=acknowledgement,
         ).model_dump(mode="json")
     )
+
+
+@router.post(
+    "/assisted-elder-sessions/current/first-use-acknowledgement",
+)
+async def acknowledge_assisted_first_use(
+    request: AcknowledgeFirstUseRequest,
+    response: Response,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    token: str = Depends(assisted_session_bearer),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    resolved = await _assisted_service(session).resolve_current(
+        token,
+        requested_action="voice_session:create",
+    )
+    settings = get_settings()
+    idem = IdempotencyRepository(
+        session,
+        resolved.actor_context.tenant_id,
+        resolved.actor_context.actor_id,
+    )
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="acknowledge_assisted_first_use",
+        payload={
+            "assisted_session_id": resolved.assisted_session.id,
+            "acknowledged": request.acknowledged,
+            "policy_version": settings.assisted_elder_acknowledgement_policy_version,
+        },
+    )
+    consent_service = ConsentService(session, resolved.actor_context.tenant_id)
+    if replay.replayed:
+        consent = (
+            await consent_service.get_by_id(resolved.elder.id, replay.resource_id)
+            if replay.resource_id is not None
+            else None
+        )
+        if consent is None:
+            raise NotFoundError("Resource not found")
+    else:
+        consent = await consent_service.acknowledge_assisted_basic_voice(
+            elder_id=resolved.elder.id,
+            recorded_by_actor_id=resolved.actor_context.actor_id,
+            assisted_session_id=resolved.assisted_session.id,
+            policy_version=settings.assisted_elder_acknowledgement_policy_version,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+        )
+
+    acknowledgement = await _first_use_acknowledgement(
+        session,
+        tenant_id=resolved.actor_context.tenant_id,
+        elder_id=resolved.elder.id,
+    )
+    payload = acknowledgement.model_dump(mode="json")
+    if not replay.replayed:
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="consent_grant",
+            resource_id=consent.id,
+            response_status=200,
+            response_body=payload,
+        )
+    _no_store(response)
+    return success(payload)
+
+
+@router.post(
+    "/assisted-elder-sessions/current/first-use-acknowledgement/revoke",
+)
+async def revoke_assisted_first_use(
+    response: Response,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    token: str = Depends(assisted_session_bearer),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    resolved = await _assisted_service(session).resolve_current(
+        token,
+        requested_action="voice_session:control",
+    )
+    idem = IdempotencyRepository(
+        session,
+        resolved.actor_context.tenant_id,
+        resolved.actor_context.actor_id,
+    )
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="revoke_assisted_first_use",
+        payload={"assisted_session_id": resolved.assisted_session.id},
+    )
+    if not replay.replayed:
+        consent = await ConsentService(
+            session,
+            resolved.actor_context.tenant_id,
+        ).revoke_assisted_basic_voice(
+            elder_id=resolved.elder.id,
+            recorded_by_actor_id=resolved.actor_context.actor_id,
+            assisted_session_id=resolved.assisted_session.id,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+        )
+    acknowledgement = FirstUseAcknowledgementResponse(
+        status="REQUIRED",
+        policy_version=get_settings().assisted_elder_acknowledgement_policy_version,
+    )
+    payload = acknowledgement.model_dump(mode="json")
+    if not replay.replayed:
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="consent_grant",
+            resource_id=consent.id,
+            response_status=200,
+            response_body=payload,
+        )
+    _no_store(response)
+    return success(payload)
 
 
 @router.post("/assisted-elder-sessions/current/companion-turns")

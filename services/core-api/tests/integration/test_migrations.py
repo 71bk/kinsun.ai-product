@@ -66,7 +66,7 @@ _TOTAL_HEAD_TABLE_COUNT = 64
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "f7a9b1c3d456"
+_HEAD_REVISION = "b8c2d4e5f607"
 
 
 def _get_alembic_config() -> Config:

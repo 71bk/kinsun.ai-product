@@ -23,6 +23,10 @@ separate gates. No real elder data may be used for verification.
   the assisted-session API. It is not a staff App Session.
 - **Initiator**: the authenticated worker who created the Elder Session. The initiator is not
   automatically the speaker, consent actor, or Memory confirmer.
+- **Tablet First-use Acknowledgement**: the plain-language, purpose-specific confirmation shown on
+  the active Elder tablet before AI companion use. It records the assisted session and the worker
+  who recorded the event, but does not fabricate an Elder Actor or claim legal-representative
+  authority.
 
 ## 3. Requirements
 
@@ -73,12 +77,22 @@ separate gates. No real elder data may be used for verification.
 
 1. The first slice may provide text companion turns while production voice/device enrollment remains
    release-blocked.
-2. Each turn shall require active `BASIC_VOICE` consent through the existing Core consent gate.
-3. The turn shall create a normal Core-owned Conversation Session whose initiator is the worker and
+2. Before the first turn, the tablet shall explain that AI processes the entered conversation,
+   does not provide medical care, and does not currently receive Care Profile or create automatic
+   long-term Memory; Core shall record explicit acknowledgement against a server-selected policy.
+3. The acknowledgement shall create only a purpose-separated `BASIC_VOICE` grant through a
+   dedicated assisted-session API. `granted_by_actor_id` shall remain `NULL`; Core shall separately
+   record the live worker and assisted session as evidence without claiming the worker consented on
+   the Elder's behalf.
+4. Each turn shall require active `BASIC_VOICE` consent through the existing Core consent gate.
+5. The tablet shall allow the Elder to stop AI companion use with a second confirmation. Revocation
+   shall cancel active conversations immediately and block later turns until acknowledgement is
+   completed again.
+6. The turn shall create a normal Core-owned Conversation Session whose initiator is the worker and
    whose care subject is the accountless Elder.
-4. Accountless assisted turns shall not auto-create or confirm long-term Memory because Elder
+7. Accountless assisted turns shall not auto-create or confirm long-term Memory because Elder
    speaker verification is unavailable.
-5. AI context shall be bounded, source-labelled, tenant/elder scoped, and omitted safely when the
+8. AI context shall be bounded, source-labelled, tenant/elder scoped, and omitted safely when the
    Care Profile context feature gate is disabled.
 
 ### R6 — Frontend handoff boundary
@@ -87,8 +101,9 @@ separate gates. No real elder data may be used for verification.
 2. The tablet shall exchange the pairing credential through a BFF route and store only an HttpOnly
    Elder Session cookie.
 3. Pairing activation on a tablet shall clear any staff App Session cookie on that tablet.
-4. Elder mode shall expose only companion and end-session actions; no staff navigation, account
-   management, Memory management, or consent-management controls shall appear.
+4. Elder mode shall expose only first-use acknowledgement, companion, stop-companion, and
+   end-session actions; no staff navigation, account management, Memory management, or general
+   consent-management controls shall appear.
 5. Ending the session shall revoke Core state and clear the Elder Session cookie.
 
 ### R7 — Evidence and release boundary
@@ -108,6 +123,7 @@ worker App Session
   -> issue one-time pairing credential
 tablet (no worker credential)
   -> exchange once -> HttpOnly Elder Session
-  -> show locked Elder identity -> text companion turn
+  -> show locked Elder identity -> plain-language first-use acknowledgement
+  -> text companion turn -> optional immediate stop/revoke
   -> end or expire -> credential rejected
 ```

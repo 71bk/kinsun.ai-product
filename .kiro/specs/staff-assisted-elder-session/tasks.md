@@ -36,8 +36,16 @@
     synthetic onboarding/pairing/session smoke pass. Destructive empty-database migration
     round-trip remains intentionally unrun because no disposable `TEST_DATABASE_URL` is configured.
 
+- [x] 7. Add lightweight Elder-tablet first-use acknowledgement
+  - Add purpose-separated `BASIC_VOICE` acknowledgement provenance without fabricating an Elder
+    Actor or treating the worker as the consenting person.
+  - Add a plain-language tablet gate, immediate stop/revoke with second confirmation, conversation
+    cancellation, synchronized contracts, and rollback-only Supabase verification.
+  - Keep Care Profile AI context and automatic Memory disabled.
+  - _Requirements: R2, R4–R7_
+
 ## Completion rule
 
-Completion means a synthetic, local accountless Elder can be created and a single-use tablet handoff
-can run a consent-gated text turn without sharing staff credentials. It does not mean production
+Completion means a synthetic, local accountless Elder can be created, complete the dedicated tablet
+acknowledgement, and run/revoke a consent-gated text turn without sharing staff credentials. It does not mean production
 entitlement, production voice, legal authority, durable device management, or deployment is approved.

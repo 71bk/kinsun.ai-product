@@ -1,0 +1,9 @@
+{
+  "data": {
+    "status": "ACKNOWLEDGED",
+    "policy_version": "demo-consent-v1",
+    "consent_version": 1,
+    "acknowledged_at": "2026-09-01T04:10:00Z",
+    "confirmation_method": "ASSISTED_TABLET_ACKNOWLEDGEMENT"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/FirstUseAcknowledgementEnvelopeV1.json",
+  "title": "FirstUseAcknowledgementEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta"
+  ],
+  "properties": {
+    "data": {
+      "$ref": "https://kinsun.ai/contracts/schemas/domain/FirstUseAcknowledgementV1.json"
+    },
+    "meta": {
+      "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json"
+    }
+  }
+}

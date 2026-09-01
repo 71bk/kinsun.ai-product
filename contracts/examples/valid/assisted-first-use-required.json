@@ -1,0 +1,9 @@
+{
+  "data": {
+    "status": "REQUIRED",
+    "policy_version": "demo-consent-v1",
+    "consent_version": null,
+    "acknowledged_at": null,
+    "confirmation_method": null
+  }
+}

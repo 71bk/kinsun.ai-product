@@ -44,6 +44,18 @@ Stores pairing/session digests, state (`PAIRING | ACTIVE | ENDED | EXPIRED`), te
 enrollment, initiator, authorization reference, pairing/idle/absolute expiry, activation, last seen,
 end time, and optimistic version. Raw credentials are never persisted or logged.
 
+### `consent_grant` assisted acknowledgement provenance
+
+The additive acknowledgement revision separates the person represented by a consent record from the
+actor who records an assisted-tablet event:
+
+- `confirmation_method = ACTOR_CONFIRMATION` keeps the existing actor-confirmed flow;
+- `confirmation_method = ASSISTED_TABLET_ACKNOWLEDGEMENT` requires
+  `granted_by_actor_id = NULL`, a live `recorded_by_actor_id`, and the `assisted_session_id`;
+- the acknowledgement creates only `BASIC_VOICE`; it cannot grant Memory, event extraction, family
+  sharing, or Care Profile projection;
+- revocation records the same assisted-session evidence and cancels active conversations.
+
 ## 3. Core operations
 
 - `POST /api/v1/organizations/{organization_id}/elders`
@@ -58,7 +70,12 @@ end time, and optimistic version. Raw credentials are never persisted or logged.
   - accepts only `ep1_`; locks row; checks single-use and expiry;
   - re-checks initiator/enrollment/authorization; returns raw `es1_` once.
 - `GET /api/v1/assisted-elder-sessions/current`
-  - accepts only `es1_`; returns bounded Elder-session identity and expiry.
+  - accepts only `es1_`; returns bounded Elder-session identity, expiry, and current first-use state.
+- `POST /api/v1/assisted-elder-sessions/current/first-use-acknowledgement`
+  - accepts only `es1_`, explicit `{ acknowledged: true }`, and idempotency evidence;
+  - selects the active policy version server-side and creates only `BASIC_VOICE` when none is active.
+- `POST /api/v1/assisted-elder-sessions/current/first-use-acknowledgement/revoke`
+  - accepts only `es1_`; revokes active `BASIC_VOICE` and cancels live conversations.
 - `POST /api/v1/assisted-elder-sessions/current/companion-turns`
   - accepts only `es1_`; rechecks all live authorization and `BASIC_VOICE` consent;
   - creates one text Conversation Session and runs the canonical Companion Service.
@@ -78,11 +95,13 @@ scope, enrollment, or expiry claims.
 
 ## 5. Consent and speaker attribution
 
-Creation does not auto-grant consent. A `BASIC_VOICE` grant must already exist through the formal
-consent flow before a companion turn succeeds. The Conversation Session records the worker as
-initiator (`CAREGIVER`); an accountless Elder has no Elder Actor, so the existing speaker gate cannot
-classify the turn as verified Elder speech. Event/Memory proposal eligibility therefore remains
-closed unless later speaker evidence explicitly permits it.
+Creation and pairing do not auto-grant consent. The Elder tablet first shows a plain-language
+purpose-specific acknowledgement. An explicit acknowledgement may create `BASIC_VOICE` through the
+dedicated assisted endpoint, but the row does not name the worker as the consenting person and does
+not claim verified Elder identity, legal capacity, or representative authority. The Conversation
+Session records the worker as initiator (`CAREGIVER`); an accountless Elder has no Elder Actor, so the
+existing speaker gate cannot classify the turn as verified Elder speech. Event/Memory proposal
+eligibility therefore remains closed unless later speaker evidence explicitly permits it.
 
 ## 6. AI Care Profile projection
 
@@ -96,8 +115,11 @@ treatment, medication advice, symptom inference, or instructions.
 - `/staff/elders/new`: bilingual staff form and one-time handoff result.
 - `/elder/pair`: tablet activation; token is read from URL fragment or pasted manually, then posted to
   a same-origin BFF exchange route.
-- `/elder/session`: Chinese elder-mode text companion with a clear end action.
-- `/backend/elder-session/*`: BFF-only cookie boundary for exchange, current session, turns, and end.
+- `/elder/session`: Chinese first-use explanation, text companion, second-confirmation stop action,
+  and clear end action.
+- `/backend/elder-session/*`: BFF-only cookie boundary for exchange, current session,
+  acknowledgement/revocation, turns, and end. The BFF fixes the acknowledgement body and does not
+  accept client-selected policy, actor, reason, deletion, tenant, or Elder scope.
 
 The tablet exchange response clears the normal App Session cookie on that browser before setting the
 separate Elder Session cookie.

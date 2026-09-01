@@ -903,6 +903,126 @@
         ]
       }
     },
+    "/api/v1/assisted-elder-sessions/current/first-use-acknowledgement": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Acknowledge Assisted First Use",
+        "operationId": "acknowledge_assisted_first_use_api_v1_assisted_elder_sessions_current_first_use_acknowledgement_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/AcknowledgeFirstUseRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/FirstUseAcknowledgementEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "assistedElderSessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assisted-elder-sessions/current/first-use-acknowledgement/revoke": {
+      "post": {
+        "tags": [
+          "assisted-elder-sessions"
+        ],
+        "summary": "Revoke Assisted First Use",
+        "operationId": "revoke_assisted_first_use_api_v1_assisted_elder_sessions_current_first_use_acknowledgement_revoke_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/FirstUseAcknowledgementEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "assistedElderSessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/assisted-elder-sessions/current/companion-turns": {
       "post": {
         "tags": [
