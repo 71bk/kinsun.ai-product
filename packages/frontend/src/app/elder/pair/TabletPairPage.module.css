@@ -22,6 +22,10 @@
   margin: 0;
 }
 
+.card h1 {
+  font-size: var(--text-2xl);
+}
+
 .icon {
   display: inline-flex;
   width: fit-content;
@@ -92,4 +96,10 @@
   gap: var(--space-2);
   color: var(--color-muted-foreground);
   font-size: var(--text-sm);
+}
+
+@media (max-width: 400px) {
+  .card h1 {
+    font-size: var(--text-xl);
+  }
 }

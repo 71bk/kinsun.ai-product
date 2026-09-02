@@ -2,7 +2,7 @@
 
 import { ClipboardText, DeviceTablet, ShieldCheck, UserPlus } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
@@ -57,6 +57,7 @@ export default function CreateAccountlessElderPage() {
     url: string;
     expiresAt: string;
   } | null>(null);
+  const successCardRef = useRef<HTMLElement>(null);
 
   const apiConfig = useMemo(
     () => ({ apiBaseUrl: config?.apiBaseUrl ?? '/backend/core' }),
@@ -79,6 +80,12 @@ export default function CreateAccountlessElderPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!handoff) return;
+    window.scrollTo({ behavior: 'auto', left: 0, top: 0 });
+    successCardRef.current?.focus({ preventScroll: true });
+  }, [handoff]);
 
   if (!config) return <Skeleton rows={6} />;
   if (config.credentialStatus !== 'present') {
@@ -129,7 +136,12 @@ export default function CreateAccountlessElderPage() {
           description={t('elderCreate.successDescription')}
           title={t('elderCreate.successTitle')}
         />
-        <section className={styles.successCard} aria-live="polite">
+        <section
+          aria-live="polite"
+          className={styles.successCard}
+          ref={successCardRef}
+          tabIndex={-1}
+        >
           <span className={styles.successIcon}>
             <DeviceTablet aria-hidden="true" size={32} weight="fill" />
           </span>

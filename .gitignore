@@ -52,3 +52,4 @@ evals/reports/tts-*-smoke.wav
 .visual-qa/
 .visual-qa-care/
 .visual-qa-auth/
+.visual-qa-assisted/
