@@ -95,6 +95,16 @@ consent。Care Event VERIFIED 不自動 promotion 成 Memory，HIGH 不建立 Me
 - **只有每次通過 Core final retrieval gate 的 Trusted Memory 可進 Context**：current ACTIVE、有效 Consent、
   Speaker ownership、risk verification、version binding（如需要）、validity、tenant／elder scope 與
   tombstone 缺一不可；MEDIUM 未確認／stale、HIGH 與 legacy 缺證據資料一律排除。
+- **`APP_ENV=production` 有啟動 gate**。`create_app()` 第一件事是
+  `validate_production_configuration()`：`MODEL_PROVIDER` 必須是
+  `bedrock`／`gemini`／`openai-compatible`，`RAG_ALLOW_NEEDS_REVIEW_CITATIONS` 與
+  `RAG_STAGING_ALLOW_ALL_AUDIENCES` 必須是 false，而
+  **`PRODUCTION_APPROVED_RAG_MODES` 目前刻意是空集合**——`disabled` 沒有受治理檢索，
+  `staging` 綁 `production_approved=false` 的 release，所以 production 現階段一律啟動失敗。
+  這不是 bug，解除條件只有一條：Owner 核准 production retrieval release 後，把該 mode 加進
+  `app.py` 的那個常數。`local`／`test`／`staging` 完全不受影響。Dockerfile 的出廠預設
+  （`APP_ENV=production`＋`mock`＋`disabled`）被測試釘住必須被拒絕，image 不得以預設啟動成
+  production runtime。
 - **Service credential 的 replay 判定必須可跨 replica**。`ServiceCredentialVerifier` 的
   `replay_store` 是必填參數；`InMemoryReplayStore`（`durable=False`）只給 test 與單一 process 的
   本機執行。設定 `SERVICE_IDENTITY_REPLAY_DATABASE_URL` 會改用 `PostgresReplayStore`，以 Core

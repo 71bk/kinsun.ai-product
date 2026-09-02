@@ -308,6 +308,14 @@ Wave 順序：
 - SQLAlchemy development `echo` 也不得輸出 bind parameter；engine 必須維持
   `hide_parameters=True`，避免 Email、credential hash、token digest 或其他 Restricted Data
   因本機 SQL diagnostics 寫入 log。
+- 一般 log 不得出現 `str(exc)`、`exc_info=True`、`traceback.format_exc()` 或任何 DSN。
+  2026-09-02 起 core-api 由 `app/core/log_safety.py` 統一處理：一般 log 只留 exception type、
+  內部 code 與 correlation ID；traceback 一律送 `app.diagnostics`（`propagate=False` ＋
+  `NullHandler`，預設不落地，需 operator 自行掛受治理的 handler）。DSN 由 `redact_dsn()`
+  **只保留 scheme**，其餘整段丟棄而不解析。`Settings` 的名稱子字串比對
+  （`password`／`secret`／`key`／`token`）看不到藏在值裡面的 credential，`database_url` 與
+  `test_database_url` 因此另由 `_DSN_FIELD_NAMES` 依形狀 redact——新增任何把 credential 放在
+  值內部的設定時要一併登記。
 - 醫療危險建議。
 - 未確認記憶被當成事實。
 - 已刪除或已撤回資料因 Replay／Projection rebuild 再次出現。

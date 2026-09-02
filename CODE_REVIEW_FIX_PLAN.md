@@ -22,7 +22,7 @@
 - [x] H-03 將 service identity replay protection 移至 shared durable store。
 - [ ] H-04 完成 Speech Gateway 的 deployment 與 frontend endpoint wiring。
 - [ ] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
-- [ ] H-06 加入 production fail-closed configuration，禁止 mock Agent / disabled RAG。
+- [x] H-06 加入 production fail-closed configuration，禁止 mock Agent / disabled RAG。
 - [ ] H-07 修正 RAG policy overlay 的 live governance validation。
 - [ ] H-08 若 deletion compliance 已在 production scope，完成所有外部 storage deletion adapter。
 
@@ -33,8 +33,8 @@
 - [ ] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
 - [ ] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
 - [ ] M-05 降低 preferred address 造成 prompt injection 的風險。
-- [ ] M-06 修正 audit request context 注入。
-- [ ] M-07 清理 exception、traceback 與 database URL logging。
+- [x] M-06 修正 audit request context 注入。
+- [x] M-07 清理 exception、traceback 與 database URL logging。
 - [ ] M-08 加入 RLS 或等價的 database-level tenant isolation。
 - [ ] M-09 為 email/password auth 加入 distributed abuse limiting。
 - [ ] M-10 為 Care Action provenance 保存 immutable event version/hash。
@@ -131,6 +131,18 @@
 - 修正：加入 production configuration validator，強制 approved model/provider/RAG mode；staging 與 production 使用不同設定模板。
 - 驗證：production + mock/disabled config 必須在 startup fail closed。
 - 應新增測試：是，configuration matrix tests。
+- 修正結果：`app.py` 新增 `validate_production_configuration()`，是 `create_app()` 的第一件事，只在
+  `APP_ENV=production` 生效，`local`／`test`／`staging` 行為完全不變。一次收集所有違規再拋一個
+  `ValueError`，訊息只帶設定名稱，不回填設定值、endpoint 或 secret。approved provider 為
+  `bedrock`／`gemini`／`openai-compatible`，normalization 與 `build_provider()` 完全一致；
+  `RAG_ALLOW_NEEDS_REVIEW_CITATIONS`、`RAG_STAGING_ALLOW_ALL_AUDIENCES` 在 production 必須為 false。
+  **`PRODUCTION_APPROVED_RAG_MODES` 目前刻意是空集合**：`disabled` 等於沒有受治理檢索，`staging`
+  綁的是 `production_approved=false` 的 release，因此在 Owner 核准 production retrieval release 之前，
+  `APP_ENV=production` 一律啟動失敗。這是 §11 待決事項的 fail-closed 表述，不是暫時 workaround；
+  解除條件是 Owner 核准 release 後把該 mode 加進該常數。另新增測試釘住 Dockerfile 的
+  `APP_ENV=production`＋`MODEL_PROVIDER=mock`＋`RAG_MODE=disabled` 預設組合會被拒絕——image 因此
+  無法以出廠預設啟動成 production runtime。Agent Runtime `pytest` 由 473 個測試通過（新增 27 個），
+  `ruff check` 與 `ruff format --check` 皆通過。
 
 ### H-07 — RAG policy overlay 可能服務已撤回資料
 
@@ -214,6 +226,13 @@
 - 修正：auth 成功後設定 request state/ContextVar，request 結束時 reset。
 - 驗證：authenticated request 觸發錯誤時，structured log 必須包含正確 actor、tenant、correlation ID。
 - 應新增測試：是。
+- 修正結果：`app/middleware/logging.py` 新增 `bind_request_actor_context()`，由
+  `app/middleware/auth.py` 的 `get_actor_context()` 在 `authenticate()` 成功後立即呼叫——那是每條
+  受保護 route 唯一都會經過、且手上已有可信身分的位置。只寫入解析後的 `ActorContext`，不接受任何
+  client 傳入值；認證失敗刻意不綁定，因為沒有可信身分可記錄。同時寫 `request.state`（主要載體，
+  存在 ASGI scope 上，可跨 `BaseHTTPMiddleware` 的 task 邊界）與兩個 ContextVar（ambient fallback）。
+  `RequestLoggerMiddleware.dispatch` 每個請求開始時重設、`finally` 中 `reset()`，避免跨請求殘留。
+  無帳號長者（`es1_`）與 speech service identity 沒有 Actor，維持不綁定。
 
 ### M-07 — Exception、traceback 與 database URL logging 可能洩漏敏感資料
 
@@ -224,6 +243,21 @@
 - 修正：只記錄 exception type、internal code、correlation ID；redact DSN authority/password；traceback 只進受控 sink。
 - 驗證：觸發 DB/config exception，確認 logs 不包含 password、DSN 或 SQL parameters。
 - 應新增測試：是；現有 `tests/unit/test_config.py:445-449` 的安全預期應改寫。
+- 修正結果：新增 `app/core/log_safety.py`，集中兩條規則。`redact_dsn()` 只保留 scheme
+  （`postgresql+asyncpg://***`）——scheme 正是 `validate_database_url` 會拒絕的部分，其餘
+  authority 與 database name **整段丟棄而非解析**，避免畸形 DSN 從解析失敗的路徑漏出。traceback
+  改送 `app.diagnostics`：`propagate=False` ＋ `NullHandler`，預設不寫任何地方，要由 operator 自行
+  掛上受治理的 handler；一般 log 只留 exception type、內部 code 與 correlation ID。
+  `config.py` 新增 `_DSN_FIELD_NAMES`（`database_url`、`test_database_url`）依形狀而非名稱子字串
+  redact——原本的名稱比對（`password`／`secret`／`key`／`token`）在結構上就看不到藏在**值**裡面的
+  credential。`main.py` 的 settings 失敗只輸出欄位名稱，連 sink 都不送 traceback，因為該例外的
+  訊息本身就是被拒絕的 DSN。`db/engine.py` 兩處 `exc_info=True` 與 `error_handlers.py` 的
+  `traceback.format_exc()`／`str(exc)`／`str(handler_exc)` 全部改為 code ＋ exception type。
+  `hide_parameters=True` 未更動，`DomainException → error_handlers → ErrorEnvelope` 與所有回應
+  形狀不變（三支 contract 驗證重跑通過）。`test_config.py` 原本斷言 `database_url` 必須原樣回傳，
+  等於把洩漏釘死成預期行為；已拆成四個測試：保留「真正非敏感欄位仍可讀」的原始意圖，並新增
+  scheme-only、`repr`／`str` 皆不含帳密主機、以及未設定的 `test_database_url` 維持空字串
+  （不得變成 `***` 而讓人誤以為有值）。Core unit 由 990 增至 1028 passed。
 
 ### M-08 — 缺少 database-level tenant isolation
 
@@ -353,6 +387,12 @@
 - [ ] WebSocket speech event、AI Care Action、notification/email、Agent handoff、Graph projection contracts。
 - [ ] Governed RAG embedding rebuild、approved release、rollback、evaluation evidence、production integration。
 - [ ] External deletion verification、operational runbook 與 compliance evidence。
+- [ ] `RequestLoggerMiddleware` 在 `call_next` 拋例外時不會輸出 `request_completed`：真正未處理的
+  例外由位於 logger **之上**的 `ServerErrorMiddleware` 接住，因此該類 500 只剩
+  `_unhandled_exception_handler` 帶 correlation ID 的紀錄。修正會改動 middleware 的錯誤語意，
+  應獨立處理（M-07 期間發現，刻意未擴大範圍）。
+- [ ] `lifespan()` 中 `DatabaseEngine(settings)` 的建構未包保護：若 `create_async_engine` 拋例外，
+  DSN 仍可能出現在 uvicorn 自己的 stderr traceback。加保護會改動 startup 語意（同上）。
 
 ## 建議完成定義
 
@@ -367,8 +407,8 @@
 
 ## 已知基準測試結果
 
-- Core unit tests：990 passed。
-- Agent tests：446 passed。
+- Core unit tests：1028 passed。
+- Agent tests：473 passed。
 - RAG unit tests：200 passed。
 - Speech tests：83 passed。
 - Frontend tests：283 passed。
