@@ -10,10 +10,9 @@ afterEach(() => cleanup());
 
 function Harness() {
   const [open, setOpen] = useState(false);
-  return createElement(
-    LocaleProvider,
-    { initialLocale: 'en' },
-    createElement(
+  return createElement(LocaleProvider, {
+    initialLocale: 'en',
+    children: createElement(
       Fragment,
       null,
       createElement(
@@ -29,7 +28,7 @@ function Harness() {
         title: 'Start work?',
       }),
     ),
-  );
+  });
 }
 
 describe('ConfirmationDialog focus lifecycle', () => {

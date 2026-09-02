@@ -108,6 +108,8 @@ async def create_voice_session(
         operation="create_voice_session",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = ConversationService(session, actor_context.tenant_id)
     if replay.replayed:
         conversation = (
@@ -247,6 +249,8 @@ async def confirm_asr_gate(
         operation="confirm_asr_gate",
         payload={"session_id": session_id, "action": request.action},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     decision = await _asr_gate_service(session, actor_context.tenant_id).confirm(
         session_id=session_id,
         actor_id=actor_context.actor_id,
@@ -308,6 +312,8 @@ async def _transition_voice_session(
         operation=f"voice_session_{target_state.lower()}",
         payload={"session_id": session_id},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     if not replay.replayed:
         conversation = await service.transition(
             conversation=conversation,
@@ -364,6 +370,8 @@ async def transition_voice_session(
         operation="voice_session_failed_by_speech",
         payload={"session_id": session_id},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     if not replay.replayed:
         conversation = await ConversationService(session, conversation.tenant_id).transition(
             conversation=conversation,

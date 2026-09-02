@@ -110,6 +110,8 @@ async def create_memory_candidate(
             "proposal_risk_hint": request.proposal_risk_hint.value,
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = MemoryService(session, actor_context.tenant_id)
     if replay.replayed:
         memory = (
@@ -230,10 +232,6 @@ async def _candidate_decision(
     session: AsyncSession,
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, f"memory:{operation}")
-    service = MemoryService(session, actor_context.tenant_id)
-    memory = await service.get(elder_id, memory_id)
-    if memory is None:
-        raise NotFoundError("Resource not found")
     idem, replay = await _begin(
         session=session,
         actor_context=actor_context,
@@ -245,6 +243,12 @@ async def _candidate_decision(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         if operation == "confirm":
             memory = await service.confirm(
@@ -264,15 +268,13 @@ async def _candidate_decision(
                 trace_id=get_correlation_id(),
                 idempotency_key=idempotency_key,
             )
+        response_body = (await _response(service, memory)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="memory",
             resource_id=memory.id,
             response_status=200,
-            response_body={
-                "memory_id": str(memory.id),
-                "status": memory.status,
-            },
+            response_body=response_body,
         )
     return success((await _response(service, memory)).model_dump(mode="json"))
 
@@ -326,10 +328,6 @@ async def decide_memory_by_voice(
         tenant_id=conversation.tenant_id,
         status=actor.status,
     )
-    service = MemoryService(session, actor_context.tenant_id)
-    memory = await service.get(elder_id, memory_id)
-    if memory is None:
-        raise NotFoundError("Resource not found")
     idem, replay = await _begin(
         session=session,
         actor_context=actor_context,
@@ -341,6 +339,12 @@ async def decide_memory_by_voice(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         memory = await service.decide_by_voice(
             memory=memory,
@@ -348,12 +352,16 @@ async def decide_memory_by_voice(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = VoiceMemoryDecisionResponse(
+            memory_id=memory.id,
+            status=memory.status,
+        ).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="memory",
             resource_id=memory.id,
             response_status=200,
-            response_body={"memory_id": str(memory.id), "status": memory.status},
+            response_body=response_body,
         )
     return success(
         VoiceMemoryDecisionResponse(
@@ -413,10 +421,6 @@ async def update_memory(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "memory:update")
-    service = MemoryService(session, actor_context.tenant_id)
-    memory = await service.get(elder_id, memory_id)
-    if memory is None:
-        raise NotFoundError("Resource not found")
     idem, replay = await _begin(
         session=session,
         actor_context=actor_context,
@@ -428,6 +432,12 @@ async def update_memory(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         memory = await service.update(
             memory=memory,
@@ -436,12 +446,13 @@ async def update_memory(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = (await _response(service, memory)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="memory",
             resource_id=memory.id,
             response_status=200,
-            response_body={"memory_id": str(memory.id), "version": memory.current_version},
+            response_body=response_body,
         )
     return success((await _response(service, memory)).model_dump(mode="json"))
 
@@ -456,10 +467,6 @@ async def delete_memory(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "memory:delete")
-    service = MemoryService(session, actor_context.tenant_id)
-    memory = await service.get(elder_id, memory_id)
-    if memory is None:
-        raise NotFoundError("Resource not found")
     idem, replay = await _begin(
         session=session,
         actor_context=actor_context,
@@ -471,6 +478,12 @@ async def delete_memory(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         memory = await service.delete(
             memory=memory,

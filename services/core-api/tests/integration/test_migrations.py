@@ -66,7 +66,7 @@ _TOTAL_HEAD_TABLE_COUNT = 64
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "c9d3e5f7a809"
+_HEAD_REVISION = "d0e4f6a8b901"
 
 
 def _get_alembic_config() -> Config:
@@ -298,6 +298,35 @@ async def test_upgrade_from_empty_to_head(test_engine):
             {"schema": SCHEMA_NAME},
         )
         assert tombstone_result.scalar_one_or_none() == "deletion_tombstone"
+
+
+@pytest.mark.asyncio
+async def test_idempotency_hardening_schema_supports_snapshot_expiry_and_cleanup(
+    test_engine,
+) -> None:
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        columns = await conn.run_sync(_get_columns, "idempotency_record")
+        checks = await conn.run_sync(_get_check_constraints, "idempotency_record")
+        indexes = await conn.run_sync(_get_indexes, "idempotency_record")
+        delete_rule = await conn.scalar(
+            text(
+                "SELECT rc.delete_rule FROM information_schema.referential_constraints rc "
+                "WHERE rc.constraint_schema = :schema "
+                "AND rc.constraint_name = 'agent_tool_call_idempotency_key_fkey'"
+            ),
+            {"schema": SCHEMA_NAME},
+        )
+
+    assert {"response_body", "key_format_version", "completed_at"} <= set(columns)
+    assert "ck_idempotency_key_format_version" in checks
+    assert "idx_idempotency_record_expiry" in indexes
+    assert delete_rule == "SET NULL"
 
 
 @pytest.mark.asyncio
@@ -539,10 +568,7 @@ async def test_public_rag_projection_migration_isolated_and_vector_ready(test_en
             row.indexname
             for row in (
                 await conn.execute(
-                    text(
-                        "SELECT indexname FROM pg_indexes "
-                        "WHERE schemaname = :schema"
-                    ),
+                    text("SELECT indexname FROM pg_indexes " "WHERE schemaname = :schema"),
                     {"schema": RAG_SCHEMA_NAME},
                 )
             )
@@ -1014,8 +1040,7 @@ async def test_legacy_memory_backfill_quarantines_and_survives_downgrade(test_en
         statuses_after_downgrade = (
             await conn.execute(
                 text(
-                    "SELECT memory_id::text, status FROM eldercare_ai.memory "
-                    "ORDER BY memory_id"
+                    "SELECT memory_id::text, status FROM eldercare_ai.memory " "ORDER BY memory_id"
                 )
             )
         ).all()

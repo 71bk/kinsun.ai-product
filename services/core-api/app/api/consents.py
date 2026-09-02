@@ -82,6 +82,8 @@ async def create_consents(
         operation="create_consents",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = ConsentService(session, actor_context.tenant_id)
     if replay.replayed:
         all_consents = await service.list_for_elder(elder_id)
@@ -99,16 +101,17 @@ async def create_consents(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+    items = [await _response_for(session, item) for item in created]
+    response_body = ConsentListResponse(items=items).model_dump(mode="json")
+    if not replay.replayed:
         await idem.complete(
             key=idempotency_key,
             resource_type="consent_batch",
             resource_id=created[0].id,
             response_status=status.HTTP_201_CREATED,
-            response_body={"consent_ids": [str(item.id) for item in created]},
+            response_body=response_body,
         )
-
-    items = [await _response_for(session, item) for item in created]
-    return success(ConsentListResponse(items=items).model_dump(mode="json"))
+    return success(response_body)
 
 
 @router.post("/elders/{elder_id}/consents/{consent_id}/revoke")
@@ -135,6 +138,8 @@ async def revoke_consent(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = ConsentService(session, actor_context.tenant_id)
     deletion_request_id = None
     if replay.replayed:
@@ -150,13 +155,6 @@ async def revoke_consent(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
-        await idem.complete(
-            key=idempotency_key,
-            resource_type="consent_grant",
-            resource_id=consent.id,
-            response_status=200,
-            response_body={"consent_id": str(consent.id), "status": consent.status},
-        )
     if replay.replayed and request.request_deletion:
         deletion_request = await DeletionService(
             session,
@@ -166,12 +164,19 @@ async def revoke_consent(
             consent_id=consent_id,
         )
         deletion_request_id = deletion_request.id if deletion_request else None
-    return success(
-        (
-            await _response_for(
-                session,
-                consent,
-                deletion_request_id=deletion_request_id,
-            )
-        ).model_dump(mode="json")
-    )
+    response_body = (
+        await _response_for(
+            session,
+            consent,
+            deletion_request_id=deletion_request_id,
+        )
+    ).model_dump(mode="json")
+    if not replay.replayed:
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="consent_grant",
+            resource_id=consent.id,
+            response_status=200,
+            response_body=response_body,
+        )
+    return success(response_body)

@@ -99,6 +99,8 @@ async def create_care_action(
         operation="create_care_action",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     if replay.replayed:
         action = (
             await service.get(elder_id, replay.resource_id)
@@ -138,9 +140,6 @@ async def update_care_action(
     await authorize_elder(session, actor_context, elder_id, "care_action:update")
     service = CareActionService(session, actor_context.tenant_id)
     service.require_professional(actor_context)
-    action = await service.get(elder_id, care_action_id)
-    if action is None:
-        raise NotFoundError("Resource not found")
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
     replay = await idem.begin(
         key=idempotency_key,
@@ -151,6 +150,11 @@ async def update_care_action(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    action = await service.get(elder_id, care_action_id)
+    if action is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         action = await service.transition(
             action=action,

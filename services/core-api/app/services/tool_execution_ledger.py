@@ -111,12 +111,20 @@ class ToolExecutionLedger:
         now = datetime.now(UTC)
         persisted_idempotency_key = None
         if request.idempotency_key:
+            idempotency = IdempotencyRepository(
+                self._session,
+                self._actor.tenant_id,
+                self._actor.actor_id,
+            )
+            scoped_key = idempotency.storage_key(request.idempotency_key)
             persisted_idempotency_key = await self._session.scalar(
-                select(IdempotencyRecord.idempotency_key).where(
-                    IdempotencyRecord.idempotency_key == request.idempotency_key,
+                select(IdempotencyRecord.idempotency_key)
+                .where(
+                    IdempotencyRecord.idempotency_key.in_([scoped_key, request.idempotency_key]),
                     IdempotencyRecord.tenant_id == self._actor.tenant_id,
                     IdempotencyRecord.actor_id == self._actor.actor_id,
                 )
+                .order_by((IdempotencyRecord.idempotency_key == scoped_key).desc())
             )
         self._session.add(
             AgentToolCall(

@@ -89,6 +89,8 @@ async def create_summary_draft(
         operation="create_summary_draft",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = SummaryService(session, actor_context.tenant_id)
     if replay.replayed:
         summary = (
@@ -106,12 +108,13 @@ async def create_summary_draft(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = (await _response(service, summary)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="daily_summary",
             resource_id=summary.id,
             response_status=status.HTTP_201_CREATED,
-            response_body={"summary_id": str(summary.id), "version": summary.current_version},
+            response_body=response_body,
         )
     return success((await _response(service, summary)).model_dump(mode="json"))
 
@@ -136,6 +139,8 @@ async def generate_summary(
         operation="generate_daily_summary",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = SummaryService(session, actor_context.tenant_id)
     if replay.replayed:
         summary = (
@@ -153,12 +158,13 @@ async def generate_summary(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = (await _response(service, summary)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="daily_summary",
             resource_id=summary.id,
             response_status=status.HTTP_201_CREATED,
-            response_body={"summary_id": str(summary.id), "version": summary.current_version},
+            response_body=response_body,
         )
     return success((await _response(service, summary)).model_dump(mode="json"))
 
@@ -236,10 +242,6 @@ async def review_summary(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "summary:review")
-    service = SummaryService(session, actor_context.tenant_id)
-    summary = await service.get(elder_id, summary_id)
-    if summary is None:
-        raise NotFoundError("Resource not found")
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
     replay = await idem.begin(
         key=idempotency_key,
@@ -250,6 +252,12 @@ async def review_summary(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = SummaryService(session, actor_context.tenant_id)
+    summary = await service.get(elder_id, summary_id)
+    if summary is None:
+        raise NotFoundError("Resource not found")
     if replay.replayed:
         review = await service.get_latest_review(summary.id)
         if review is None:
@@ -262,24 +270,20 @@ async def review_summary(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+    body = (await _response(service, summary)).model_dump()
+    response_body = SummaryReviewResponse(
+        **body,
+        review_record_id=review.review_id,
+    ).model_dump(mode="json")
+    if not replay.replayed:
         await idem.complete(
             key=idempotency_key,
             resource_type="daily_summary",
             resource_id=summary.id,
             response_status=200,
-            response_body={
-                "summary_id": str(summary.id),
-                "status": summary.status,
-                "review_record_id": str(review.review_id),
-            },
+            response_body=response_body,
         )
-    body = (await _response(service, summary)).model_dump()
-    return success(
-        SummaryReviewResponse(
-            **body,
-            review_record_id=review.review_id,
-        ).model_dump(mode="json")
-    )
+    return success(response_body)
 
 
 @router.post("/elders/{elder_id}/summaries/{summary_id}/rebuild")
@@ -292,10 +296,6 @@ async def rebuild_summary(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "summary:rebuild")
-    service = SummaryService(session, actor_context.tenant_id)
-    summary = await service.get(elder_id, summary_id)
-    if summary is None:
-        raise NotFoundError("Resource not found")
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
     replay = await idem.begin(
         key=idempotency_key,
@@ -306,6 +306,12 @@ async def rebuild_summary(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = SummaryService(session, actor_context.tenant_id)
+    summary = await service.get(elder_id, summary_id)
+    if summary is None:
+        raise NotFoundError("Resource not found")
     if not replay.replayed:
         summary = await service.request_rebuild(
             summary=summary,
@@ -315,11 +321,12 @@ async def rebuild_summary(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = (await _response(service, summary)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="daily_summary",
             resource_id=summary.id,
             response_status=200,
-            response_body={"summary_id": str(summary.id), "status": summary.status},
+            response_body=response_body,
         )
     return success((await _response(service, summary)).model_dump(mode="json"))

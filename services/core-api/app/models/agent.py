@@ -89,7 +89,10 @@ class AgentToolCall(Base):
     )
     idempotency_key: Mapped[str | None] = mapped_column(
         String(160),
-        ForeignKey(f"{SCHEMA_NAME}.idempotency_record.idempotency_key"),
+        ForeignKey(
+            f"{SCHEMA_NAME}.idempotency_record.idempotency_key",
+            ondelete="SET NULL",
+        ),
     )
     tool_name: Mapped[str] = mapped_column(String(120), nullable=False)
     tool_version: Mapped[str] = mapped_column(String(40), nullable=False)

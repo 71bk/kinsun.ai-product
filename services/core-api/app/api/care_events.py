@@ -112,6 +112,8 @@ async def create_care_event_candidate(
         operation="create_care_event_candidate",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = CareEventService(session, actor_context.tenant_id)
     if replay.replayed:
         event = (
@@ -255,10 +257,6 @@ async def review_care_event(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "care_event:review")
-    service = CareEventService(session, actor_context.tenant_id)
-    event = await service.get(elder_id, event_id)
-    if event is None:
-        raise NotFoundError("Resource not found")
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
     replay = await idem.begin(
         key=idempotency_key,
@@ -269,6 +267,12 @@ async def review_care_event(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
+    service = CareEventService(session, actor_context.tenant_id)
+    event = await service.get(elder_id, event_id)
+    if event is None:
+        raise NotFoundError("Resource not found")
     rebuild_required: list[str] = []
     if replay.replayed:
         review = await service.get_latest_review(event.id)
@@ -282,21 +286,19 @@ async def review_care_event(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
-        await idem.complete(
-            key=idempotency_key,
-            resource_type="care_event",
-            resource_id=event.id,
-            response_status=200,
-            response_body={
-                "event_id": str(event.id),
-                "review_record_id": str(review.review_id),
-                "status": event.status,
-            },
-        )
     base = (await _response(service, event)).model_dump()
     response = CareEventReviewResponse(
         **base,
         review_record_id=review.review_id,
         rebuild_required=rebuild_required,
     )
-    return success(response.model_dump(mode="json"))
+    response_body = response.model_dump(mode="json")
+    if not replay.replayed:
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="care_event",
+            resource_id=event.id,
+            response_status=200,
+            response_body=response_body,
+        )
+    return success(response_body)

@@ -72,6 +72,8 @@ async def create_family_report_draft(
         operation="create_family_report_draft",
         payload={"elder_id": elder_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = ReportService(session, actor_context.tenant_id)
     if replay.replayed:
         report = await service.get(replay.resource_id) if replay.resource_id is not None else None
@@ -85,12 +87,13 @@ async def create_family_report_draft(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = (await _response(service, report)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="family_report",
             resource_id=report.id,
             response_status=status.HTTP_201_CREATED,
-            response_body={"report_id": str(report.id), "status": report.status},
+            response_body=response_body,
         )
     return success((await _response(service, report)).model_dump(mode="json"))
 
@@ -120,6 +123,8 @@ async def _report_command(
         operation=f"family_report_{operation}",
         payload={"report_id": report_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     if not replay.replayed:
         if operation == "publish":
             report = await service.publish(
@@ -138,12 +143,13 @@ async def _report_command(
                 trace_id=get_correlation_id(),
                 idempotency_key=idempotency_key,
             )
+        response_body = (await _response(service, report)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="family_report",
             resource_id=report.id,
             response_status=200,
-            response_body={"report_id": str(report.id), "status": report.status},
+            response_body=response_body,
         )
     return success((await _response(service, report)).model_dump(mode="json"))
 

@@ -175,6 +175,8 @@ async def create_accountless_elder(
         )
         if bundle is None:
             raise NotFoundError("Resource not found")
+        if replay.response_body is not None:
+            return success(replay.response_body)
     else:
         bundle = await service.create(
             organization_id=organization_id,
@@ -299,6 +301,9 @@ async def acknowledge_assisted_first_use(
             "policy_version": settings.assisted_elder_acknowledgement_policy_version,
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        _no_store(response)
+        return success(replay.response_body)
     consent_service = ConsentService(session, resolved.actor_context.tenant_id)
     if replay.replayed:
         consent = (
@@ -359,6 +364,9 @@ async def revoke_assisted_first_use(
         operation="revoke_assisted_first_use",
         payload={"assisted_session_id": resolved.assisted_session.id},
     )
+    if replay.replayed and replay.response_body is not None:
+        _no_store(response)
+        return success(replay.response_body)
     if not replay.replayed:
         consent = await ConsentService(
             session,

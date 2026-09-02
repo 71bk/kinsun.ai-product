@@ -67,6 +67,8 @@ async def create_assignment(
         operation="create_assignment",
         payload=request.model_dump(mode="json"),
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = AssignmentService(session, actor_context.tenant_id)
     if replay.replayed:
         assignment = (
@@ -81,12 +83,13 @@ async def create_assignment(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = _response(assignment).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="care_assignment",
             resource_id=assignment.id,
             response_status=status.HTTP_201_CREATED,
-            response_body={"assignment_id": str(assignment.id), "status": assignment.status},
+            response_body=response_body,
         )
     return success(_response(assignment).model_dump(mode="json"))
 
@@ -148,6 +151,8 @@ async def _assignment_command(
         operation=f"assignment_{target.lower()}",
         payload={"assignment_id": assignment_id, **request.model_dump(mode="json")},
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     if not replay.replayed:
         assignment = await service.transition(
             assignment=assignment,
@@ -157,12 +162,13 @@ async def _assignment_command(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = _response(assignment).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="care_assignment",
             resource_id=assignment.id,
             response_status=200,
-            response_body={"assignment_id": str(assignment.id), "status": assignment.status},
+            response_body=response_body,
         )
     return success(_response(assignment).model_dump(mode="json"))
 

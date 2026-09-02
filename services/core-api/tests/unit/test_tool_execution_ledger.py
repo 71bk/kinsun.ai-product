@@ -10,6 +10,7 @@ import pytest
 
 from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError
+from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.tool import ToolRequest, ToolResult
 from app.services.tool_execution_ledger import ToolExecutionLedger
 
@@ -120,11 +121,16 @@ async def test_record_result_appends_minimized_scoped_audit_without_commit() -> 
         "tenant_id",
         "actor_id",
     }
-    assert set(idempotency_statement.compile().params.values()) == {
+    parameters = tuple(idempotency_statement.compile().params.values())
+    assert actor.tenant_id in parameters
+    assert actor.actor_id in parameters
+    persisted_keys = next(value for value in parameters if isinstance(value, list))
+    assert persisted_keys == [
+        IdempotencyRepository(session, actor.tenant_id, actor.actor_id).storage_key(
+            request.idempotency_key
+        ),
         request.idempotency_key,
-        actor.tenant_id,
-        actor.actor_id,
-    }
+    ]
     session.add.assert_called_once()
     audit_row = session.add.call_args.args[0]
     assert audit_row.tool_call_id == request.tool_call_id

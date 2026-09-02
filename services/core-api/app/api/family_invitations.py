@@ -107,6 +107,8 @@ async def revoke_family_invitation(
         )
         if result is None:
             raise NotFoundError("Resource not found")
+        if replay.response_body is not None:
+            return success(replay.response_body)
     else:
         result = await service.revoke(
             tenant_id=actor.tenant_id,
@@ -117,11 +119,12 @@ async def revoke_family_invitation(
             trace_id=get_correlation_id(),
             idempotency_key=idempotency_key,
         )
+        response_body = result.model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
             resource_type="family_invitation",
             resource_id=invitation_id,
             response_status=status.HTTP_200_OK,
-            response_body={"invitation_id": str(invitation_id), "status": result.status},
+            response_body=response_body,
         )
     return success(result.model_dump(mode="json"))

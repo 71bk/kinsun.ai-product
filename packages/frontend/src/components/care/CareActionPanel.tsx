@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  CalendarBlank,
-  CheckCircle,
-  Clock,
-  PauseCircle,
-  Play,
-  Prohibit,
-  Plus,
-  X,
-} from '@phosphor-icons/react';
+import { CheckCircle, Clock, PauseCircle, Play, Prohibit, Plus, X } from '@phosphor-icons/react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Skeleton } from '@/components/Skeleton';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';

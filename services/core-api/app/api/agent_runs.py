@@ -81,6 +81,8 @@ async def register_agent_run(
         operation="register_agent_run",
         payload=request.model_dump(mode="json"),
     )
+    if replay.replayed and replay.response_body is not None:
+        return success(replay.response_body)
     service = AgentRunService(session, actor_context.tenant_id)
     if replay.replayed:
         agent_run = (
@@ -133,6 +135,10 @@ async def complete_agent_run(
             **request.model_dump(mode="json"),
         },
     )
+    if replay.replayed and replay.response_body is not None:
+        if replay.resource_type != "agent_run" or replay.resource_id != agent_run_id:
+            raise ConflictError("Idempotency replay does not match the AgentRun completion")
+        return success(replay.response_body)
     service = AgentRunService(session, actor_context.tenant_id)
     if replay.replayed:
         if replay.resource_type != "agent_run" or replay.resource_id != agent_run_id:
