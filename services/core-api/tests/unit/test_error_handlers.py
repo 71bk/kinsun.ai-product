@@ -5,10 +5,12 @@ Validates:
 - ErrorEnvelope construction with correlation_id (Requirement 8.4, 8.5)
 - Production mode strips internal details (Requirement 8.6)
 - Self-healing: error handler failure returns minimal 500 (Requirement 9.4)
+- Handler logs carry no traceback and no exception text (M-07)
 """
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -20,6 +22,7 @@ from app.api.error_handlers import (
     _domain_exception_handler,
     _fallback_500,
     _get_correlation_id,
+    _no_authenticator_handler,
     _sanitize_message,
     _unhandled_exception_handler,
     register_exception_handlers,
@@ -34,7 +37,37 @@ from app.core.exceptions import (
     TenantScopeError,
     ValidationError,
 )
+from app.core.log_safety import diagnostics_logger
 from app.middleware.auth import NoAuthenticatorConfiguredError
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+# A message shaped like the ones that actually leak: a DSN with a password.
+_LEAKY_MESSAGE = "connect failed: postgresql+asyncpg://dbuser:dbsecret@db.internal.test/kinsun"
+
+
+class _CollectingHandler(logging.Handler):
+    """Stand-in for the operator-attached, access-governed diagnostics sink."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def diagnostics_sink():
+    handler = _CollectingHandler()
+    diagnostics_logger.addHandler(handler)
+    yield handler
+    diagnostics_logger.removeHandler(handler)
+
+
+def _general_log_text(caplog: pytest.LogCaptureFixture) -> str:
+    """Render every captured record including its structured extras."""
+    return "\n".join(str(record.__dict__) for record in caplog.records)
 
 
 class TestExceptionMap:
@@ -294,6 +327,110 @@ class TestUnhandledExceptionHandler:
             assert body["error"]["correlation_id"] == "unhandled-cid-2"
         finally:
             _correlation_id.reset(token)
+
+
+class TestHandlerLogsCarryNoRestrictedData:
+    """M-07: the general log gets type, code and correlation ID — nothing else."""
+
+    def _make_request(self, path: str = "/test") -> MagicMock:
+        request = MagicMock()
+        request.url.path = path
+        return request
+
+    @pytest.mark.asyncio
+    @patch("app.api.error_handlers._is_production", return_value=False)
+    async def test_unhandled_exception_log_has_no_traceback(
+        self,
+        _mock: MagicMock,
+        caplog: pytest.LogCaptureFixture,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        token = _correlation_id.set("leak-cid")
+        try:
+            with caplog.at_level(logging.ERROR, logger="app.api.error_handlers"):
+                await _unhandled_exception_handler(
+                    self._make_request(),
+                    RuntimeError(_LEAKY_MESSAGE),
+                )
+        finally:
+            _correlation_id.reset(token)
+
+        record = caplog.records[-1]
+        assert record.code == "UNEXPECTED_INTERNAL_ERROR"
+        assert record.exception_type == "RuntimeError"
+        assert record.correlation_id == "leak-cid"
+        # The two carriers the finding named: a formatted traceback field and
+        # exc_info, which a JSON formatter would render just as eagerly.
+        assert not hasattr(record, "traceback")
+        assert record.exc_info is None
+        assert "dbsecret" not in _general_log_text(caplog)
+
+    @pytest.mark.asyncio
+    @patch("app.api.error_handlers._is_production", return_value=False)
+    async def test_unhandled_exception_traceback_reaches_the_controlled_sink(
+        self,
+        _mock: MagicMock,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        token = _correlation_id.set("sink-cid")
+        try:
+            await _unhandled_exception_handler(
+                self._make_request(),
+                RuntimeError(_LEAKY_MESSAGE),
+            )
+        finally:
+            _correlation_id.reset(token)
+
+        assert len(diagnostics_sink.records) == 1
+        sink_record = diagnostics_sink.records[0]
+        assert sink_record.code == "UNEXPECTED_INTERNAL_ERROR"
+        assert sink_record.correlation_id == "sink-cid"
+        assert sink_record.exc_info is not None
+
+    @pytest.mark.asyncio
+    @patch("app.api.error_handlers._is_production", return_value=False)
+    async def test_no_authenticator_log_does_not_repeat_the_exception_text(
+        self,
+        _mock: MagicMock,
+        caplog: pytest.LogCaptureFixture,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        token = _correlation_id.set("authn-cid")
+        try:
+            with caplog.at_level(logging.CRITICAL, logger="app.api.error_handlers"):
+                response = await _no_authenticator_handler(
+                    self._make_request(),
+                    NoAuthenticatorConfiguredError("set FAKE_AUTH_ENABLED=true to bypass"),
+                )
+        finally:
+            _correlation_id.reset(token)
+
+        assert response.status_code == 401
+        record = caplog.records[-1]
+        assert record.code == "AUTHENTICATOR_NOT_CONFIGURED"
+        assert record.exception_type.endswith("NoAuthenticatorConfiguredError")
+        assert "FAKE_AUTH_ENABLED" not in _general_log_text(caplog)
+        # It is still recoverable, just not from the general log.
+        assert len(diagnostics_sink.records) == 1
+
+    def test_fallback_500_log_summarises_the_secondary_failure(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        token = _correlation_id.set("fallback-log-cid")
+        try:
+            with caplog.at_level(logging.CRITICAL, logger="app.api.error_handlers"):
+                _fallback_500(self._make_request("/broken"), RuntimeError(_LEAKY_MESSAGE))
+        finally:
+            _correlation_id.reset(token)
+
+        record = caplog.records[-1]
+        assert record.code == "ERROR_HANDLER_FAILURE"
+        assert record.exception_type == "RuntimeError"
+        assert not hasattr(record, "handler_exception")
+        assert "dbsecret" not in _general_log_text(caplog)
+        assert len(diagnostics_sink.records) == 1
 
 
 class TestFallback500:

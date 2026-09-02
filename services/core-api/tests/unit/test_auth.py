@@ -24,6 +24,29 @@ from app.middleware.auth import (
     get_authenticator,
 )
 
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+
+def _http_scope(path: str = "/protected") -> dict:
+    """Build the minimal ASGI scope a real Starlette Request needs.
+
+    The audit-context assertions need a genuine ``request.state`` backed by the
+    ASGI scope; a Mock would accept any attribute and prove nothing.
+    """
+    return {
+        "type": "http",
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "server": ("testserver", 80),
+        "root_path": "",
+        "path": path,
+        "raw_path": path.encode(),
+        "query_string": b"",
+        "headers": [],
+    }
+
+
 # ─── ActorContext Tests ──────────────────────────────────────────────────────
 
 
@@ -258,3 +281,36 @@ class TestGetActorContext:
 
         with pytest.raises(AuthenticationError, match="Invalid token"):
             await get_actor_context(request=request, authenticator=AuthErrorAuth())
+
+    @pytest.mark.asyncio
+    async def test_success_binds_the_audit_context_for_the_request_logger(self):
+        """The request logger can only attribute errors if this binding happens.
+
+        Without it an authenticated request that later fails authorization or
+        raises produces a 4xx/5xx log entry with no actor and no tenant.
+        """
+        actor_id = uuid.uuid4()
+        tenant_id = uuid.uuid4()
+        auth = FakeAuthenticator(actor_id=actor_id, tenant_id=tenant_id)
+        request = Request(_http_scope())
+
+        await get_actor_context(request=request, authenticator=auth)
+
+        assert request.state.actor_id == str(actor_id)
+        assert request.state.tenant_id == str(tenant_id)
+
+    @pytest.mark.asyncio
+    async def test_failed_authentication_binds_nothing(self):
+        """A rejected credential proves no identity, so none may be recorded."""
+
+        class FailingAuth(Authenticator):
+            async def authenticate(self, request: Request) -> ActorContext:
+                raise RuntimeError("token expired")
+
+        request = Request(_http_scope())
+
+        with pytest.raises(AuthenticationError):
+            await get_actor_context(request=request, authenticator=FailingAuth())
+
+        assert getattr(request.state, "actor_id", None) is None
+        assert getattr(request.state, "tenant_id", None) is None

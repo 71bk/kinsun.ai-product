@@ -5,6 +5,10 @@ production mode, internal details (stack traces, SQL, file paths) are stripped
 from responses. Framework validation and HTTP errors never echo rejected input
 or exception details.
 
+The same rule applies to the log side: handlers record the exception type, a
+stable internal code and the correlation ID, and hand the traceback to the
+controlled sink in ``app.core.log_safety`` rather than to the general log.
+
 Self-healing: if an error handler itself fails, a minimal 500 response with
 only the correlation_id is returned.
 """
@@ -13,7 +17,6 @@ from __future__ import annotations
 
 import logging
 import re
-import traceback
 import uuid
 from typing import TYPE_CHECKING
 
@@ -35,6 +38,7 @@ from app.core.exceptions import (
     TenantScopeError,
     ValidationError,
 )
+from app.core.log_safety import exception_type_name, record_exception
 from app.middleware.auth import NoAuthenticatorConfiguredError
 from app.policies import ActorInactiveError, RoleModeIncompatibleError
 
@@ -286,8 +290,10 @@ async def _no_authenticator_handler(
     situation. A misconfigured deployment must look like an auth failure, not
     like a crash.
 
-    The real reason is logged at critical level and never sent to the client:
-    the exception text names the config flag that would enable fake auth.
+    The client never learns why. The general log keeps the exception type and
+    the internal code so the misconfiguration stays visible on the ordinary
+    dashboard, while the exception text — which names the config flag that would
+    enable fake auth — goes only to the controlled diagnostics sink.
     """
     try:
         correlation_id = _get_correlation_id()
@@ -296,9 +302,15 @@ async def _no_authenticator_handler(
             "no_authenticator_configured",
             extra={
                 "correlation_id": correlation_id,
+                "code": "AUTHENTICATOR_NOT_CONFIGURED",
+                "exception_type": exception_type_name(exc),
                 "path": request.url.path,
-                "reason": str(exc),
             },
+        )
+        record_exception(
+            "AUTHENTICATOR_NOT_CONFIGURED",
+            exc,
+            correlation_id=correlation_id,
         )
 
         envelope = _build_error_envelope(
@@ -322,15 +334,24 @@ async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSON
     try:
         correlation_id = _get_correlation_id()
 
-        # Log the full traceback for debugging but never expose it.
+        # The traceback is the most likely carrier of restricted data here: it
+        # can quote SQL, a connection URL, or values from the failing request.
+        # The general log therefore keeps only the exception type, the internal
+        # code and the correlation ID; the traceback goes to the controlled
+        # diagnostics sink, which the correlation ID joins back to this entry.
         logger.error(
             "unhandled_exception",
             extra={
                 "correlation_id": correlation_id,
-                "exception_type": type(exc).__name__,
+                "code": "UNEXPECTED_INTERNAL_ERROR",
+                "exception_type": exception_type_name(exc),
                 "path": request.url.path,
-                "traceback": traceback.format_exc(),
             },
+        )
+        record_exception(
+            "UNEXPECTED_INTERNAL_ERROR",
+            exc,
+            correlation_id=correlation_id,
         )
 
         envelope = _build_error_envelope(
@@ -362,15 +383,22 @@ def _fallback_500(request: Request, handler_exc: Exception) -> JSONResponse:
     except Exception:
         correlation_id = str(uuid.uuid4())
 
-    # Log the handler failure for diagnosis.
+    # Log the handler failure for diagnosis. The secondary exception carries
+    # whatever the primary one did, so it is summarised the same way.
     try:
         logger.critical(
             "error_handler_failure",
             extra={
                 "correlation_id": correlation_id,
-                "handler_exception": str(handler_exc),
+                "code": "ERROR_HANDLER_FAILURE",
+                "exception_type": exception_type_name(handler_exc),
                 "path": getattr(request, "url", None) and request.url.path,
             },
+        )
+        record_exception(
+            "ERROR_HANDLER_FAILURE",
+            handler_exc,
+            correlation_id=correlation_id,
         )
     except Exception:
         pass  # Absolutely must not fail here.

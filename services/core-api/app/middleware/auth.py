@@ -18,6 +18,7 @@ from app.core.auth import ActorContext, AuthenticationRequest, Authenticator
 from app.core.config import AppEnv, get_settings
 from app.core.exceptions import AuthenticationError, ServiceUnavailableError
 from app.core.oidc import GoogleTokenVerifier, LineTokenVerifier
+from app.middleware.logging import bind_request_actor_context
 
 
 class FakeAuthenticator(Authenticator):
@@ -184,10 +185,24 @@ async def get_actor_context(
 
     Calls the authenticator to resolve the actor's identity. On failure,
     raises AuthenticationError which maps to HTTP 401.
+
+    On success the resolved actor and tenant are bound to the request's audit
+    context. This is the only place every protected route passes through with a
+    trusted identity in hand, so binding here is what lets the request logger
+    attribute a later authorization denial, domain error or crash to the caller
+    instead of emitting an anonymous 4xx/5xx line. A failed authentication is
+    deliberately left unbound — there is no trusted identity to record.
     """
     try:
-        return await authenticator.authenticate(request)
+        actor_context = await authenticator.authenticate(request)
     except AuthenticationError:
         raise
     except Exception as exc:
         raise AuthenticationError("Authentication failed") from exc
+
+    bind_request_actor_context(
+        request,
+        actor_id=actor_context.actor_id,
+        tenant_id=actor_context.tenant_id,
+    )
+    return actor_context

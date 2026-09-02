@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,6 +11,7 @@ import pytest
 from sqlalchemy.pool import NullPool
 
 from app.core.config import Settings
+from app.core.log_safety import diagnostics_logger
 from app.db.engine import DatabaseEngine
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -26,6 +28,25 @@ def _make_settings(**overrides: str) -> Settings:
     env.update(overrides)
     with patch.dict(os.environ, env, clear=False):
         return Settings(_env_file=None)
+
+
+class _CollectingHandler(logging.Handler):
+    """Stand-in for the operator-attached, access-governed diagnostics sink."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def diagnostics_sink():
+    handler = _CollectingHandler()
+    diagnostics_logger.addHandler(handler)
+    yield handler
+    diagnostics_logger.removeHandler(handler)
 
 
 # ─── Engine creation ─────────────────────────────────────────────────────────
@@ -315,3 +336,83 @@ class TestDispose:
             await db_engine.dispose()
 
             assert db_engine.is_ready is False
+
+
+# ─── Failure logging (M-07) ──────────────────────────────────────────────────
+
+
+class TestFailureLoggingCarriesNoConnectionDetails:
+    """A driver error names the host, user and often the DSN it failed on.
+
+    Whatever the driver puts in that message must stay out of the general log:
+    an ``exc_info=True`` here is enough to file database credentials next to
+    ordinary request lines (AGENTS.md §4).
+    """
+
+    # Shaped like a real asyncpg/SQLAlchemy failure message.
+    _LEAKY_MESSAGE = f"could not connect using {_VALID_DB_URL}"
+
+    def _engine_failing_to_connect(self, exc: Exception) -> DatabaseEngine:
+        settings = _make_settings()
+        with patch("app.db.engine.create_async_engine") as mock_create:
+            mock_engine = MagicMock()
+            mock_cm = AsyncMock()
+            mock_cm.__aenter__.side_effect = exc
+            mock_engine.connect.return_value = mock_cm
+            mock_create.return_value = mock_engine
+            return DatabaseEngine(settings)
+
+    @pytest.mark.asyncio
+    async def test_connectivity_failure_logs_type_and_code_only(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        db_engine = self._engine_failing_to_connect(ConnectionRefusedError(self._LEAKY_MESSAGE))
+
+        with caplog.at_level(logging.WARNING, logger="app.db.engine"):
+            assert await db_engine.check_connectivity() is False
+
+        record = caplog.records[-1]
+        assert record.code == "DB_CONNECTIVITY_CHECK_FAILED"
+        assert record.exception_type == "ConnectionRefusedError"
+        assert record.exc_info is None
+        rendered = "\n".join(str(item.__dict__) for item in caplog.records)
+        assert "user:pass@localhost" not in rendered
+        assert _VALID_DB_URL not in rendered
+
+    @pytest.mark.asyncio
+    async def test_connectivity_failure_traceback_reaches_the_controlled_sink(
+        self,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        db_engine = self._engine_failing_to_connect(ConnectionRefusedError(self._LEAKY_MESSAGE))
+
+        await db_engine.check_connectivity()
+
+        assert len(diagnostics_sink.records) == 1
+        assert diagnostics_sink.records[0].code == "DB_CONNECTIVITY_CHECK_FAILED"
+        assert diagnostics_sink.records[0].exc_info is not None
+
+    @pytest.mark.asyncio
+    async def test_disposal_failure_logs_type_and_code_only(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        diagnostics_sink: _CollectingHandler,
+    ) -> None:
+        settings = _make_settings()
+        with patch("app.db.engine.create_async_engine") as mock_create:
+            mock_engine = AsyncMock()
+            mock_engine.dispose.side_effect = RuntimeError(self._LEAKY_MESSAGE)
+            mock_create.return_value = mock_engine
+            db_engine = DatabaseEngine(settings)
+
+        with caplog.at_level(logging.ERROR, logger="app.db.engine"):
+            await db_engine.dispose()
+
+        record = caplog.records[-1]
+        assert record.code == "DB_ENGINE_DISPOSAL_FAILED"
+        assert record.exception_type == "RuntimeError"
+        assert record.exc_info is None
+        assert _VALID_DB_URL not in "\n".join(str(item.__dict__) for item in caplog.records)
+        assert len(diagnostics_sink.records) == 1

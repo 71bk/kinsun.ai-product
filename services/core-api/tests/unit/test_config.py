@@ -445,8 +445,52 @@ class TestSecretRedaction:
     def test_non_sensitive_fields_not_redacted(self) -> None:
         s = _make_settings()
         dumped = s.model_dump()
-        assert dumped["database_url"] == _VALID_DB_URL
         assert dumped["app_title"] == "kinsun.ai Core API"
+        assert dumped["docs_url"] == "/docs"
+        # A service endpoint that carries no credential stays readable, so a
+        # misconfigured runtime URL is still diagnosable from a dumped config.
+        assert dumped["agent_runtime_url"] == "http://127.0.0.1:8001"
+
+    def test_database_url_is_reduced_to_its_scheme(self) -> None:
+        """The DSN embeds the password and host, so only the driver survives.
+
+        This replaces an earlier expectation that database_url was a
+        "non-sensitive field" returned verbatim. Field-name matching cannot see
+        a credential that lives inside the value, and DATABASE_URL is exactly
+        that case, so treating it as non-sensitive pinned a leak in place: any
+        repr(), str() or model_dump() of Settings put the database user,
+        password and host into whatever log or console received it.
+        """
+        s = _make_settings()
+        dumped = s.model_dump()
+
+        assert dumped["database_url"] == "postgresql+asyncpg://***"
+        # The scheme is retained on purpose: it is what validate_database_url
+        # rejects, so an operator debugging a refused URL still sees the driver.
+        assert dumped["database_url"].startswith("postgresql+asyncpg://")
+
+    @pytest.mark.parametrize("render", [repr, str])
+    def test_database_credentials_never_appear_in_settings_output(self, render) -> None:
+        s = _make_settings(
+            DATABASE_URL="postgresql+asyncpg://dbuser:dbsecret@db.internal.test:5432/kinsun",
+            TEST_DATABASE_URL="postgresql+asyncpg://dbuser:dbsecret@db.internal.test:5432/t",
+        )
+
+        rendered = render(s)
+
+        assert "dbsecret" not in rendered
+        assert "dbuser" not in rendered
+        assert "db.internal.test" not in rendered
+
+    def test_test_database_url_is_redacted_and_empty_stays_empty(self) -> None:
+        """The disposable test DSN is a real credential too; an unset one is not."""
+        configured = _make_settings(
+            TEST_DATABASE_URL="postgresql+asyncpg://t:t@db.internal.test:5432/kinsun_test"
+        )
+        assert configured.model_dump()["test_database_url"] == "postgresql+asyncpg://***"
+
+        unset = _make_settings()
+        assert unset.model_dump()["test_database_url"] == ""
 
     def test_family_invitation_secret_is_redacted(self) -> None:
         secret = "test-family-invitation-secret-32-bytes"

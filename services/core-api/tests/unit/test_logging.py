@@ -7,6 +7,7 @@ Tests cover:
 - Sensitive headers not logged
 - Duration measurement
 - tenant_id/actor_id inclusion on error responses
+- Audit context binding from the authentication dependency, and its release
 - Log emission failure does not interrupt request processing
 """
 
@@ -16,15 +17,24 @@ import logging
 import uuid
 from unittest.mock import patch
 
+import pytest
+from fastapi import Depends, FastAPI
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
+from app.api.error_handlers import register_exception_handlers
+from app.core.auth import ActorContext
+from app.core.exceptions import NotFoundError
+from app.middleware.auth import FakeAuthenticator, get_actor_context, get_authenticator
 from app.middleware.logging import (
     SENSITIVE_HEADERS,
     RequestLoggerMiddleware,
+    _actor_id_var,
+    _tenant_id_var,
+    bind_request_actor_context,
     correlation_id_var,
 )
 
@@ -45,6 +55,43 @@ def _create_app(handler=None, status_code: int = 200) -> Starlette:
     )
     app.add_middleware(RequestLoggerMiddleware)
     return app
+
+
+def _http_scope(path: str = "/test") -> dict:
+    """Build the minimal ASGI scope a Starlette Request needs."""
+    return {
+        "type": "http",
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "server": ("testserver", 80),
+        "root_path": "",
+        "path": path,
+        "raw_path": path.encode(),
+        "query_string": b"",
+        "headers": [],
+    }
+
+
+def _last_request_record(caplog) -> logging.LogRecord:
+    """Return the request logger's own entry, ignoring handler-emitted ones."""
+    records = [record for record in caplog.records if record.name == "app.request"]
+    assert records, "the request logger emitted no entry"
+    return records[-1]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_audit_context():
+    """Keep one test's audit ContextVars from reaching the next test.
+
+    Tests share a single context, so a binding left behind here would look
+    exactly like the cross-request attribution bug the middleware guards against.
+    """
+    actor_token = _actor_id_var.set("")
+    tenant_token = _tenant_id_var.set("")
+    yield
+    _actor_id_var.reset(actor_token)
+    _tenant_id_var.reset(tenant_token)
 
 
 # ─── Correlation ID tests ────────────────────────────────────────────────────
@@ -255,6 +302,120 @@ def test_missing_actor_context_on_error_does_not_crash(caplog):
     assert record.status_code == 400
     # tenant_id and actor_id should not be present (empty defaults)
     assert not hasattr(record, "tenant_id") or record.tenant_id == ""
+
+
+# ─── Audit context binding tests (M-06) ──────────────────────────────────────
+
+
+def test_bind_request_actor_context_normalizes_identifiers() -> None:
+    """UUIDs are stored as strings so the log entry is JSON-serialisable."""
+    request = Request(_http_scope())
+    actor_id = uuid.uuid4()
+    tenant_id = uuid.uuid4()
+
+    bind_request_actor_context(request, actor_id=actor_id, tenant_id=tenant_id)
+
+    assert request.state.actor_id == str(actor_id)
+    assert request.state.tenant_id == str(tenant_id)
+    assert _actor_id_var.get() == str(actor_id)
+    assert _tenant_id_var.get() == str(tenant_id)
+
+
+def test_authenticated_error_response_is_attributed_to_the_actor(caplog):
+    """An authenticated request that fails must not log an anonymous entry.
+
+    This is the M-06 acceptance path end to end: the real authentication
+    dependency binds the audit context, the route then raises a domain error,
+    and the resulting 404 entry still carries actor, tenant and correlation ID.
+    """
+    actor_id = uuid.uuid4()
+    tenant_id = uuid.uuid4()
+
+    app = FastAPI()
+    app.add_middleware(RequestLoggerMiddleware)
+    register_exception_handlers(app)
+
+    @app.get("/protected")
+    async def protected(actor: ActorContext = Depends(get_actor_context)) -> dict:
+        raise NotFoundError("Resource not found")
+
+    app.dependency_overrides[get_authenticator] = lambda: FakeAuthenticator(
+        actor_id=actor_id,
+        tenant_id=tenant_id,
+    )
+    client = TestClient(app)
+
+    with caplog.at_level(logging.INFO, logger="app.request"):
+        response = client.get("/protected", headers={"x-correlation-id": "audit-cid-1"})
+
+    assert response.status_code == 404
+    record = _last_request_record(caplog)
+    assert record.status_code == 404
+    assert record.actor_id == str(actor_id)
+    assert record.tenant_id == str(tenant_id)
+    assert record.correlation_id == "audit-cid-1"
+
+
+def test_unauthenticated_error_response_stays_anonymous(caplog):
+    """A rejected credential has no trusted identity, so none is recorded."""
+    app = FastAPI()
+    app.add_middleware(RequestLoggerMiddleware)
+    register_exception_handlers(app)
+
+    @app.get("/protected")
+    async def protected(actor: ActorContext = Depends(get_actor_context)) -> dict:
+        return {"ok": True}
+
+    class _RejectingAuthenticator:
+        async def authenticate(self, request):
+            raise RuntimeError("expired credential")
+
+    app.dependency_overrides[get_authenticator] = _RejectingAuthenticator
+    client = TestClient(app)
+
+    with caplog.at_level(logging.INFO, logger="app.request"):
+        response = client.get("/protected")
+
+    assert response.status_code == 401
+    record = _last_request_record(caplog)
+    assert not hasattr(record, "actor_id")
+    assert not hasattr(record, "tenant_id")
+
+
+@pytest.mark.asyncio
+async def test_dispatch_releases_audit_context_after_the_request():
+    """One request's actor must not survive into whatever runs next."""
+    middleware = RequestLoggerMiddleware(app=None)
+    outer_token = _actor_id_var.set("actor-from-an-earlier-caller")
+
+    async def call_next(request: Request) -> PlainTextResponse:
+        bind_request_actor_context(request, actor_id="actor-1", tenant_id="tenant-1")
+        return PlainTextResponse("denied", status_code=403)
+
+    try:
+        response = await middleware.dispatch(Request(_http_scope()), call_next)
+
+        assert response.status_code == 403
+        assert _actor_id_var.get() == "actor-from-an-earlier-caller"
+        assert _tenant_id_var.get() == ""
+    finally:
+        _actor_id_var.reset(outer_token)
+
+
+@pytest.mark.asyncio
+async def test_dispatch_releases_audit_context_when_the_request_raises():
+    """A failed request must not bequeath its actor either."""
+    middleware = RequestLoggerMiddleware(app=None)
+
+    async def call_next(request: Request) -> PlainTextResponse:
+        bind_request_actor_context(request, actor_id="actor-1", tenant_id="tenant-1")
+        raise RuntimeError("route exploded")
+
+    with pytest.raises(RuntimeError):
+        await middleware.dispatch(Request(_http_scope()), call_next)
+
+    assert _actor_id_var.get() == ""
+    assert _tenant_id_var.get() == ""
 
 
 # ─── Log emission failure tests ──────────────────────────────────────────────

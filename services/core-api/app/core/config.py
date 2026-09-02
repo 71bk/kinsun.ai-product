@@ -17,6 +17,8 @@ from uuid import UUID
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.log_safety import REDACTED, redact_dsn
+
 
 class AppEnv(str, Enum):
     """Application environment profiles."""
@@ -40,6 +42,13 @@ _env_file: str | None = (
 
 # Substrings in field names that indicate sensitive data (used for redaction).
 _SENSITIVE_SUBSTRINGS: tuple[str, ...] = ("password", "secret", "key", "token")
+
+# Fields whose value is a database connection string. The credential lives
+# inside the value rather than in the field name, so the substring rule above
+# can never reach it — these are redacted by shape instead. Only the database
+# DSNs qualify: the other URL settings carry no credential, and blanket-matching
+# "url" would blind operators to misconfigured service endpoints.
+_DSN_FIELD_NAMES: frozenset[str] = frozenset({"database_url", "test_database_url"})
 
 
 class Settings(BaseSettings):
@@ -65,6 +74,8 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535)
 
     # ─── Database ────────────────────────────────────────────────────────────────
+    # The DSN embeds the database user, password and host, so it is redacted by
+    # shape in _redacted_dict() — repr(), str() and model_dump() stay safe to log.
     database_url: str  # Required — validated below
     db_pool_mode: DatabasePoolMode = DatabasePoolMode.QUEUE
     db_pool_size: int = Field(default=5, ge=1)
@@ -497,11 +508,15 @@ class Settings(BaseSettings):
         return any(sub in lower for sub in _SENSITIVE_SUBSTRINGS)
 
     def _redacted_dict(self, **kwargs: Any) -> dict[str, Any]:
-        """Return model data with sensitive fields replaced by '***'."""
+        """Return model data with sensitive fields replaced or reduced."""
         data = super().model_dump(**kwargs)
-        for field_name in data:
+        for field_name, value in data.items():
             if self._is_sensitive(field_name):
-                data[field_name] = "***"
+                data[field_name] = REDACTED
+            elif field_name in _DSN_FIELD_NAMES and isinstance(value, str):
+                # Keep the scheme so a rejected driver is still diagnosable;
+                # drop the authority, which carries the password and host.
+                data[field_name] = redact_dsn(value)
         return data
 
     def model_dump(self, **kwargs: Any) -> dict[str, Any]:

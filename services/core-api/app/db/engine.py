@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 from app.core.config import AppEnv, DatabasePoolMode, Settings
+from app.core.log_safety import exception_type_name, record_exception
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +93,19 @@ class DatabaseEngine:
                 await conn.execute(text("SELECT 1"))
             self._ready = True
             return True
-        except Exception:
-            logger.warning("Database connectivity check failed", exc_info=True)
+        except Exception as exc:
+            # exc_info here would put an asyncpg/SQLAlchemy traceback — which
+            # quotes the failing statement and the connection URL — straight
+            # into the general log. Type and internal code only; the traceback
+            # goes to the controlled diagnostics sink.
+            logger.warning(
+                "Database connectivity check failed",
+                extra={
+                    "code": "DB_CONNECTIVITY_CHECK_FAILED",
+                    "exception_type": exception_type_name(exc),
+                },
+            )
+            record_exception("DB_CONNECTIVITY_CHECK_FAILED", exc)
             self._ready = False
             return False
 
@@ -151,6 +163,15 @@ class DatabaseEngine:
         except TimeoutError:
             logger.error("Database engine disposal timed out after %.1f seconds", timeout)
             self._ready = False
-        except Exception:
-            logger.error("Error during database engine disposal", exc_info=True)
+        except Exception as exc:
+            # Same reasoning as check_connectivity(): disposal failures surface
+            # pool internals and the connection URL.
+            logger.error(
+                "Error during database engine disposal",
+                extra={
+                    "code": "DB_ENGINE_DISPOSAL_FAILED",
+                    "exception_type": exception_type_name(exc),
+                },
+            )
+            record_exception("DB_ENGINE_DISPOSAL_FAILED", exc)
             self._ready = False

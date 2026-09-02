@@ -49,11 +49,38 @@ from app.api.summaries import router as summaries_router
 from app.api.tools import router as tools_router
 from app.api.voice_sessions import router as voice_sessions_router
 from app.core.config import AppEnv, get_settings
+from app.core.log_safety import exception_type_name, record_exception
 from app.db.engine import DatabaseEngine
 from app.db.session import init_db_engine
 from app.middleware.logging import RequestLoggerMiddleware
 
 logger = logging.getLogger(__name__)
+
+
+def _invalid_setting_names(exc: Exception) -> list[str]:
+    """Return the setting names a validation failure blames — never their values.
+
+    Pydantic renders the rejected input inside ``str(exc)``, and DATABASE_URL
+    carries the database password, so a settings failure is reduced to its error
+    locations here instead of being formatted anywhere it could be logged or
+    printed. An error object that is not the Pydantic shape yields no names
+    rather than a fallback that might quote it.
+    """
+    errors = getattr(exc, "errors", None)
+    if not callable(errors):
+        return []
+
+    try:
+        located = {".".join(str(part) for part in error.get("loc", ())) for error in errors()}
+    except Exception:  # noqa: BLE001
+        return []
+    return sorted(name for name in located if name)
+
+
+def _settings_failure_notice(invalid_fields: list[str]) -> str:
+    """Compose the stderr line for a fatal settings failure without any value."""
+    named = ", ".join(invalid_fields) if invalid_fields else "unknown setting"
+    return f"FATAL: Settings validation failed for: {named}"
 
 
 @asynccontextmanager
@@ -76,14 +103,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         settings = get_settings()
     except Exception as exc:
+        # Neither the log nor stderr may carry the exception text: a Pydantic
+        # ValidationError echoes the rejected input, and the value most likely
+        # to be rejected is DATABASE_URL with its password. Field names are
+        # enough to fix the deployment, and no traceback is sent to the
+        # diagnostics sink either, because it would quote the same input.
+        invalid_fields = _invalid_setting_names(exc)
         logger.critical(
             "fatal_startup_error",
             extra={
                 "component": "Settings",
-                "error": str(exc),
+                "code": "SETTINGS_VALIDATION_FAILED",
+                "exception_type": exception_type_name(exc),
+                "invalid_fields": invalid_fields,
             },
         )
-        print(f"FATAL: Settings validation failed: {exc}", file=sys.stderr)
+        print(_settings_failure_notice(invalid_fields), file=sys.stderr)
         sys.exit(1)
 
     # ── Step 2: Create DatabaseEngine ────────────────────────────────────────
@@ -101,14 +136,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 },
             )
     except Exception as exc:
+        # A connection failure names the host, user and sometimes the DSN, so
+        # only the exception type reaches the general log; the traceback goes to
+        # the controlled diagnostics sink.
         logger.warning(
             "db_startup_failed",
             extra={
                 "component": "DatabaseEngine",
-                "error": str(exc),
+                "code": "DB_STARTUP_CONNECTIVITY_FAILED",
+                "exception_type": exception_type_name(exc),
                 "detail": "Database unreachable at startup — running in degraded mode",
             },
         )
+        record_exception("DB_STARTUP_CONNECTIVITY_FAILED", exc, component="DatabaseEngine")
         # Readiness remains false; a later DB-backed request may run one bounded retry.
 
     # ── Step 4: Wire engine into app state and session dependency ─────────────
@@ -145,7 +185,8 @@ def create_app() -> FastAPI:
     try:
         settings = get_settings()
     except Exception as exc:
-        print(f"FATAL: Settings validation failed: {exc}", file=sys.stderr)
+        # Same rule as in lifespan(): the rejected value never reaches stderr.
+        print(_settings_failure_notice(_invalid_setting_names(exc)), file=sys.stderr)
         sys.exit(1)
 
     # In production, disable OpenAPI docs (404 for /docs, /redoc, /openapi.json)
