@@ -1,5 +1,10 @@
 # SageMaker endpoint 契約 + 部署步驟
 
+> 2026-09-02：本文件保留為 optional SageMaker adapter 的介面與歷史設計紀錄。專案目前沒有使用中的
+> AWS 服務，舊 CDK／AWS deployment profile 已由
+> [ADR 0019](../../../docs/adr/0019-retire-aws-cdk-deployment-profile.md) 退役；未經新的 provider／部署
+> ADR，不得把下列步驟當成現行 runbook。
+
 ## 契約權威
 
 正式呼叫端是 `src/speech_gateway/sagemaker_asr.py` 與
@@ -58,7 +63,7 @@ backend 預設當 `audio/wav`）。
 `502`，且不洩漏模型或 AWS 內部細節。呼叫端必須保留 Core 的 `reply_text` 作為明確的
 文字降級，不得改用另一語言的聲音或自行生成替代內容。
 
-## 部署步驟（目前 `infra/` 未管理這兩個 endpoint，仍是受控手動流程）
+## 歷史部署步驟（非現行 runbook）
 
 沿用 PoC repo `SAGEMAKER_SOP_與待辦清單.md` 的既有規劃，這裡只補上跟這次
 container 骨架有關的步驟：

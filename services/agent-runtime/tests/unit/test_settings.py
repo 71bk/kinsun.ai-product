@@ -27,6 +27,9 @@ def test_env_files_are_absolute_and_service_scoped_last() -> None:
 def test_needs_review_citation_override_is_disabled_by_default() -> None:
     settings = Settings(_env_file=None)
 
+    assert settings.RAG_SEARCH_BACKEND == "postgresql"
+    assert settings.RAG_EMBEDDING_CONFIG_PATH == "config/rag/embedding-google.yaml"
+    assert settings.RAG_QUERY_EMBEDDING_CONFIG_PATH == "config/rag/embedding-google.yaml"
     assert settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS is False
     assert settings.RAG_SOURCE_FAMILY_POLICY_PATH is None
     assert settings.RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256 is None

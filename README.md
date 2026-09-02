@@ -25,15 +25,13 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 | 單元 | 狀態 |
 | --- | --- |
 | `services/core-api` | ✅ 主線。Direct Google／LINE OIDC、Core App Session、Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
-| `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；預設 deterministic mock，也可切換 Bedrock 或 provider-neutral OpenAI-compatible provider |
+| `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；預設 deterministic mock，也可切換明確設定的 model provider |
 | `packages/frontend` | ✅ Multi-role PWA + BFF；文字與語音主線、麥克風錄音、角色動畫及 LINE 帳號連結已接入 |
 | `services/rag-ingestion` | ⚠️ staging-only；治理簽章與 production gate 尚未完成，不可視為正式照護知識來源 |
-| `services/speech-gateway` | ✅ 已接入語音主線；華語／英語使用 AWS managed speech，台語／客語可接私有 SageMaker endpoint |
-| `infra` | ⚠️ 保留 AWS CDK deployment profile；黑客松 AWS 帳號目前無法操作，不能視為可部署或仍在使用的環境 |
+| `services/speech-gateway` | ⚠️ 已有語音主線與 provider adapters；目前沒有已部署的雲端 ASR／TTS provider，未設定時 fail closed |
 
-CI workflow 目前仍停用；本機已有 Ruff／ESLint、TypeScript typecheck、單元測試、合約驗證與
-production build。Core integration test 與完整 E2E 仍需要 PostgreSQL 或對應的外部服務環境。
-`.github/workflows-disabled/pr.yml` 是未啟用的歷史草稿，見 `AGENTS.md` §1。
+Gate 1 CI 已啟用，涵蓋四個 Python 元件、Core PostgreSQL integration、contracts、五輪 synthetic
+Core-to-Agent evidence 與 Frontend production build；完整 browser／外部部署 E2E 仍未建立。
 
 ## 小暖｜陪伴角色
 
@@ -51,7 +49,6 @@ kinsun.ai/
 ├── data/           RAG chunks、manifest、seed
 ├── docker/         docker-compose 引用的 PostgreSQL 初始化腳本
 ├── docs/           spec／adr／architecture／design-system／runbooks／handover…
-├── infra/          AWS CDK v2（canonical staging stacks）
 ├── packages/       frontend（PWA＋BFF）、shared（TypeScript 型別）
 ├── scripts/        contract 與 repository 驗證腳本
 └── services/       core-api、agent-runtime、rag-ingestion、speech-gateway
@@ -88,7 +85,7 @@ docker compose run --rm migrate   # 建立 eldercare_ai schema
 | Host / Port | `localhost:5432`（`POSTGRES_PORT` 可改） |
 | Database | `kinsun`（測試用 `kinsun_test`） |
 | User / Password | `kinsun` / `kinsun_local_dev` |
-| 版本 | PostgreSQL 16（對齊 Aurora Serverless v2） |
+| 版本 | PostgreSQL 16（與 migration／CI baseline 一致） |
 
 ### 起四個服務
 
@@ -96,11 +93,11 @@ docker compose run --rm migrate   # 建立 eldercare_ai schema
 # Core API :8000
 cd services/core-api;    uv sync --extra test --extra dev; uv run uvicorn app.main:app --reload
 
-# Agent Runtime :8001（預設 mock provider 不需 AWS 憑證或網路）
+# Agent Runtime :8001（預設 mock provider 不需雲端憑證或網路）
 cd services/agent-runtime; uv sync --extra test --extra dev
 uv run uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
 
-# Speech Gateway :8002（雲端 ASR／TTS 需對應 AWS 設定）
+# Speech Gateway :8002（雲端 ASR／TTS 需明確設定對應 provider）
 cd services/speech-gateway; uv sync --extra test --extra dev
 uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002
 
@@ -156,14 +153,15 @@ staging-only RAG Retrieval。
 
 ```powershell
 cd services/agent-runtime
-uv run pytest              # 預設不需資料庫、AWS 憑證或網路
+uv run pytest              # 預設不需資料庫、雲端憑證或網路
 uv run ruff check .
 ```
 
 閉環是 `POST /api/v1/agent/runs` → contract 驗證 → Orchestrator → Companion Agent →
 Safety Evaluator → 回應。本機預設走 `MockModelProvider`，讓測試與開發可重現；需要真實推論時，
-可由環境設定切換 Bedrock，或以 provider-neutral OpenAI-compatible adapter 連到相容的本機服務／
-Google Gemini API。Core 的 `BASIC_VOICE` 路徑可在重驗授權與長期記憶 Consent 後，
+可由環境設定切換 Google Gemini 或 provider-neutral OpenAI-compatible adapter；Bedrock adapter
+仍保留為明確 opt-in 的 legacy option，但目前沒有 AWS deployment。Core 的 `BASIC_VOICE` 路徑可在
+重驗授權與長期記憶 Consent 後，
 帶入最多 5 筆 current ACTIVE Confirmed Memory；Knowledge／RAG purpose 不會混入私人記憶。
 目前只按更新時間做有界選取，尚未有語意相關性排序。RAG 仍受 allowlist、簽章與 production gate 約束。
 
@@ -177,8 +175,9 @@ Memory Candidate。Runtime 不直接寫 Domain DB。
 （停藥、改藥、診斷等）。
 
 RAG 保留 `POST /api/v1/rag/retrievals` 相容路徑，Agent 內部改用
-`POST /api/v2/rag/retrievals` 的完整治理 citation contract。底層仍是 Bedrock query
-embedding ＋ OpenSearch Hybrid Search adapter。只有 `general_information`／
+`POST /api/v2/rag/retrievals` 的完整治理 citation contract。現行 target／已驗證資料面是 Google
+query embedding ＋ Supabase PostgreSQL FTS／trigram＋pgvector hybrid search；OpenSearch／Bedrock
+只保留為顯式 opt-in legacy adapters，沒有 live AWS evidence。只有 `general_information`／
 `legal_reference` purpose 的回合會檢索，
 成功時 3～5 個帶引用的 chunk 進入 Context Manifest，查無資料時**不呼叫模型猜測**。
 治理 gate：Allowlist 尚未簽署，Human Review 未完成。僅在 staging 明確設定
@@ -187,8 +186,8 @@ embedding ＋ OpenSearch Hybrid Search adapter。只有 `general_information`／
 hard gate，receipt 與 log 必須標記 `governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、
 `production_approved=false`。Production 需正式簽署並明確設定 `RAG_PRODUCTION_ENABLED=true`。
 V2 另需明確設定 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 才會讓 staging 讀取
-`needs_review` citation；這不會授予 production approval。目前尚未執行 V2 OpenSearch
-reindex 或 alias cutover。
+`needs_review` citation；這不會授予 production approval。PostgreSQL 的獨立 read-only principal、
+v003 activation／rollback 與完整 relevance evaluation 仍未完成。
 
 回應與 core-api 共用 envelope（`{"data","meta"}` / `{"error"}`），見
 [ADR 0005](docs/adr/0005-agent-runtime-api-conventions.md)。範圍見
@@ -216,8 +215,9 @@ Agent Runtime。
 
 語音主線會由瀏覽器錄製 16 kHz mono PCM，交給 Speech Gateway 做 ASR；Core 驗證 voice ticket、
 身份、elder scope、consent 與 ASR gate 後，才建立 Voice Session 並呼叫 Agent Runtime，最後再由
-Speech Gateway 合成語音。華語／英語走 AWS managed services；台語／客語走設定的私有 SageMaker
-endpoint，未設定時會明確失敗，**不會靜默改用華語**。文字路徑保留為獨立的無障礙 fallback。
+Speech Gateway 合成語音。Repository 保留多個可替換 provider adapter，但目前沒有已部署的雲端
+ASR／TTS provider；未設定時會明確失敗，**不會靜默改用另一種語言或 provider**。文字路徑保留為
+獨立的無障礙 fallback。
 
 視覺、RWD 與無障礙規範見 [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md)，
 **建立任何頁面前先讀**（元件內不得出現 raw hex，§14）。
@@ -225,7 +225,7 @@ endpoint，未設定時會明確失敗，**不會靜默改用華語**。文字�
 ## Speech Gateway
 
 [`services/speech-gateway/`](services/speech-gateway/) 封裝 ASR／TTS、語言路由、Core voice gate 與
-SageMaker adapter。低資源語言的模型選擇、endpoint contract 與部署證據見
+可替換 provider adapters。低資源語言的歷史模型選擇、endpoint contract 與 Hackathon 證據見
 [`services/speech-gateway/docs/`](services/speech-gateway/docs/)；服務在缺少必要 endpoint 時採
 fail-closed，不宣稱已提供不可用的語言能力。
 
@@ -286,22 +286,24 @@ uv run alembic revision -m "PROJ-123 add xxx table"
 upgrade 前驗證 SHA-256。注意檔名叫 `smart_eldercare_schema_v0_1`，但它建立的 PostgreSQL
 schema 名稱是 `eldercare_ai`。
 
-## Infrastructure
+## Deployment
 
-[`infra/`](infra/) 保留 AWS CDK v2 deployment profile（[ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md)）。
-黑客松 AWS 帳號目前已無法操作；repository 內的 stack 只能代表可 synth 的 IaC，不代表資源仍存在、
-可存取或正在計費。Cognito 已從 runtime、前端與 IaC 移除，登入改走 direct Google／LINE OIDC +
-Core App Session。現行資料庫是 Supabase PostgreSQL；未來 deployment provider 必須透過環境變數與
-adapter 邊界接入，不把 Domain Core 綁在單一雲端服務。
+現行資料庫是 Supabase PostgreSQL，repository 目前沒有 production IaC，也沒有使用中的 AWS
+deployment。舊 AWS CDK profile 已由
+[ADR 0019](docs/adr/0019-retire-aws-cdk-deployment-profile.md) 正式退役；歷史 AWS spec／ADR 只作為
+設計與決策紀錄。未來 hosting provider 必須先經 ADR 定案，再透過環境變數與 adapter 邊界接入，
+不把 Domain Core 綁在單一雲端服務。
+
+仍可在本機建立四個 portable runtime images：
 
 ```powershell
-cd infra
-npm run test      # 7 tests
-npm run synth     # foundation stack
-npm run diff
+./scripts/build_runtime_images.ps1 `
+  -ReleaseId <git-sha> `
+  -ConsentPolicyVersion <policy-version>
 ```
 
-目前狀態與邊界見 [`infra/README.md`](infra/README.md)。
+這只建立並檢查本機 OCI images，不會 push registry 或部署資源。外部環境 smoke test 見
+[`docs/runbooks/deployment-smoke.md`](docs/runbooks/deployment-smoke.md)。
 
 ## Kiro 開發紀錄
 
@@ -327,4 +329,4 @@ npm run diff
 | Agent Runtime 架構 | [`docs/architecture/`](docs/architecture/) |
 | 視覺與無障礙規範 | [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md) |
 | 契約與實作的已知差異 | [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) |
-| AWS 存取與維運 | [`docs/runbooks/`](docs/runbooks/) |
+| 外部部署驗證 | [`docs/runbooks/deployment-smoke.md`](docs/runbooks/deployment-smoke.md) |

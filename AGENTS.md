@@ -1,7 +1,7 @@
 # AGENTS.md
 
-- 更新日期：2026-09-01
-- 校準基準：`main` at `25f8d77`
+- 更新日期：2026-09-02
+- 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
 
@@ -54,8 +54,7 @@
     `RECORDED`／`VERIFIED` 未退場條目，Runtime 以 source-labelled context item 帶入並固定加上
     prompt 規則：健康資料只是安全互動的背景，不是診斷、治療、用藥建議、症狀推論或指令的依據。
     Care Profile 與 Memory 表之間沒有任何關聯或寫入。
-    `MODEL_PROVIDER=mock` 是本機及目前
-    staging application template 的預設；程式另有 `BedrockModelProvider`，以及只依 runtime
+    `MODEL_PROVIDER=mock` 是 repository 與本機預設；程式另有 `BedrockModelProvider`，以及只依 runtime
     URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`，以及原生
     Google Gen AI SDK 的 `GeminiModelProvider`。`MODEL_PROVIDER=gemini` 會依 key 類型選路：`AQ.`
     開頭的 Vertex AI Express key 必須走 Vertex AI，其他 key 走 Gemini Developer API；兩者不得
@@ -179,14 +178,16 @@
   `voice-workflow`、`infra/lambda-stubs/`）。
   [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 的決策不變，
   只是被判死的程式碼不再留在工作樹；要查歷史用 `git log --follow`。
-  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime。AWS CDK v2 profile 仍保留；歷史
-  紀錄顯示 `kinsun-staging-foundation-v1` 曾建立 VPC、ECS cluster、ECR、Aurora、Secrets、Logs 與
-  IAM foundation，但黑客松 AWS 帳號目前無法操作，不能由 repository 推定資源仍存在或可用。
-  四個 runtime／migration image 與 `kinsun-staging-application-v1` template 可在本機建立／驗證，
-  但沒有可操作的 AWS application runtime。Frontend 已依
+  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime。歷史紀錄顯示 AWS Hackathon 曾有
+  staging foundation 與 application template，但目前沒有使用中的 AWS 服務；可執行 CDK profile、
+  AWS preflight／deployment scripts 與 active runbook 已於 2026-09-02 依
+  [ADR 0019](docs/adr/0019-retire-aws-cdk-deployment-profile.md) 退役。歷史 AWS spec／ADR／handover
+  只保留決策與證據，不得當成現行 resource inventory 或部署能力。四個 runtime／migration image
+  仍可由 provider-neutral 的 `scripts/build_runtime_images.ps1`／`.sh` 在本機建立與驗證，但不會
+  push registry 或部署資源。Frontend 已依
   [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
   production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
-  不代表 ECR push、provider callback、application deploy 或公開流量 gate 已完成。
+  不代表 registry push、provider callback、application deploy 或公開流量 gate 已完成。
 - **CI quality gate 已啟用**：`.github/workflows/gate1.yml`（Gate 1 Quality Gate）於 2026-08-26
   建立，在對 `main` 的 pull request 與 push 觸發，在 `ubuntu-latest` 搭 pinned pgvector service
   container 執行，timeout 30 分鐘。涵蓋範圍：
@@ -210,12 +211,9 @@
     兩者已於 2026-09-01 修掉。排序是 ASCII 比較（`assignments` < `assisted_*`、
     `asr_gate` < `assisted_*`），肉眼很容易排錯：新增 import 後先跑一次該服務的
     `ruff check`／`ruff format --check`，不要靠 review 目測。
-- `.github/workflows-disabled/pr.yml` 仍是**未啟用的草稿**（GitHub 不會讀 `workflows-disabled/`
-  這個目錄名），且已被 `gate1.yml` 取代，沒有理由再啟用它。它殘留的 `infra/package-lock.json`
-  路徑問題仍未修（`infra` 是 npm workspace 成員，lockfile 只在 repository 根目錄一份）；至於舊
-  紀錄說的「`verify_contract_live.py` 未先啟動服務就呼叫」已不成立，該腳本現在自帶 in-process
-  transport。原 `deploy-dev.yml`／`deploy-staging.yml` 指向 ADR 0007 廢棄的 legacy stack 與錯誤
-  region（`ap-northeast-1`，staging 應為 `us-west-2`），已於 2026-08-06 移除。
+- 已被 `gate1.yml` 取代的 `.github/workflows-disabled/pr.yml` 已於 2026-09-02 隨 AWS CDK profile
+  一併移除；不要重建或啟用該草稿。外部部署 endpoint 可用 provider-neutral 的
+  `scripts/smoke_test_deployment.py` 驗證，但結果不代表 hosting infrastructure 已完成。
 - 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
 - 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
 
@@ -226,7 +224,7 @@
 | Core | Python 3.12、FastAPI、SQLAlchemy 2 async、Alembic、PostgreSQL 16、uv | Django、Flask、同步 ORM、第二套 schema 管理器 |
 | Agent／RAG／Speech | Python 3.12、FastAPI、Pydantic、boto3、OpenSearch adapter、uv | 自由 Agent loop、直接 SQL／DSL、未受控 SDK 呼叫 |
 | Frontend／BFF | Next.js 16 App Router、React 19、TypeScript、CSS Modules、npm workspaces | Vite、Tailwind、獨立 elder／care／family apps、browser-held access token |
-| IaC | 保留的 AWS CDK v2 deployment profile；runtime 以環境變數／adapter 解耦 | 未經 ADR 換 IaC、legacy Lambda／DynamoDB backend、恢復 Cognito |
+| Deployment | 目前沒有 production IaC；runtime 以環境變數／adapter 解耦 | 未經 ADR 選定 provider／IaC、legacy Lambda／DynamoDB backend、恢復 Cognito |
 | Contract | OpenAPI 3.1、AsyncAPI、JSON Schema、Pydantic | 未實作先寫 executable contract、相對 `$ref`、寬鬆額外欄位 |
 
 ## 2. 規格來源與優先順序
@@ -357,7 +355,7 @@ Wave 順序：
 - 長流程／人工流程使用顯式 State Machine；不得以隱含 Prompt 狀態代替 Domain State。
 - 正式刪除使用 Tombstone 防止 DLQ Replay、Backfill、Graph rebuild、Index rebuild 或 Backup restore 復活資料。
 
-保留的 AWS deployment profile／原 Target Architecture 包含：
+歷史 AWS Target Architecture 曾包含：
 
 - Single multi-role PWA。
 - Python modular monolith on ECS/Fargate。
@@ -368,7 +366,8 @@ Wave 順序：
 - EventBridge、SQS／DLQ、Step Functions、Scheduler。
 - SES／LINE Notification Adapter。
 
-以上是可替換的部署規劃，不代表服務已建立；黑客松 AWS 帳號目前不可操作。
+以上只保留為歷史規劃，不代表服務已建立，也不是現行 deployment baseline；可執行 CDK profile 已由
+ADR 0019 退役。
 
 ## 7. Agent 與 AI 實作規則
 
@@ -554,13 +553,13 @@ adapter、前端 label 與測試，不能只改其中一層。
 ## 9. 程式與 Repository 工作方式
 
 - 已核准的主線不得自行替換：Core／Agent／Speech 用 Python＋FastAPI＋uv，Frontend 用 Next.js＋npm
-  workspaces，IaC 用 AWS CDK v2；staging region 固定 `us-west-2`。新服務的 framework、production
-  region 或尚未定案的外部 Provider 若需選擇，先提出候選、Trade-off 與 ADR，取得明確決策後再建立骨架。
+  workspaces。Production hosting provider、IaC 與 region 尚未定案；需要選擇時先提出候選、Trade-off
+  與 ADR，取得明確決策後再建立骨架，不得復原歷史 CDK profile 代替新決策。
 - Repository 結構（2026-09-01 實際狀態，非文件 12 的原始骨架）：
 
 ```text
 kinsun.ai/
-├── .github/               CI；workflows/gate1.yml 已啟用，workflows-disabled/pr.yml 是廢棄草稿，見 §1
+├── .github/               CI；workflows/gate1.yml 已啟用
 ├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
 ├── .qa/                   手動執行的 smoke／schema 驗證腳本（Supabase、登入、RAG、assisted session）
 ├── config/                RAG 與 LINE 設定；config/rag 由 agent-runtime、rag-ingestion 共用
@@ -578,7 +577,6 @@ kinsun.ai/
 │   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
 │   ├── runbooks/          維運手冊
 │   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
-├── infra/                 AWS CDK v2 IaC（canonical staging stacks；ADR 0007）
 ├── packages/
 │   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
 │   └── shared/            前端使用的 TypeScript 型別
@@ -593,7 +591,7 @@ kinsun.ai/
 
 - **分類軸線是 runtime／toolchain，不是 app／library。** Python 服務進 `services/`，npm
   workspace 成員進 `packages/`（根 `package.json` 的 `workspaces` 字面上就是
-  `["packages/*", "infra"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
+  `["packages/*"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
   慣例**——這個 repo 從未採用它，證據是 `services/core-api` 同樣是可部署應用卻也不在
   `apps/`。文件 12 的 `/apps` 是被 ADR 0006 廢掉的三-app 方案殘骸，已於 2026-08-06 移除。
 - 文件 12 原本只有 `.gitkeep` 的 `/tests`、`/ops` 已移除；`evals/` 後來因 multilingual speech
@@ -649,10 +647,9 @@ kinsun.ai/
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - 2026-09-01 工作樹有 27 個 revision，head 是 `b8c2d4e5f607`
-    （`e6f8a0b2c345` → `f7a9b1c3d456` → `b8c2d4e5f607`）。baseline 仍是 48 張 table，
+  - 2026-09-02 工作樹有 29 個 revision，head 是 `d0e4f6a8b901`。baseline 仍是 48 張 table，
     後續 revision 另外加了 `elder_enrollment`、`elder_care_profile_entry`、
-    `assisted_elder_session` 等表；`app/models/` 目前宣告 50 個 `__tablename__`。
+    `assisted_elder_session` 等表；`app/models/` 目前宣告 51 個 `__tablename__`。
     `alembic revision --autogenerate` 仍會把未映射 table 誤判為應刪除；產生的 migration
     一律需人工檢查後才可使用。
 - 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：
@@ -692,7 +689,7 @@ kinsun.ai/
 | Frontend pages／BFF／API client | `packages/frontend/src/app/`、`src/lib/server/`、`src/lib/api/` |
 | UI tokens／translations | `packages/frontend/src/app/tokens.css`、`packages/frontend/src/lib/i18n/messages.ts` |
 | Contracts／差異／驗證 | `contracts/`、`contracts/DIVERGENCE.md`、`scripts/validate_contracts.py`、`scripts/verify_*_live.py` |
-| Staging IaC／rollout | `infra/lib/canonical-staging-*-stack.ts`、`infra/README.md`、`scripts/build_staging_images.ps1` |
+| Portable runtime images／deployment smoke | `scripts/build_runtime_images.ps1`、`scripts/build_runtime_images.sh`、`scripts/smoke_test_deployment.py` |
 
 ## 10. 驗證與完成條件
 
@@ -763,18 +760,13 @@ uv run ruff format --check .
 
 四個 Python component 各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
 
-Frontend 與 IaC：
+Frontend：
 
 ```powershell
 npm run test --workspace @elderly-care/frontend
 npm run typecheck --workspace @elderly-care/frontend
 npm run build --workspace @elderly-care/frontend
 npm run lint
-
-npm run typecheck --workspace @elderly-care/infrastructure
-npm run test --workspace @elderly-care/infrastructure
-npm run synth --workspace @elderly-care/infrastructure
-npm run synth:application --workspace @elderly-care/infrastructure
 ```
 
 整合測試會對 `TEST_DATABASE_URL` 指向的資料庫執行 `alembic upgrade head`，
@@ -782,18 +774,22 @@ npm run synth:application --workspace @elderly-care/infrastructure
 均為 Synthetic，不得改用任何真實長者資料。
 
 尚未建立的項目（不要描述成已完成）：Python Type Check（mypy／pyright）、自動化 browser E2E、
-真實 AWS staging 跨服務 E2E。Frontend／IaC TypeScript typecheck、靜態 Contract validator 與兩支
-live contract verifier 已存在，但不能取代上述 E2E。
+外部部署的跨服務 E2E。Frontend TypeScript typecheck、靜態 Contract validator 與兩支 live contract
+verifier 已存在，但不能取代上述 E2E。Repository 目前沒有 production IaC；舊 CDK 的
+typecheck／test／synth 已隨 ADR 0019 退役。
 
 CI Quality Gate 已於 2026-08-26 啟用（§1 的 `gate1.yml`），它涵蓋四個 Python 服務的 lint／測試、
 Core integration、contract 三支驗證、五輪 synthetic Core-to-Agent 證據與完整 Frontend build。
-但它跑的仍是 synthetic in-process 驗證，**不等於真實 AWS staging 跨服務 E2E**，也不含 browser
-E2E 與 Python type check；IaC 的 typecheck／test／synth 目前不在 CI 內，仍須本機執行。
+但它跑的仍是 synthetic in-process 驗證，**不等於外部部署的跨服務 E2E**，也不含 browser E2E、
+Python type check 或 production IaC verification。
 
 Contract 驗證分三支：`scripts/validate_contracts.py` 驗 schema 與範例的自我一致性
 （會掃 `contracts/openapi/` 底下所有文件）；`scripts/verify_contract_live.py` 對執行中的
 core-api 驗證；`scripts/verify_agent_contract_live.py` 對執行中的 agent-runtime 驗證
 （不需資料庫、憑證或網路）。新增 endpoint 時要同步在對應那支加檢查，否則它永遠只驗舊的。
+
+下列 2026-08-13 至 2026-09-01 快照中的 Infra 結果，是 ADR 0019 退役前的歷史驗證紀錄，
+不表示目前仍有 CDK workspace 或應重跑該命令。
 
 2026-08-13 provider-neutral text adapter 完成後的本機校準結果：Core unit `755 passed`、
 Agent Runtime `296 passed`、Frontend `135 passed`、Infra `7 passed`；Core／Agent Runtime Ruff lint、
@@ -881,10 +877,10 @@ uv run alembic upgrade head
 
 ## 11. 仍待 ADR／Owner 決策
 
-- Production hosting provider、Region、Account／Environment 與成本上限；AWS profile 曾固定
-  `us-west-2`，但目前帳號不可操作，不構成未來 provider 決策。
-- 若未來重用 AWS application profile，service 規模、Aurora auto-pause 與費用都必須在新帳號重新
-  實測；舊 template 或歷史紀錄不能當成現在的運行證據。
+- Production hosting provider、Region、Account／Environment、IaC 工具與成本上限；歷史 AWS profile
+  曾固定 `us-west-2`，但已退役且不構成未來 provider 決策。
+- 若未來重新選用 AWS，service 規模、database、network 與費用都必須在新帳號重新設計、實測；
+  舊 template 或歷史紀錄不能當成現在的部署基準。
 - Bedrock Model／Inference Profile 與 Fallback。
 - Neptune、OpenSearch、LINE、Email、Custom ASR／TTS 採真實服務或 Demo Adapter。
 - Production API／Event／Client 支援期限。

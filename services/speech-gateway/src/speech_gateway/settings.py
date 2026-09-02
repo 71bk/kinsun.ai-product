@@ -14,6 +14,8 @@ SERVICE_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 class Settings(BaseSettings):
     APP_ENV: str = "local"
     LOG_LEVEL: str = "INFO"
+    # Consumed only when an AWS adapter is explicitly routed. There is no
+    # current AWS deployment; speech provider migration is tracked separately.
     AWS_REGION: str = "us-west-2"
 
     # Hokkien (nan-TW) and Hakka (hak-TW) ASR run on a self-hosted SageMaker

@@ -23,7 +23,7 @@ $images = @(
         Artifact = "frontend"
         Dockerfile = "packages/frontend/Dockerfile"
         Context = "."
-        Tag = "kinsun-staging-frontend:$ReleaseId"
+        Tag = "kinsun-runtime-frontend:$ReleaseId"
         Extra = @(
             "--build-arg", "NEXT_PUBLIC_CONSENT_POLICY_VERSION=$ConsentPolicyVersion"
         )
@@ -32,21 +32,21 @@ $images = @(
         Artifact = "core-api"
         Dockerfile = "services/core-api/Dockerfile.api"
         Context = "services/core-api"
-        Tag = "kinsun-staging-core-api:$ReleaseId"
+        Tag = "kinsun-runtime-core-api:$ReleaseId"
         Extra = @()
     },
     @{
         Artifact = "core-migration"
         Dockerfile = "services/core-api/Dockerfile"
         Context = "services/core-api"
-        Tag = "kinsun-staging-core-migration:$ReleaseId"
+        Tag = "kinsun-runtime-core-migration:$ReleaseId"
         Extra = @()
     },
     @{
         Artifact = "agent-runtime"
         Dockerfile = "services/agent-runtime/Dockerfile"
         Context = "."
-        Tag = "kinsun-staging-agent-runtime:$ReleaseId"
+        Tag = "kinsun-runtime-agent-runtime:$ReleaseId"
         Extra = @()
     }
 )
@@ -101,5 +101,5 @@ finally {
 }
 
 Write-Host ""
-Write-Host "Local staging image build passed. No image was pushed to AWS."
+Write-Host "Local runtime image build passed. No image was pushed to a registry."
 Write-Host "Frontend consent policy compiled into the bundle: $ConsentPolicyVersion"

@@ -367,6 +367,7 @@ def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> N
         natural_profile_path=config_dir / "hybrid-natural-language.json",
         legal_profile_path=config_dir / "hybrid-legal.json",
         environ={
+            "RAG_SEARCH_BACKEND": "opensearch",
             "AWS_REGION": "configured-region",
             "BEDROCK_EMBEDDING_MODEL_ID": "configured-model",
             "BEDROCK_EMBEDDING_DIMENSION": "1024",
@@ -398,6 +399,7 @@ def test_runtime_settings_load_google_embedding_without_putting_key_in_config() 
         natural_profile_path=config_dir / "hybrid-natural-language.json",
         legal_profile_path=config_dir / "hybrid-legal.json",
         environ={
+            "RAG_SEARCH_BACKEND": "opensearch",
             "AWS_REGION": "configured-region",
             "GEMINI_EMBEDDING_MODEL_ID": "configured-google-embedding",
             "GEMINI_EMBEDDING_DIMENSION": "1024",

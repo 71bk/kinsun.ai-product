@@ -1,6 +1,7 @@
 # ADR 0007：後端主線、AWS IaC 權威與 Legacy 退役
 
-- 狀態：Accepted for staging implementation；production 仍需 Project Owner／Quality Owner 核准
+- 狀態：Partially superseded；AWS CDK／staging deployment profile 已由
+  [ADR 0019](0019-retire-aws-cdk-deployment-profile.md) 退役
 - 日期：2026-08-02
 - 決策依據：本次 repository 工作指示與既有架構不變量
 - 相關：[ADR 0003](0003-core-api-framework-and-schema-authority.md)、
@@ -12,6 +13,9 @@
 > [ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md) 取代，Cognito 已從 repository
 > 退場。目前資料庫 provider 是 Supabase PostgreSQL，黑客松 AWS 帳號不可操作，以下 AWS 盤點
 > 與部署狀態不得當成現在仍可存取的證據。
+>
+> 2026-09-02 現況：本 ADR 的單一 Domain Core、legacy backend 退役及禁止 dual write 決策仍有效；
+> AWS CDK 作為 canonical IaC、staging 建立規則與 rollout 描述已被 ADR 0019 取代，只保留為歷史紀錄。
 
 ## 背景
 

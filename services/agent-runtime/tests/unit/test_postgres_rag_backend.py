@@ -246,7 +246,7 @@ def test_postgres_settings_are_staging_only_and_redact_database_url() -> None:
         make_postgres_settings(pool_min_size=5, pool_max_size=1)
 
 
-def test_postgres_runtime_loader_does_not_require_opensearch_configuration() -> None:
+def test_postgres_runtime_loader_is_default_and_does_not_require_opensearch() -> None:
     repository_root = Path(__file__).resolve().parents[4]
     config_dir = repository_root / "config" / "rag"
 
@@ -259,7 +259,6 @@ def test_postgres_runtime_loader_does_not_require_opensearch_configuration() -> 
             "GEMINI_EMBEDDING_MODEL_ID": "gemini-embedding-001",
             "GEMINI_EMBEDDING_DIMENSION": "1024",
             "RAG_MODE": "staging",
-            "RAG_SEARCH_BACKEND": "postgresql",
             "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": "true",
             "RAG_STAGING_ALLOW_ALL_AUDIENCES": "true",
             "RAG_POSTGRES_RELEASE_ID": "rag-v2-v002-bab68588963b",

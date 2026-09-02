@@ -1,7 +1,7 @@
 # AGENTS.md — agent-runtime
 
-- 更新日期：2026-08-26
-- 校準基準：`main` at `4f6b4ae`
+- 更新日期：2026-09-02
+- 校準基準：`main` at `03cd170`
 
 本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
 根目錄那份的規則一律適用；兩者衝突時以根目錄為準。
@@ -11,8 +11,8 @@
 ## 目前狀態
 
 M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證 → Orchestrator
-→ Companion Agent → Safety Evaluator → 回應。預設與目前 staging application template 都走
-`MockModelProvider`；程式碼另有 `models/bedrock_provider.py`，設定
+→ Companion Agent → Safety Evaluator → 回應。Repository 預設走 `MockModelProvider`；程式碼另有
+`models/bedrock_provider.py`，設定
 `MODEL_PROVIDER=bedrock`、`AWS_REGION` 與 `BEDROCK_TEXT_MODEL_ID` 後才會選用。Bedrock provider
 能接收已通過 RAG 治理的 context，但尚未用真實 AWS 憑證與模型端點驗證，不得描述成已部署。
 `MODEL_PROVIDER=openai-compatible` 則使用 provider-neutral text adapter；base URL、model ID 與
@@ -23,6 +23,10 @@ bounded plan 隔離搜尋 provider；runtime factory 可明確選 legacy OpenSea
 `MODEL_PROVIDER=gemini` 則使用原生 Google Gen AI SDK；`AQ.` 開頭的 Vertex AI Express key 自動
 走 Vertex AI，其他 key 走 Gemini Developer API。這兩種 key 不得混用 endpoint；設定不完整或
 Google provider 失敗時一律 fail closed，不會退回 mock，也不得把上游訊息帶出 provider 邊界。
+
+2026-09-02 起，RAG 啟用時的預設 search backend 是 PostgreSQL，預設 query embedding config 是
+`config/rag/embedding-google.yaml`；仍需完整 release／profile／database／policy 設定才會啟動。
+OpenSearch／Bedrock 只在明確設定時選用，沒有現行 AWS deployment evidence。
 
 另有第一版 **staging-only** RAG endpoint、provider-neutral `EmbeddingProvider`／`SearchBackend`
 boundaries、Bedrock 與 opt-in Google query embedding adapters、legacy OpenSearch Hybrid adapter，

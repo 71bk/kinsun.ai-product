@@ -23,10 +23,6 @@ coverage/
 *.tsbuildinfo
 npm-debug.log*
 
-# AWS CDK
-cdk.out/
-cdk.out-*/
-
 # 編輯器、OS 與本機 AI 工具
 .vscode/
 .idea/

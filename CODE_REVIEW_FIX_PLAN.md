@@ -48,7 +48,7 @@
 - [x] L-04 修復 frontend typecheck。
 - [x] L-05 修復 frontend lint。
 - [ ] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
-- [ ] L-07 更新 migration head 與 staging expiry 文件/設定。
+- [x] L-07 更新 migration head，並以 ADR 0019 退役過期的 AWS staging profile。
 
 ---
 
@@ -82,17 +82,21 @@
 - 位置：`services/core-api/app/adapters/service_identity.py:113-140,201-204`；`services/agent-runtime/src/agent_runtime/security/service_identity.py:102-130,185-188`
 - 問題：已使用 nonce 儲存在單一 process 的 dictionary；不同 replica 互相看不到 replay state。
 - 影響：相同 signed request 可在不同 replica 被接受，導致重複 Agent run、proposal 或 provider cost。
-- 修正：使用 Redis/DB atomic nonce store、mTLS 或 cloud IAM；production 啟動時拒絕 process-local replay mode。
+- 修正：使用現有 PostgreSQL 的 unique constraint＋`INSERT ... ON CONFLICT DO NOTHING` 建立 atomic
+  nonce claim；production 啟動時拒絕 process-local replay mode。專案目前不使用 Redis 或 AWS 服務，
+  不為單一 nonce use case 新增基礎設施。
 - 驗證：將同一 signed request 送到兩個 replica，第二個 replica 必須拒絕。
 - 應新增測試：是，multi-replica replay integration test。
 
-### H-04 — Canonical stack 沒有部署 Speech Gateway
+### H-04 — Speech Gateway 尚無 production deployment 與 endpoint wiring
 
 - Severity：High
-- 位置：`infra/lib/canonical-staging-application-stack.ts:300-475`；`packages/frontend/src/lib/voice/speech-gateway-client.ts:48-50`；`packages/frontend/src/lib/voice/canonical-voice-turn.ts:65-69`
-- 問題：frontend voice flow 依賴 `NEXT_PUBLIC_SPEECH_GATEWAY_URL`，但 canonical stack 沒有 Speech Gateway task/service，也沒有注入該設定。
+- 位置：`packages/frontend/src/lib/voice/speech-gateway-client.ts:48-50`；`packages/frontend/src/lib/voice/canonical-voice-turn.ts:65-69`；ADR 0019
+- 問題：frontend voice flow 依賴 `NEXT_PUBLIC_SPEECH_GATEWAY_URL`，但 production hosting provider／IaC
+  尚未定案，也沒有已部署的 Speech Gateway endpoint。舊 AWS CDK profile 已退役，不能再當作修正位置。
 - 影響：部署後啟用 voice surface，ASR 會因 gateway URL 缺失而失敗；TTS 只會 fallback 為文字。
-- 修正：將 Speech Gateway 加入 deployment topology 並注入 endpoint，或統一經由 authenticated BFF proxy。
+- 修正：先以 ADR 選定 production hosting／network topology，再部署 Speech Gateway 並注入 endpoint，
+  或統一經由 authenticated BFF proxy。
 - 驗證：部署環境執行登入、錄音、transcription、TTS 的 browser smoke test。
 - 應新增測試：是，deployment smoke/E2E test。
 
@@ -311,15 +315,19 @@
 - 驗證：在 clean environment 執行 lint、format、contract validation。
 - 應新增測試：是，CI/tooling smoke test。
 
-### L-07 — Migration head 與 staging expiry 文件/設定過時
+### L-07 — Migration head 文件過時與已失效 AWS staging metadata
 
 - Severity：Low/Medium
-- 位置：`AGENTS.md:652-653`；`CLAUDE.md:55`；`infra/lib/canonical-staging-application-stack.ts:64-69`
-- 問題：文件仍指向舊 migration head `b8c2d4e5f607`；實際 head 已為 `d0e4f6a8b901`。Staging `ExpiresAt` 為 `2026-09-01`，已過期。
-- 影響：部署、migration review、環境清理工具可能依據錯誤資訊運作。
-- 修正：更新文件與 tag；以 CI 檢查文件 migration head 與 expiry metadata。
-- 驗證：documentation/infrastructure consistency check。
+- 位置：`AGENTS.md`；`CLAUDE.md`；ADR 0019
+- 問題：文件仍指向舊 migration head `b8c2d4e5f607`；實際 head 已為 `d0e4f6a8b901`。舊 AWS
+  staging `ExpiresAt` 也已過期，但該 deployment profile 並非現行環境。
+- 影響：migration review 可能依據錯誤資訊；過期 IaC 會使讀者誤認 AWS 是現行部署路徑。
+- 修正：文件更新為 29 個 revisions、head `d0e4f6a8b901`；依 ADR 0019 退役 AWS CDK workspace、
+  deployment scripts 與 active runbook，而不是延長一個未使用環境的 expiry tag。
+- 驗證：`alembic heads`、repository reference scan、root workspace lockfile consistency check。
 - 應新增測試：可新增 CI validation，不需 runtime test。
+- 修正結果：完成上述文件校準與 AWS CDK profile 退役；歷史 AWS spec／ADR／handover 保留但標記為
+  非現行部署證據。
 
 ---
 

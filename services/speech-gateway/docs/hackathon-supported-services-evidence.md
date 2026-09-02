@@ -1,5 +1,10 @@
 # Hackathon supported-services evidence
 
+> **Historical record (2026-09-02):** this evidence applies only to the expired competition AWS
+> account. The reproduction script and AWS deployment profile were retired by
+> [ADR 0019](../../../docs/adr/0019-retire-aws-cdk-deployment-profile.md); this is not current service
+> availability or an executable runbook.
+
 - Source: organizer-provided `Supported AWS Services List 20260722.xlsx`
 - Inspected exports: `Services List.csv`, `EC2.csv`, `SageMaker AI.csv`
 - Inspection date: 2026-08-01

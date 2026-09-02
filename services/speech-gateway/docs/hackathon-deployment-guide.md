@@ -1,5 +1,10 @@
 # Speech deployment guide for the 2026 hackathon account
 
+> **Historical record (2026-09-02):** the competition AWS account and this deployment path are no
+> longer in use. The referenced CDK profile and AWS deployment scripts were retired by
+> [ADR 0019](../../../docs/adr/0019-retire-aws-cdk-deployment-profile.md). Do not execute this guide
+> as a current runbook; a new provider decision and deployment ADR are required first.
+
 This guide is intentionally fail-closed. It deploys no resource until the
 competition service list, account, Region, quota, model license, and synthetic
 test data are confirmed.

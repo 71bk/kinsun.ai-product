@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Bash port of build_staging_images.ps1 — same four images, same build args, and
+# Bash port of build_runtime_images.ps1 — same four images, same build args, and
 # the same post-build assertions (linux/amd64, artifact label, non-root user,
 # frontend consent-policy provenance label). Exists only because the repository
 # ships a PowerShell script and pwsh is unavailable on this machine.
 #
-# Builds locally. Nothing is pushed to AWS.
+# Builds locally. Nothing is pushed to a registry.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -64,19 +64,19 @@ build_one() {
 }
 
 build_one frontend packages/frontend/Dockerfile . \
-  "kinsun-staging-frontend:${release_id}" \
+  "kinsun-runtime-frontend:${release_id}" \
   --label "io.kinsun.consent-policy-version=${consent_policy_version}" \
   --build-arg "NEXT_PUBLIC_CONSENT_POLICY_VERSION=${consent_policy_version}"
 
 build_one core-api services/core-api/Dockerfile.api services/core-api \
-  "kinsun-staging-core-api:${release_id}"
+  "kinsun-runtime-core-api:${release_id}"
 
 build_one core-migration services/core-api/Dockerfile services/core-api \
-  "kinsun-staging-core-migration:${release_id}"
+  "kinsun-runtime-core-migration:${release_id}"
 
 build_one agent-runtime services/agent-runtime/Dockerfile . \
-  "kinsun-staging-agent-runtime:${release_id}"
+  "kinsun-runtime-agent-runtime:${release_id}"
 
 echo
-echo "Local staging image build passed. No image was pushed to AWS."
+echo "Local runtime image build passed. No image was pushed to a registry."
 echo "Frontend consent policy compiled into the bundle: ${consent_policy_version}"

@@ -431,7 +431,7 @@ class PostgresSearchSettings(RagBaseModel):
 class RagRuntimeSettings(RagBaseModel):
     """Complete online retrieval settings with no provider values baked into code."""
 
-    search_backend: SearchBackendName = "opensearch"
+    search_backend: SearchBackendName = "postgresql"
     embedding: QueryEmbeddingSettings
     opensearch: OpenSearchConnectionSettings | None = None
     postgres: PostgresSearchSettings | None = None
@@ -473,7 +473,7 @@ class RagRuntimeSettings(RagBaseModel):
 
         embedding_values = _required_mapping(embedding_document, "embedding")
         search_backend = _as_nonempty_str(
-            env.get("RAG_SEARCH_BACKEND", "opensearch"),
+            env.get("RAG_SEARCH_BACKEND", "postgresql"),
             "RAG_SEARCH_BACKEND",
         ).casefold()
         if search_backend not in {"opensearch", "postgresql"}:

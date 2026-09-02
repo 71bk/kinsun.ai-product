@@ -4,8 +4,7 @@
   "version": "0.1.0",
   "description": "智慧長照 AI 陪伴系統 — voice-first elder-care AI companion",
   "workspaces": [
-    "packages/*",
-    "infra"
+    "packages/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -71,8 +70,7 @@
     "ignorePatterns": [
       "**/node_modules/**",
       "**/dist/**",
-      "**/.next/**",
-      "**/cdk.out/**"
+      "**/.next/**"
     ],
     "rules": {
       "@typescript-eslint/no-unused-vars": [

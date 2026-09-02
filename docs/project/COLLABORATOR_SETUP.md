@@ -1,12 +1,12 @@
 # kinsun.ai 新協作者環境建置指南
 
-- 更新日期：2026-08-13
+- 更新日期：2026-09-02
 - 適用範圍：本機開發、測試與 Synthetic Demo
 - 主要環境：Windows 11 + PowerShell；其他作業系統請換成等價指令
 
 這份文件提供新協作者從乾淨電腦開始建置 `kinsun.ai` 的步驟。它只描述 repository
-目前真正存在的功能與設定，不代表 AWS staging、Production、真實語音 Provider 或 RAG
-已部署可用。
+目前真正存在的功能與設定。Repository 沒有使用中的 AWS 服務或 production IaC，也不代表
+Production、真實語音 Provider 或 RAG 已部署可用。
 
 ## 1. 開始前先讀
 
@@ -32,7 +32,7 @@
 | 工具 | 要求 | 用途 |
 | --- | --- | --- |
 | Git | 建議最新版 | 版本控制 |
-| Node.js | `>= 20.9` | Next.js、TypeScript、CDK |
+| Node.js | `>= 20.9` | Next.js、TypeScript |
 | npm | 隨 Node.js 安裝 | repository workspaces |
 | Python | 3.12 | Core、Agent、Speech、RAG |
 | uv | 建議最新版 | Python 版本、依賴與 lockfile |
@@ -105,7 +105,7 @@ cd ../..
 | `/.env` | Docker Compose、Core（非 production）、Agent Runtime、root scripts | DB、Core、Agent 與共用本機設定 |
 | `/packages/frontend/.env.local` | Next.js | BFF、OIDC 與 `NEXT_PUBLIC_*` |
 | `/services/agent-runtime/.env` | Agent Runtime，且會覆蓋 root `.env` | 選用的 Agent 個人設定 |
-| `/services/speech-gateway/.env` | Speech Gateway | Speech、AWS region、Core system credential |
+| `/services/speech-gateway/.env` | Speech Gateway | 選用的 Speech provider、Core system credential |
 | 目前工作目錄的 `.env` | RAG ingestion | 從 root 執行時即使用 `/.env` |
 
 第一次建置時建立兩個必要檔案；已有檔案時不要覆寫：
@@ -357,7 +357,7 @@ Provider、scope 與 callback 都準備完成。
 
 ## 11. Speech Gateway 與語音（選配）
 
-只驗證 service health 時，不需要 AWS credential：
+只驗證 service health 時，不需要任何雲端 credential：
 
 ```powershell
 cd services/speech-gateway
@@ -400,13 +400,14 @@ SPEECH_SERVICE_IDENTITY_ISSUER=kinsun-local
 SPEECH_SERVICE_IDENTITY_TTL_SECONDS=30
 ```
 
-語音完整閉環另外需要：
+Repository 目前沒有已部署的雲端 ASR／TTS provider。只有在明確測試對應 optional adapter 時，
+才需要以下 provider-specific 設定：
 
-- 標準 AWS credential provider chain 可用，且具有 Transcribe／Polly 權限。
+- AWS Transcribe／Polly adapter：標準 AWS credential provider chain 與對應權限。
 - Gate 1 local/test 的 Speech Gateway 必須啟用 request-bound service identity；
   `CORE_API_SERVICE_IDENTITY_HMAC_SECRET` 與 root `SPEECH_SERVICE_IDENTITY_HMAC_SECRET` 相同，且不得與
   Core → Agent Runtime、Voice Ticket、ASR Gate、OAuth 或 provider secret 共用。
-- 台語／客語還需要已通過 license 與 Synthetic smoke gates 的私有 SageMaker endpoint。
+- SageMaker 台語／客語 adapter：通過 license 與 Synthetic smoke gates 的私有 endpoint。
 - 國語／英文 TTS 預設走 Azure Speech；`AZURE_SPEECH_KEY` 必須是 Speech resource 的
   Key 1／Key 2，且 `AZURE_SPEECH_REGION` 必須與該 resource 的 region 相同。Azure 拒絕憑證時
   Gateway 回 503；只有未部署該語言時才回 501。
@@ -439,8 +440,10 @@ OPENAI_COMPATIBLE_TIMEOUT_SECONDS=30
 RAG 不是最小本機 Stack 的必要服務。它目前只允許 staging、官方公共資料與既有 allowlist，禁止
 處理真實長者個資。
 
-從 repository root 執行時，它使用 root `.env`。必須提供 AWS／OpenSearch 設定與一份由獨立可信
-來源取得的 `RAG_ALLOWLIST_EXPECTED_SHA256`。不能從待驗證的 Allowlist 自己推導後再當成信任值。
+從 repository root 執行時，它使用 root `.env`。現行 target 是 Supabase PostgreSQL／pgvector，
+Runtime 要明確綁定 `RAG_DATABASE_URL`、release、embedding profile 與治理 policy digest；完整設定見
+[`rag-v3-runtime-policy-integration.md`](rag-v3-runtime-policy-integration.md)。Legacy
+OpenSearch／Bedrock adapter 只在顯式 opt-in 時使用，沒有現行 AWS deployment evidence。
 
 本機 Agent Runtime 使用 port 8001 時，RAG smoke 應明確設定：
 
@@ -523,17 +526,18 @@ git status --short
 靜態 contract validator 只證明 schema 與 examples 自洽。Live verifier 需要先啟動對應服務，才是
 contract 與實作一致的證據。
 
-### Infrastructure（只驗證，不部署）
+### Portable runtime images 與外部部署 smoke
 
 ```powershell
-npm run typecheck --workspace @elderly-care/infrastructure
-npm run test --workspace @elderly-care/infrastructure
-npm run synth --workspace @elderly-care/infrastructure
-npm run synth:application --workspace @elderly-care/infrastructure
+./scripts/build_runtime_images.ps1 `
+  -ReleaseId <git-sha> `
+  -ConsentPolicyVersion <policy-version>
 ```
 
-目前黑客松 AWS 帳號不可操作；新協作者不得把 `cdk synth` 成功描述成已部署，也不要自行執行
-`cdk deploy`。
+這只建立並檢查本機 OCI images，不 push registry 或部署資源。Repository 目前沒有 production IaC；
+舊 AWS CDK profile 已依 ADR 0019 退役。若 deployment owner 提供外部服務 URL，依
+[`docs/runbooks/deployment-smoke.md`](../runbooks/deployment-smoke.md) 驗證，不得自行猜測 hosting
+provider 或環境。
 
 ## 15. 日常啟停
 
@@ -600,12 +604,13 @@ direct Core API 進行 fake-auth 測試。
 
 ### Agent 可啟動，但知識問答只回 fallback
 
-`MODEL_PROVIDER=mock` 與一般 conversation 不代表 RAG 已啟用。RAG provider、allowlist、SHA、staging
-mode 或 OpenSearch 任一項缺少時都會 no-guess／fail-closed。
+`MODEL_PROVIDER=mock` 與一般 conversation 不代表 RAG 已啟用。PostgreSQL release／profile、query
+embedding provider、runtime policy path／digest、staging mode 或治理 gate 任一項缺少時都會
+no-guess／fail-closed。
 
 ### Speech health 通過，但錄音失敗
 
-Health 不會驗證 AWS、Core system credential、Voice Ticket、ASR Gate 或模型 endpoint。依第 11 節
+Health 不會驗證雲端 provider、Core system credential、Voice Ticket、ASR Gate 或模型 endpoint。依第 11 節
 逐項確認；不要把 health 200 當成語音 E2E 證據。
 
 ### PowerShell 不允許執行 repository script
@@ -630,7 +635,7 @@ Windows checkout 可能把 SQL 從 LF 轉成 CRLF。不要修改 baseline SQL �
 - Google／LINE Client Secret 只在 BFF/runtime secret store。
 - Identity、transaction、handoff、family invitation、voice ticket、ASR gate、encryption secrets
   彼此獨立。
-- AWS credential 使用標準 credential provider chain，不寫入 repository。
+- 任何 optional provider credential 都只使用其標準 credential chain／runtime secret，不寫入 repository。
 - 所有測試、Demo 與截圖都只有 Synthetic／de-identified data。
 - Production secret 由部署平台的 Secret Manager 注入，不打包進 image。
 

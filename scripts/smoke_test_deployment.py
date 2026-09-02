@@ -1,8 +1,7 @@
 """Smoke-test externally deployed kinsun.ai service endpoints.
 
 This script validates only interfaces that currently exist in the repository.
-It does not infer that AWS resources, Bedrock, EventBridge, or other
-parts of the target architecture have been deployed.
+It does not infer which hosting provider or surrounding infrastructure is in use.
 """
 
 from __future__ import annotations
@@ -138,7 +137,7 @@ def _request_json(
     url = f"{base_url}{path}"
     headers = {
         "Accept": "application/json",
-        "User-Agent": "kinsun-aws-smoke/1.0",
+        "User-Agent": "kinsun-deployment-smoke/1.0",
         "X-Correlation-Id": f"smoke-{uuid.uuid4()}",
     }
     data = None

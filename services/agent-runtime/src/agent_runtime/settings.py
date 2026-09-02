@@ -6,8 +6,7 @@ from pydantic import AnyHttpUrl, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 AGENT_RUNTIME_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
-# Staging RAG settings (AWS region, Bedrock model, OpenSearch host) live in the
-# repository-root .env shared with the ingestion service.
+# Shared RAG settings live in the repository-root .env used by Core and ingestion.
 REPOSITORY_ENV_FILE = Path(__file__).resolve().parents[4] / ".env"
 
 
@@ -29,14 +28,14 @@ class Settings(BaseSettings):
     SERVICE_IDENTITY_ISSUER: str = Field(default="kinsun-local", min_length=1, max_length=80)
     SERVICE_IDENTITY_TTL_SECONDS: int = Field(default=30, ge=1, le=60)
     RAG_MODE: str = "disabled"
-    RAG_SEARCH_BACKEND: str = "opensearch"
+    RAG_SEARCH_BACKEND: str = "postgresql"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
     # Immutable runtime policy path and independently pinned digest must move together.
     RAG_SOURCE_FAMILY_POLICY_PATH: str | None = None
     RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256: str | None = None
-    RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding.yaml"
-    RAG_QUERY_EMBEDDING_CONFIG_PATH: str | None = None
+    RAG_EMBEDDING_CONFIG_PATH: str = "config/rag/embedding-google.yaml"
+    RAG_QUERY_EMBEDDING_CONFIG_PATH: str | None = "config/rag/embedding-google.yaml"
     RAG_OPENSEARCH_INDEX_CONFIG_PATH: str = "config/rag/opensearch-index-v1.json"
     RAG_HYBRID_NATURAL_CONFIG_PATH: str = "config/rag/hybrid-natural-language.json"
     RAG_HYBRID_LEGAL_CONFIG_PATH: str = "config/rag/hybrid-legal.json"

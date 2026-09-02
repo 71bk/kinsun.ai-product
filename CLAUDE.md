@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-- 更新日期：2026-09-01
-- 校準基準：`main` at `25f8d77`
+- 更新日期：2026-09-02
+- 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository
 
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
@@ -52,9 +52,9 @@
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-09-01 工作樹基準為 27 個 revisions、head `b8c2d4e5f607`；baseline 仍是 48 張 table，
+  2026-09-02 工作樹基準為 29 個 revisions、head `d0e4f6a8b901`；baseline 仍是 48 張 table，
   後續 revision 另加 `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session`，
-  `app/models/` 目前宣告 50 個 `__tablename__`。model attribute `id` 常透過 `__pk_name__` 對應
+  `app/models/` 目前宣告 51 個 `__tablename__`。model attribute `id` 常透過 `__pk_name__` 對應
   DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
 - Staff-assisted accountless Elder Session（`f7a9b1c3d456`／`b8c2d4e5f607`）預設關閉，且在
   `APP_ENV=production` 一律拒絕。`ks1_`／`ep1_`／`es1_` 是三種不同憑證，assisted token 不帶任何
@@ -180,7 +180,7 @@
 - `services/notification-worker` 目前只有 scheduler boundary README；工作邏輯仍在 Core，尚無獨立
   worker framework、Scheduler、SQS 或 DLQ deployment。`projection-worker`、`report-worker` 也不存在。
 
-### Contract 與 IaC
+### Contract 與 deployment
 
 - OpenAPI、AsyncAPI、JSON Schema、Pydantic model、實際 route 與 live verifier 必須一起演進。
   不可實作未登記 API；不相容變更必須有新 major version 或正式 migration plan。
@@ -190,14 +190,16 @@
   的 `/docs`、`/docs/oauth2-redirect`、`/openapi.json`、`/redoc`，實際 API path 已全部登記。
   `contracts/openapi/core-api.v1.yaml` 副檔名是 `.yaml` 但內容是 JSON（由
   `scripts/export_core_openapi.py` 產生），用 YAML 縮排 grep 會得到 0。
-- `infra` 保留 AWS CDK v2 deployment profile；application stack 的 `desiredCount` 預設 0。黑客松 AWS
-  帳號目前無法操作，Cognito 已從 IaC 移除，OpenSearch 仍是 external reference。沒有使用者明確要求
-  與新的可操作帳號，不部署、不 push image、不變更 AWS resource，也不把 synth 結果描述成已上線。
+- Repository 目前沒有 production IaC，也沒有使用中的 AWS 服務。舊 `infra` CDK workspace 與 AWS
+  deployment scripts 已由 [ADR 0019](docs/adr/0019-retire-aws-cdk-deployment-profile.md) 退役；歷史
+  spec／ADR／handover 不是現行 runbook。未來 hosting provider、IaC 與 region 必須先由 Owner 以
+  ADR 定案。Portable images 可用 `scripts/build_runtime_images.ps1`／`.sh` 在本機驗證；外部 endpoint
+  可用 `scripts/smoke_test_deployment.py` 驗證，兩者都不代表 infrastructure 已部署。
 - CI 已啟用：`.github/workflows/gate1.yml` 在對 `main` 的 PR 與 push 觸發，跑四個 Python 服務的
   lint／pytest、Core `tests/integration`（CI 自建 disposable `kinsun_test`）、三支 contract 驗證、
   五輪 synthetic Core-to-Agent 證據與完整 Frontend build。細節見 `AGENTS.md` §1。兩個要記住的
-  邊界：core-api 在 CI 只跑 `ruff check` 不跑 `ruff format --check`；IaC 完全不在 CI 內，仍須本機
-  跑 typecheck／test／synth。`.github/workflows-disabled/pr.yml` 是已被取代的廢棄草稿。
+  邊界：core-api 在 CI 只跑 `ruff check` 不跑 `ruff format --check`；repository 目前沒有
+  production IaC verification，已被取代的 `.github/workflows-disabled/pr.yml` 也已移除。
   **新增 import 時字母序是 CI 等級的地雷**：`8adba0f` 讓 core-api `ruff check` 出現 2 個 `I001`
   （`assisted_elders` 排在 `assignments` 前、`assisted_elder_session` 排在 `asr_gate` 前），
   同時讓 agent-runtime 的 `context/manifest.py`、`contracts/models.py` 沒過
@@ -265,16 +267,17 @@ npm run build --workspace @elderly-care/frontend
 有畫面或互動改動時，再做 375／390／430 px、keyboard、loading／empty／error、`prefers-reduced-motion`
 與 feature-on／feature-off 視覺驗證。
 
-### IaC 與 contracts
+### Contracts 與 deployment-neutral artifacts
 
 ```powershell
-npm run test --workspace @elderly-care/infrastructure
-npm run typecheck --workspace @elderly-care/infrastructure
-npm run synth --workspace @elderly-care/infrastructure
-npm run synth:application --workspace @elderly-care/infrastructure
-
 uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts
 ```
+
+Repository 目前沒有可執行的 production IaC。需要驗證 container portability 時執行
+`scripts/build_runtime_images.ps1`／`.sh`；需要驗證 Owner 提供的外部 URL 時依
+`docs/runbooks/deployment-smoke.md` 執行，不能把任一結果描述成 infrastructure 已完成。
+
+以下快照中的 Infra 結果，是 ADR 0019 退役前的歷史紀錄，不表示目前仍有 CDK workspace。
 
 2026-08-13 Cognito retirement 當次結果：Core unit 752、Frontend 135、Infra 7 tests passed；Core Ruff
 lint、本次 Core 檔案 format、Frontend lint／typecheck／build、Infra typecheck／兩個 synth、static
@@ -330,7 +333,7 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 
 ## 常見誤判與禁止事項
 
-- 不因 route、provider 或 CDK construct 存在，就宣稱功能已啟用、已部署或 production-ready。
+- 不因 route 或 optional provider adapter 存在，就宣稱功能已啟用、已部署或 production-ready。
 - 不把 Memory API 當成 Agent Context、不把 RAG retrieval 當成 projection、不把 notification README
   當成 worker deployment。
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
@@ -346,7 +349,7 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 
 ## 尚待產品／平台決策
 
-以下仍是 `TODO(待確認)`，不得自行選定：production hosting provider／region 與成本上限、正式 Bedrock model／fallback、
+以下仍是 `TODO(待確認)`，不得自行選定：production hosting provider／IaC／region 與成本上限、正式 Bedrock model／fallback、
 ASR/TTS endpoint 與 quality gate、LINE／email service credential、scheduler frequency、資料 retention／
 legal hold／offboarding、production API／event client、voice／agent／TTS performance gate。
 

@@ -11,6 +11,10 @@
 > 2026-08-13：本 ADR 內的 Cognito route／cookie 是歷史實作；現行 BFF authentication 已由
 > [ADR 0010](0010-provider-neutral-oidc-and-application-sessions.md) 取代為 direct Google／LINE OIDC +
 > Core-owned App Session。單一 PWA 與 server-side BFF 邊界不變。
+>
+> 2026-09-02：AWS CDK workspace 已由
+> [ADR 0019](0019-retire-aws-cdk-deployment-profile.md) 退役；npm workspace 現在只有
+> `packages/*`。這不影響本 ADR 的前端、BFF、樣式與 npm 決策。
 
 ## 背景
 
@@ -94,7 +98,7 @@ utility class 與 CSS 變數各自表述同一組 token，而 MASTER.md §14 禁
 
 ### 4. Package manager：npm workspaces（僅前端／TypeScript 側）
 
-`package.json` 已宣告 `workspaces: ["packages/*", "infrastructure"]`，
+`package.json` 現行宣告 `workspaces: ["packages/*"]`，
 根目錄有 `package-lock.json`，無 `pnpm-lock.yaml`。因此 npm 是既成事實。
 
 Python 側維持 uv（[ADR 0001](0001-package-manager-uv.md)），兩者不共用，各自 lock。
@@ -155,8 +159,9 @@ upgrade 的實際相容性、React 版本與 rollback 必須由後續 ADR 記錄
 
 ## 後續決策
 
-後端主線、legacy Lambda／DynamoDB 的去留及 AWS CDK v2 IaC 權威，已由
-[ADR 0007](0007-canonical-backend-and-aws-deployment-authority.md) 收斂。
+後端主線與 legacy Lambda／DynamoDB 的去留已由
+[ADR 0007](0007-canonical-backend-and-aws-deployment-authority.md) 收斂；AWS CDK profile 後續已由
+[ADR 0019](0019-retire-aws-cdk-deployment-profile.md) 退役。
 `packages/backend` 與現有 `ElderlyCareStack` 已凍結；一般 HTTP 主線維持本 ADR 定義的
 Next.js BFF → Python Core → Agent Runtime。選填舊 WebSocket voice path 只屬限時
 synthetic staging/demo 例外，不代表第二套正式後端。
