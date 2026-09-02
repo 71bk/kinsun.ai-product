@@ -35,8 +35,12 @@
       ＋ `app/adapters/service_identity.py`）：取代原本 `require_system_service_actor` 的長效
       bearer。憑證綁 issuer／subject／audience／method／path／body SHA-256／correlation ID 與
       single-use credential ID，TTL 1–60s，claim 必須完全相符，比對用 `hmac.compare_digest`，
-      所有失敗都回同一句 "Authentication required"，不得當成資源存在與否的 oracle。replay state
-      是 process-local，ADR 0009 要求多 replica 部署前換掉。`SPEECH_SERVICE_IDENTITY_ENABLED`／
+      所有失敗都回同一句 "Authentication required"，不得當成資源存在與否的 oracle。2026-09-02 起
+      replay state 不再是 process-local：migration `e2f4a6c8b013` 在 `eldercare_ai` 之外建立
+      `service_identity.credential_nonce`（PK `(audience, credential_id)`），claim 由
+      `INSERT ... ON CONFLICT DO NOTHING` 在**獨立短交易**完成，被認證的請求之後 rollback 也不會
+      釋放該 credential ID。verifier 的 `replay_store` 是**必填**參數，忘記注入是 `TypeError`，
+      不會靜默退回 process-local；Core 一律用 `DatabaseReplayStore`。`SPEECH_SERVICE_IDENTITY_ENABLED`／
       `CORE_API_SERVICE_IDENTITY_ENABLED` 兩側都預設關閉，secret 必須相等且**不得**重用
       Core→Agent Runtime 或任何 Voice／OAuth／provider secret；`X-Kinsun-Service-Credential`
       已加入 log redaction。legacy bearer 只保留給遷移，不得與 request-bound identity 併用。
@@ -647,9 +651,14 @@ kinsun.ai/
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - 2026-09-02 工作樹有 29 個 revision，head 是 `d0e4f6a8b901`。baseline 仍是 48 張 table，
+  - 2026-09-02 工作樹有 30 個 revision，head 是 `e2f4a6c8b013`。baseline 仍是 48 張 table，
     後續 revision 另外加了 `elder_enrollment`、`elder_care_profile_entry`、
     `assisted_elder_session` 等表；`app/models/` 目前宣告 51 個 `__tablename__`。
+    Alembic 另外擁有兩個非 domain schema：`rag_public`（RAG projection）與
+    `service_identity`（service credential replay claims）。兩者都**沒有** ORM model，
+    因此不在 `Base.metadata`；`database_runtime_principal.py` 對它們用
+    `RUNTIME_SHARED_SCHEMA_PRIVILEGES` 逐表授權，不要放進 `RUNTIME_TABLE_PRIVILEGES`
+    （那份有 ORM 交叉檢查測試會紅）。
     `alembic revision --autogenerate` 仍會把未映射 table 誤判為應刪除；產生的 migration
     一律需人工檢查後才可使用。
 - 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：

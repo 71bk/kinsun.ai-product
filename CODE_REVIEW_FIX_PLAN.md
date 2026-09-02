@@ -10,7 +10,7 @@
 - High：需要在 production rollout 前處理。
 - Medium：需要排入近期 hardening / reliability sprint。
 - Low：需要在 CI、文件或維護性工作中補齊。
-- 完整 PostgreSQL integration suite 尚未執行；H-01 已以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已以一次性 PostgreSQL 16 + pgvector Docker database 完成 runtime-role deny matrix。
+- 完整 PostgreSQL integration suite 尚未執行；H-01 已以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已以一次性 PostgreSQL 16 + pgvector Docker database 完成 runtime-role deny matrix，H-03 已以 development database verifier 完成 cross-replica 與 concurrent nonce claim 驗證。
 - Frontend typecheck 與 lint 已恢復綠燈。
 
 ## 修正順序
@@ -19,7 +19,7 @@
 
 - [x] H-01 修正 idempotency 首次併發 race condition。
 - [x] H-02 收窄 Core runtime database role 權限。
-- [ ] H-03 將 service identity replay protection 移至 shared durable store。
+- [x] H-03 將 service identity replay protection 移至 shared durable store。
 - [ ] H-04 完成 Speech Gateway 的 deployment 與 frontend endpoint wiring。
 - [ ] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
 - [ ] H-06 加入 production fail-closed configuration，禁止 mock Agent / disabled RAG。
@@ -87,6 +87,18 @@
   不為單一 nonce use case 新增基礎設施。
 - 驗證：將同一 signed request 送到兩個 replica，第二個 replica 必須拒絕。
 - 應新增測試：是，multi-replica replay integration test。
+- 修正結果：新增 migration `e2f4a6c8b013`，在 `eldercare_ai` 之外建立 `service_identity.credential_nonce`
+  （PK `(audience, credential_id)`、expiry index、`REVOKE ALL ... FROM PUBLIC`）。replay 判定改由
+  `INSERT ... ON CONFLICT DO NOTHING` 在**獨立短交易**完成，即使被認證的請求之後 rollback，claim 仍然成立；
+  同一交易先做上限 200 筆的 expiry purge，只清已過期列。兩側 verifier 的 `replay_store` 改為**必填**，
+  忘記注入會直接 `TypeError`，不再靜默退回 process-local。Core 一律使用 `DatabaseReplayStore`；
+  Agent Runtime 以 `SERVICE_IDENTITY_REPLAY_DATABASE_URL` 選用 `PostgresReplayStore`，
+  `APP_ENV=production` 缺少該設定時**啟動即失敗**。claim 無法判定（driver 失敗）時 fail closed，
+  且錯誤訊息只帶 exception type。Runtime 只取得 `service_identity` schema 的 USAGE 與該表的
+  SELECT/INSERT/DELETE，`UPDATE`／`TRUNCATE`／`REFERENCES`／`TRIGGER` 在 deny matrix 內，
+  對 `eldercare_ai` 沒有任何新 grant。development database verifier
+  （`scripts/verify_service_credential_replay.py`）回報
+  `sequential_replay_rejected=true`、`concurrent_accepted=1`、`concurrent_rejected=1`。
 
 ### H-04 — Speech Gateway 尚無 production deployment 與 endpoint wiring
 
@@ -355,8 +367,8 @@
 
 ## 已知基準測試結果
 
-- Core unit tests：978 passed。
-- Agent tests：432 passed。
+- Core unit tests：990 passed。
+- Agent tests：446 passed。
 - RAG unit tests：200 passed。
 - Speech tests：83 passed。
 - Frontend tests：283 passed。

@@ -95,6 +95,13 @@ consent。Care Event VERIFIED 不自動 promotion 成 Memory，HIGH 不建立 Me
 - **只有每次通過 Core final retrieval gate 的 Trusted Memory 可進 Context**：current ACTIVE、有效 Consent、
   Speaker ownership、risk verification、version binding（如需要）、validity、tenant／elder scope 與
   tombstone 缺一不可；MEDIUM 未確認／stale、HIGH 與 legacy 缺證據資料一律排除。
+- **Service credential 的 replay 判定必須可跨 replica**。`ServiceCredentialVerifier` 的
+  `replay_store` 是必填參數；`InMemoryReplayStore`（`durable=False`）只給 test 與單一 process 的
+  本機執行。設定 `SERVICE_IDENTITY_REPLAY_DATABASE_URL` 會改用 `PostgresReplayStore`，以 Core
+  migration 建立的 `service_identity.credential_nonce` 做 `INSERT ... ON CONFLICT DO NOTHING`
+  atomic claim；`APP_ENV=production` 沒有這項設定時 `create_app()` 直接失敗。Runtime 只碰這一張
+  非 domain 表，不對 `eldercare_ai` 有任何 grant。claim 因 driver 失敗而無法判定時 fail closed，
+  錯誤訊息只帶 exception type。
 - **不得產生可執行的 SQL、Gremlin 或 OpenSearch DSL**。查詢一律走參數化的 Planner。
 - **不得建立無上限的 Agent Loop**。每條控制流都要有 step 上限與明確停止條件。
 - 所有 Agent 輸出必須同時通過 Pydantic model 與 `contracts/schemas/` 的 JSON Schema。

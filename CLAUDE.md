@@ -52,9 +52,10 @@
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-09-02 工作樹基準為 29 個 revisions、head `d0e4f6a8b901`；baseline 仍是 48 張 table，
+  2026-09-02 工作樹基準為 30 個 revisions、head `e2f4a6c8b013`；baseline 仍是 48 張 table，
   後續 revision 另加 `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session`，
-  `app/models/` 目前宣告 51 個 `__tablename__`。model attribute `id` 常透過 `__pk_name__` 對應
+  `app/models/` 目前宣告 51 個 `__tablename__`。Alembic 另外擁有 `rag_public` 與
+  `service_identity` 兩個非 domain schema，兩者都沒有 ORM model。model attribute `id` 常透過 `__pk_name__` 對應
   DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
 - Staff-assisted accountless Elder Session（`f7a9b1c3d456`／`b8c2d4e5f607`）預設關閉，且在
   `APP_ENV=production` 一律拒絕。`ks1_`／`ep1_`／`es1_` 是三種不同憑證，assisted token 不帶任何
@@ -64,8 +65,11 @@
   Actor，speaker gate 無法判定 verified Elder speech，Event／Memory proposal 維持關閉。
 - Speech Gateway → Core 私有呼叫改用 request-bound 短效 HMAC 憑證（綁 method／path／body digest／
   correlation ID／single-use ID，TTL 1–60s），兩側預設關閉、secret 必須相等且不得重用
-  Core→Agent Runtime 或任何 Voice／OAuth／provider secret。replay state 是 process-local，
-  ADR 0009 要求多 replica 前換掉。legacy bearer 只供遷移，不得與 request-bound identity 併用。
+  Core→Agent Runtime 或任何 Voice／OAuth／provider secret。replay claim 自 2026-09-02 起改用
+  `service_identity.credential_nonce` 的 `INSERT ... ON CONFLICT DO NOTHING`，在獨立短交易提交，
+  跨 replica 有效。verifier 的 `replay_store` 是必填參數；Agent Runtime 以
+  `SERVICE_IDENTITY_REPLAY_DATABASE_URL` 選用 durable store，`APP_ENV=production` 缺這項就
+  **啟動失敗**，不得退回 process-local。legacy bearer 只供遷移，不得與 request-bound identity 併用。
 - 不用未經檢查的 autogenerate。migration SQL 維持 LF、可重建、可升級，並保留 RLS、grant、trigger、
   constraint 與 state-machine 規則。
 
