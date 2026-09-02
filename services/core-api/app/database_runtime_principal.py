@@ -411,15 +411,17 @@ def _execute_role_reconciliation(
     cursor.execute(
         """
         SELECT columns.table_name,
-               array_agg(columns.column_name ORDER BY columns.ordinal_position)
+               columns.column_name
           FROM information_schema.columns AS columns
          WHERE columns.table_schema = %s
-         GROUP BY columns.table_name
-         ORDER BY columns.table_name
+         ORDER BY columns.table_name, columns.ordinal_position
         """,
         (RUNTIME_SCHEMA,),
     )
-    for table_name, columns in cursor.fetchall():
+    columns_by_table: dict[str, list[str]] = {}
+    for table_name, column_name in cursor.fetchall():
+        columns_by_table.setdefault(table_name, []).append(column_name)
+    for table_name, columns in columns_by_table.items():
         column_list = sql.SQL(", ").join(sql.Identifier(column) for column in columns)
         cursor.execute(
             sql.SQL("REVOKE ALL PRIVILEGES ({}) ON TABLE {} FROM {}").format(

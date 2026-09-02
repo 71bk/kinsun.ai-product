@@ -40,7 +40,7 @@ class _FakeCursor:
         responses: list[tuple[Any, ...]],
         type_rows: list[tuple[str]] | None = None,
         sequence_rows: list[tuple[str, str]] | None = None,
-        column_rows: list[tuple[str, list[str]]] | None = None,
+        column_rows: list[tuple[str, str]] | None = None,
     ) -> None:
         self._responses = iter(responses)
         self._fetchall_responses = iter(
@@ -75,7 +75,7 @@ class _FakeConnection:
         responses: list[tuple[Any, ...]],
         type_rows: list[tuple[str]] | None = None,
         sequence_rows: list[tuple[str, str]] | None = None,
-        column_rows: list[tuple[str, list[str]]] | None = None,
+        column_rows: list[tuple[str, str]] | None = None,
     ) -> None:
         self.pgconn = _FakePgConnection()
         self.cursor_instance = _FakeCursor(responses, type_rows, sequence_rows, column_rows)
@@ -137,7 +137,7 @@ def test_new_role_is_created_with_explicit_table_privilege_matrix() -> None:
             (True,),  # eldercare_ai exists after Alembic
             (False,),  # runtime role is new
         ],
-        column_rows=[("consent_grant", ["elder_id", "status"])],
+        column_rows=[("consent_grant", "elder_id"), ("consent_grant", "status")],
     )
 
     captured_dsn = ""

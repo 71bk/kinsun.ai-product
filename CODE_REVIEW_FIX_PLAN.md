@@ -2,7 +2,7 @@
 
 > 來源：repository-wide code review（commit `be25802`）
 >
-> 本文件只列出待修正與待補強項目；目前尚未修改任何程式碼。
+> 本文件追蹤 review findings、修正進度與驗證結果。
 
 ## 整體狀態
 
@@ -10,7 +10,7 @@
 - High：需要在 production rollout 前處理。
 - Medium：需要排入近期 hardening / reliability sprint。
 - Low：需要在 CI、文件或維護性工作中補齊。
-- PostgreSQL integration suite 尚未在本機執行，因沒有 disposable `TEST_DATABASE_URL`；H-01 已另以受限 development Demo verifier 完成真實 concurrent transaction 驗證。
+- 完整 PostgreSQL integration suite 尚未執行；H-01 已以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已以一次性 PostgreSQL 16 + pgvector Docker database 完成 runtime-role deny matrix。
 - Frontend typecheck 與 lint 已恢復綠燈。
 
 ## 修正順序
@@ -18,7 +18,7 @@
 ### P0 — Production blocker / security control
 
 - [x] H-01 修正 idempotency 首次併發 race condition。
-- [ ] H-02 收窄 Core runtime database role 權限。
+- [x] H-02 收窄 Core runtime database role 權限。
 - [ ] H-03 將 service identity replay protection 移至 shared durable store。
 - [ ] H-04 完成 Speech Gateway 的 deployment 與 frontend endpoint wiring。
 - [ ] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
@@ -74,6 +74,7 @@
 - 修正：改用 table allowlist、分離 read/write roles、stored procedures；audit/consent/security tables 不應由一般 application role 任意更新。
 - 驗證：建立 database permission deny matrix，確認 application role 不能直接修改受保護表。
 - 應新增測試：是，database integration test。
+- 修正結果：runtime role 改用明確 table allowlist 與 column-scoped lifecycle UPDATE；未分類與未來新增的 table/sequence 預設無 DML，audit、policy、consent、outbox、idempotency、identity 與 credential immutable 欄位均有 deny matrix。以一次性 PostgreSQL 16 + pgvector 容器完成全部 migrations 並驗證通過；同時修正 psycopg 對 `information_schema.sql_identifier[]` 的 domain-array 解碼差異，改採逐欄分組以維持跨環境一致性。
 
 ### H-03 — Service identity replay protection 只存在 process memory
 
