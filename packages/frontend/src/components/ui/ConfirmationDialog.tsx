@@ -35,6 +35,7 @@ export function ConfirmationDialog({
   const { t } = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
   const descriptionId = useId();
 
@@ -43,6 +44,8 @@ export function ConfirmationDialog({
     if (!dialog) return;
 
     if (open && !dialog.open) {
+      returnFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       if (typeof dialog.showModal === 'function') dialog.showModal();
       else dialog.setAttribute('open', '');
       cancelRef.current?.focus();
@@ -52,6 +55,8 @@ export function ConfirmationDialog({
     if (!open && dialog.open) {
       if (typeof dialog.close === 'function') dialog.close();
       else dialog.removeAttribute('open');
+      if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+      returnFocusRef.current = null;
     }
   }, [open]);
 

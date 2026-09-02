@@ -1,0 +1,186 @@
+{
+  "$defs": {
+    "CareActionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "care_action_id": {
+          "format": "uuid",
+          "title": "Care Action Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "action_type": {
+          "enum": [
+            "CONTACT_ELDER",
+            "CONTACT_FAMILY",
+            "CONFIRM_INFORMATION",
+            "INVITE_ACTIVITY",
+            "FOLLOW_UP",
+            "OTHER"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "trigger_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Reason"
+        },
+        "related_event_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Related Event Ids",
+          "type": "array"
+        },
+        "assignee_actor_id": {
+          "format": "uuid",
+          "title": "Assignee Actor Id",
+          "type": "string"
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Due At"
+        },
+        "priority": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ],
+          "title": "Priority",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "OPEN",
+            "IN_PROGRESS",
+            "COMPLETED",
+            "POSTPONED",
+            "CANCELLED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Resolution"
+        },
+        "created_by_actor_id": {
+          "format": "uuid",
+          "title": "Created By Actor Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "care_action_id",
+        "elder_id",
+        "action_type",
+        "title",
+        "description",
+        "trigger_reason",
+        "related_event_ids",
+        "assignee_actor_id",
+        "due_at",
+        "priority",
+        "status",
+        "resolution",
+        "created_by_actor_id",
+        "version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "CareActionResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CareActionResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Cursor"
+    },
+    "has_more": {
+      "title": "Has More",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "next_cursor",
+    "has_more"
+  ],
+  "title": "CareActionListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CareActionListV1.json"
+}

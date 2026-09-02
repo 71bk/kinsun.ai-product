@@ -275,10 +275,14 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 舊的 `ToolResponseV1` 是尚未接上 Core endpoint 的 Agent Runtime 目標格式，保留作為 migration input，不代表可呼叫的 API。它與 Core 的 `ToolResultV1` 在欄位名稱及 source reference 細節上仍不同，後續應由 Agent Runtime adapter 明確轉換，不可讓兩份 schema 共用同一 `$id` 或互相覆蓋。
 
+### Care Action 邊界
+
+Core 已實作專業照護者使用的 Care Action list／create／update endpoint。正式待辦只能由照護者從同一 tenant、同一 elder 且已 `VERIFIED`／`CORRECTED` 的 Care Event 人工建立，並以 `expected_version` 控制狀態更新；目前只允許建立者指派自己。Agent Tool 的 `create_care_action` 仍明確拒絕執行，因此 AI 候選不會自動成為正式待辦。
+
 ## 尚未實作、不得視為 executable contract
 
 - WebSocket voice event contract 與 audio upload。
-- Care Action API。
+- AI Care Action 候選產生、人工採納與批次優先排序。
 - Notification delivery API／LINE／Email Adapter。
 - 正式 Agent Handoff 與多步 Agent Tool 迴圈。
 - Graph／正式 OpenSearch projection endpoint。

@@ -36,11 +36,14 @@
           "assignment:complete",
           "care_event:candidate:create",
           "care_event:read",
+          "care_action:create",
+          "care_action:read",
+          "care_action:update",
           "summary:read"
         ],
         "type": "string"
       },
-      "maxItems": 8,
+      "maxItems": 12,
       "minItems": 1,
       "title": "Allowed Data Scopes",
       "type": "array"

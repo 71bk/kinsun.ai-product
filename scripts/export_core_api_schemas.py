@@ -35,6 +35,12 @@ from app.schemas.assisted_elder import (  # noqa: E402
     IssueAssistedSessionRequest,
     IssuedAssistedSessionResponse,
 )
+from app.schemas.care_action import (  # noqa: E402
+    CareActionListResponse,
+    CareActionResponse,
+    CreateCareActionRequest,
+    UpdateCareActionRequest,
+)
 from app.schemas.care_event import (  # noqa: E402
     CareEventListResponse,
     CareEventResponse,
@@ -127,6 +133,10 @@ EXPORTS = {
         "VoiceTicketIssuedV1": VoiceTicketIssuedResponse,
         "CompanionTurnRequestV1": CompanionTurnRequest,
         "CompanionTurnV1": CompanionTurnResponse,
+        "CreateCareActionRequestV1": CreateCareActionRequest,
+        "UpdateCareActionRequestV1": UpdateCareActionRequest,
+        "CareActionV1": CareActionResponse,
+        "CareActionListV1": CareActionListResponse,
         "CreateCareEventCandidateRequestV1": CreateCareEventCandidateRequest,
         "ReviewCareEventRequestV1": ReviewCareEventRequest,
         "CareEventV1": CareEventResponse,
@@ -192,6 +202,8 @@ SUCCESS_ENVELOPES = {
     "VoiceSessionEnvelopeV1": "domain/VoiceSessionV1.json",
     "VoiceTicketIssuedEnvelopeV1": "domain/VoiceTicketIssuedV1.json",
     "CompanionTurnEnvelopeV1": "domain/CompanionTurnV1.json",
+    "CareActionEnvelopeV1": "domain/CareActionV1.json",
+    "CareActionListEnvelopeV1": "domain/CareActionListV1.json",
     "CareEventEnvelopeV1": "domain/CareEventV1.json",
     "CareEventReviewEnvelopeV1": "domain/CareEventReviewV1.json",
     "CareEventListEnvelopeV1": "domain/CareEventListV1.json",
@@ -356,6 +368,47 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                     },
                 },
             }
+        )
+    elif title == "CreateCareActionRequestV1":
+        properties["related_event_ids"]["uniqueItems"] = True
+        properties["title"]["pattern"] = r".*\S.*"
+        properties["trigger_reason"]["pattern"] = r".*\S.*"
+    elif title == "UpdateCareActionRequestV1":
+        schema.setdefault("allOf", []).extend(
+            [
+                {
+                    "if": {
+                        "properties": {
+                            "status": {
+                                "enum": ["COMPLETED", "POSTPONED", "CANCELLED"]
+                            }
+                        },
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "required": ["resolution"],
+                        "properties": {
+                            "resolution": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": r".*\S.*",
+                            }
+                        },
+                    },
+                },
+                {
+                    "if": {
+                        "properties": {"status": {"const": "POSTPONED"}},
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "required": ["due_at"],
+                        "properties": {
+                            "due_at": {"type": "string", "format": "date-time"}
+                        },
+                    },
+                },
+            ]
         )
     elif title == "ReviewCareEventRequestV1":
         corrected = properties["corrected_payload"]

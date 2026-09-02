@@ -7,6 +7,7 @@ import pytest
 from app.core.exceptions import ConflictError
 from app.domain.state_machine import (
     require_assignment_transition,
+    require_care_action_transition,
     require_deletion_item_transition,
     require_deletion_request_transition,
     require_memory_transition,
@@ -68,6 +69,14 @@ def test_assignment_requires_confirmation_before_service_start() -> None:
         require_assignment_transition("DRAFT", "IN_PROGRESS")
     require_assignment_transition("DRAFT", "CONFIRMED")
     require_assignment_transition("CONFIRMED", "IN_PROGRESS")
+
+
+def test_care_action_records_progress_and_keeps_terminal_states_terminal() -> None:
+    require_care_action_transition("OPEN", "IN_PROGRESS")
+    require_care_action_transition("IN_PROGRESS", "POSTPONED")
+    require_care_action_transition("POSTPONED", "COMPLETED")
+    with pytest.raises(ConflictError):
+        require_care_action_transition("COMPLETED", "IN_PROGRESS")
 
 
 def test_published_report_can_only_leave_publication_safely() -> None:

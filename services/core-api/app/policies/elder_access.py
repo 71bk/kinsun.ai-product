@@ -52,6 +52,9 @@ NOT_ELDER_SELF = "NOT_ELDER_SELF"
 
 ELDER_SELF_PROHIBITED_ACTIONS = frozenset(
     {
+        "care_action:create",
+        "care_action:read",
+        "care_action:update",
         "care_event:review",
         "summary:review",
     }

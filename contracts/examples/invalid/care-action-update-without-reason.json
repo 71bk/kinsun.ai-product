@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "Completing, postponing, or cancelling a Care Action requires a recorded reason.",
+  "data": {
+    "status": "COMPLETED",
+    "expected_version": 1
+  }
+}

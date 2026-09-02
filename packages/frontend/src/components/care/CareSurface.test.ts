@@ -107,6 +107,7 @@ describe('Care Surface safety semantics', () => {
 describe('Care Surface styling boundary', () => {
   it.each([
     'AssignmentCard.module.css',
+    'CareActionPanel.module.css',
     'CareSidebar.module.css',
     'ElderCard.module.css',
     'EventReviewControls.module.css',
@@ -128,5 +129,18 @@ describe('Care Surface styling boundary', () => {
     );
     expect(css).toMatch(/@container\s*\(max-width:\s*60rem\)/);
     expect(css).not.toMatch(/overflow-x:\s*(auto|scroll)/);
+  });
+
+  it('does not let hover styling erase the selected elder-detail tab contrast', () => {
+    const css = readFileSync(
+      fileURLToPath(
+        new URL(
+          '../../app/staff/(app)/elders/[elderId]/ElderDetailPage.module.css',
+          import.meta.url,
+        ),
+      ),
+      'utf8',
+    );
+    expect(css).toContain(".tab:hover:not([aria-selected='true'])");
   });
 });

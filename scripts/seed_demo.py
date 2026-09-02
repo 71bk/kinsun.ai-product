@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 import os
@@ -46,6 +47,15 @@ E2E_DATABASE_PREFIX = "kinsun_frontend_e2e_"
 DEMO_POLICY_ID = UUID("80000000-0000-4000-8000-000000000001")
 DEMO_POLICY_CODE = "demo-consent-policy"
 DEMO_POLICY_VERSION = "demo-consent-v1"
+CARE_ACTION_SCOPES = (
+    "care_action:create",
+    "care_action:read",
+    "care_action:update",
+)
+DEMO_DAYCARE_RELATIONSHIP_IDS = (
+    UUID("60000000-0000-4000-8000-000000000001"),
+    UUID("60000000-0000-4000-8000-000000000002"),
+)
 DEMO_POLICY_PAYLOAD = MappingProxyType(
     {"synthetic_only": True, "purpose_specific": True}
 )
@@ -246,9 +256,7 @@ async def _get_or_create_demo_policy(
     return DEMO_POLICY_ID
 
 
-async def _assert_empty_and_current(
-    session: AsyncSession, daycare_tenant_id: UUID
-) -> None:
+async def _assert_current(session: AsyncSession) -> None:
     revision = await session.scalar(
         text("SELECT version_num FROM public.alembic_version")
     )
@@ -258,6 +266,12 @@ async def _assert_empty_and_current(
             f"Database revision is {revision!r}; expected repository head "
             f"{expected_revision}. Run the additive migration before seeding Demo rows."
         )
+
+
+async def _assert_empty_and_current(
+    session: AsyncSession, daycare_tenant_id: UUID
+) -> None:
+    await _assert_current(session)
     exists = await session.scalar(
         select(Tenant.id).where(Tenant.id == daycare_tenant_id)
     )
@@ -266,6 +280,87 @@ async def _assert_empty_and_current(
             "Deterministic Demo rows already exist. "
             "Use scripts/reset_demo.ps1 to rebuild instead of editing rows manually."
         )
+
+
+def _merge_required_scopes(current: object) -> list[str]:
+    if not isinstance(current, list) or not all(
+        isinstance(scope, str) for scope in current
+    ):
+        raise RuntimeError("Synthetic Demo scope must be a JSON string array")
+    return [*current, *(scope for scope in CARE_ACTION_SCOPES if scope not in current)]
+
+
+async def _sync_care_action_scopes(
+    session: AsyncSession,
+    manifest: dict,
+) -> dict[str, int]:
+    """Add only the C04 scopes to known synthetic Demo authorization rows."""
+
+    await _assert_current(session)
+    daycare_tenant_id = _id(manifest["tenants"]["daycare"])
+    home_tenant_id = _id(manifest["tenants"]["home_care"])
+    daycare_worker_id = _id(manifest["actors"]["daycare_worker"])
+    home_worker_id = _id(manifest["actors"]["home_worker"])
+    home_elder_id = _id(manifest["elders"]["陳伯伯"])
+    assignment_id = _id(manifest["assignment"]["陳伯伯今日派案"])
+
+    tenants = list(
+        (
+            await session.execute(
+                select(Tenant).where(Tenant.id.in_([daycare_tenant_id, home_tenant_id]))
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if len(tenants) != 2 or any(tenant.tenant_type != "DEMO" for tenant in tenants):
+        raise RuntimeError("Care Action scope sync requires both fixed DEMO tenants")
+
+    relationships = list(
+        (
+            await session.execute(
+                select(CareRelationship).where(
+                    CareRelationship.id.in_(DEMO_DAYCARE_RELATIONSHIP_IDS)
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if len(relationships) != len(DEMO_DAYCARE_RELATIONSHIP_IDS) or any(
+        relationship.tenant_id != daycare_tenant_id
+        or relationship.actor_id != daycare_worker_id
+        or relationship.relationship_type != "DAYCARE_ASSIGNMENT"
+        or relationship.status != "ACTIVE"
+        for relationship in relationships
+    ):
+        raise RuntimeError("Fixed synthetic Daycare relationships do not match the manifest")
+
+    assignment = await session.get(CareAssignment, assignment_id)
+    if (
+        assignment is None
+        or assignment.tenant_id != home_tenant_id
+        or assignment.elder_id != home_elder_id
+        or assignment.worker_id != home_worker_id
+    ):
+        raise RuntimeError("Fixed synthetic Home Care assignment does not match the manifest")
+
+    changed_relationships = 0
+    for relationship in relationships:
+        merged = _merge_required_scopes(relationship.scope)
+        if merged != relationship.scope:
+            relationship.scope = merged
+            changed_relationships += 1
+    merged_assignment = _merge_required_scopes(assignment.service_scope)
+    changed_assignment = int(merged_assignment != assignment.service_scope)
+    if changed_assignment:
+        assignment.service_scope = merged_assignment
+        assignment.version += 1
+    await session.flush()
+    return {
+        "relationships_updated": changed_relationships,
+        "assignments_updated": changed_assignment,
+    }
 
 
 async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
@@ -444,6 +539,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
         "care_event:candidate:create",
         "care_event:read",
         "care_event:review",
+        *CARE_ACTION_SCOPES,
         "memory:candidate:create",
         "memory:candidate:read",
         "memory:reject",
@@ -591,6 +687,7 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
                 "assignment:complete",
                 "care_event:candidate:create",
                 "care_event:read",
+                *CARE_ACTION_SCOPES,
                 "summary:read",
             ],
             status="CONFIRMED",
@@ -933,7 +1030,17 @@ async def _seed(session: AsyncSession, manifest: dict) -> list[str]:
     return demo_accounts
 
 
-async def main() -> None:
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--sync-care-action-scopes",
+        action="store_true",
+        help="Add C04 scopes only to the fixed synthetic Demo authorization rows",
+    )
+    return parser.parse_args()
+
+
+async def main(*, sync_care_action_scopes: bool = False) -> None:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     if manifest.get("synthetic_only") is not True:
         raise RuntimeError("Seed manifest must declare synthetic_only=true")
@@ -942,7 +1049,12 @@ async def main() -> None:
     try:
         async with session_factory() as session:
             async with session.begin():
-                demo_accounts = await _seed(session, manifest)
+                if sync_care_action_scopes:
+                    sync_result = await _sync_care_action_scopes(session, manifest)
+                    demo_accounts: list[str] = []
+                else:
+                    sync_result = None
+                    demo_accounts = await _seed(session, manifest)
     finally:
         await engine.dispose()
     print(
@@ -954,6 +1066,7 @@ async def main() -> None:
                 "elder_ids": manifest["elders"],
                 "report_ids": manifest["reports"],
                 "demo_accounts": demo_accounts,
+                "care_action_scope_sync": sync_result,
             },
             ensure_ascii=False,
         )
@@ -961,4 +1074,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    args = _parse_args()
+    asyncio.run(main(sync_care_action_scopes=args.sync_care_action_scopes))

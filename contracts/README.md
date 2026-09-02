@@ -65,7 +65,7 @@ adapter 串起 register → Tool → complete；通用多 Tool 迴圈仍未實�
 錯誤欄位、狀態碼對應都不同。差異全部列在 [DIVERGENCE.md](DIVERGENCE.md)，
 尚未決定要往哪邊收斂。改任何一邊之前先讀那份清單。
 
-**Executable contract 只涵蓋已實作的 endpoint。** WebSocket audio transport、Care Action、
+**Executable contract 只涵蓋已實作的 endpoint。** WebSocket audio transport、AI Care Action 候選與人工採納流程、
 Email notification delivery、LINE queue／DLQ 與 Scheduler deployment、正式 Agent Handoff／多步 Tool 迴圈、Graph／OpenSearch production projection
 尚未完成；完整差異以 [DIVERGENCE.md](DIVERGENCE.md) 為準。
 

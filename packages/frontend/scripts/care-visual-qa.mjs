@@ -39,7 +39,15 @@ const ELDER = {
 };
 const ACCESS = {
   purpose: 'HOME_CARE_VISIT',
-  allowed_actions: ['care-event:read', 'care-event:review', 'memory:read', 'summary:review'],
+  allowed_actions: [
+    'care-event:read',
+    'care-event:review',
+    'care_action:create',
+    'care_action:read',
+    'care_action:update',
+    'memory:read',
+    'summary:review',
+  ],
   source_type: 'assignment',
   source_summary: '今日居家照護任務',
   expires_at: '2026-08-13T10:00:00Z',
@@ -176,6 +184,62 @@ const SUMMARIES = [
     updated_at: '2026-08-12T09:00:00Z',
   },
 ];
+const CARE_ACTIONS = [
+  {
+    care_action_id: 'care-action-open-001',
+    elder_id: ELDER_ID,
+    action_type: 'FOLLOW_UP',
+    title: '追蹤下次聯繫安排',
+    description: '確認長者方便接聽的時段。',
+    trigger_reason: '已覆核事件顯示今日完成家人通話，需要確認下次聯繫安排。',
+    related_event_ids: ['event-verified-001'],
+    assignee_actor_id: 'worker-private-001',
+    due_at: '2026-09-03T01:00:00Z',
+    priority: 'MEDIUM',
+    status: 'OPEN',
+    resolution: null,
+    created_by_actor_id: 'worker-private-001',
+    version: 1,
+    created_at: '2026-09-02T01:00:00Z',
+    updated_at: '2026-09-02T01:00:00Z',
+  },
+  {
+    care_action_id: 'care-action-postponed-001',
+    elder_id: ELDER_ID,
+    action_type: 'INVITE_ACTIVITY',
+    title: '邀請參加下週活動',
+    description: null,
+    trigger_reason: '已覆核事件顯示長者有興趣參加團體活動。',
+    related_event_ids: ['event-verified-001'],
+    assignee_actor_id: 'worker-private-001',
+    due_at: '2026-09-05T01:00:00Z',
+    priority: 'LOW',
+    status: 'POSTPONED',
+    resolution: '長者今日外出，改於下次服務時確認。',
+    created_by_actor_id: 'worker-private-001',
+    version: 2,
+    created_at: '2026-09-01T01:00:00Z',
+    updated_at: '2026-09-02T02:00:00Z',
+  },
+  {
+    care_action_id: 'care-action-completed-001',
+    elder_id: ELDER_ID,
+    action_type: 'CONFIRM_INFORMATION',
+    title: '確認家屬聯繫方式',
+    description: null,
+    trigger_reason: '正式事件需要補充後續聯繫資訊。',
+    related_event_ids: ['event-verified-001'],
+    assignee_actor_id: 'worker-private-001',
+    due_at: '2026-09-02T01:00:00Z',
+    priority: 'HIGH',
+    status: 'COMPLETED',
+    resolution: '已由照護者完成資訊確認。',
+    created_by_actor_id: 'worker-private-001',
+    version: 3,
+    created_at: '2026-08-31T01:00:00Z',
+    updated_at: '2026-09-02T03:00:00Z',
+  },
+];
 const ASSIGNMENTS = [
   {
     assignment_id: 'assignment-confirmed-001',
@@ -289,11 +353,15 @@ async function installContractFixtures(context) {
       return;
     }
     if (path === `/api/v1/elders/${ELDER_ID}/care-events`) {
-      const events =
-        url.searchParams.get('status') === 'NEEDS_REVIEW'
-          ? EVENTS.filter((event) => event.status === 'NEEDS_REVIEW')
-          : EVENTS;
+      const requestedStatus = url.searchParams.get('status');
+      const events = requestedStatus
+        ? EVENTS.filter((event) => event.status === requestedStatus)
+        : EVENTS;
       await json(route, { items: events, next_cursor: null, has_more: false });
+      return;
+    }
+    if (path === `/api/v1/elders/${ELDER_ID}/care-actions`) {
+      await json(route, { items: CARE_ACTIONS, next_cursor: null, has_more: false });
       return;
     }
     if (path === `/api/v1/elders/${ELDER_ID}/memory-candidates`) {
@@ -421,6 +489,29 @@ for (const viewport of VIEWPORTS.filter(
       await settle(page, '早餐紀錄仍待照護人員確認。');
       await capture(page, viewport, locale, 'elder-events', problems);
 
+      await page.locator('#elder-tab-actions').click();
+      await settle(page, '追蹤下次聯繫安排');
+      await capture(page, viewport, locale, 'elder-care-actions', problems);
+
+      await page.locator('#elder-panel-actions button[aria-expanded]').click();
+      await page.locator('#elder-panel-actions input[name="title"]').waitFor({ timeout: 20_000 });
+      await page.waitForTimeout(250);
+      await capture(page, viewport, locale, 'elder-care-action-create', problems);
+      await page.locator('#elder-panel-actions button[aria-expanded]').click();
+
+      await page.locator('#elder-panel-actions article[data-status="OPEN"] button').first().click();
+      await page.waitForSelector('dialog[open]');
+      await page.screenshot({
+        path: join(OUT, `elder-care-action-dialog__${viewport.name}__${locale}.png`),
+        fullPage: false,
+      });
+      await page.keyboard.press('Escape');
+      await page.waitForSelector('dialog[open]', { state: 'detached' });
+
+      await page.locator('#elder-panel-actions article[data-status="OPEN"] button').nth(1).click();
+      await page.locator('#elder-panel-actions article[data-status="OPEN"] form').waitFor();
+      await capture(page, viewport, locale, 'elder-care-action-transition', problems);
+
       await page.locator('#elder-tab-memories').click();
       await settle(page, '偏好在早餐後散步，尚待本人確認。');
       await capture(page, viewport, locale, 'elder-memories', problems);
@@ -449,7 +540,10 @@ for (const viewport of VIEWPORTS.filter(
       await page.evaluate(() => window.scrollTo(0, 0));
       await capture(page, viewport, locale, 'assignments', problems);
 
-      await page.goto(`${BASE}/staff/elders/${FORBIDDEN_ID}`, { waitUntil: 'load', timeout: 90_000 });
+      await page.goto(`${BASE}/staff/elders/${FORBIDDEN_ID}`, {
+        waitUntil: 'load',
+        timeout: 90_000,
+      });
       await page.waitForSelector('main');
       await page.waitForTimeout(350);
       if ((await page.locator(`text=${PRIVATE_NAME}`).count()) > 0) {

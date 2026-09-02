@@ -61,6 +61,7 @@
   border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: var(--shadow-1);
+  overflow-x: auto;
 }
 
 .tab {
@@ -80,7 +81,7 @@
   color: var(--color-on-primary);
 }
 
-.tab:hover {
+.tab:hover:not([aria-selected='true']) {
   background: var(--color-primary-weak);
 }
 
@@ -115,12 +116,11 @@
 
 @media (max-width: 39rem) {
   .tabs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     border: 1px solid var(--color-border);
   }
 
   .tab {
+    flex: 0 0 auto;
     border: 1px solid transparent;
     padding-inline: var(--space-2);
   }

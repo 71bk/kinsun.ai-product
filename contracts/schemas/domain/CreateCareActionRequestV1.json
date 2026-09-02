@@ -1,0 +1,94 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action_type": {
+      "enum": [
+        "CONTACT_ELDER",
+        "CONTACT_FAMILY",
+        "CONFIRM_INFORMATION",
+        "INVITE_ACTIVITY",
+        "FOLLOW_UP",
+        "OTHER"
+      ],
+      "title": "Action Type",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string",
+      "pattern": ".*\\S.*"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "maxLength": 4000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "trigger_reason": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Trigger Reason",
+      "type": "string",
+      "pattern": ".*\\S.*"
+    },
+    "related_event_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Related Event Ids",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "assignee_actor_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assignee Actor Id"
+    },
+    "due_at": {
+      "format": "date-time",
+      "title": "Due At",
+      "type": "string"
+    },
+    "priority": {
+      "default": "MEDIUM",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "Priority",
+      "type": "string"
+    }
+  },
+  "required": [
+    "action_type",
+    "title",
+    "trigger_reason",
+    "related_event_ids",
+    "due_at"
+  ],
+  "title": "CreateCareActionRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateCareActionRequestV1.json"
+}

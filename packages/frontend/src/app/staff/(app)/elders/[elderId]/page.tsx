@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
+import { CareActionPanel } from '@/components/care/CareActionPanel';
 import { EventFilterBar } from '@/components/dashboard/EventFilterBar';
 import { EventTable } from '@/components/dashboard/EventTable';
 import { MemoryList } from '@/components/dashboard/MemoryList';
@@ -44,10 +45,11 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import styles from './ElderDetailPage.module.css';
 
-type Tab = 'events' | 'memories' | 'summaries';
+type Tab = 'events' | 'actions' | 'memories' | 'summaries';
 
 const TAB_LABEL: Record<Tab, MessageKey> = {
   events: 'elderDetail.tabEvents',
+  actions: 'elderDetail.tabActions',
   memories: 'elderDetail.tabMemories',
   summaries: 'elderDetail.tabSummaries',
 };
@@ -144,6 +146,9 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   }, [apiConfig, elderId]);
 
   const canReviewSummaries = workspace?.allowedActions.includes('summary:review') ?? false;
+  const canReadCareActions = workspace?.allowedActions.includes('care_action:read') ?? false;
+  const canCreateCareActions = workspace?.allowedActions.includes('care_action:create') ?? false;
+  const canUpdateCareActions = workspace?.allowedActions.includes('care_action:update') ?? false;
 
   const loadSummaries = useCallback(() => {
     setErrorKey(null);
@@ -287,6 +292,9 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   }
 
   const listSeparator = locale === 'en' ? ', ' : '、';
+  const visibleTabs: Tab[] = canReadCareActions
+    ? ['events', 'actions', 'memories', 'summaries']
+    : ['events', 'memories', 'summaries'];
 
   return (
     <main className={styles.page}>
@@ -333,7 +341,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
       )}
 
       <div aria-label={t('elderDetail.tabsLabel')} className={styles.tabs} role="tablist">
-        {(['events', 'memories', 'summaries'] as Tab[]).map((item) => (
+        {visibleTabs.map((item) => (
           <button
             aria-controls={`elder-panel-${item}`}
             aria-selected={tab === item}
@@ -369,6 +377,22 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
           ) : (
             <EventTable events={events} onReview={handleReviewEvent} />
           )}
+        </section>
+      )}
+
+      {tab === 'actions' && canReadCareActions && (
+        <section
+          aria-labelledby="elder-tab-actions"
+          id="elder-panel-actions"
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <CareActionPanel
+            apiConfig={apiConfig}
+            canCreate={canCreateCareActions}
+            canUpdate={canUpdateCareActions}
+            elderId={elderId}
+          />
         </section>
       )}
 

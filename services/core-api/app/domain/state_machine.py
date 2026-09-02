@@ -48,6 +48,14 @@ ASSIGNMENT_TRANSITIONS: dict[str, frozenset[str]] = {
     "NO_SHOW": frozenset(),
 }
 
+CARE_ACTION_TRANSITIONS: dict[str, frozenset[str]] = {
+    "OPEN": frozenset({"IN_PROGRESS", "COMPLETED", "POSTPONED", "CANCELLED"}),
+    "IN_PROGRESS": frozenset({"COMPLETED", "POSTPONED", "CANCELLED"}),
+    "POSTPONED": frozenset({"IN_PROGRESS", "COMPLETED", "CANCELLED"}),
+    "COMPLETED": frozenset(),
+    "CANCELLED": frozenset(),
+}
+
 REPORT_TRANSITIONS: dict[str, frozenset[str]] = {
     "DRAFT": frozenset({"NEEDS_REVIEW", "PUBLISHED", "WITHDRAWN", "STALE"}),
     "NEEDS_REVIEW": frozenset({"DRAFT", "PUBLISHED", "WITHDRAWN", "STALE"}),
@@ -103,6 +111,10 @@ def require_memory_transition(current: str, target: str) -> None:
 
 def require_assignment_transition(current: str, target: str) -> None:
     require_transition("care_assignment", current, target, ASSIGNMENT_TRANSITIONS)
+
+
+def require_care_action_transition(current: str, target: str) -> None:
+    require_transition("care_action", current, target, CARE_ACTION_TRANSITIONS)
 
 
 def require_report_transition(current: str, target: str) -> None:

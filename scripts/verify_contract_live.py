@@ -285,6 +285,73 @@ async def main() -> int:
             load("common/ErrorEnvelopeV1.json"),
         )
 
+        care_action_collection = f"/api/v1/elders/{sample_uuid}/care-actions"
+        response = await client.post(
+            care_action_collection,
+            headers={"Idempotency-Key": "live-contract-care-action-create"},
+            json={
+                "action_type": "FOLLOW_UP",
+                "title": "Follow up after verified event",
+                "description": None,
+                "trigger_reason": "A professional reviewed the source event",
+                "related_event_ids": [sample_uuid],
+                "assignee_actor_id": None,
+                "due_at": "2026-09-03T09:00:00+08:00",
+                "priority": "MEDIUM",
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/elders/{elder_id}/care-actions returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST /api/v1/elders/{elder_id}/care-actions fails closed: "
+                f"{response.status_code}"
+            )
+        else:
+            print(
+                "ok    POST /api/v1/elders/{elder_id}/care-actions "
+                "fails closed with 401"
+            )
+        check(
+            "POST /api/v1/elders/{elder_id}/care-actions 401 body "
+            "vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.patch(
+            f"{care_action_collection}/{sample_uuid}",
+            headers={"Idempotency-Key": "live-contract-care-action-update"},
+            json={
+                "status": "COMPLETED",
+                "expected_version": 1,
+                "resolution": "Follow-up completed",
+                "due_at": None,
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "PATCH /api/v1/elders/{elder_id}/care-actions/{care_action_id} "
+                f"returned {response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  PATCH /api/v1/elders/{elder_id}/care-actions/"
+                f"{{care_action_id}} fails closed: {response.status_code}"
+            )
+        else:
+            print(
+                "ok    PATCH /api/v1/elders/{elder_id}/care-actions/"
+                "{care_action_id} fails closed with 401"
+            )
+        check(
+            "PATCH /api/v1/elders/{elder_id}/care-actions/{care_action_id} "
+            "401 body vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
         response = await client.post(
             "/api/v1/internal/voice-tickets/consume",
             json={

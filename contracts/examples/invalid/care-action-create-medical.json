@@ -1,0 +1,11 @@
+{
+  "_why_invalid": "Care Action types must never encode medication changes, diagnoses, or treatment decisions.",
+  "data": {
+    "action_type": "CHANGE_MEDICATION",
+    "title": "修改藥物",
+    "trigger_reason": "不允許的醫療動作",
+    "related_event_ids": ["71000000-0000-4000-8000-000000000001"],
+    "due_at": "2026-09-03T10:00:00+08:00",
+    "priority": "HIGH"
+  }
+}

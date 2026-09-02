@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.models.assisted_elder_session import AssistedElderSession
+from app.models.care_action import CareAction
 from app.models.care_profile import ElderCareProfileEntry
 from app.models.elder_enrollment import ElderEnrollment
 
@@ -35,3 +36,14 @@ def test_assisted_session_persists_only_digests_and_real_initiator() -> None:
     assert columns["session_token_digest"].nullable is True
     assert columns["initiated_by_actor_id"].nullable is False
     assert columns["elder_id"].nullable is False
+
+
+def test_care_action_has_scope_sources_owner_and_optimistic_version() -> None:
+    columns = CareAction.__table__.columns
+
+    assert columns["tenant_id"].nullable is False
+    assert columns["elder_id"].nullable is False
+    assert columns["related_event_ids"].nullable is False
+    assert columns["assignee_actor_id"].nullable is False
+    assert columns["created_by_actor_id"].nullable is False
+    assert columns["version"].nullable is False

@@ -1,0 +1,12 @@
+{
+  "data": {
+    "action_type": "CONTACT_ELDER",
+    "title": "關心早餐狀況",
+    "description": "確認最近幾天早餐是否正常",
+    "trigger_reason": "已覆核早餐事件需要後續確認",
+    "related_event_ids": ["71000000-0000-4000-8000-000000000001"],
+    "assignee_actor_id": "20000000-0000-4000-8000-000000000002",
+    "due_at": "2026-09-03T10:00:00+08:00",
+    "priority": "MEDIUM"
+  }
+}

@@ -61,6 +61,8 @@ MODEL_FILES = {
     "ExchangeAssistedSessionRequest": "domain/ExchangeAssistedSessionRequestV1.json",
     "AcknowledgeFirstUseRequest": "domain/AcknowledgeFirstUseRequestV1.json",
     "AssistedCompanionTurnRequest": "domain/AssistedCompanionTurnRequestV1.json",
+    "CreateCareActionRequest": "domain/CreateCareActionRequestV1.json",
+    "UpdateCareActionRequest": "domain/UpdateCareActionRequestV1.json",
     "CreateCareEventCandidateRequest": "domain/CreateCareEventCandidateRequestV1.json",
     "ReviewCareEventRequest": "domain/ReviewCareEventRequestV1.json",
     "CreateMemoryCandidateRequest": "domain/CreateMemoryCandidateRequestV1.json",
@@ -188,6 +190,15 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "end_assisted_session_api_v1_assisted_elder_sessions_current_end_post": (
         "EndAssistedSessionEnvelopeV1"
     ),
+    "list_care_actions_api_v1_elders__elder_id__care_actions_get": (
+        "CareActionListEnvelopeV1"
+    ),
+    "create_care_action_api_v1_elders__elder_id__care_actions_post": (
+        "CareActionEnvelopeV1"
+    ),
+    "update_care_action_api_v1_elders__elder_id__care_actions__care_action_id__patch": (
+        "CareActionEnvelopeV1"
+    ),
     "create_care_event_candidate_api_v1_elders__elder_id__care_event_candidates_post": (
         "CareEventEnvelopeV1"
     ),
@@ -304,10 +315,10 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.6.0",
+        "version": "1.7.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
-            "security, assisted Elder Session and outbox APIs."
+            "security, assisted Elder Session, professional Care Action and outbox APIs."
         ),
         "description": (
             "Current executable Core API contract. Every protected operation "
