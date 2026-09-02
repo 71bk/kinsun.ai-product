@@ -78,9 +78,19 @@ The migration image additionally requires `DB_RUNTIME_USERNAME=kinsun_app` and
 `DB_RUNTIME_PASSWORD` from the retained runtime credential secret. It validates
 both secrets before mutation, runs `alembic upgrade head` with the Aurora admin
 credential, then creates or reconciles the runtime LOGIN role. The role gets
-only database CONNECT, schema USAGE, table SELECT/INSERT/UPDATE/DELETE, enum or
-domain type USAGE, and sequence USAGE/SELECT for current and future
-`eldercare_ai` objects. Unexpected ownership or role membership fails closed.
+only database CONNECT, schema USAGE, and the per-table privileges declared in
+`app/database_runtime_principal.py`. Reference tables are read-only, immutable
+evidence/version tables are append-only, mutable application tables do not get
+DELETE, and security/consent/infrastructure tables can update only reviewed
+lifecycle columns. Immutable identity bindings, tenant metadata, consent-purpose,
+event-payload, and credential ownership/algorithm columns have no UPDATE grant.
+Password hash, parameter version, and change timestamp remain updateable only for
+the authenticated adaptive-rehash path. Only expired idempotency cleanup may
+physically delete rows. The runtime role has no access to `audit_record` or
+unclassified baseline tables.
+New tables and their sequences receive no automatic DML; each migration must
+classify them in the allowlist before reconciliation grants access. Enum/domain
+types retain USAGE. Unexpected ownership or role membership fails closed.
 The long-lived Core task receives only the runtime secret; only the one-shot
 migration execution role may read both admin and runtime secrets.
 

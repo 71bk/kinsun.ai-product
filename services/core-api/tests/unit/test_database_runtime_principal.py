@@ -6,7 +6,12 @@ from typing import Any
 
 import pytest
 
+import app.models  # noqa: F401
 from app.database_runtime_principal import (
+    PROTECTED_COLUMN_UPDATE_DENY_MATRIX,
+    PROTECTED_TABLE_DENY_MATRIX,
+    RUNTIME_COLUMN_UPDATE_PRIVILEGES,
+    RUNTIME_TABLE_PRIVILEGES,
     RUNTIME_USERNAME,
     RuntimeCredential,
     RuntimePrincipalConfigurationError,
@@ -14,6 +19,7 @@ from app.database_runtime_principal import (
     load_runtime_credential,
     reconcile_runtime_principal,
 )
+from app.db.base import SCHEMA_NAME, Base
 
 RUNTIME_PASSWORD = "synthetic-runtime-password-material-000000000001"
 
@@ -33,9 +39,17 @@ class _FakeCursor:
         self,
         responses: list[tuple[Any, ...]],
         type_rows: list[tuple[str]] | None = None,
+        sequence_rows: list[tuple[str, str]] | None = None,
+        column_rows: list[tuple[str, list[str]]] | None = None,
     ) -> None:
         self._responses = iter(responses)
-        self._type_rows = [("consent_status",)] if type_rows is None else type_rows
+        self._fetchall_responses = iter(
+            [
+                [] if column_rows is None else column_rows,
+                [] if sequence_rows is None else sequence_rows,
+                [("consent_status",)] if type_rows is None else type_rows,
+            ]
+        )
         self.executions: list[tuple[str, object | None]] = []
 
     def __enter__(self) -> _FakeCursor:
@@ -51,8 +65,8 @@ class _FakeCursor:
     def fetchone(self) -> tuple[Any, ...]:
         return next(self._responses)
 
-    def fetchall(self) -> list[tuple[str]]:
-        return self._type_rows
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        return next(self._fetchall_responses)
 
 
 class _FakeConnection:
@@ -60,9 +74,11 @@ class _FakeConnection:
         self,
         responses: list[tuple[Any, ...]],
         type_rows: list[tuple[str]] | None = None,
+        sequence_rows: list[tuple[str, str]] | None = None,
+        column_rows: list[tuple[str, list[str]]] | None = None,
     ) -> None:
         self.pgconn = _FakePgConnection()
-        self.cursor_instance = _FakeCursor(responses, type_rows)
+        self.cursor_instance = _FakeCursor(responses, type_rows, sequence_rows, column_rows)
 
     def __enter__(self) -> _FakeConnection:
         return self
@@ -114,13 +130,14 @@ def test_invalid_runtime_password_fails_without_echoing_value(password: str) -> 
         assert password not in str(exc_info.value)
 
 
-def test_new_role_is_created_with_only_current_and_future_dml_privileges() -> None:
+def test_new_role_is_created_with_explicit_table_privilege_matrix() -> None:
     connection = _FakeConnection(
         [
             ('migration"owner', "kinsun"),
             (True,),  # eldercare_ai exists after Alembic
             (False,),  # runtime role is new
-        ]
+        ],
+        column_rows=[("consent_grant", ["elder_id", "status"])],
     )
 
     captured_dsn = ""
@@ -141,10 +158,27 @@ def test_new_role_is_created_with_only_current_and_future_dml_privileges() -> No
     assert RUNTIME_PASSWORD not in sql_text
     assert 'CREATE ROLE "kinsun_app" WITH LOGIN PASSWORD' in sql_text
     assert "NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS" in sql_text
-    assert 'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "eldercare_ai"' in (
-        sql_text
+    assert 'GRANT SELECT ON TABLE "eldercare_ai"."policy_registry" TO "kinsun_app"' in sql_text
+    assert (
+        'GRANT SELECT, INSERT ON TABLE "eldercare_ai"."consent_grant" TO "kinsun_app"' in sql_text
     )
-    assert 'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA "eldercare_ai"' in sql_text
+    assert (
+        "GRANT SELECT, INSERT, DELETE ON TABLE "
+        '"eldercare_ai"."idempotency_record" TO "kinsun_app"' in sql_text
+    )
+    assert (
+        'GRANT UPDATE ("status", "revoked_at", "updated_at") ON TABLE '
+        '"eldercare_ai"."consent_grant" TO "kinsun_app"' in sql_text
+    )
+    assert (
+        'REVOKE ALL PRIVILEGES ("elder_id", "status") ON TABLE '
+        '"eldercare_ai"."consent_grant" FROM "kinsun_app"' in sql_text
+    )
+    assert "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES" not in sql_text
+    assert "GRANT USAGE, SELECT ON ALL SEQUENCES" not in sql_text
+    assert 'GRANT SELECT ON TABLE "eldercare_ai"."audit_record"' not in sql_text
+    assert "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO" not in sql_text
+    assert "GRANT USAGE, SELECT ON SEQUENCES TO" not in sql_text
     assert 'GRANT USAGE ON TYPE "eldercare_ai"."consent_status" TO "kinsun_app"' in sql_text
     assert "ON ALL TYPES IN SCHEMA" not in sql_text
     assert 'FOR ROLE "migration""owner" IN SCHEMA "eldercare_ai"' in sql_text
@@ -152,6 +186,90 @@ def test_new_role_is_created_with_only_current_and_future_dml_privileges() -> No
     assert "GRANT TRUNCATE" not in sql_text
     assert "GRANT TRIGGER" not in sql_text
     assert "GRANT EXECUTE" not in sql_text
+
+
+def test_runtime_privilege_contract_denies_sensitive_mutation() -> None:
+    assert "audit_record" not in RUNTIME_TABLE_PRIVILEGES
+    assert RUNTIME_TABLE_PRIVILEGES["policy_registry"] == ("SELECT",)
+    assert "DELETE" not in RUNTIME_TABLE_PRIVILEGES["consent_grant"]
+    assert "DELETE" not in RUNTIME_TABLE_PRIVILEGES["outbox_event"]
+    assert RUNTIME_TABLE_PRIVILEGES["idempotency_record"] == (
+        "SELECT",
+        "INSERT",
+        "DELETE",
+    )
+    assert RUNTIME_COLUMN_UPDATE_PRIVILEGES["consent_grant"] == (
+        "status",
+        "revoked_at",
+        "updated_at",
+    )
+    assert "elder_id" in PROTECTED_COLUMN_UPDATE_DENY_MATRIX["consent_grant"]
+    assert PROTECTED_TABLE_DENY_MATRIX["audit_record"] == (
+        "SELECT",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+    )
+    assert RUNTIME_COLUMN_UPDATE_PRIVILEGES["password_credential"] == (
+        "password_hash",
+        "parameter_version",
+        "status",
+        "failed_attempt_count",
+        "locked_until",
+        "password_changed_at",
+        "last_verified_at",
+        "revoked_at",
+        "version",
+        "updated_at",
+    )
+    assert PROTECTED_COLUMN_UPDATE_DENY_MATRIX["password_credential"] == (
+        "actor_id",
+        "algorithm",
+    )
+    assert "expires_at" in RUNTIME_COLUMN_UPDATE_PRIVILEGES["line_link_challenge"]
+    assert "event_type" in RUNTIME_COLUMN_UPDATE_PRIVILEGES["line_webhook_receipt"]
+    assert RUNTIME_TABLE_PRIVILEGES["context_manifest"] == ("SELECT",)
+    assert RUNTIME_TABLE_PRIVILEGES["knowledge_source"] == ("SELECT",)
+    assert RUNTIME_TABLE_PRIVILEGES["knowledge_source_version"] == ("SELECT",)
+
+
+def test_runtime_privilege_allowlist_matches_orm_table_and_column_names() -> None:
+    orm_tables = {
+        table.name: table for table in Base.metadata.tables.values() if table.schema == SCHEMA_NAME
+    }
+
+    assert set(RUNTIME_TABLE_PRIVILEGES) <= set(orm_tables)
+    for table_name, columns in RUNTIME_COLUMN_UPDATE_PRIVILEGES.items():
+        assert table_name in RUNTIME_TABLE_PRIVILEGES
+        assert "UPDATE" not in RUNTIME_TABLE_PRIVILEGES[table_name]
+        assert set(columns) <= set(orm_tables[table_name].columns.keys())
+    for table_name, columns in PROTECTED_COLUMN_UPDATE_DENY_MATRIX.items():
+        assert table_name in RUNTIME_COLUMN_UPDATE_PRIVILEGES
+        assert set(columns).isdisjoint(RUNTIME_COLUMN_UPDATE_PRIVILEGES[table_name])
+        assert set(columns) <= set(orm_tables[table_name].columns.keys())
+
+
+def test_only_sequences_owned_by_insert_allowlisted_tables_are_granted() -> None:
+    connection = _FakeConnection(
+        [
+            ("kinsun_admin", "kinsun"),
+            (True,),
+            (False,),
+        ],
+        sequence_rows=[("eldercare_ai", "synthetic_owned_sequence")],
+    )
+
+    reconcile_runtime_principal(
+        "postgresql+psycopg://admin:never-log@db.invalid/kinsun",
+        _credential(),
+        connect=lambda _: connection,
+    )
+
+    sql_text = "\n".join(query for query, _ in connection.cursor_instance.executions)
+    assert (
+        'GRANT USAGE, SELECT ON SEQUENCE "eldercare_ai"."synthetic_owned_sequence" '
+        'TO "kinsun_app"' in sql_text
+    )
 
 
 @pytest.mark.parametrize(

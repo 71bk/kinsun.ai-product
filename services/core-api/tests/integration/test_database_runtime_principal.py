@@ -10,6 +10,10 @@ import pytest
 from psycopg import sql
 
 from app.database_runtime_principal import (
+    PROTECTED_COLUMN_UPDATE_DENY_MATRIX,
+    PROTECTED_TABLE_DENY_MATRIX,
+    RUNTIME_COLUMN_UPDATE_PRIVILEGES,
+    RUNTIME_TABLE_PRIVILEGES,
     RUNTIME_USERNAME,
     RuntimeCredential,
     reconcile_runtime_principal,
@@ -62,7 +66,7 @@ def _drop_test_runtime_role(cursor: psycopg.Cursor) -> None:
 
 
 @pytest.mark.usefixtures("run_migrations")
-def test_runtime_role_has_dml_and_sequence_access_but_no_schema_ddl() -> None:
+def test_runtime_role_enforces_explicit_permission_and_deny_matrix() -> None:
     sqlalchemy_admin_url, psycopg_admin_url = _admin_urls()
     role_created_by_test = False
 
@@ -95,8 +99,8 @@ def test_runtime_role_has_dml_and_sequence_access_but_no_schema_ddl() -> None:
         )
         role_created_by_test = True
 
-        # Objects created after reconciliation must receive the same least-privilege
-        # grants through ALTER DEFAULT PRIVILEGES.
+        # A table created after reconciliation must remain inaccessible until the
+        # application privilege matrix explicitly classifies it.
         with psycopg.connect(psycopg_admin_url) as admin_connection:
             with admin_connection.cursor() as cursor:
                 cursor.execute(f"CREATE TYPE eldercare_ai.\"{_FUTURE_TYPE}\" AS ENUM ('ready')")
@@ -126,31 +130,96 @@ def test_runtime_role_has_dml_and_sequence_access_but_no_schema_ddl() -> None:
                 )
                 assert cursor.fetchone() == (True, False)
 
-        with psycopg.connect(_runtime_url(psycopg_admin_url)) as runtime_connection:
-            with runtime_connection.cursor() as cursor:
+                for table_name, privileges in RUNTIME_TABLE_PRIVILEGES.items():
+                    for privilege in privileges:
+                        cursor.execute(
+                            "SELECT has_table_privilege(%s, %s, %s)",
+                            (
+                                RUNTIME_USERNAME,
+                                f"eldercare_ai.{table_name}",
+                                privilege,
+                            ),
+                        )
+                        assert cursor.fetchone() == (True,), (table_name, privilege)
+
+                for table_name, columns in RUNTIME_COLUMN_UPDATE_PRIVILEGES.items():
+                    for column in columns:
+                        cursor.execute(
+                            "SELECT has_column_privilege(%s, %s, %s, 'UPDATE')",
+                            (RUNTIME_USERNAME, f"eldercare_ai.{table_name}", column),
+                        )
+                        assert cursor.fetchone() == (True,), (table_name, column)
+
+                    cursor.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_schema = 'eldercare_ai' AND table_name = %s",
+                        (table_name,),
+                    )
+                    allowed_columns = set(columns)
+                    for (column,) in cursor.fetchall():
+                        if column in allowed_columns:
+                            continue
+                        cursor.execute(
+                            "SELECT has_column_privilege(%s, %s, %s, 'UPDATE')",
+                            (RUNTIME_USERNAME, f"eldercare_ai.{table_name}", column),
+                        )
+                        assert cursor.fetchone() == (False,), (table_name, column)
+
+                for table_name, denied_privileges in PROTECTED_TABLE_DENY_MATRIX.items():
+                    for privilege in denied_privileges:
+                        cursor.execute(
+                            "SELECT has_table_privilege(%s, %s, %s)",
+                            (
+                                RUNTIME_USERNAME,
+                                f"eldercare_ai.{table_name}",
+                                privilege,
+                            ),
+                        )
+                        assert cursor.fetchone() == (False,), (table_name, privilege)
+
+                for table_name, columns in PROTECTED_COLUMN_UPDATE_DENY_MATRIX.items():
+                    for column in columns:
+                        cursor.execute(
+                            "SELECT has_column_privilege(%s, %s, %s, 'UPDATE')",
+                            (RUNTIME_USERNAME, f"eldercare_ai.{table_name}", column),
+                        )
+                        assert cursor.fetchone() == (False,), (table_name, column)
+
+                cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'eldercare_ai'")
+                for (table_name,) in cursor.fetchall():
+                    if table_name in RUNTIME_TABLE_PRIVILEGES:
+                        continue
+                    cursor.execute(
+                        "SELECT has_table_privilege(%s, %s, %s)",
+                        (
+                            RUNTIME_USERNAME,
+                            f"eldercare_ai.{table_name}",
+                            "SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER",
+                        ),
+                    )
+                    assert cursor.fetchone() == (False,), table_name
+
                 for table_name in (_CURRENT_TABLE, _FUTURE_TABLE):
                     cursor.execute(
-                        f"""
-                        INSERT INTO eldercare_ai."{table_name}" (value, state)
-                        VALUES (%s, 'ready') RETURNING id
-                        """,
-                        ("synthetic",),
+                        "SELECT has_table_privilege(%s, %s, %s)",
+                        (
+                            RUNTIME_USERNAME,
+                            f"eldercare_ai.{table_name}",
+                            "SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER",
+                        ),
                     )
-                    row_id = cursor.fetchone()[0]
+                    assert cursor.fetchone() == (False,), table_name
                     cursor.execute(
-                        f'UPDATE eldercare_ai."{table_name}" SET value = %s WHERE id = %s',
-                        ("updated", row_id),
+                        "SELECT has_sequence_privilege(%s, "
+                        "pg_get_serial_sequence(%s, 'id'), 'USAGE,SELECT,UPDATE')",
+                        (RUNTIME_USERNAME, f"eldercare_ai.{table_name}"),
                     )
-                    cursor.execute(
-                        f'SELECT value FROM eldercare_ai."{table_name}" WHERE id = %s',
-                        (row_id,),
-                    )
-                    assert cursor.fetchone() == ("updated",)
-                    cursor.execute(
-                        f'DELETE FROM eldercare_ai."{table_name}" WHERE id = %s',
-                        (row_id,),
-                    )
-            runtime_connection.commit()
+                    assert cursor.fetchone() == (False,), table_name
+
+        with psycopg.connect(_runtime_url(psycopg_admin_url)) as runtime_connection:
+            with runtime_connection.cursor() as cursor:
+                cursor.execute("SELECT count(*) FROM eldercare_ai.policy_registry")
+                assert cursor.fetchone()[0] >= 0
 
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with runtime_connection.cursor() as cursor:
@@ -160,6 +229,44 @@ def test_runtime_role_has_dml_and_sequence_access_but_no_schema_ddl() -> None:
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with runtime_connection.cursor() as cursor:
                     cursor.execute(f'TRUNCATE eldercare_ai."{_CURRENT_TABLE}"')
+            runtime_connection.rollback()
+
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with runtime_connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO eldercare_ai.audit_record "
+                        "(action_type, target_type, result, trace_id) "
+                        "VALUES ('probe', 'probe', 'SUCCESS', 'probe')"
+                    )
+            runtime_connection.rollback()
+
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with runtime_connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM eldercare_ai.consent_grant WHERE FALSE")
+            runtime_connection.rollback()
+
+            with runtime_connection.cursor() as cursor:
+                cursor.execute("UPDATE eldercare_ai.consent_grant SET status = status WHERE FALSE")
+                cursor.execute(
+                    "UPDATE eldercare_ai.password_credential "
+                    "SET password_hash = password_hash, "
+                    "parameter_version = parameter_version, "
+                    "password_changed_at = password_changed_at WHERE FALSE"
+                )
+            runtime_connection.commit()
+
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with runtime_connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE eldercare_ai.consent_grant SET elder_id = elder_id WHERE FALSE"
+                    )
+            runtime_connection.rollback()
+
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with runtime_connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE eldercare_ai.policy_registry SET status = status WHERE FALSE"
+                    )
             runtime_connection.rollback()
     finally:
         with psycopg.connect(psycopg_admin_url) as admin_connection:
