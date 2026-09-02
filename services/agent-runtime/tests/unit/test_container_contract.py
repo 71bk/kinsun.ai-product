@@ -1,4 +1,10 @@
+import re
 from pathlib import Path
+
+import pytest
+
+from agent_runtime.app import validate_production_configuration
+from agent_runtime.settings import Settings
 
 SERVICE_ROOT = Path(__file__).resolve().parents[2]
 
@@ -65,3 +71,31 @@ def test_runtime_image_is_non_root_and_safe_by_default() -> None:
         "hybrid-legal.json",
     ):
         assert f"config/rag/{config_name}" in dockerfile
+
+
+def test_image_defaults_cannot_start_as_a_production_runtime() -> None:
+    """The shipped defaults are mock replies and no retrieval, so they must not start.
+
+    The image is environment-neutral and expects deployment settings to be
+    injected. Reading the defaults back out of the Dockerfile keeps that promise
+    executable: if someone ever pairs a real-looking APP_ENV with the mock
+    provider in the image itself, this fails instead of shipping.
+    """
+
+    dockerfile = (SERVICE_ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+    def shipped_default(name: str) -> str:
+        match = re.search(rf"\b{name}=(\S+)", dockerfile)
+        assert match is not None, f"{name} has no default in the Dockerfile"
+        return match.group(1)
+
+    defaults = {name: shipped_default(name) for name in ("APP_ENV", "MODEL_PROVIDER", "RAG_MODE")}
+
+    assert defaults == {
+        "APP_ENV": "production",
+        "MODEL_PROVIDER": "mock",
+        "RAG_MODE": "disabled",
+    }
+
+    with pytest.raises(ValueError, match="APP_ENV=production rejected this configuration"):
+        validate_production_configuration(Settings(_env_file=None, **defaults))

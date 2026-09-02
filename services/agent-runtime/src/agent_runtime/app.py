@@ -29,6 +29,19 @@ from agent_runtime.settings import Settings, get_settings
 logger = logging.getLogger(__name__)
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
+# Providers that actually reach a governed model. "mock" is deliberately absent:
+# it answers from fixed rules, and a deployment doing that while the operator
+# believes a model is grounded in the knowledge base is the failure this
+# allowlist exists to stop.
+PRODUCTION_APPROVED_MODEL_PROVIDERS = frozenset({"bedrock", "gemini", "openai-compatible"})
+
+# RAG_MODE values this service may serve under APP_ENV=production. Empty on
+# purpose, not by oversight: "disabled" builds no retriever at all, and
+# "staging" binds the retriever to a release whose chunks carry
+# production_approved=false. Promoting a corpus is an owner decision plus a
+# signed allowlist, so the approved value arrives with that release, not before.
+PRODUCTION_APPROVED_RAG_MODES: frozenset[str] = frozenset()
+
 
 def build_provider() -> ModelProvider:
     settings = get_settings()
@@ -176,6 +189,49 @@ def _resolve_config_path(configured_path: str) -> Path:
     return (REPOSITORY_ROOT / path).resolve()
 
 
+def validate_production_configuration(settings: Settings) -> None:
+    """Refuse a production start that would only look like a working runtime.
+
+    Local, test and staging keep every default: they may run the mock provider
+    with retrieval switched off, and nothing about those profiles claims
+    otherwise. Production is where the same defaults become invisible — the
+    service starts, answers, and reports healthy while the replies are synthetic
+    and no governed retrieval ever ran. Every violation is collected so one
+    failed start shows the operator the whole gap instead of one value per
+    restart, and no configured value is echoed back into the message.
+    """
+
+    if settings.APP_ENV.strip().casefold() != "production":
+        return
+
+    reasons: list[str] = []
+    provider_key = settings.MODEL_PROVIDER.strip().casefold().replace("_", "-")
+    if provider_key not in PRODUCTION_APPROVED_MODEL_PROVIDERS:
+        approved = ", ".join(sorted(PRODUCTION_APPROVED_MODEL_PROVIDERS))
+        reasons.append(
+            f"MODEL_PROVIDER must be one of: {approved} "
+            "(the mock provider returns scripted text, not a model reply)"
+        )
+    if settings.RAG_MODE.strip().casefold() not in PRODUCTION_APPROVED_RAG_MODES:
+        reasons.append(
+            "RAG_MODE has no production-approved value yet: 'disabled' runs with no "
+            "governed retrieval, and 'staging' retrieves from a release whose chunks "
+            "are production_approved=false"
+        )
+    if settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS:
+        reasons.append(
+            "RAG_ALLOW_NEEDS_REVIEW_CITATIONS must be false: needs-review chunks have "
+            "not passed human review"
+        )
+    if settings.RAG_STAGING_ALLOW_ALL_AUDIENCES:
+        reasons.append(
+            "RAG_STAGING_ALLOW_ALL_AUDIENCES must be false: it serves a role content "
+            "whose source metadata does not list that role"
+        )
+    if reasons:
+        raise ValueError("APP_ENV=production rejected this configuration: " + "; ".join(reasons))
+
+
 def build_service_identity_replay_store(settings: Settings) -> ReplayStore:
     """Return a durable claim store, or fail closed where replicas can exist.
 
@@ -212,6 +268,7 @@ async def _lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    validate_production_configuration(settings)
     if not settings.SERVICE_IDENTITY_ENABLED:
         raise ValueError("SERVICE_IDENTITY_ENABLED=true is required for Agent Runtime")
     if not settings.SERVICE_IDENTITY_HMAC_SECRET:

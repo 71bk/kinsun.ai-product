@@ -147,6 +147,20 @@ Core 的 `AGENT_RUNTIME_MODEL_ID` 是 audit label，部署時應同步設成實�
 Confirmed Memory 已可走這個 adapter；目前 knowledge RAG 仍依賴 staging Bedrock／OpenSearch，
 不會因換文字模型而自動脫離 AWS。
 
+### `APP_ENV=production` 設定 gate
+
+`create_app()` 第一件事是 `validate_production_configuration()`。它只在 `APP_ENV=production`
+時檢查，`local`／`test`／`staging` 的預設行為完全不變，仍可用 mock 與關閉的檢索。production 則
+要求 `MODEL_PROVIDER` 為 `bedrock`／`gemini`／`openai-compatible` 其中之一，且
+`RAG_ALLOW_NEEDS_REVIEW_CITATIONS`、`RAG_STAGING_ALLOW_ALL_AUDIENCES` 必須是 false。
+
+`RAG_MODE` 目前**沒有任何 production 核准值**：`disabled` 等於完全沒有受治理檢索，`staging`
+綁的是 `production_approved=false` 的 release，兩者都會被拒絕。因此在正式核准的檢索 release
+出現之前，`APP_ENV=production` 一律在啟動時 fail closed，不會以 synthetic 回覆或無檢索的狀態
+上線。要解除只有一條路：由 Owner 核准 production retrieval release，再把該 mode 加進
+`app.py` 的 `PRODUCTION_APPROVED_RAG_MODES`。違規項目會一次列出，訊息只帶設定名稱，
+不回填任何設定值、endpoint 或 secret。
+
 若 `allowed_tools` 明確包含 `create_event_candidate`，Safety 允許且 Event Extractor 真的產生
 Candidate，Runtime 才會要求 `CORE_API_BASE_URL`，向 Core 註冊正式 UUID AgentRun、以同一
 UUID 執行 Core Tool，並同步完成該 AgentRun。Tool `SUCCESS`／`NO_DATA`／`BLOCKED` 對應同名
@@ -190,11 +204,18 @@ daemon or copied into the image.
 docker build --file services/agent-runtime/Dockerfile `
   --tag kinsun/agent-runtime:local .
 docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m `
+  --env APP_ENV=staging `
+  --env SERVICE_IDENTITY_ENABLED=true `
+  --env SERVICE_IDENTITY_HMAC_SECRET=<local-only-synthetic-secret> `
   --publish 8001:8001 kinsun/agent-runtime:local
 curl http://localhost:8001/health
 ```
 
-The container intentionally defaults to `MODEL_PROVIDER=mock` and `RAG_MODE=disabled`. Setting
+The container intentionally defaults to `APP_ENV=production`, `MODEL_PROVIDER=mock` and
+`RAG_MODE=disabled` — a combination the production configuration gate refuses, so the image cannot
+start on its shipped defaults at all. That is deliberate: the image is environment-neutral, and the
+one thing it must never do is boot as a production runtime answering from scripted text. A local or
+staging run therefore injects its own `APP_ENV` and service identity settings, as above. Setting
 `APP_ENV=staging` alone does not enable Bedrock or retrieval. A staging deployment must explicitly
 inject its approved non-secret model/OpenSearch settings and use an ECS task role for AWS access.
 The image includes only the Bedrock/Google query embedding configs, the index mapping, and the
