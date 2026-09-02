@@ -32,7 +32,7 @@ async def retrieve_knowledge(
     chunks.
     """
 
-    request.app.state.service_identity_verifier.verify(
+    await request.app.state.service_identity_verifier.verify(
         request.headers.get(SERVICE_CREDENTIAL_HEADER),
         method=request.method,
         path=request.url.path,
@@ -62,7 +62,7 @@ async def retrieve_governed_knowledge(
 ) -> SuccessEnvelope[RetrievalResponseV2]:
     """Retrieve complete governed citations or fail the entire batch closed."""
 
-    request.app.state.service_identity_verifier.verify(
+    await request.app.state.service_identity_verifier.verify(
         request.headers.get(SERVICE_CREDENTIAL_HEADER),
         method=request.method,
         path=request.url.path,

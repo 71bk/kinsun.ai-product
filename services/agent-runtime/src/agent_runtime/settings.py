@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     SERVICE_IDENTITY_HMAC_SECRET: SecretStr | None = None
     SERVICE_IDENTITY_ISSUER: str = Field(default="kinsun-local", min_length=1, max_length=80)
     SERVICE_IDENTITY_TTL_SECONDS: int = Field(default=30, ge=1, le=60)
+    # Durable replay protection. Required in production: a process-local store
+    # cannot stop the same signed request being accepted by a second replica.
+    SERVICE_IDENTITY_REPLAY_DATABASE_URL: SecretStr | None = None
+    SERVICE_IDENTITY_REPLAY_STATEMENT_TIMEOUT_MS: int = Field(default=5_000, ge=500, le=30_000)
     RAG_MODE: str = "disabled"
     RAG_SEARCH_BACKEND: str = "postgresql"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False

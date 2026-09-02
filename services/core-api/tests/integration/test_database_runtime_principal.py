@@ -11,8 +11,10 @@ from psycopg import sql
 
 from app.database_runtime_principal import (
     PROTECTED_COLUMN_UPDATE_DENY_MATRIX,
+    PROTECTED_SHARED_TABLE_DENY_MATRIX,
     PROTECTED_TABLE_DENY_MATRIX,
     RUNTIME_COLUMN_UPDATE_PRIVILEGES,
+    RUNTIME_SHARED_SCHEMA_PRIVILEGES,
     RUNTIME_TABLE_PRIVILEGES,
     RUNTIME_USERNAME,
     RuntimeCredential,
@@ -185,6 +187,30 @@ def test_runtime_role_enforces_explicit_permission_and_deny_matrix() -> None:
                         )
                         assert cursor.fetchone() == (False,), (table_name, column)
 
+                for schema_name, shared_tables in RUNTIME_SHARED_SCHEMA_PRIVILEGES.items():
+                    cursor.execute(
+                        "SELECT has_schema_privilege(%s, %s, 'USAGE'), "
+                        "has_schema_privilege(%s, %s, 'CREATE')",
+                        (RUNTIME_USERNAME, schema_name, RUNTIME_USERNAME, schema_name),
+                    )
+                    assert cursor.fetchone() == (True, False), schema_name
+                    for table_name, privileges in shared_tables.items():
+                        for privilege in privileges:
+                            cursor.execute(
+                                "SELECT has_table_privilege(%s, %s, %s)",
+                                (RUNTIME_USERNAME, f"{schema_name}.{table_name}", privilege),
+                            )
+                            assert cursor.fetchone() == (True,), (table_name, privilege)
+
+                for schema_name, shared_tables in PROTECTED_SHARED_TABLE_DENY_MATRIX.items():
+                    for table_name, denied_privileges in shared_tables.items():
+                        for privilege in denied_privileges:
+                            cursor.execute(
+                                "SELECT has_table_privilege(%s, %s, %s)",
+                                (RUNTIME_USERNAME, f"{schema_name}.{table_name}", privilege),
+                            )
+                            assert cursor.fetchone() == (False,), (table_name, privilege)
+
                 cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'eldercare_ai'")
                 for (table_name,) in cursor.fetchall():
                     if table_name in RUNTIME_TABLE_PRIVILEGES:
@@ -266,6 +292,27 @@ def test_runtime_role_enforces_explicit_permission_and_deny_matrix() -> None:
                 with runtime_connection.cursor() as cursor:
                     cursor.execute(
                         "UPDATE eldercare_ai.policy_registry SET status = status WHERE FALSE"
+                    )
+            runtime_connection.rollback()
+
+            # The runtime role claims and purges nonces but can never rewrite one.
+            with runtime_connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO service_identity.credential_nonce "
+                    "(audience, credential_id, issuer, subject, expires_at) "
+                    "VALUES ('agent-runtime', 'runtime-principal-probe', 'kinsun-local', "
+                    "'core-api', now() - interval '1 second')"
+                )
+                cursor.execute(
+                    "DELETE FROM service_identity.credential_nonce WHERE expires_at < now()"
+                )
+            runtime_connection.commit()
+
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with runtime_connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE service_identity.credential_nonce "
+                        "SET expires_at = expires_at WHERE FALSE"
                     )
             runtime_connection.rollback()
     finally:

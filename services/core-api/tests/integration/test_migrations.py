@@ -42,6 +42,7 @@ from alembic.config import Config
 
 SCHEMA_NAME = "eldercare_ai"
 RAG_SCHEMA_NAME = "rag_public"
+SERVICE_IDENTITY_SCHEMA_NAME = "service_identity"
 
 #: The eight tables that back the identity & elder assignment domain.
 #: The baseline creates 48 tables in total (the wider eldercare_ai product
@@ -66,7 +67,7 @@ _TOTAL_HEAD_TABLE_COUNT = 64
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "d0e4f6a8b901"
+_HEAD_REVISION = "e2f4a6c8b013"
 
 
 def _get_alembic_config() -> Config:
@@ -137,6 +138,7 @@ def _drop_all_tables(connection) -> None:
     """
     connection.execute(text(f"DROP SCHEMA IF EXISTS {SCHEMA_NAME} CASCADE"))
     connection.execute(text(f"DROP SCHEMA IF EXISTS {RAG_SCHEMA_NAME} CASCADE"))
+    connection.execute(text(f"DROP SCHEMA IF EXISTS {SERVICE_IDENTITY_SCHEMA_NAME} CASCADE"))
     connection.execute(text("DROP TABLE IF EXISTS alembic_version CASCADE"))
 
 
@@ -327,6 +329,122 @@ async def test_idempotency_hardening_schema_supports_snapshot_expiry_and_cleanup
     assert "ck_idempotency_key_format_version" in checks
     assert "idx_idempotency_record_expiry" in indexes
     assert delete_rule == "SET NULL"
+
+
+@pytest.mark.asyncio
+async def test_service_credential_nonce_is_isolated_from_the_domain_schema(test_engine) -> None:
+    """The shared replay store must not live inside eldercare_ai."""
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+    async with test_engine.begin() as conn:
+        nonce_tables = {
+            row.table_name
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT table_name FROM information_schema.tables "
+                        "WHERE table_schema = :schema"
+                    ),
+                    {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+                )
+            )
+        }
+        primary_key_columns = [
+            row.attname
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT a.attname FROM pg_index i "
+                        "JOIN pg_class c ON c.oid = i.indrelid "
+                        "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                        "JOIN pg_attribute a "
+                        "  ON a.attrelid = c.oid AND a.attnum = ANY(i.indkey) "
+                        "WHERE n.nspname = :schema AND c.relname = 'credential_nonce' "
+                        "AND i.indisprimary ORDER BY a.attname"
+                    ),
+                    {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+                )
+            )
+        ]
+        indexes = {
+            row.indexname
+            for row in (
+                await conn.execute(
+                    text("SELECT indexname FROM pg_indexes WHERE schemaname = :schema"),
+                    {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+                )
+            )
+        }
+        public_grant_count = await conn.scalar(
+            text(
+                "SELECT count(*) FROM information_schema.role_table_grants "
+                "WHERE table_schema = :schema AND grantee = 'PUBLIC'"
+            ),
+            {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+        )
+        domain_tables = await conn.run_sync(_get_tables)
+
+    assert nonce_tables == {"credential_nonce"}
+    assert primary_key_columns == ["audience", "credential_id"]
+    assert "ix_credential_nonce_expiry" in indexes
+    assert public_grant_count == 0
+    assert "credential_nonce" not in domain_tables
+
+    # The same credential ID may only be claimed once per audience.
+    async with test_engine.begin() as conn:
+        first = await conn.scalar(
+            text(
+                "INSERT INTO service_identity.credential_nonce "
+                "(audience, credential_id, issuer, subject, expires_at) "
+                "VALUES ('agent-runtime', 'migration-probe', 'kinsun-local', "
+                "'core-api', now() + interval '30 seconds') "
+                "ON CONFLICT (audience, credential_id) DO NOTHING "
+                "RETURNING credential_id"
+            )
+        )
+        replay = await conn.scalar(
+            text(
+                "INSERT INTO service_identity.credential_nonce "
+                "(audience, credential_id, issuer, subject, expires_at) "
+                "VALUES ('agent-runtime', 'migration-probe', 'kinsun-local', "
+                "'core-api', now() + interval '30 seconds') "
+                "ON CONFLICT (audience, credential_id) DO NOTHING "
+                "RETURNING credential_id"
+            )
+        )
+        other_audience = await conn.scalar(
+            text(
+                "INSERT INTO service_identity.credential_nonce "
+                "(audience, credential_id, issuer, subject, expires_at) "
+                "VALUES ('core-api', 'migration-probe', 'kinsun-local', "
+                "'speech-gateway', now() + interval '30 seconds') "
+                "ON CONFLICT (audience, credential_id) DO NOTHING "
+                "RETURNING credential_id"
+            )
+        )
+        await conn.execute(text("DELETE FROM service_identity.credential_nonce"))
+
+    assert first == "migration-probe"
+    assert replay is None
+    assert other_audience == "migration-probe"
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_downgrade, "d0e4f6a8b901")
+
+    async with test_engine.begin() as conn:
+        remaining = await conn.execute(
+            text("SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema"),
+            {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+        )
+        assert remaining.first() is None
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
 
 
 @pytest.mark.asyncio

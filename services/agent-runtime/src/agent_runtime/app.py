@@ -18,8 +18,13 @@ from agent_runtime.orchestration.orchestrator import AgentOrchestrator
 from agent_runtime.rag.models import RagRuntimeSettings
 from agent_runtime.rag.retriever import build_retriever, close_retriever
 from agent_runtime.rag.runtime_policy import load_source_family_runtime_policy
+from agent_runtime.security.replay_store import InMemoryReplayStore, ReplayStore
+from agent_runtime.security.replay_store_postgres import (
+    PostgresReplayStore,
+    build_replay_engine,
+)
 from agent_runtime.security.service_identity import ServiceCredentialVerifier
-from agent_runtime.settings import get_settings
+from agent_runtime.settings import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -171,6 +176,30 @@ def _resolve_config_path(configured_path: str) -> Path:
     return (REPOSITORY_ROOT / path).resolve()
 
 
+def build_service_identity_replay_store(settings: Settings) -> ReplayStore:
+    """Return a durable claim store, or fail closed where replicas can exist.
+
+    Local and test profiles keep the in-memory store so the suite needs no
+    database. Production must not: two replicas each holding their own
+    dictionary would both accept the same signed request.
+    """
+
+    configured_url = settings.SERVICE_IDENTITY_REPLAY_DATABASE_URL
+    if configured_url is not None and configured_url.get_secret_value().strip():
+        return PostgresReplayStore(
+            build_replay_engine(
+                configured_url.get_secret_value().strip(),
+                statement_timeout_ms=settings.SERVICE_IDENTITY_REPLAY_STATEMENT_TIMEOUT_MS,
+            )
+        )
+    if settings.APP_ENV.strip().casefold() == "production":
+        raise ValueError(
+            "SERVICE_IDENTITY_REPLAY_DATABASE_URL is required when APP_ENV=production: "
+            "process-local replay protection cannot span replicas"
+        )
+    return InMemoryReplayStore()
+
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     try:
@@ -178,6 +207,7 @@ async def _lifespan(app: FastAPI):
     finally:
         await close_retriever(app.state.rag_retriever)
         await app.state.provider.aclose()
+        await app.state.service_identity_replay_store.aclose()
 
 
 def create_app() -> FastAPI:
@@ -205,11 +235,13 @@ def create_app() -> FastAPI:
         max_total_tools=settings.MAX_TOTAL_TOOLS,
     )
     app.state.rag_retriever = build_configured_rag_retriever()
+    app.state.service_identity_replay_store = build_service_identity_replay_store(settings)
     app.state.service_identity_verifier = ServiceCredentialVerifier(
         secret=settings.SERVICE_IDENTITY_HMAC_SECRET.get_secret_value(),
         issuer=settings.SERVICE_IDENTITY_ISSUER,
         expected_subject="core-api",
         audience="agent-runtime",
+        replay_store=app.state.service_identity_replay_store,
         max_ttl_seconds=settings.SERVICE_IDENTITY_TTL_SECONDS,
     )
     return app

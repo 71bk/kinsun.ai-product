@@ -91,6 +91,12 @@ unclassified baseline tables.
 New tables and their sequences receive no automatic DML; each migration must
 classify them in the allowlist before reconciliation grants access. Enum/domain
 types retain USAGE. Unexpected ownership or role membership fails closed.
+Schemas outside `eldercare_ai` are classified separately in
+`RUNTIME_SHARED_SCHEMA_PRIVILEGES`: `service_identity.credential_nonce` gets
+SELECT/INSERT/DELETE so single-use service credential IDs can be claimed and
+expired rows purged, but never UPDATE, and the shared schema receives no type,
+sequence, or future-object grants. Reconciliation also fails closed when a
+declared shared schema is missing after migration.
 The long-lived Core task receives only the runtime secret; only the one-shot
 migration execution role may read both admin and runtime secrets.
 

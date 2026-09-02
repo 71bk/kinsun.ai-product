@@ -9,8 +9,10 @@ import pytest
 import app.models  # noqa: F401
 from app.database_runtime_principal import (
     PROTECTED_COLUMN_UPDATE_DENY_MATRIX,
+    PROTECTED_SHARED_TABLE_DENY_MATRIX,
     PROTECTED_TABLE_DENY_MATRIX,
     RUNTIME_COLUMN_UPDATE_PRIVILEGES,
+    RUNTIME_SHARED_SCHEMA_PRIVILEGES,
     RUNTIME_TABLE_PRIVILEGES,
     RUNTIME_USERNAME,
     RuntimeCredential,
@@ -135,6 +137,7 @@ def test_new_role_is_created_with_explicit_table_privilege_matrix() -> None:
         [
             ('migration"owner', "kinsun"),
             (True,),  # eldercare_ai exists after Alembic
+            (True,),  # service_identity exists after Alembic
             (False,),  # runtime role is new
         ],
         column_rows=[("consent_grant", "elder_id"), ("consent_grant", "status")],
@@ -180,6 +183,16 @@ def test_new_role_is_created_with_explicit_table_privilege_matrix() -> None:
     assert "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO" not in sql_text
     assert "GRANT USAGE, SELECT ON SEQUENCES TO" not in sql_text
     assert 'GRANT USAGE ON TYPE "eldercare_ai"."consent_status" TO "kinsun_app"' in sql_text
+    assert 'GRANT USAGE ON SCHEMA "service_identity" TO "kinsun_app"' in sql_text
+    assert (
+        "GRANT SELECT, INSERT, DELETE ON TABLE "
+        '"service_identity"."credential_nonce" TO "kinsun_app"' in sql_text
+    )
+    assert (
+        'ALTER DEFAULT PRIVILEGES FOR ROLE "migration""owner" IN SCHEMA "service_identity" '
+        'REVOKE ALL PRIVILEGES ON TABLES FROM "kinsun_app"' in sql_text
+    )
+    assert 'GRANT USAGE ON TYPE "service_identity"' not in sql_text
     assert "ON ALL TYPES IN SCHEMA" not in sql_text
     assert 'FOR ROLE "migration""owner" IN SCHEMA "eldercare_ai"' in sql_text
     assert "GRANT CREATE" not in sql_text
@@ -233,6 +246,22 @@ def test_runtime_privilege_contract_denies_sensitive_mutation() -> None:
     assert RUNTIME_TABLE_PRIVILEGES["knowledge_source_version"] == ("SELECT",)
 
 
+def test_shared_schema_nonce_claims_are_insert_and_purge_only() -> None:
+    nonce_privileges = RUNTIME_SHARED_SCHEMA_PRIVILEGES["service_identity"]["credential_nonce"]
+
+    assert nonce_privileges == ("SELECT", "INSERT", "DELETE")
+    assert "UPDATE" not in nonce_privileges
+    assert PROTECTED_SHARED_TABLE_DENY_MATRIX["service_identity"]["credential_nonce"] == (
+        "UPDATE",
+        "TRUNCATE",
+        "REFERENCES",
+        "TRIGGER",
+    )
+    # A shared schema must never leak into the eldercare_ai allowlist, which the
+    # ORM cross-check treats as domain tables.
+    assert "credential_nonce" not in RUNTIME_TABLE_PRIVILEGES
+
+
 def test_runtime_privilege_allowlist_matches_orm_table_and_column_names() -> None:
     orm_tables = {
         table.name: table for table in Base.metadata.tables.values() if table.schema == SCHEMA_NAME
@@ -253,6 +282,7 @@ def test_only_sequences_owned_by_insert_allowlisted_tables_are_granted() -> None
     connection = _FakeConnection(
         [
             ("kinsun_admin", "kinsun"),
+            (True,),
             (True,),
             (False,),
         ],
@@ -286,6 +316,7 @@ def test_existing_role_with_privilege_invariants_fails_before_alter(
         [
             ("kinsun_admin", "kinsun"),
             (True,),
+            (True,),  # service_identity exists after Alembic
             (True,),  # runtime role already exists
             *safety_responses,
         ]
@@ -308,6 +339,7 @@ def test_existing_role_membership_check_is_bidirectional() -> None:
         [
             ("kinsun_admin", "kinsun"),
             (True,),
+            (True,),  # service_identity exists after Alembic
             (True,),  # runtime role already exists
             (False,),  # no membership in either direction
             (False,),  # no ownership
@@ -320,7 +352,7 @@ def test_existing_role_membership_check_is_bidirectional() -> None:
         connect=lambda _: connection,
     )
 
-    membership_query, membership_params = connection.cursor_instance.executions[4]
+    membership_query, membership_params = connection.cursor_instance.executions[5]
     assert "memberships.member" in membership_query
     assert "memberships.roleid" in membership_query
     assert membership_params == (RUNTIME_USERNAME, RUNTIME_USERNAME)
@@ -329,7 +361,21 @@ def test_existing_role_membership_check_is_bidirectional() -> None:
 def test_missing_schema_fails_before_role_creation() -> None:
     connection = _FakeConnection([("kinsun_admin", "kinsun"), (False,)])
 
-    with pytest.raises(RuntimePrincipalInvariantError, match="schema does not exist"):
+    with pytest.raises(RuntimePrincipalInvariantError, match="runtime schema does not exist"):
+        reconcile_runtime_principal(
+            "postgresql+psycopg://admin:never-log@db.invalid/kinsun",
+            _credential(),
+            connect=lambda _: connection,
+        )
+
+    sql_text = "\n".join(query for query, _ in connection.cursor_instance.executions)
+    assert "CREATE ROLE" not in sql_text
+
+
+def test_missing_shared_schema_fails_before_role_creation() -> None:
+    connection = _FakeConnection([("kinsun_admin", "kinsun"), (True,), (False,)])
+
+    with pytest.raises(RuntimePrincipalInvariantError, match="shared schema does not exist"):
         reconcile_runtime_principal(
             "postgresql+psycopg://admin:never-log@db.invalid/kinsun",
             _credential(),

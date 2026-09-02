@@ -15,7 +15,7 @@ async def run_agent(
 ) -> SuccessEnvelope[AgentRunResponse]:
     """Run one bounded turn and return only replies or typed proposals."""
     raw_body = await request.body()
-    request.app.state.service_identity_verifier.verify(
+    await request.app.state.service_identity_verifier.verify(
         request.headers.get(SERVICE_CREDENTIAL_HEADER),
         method=request.method,
         path=request.url.path,

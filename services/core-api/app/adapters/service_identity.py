@@ -14,8 +14,10 @@ import json
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
+from app.adapters.service_identity_replay import ReplayStore
 from app.core.exceptions import AuthenticationError
 
 SERVICE_CREDENTIAL_HEADER = "X-Kinsun-Service-Credential"
@@ -113,8 +115,9 @@ class ServicePrincipal:
 class ServiceCredentialVerifier:
     """Verify one short-lived, request-bound synthetic service credential.
 
-    Replay state is intentionally process-local. ADR 0009 requires a different
-    credential mechanism before a multi-replica production deployment.
+    ``replay_store`` is required rather than defaulted: a forgotten store used
+    to mean silent process-local replay protection, which ADR 0009 forbids once
+    more than one replica can serve the same audience.
     """
 
     def __init__(
@@ -124,6 +127,7 @@ class ServiceCredentialVerifier:
         issuer: str,
         expected_subject: str,
         audience: str,
+        replay_store: ReplayStore,
         max_ttl_seconds: int = 60,
         clock_skew_seconds: int = 5,
     ) -> None:
@@ -135,11 +139,11 @@ class ServiceCredentialVerifier:
         self._issuer = issuer
         self._expected_subject = expected_subject
         self._audience = audience
+        self._replay_store = replay_store
         self._max_ttl_seconds = max_ttl_seconds
         self._clock_skew_seconds = clock_skew_seconds
-        self._seen: dict[str, int] = {}
 
-    def verify(
+    async def verify(
         self,
         token: str | None,
         *,
@@ -198,10 +202,16 @@ class ServiceCredentialVerifier:
         ):
             raise AuthenticationError("Authentication required")
 
-        self._seen = {key: expiry for key, expiry in self._seen.items() if expiry >= current_time}
-        if credential_id in self._seen:
+        claimed = await self._replay_store.claim(
+            issuer=str(claims["iss"]),
+            subject=str(claims["sub"]),
+            audience=str(claims["aud"]),
+            credential_id=credential_id,
+            expires_at=datetime.fromtimestamp(expires_at, tz=UTC),
+            now=datetime.fromtimestamp(current_time, tz=UTC),
+        )
+        if not claimed:
             raise AuthenticationError("Authentication required")
-        self._seen[credential_id] = expires_at
         return ServicePrincipal(
             issuer=str(claims["iss"]),
             subject=str(claims["sub"]),

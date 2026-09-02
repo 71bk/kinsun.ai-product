@@ -86,6 +86,21 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "idempotency_record": _READ_APPEND_DELETE,
 }
 
+# Schemas outside eldercare_ai that hold operational security state rather than
+# domain rows.  Each is enumerated table by table for the same reason as above:
+# a future table in a shared schema receives no runtime DML until it is listed.
+RUNTIME_SHARED_SCHEMA_PRIVILEGES: dict[str, dict[str, tuple[str, ...]]] = {
+    # Single-use service credential IDs.  Claims are inserted, never edited, and
+    # expired rows are purged by the same runtime role.
+    "service_identity": {"credential_nonce": _READ_APPEND_DELETE},
+}
+
+PROTECTED_SHARED_TABLE_DENY_MATRIX: dict[str, dict[str, tuple[str, ...]]] = {
+    "service_identity": {
+        "credential_nonce": ("UPDATE", "TRUNCATE", "REFERENCES", "TRIGGER"),
+    },
+}
+
 RUNTIME_COLUMN_UPDATE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "account_merge_request": (
         "status",
@@ -504,6 +519,36 @@ def _execute_role_reconciliation(
         )
         cursor.execute(sql.SQL("GRANT USAGE ON TYPE {} TO {}").format(type_identifier, role))
 
+    # Shared operational schemas get USAGE plus an explicit per-table grant.  They
+    # deliberately never receive type, sequence or future-object privileges.
+    for shared_schema_name, shared_tables in sorted(RUNTIME_SHARED_SCHEMA_PRIVILEGES.items()):
+        shared_schema = sql.Identifier(shared_schema_name)
+        cursor.execute(
+            sql.SQL("REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {}").format(shared_schema, role)
+        )
+        cursor.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(shared_schema, role))
+        for object_type in ("TABLES", "SEQUENCES", "FUNCTIONS"):
+            cursor.execute(
+                sql.SQL("REVOKE ALL PRIVILEGES ON ALL {} IN SCHEMA {} FROM {}").format(
+                    sql.SQL(object_type), shared_schema, role
+                )
+            )
+            cursor.execute(
+                sql.SQL(
+                    "ALTER DEFAULT PRIVILEGES FOR ROLE {} IN SCHEMA {} "
+                    "REVOKE ALL PRIVILEGES ON {} FROM {}"
+                ).format(admin, shared_schema, sql.SQL(object_type), role)
+            )
+        for table_name, privileges in sorted(shared_tables.items()):
+            privilege_list = sql.SQL(", ").join(sql.SQL(privilege) for privilege in privileges)
+            cursor.execute(
+                sql.SQL("GRANT {} ON TABLE {} TO {}").format(
+                    privilege_list,
+                    sql.Identifier(shared_schema_name, table_name),
+                    role,
+                )
+            )
+
     for object_type in ("TABLES", "SEQUENCES", "FUNCTIONS", "TYPES"):
         cursor.execute(
             sql.SQL(
@@ -554,6 +599,16 @@ def reconcile_runtime_principal(
                 raise RuntimePrincipalInvariantError(
                     "runtime schema does not exist after migration"
                 )
+
+            for shared_schema_name in sorted(RUNTIME_SHARED_SCHEMA_PRIVILEGES):
+                cursor.execute(
+                    "SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = %s)",
+                    (shared_schema_name,),
+                )
+                if not cursor.fetchone()[0]:
+                    raise RuntimePrincipalInvariantError(
+                        "shared schema does not exist after migration"
+                    )
 
             cursor.execute(
                 "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = %s)",

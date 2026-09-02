@@ -9,9 +9,11 @@ import json
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from agent_runtime.common.errors import ServiceAuthenticationError
+from agent_runtime.security.replay_store import ReplayStore, ReplayStoreError
 
 SERVICE_CREDENTIAL_HEADER = "X-Kinsun-Service-Credential"
 _TOKEN_PREFIX = "ksvc1"
@@ -100,11 +102,11 @@ class ServicePrincipal:
 
 
 class ServiceCredentialVerifier:
-    """Fail-closed verifier with process-local replay protection.
+    """Fail-closed verifier whose replay protection comes from an injected store.
 
-    The replay store is intentionally local to the synthetic profile. A
-    production multi-replica deployment must replace this mechanism as noted in
-    ADR 0009.
+    ``replay_store`` is required rather than defaulted: a forgotten store used to
+    mean silent process-local protection, which cannot span replicas. The app
+    refuses to start in production unless the configured store is durable.
     """
 
     def __init__(
@@ -114,6 +116,7 @@ class ServiceCredentialVerifier:
         issuer: str,
         expected_subject: str,
         audience: str,
+        replay_store: ReplayStore,
         max_ttl_seconds: int = 60,
         clock_skew_seconds: int = 5,
     ) -> None:
@@ -125,11 +128,11 @@ class ServiceCredentialVerifier:
         self._issuer = issuer
         self._expected_subject = expected_subject
         self._audience = audience
+        self._replay_store = replay_store
         self._max_ttl_seconds = max_ttl_seconds
         self._clock_skew_seconds = clock_skew_seconds
-        self._seen: dict[str, int] = {}
 
-    def verify(
+    async def verify(
         self,
         token: str | None,
         *,
@@ -182,10 +185,20 @@ class ServiceCredentialVerifier:
         ):
             raise ServiceAuthenticationError("Service credential is missing or invalid")
 
-        self._seen = {key: expiry for key, expiry in self._seen.items() if expiry >= current_time}
-        if credential_id in self._seen:
+        try:
+            claimed = await self._replay_store.claim(
+                issuer=str(claims["iss"]),
+                subject=str(claims["sub"]),
+                audience=str(claims["aud"]),
+                credential_id=credential_id,
+                expires_at=datetime.fromtimestamp(expires_at, tz=UTC),
+                now=datetime.fromtimestamp(current_time, tz=UTC),
+            )
+        except ReplayStoreError as exc:
+            # An undecidable claim is a rejection, never an implicit accept.
+            raise ServiceAuthenticationError("Service credential is missing or invalid") from exc
+        if not claimed:
             raise ServiceAuthenticationError("Service credential is missing or invalid")
-        self._seen[credential_id] = expires_at
         return ServicePrincipal(
             issuer=str(claims["iss"]),
             subject=str(claims["sub"]),
