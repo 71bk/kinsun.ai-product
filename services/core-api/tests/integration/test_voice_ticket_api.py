@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.adapters.service_identity import ServicePrincipal
 from app.middleware.speech_service_auth import require_speech_service
 from app.models.actor import Actor
+from app.models.agent import AgentRun
 from app.models.care_assignment import CareAssignment
 from app.models.care_unit import CareUnit
 from app.models.consent import ConsentGrant
@@ -22,10 +24,15 @@ from app.models.elder import Elder
 from app.models.outbox import OutboxEvent
 from app.models.policy import PolicyRegistry
 from app.models.tenant import Tenant
+from app.services.speech_synthesis_capability import (
+    SpeechSynthesisCapabilityCodec,
+    get_speech_synthesis_capability_codec,
+)
 from app.services.voice_ticket_codec import VoiceTicketCodec, get_voice_ticket_codec
 from tests.integration import test_identity_api as identity_api_tests
 
 SECRET = "integration-voice-ticket-secret-material-32-bytes"
+SYNTHESIS_SECRET = "integration-speech-synthesis-secret-material-32-bytes"
 
 
 @pytest.fixture
@@ -504,3 +511,108 @@ async def test_expired_assignment_issue_has_zero_session_or_outbox_side_effect(
     assert denied.status_code == 404
     assert denied.json()["error"]["reason_code"] == "RESOURCE_NOT_FOUND"
     assert await _counts(test_engine) == before
+
+
+@pytest.mark.asyncio
+async def test_speech_synthesis_capability_binds_text_and_is_single_use(
+    test_engine,
+    committed_session,
+    voice_data,
+) -> None:
+    ids = voice_data
+    now = datetime.now(UTC)
+    session_id = uuid4()
+    agent_run_id = uuid4()
+    reply_text = "這是受 Core 授權的合成回覆。"
+    conversation = ConversationSession(
+        id=session_id,
+        tenant_id=ids["tenant_id"],
+        elder_id=ids["elder_id"],
+        initiator_actor_id=ids["actor_id"],
+        initiator_type="ELDER",
+        language_route="ZH_TW",
+        input_mode="voice_with_text_fallback",
+        state="COMPLETED",
+        started_at=now - timedelta(seconds=2),
+        ended_at=now,
+        trace_id=f"synthesis-capability-{session_id}",
+        consent_id=ids["consent_id"],
+        consent_version=1,
+        policy_version="voice-ticket-v1",
+    )
+    agent_run = AgentRun(
+        agent_run_id=agent_run_id,
+        session_id=session_id,
+        elder_id=ids["elder_id"],
+        tenant_id=ids["tenant_id"],
+        actor_id=ids["actor_id"],
+        agent_id="companion-agent",
+        agent_version="1.0.0",
+        result_status="SUCCESS",
+        model_id="synthetic",
+        prompt_version="test",
+        policy_version="voice-ticket-v1",
+        token_usage={},
+        trace_id=conversation.trace_id,
+        started_at=now - timedelta(seconds=1),
+        completed_at=now,
+    )
+    committed_session.add_all([conversation, agent_run])
+    await committed_session.commit()
+
+    codec = SpeechSynthesisCapabilityCodec(SYNTHESIS_SECRET, now=lambda: now)
+    capability = codec.issue(
+        session_id=session_id,
+        agent_run_id=agent_run_id,
+        tenant_id=ids["tenant_id"],
+        actor_id=ids["actor_id"],
+        text=reply_text,
+        language="zh-TW",
+        completed_at=now,
+    ).value
+    app = _app(
+        test_engine,
+        ids,
+        role="ELDER",
+        codec=VoiceTicketCodec(SECRET),
+    )
+    app.dependency_overrides[get_speech_synthesis_capability_codec] = lambda: codec
+    base_payload = {
+        "session_id": str(session_id),
+        "agent_run_id": str(agent_run_id),
+        "capability": capability,
+        "character_count": len(reply_text),
+        "language": "zh-TW",
+        "client_ip_hash": "a" * 64,
+    }
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        changed = await client.post(
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            json={
+                **base_payload,
+                "text_sha256": "b" * 64,
+            },
+        )
+        accepted = await client.post(
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            json={
+                **base_payload,
+                "text_sha256": hashlib.sha256(reply_text.encode()).hexdigest(),
+            },
+        )
+        replayed = await client.post(
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            json={
+                **base_payload,
+                "text_sha256": hashlib.sha256(reply_text.encode()).hexdigest(),
+            },
+        )
+
+    assert changed.status_code == 401
+    assert accepted.status_code == 200
+    assert accepted.json()["data"]["actor_id"] == str(ids["actor_id"])
+    assert replayed.status_code == 401

@@ -52,6 +52,9 @@ MODEL_FILES = {
     "CreateVoiceSessionRequest": "domain/CreateVoiceSessionRequestV1.json",
     "CreateVoiceTicketRequest": "domain/CreateVoiceTicketRequestV1.json",
     "ConsumeVoiceTicketRequest": "domain/ConsumeVoiceTicketRequestV1.json",
+    "ConsumeSpeechSynthesisCapabilityRequest": (
+        "domain/ConsumeSpeechSynthesisCapabilityRequestV1.json"
+    ),
     "SubmitAsrResultRequest": "domain/SubmitAsrResultRequestV1.json",
     "ConfirmAsrGateRequest": "domain/ConfirmAsrGateRequestV1.json",
     "TransitionVoiceSessionRequest": "domain/TransitionVoiceSessionRequestV1.json",
@@ -143,6 +146,9 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "consume_voice_ticket_api_v1_internal_voice_tickets_consume_post": (
         "VoiceSessionEnvelopeV1"
     ),
+    "consume_speech_synthesis_capability_api_v1_internal_speech_synthesis_capabilities_consume_post": (
+        "SpeechSynthesisPrincipalEnvelopeV1"
+    ),
     "submit_asr_result_api_v1_internal_asr_results_post": ("AsrGateDecisionEnvelopeV1"),
     "confirm_asr_gate_api_v1_voice_sessions__session_id__asr_confirmation_post": (
         "AsrGateDecisionEnvelopeV1"
@@ -175,15 +181,11 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     (
         "acknowledge_assisted_first_use_api_v1_assisted_elder_sessions_current_"
         "first_use_acknowledgement_post"
-    ): (
-        "FirstUseAcknowledgementEnvelopeV1"
-    ),
+    ): ("FirstUseAcknowledgementEnvelopeV1"),
     (
         "revoke_assisted_first_use_api_v1_assisted_elder_sessions_current_"
         "first_use_acknowledgement_revoke_post"
-    ): (
-        "FirstUseAcknowledgementEnvelopeV1"
-    ),
+    ): ("FirstUseAcknowledgementEnvelopeV1"),
     "create_assisted_companion_turn_api_v1_assisted_elder_sessions_current_companion_turns_post": (
         "CompanionTurnEnvelopeV1"
     ),
@@ -282,6 +284,18 @@ LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
 KINSUN_AUTH_PATH_PREFIX = "/api/v1/internal/auth/kinsun/"
 ASSISTED_SESSION_PATH_PREFIX = "/api/v1/assisted-elder-sessions/current"
 ASSISTED_SESSION_EXCHANGE_PATH = "/api/v1/assisted-elder-sessions/exchange"
+SPEECH_SERVICE_PATHS = {
+    "/api/v1/internal/asr-results",
+    "/api/v1/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation",
+    "/api/v1/internal/speech-synthesis-capabilities/consume",
+}
+SPEECH_SERVICE_PATH_PREFIXES = (
+    "/api/v1/internal/voice-sessions/",
+    "/api/v1/internal/voice-tickets/",
+)
+SPEECH_SYNTHESIS_CAPABILITY_PATH = (
+    "/api/v1/internal/speech-synthesis-capabilities/consume"
+)
 
 
 def replace_model_refs(node: object) -> None:
@@ -315,7 +329,7 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.7.0",
+        "version": "1.8.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
             "security, assisted Elder Session, professional Care Action and outbox APIs."
@@ -380,6 +394,16 @@ def main() -> None:
                 "actor, enrollment and Elder relationship on every request."
             ),
         },
+        "speechServiceCredential": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Kinsun-Service-Credential",
+            "description": (
+                "Short-lived request-bound HMAC credential for Speech Gateway. "
+                "Core binds it to method, path, body hash, correlation ID and a "
+                "durable single-use nonce."
+            ),
+        },
     }
     components["responses"] = {
         "Unauthorized": {
@@ -424,6 +448,20 @@ def main() -> None:
         },
         "Unavailable": {
             "description": "Required dependency unavailable.",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
+                }
+            },
+        },
+        "RateLimited": {
+            "description": "A scoped request or character quota was exhausted.",
+            "headers": {
+                "Retry-After": {
+                    "description": "Seconds before this quota window may accept a retry.",
+                    "schema": {"type": "integer", "minimum": 1},
+                }
+            },
             "content": {
                 "application/json": {
                     "schema": {"$ref": "../schemas/common/ErrorEnvelopeV1.json"}
@@ -495,6 +533,10 @@ def main() -> None:
                     operation["security"] = []
                 elif path.startswith(ASSISTED_SESSION_PATH_PREFIX):
                     operation["security"] = [{"assistedElderSessionAuth": []}]
+                elif path in SPEECH_SERVICE_PATHS or path.startswith(
+                    SPEECH_SERVICE_PATH_PREFIXES
+                ):
+                    operation["security"] = [{"speechServiceCredential": []}]
                 else:
                     operation["security"] = [{"bearerAuth": []}]
                 operation["responses"].update(
@@ -507,6 +549,10 @@ def main() -> None:
                         "503": {"$ref": "#/components/responses/Unavailable"},
                     }
                 )
+                if path == SPEECH_SYNTHESIS_CAPABILITY_PATH:
+                    operation["responses"]["429"] = {
+                        "$ref": "#/components/responses/RateLimited"
+                    }
             else:
                 operation["security"] = []
 

@@ -1,6 +1,7 @@
 {
   "$defs": {
     "ConsentPurpose": {
+      "description": "Supported purposes for granting and enforcing consent.",
       "enum": [
         "BASIC_VOICE",
         "TRANSCRIPT_STORAGE",

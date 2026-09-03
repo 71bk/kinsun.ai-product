@@ -16,7 +16,10 @@ from agent_runtime.rag.client import (
     build_opensearch_transport,
 )
 from agent_runtime.rag.fallback import NO_DATA_MESSAGE
-from agent_runtime.rag.filters import is_normal_rag_eligible
+from agent_runtime.rag.filters import (
+    is_normal_rag_eligible,
+    is_policy_overlay_live_eligible,
+)
 from agent_runtime.rag.hybrid_search import HybridSearch
 from agent_runtime.rag.models import (
     HybridProfileSettings,
@@ -503,8 +506,72 @@ def test_runtime_policy_searches_fixed_candidates_before_response_gates() -> Non
     assert body["size"] == 50
     assert body["query"]["hybrid"]["queries"][1]["knn"]["embedding"]["k"] == 50
     assert body["query"]["hybrid"]["filter"] == {
-        "bool": {"must": [{"terms": {"chunk_id": list(candidate_ids)}}]}
+        "bool": {
+            "must": [
+                {"terms": {"chunk_id": list(candidate_ids)}},
+                {"term": {"current_status": "current"}},
+                {"term": {"stop_normal_rag": False}},
+                {"term": {"retrieval_eligible": True}},
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "bool": {
+                                    "must": [
+                                        {"term": {"review_status": "verified"}},
+                                        {"terms": {"production_approved": [True, False]}},
+                                    ]
+                                }
+                            },
+                            {
+                                "bool": {
+                                    "must": [
+                                        {"term": {"review_status": "needs_review"}},
+                                        {"term": {"production_approved": False}},
+                                    ]
+                                }
+                            },
+                        ],
+                        "minimum_should_match": 1,
+                    }
+                },
+            ]
+        }
     }
+
+
+@pytest.mark.parametrize(
+    ("override", "allow_needs_review"),
+    [
+        ({"current_status": "withdrawn"}, True),
+        ({"current_status": "expired"}, True),
+        ({"stop_normal_rag": True}, True),
+        ({"retrieval_eligible": False}, True),
+        ({"retrieval_block_reasons": ["source_withdrawn"]}, True),
+        ({"review_status": "needs_review", "production_approved": True}, True),
+        ({"review_status": "needs_review", "production_approved": False}, False),
+    ],
+)
+def test_runtime_policy_overlay_rejects_ineligible_live_governance(
+    override: dict[str, object], allow_needs_review: bool
+) -> None:
+    source: dict[str, object] = {
+        "current_status": "current",
+        "stop_normal_rag": False,
+        "retrieval_eligible": True,
+        "retrieval_block_reasons": [],
+        "review_status": "needs_review",
+        "production_approved": False,
+        **override,
+    }
+
+    assert (
+        is_policy_overlay_live_eligible(
+            source,
+            allow_needs_review=allow_needs_review,
+        )
+        is False
+    )
 
 
 def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:

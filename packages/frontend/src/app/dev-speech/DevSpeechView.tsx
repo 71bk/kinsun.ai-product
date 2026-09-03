@@ -14,13 +14,9 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { BrowserVoiceRecorder } from '@/lib/voice/recorder';
-import { transcribeTurn, VoiceTurnError } from '@/lib/voice/canonical-voice-turn';
-import {
-  audioBase64ToObjectUrl,
-  canSynthesize,
-  synthesizeSpeech,
-  type SpeechLanguage,
-} from '@/lib/voice/speech-gateway-client';
+import { createTextSession } from '@/lib/api/companion';
+import { speakTurn, transcribeTurn, VoiceTurnError } from '@/lib/voice/canonical-voice-turn';
+import { canSynthesize, type SpeechLanguage } from '@/lib/voice/speech-gateway-client';
 
 type Language = SpeechLanguage;
 
@@ -96,10 +92,13 @@ export function DevSpeechView() {
     }
     setBusy(true);
     try {
-      const result = await synthesizeSpeech(ttsText, language);
-      const url = audioBase64ToObjectUrl(result.audioBase64, result.contentType);
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
+      const config = { apiBaseUrl: '/backend/core' };
+      const session = await createTextSession(config, elderId.trim());
+      const result = await speakTurn(config, session.session_id, ttsText, language);
+      const audioUrl = result.audioUrl;
+      if (!audioUrl) throw new Error('Core did not authorize speech synthesis');
+      const audio = new Audio(audioUrl);
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
       await audio.play();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'synthesis failed');

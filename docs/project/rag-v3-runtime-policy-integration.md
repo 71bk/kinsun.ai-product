@@ -12,10 +12,13 @@
 最多取得 50 筆候選；Retriever 再逐筆驗證 v002 chunk ID、source ID、v003 文字 SHA-256、角色、
 purpose 與 assessment metadata，最後只回傳 3–5 筆 v003 citation。搜尋排序不負責安全判斷。
 
-啟用 hash-pinned runtime policy 時，PostgreSQL 先以固定 554 個 prior chunk IDs 取代遠端舊版
-governance metadata；Retriever 隨後仍逐筆驗證 source ID、v003 文字 SHA-256、角色與 purpose。這讓
-本機已核准的 immutable policy 能覆蓋尚未同步的遠端 v002 metadata，又不會讓清單外或文字被改動的
-資料進入回答。未啟用 runtime policy 的 legacy 路徑仍必須通過遠端 public／official governance。
+啟用 hash-pinned runtime policy 時，PostgreSQL 先以固定 554 個 prior chunk IDs 補足遠端舊版的
+risk／audience／purpose／assessment／citation metadata；遠端 live `current_status`、
+`stop_normal_rag`、`retrieval_eligible`、block reasons 與 review／production flags 仍是不可覆蓋的
+撤銷邊界。搜尋 backend 與 Retriever 都會檢查這些 live 欄位；Retriever 隨後再逐筆驗證 source ID、
+v003 文字 SHA-256、角色與 purpose。這讓本機已核准的 immutable policy 能補足尚未同步的遠端 v002
+metadata，又不會讓清單外、文字被改動或已撤回的資料進入回答。未啟用 runtime policy 的 legacy
+路徑仍必須通過遠端 public／official governance。
 
 四個角色 `elder`、`family_caregiver`、`care_professional`、`system_admin` 都可搜尋同一個固定
 候選池。`requires_official_assessment=true` 或 `requires_professional_assessment=true` 不再因角色

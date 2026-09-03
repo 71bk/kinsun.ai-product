@@ -10,7 +10,7 @@
 - High：需要在 production rollout 前處理。
 - Medium：需要排入近期 hardening / reliability sprint。
 - Low：需要在 CI、文件或維護性工作中補齊。
-- 完整 PostgreSQL integration suite 尚未執行；H-01 已以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已以一次性 PostgreSQL 16 + pgvector Docker database 完成 runtime-role deny matrix，H-03 已以 development database verifier 完成 cross-replica 與 concurrent nonce claim 驗證。
+- 2026-09-03 GitHub Actions Gate1 已在 PostgreSQL 16 + pgvector service 上完整通過 Core unit／integration suite；H-01 另以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已完成 runtime-role deny matrix，H-03 已完成 cross-replica 與 concurrent nonce claim 驗證。
 - Frontend typecheck 與 lint 已恢復綠燈。
 
 ## 修正順序
@@ -21,9 +21,9 @@
 - [x] H-02 收窄 Core runtime database role 權限。
 - [x] H-03 將 service identity replay protection 移至 shared durable store。
 - [ ] H-04 完成 Speech Gateway 的 deployment 與 frontend endpoint wiring。
-- [ ] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
+- [x] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
 - [x] H-06 加入 production fail-closed configuration，禁止 mock Agent / disabled RAG。
-- [ ] H-07 修正 RAG policy overlay 的 live governance validation。
+- [x] H-07 修正 RAG policy overlay 的 live governance validation。
 - [ ] H-08 若 deletion compliance 已在 production scope，完成所有外部 storage deletion adapter。
 
 ### P1 — Reliability / privacy / tenant isolation
@@ -121,6 +121,24 @@
 - 修正：透過 BFF/Core capability flow 呼叫；驗證 user/session ticket；加入 IP/user/tenant quota、字數限制、concurrency limit 與 `Retry-After`。
 - 驗證：未認證請求應拒絕；超過 quota 應回傳 429；provider failure 不得造成資源洩漏。
 - 應新增測試：是。
+- 修正結果：Core companion turn 只在 completed Agent run 與 live actor／tenant／session binding
+  一致時，為**去除引用區塊後的 exact UTF-8 reply**簽發 15–120 秒的一次性 opaque HMAC
+  capability；capability 綁定 session、Agent run、actor、tenant、文字 SHA-256、字數、語言與
+  completed time，且三個 synthesis response 欄位在 DTO 與 JSON Schema 都是 all-or-none。
+  Speech Gateway 的 TTS route 現在必須收到 bearer capability，先以既有 request-bound Speech
+  service identity 向 Core 兌換，再呼叫 provider；production 若未啟用該 service identity 會在
+  startup fail closed。migration `f3a5b7c9d024` 在 `service_identity` schema 新增 immutable
+  `speech_synthesis_claim`：以 advisory transaction locks 將 client-IP HMAC pseudonym／actor／tenant
+  三個 scope 的 request 與 character window quota 序列化，並以 capability digest PK 保證跨 replica
+  single use。超限回 429、`retryable=true` 與 bounded `Retry-After`。Gateway 另有 1–64 的 process
+  concurrency limit，超量立即回 429，所有 Core／provider exception path 都在 `finally` 釋放 slot。
+  Frontend 不再自行重建 TTS 文字，只傳 Core 回傳的 exact text、session／run binding 與 bearer
+  capability；reply language 不一致或 capability 未簽發時維持 text-only。新增 Core codec／DTO／quota
+  unit tests、PostgreSQL single-use integration test、Gateway auth／quota／concurrency tests、frontend
+  binding tests、OpenAPI／JSON Schema 與 valid／invalid examples。2026-09-03 本機驗證 Core unit
+  `1046 passed`、Speech Gateway `91 passed`、Agent Runtime `488 passed`、frontend `284 passed`，以及
+  Ruff、frontend typecheck／lint／build、contract validator／live drift verifier 全數通過；PostgreSQL
+  integration 由含 PostgreSQL 16 + pgvector disposable service 的 GitHub Actions 執行。
 
 ### H-06 — Production 可使用 mock Agent 或 disabled RAG
 
@@ -153,6 +171,13 @@
 - 修正：overlay 也套用完整 governance predicate，並在 response 階段以 authoritative metadata fail closed。
 - 驗證：將 chunk 改為 withdrawn/expired/review 狀態後，overlay 必須拒絕該 chunk。
 - 應新增測試：是。
+- 修正結果：OpenSearch 與 PostgreSQL 的 policy-overlay 搜尋路徑現在都必須通過 live
+  `current_status=current`、`stop_normal_rag=false`、`retrieval_eligible=true`、空的
+  `retrieval_block_reasons` 與 review／production gate；immutable policy 只可補足固定候選的
+  risk／audience／purpose／assessment／citation metadata，不能覆蓋撤回狀態。Retriever 在建立
+  response 前會以搜尋結果的 authoritative live metadata 再做一次相同的 fail-closed 檢查。
+  新增 withdrawn、expired、stop、retrieval-disabled、block reason 與 review／production mismatch
+  測試；Agent Runtime 全套 `485 passed`，Ruff check／format 皆通過。
 
 ### H-08 — External deletion 尚未完成
 

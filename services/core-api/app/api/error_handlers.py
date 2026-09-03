@@ -35,6 +35,7 @@ from app.core.exceptions import (
     DomainException,
     NotFoundError,
     ServiceUnavailableError,
+    SpeechSynthesisRateLimitError,
     TenantScopeError,
     ValidationError,
 )
@@ -58,6 +59,7 @@ EXCEPTION_MAP: dict[type[DomainException], int] = {
     AuthorizationDeniedError: 404,  # Hide resource existence
     AuthenticationError: 401,
     ServiceUnavailableError: 503,
+    SpeechSynthesisRateLimitError: 429,
     TenantScopeError: 401,
     RoleModeIncompatibleError: 403,
     ActorInactiveError: 403,
@@ -97,6 +99,7 @@ _REASON_CODE_BY_EXCEPTION: dict[type[Exception], str] = {
     AuthorizationDeniedError: "RESOURCE_NOT_FOUND_OR_FORBIDDEN",
     AuthenticationError: "AUTHENTICATION_FAILED",
     ServiceUnavailableError: "DEPENDENCY_UNAVAILABLE",
+    SpeechSynthesisRateLimitError: "SPEECH_SYNTHESIS_QUOTA_EXCEEDED",
     TenantScopeError: "TENANT_SCOPE_INVALID",
     RoleModeIncompatibleError: "ROLE_MODE_INCOMPATIBLE",
     ActorInactiveError: "ACTOR_INACTIVE",
@@ -183,7 +186,7 @@ async def _domain_exception_handler(request: Request, exc: DomainException) -> J
                 type(exc),
                 "UNEXPECTED_DOMAIN_ERROR",
             ),
-            retryable=status_code in {500, 502, 503, 504},
+            retryable=status_code in {429, 500, 502, 503, 504},
         )
 
         logger.warning(
@@ -196,9 +199,13 @@ async def _domain_exception_handler(request: Request, exc: DomainException) -> J
             },
         )
 
+        headers = None
+        if isinstance(exc, SpeechSynthesisRateLimitError):
+            headers = {"Retry-After": str(exc.retry_after_seconds)}
         return JSONResponse(
             status_code=status_code,
             content=envelope.model_dump(mode="json"),
+            headers=headers,
         )
     except Exception as handler_exc:
         # Self-healing: error handler failed — return minimal 500.

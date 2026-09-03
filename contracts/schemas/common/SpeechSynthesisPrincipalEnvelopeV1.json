@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/common/StartedKinsunEmailAuthEnvelopeV1.json",
-  "title": "StartedKinsunEmailAuthEnvelopeV1",
+  "$id": "https://kinsun.ai/contracts/schemas/common/SpeechSynthesisPrincipalEnvelopeV1.json",
+  "title": "SpeechSynthesisPrincipalEnvelopeV1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,7 +10,7 @@
   ],
   "properties": {
     "data": {
-      "$ref": "https://kinsun.ai/contracts/schemas/domain/StartedKinsunEmailAuthV1.json"
+      "$ref": "https://kinsun.ai/contracts/schemas/domain/SpeechSynthesisPrincipalV1.json"
     },
     "meta": {
       "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json"

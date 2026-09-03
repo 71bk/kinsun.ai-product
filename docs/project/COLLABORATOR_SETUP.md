@@ -375,6 +375,9 @@ CORE_API_SERVICE_IDENTITY_HMAC_SECRET=<same-as-root-SPEECH_SERVICE_IDENTITY_HMAC
 CORE_API_SERVICE_IDENTITY_ISSUER=kinsun-local
 CORE_API_SERVICE_IDENTITY_TTL_SECONDS=30
 CORE_API_TIMEOUT_SECONDS=5
+TTS_MAX_CONCURRENCY=4
+TTS_CONCURRENCY_RETRY_AFTER_SECONDS=1
+TTS_CLIENT_IP_HASH_SECRET=<independent-32-byte-secret>
 SAGEMAKER_ASR_ENDPOINT=
 SAGEMAKER_TTS_ENDPOINT=
 AZURE_SPEECH_KEY=<Speech-resource-Key-1-or-Key-2>
@@ -398,6 +401,9 @@ SPEECH_SERVICE_IDENTITY_ENABLED=true
 SPEECH_SERVICE_IDENTITY_HMAC_SECRET=<third-independent-32-byte-secret>
 SPEECH_SERVICE_IDENTITY_ISSUER=kinsun-local
 SPEECH_SERVICE_IDENTITY_TTL_SECONDS=30
+SPEECH_SYNTHESIS_CAPABILITY_ENABLED=true
+SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET=<fourth-independent-32-byte-secret>
+SPEECH_SYNTHESIS_CAPABILITY_TTL_SECONDS=60
 ```
 
 Repository 目前沒有已部署的雲端 ASR／TTS provider。只有在明確測試對應 optional adapter 時，
@@ -407,6 +413,10 @@ Repository 目前沒有已部署的雲端 ASR／TTS provider。只有在明確�
 - Gate 1 local/test 的 Speech Gateway 必須啟用 request-bound service identity；
   `CORE_API_SERVICE_IDENTITY_HMAC_SECRET` 與 root `SPEECH_SERVICE_IDENTITY_HMAC_SECRET` 相同，且不得與
   Core → Agent Runtime、Voice Ticket、ASR Gate、OAuth 或 provider secret 共用。
+- TTS 只接受 Core companion turn 簽發、綁定 exact reply 的一次性 capability。Core 以 PostgreSQL
+  原子 claim，對 client IP pseudonym／actor／tenant 同時執行 request 與字數 quota；Gateway 另有
+  process-local provider concurrency limit。兩種超限都回 429 與 `Retry-After`。反向代理部署時必須
+  保留可信的來源位址語意，否則所有流量會共用 proxy IP quota；目前 production topology 仍由 H-04 追蹤。
 - SageMaker 台語／客語 adapter：通過 license 與 Synthetic smoke gates 的私有 endpoint。
 - 國語／英文 TTS 預設走 Azure Speech；`AZURE_SPEECH_KEY` 必須是 Speech resource 的
   Key 1／Key 2，且 `AZURE_SPEECH_REGION` 必須與該 resource 的 region 相同。Azure 拒絕憑證時

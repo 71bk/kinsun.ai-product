@@ -27,6 +27,14 @@ class CoreGateUnavailableError(Exception):
     """Core could not provide a trustworthy gate decision."""
 
 
+class CoreSynthesisRateLimitedError(Exception):
+    """Core refused a TTS capability because a shared quota was exhausted."""
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__("Speech synthesis quota exceeded")
+
+
 def _canonicalize_asr_confidence(confidence: float) -> float:
     """Match Core's Numeric(5, 4) contract before serializing JSON."""
     value = Decimal(str(confidence))
@@ -53,6 +61,15 @@ class CoreMemoryDecision(BaseModel):
 
     memory_id: UUID
     status: Literal["ACTIVE", "REJECTED", "DEFERRED", "PENDING_CONFIRMATION"]
+
+
+class CoreSynthesisPrincipal(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: UUID
+    agent_run_id: UUID
+    tenant_id: UUID
+    actor_id: UUID
 
 
 class CoreVoiceGateClient:
@@ -112,6 +129,13 @@ class CoreVoiceGateClient:
         except httpx.HTTPError as exc:
             raise CoreGateUnavailableError("Core ASR gate is unavailable") from exc
 
+        if response.status_code == 429:
+            raw_retry_after = response.headers.get("Retry-After", "1")
+            try:
+                retry_after = min(3600, max(1, int(raw_retry_after)))
+            except ValueError:
+                retry_after = 1
+            raise CoreSynthesisRateLimitedError(retry_after)
         if response.status_code in {401, 403, 404, 409, 422}:
             raise CoreGateRejectedError("Core rejected the voice session")
         if not response.is_success:
@@ -170,6 +194,37 @@ class CoreVoiceGateClient:
             payload={"target_state": "FAILED"},
             headers={"Idempotency-Key": f"speech-asr-failed:{session_id}"},
         )
+
+    async def consume_synthesis_capability(
+        self,
+        *,
+        session_id: UUID,
+        agent_run_id: UUID,
+        capability: str,
+        text_sha256: str,
+        character_count: int,
+        language: str,
+        client_ip_hash: str,
+    ) -> CoreSynthesisPrincipal:
+        data = await self._post(
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            payload={
+                "session_id": str(session_id),
+                "agent_run_id": str(agent_run_id),
+                "capability": capability,
+                "text_sha256": text_sha256,
+                "character_count": character_count,
+                "language": language,
+                "client_ip_hash": client_ip_hash,
+            },
+        )
+        try:
+            principal = CoreSynthesisPrincipal.model_validate(data)
+        except ValueError as exc:
+            raise CoreGateUnavailableError("Core returned an invalid synthesis grant") from exc
+        if principal.session_id != session_id or principal.agent_run_id != agent_run_id:
+            raise CoreGateUnavailableError("Core returned a mismatched synthesis grant")
+        return principal
 
     async def decide_memory_by_voice(
         self,

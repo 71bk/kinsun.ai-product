@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     TTS_PROVIDER_HAK_TW: str = "aws-sagemaker"
     ASR_PROVIDER_TIMEOUT_SECONDS: float = 30.0
     TTS_PROVIDER_TIMEOUT_SECONDS: float = 30.0
+    TTS_MAX_CONCURRENCY: int = 4
+    TTS_CONCURRENCY_RETRY_AFTER_SECONDS: int = 1
+    TTS_CLIENT_IP_HASH_SECRET: str = ""
 
     # Deepgram remains opt-in by route. The key is intentionally allowed to be
     # blank while another ASR provider is selected, then fails closed on first
@@ -74,6 +77,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_core_service_identity(self) -> Settings:
+        environment = self.APP_ENV.casefold()
         if self.CORE_API_SERVICE_IDENTITY_ENABLED:
             if len(self.CORE_API_SERVICE_IDENTITY_HMAC_SECRET.encode("utf-8")) < 32:
                 raise ValueError(
@@ -86,6 +90,24 @@ class Settings(BaseSettings):
                     "CORE_API_SERVICE_TOKEN and request-bound service identity "
                     "are mutually exclusive"
                 )
+        if environment == "production" and not self.CORE_API_SERVICE_IDENTITY_ENABLED:
+            raise ValueError(
+                "CORE_API_SERVICE_IDENTITY_ENABLED must be true when APP_ENV=production"
+            )
+        if not 1 <= self.TTS_MAX_CONCURRENCY <= 64:
+            raise ValueError("TTS_MAX_CONCURRENCY must be between 1 and 64")
+        if not 1 <= self.TTS_CONCURRENCY_RETRY_AFTER_SECONDS <= 60:
+            raise ValueError("TTS_CONCURRENCY_RETRY_AFTER_SECONDS must be between 1 and 60")
+        if environment != "local" and len(self.TTS_CLIENT_IP_HASH_SECRET.encode("utf-8")) < 32:
+            raise ValueError("TTS_CLIENT_IP_HASH_SECRET must contain at least 32 bytes")
+        if (
+            self.TTS_CLIENT_IP_HASH_SECRET
+            and self.TTS_CLIENT_IP_HASH_SECRET == self.CORE_API_SERVICE_IDENTITY_HMAC_SECRET
+        ):
+            raise ValueError(
+                "TTS_CLIENT_IP_HASH_SECRET and CORE_API_SERVICE_IDENTITY_HMAC_SECRET "
+                "must be independent"
+            )
         return self
 
     def asr_provider_routes(self) -> dict[SpeechLanguage, str]:

@@ -92,12 +92,16 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
 RUNTIME_SHARED_SCHEMA_PRIVILEGES: dict[str, dict[str, tuple[str, ...]]] = {
     # Single-use service credential IDs.  Claims are inserted, never edited, and
     # expired rows are purged by the same runtime role.
-    "service_identity": {"credential_nonce": _READ_APPEND_DELETE},
+    "service_identity": {
+        "credential_nonce": _READ_APPEND_DELETE,
+        "speech_synthesis_claim": _READ_APPEND_DELETE,
+    },
 }
 
 PROTECTED_SHARED_TABLE_DENY_MATRIX: dict[str, dict[str, tuple[str, ...]]] = {
     "service_identity": {
         "credential_nonce": ("UPDATE", "TRUNCATE", "REFERENCES", "TRIGGER"),
+        "speech_synthesis_claim": ("UPDATE", "TRUNCATE", "REFERENCES", "TRIGGER"),
     },
 }
 

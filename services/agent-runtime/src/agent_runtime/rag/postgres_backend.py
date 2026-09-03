@@ -86,7 +86,27 @@ eligible AS (
      AND embedding.chunk_id = projection.chunk_id
      AND embedding.embedding_profile_id = CAST(:embedding_profile_id AS text)
      AND embedding.embedding_text_sha256 = projection.embedding_text_sha256
-    WHERE (
+    WHERE projection.current_status = 'current'
+      AND projection.stop_normal_rag IS FALSE
+      AND projection.retrieval_eligible IS TRUE
+      AND jsonb_typeof(
+          projection.retrieval_policy -> 'retrieval_block_reasons'
+      ) = 'array'
+      AND jsonb_array_length(
+          projection.retrieval_policy -> 'retrieval_block_reasons'
+      ) = 0
+      AND (
+          (
+              projection.review_status = 'verified'
+              AND projection.production_approved IS TRUE
+          )
+          OR (
+              CAST(:allow_needs_review AS boolean) IS TRUE
+              AND projection.review_status IN ('needs_review', 'verified')
+              AND projection.production_approved IS FALSE
+          )
+      )
+      AND (
         (
             CAST(:policy_overlay_enabled AS boolean) IS TRUE
             AND cardinality(CAST(:policy_candidate_chunk_ids AS text[])) = 554
@@ -97,9 +117,6 @@ eligible AS (
               AND projection.governance ->> 'data_classification' = 'public'
               AND projection.governance ->> 'distribution_scope' = 'public_knowledge'
               AND projection.provenance ->> 'is_official_source' = 'true'
-              AND projection.current_status = 'current'
-              AND projection.stop_normal_rag IS FALSE
-              AND projection.retrieval_eligible IS TRUE
               AND projection.risk_level IN ('low', 'medium')
               AND projection.requires_official_assessment IS NOT NULL
               AND projection.requires_professional_assessment IS NOT NULL
@@ -111,23 +128,6 @@ eligible AS (
               )
               AND CAST(:purpose AS text) IS NOT NULL
               AND CAST(:purpose AS text) = ANY(projection.allowed_purposes)
-              AND jsonb_typeof(
-                  projection.retrieval_policy -> 'retrieval_block_reasons'
-              ) = 'array'
-              AND jsonb_array_length(
-                  projection.retrieval_policy -> 'retrieval_block_reasons'
-              ) = 0
-              AND (
-                  (
-                      projection.review_status = 'verified'
-                      AND projection.production_approved IS TRUE
-                  )
-                  OR (
-                      CAST(:allow_needs_review AS boolean) IS TRUE
-                      AND projection.review_status IN ('needs_review', 'verified')
-                      AND projection.production_approved IS FALSE
-                  )
-              )
         )
     )
 ),

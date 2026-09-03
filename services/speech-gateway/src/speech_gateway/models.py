@@ -92,6 +92,8 @@ class TranscribeResponse(GatewayModel):
 
 class SynthesizeRequest(GatewayModel):
     text: str = Field(min_length=1, max_length=3000)
+    session_id: UUID
+    agent_run_id: UUID
     # Mandarin/English use a server-routed managed provider; Hokkien/Hakka
     # require the private SageMaker endpoint and fail closed when unavailable.
     language: SpeechLanguage

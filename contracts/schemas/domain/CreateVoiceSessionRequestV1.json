@@ -1,6 +1,7 @@
 {
   "$defs": {
     "LanguageRoute": {
+      "description": "Supported language routes for a conversation.",
       "enum": [
         "ZH_TW",
         "NAN_TW",

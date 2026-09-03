@@ -9,7 +9,10 @@ from agent_runtime.rag.fallback import (
     no_data_response,
     no_data_response_v2,
 )
-from agent_runtime.rag.filters import is_normal_rag_eligible
+from agent_runtime.rag.filters import (
+    is_normal_rag_eligible,
+    is_policy_overlay_live_eligible,
+)
 from agent_runtime.rag.hybrid_search import HybridSearch
 from agent_runtime.rag.models import (
     QueryProfile,
@@ -255,6 +258,11 @@ def _eligible_unique_results_v2(
     for hit in hits:
         source = hit.source
         if source_family_policy is not None:
+            if not is_policy_overlay_live_eligible(
+                source,
+                allow_needs_review=allow_needs_review,
+            ):
+                continue
             candidate = source_family_policy.response_candidate(
                 source,
                 audience=audience,
