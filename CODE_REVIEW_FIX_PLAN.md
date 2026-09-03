@@ -50,6 +50,28 @@
 - [x] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
 - [x] L-07 更新 migration head，並以 ADR 0019 退役過期的 AWS staging profile。
 
+## 2026-09-03 階段決策與續作 checkpoint
+
+目前階段不宣稱 production-complete；production deployment、外部服務整合與合規驗證改由
+production-readiness release gate 管理。排除這些外部條件後，目前沒有未處理的 Critical／High finding，
+但下列項目仍須依 Wave 2 相依性安排：
+
+1. **回家續作的第一項：M-10。** 在擴充 Wave 2 Care Action 前，先確立 immutable event
+   version/hash provenance，避免功能完成後再次修改資料模型與歷史證據語意。
+2. **M-11 為條件式 Wave 2 前置。** 若本輪包含 notification、projection、Agent handoff 或其他
+   非同步事件流程，須先完成 outbox publisher、recovery、DLQ 與 duplicate-safe consumer；若不包含，
+   保留為後續 reliability milestone。
+3. **L-01、L-02 為一般 Wave 2 工程項目。** 分別處理超過 100 筆資料的靜默截斷，以及 frontend
+   對 malformed／drifted API response 的可預期失敗；不阻擋 Wave 2 資料模型骨架。
+4. **M-08、M-09 移入 production-readiness gate。** M-08 必須在共享資料庫承載真實多租戶資料前完成；
+   M-09 必須在 email/password auth 對不受信任網路開放前完成。若開發／staging 已符合上述條件，
+   不得延後。
+5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
+   H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
+
+建議續作順序：`M-10` → 視 Wave 2 範圍決定是否立即做 `M-11` → `L-01` → `L-02`；
+`M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
+
 ---
 
 ## P0 詳細項目
@@ -466,7 +488,7 @@
 
 ## 最新驗證結果
 
-- GitHub Actions Gate 1：run `33737646609` passed（commit `dbe54ce`）；M-04 推送後會再跑一次。
+- GitHub Actions Gate 1：run `33739166227` passed（commit `9bcbc74`，包含 M-04），耗時 6m30s。
 - Core unit tests：1050 passed。
 - Agent tests：498 passed。
 - RAG tests：324 passed。
@@ -477,4 +499,5 @@
 - Frontend lint：passed（L-05 已修正）。
 - Core Ruff lint：passed。
 - Core Ruff format check：passed（L-06 已修正並納入 CI）。
-- PostgreSQL integration tests：未執行，缺少 disposable `TEST_DATABASE_URL`。
+- PostgreSQL integration tests：本機未執行（缺少 disposable `TEST_DATABASE_URL`）；GitHub Actions
+  run `33739166227` 已在 PostgreSQL 16 + pgvector service 上通過。
