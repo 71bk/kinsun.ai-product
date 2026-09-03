@@ -102,12 +102,24 @@ export async function transcribeAudio(
 export async function synthesizeSpeech(
   text: string,
   language: SynthesisLanguage,
+  sessionId: string,
+  agentRunId: string,
+  capability: string,
   speakingSpeed: 'slow' | 'normal' | 'fast' = 'normal',
 ): Promise<SynthesisResult> {
   const response = await fetch(`${gatewayBaseUrl()}/api/v1/speech/syntheses`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, language, speaking_speed: speakingSpeed }),
+    headers: {
+      Authorization: `Bearer ${capability}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text,
+      language,
+      session_id: sessionId,
+      agent_run_id: agentRunId,
+      speaking_speed: speakingSpeed,
+    }),
   });
 
   if (!response.ok) {

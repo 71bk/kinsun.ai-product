@@ -79,10 +79,54 @@
       "type": "string"
     },
     "transport_status": {
-      "const": "TEXT_ONLY",
       "default": "TEXT_ONLY",
+      "enum": [
+        "TEXT_ONLY",
+        "SYNTHESIS_CAPABILITY_ISSUED"
+      ],
       "title": "Transport Status",
       "type": "string"
+    },
+    "speech_synthesis_capability": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 32,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Speech Synthesis Capability"
+    },
+    "speech_synthesis_expires_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Speech Synthesis Expires At"
+    },
+    "speech_synthesis_text": {
+      "anyOf": [
+        {
+          "maxLength": 3000,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Speech Synthesis Text"
     },
     "model_route": {
       "maxLength": 200,
@@ -107,5 +151,55 @@
   "title": "CompanionTurnV1",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kinsun.ai/contracts/schemas/domain/CompanionTurnV1.json"
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CompanionTurnV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "transport_status": {
+            "const": "SYNTHESIS_CAPABILITY_ISSUED"
+          }
+        },
+        "required": [
+          "transport_status"
+        ]
+      },
+      "then": {
+        "required": [
+          "speech_synthesis_capability",
+          "speech_synthesis_expires_at",
+          "speech_synthesis_text"
+        ],
+        "properties": {
+          "speech_synthesis_capability": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 128
+          },
+          "speech_synthesis_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "speech_synthesis_text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "speech_synthesis_capability": {
+            "type": "null"
+          },
+          "speech_synthesis_expires_at": {
+            "type": "null"
+          },
+          "speech_synthesis_text": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
 }

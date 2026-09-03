@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.domain.conversation import LanguageRoute
 
@@ -36,6 +36,27 @@ class ConsumeVoiceTicketRequest(BaseModel):
 
     session_id: UUID
     voice_ticket: str = Field(min_length=32, max_length=128)
+
+
+class ConsumeSpeechSynthesisCapabilityRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: UUID
+    agent_run_id: UUID
+    capability: str = Field(min_length=32, max_length=128)
+    text_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    character_count: int = Field(ge=1, le=3000)
+    language: Literal["zh-TW", "en-US", "nan-TW", "hak-TW"]
+    client_ip_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class SpeechSynthesisPrincipalResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: UUID
+    agent_run_id: UUID
+    tenant_id: UUID
+    actor_id: UUID
 
 
 class TransitionVoiceSessionRequest(BaseModel):
@@ -81,8 +102,25 @@ class CompanionTurnResponse(BaseModel):
     risk_level: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     reason_codes: list[str]
     session_state: Literal["COMPLETED"] = "COMPLETED"
-    transport_status: Literal["TEXT_ONLY"] = "TEXT_ONLY"
+    transport_status: Literal["TEXT_ONLY", "SYNTHESIS_CAPABILITY_ISSUED"] = "TEXT_ONLY"
+    speech_synthesis_capability: str | None = Field(default=None, min_length=32, max_length=128)
+    speech_synthesis_expires_at: datetime | None = None
+    speech_synthesis_text: str | None = Field(default=None, min_length=1, max_length=3000)
     model_route: str = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_synthesis_transport(self) -> CompanionTurnResponse:
+        synthesis_values = (
+            self.speech_synthesis_capability,
+            self.speech_synthesis_expires_at,
+            self.speech_synthesis_text,
+        )
+        if self.transport_status == "SYNTHESIS_CAPABILITY_ISSUED":
+            if any(value is None for value in synthesis_values):
+                raise ValueError("synthesis capability transport requires all synthesis fields")
+        elif any(value is not None for value in synthesis_values):
+            raise ValueError("text-only transport must not contain synthesis fields")
+        return self
 
 
 class VoiceSessionResponse(BaseModel):

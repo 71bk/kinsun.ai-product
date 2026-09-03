@@ -1,7 +1,6 @@
 import type { ApiConfig } from '@/lib/api/client';
 import { cancelVoiceSession, issueVoiceTicket, runCompanionTurn } from '@/lib/api/companion';
 import { blobToPcm16Base64 } from './recorder';
-import { companionReplyForSpeech } from './reply-presentation';
 import {
   canSynthesize,
   LanguageUnavailableError,
@@ -118,11 +117,22 @@ export async function speakTurn(
     throw new VoiceTurnError('companion', 'the companion service is unavailable');
   }
 
-  const synthesizable = canSynthesize(language);
+  const synthesizable = canSynthesize(language) && turn.reply_language === language;
   let audioUrl: string | null = null;
-  if (synthesizable) {
+  if (
+    synthesizable &&
+    turn.transport_status === 'SYNTHESIS_CAPABILITY_ISSUED' &&
+    turn.speech_synthesis_capability &&
+    turn.speech_synthesis_text
+  ) {
     try {
-      const audio = await synthesizeSpeech(companionReplyForSpeech(turn.reply_text), language);
+      const audio = await synthesizeSpeech(
+        turn.speech_synthesis_text,
+        language,
+        turn.session_id,
+        turn.agent_run_id,
+        turn.speech_synthesis_capability,
+      );
       audioUrl = audioBase64ToUrl(audio.audioBase64, audio.contentType);
     } catch {
       audioUrl = null;
@@ -132,7 +142,7 @@ export async function speakTurn(
   return {
     replyText: turn.reply_text,
     audioUrl,
-    textOnlyByLanguage: !synthesizable,
+    textOnlyByLanguage: !synthesizable || turn.transport_status === 'TEXT_ONLY',
     resultStatus: turn.result_status,
     safetyDecision: turn.safety_decision,
   };

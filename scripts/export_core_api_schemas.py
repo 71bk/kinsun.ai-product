@@ -57,9 +57,11 @@ from app.schemas.consent import (  # noqa: E402
 from app.schemas.conversation import (  # noqa: E402
     CompanionTurnRequest,
     CompanionTurnResponse,
+    ConsumeSpeechSynthesisCapabilityRequest,
     ConsumeVoiceTicketRequest,
     CreateVoiceSessionRequest,
     CreateVoiceTicketRequest,
+    SpeechSynthesisPrincipalResponse,
     TransitionVoiceSessionRequest,
     VoiceSessionResponse,
     VoiceTicketIssuedResponse,
@@ -128,11 +130,13 @@ EXPORTS = {
         "CreateVoiceSessionRequestV1": CreateVoiceSessionRequest,
         "CreateVoiceTicketRequestV1": CreateVoiceTicketRequest,
         "ConsumeVoiceTicketRequestV1": ConsumeVoiceTicketRequest,
+        "ConsumeSpeechSynthesisCapabilityRequestV1": ConsumeSpeechSynthesisCapabilityRequest,
         "TransitionVoiceSessionRequestV1": TransitionVoiceSessionRequest,
         "VoiceSessionV1": VoiceSessionResponse,
         "VoiceTicketIssuedV1": VoiceTicketIssuedResponse,
         "CompanionTurnRequestV1": CompanionTurnRequest,
         "CompanionTurnV1": CompanionTurnResponse,
+        "SpeechSynthesisPrincipalV1": SpeechSynthesisPrincipalResponse,
         "CreateCareActionRequestV1": CreateCareActionRequest,
         "UpdateCareActionRequestV1": UpdateCareActionRequest,
         "CareActionV1": CareActionResponse,
@@ -202,6 +206,7 @@ SUCCESS_ENVELOPES = {
     "VoiceSessionEnvelopeV1": "domain/VoiceSessionV1.json",
     "VoiceTicketIssuedEnvelopeV1": "domain/VoiceTicketIssuedV1.json",
     "CompanionTurnEnvelopeV1": "domain/CompanionTurnV1.json",
+    "SpeechSynthesisPrincipalEnvelopeV1": "domain/SpeechSynthesisPrincipalV1.json",
     "CareActionEnvelopeV1": "domain/CareActionV1.json",
     "CareActionListEnvelopeV1": "domain/CareActionListV1.json",
     "CareEventEnvelopeV1": "domain/CareEventV1.json",
@@ -329,6 +334,46 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
         properties["voice_session"] = {
             "$ref": "https://kinsun.ai/contracts/schemas/domain/VoiceSessionV1.json"
         }
+    elif title == "CompanionTurnV1":
+        synthesis_fields = [
+            "speech_synthesis_capability",
+            "speech_synthesis_expires_at",
+            "speech_synthesis_text",
+        ]
+        schema.setdefault("allOf", []).append(
+            {
+                "if": {
+                    "properties": {
+                        "transport_status": {"const": "SYNTHESIS_CAPABILITY_ISSUED"}
+                    },
+                    "required": ["transport_status"],
+                },
+                "then": {
+                    "required": synthesis_fields,
+                    "properties": {
+                        "speech_synthesis_capability": {
+                            "type": "string",
+                            "minLength": 32,
+                            "maxLength": 128,
+                        },
+                        "speech_synthesis_expires_at": {
+                            "type": "string",
+                            "format": "date-time",
+                        },
+                        "speech_synthesis_text": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 3000,
+                        },
+                    },
+                },
+                "else": {
+                    "properties": {
+                        field: {"type": "null"} for field in synthesis_fields
+                    }
+                },
+            }
+        )
     elif title == "RevokeConsentRequestV1":
         properties["revoke_scope"]["items"]["enum"] = [
             "CONVERSATION_SESSION",
@@ -379,9 +424,7 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                 {
                     "if": {
                         "properties": {
-                            "status": {
-                                "enum": ["COMPLETED", "POSTPONED", "CANCELLED"]
-                            }
+                            "status": {"enum": ["COMPLETED", "POSTPONED", "CANCELLED"]}
                         },
                         "required": ["status"],
                     },

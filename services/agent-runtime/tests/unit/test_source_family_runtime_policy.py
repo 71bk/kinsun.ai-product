@@ -176,6 +176,12 @@ async def test_offline_golden_queries_retrieve_before_response_policy() -> None:
                         "chunk_id": prior_chunk_id,
                         "source_id": candidate.source_id,
                         "text": text_by_chunk[candidate.chunk_id],
+                        "current_status": "current",
+                        "stop_normal_rag": False,
+                        "retrieval_eligible": True,
+                        "retrieval_block_reasons": [],
+                        "review_status": "needs_review",
+                        "production_approved": False,
                     },
                 )
             )
@@ -219,6 +225,70 @@ async def test_offline_golden_queries_retrieve_before_response_policy() -> None:
         else:
             assert response.results == []
             assert case["expected_advisory"] is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "live_override",
+    [
+        {"current_status": "withdrawn"},
+        {"current_status": "expired"},
+        {"stop_normal_rag": True},
+        {"retrieval_eligible": False},
+        {"review_status": "needs_review", "production_approved": True},
+    ],
+)
+async def test_runtime_policy_overlay_rechecks_live_authority_before_response(
+    live_override: dict[str, object],
+) -> None:
+    policy = _load_policy()
+    golden = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
+    case = golden["cases"][0]
+    text_by_chunk = _text_by_successor_chunk_id()
+    by_prior = {candidate.prior_chunk_id: candidate for candidate in policy.document.chunks}
+    hits = []
+    for prior_chunk_id in case["fixture_prior_chunk_ids"]:
+        candidate = by_prior[prior_chunk_id]
+        hits.append(
+            SearchHit(
+                score=0.99,
+                source={
+                    "chunk_id": prior_chunk_id,
+                    "source_id": candidate.source_id,
+                    "text": text_by_chunk[candidate.chunk_id],
+                    "current_status": "current",
+                    "stop_normal_rag": False,
+                    "retrieval_eligible": True,
+                    "retrieval_block_reasons": [],
+                    "review_status": "needs_review",
+                    "production_approved": False,
+                    **live_override,
+                },
+            )
+        )
+    retriever = Retriever(
+        embedding_provider=FakeEmbeddingProvider(),
+        search_backend=GoldenBackend(hits),
+        hybrid_search=_hybrid_search(),
+        allow_needs_review_citations=True,
+        source_family_policy=policy,
+    )
+
+    response = await retriever.retrieve_v2(
+        RetrievalRequestV2(
+            schema_version="2.0.0",
+            request_id="revoked-live-overlay-candidates",
+            query=case["query"],
+            query_profile="natural_language",
+            top_k=5,
+            audience=case["audience"],
+            purpose=case["purpose"],
+            language="zh-TW",
+        )
+    )
+
+    assert response.status == "NO_DATA"
+    assert response.results == []
 
 
 def test_high_risk_and_research_exclusions_are_absent_from_search_projection() -> None:

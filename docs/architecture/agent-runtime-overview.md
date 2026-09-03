@@ -10,6 +10,7 @@ HTTP Request
   → CorrelationIdMiddleware
   → Contract validation (Pydantic + JSON Schema)
   → Orchestrator
+      → ExecutionBudget（單一 latency deadline＋decision／Tool counters）
       → explicit knowledge purpose? → staging Retriever
           → SUCCESS: 3–5 個限長、帶引用 chunk → Context Manifest
           → NO_DATA/FAILED: no-guess SAFE_FALLBACK（不呼叫 ModelProvider）
@@ -61,12 +62,17 @@ OpenSearch 或 production Guardrails 已驗證。
 
 目前 Companion 固定只跑一個 bounded model decision。若 Safety 允許，Runtime 只依 Core 明確
 推導的 `requested_outputs` 執行 deterministic Event／Memory extraction 並回 typed proposal；
-Runtime 不 callback Core，也不寫 Domain DB。`MAX_TOOL_ROUNDS`、`MAX_TOTAL_TOOLS` 與
-`MAX_REWRITE` 尚未被 canonical 執行流程使用。
+Runtime 不 callback Core，也不寫 Domain DB。每個 Agent Run 現在以 request 的
+`latency_budget_ms` 建立單一 monotonic deadline，RAG、Model Provider 與 deterministic extraction
+共用剩餘時間；超時取消目前 await、回 `SAFE_FALLBACK`，並只記錄 bounded counters。
+`MAX_TOOL_ROUNDS`／`MAX_TOTAL_TOOLS` 已進入 `ExecutionBudget` 的原子 reservation 邊界，但目前
+canonical 流程不執行 Tool，因此兩個 counter 固定為零；`MAX_REWRITE` 仍未使用。
 
 因此目前不是通用多 Tool 迴圈，也沒有自由重試、Agent Debate 或 cross-agent handoff。真正會
 消耗多輪 Tool／rewrite budget 的控制流程，必須另行設計顯式停止條件、Core reauthorization
 與可測試的 failure state，不能把現有單次 Candidate 路徑描述成已完成的 Tool engine。
+
+完整決策與限制見 [ADR 0020](../adr/0020-agent-run-execution-budget.md)。
 
 ## 受控 Event／Memory Candidate proposal 路徑
 

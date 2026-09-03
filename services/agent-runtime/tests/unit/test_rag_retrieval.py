@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import threading
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,11 +15,15 @@ import agent_runtime.rag.query_embedder as embedder_module
 from agent_runtime.rag.citations import render_citation, render_cited_chunk
 from agent_runtime.rag.client import (
     OpenSearchClient,
+    OpenSearchClientError,
     build_opensearch_search_body,
     build_opensearch_transport,
 )
 from agent_runtime.rag.fallback import NO_DATA_MESSAGE
-from agent_runtime.rag.filters import is_normal_rag_eligible
+from agent_runtime.rag.filters import (
+    is_normal_rag_eligible,
+    is_policy_overlay_live_eligible,
+)
 from agent_runtime.rag.hybrid_search import HybridSearch
 from agent_runtime.rag.models import (
     HybridProfileSettings,
@@ -173,6 +180,24 @@ class FakeOpenSearchTransport:
     def search(self, **kwargs: object) -> dict[str, object]:
         self.kwargs = kwargs
         return {"hits": {"hits": self.hits}}
+
+
+class BlockingOpenSearchTransport:
+    def __init__(self) -> None:
+        self.calls = 0
+        self._lock = threading.Lock()
+        self.release = threading.Event()
+
+    def search(self, **kwargs: object) -> dict[str, object]:
+        with self._lock:
+            self.calls += 1
+        self.release.wait(timeout=60)
+        return {"hits": {"hits": []}}
+
+
+class FailingOpenSearchTransport:
+    def search(self, **kwargs: object) -> dict[str, object]:
+        raise RuntimeError("sensitive upstream transport detail")
 
 
 class FakeAwsSession:
@@ -355,6 +380,106 @@ def test_opensearch_factory_uses_sigv4_and_configured_host(
         {"host": "collection-id.region.aoss.amazonaws.com", "port": 443}
     ]
     assert client_kwargs["http_auth"] == "signed-auth"
+    assert client_kwargs["use_ssl"] is True
+    assert client_kwargs["verify_certs"] is True
+    assert client_kwargs["ssl_assert_hostname"] is True
+    assert client_kwargs["timeout"] == 5.0
+    assert client_kwargs["pool_maxsize"] == 4
+    assert client_kwargs["max_retries"] == 0
+    assert client_kwargs["retry_on_timeout"] is False
+
+
+@pytest.mark.parametrize(
+    "host",
+    ["http://search.example.test:9200", "http://10.0.0.8:9200"],
+)
+def test_opensearch_factory_rejects_remote_http(host: str) -> None:
+    with pytest.raises(OpenSearchClientError, match="HTTPS for non-loopback"):
+        build_opensearch_transport(
+            OpenSearchConnectionSettings(
+                host=host,
+                region="configured-region",
+                index_name="configured-staging-index",
+                index_alias="configured-staging-alias",
+                mode="staging",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_opensearch_deadline_bounds_slow_concurrent_workers() -> None:
+    transport = BlockingOpenSearchTransport()
+    backend = OpenSearchClient(
+        transport,
+        make_search_settings(),
+        timeout_seconds=0.1,
+        max_concurrency=2,
+    )
+    plan = HybridSearch(make_search_settings()).build(make_request(), [0.0] * 1024)
+
+    started = time.perf_counter()
+    results = await asyncio.gather(
+        *(backend.search(plan) for _ in range(8)),
+        return_exceptions=True,
+    )
+
+    assert time.perf_counter() - started < 1.0
+    assert transport.calls == 2
+    assert all(
+        isinstance(result, OpenSearchClientError) and "deadline exceeded" in str(result)
+        for result in results
+    )
+    transport.release.set()
+    await asyncio.sleep(0.05)
+    await backend.aclose()
+
+
+@pytest.mark.asyncio
+async def test_cancelled_opensearch_request_keeps_worker_capacity_bounded() -> None:
+    transport = BlockingOpenSearchTransport()
+    backend = OpenSearchClient(
+        transport,
+        make_search_settings(),
+        timeout_seconds=0.1,
+        max_concurrency=1,
+    )
+    plan = HybridSearch(make_search_settings()).build(make_request(), [0.0] * 1024)
+    request = asyncio.create_task(backend.search(plan))
+    while transport.calls == 0:
+        await asyncio.sleep(0)
+
+    request.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await request
+    with pytest.raises(OpenSearchClientError, match="deadline exceeded"):
+        await backend.search(plan)
+    assert transport.calls == 1
+
+    transport.release.set()
+    await asyncio.sleep(0.05)
+    await backend.aclose()
+
+
+@pytest.mark.asyncio
+async def test_opensearch_failure_is_observable_without_logging_sensitive_detail(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    backend = OpenSearchClient(FailingOpenSearchTransport(), make_search_settings())
+    retriever = Retriever(
+        embedding_provider=FakeQueryEmbedder(),
+        search_backend=backend,
+        hybrid_search=HybridSearch(make_search_settings()),
+    )
+
+    with caplog.at_level("WARNING", logger="agent_runtime.rag.retriever"):
+        response = await retriever.retrieve(make_request())
+
+    assert response.status == "FAILED"
+    record = next(record for record in caplog.records if record.message == "rag_retrieval_failed")
+    assert record.failure_type == "OpenSearchClientError"
+    assert record.search_backend_type == "OpenSearchClient"
+    assert "sensitive upstream transport detail" not in caplog.text
+    await backend.aclose()
 
 
 def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> None:
@@ -374,6 +499,8 @@ def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> N
             "OPENSEARCH_HOST": "https://search.example.test",
             "OPENSEARCH_INDEX": "configured-staging-index",
             "OPENSEARCH_ALIAS": "configured-staging-alias",
+            "RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS": "2.5",
+            "RAG_OPENSEARCH_MAX_CONCURRENCY": "2",
             "RAG_MODE": "staging",
         },
     )
@@ -383,6 +510,8 @@ def test_runtime_settings_load_from_explicit_config_paths_and_environment() -> N
     assert settings.embedding.region == "configured-region"
     assert settings.opensearch.host == "https://search.example.test"
     assert settings.opensearch.index_name == "configured-staging-index"
+    assert settings.opensearch.search_timeout_seconds == 2.5
+    assert settings.opensearch.max_concurrency == 2
     assert settings.hybrid.index_alias == "configured-staging-alias"
     assert settings.hybrid.natural_language.bm25_weight == 0.4
     assert settings.hybrid.legal.vector_weight == 0.35
@@ -503,8 +632,72 @@ def test_runtime_policy_searches_fixed_candidates_before_response_gates() -> Non
     assert body["size"] == 50
     assert body["query"]["hybrid"]["queries"][1]["knn"]["embedding"]["k"] == 50
     assert body["query"]["hybrid"]["filter"] == {
-        "bool": {"must": [{"terms": {"chunk_id": list(candidate_ids)}}]}
+        "bool": {
+            "must": [
+                {"terms": {"chunk_id": list(candidate_ids)}},
+                {"term": {"current_status": "current"}},
+                {"term": {"stop_normal_rag": False}},
+                {"term": {"retrieval_eligible": True}},
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "bool": {
+                                    "must": [
+                                        {"term": {"review_status": "verified"}},
+                                        {"terms": {"production_approved": [True, False]}},
+                                    ]
+                                }
+                            },
+                            {
+                                "bool": {
+                                    "must": [
+                                        {"term": {"review_status": "needs_review"}},
+                                        {"term": {"production_approved": False}},
+                                    ]
+                                }
+                            },
+                        ],
+                        "minimum_should_match": 1,
+                    }
+                },
+            ]
+        }
     }
+
+
+@pytest.mark.parametrize(
+    ("override", "allow_needs_review"),
+    [
+        ({"current_status": "withdrawn"}, True),
+        ({"current_status": "expired"}, True),
+        ({"stop_normal_rag": True}, True),
+        ({"retrieval_eligible": False}, True),
+        ({"retrieval_block_reasons": ["source_withdrawn"]}, True),
+        ({"review_status": "needs_review", "production_approved": True}, True),
+        ({"review_status": "needs_review", "production_approved": False}, False),
+    ],
+)
+def test_runtime_policy_overlay_rejects_ineligible_live_governance(
+    override: dict[str, object], allow_needs_review: bool
+) -> None:
+    source: dict[str, object] = {
+        "current_status": "current",
+        "stop_normal_rag": False,
+        "retrieval_eligible": True,
+        "retrieval_block_reasons": [],
+        "review_status": "needs_review",
+        "production_approved": False,
+        **override,
+    }
+
+    assert (
+        is_policy_overlay_live_eligible(
+            source,
+            allow_needs_review=allow_needs_review,
+        )
+        is False
+    )
 
 
 def test_hybrid_plan_adds_parameterized_metadata_scope_filters() -> None:

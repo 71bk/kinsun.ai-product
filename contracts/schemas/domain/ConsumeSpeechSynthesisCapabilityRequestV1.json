@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "format": "uuid",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "agent_run_id": {
+      "format": "uuid",
+      "title": "Agent Run Id",
+      "type": "string"
+    },
+    "capability": {
+      "maxLength": 128,
+      "minLength": 32,
+      "title": "Capability",
+      "type": "string"
+    },
+    "text_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Text Sha256",
+      "type": "string"
+    },
+    "character_count": {
+      "maximum": 3000,
+      "minimum": 1,
+      "title": "Character Count",
+      "type": "integer"
+    },
+    "language": {
+      "enum": [
+        "zh-TW",
+        "en-US",
+        "nan-TW",
+        "hak-TW"
+      ],
+      "title": "Language",
+      "type": "string"
+    },
+    "client_ip_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Client Ip Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "agent_run_id",
+    "capability",
+    "text_sha256",
+    "character_count",
+    "language",
+    "client_ip_hash"
+  ],
+  "title": "ConsumeSpeechSynthesisCapabilityRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ConsumeSpeechSynthesisCapabilityRequestV1.json"
+}

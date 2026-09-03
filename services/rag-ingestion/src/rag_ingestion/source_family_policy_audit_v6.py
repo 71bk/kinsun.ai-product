@@ -25,6 +25,7 @@ from rag_ingestion.source_family_policy_v2 import (
     _new_staging_directory,
     _read_json,
     _refuse_overwrite,
+    _validate_frozen_audit_inventory,
     _validate_package_checksums,
     _write_checksums,
     _write_json,
@@ -113,15 +114,18 @@ def validate_source_family_policy_audit_v6(
         ),
         "immutable policy artifacts, audit v001-v005 bytes, and v006 closeout acceptance",
     )
-    expected_inventory = _inventory_document(
-        INVENTORY_KIND,
-        _audit_v6_input_entries(root),
-        "current policy schemas, code, tests, evidence, docs, and v003 chunks",
-    )
     if lock != expected_lock:
         raise SourceFamilyPolicyAuditV6Error("source-family audit v006 candidate lock mismatch")
-    if inventory != expected_inventory:
-        raise SourceFamilyPolicyAuditV6Error("source-family audit v006 input mismatch")
+    if package == (root / POLICY_AUDIT_V6_ROOT).resolve():
+        _validate_frozen_audit_inventory(inventory, INVENTORY_KIND)
+    else:
+        expected_inventory = _inventory_document(
+            INVENTORY_KIND,
+            _audit_v6_input_entries(root),
+            "current policy schemas, code, tests, evidence, docs, and v003 chunks",
+        )
+        if inventory != expected_inventory:
+            raise SourceFamilyPolicyAuditV6Error("source-family audit v006 input mismatch")
     return {
         "status": "PASS",
         "source_count": SOURCE_COUNT,

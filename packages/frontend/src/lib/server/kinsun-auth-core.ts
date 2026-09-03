@@ -1,4 +1,5 @@
 import { logAuthDiagnostic } from './auth-diagnostics';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 
 const START_PATH = '/api/v1/internal/auth/kinsun/email/start';
 const COMPLETE_PATH = '/api/v1/internal/auth/kinsun/email/complete';
@@ -43,18 +44,8 @@ export function normalizeKinsunEmail(value: unknown): string | null {
 type CoreAuthPath = typeof START_PATH | typeof COMPLETE_PATH | typeof PASSWORD_LOGIN_PATH;
 
 function coreTarget(path: CoreAuthPath): URL {
-  const value = process.env.CORE_API_INTERNAL_URL;
-  if (!value) throw new Error('Kinsun authentication is unavailable');
-  const base = new URL(value);
-  if (
-    base.username ||
-    base.password ||
-    base.search ||
-    base.hash ||
-    (base.protocol !== 'http:' && base.protocol !== 'https:')
-  ) {
-    throw new Error('Kinsun authentication is unavailable');
-  }
+  const base = resolveCoreApiBaseUrl();
+  if (!base) throw new Error('Kinsun authentication is unavailable');
   const target = new URL(path, base);
   if (target.origin !== base.origin || target.pathname !== path) {
     throw new Error('Kinsun authentication is unavailable');

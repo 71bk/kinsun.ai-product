@@ -1,4 +1,5 @@
 import { normalizeAppSession } from './app-session-cookie';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 
 const DEVELOPMENT_LINE_LINK_COOKIE = 'kinsun_line_link';
 const PRODUCTION_LINE_LINK_COOKIE = '__Host-kinsun_line_link';
@@ -38,21 +39,6 @@ export function normalizeLineLinkToken(value: unknown): string | null {
     return null;
   }
   return value;
-}
-
-function coreApiBaseUrl(): URL | null {
-  try {
-    const url = new URL(process.env.CORE_API_INTERNAL_URL ?? 'http://127.0.0.1:8000');
-    if (url.username || url.password || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
-      return null;
-    }
-    url.pathname = `${url.pathname.replace(/\/+$/, '')}/`;
-    url.search = '';
-    url.hash = '';
-    return url;
-  } catch {
-    return null;
-  }
 }
 
 function officialAccountLinkUrl(value: unknown): string | null {
@@ -97,7 +83,7 @@ export async function createCoreLineLinkChallenge(
 ): Promise<CoreLineLinkChallengeResult> {
   const appSession = normalizeAppSession(rawAppSession);
   const linkToken = normalizeLineLinkToken(rawLinkToken);
-  const baseUrl = coreApiBaseUrl();
+  const baseUrl = resolveCoreApiBaseUrl({ allowLocalDefault: true });
   if (!appSession || !linkToken || !baseUrl) return { status: 503 };
 
   try {

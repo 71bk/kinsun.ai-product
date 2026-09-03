@@ -44,6 +44,7 @@ class ElderEnrollmentRepository(BaseRepository):
             stmt = stmt.with_for_update()
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
     async def get_created_for_elder(
         self,
         *,

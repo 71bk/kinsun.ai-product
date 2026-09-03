@@ -25,6 +25,22 @@ correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
 HEADER_NAME = "x-correlation-id"
 
 
+def normalize_correlation_id(value: str | None) -> str | None:
+    """Accept only the canonical lowercase UUID v4 form used across services."""
+    if value is None or len(value) != 36:
+        return None
+    try:
+        parsed = uuid.UUID(value)
+    except (ValueError, AttributeError):
+        return None
+    return value if parsed.version == 4 and str(parsed) == value else None
+
+
+def resolve_correlation_id(value: str | None) -> str:
+    """Return a validated caller ID or an independently generated UUID v4."""
+    return normalize_correlation_id(value) or str(uuid.uuid4())
+
+
 def get_correlation_id() -> str:
     """Return the current correlation id, generating one if unset.
 
@@ -43,7 +59,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """Bind a correlation id to every request and echo it back."""
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        correlation_id = request.headers.get(HEADER_NAME) or str(uuid.uuid4())
+        correlation_id = resolve_correlation_id(request.headers.get(HEADER_NAME))
         correlation_id_var.set(correlation_id)
 
         response: Response = await call_next(request)

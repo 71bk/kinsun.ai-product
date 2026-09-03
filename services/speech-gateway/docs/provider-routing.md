@@ -36,6 +36,9 @@ TTS_PROVIDER_NAN_TW=aws-sagemaker
 TTS_PROVIDER_HAK_TW=aws-sagemaker
 ASR_PROVIDER_TIMEOUT_SECONDS=30
 TTS_PROVIDER_TIMEOUT_SECONDS=30
+TTS_MAX_CONCURRENCY=4
+TTS_CONCURRENCY_RETRY_AFTER_SECONDS=1
+TTS_CLIENT_IP_HASH_SECRET=<deployment-secret>
 DEEPGRAM_API_KEY=
 DEEPGRAM_API_BASE_URL=https://api.deepgram.com
 AZURE_SPEECH_KEY=
@@ -47,6 +50,17 @@ AZURE_SPEECH_TTS_VOICE_EN_US=en-US-JennyNeural
 `SAGEMAKER_ASR_ENDPOINT` and `SAGEMAKER_TTS_ENDPOINT` remain separate required
 configuration for the private adapters. Route changes take effect after the
 service restarts.
+
+Every TTS request must carry a short-lived bearer capability issued with the
+completed Core companion turn. The capability binds the session, Agent run,
+tenant, actor, exact UTF-8 text digest, character count, language, and expiry.
+Speech Gateway consumes it exactly once through Core using the request-bound
+Speech service identity before any provider call. Core serializes quota checks
+in PostgreSQL for client-address pseudonym, actor, and tenant; Gateway also
+rejects work above `TTS_MAX_CONCURRENCY` immediately. Both quota and capacity
+responses are HTTP 429 with a bounded `Retry-After`, and provider failures always
+release the local concurrency slot. `TTS_CLIENT_IP_HASH_SECRET` is required
+outside local development and must not reuse the service-identity secret.
 
 Deepgram is opt-in. To use Nova-3 for Traditional Mandarin and US English while
 preserving the low-resource routes, set:

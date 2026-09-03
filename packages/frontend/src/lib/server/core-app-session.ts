@@ -1,21 +1,13 @@
 import { normalizeAppSession } from './app-session-cookie';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 
 const LOGOUT_PATH = '/api/v1/auth/logout';
 const REQUEST_TIMEOUT_MS = 10_000;
 
 function logoutTarget(): URL {
-  const raw = process.env.CORE_API_INTERNAL_URL ?? 'http://127.0.0.1:8000';
   try {
-    const base = new URL(raw);
-    if (
-      base.username ||
-      base.password ||
-      base.search ||
-      base.hash ||
-      (base.protocol !== 'http:' && base.protocol !== 'https:')
-    ) {
-      throw new Error('invalid');
-    }
+    const base = resolveCoreApiBaseUrl({ allowLocalDefault: true });
+    if (!base) throw new Error('invalid');
     const target = new URL(LOGOUT_PATH, base);
     if (target.origin !== base.origin || target.pathname !== LOGOUT_PATH)
       throw new Error('invalid');

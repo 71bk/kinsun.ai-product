@@ -1,0 +1,11 @@
+{
+  "data": {
+    "session_id": "51000000-0000-4000-8000-000000000001",
+    "agent_run_id": "52000000-0000-4000-8000-000000000001",
+    "capability": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "text_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "character_count": 12,
+    "language": "zh-TW",
+    "client_ip_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

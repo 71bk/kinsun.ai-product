@@ -135,7 +135,7 @@ def test_correlation_id_set_in_contextvar():
 
     app = _create_app(handler=handler)
     client = TestClient(app)
-    custom_id = "test-correlation-123"
+    custom_id = "11111111-1111-4111-8111-111111111111"
 
     client.get("/test", headers={"x-correlation-id": custom_id})
 
@@ -153,6 +153,25 @@ def test_correlation_id_generated_when_header_empty():
     assert cid is not None
     # Should be a valid UUID (not empty)
     uuid.UUID(cid, version=4)
+
+
+@pytest.mark.parametrize(
+    "invalid_id",
+    [
+        "abc-123",
+        "11111111-1111-1111-8111-111111111111",
+        "A" * 200,
+    ],
+)
+def test_invalid_correlation_id_is_replaced(invalid_id: str) -> None:
+    app = _create_app()
+    client = TestClient(app)
+
+    response = client.get("/test", headers={"x-correlation-id": invalid_id})
+
+    generated = response.headers["x-correlation-id"]
+    assert generated != invalid_id
+    assert uuid.UUID(generated).version == 4
 
 
 # ─── Sensitive header exclusion tests ────────────────────────────────────────
@@ -210,8 +229,9 @@ def test_log_entry_contains_required_fields(caplog):
     app = _create_app()
     client = TestClient(app)
 
+    correlation_id = "22222222-2222-4222-8222-222222222222"
     with caplog.at_level(logging.INFO, logger="app.request"):
-        client.get("/test", headers={"x-correlation-id": "abc-123"})
+        client.get("/test", headers={"x-correlation-id": correlation_id})
 
     assert len(caplog.records) >= 1
     record = caplog.records[-1]
@@ -219,7 +239,7 @@ def test_log_entry_contains_required_fields(caplog):
     assert record.method == "GET"
     assert record.path == "/test"
     assert record.status_code == 200
-    assert record.correlation_id == "abc-123"
+    assert record.correlation_id == correlation_id
     assert hasattr(record, "timestamp")
     assert hasattr(record, "duration_ms")
 
@@ -346,14 +366,15 @@ def test_authenticated_error_response_is_attributed_to_the_actor(caplog):
     client = TestClient(app)
 
     with caplog.at_level(logging.INFO, logger="app.request"):
-        response = client.get("/protected", headers={"x-correlation-id": "audit-cid-1"})
+        correlation_id = "33333333-3333-4333-8333-333333333333"
+        response = client.get("/protected", headers={"x-correlation-id": correlation_id})
 
     assert response.status_code == 404
     record = _last_request_record(caplog)
     assert record.status_code == 404
     assert record.actor_id == str(actor_id)
     assert record.tenant_id == str(tenant_id)
-    assert record.correlation_id == "audit-cid-1"
+    assert record.correlation_id == correlation_id
 
 
 def test_unauthenticated_error_response_stays_anonymous(caplog):

@@ -78,8 +78,10 @@ high／unknown、`stop_normal_rag`、非 current 與 research 來源不會進入
 staging-only，`production_approved` 固定為 false。Runtime image 不內建 `data/rag*`；container
 測試必須以唯讀 config mount 注入 policy，再設定同一個獨立 SHA-256 pin。
 
-Policy 啟用時，固定 candidate IDs 與 Retriever 的 text SHA-256 驗證是 runtime authority，可覆蓋尚未
-同步的遠端舊版 governance metadata；legacy 路徑仍讀取並強制執行遠端 public／official metadata。
+Policy 啟用時，固定 candidate IDs 與 Retriever 的 text SHA-256 驗證是補足舊版
+risk／audience／purpose／assessment／citation metadata 的 runtime authority；遠端 live current／stop／
+retrieval／block reasons／review-production 狀態仍是不可覆蓋的撤銷邊界，並在搜尋與回覆階段各自
+fail closed。legacy 路徑仍讀取並強制執行遠端 public／official metadata。
 legal search 也保留 raw lexical exact-title score，避免權重正規化把法規名稱的完整命中誤判為低於門檻。
 
 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 只可用於 staging，且目前來源 metadata 預設只允許
