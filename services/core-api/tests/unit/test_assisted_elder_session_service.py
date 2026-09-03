@@ -165,9 +165,7 @@ async def test_pairing_exchange_is_single_use(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(
         service_module,
         "ElderRepository",
-        lambda *_args, **_kwargs: SimpleNamespace(
-            get_by_id=AsyncMock(return_value=_elder(row))
-        ),
+        lambda *_args, **_kwargs: SimpleNamespace(get_by_id=AsyncMock(return_value=_elder(row))),
     )
 
     activated = await service.exchange(pairing.value)
@@ -231,9 +229,7 @@ async def test_reissue_ends_previous_live_session(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(
         service_module,
         "ElderEnrollmentRepository",
-        lambda *_args, **_kwargs: SimpleNamespace(
-            get_active=AsyncMock(return_value=enrollment)
-        ),
+        lambda *_args, **_kwargs: SimpleNamespace(get_active=AsyncMock(return_value=enrollment)),
     )
     service = AssistedElderSessionService(
         AsyncMock(),

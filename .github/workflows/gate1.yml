@@ -78,6 +78,7 @@ jobs:
       - name: Core API quality and PostgreSQL integration
         run: |
           uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
+          uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
           uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
           uv run --frozen --project services/core-api pytest services/core-api/tests/unit
           uv run --frozen --project services/core-api pytest services/core-api/tests/integration

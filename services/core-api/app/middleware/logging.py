@@ -31,7 +31,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.correlation import correlation_id_var
+from app.core.correlation import correlation_id_var, resolve_correlation_id
 
 # ─── Request-scoped audit context ────────────────────────────────────────────
 # Populated by bind_request_actor_context() as soon as authentication succeeds.
@@ -102,7 +102,7 @@ class RequestLoggerMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         # 1. Extract or generate correlation_id
-        correlation_id = request.headers.get("x-correlation-id") or str(uuid.uuid4())
+        correlation_id = resolve_correlation_id(request.headers.get("x-correlation-id"))
         correlation_id_var.set(correlation_id)
 
         # 2. Start every request from an empty audit context, and restore the

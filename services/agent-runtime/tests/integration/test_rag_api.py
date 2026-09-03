@@ -43,7 +43,7 @@ def request_payload_v2(**overrides: object) -> dict[str, object]:
 
 async def post(app, payload: dict[str, object], *, path: str = RAG_PATH):
     body = canonical_json_bytes(payload)
-    correlation_id = "cid-rag-test"
+    correlation_id = "33333333-3333-4333-8333-333333333333"
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         return await client.post(

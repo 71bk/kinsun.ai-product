@@ -29,10 +29,10 @@
 ### P1 — Reliability / privacy / tenant isolation
 
 - [x] M-01 完成 idempotency TTL、scope 與 replay response redesign。
-- [ ] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
+- [x] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
 - [ ] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
 - [ ] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
-- [ ] M-05 降低 preferred address 造成 prompt injection 的風險。
+- [x] M-05 降低 preferred address 造成 prompt injection 的風險。
 - [x] M-06 修正 audit request context 注入。
 - [x] M-07 清理 exception、traceback 與 database URL logging。
 - [ ] M-08 加入 RLS 或等價的 database-level tenant isolation。
@@ -44,10 +44,10 @@
 
 - [ ] L-01 實作 Care Action 與 source event pagination。
 - [ ] L-02 為 frontend API response 加入 runtime schema validation。
-- [ ] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
+- [x] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
 - [x] L-04 修復 frontend typecheck。
 - [x] L-05 修復 frontend lint。
-- [ ] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
+- [x] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
 - [x] L-07 更新 migration head，並以 ADR 0019 退役過期的 AWS staging profile。
 
 ---
@@ -214,6 +214,11 @@
 - 修正：非 loopback environment 強制 HTTPS；startup/request 時拒絕不安全 URL。
 - 驗證：遠端 HTTP URL 必須被拒絕；localhost development exception 應有明確測試。
 - 應新增測試：是。
+- 修正結果：新增共用 `resolveCoreApiBaseUrl()`，並套用至 Core proxy、assisted elder session、
+  app session、email auth、LINE／Google OIDC handoff 與 LINE account linking。Production 僅允許 HTTPS，
+  明確保留 localhost、`127.0.0.0/8` 與 `::1` sidecar 例外；同時拒絕 credentials、query、fragment
+  與不支援的 protocol。新增 URL policy tests，並通過 frontend typecheck、288 tests、lint 與
+  production build。
 
 ### M-03 — OpenSearch transport 安全與 timeout 不足
 
@@ -244,6 +249,9 @@
 - 修正：將所有 user-controlled text 放入 delimited data/user section；限制長度與字元。
 - 驗證：輸入 instruction-like preferred address，確認不會改變 system policy 或洩漏資料。
 - 應新增測試：是，adversarial prompt tests。
+- 修正結果：`preferred_address` 不再插入 system prompt，而是正規化後以 compact JSON 放入 user
+  prompt 的 `<preferred_address_data>` data-only 區段；未提供時使用中性行為。新增 instruction-like
+  adversarial case，並隨 Agent Runtime 全套 `490 passed` 驗證。
 
 ### M-06 — Audit request context 沒有被設定
 
@@ -358,6 +366,9 @@
 - 修正：限制長度、只接受 UUID v4；無效值重新生成。
 - 驗證：malformed、oversized、control-character headers。
 - 應新增測試：是。
+- 修正結果：Core API 與 Agent Runtime 共用相同邊界，只接受 canonical lowercase UUID v4；空值、
+  非 v4、非 canonical、過長或 malformed header 一律改產生新的 UUID v4。同步更新 signed-request
+  integration fixtures；Core 全套 `1050 passed`、Agent Runtime 全套 `490 passed`。
 
 ### L-04 — Frontend typecheck 失敗
 
@@ -388,6 +399,10 @@
 - 修正：將 PyYAML 加入明確 dev dependency，將 formatting 納入 CI，統一驗證命令。
 - 驗證：在 clean environment 執行 lint、format、contract validation。
 - 應新增測試：是，CI/tooling smoke test。
+- 修正結果：Gate 1 的 Core job 已加入 `ruff format --check`，並將既有不符合格式的 Core／相關
+  Python 檔案機械式格式化。Contract validator 繼續由 workflow 明確、固定地注入
+  `pyyaml`、`jsonschema`、`referencing`，不再隱含依賴某個 service venv。Core Ruff lint、format 與
+  `1050 passed` 均通過；workflow YAML 與 contract validation 亦可在相同命令環境重現。
 
 ### L-07 — Migration head 文件過時與已失效 AWS staging metadata
 
@@ -433,16 +448,17 @@
 5. 更新 contracts/spec/ADR/runbook。
 6. 在 disposable PostgreSQL 與 deployment-like environment 驗證。
 
-## 已知基準測試結果
+## 最新驗證結果
 
-- Core unit tests：1028 passed。
-- Agent tests：473 passed。
-- RAG unit tests：200 passed。
-- Speech tests：83 passed。
-- Frontend tests：283 passed。
+- GitHub Actions Gate 1：run `33729690576` passed（commit `947a971`）；本批修改推送後會再跑一次。
+- Core unit tests：1050 passed。
+- Agent tests：490 passed。
+- RAG unit tests：322 passed。
+- Speech tests：91 passed。
+- Frontend tests：288 passed。
 - Frontend production build：passed。
 - Frontend typecheck：passed（L-04 已修正）。
 - Frontend lint：passed（L-05 已修正）。
 - Core Ruff lint：passed。
-- Core Ruff format check：failed，對應 L-06。
+- Core Ruff format check：passed（L-06 已修正並納入 CI）。
 - PostgreSQL integration tests：未執行，缺少 disposable `TEST_DATABASE_URL`。

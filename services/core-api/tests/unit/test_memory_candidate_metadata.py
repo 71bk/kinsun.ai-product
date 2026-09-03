@@ -75,9 +75,7 @@ async def test_create_candidate_persists_confirmation_and_extraction_metadata(
         auto_low_risk_memory=True,
     )
     service._decision_support_profiles = SimpleNamespace(
-        resolve_for_memory=AsyncMock(
-            return_value=default_standard_resolution("PREFERENCE")
-        )
+        resolve_for_memory=AsyncMock(return_value=default_standard_resolution("PREFERENCE"))
     )
     await service.create_candidate(
         elder_id=elder_id,
@@ -143,9 +141,7 @@ async def test_create_candidate_fails_before_consent_when_parent_rollout_is_disa
         auto_low_risk_memory=False,
     )
     service._decision_support_profiles = SimpleNamespace(
-        resolve_for_memory=AsyncMock(
-            return_value=default_standard_resolution("PREFERENCE")
-        )
+        resolve_for_memory=AsyncMock(return_value=default_standard_resolution("PREFERENCE"))
     )
     with pytest.raises(ValidationError) as exc_info:
         await service.create_candidate(
@@ -220,9 +216,7 @@ async def test_low_candidate_fails_before_persistence_when_auto_rollout_is_disab
         auto_low_risk_memory=False,
     )
     service._decision_support_profiles = SimpleNamespace(
-        resolve_for_memory=AsyncMock(
-            return_value=default_standard_resolution("PREFERENCE")
-        )
+        resolve_for_memory=AsyncMock(return_value=default_standard_resolution("PREFERENCE"))
     )
     with pytest.raises(ValidationError) as exc_info:
         await service.create_candidate(
@@ -395,9 +389,7 @@ async def test_representative_required_profile_creates_no_elder_owned_memory(
             idempotency_key="representative-required-1",
         )
 
-    assert exc_info.value.details[0]["reason"] == (
-        "REPRESENTATIVE_REQUIRED_NO_ELDER_MEMORY"
-    )
+    assert exc_info.value.details[0]["reason"] == ("REPRESENTATIVE_REQUIRED_NO_ELDER_MEMORY")
     repository.add_memory.assert_not_called()
     repository.add_version.assert_not_called()
     session.flush.assert_not_awaited()

@@ -1,4 +1,5 @@
 import { logAuthDiagnostic } from './auth-diagnostics';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 import type { LineOidcTransaction } from './line-oidc-transaction';
 
 const HANDOFF_PATH = '/api/v1/internal/auth/line/handoff';
@@ -24,23 +25,9 @@ export interface PendingLineCoreHandoff {
 export type LineCoreHandoffResult = AuthenticatedLineCoreHandoff | PendingLineCoreHandoff;
 
 function safeCoreBaseUrl(): URL {
-  const value = process.env.CORE_API_INTERNAL_URL;
-  if (!value) throw new Error('Core LINE handoff is unavailable');
-  try {
-    const target = new URL(value);
-    if (
-      target.username ||
-      target.password ||
-      target.search ||
-      target.hash ||
-      (target.protocol !== 'http:' && target.protocol !== 'https:')
-    ) {
-      throw new Error('invalid');
-    }
-    return target;
-  } catch {
-    throw new Error('Core LINE handoff is unavailable');
-  }
+  const target = resolveCoreApiBaseUrl();
+  if (!target) throw new Error('Core LINE handoff is unavailable');
+  return target;
 }
 
 export function lineOidcCoreTarget(path = HANDOFF_PATH): URL {
