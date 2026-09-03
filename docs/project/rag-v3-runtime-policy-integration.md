@@ -44,8 +44,18 @@ audience／purpose verification 後才能建立 runtime successor。v003 policy 
 2026-09-03 audit v007 將 H-07 的 live governance enforcement 綁定到目前 Agent Runtime 實作與
 驗收測試，但不改寫 runtime policy v003 的資料或 Owner 決策。v003～v006 歷史包改採 sealed inventory
 驗證：CI 驗證封存包本身的 checksum 與 predecessor lock，不再要求歷史 inventory 永遠等於目前 HEAD；
-只有最新版 v007 會和目前安全關鍵程式逐檔比對。一般 UI、文件或無關測試修改不需要建立 RAG successor，
-只有 v007 明列的治理程式、政策或驗收輸入改變時才會要求新的 audit successor。
+當時只有最新版 v007 會和安全關鍵程式逐檔比對。一般 UI、文件或無關測試修改不需要建立 RAG successor，
+只有最新版 audit 明列的治理程式、政策或驗收輸入改變時才會要求新的 successor。
+
+2026-09-03 audit v008 接續封存 v007，並綁定 M-03 OpenSearch transport hardening：遠端 endpoint
+強制 HTTPS 與 certificate／hostname validation，search 使用 dedicated bounded worker pool、concurrency
+semaphore 與共用 end-to-end deadline；caller cancellation 不會提前釋放仍執行中的 worker capacity。
+Runtime policy v003 資料與 Owner 決策維持不變，外部同步仍未授權，production 仍 blocked。
+
+2026-09-03 audit v008 延續封存 v007，並將 M-03 的 OpenSearch transport 邊界納入目前 attestation：
+非 loopback endpoint 強制 HTTPS 與 certificate／hostname validation；同步綁定 5 秒 search deadline、
+固定大小 connection／worker pool、bounded concurrency，以及取消後在 blocking worker 真正結束前不釋放
+capacity。v007 現為 frozen predecessor；CI 只以最新版 v008 對目前安全關鍵程式逐檔比對。
 
 ## 啟用方式
 

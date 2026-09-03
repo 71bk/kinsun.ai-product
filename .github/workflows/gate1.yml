@@ -99,7 +99,7 @@ jobs:
         run: |
           uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
           uv run --frozen --project services/rag-ingestion ruff format --check services/rag-ingestion
-          uv run --frozen --project services/rag-ingestion python scripts/rag/validate_source_family_policy_audit_v7.py
+          uv run --frozen --project services/rag-ingestion python scripts/rag/validate_source_family_policy_audit_v8.py
           uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
 
       - name: Executable contracts

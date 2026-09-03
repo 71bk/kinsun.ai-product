@@ -30,7 +30,7 @@
 
 - [x] M-01 完成 idempotency TTL、scope 與 replay response redesign。
 - [x] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
-- [ ] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
+- [x] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
 - [ ] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
 - [x] M-05 降低 preferred address 造成 prompt injection 的風險。
 - [x] M-06 修正 audit request context 注入。
@@ -229,6 +229,13 @@
 - 修正：遠端強制 HTTPS；加入 certificate validation、semaphore、較短一致的 deadline 與 cancellation。
 - 驗證：模擬 60 秒延遲與高併發，確認 request 可取消且不耗盡 worker。
 - 應新增測試：是，security、timeout、load tests。
+- 修正結果：非 loopback OpenSearch endpoint 強制 HTTPS，並明確啟用 certificate／hostname
+  validation、關閉 transport retry。Search 改用專屬 bounded thread pool、同容量 semaphore 與單一
+  end-to-end deadline（預設 5 秒，可設定為大於 0、最多 30 秒；併發預設 4、上限 16）；caller cancellation
+  立即生效，但仍執行的 blocking worker 完成前不會提前釋放 capacity。新增 remote HTTP、TLS 設定、
+  60 秒 slow-worker、高併發、cancellation 與 sanitized structured warning tests；Agent Runtime 全套
+  `495 passed`。Audit v008 封存 v007 並綁定目前 M-03 runtime／tests；RAG 全套 `324 passed`，
+  v007 frozen predecessor 與 v008 current validator／integration tests 均通過。
 
 ### M-04 — Agent latency/tool budgets 沒有 enforcement
 
@@ -450,10 +457,10 @@
 
 ## 最新驗證結果
 
-- GitHub Actions Gate 1：run `33729690576` passed（commit `947a971`）；本批修改推送後會再跑一次。
+- GitHub Actions Gate 1：run `33733914076` passed（commit `2c6b545`）；M-03 推送後會再跑一次。
 - Core unit tests：1050 passed。
-- Agent tests：490 passed。
-- RAG unit tests：322 passed。
+- Agent tests：495 passed。
+- RAG tests：324 passed。
 - Speech tests：91 passed。
 - Frontend tests：288 passed。
 - Frontend production build：passed。

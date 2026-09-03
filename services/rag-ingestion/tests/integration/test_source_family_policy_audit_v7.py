@@ -29,7 +29,7 @@ def test_audit_v7_builder_is_deterministic_and_refuses_overwrite(
         build_source_family_policy_audit_v7(REPOSITORY_ROOT, output_path=output)
 
 
-def test_committed_audit_v7_matches_current_runtime_governance() -> None:
+def test_committed_audit_v7_remains_a_valid_frozen_predecessor() -> None:
     result = validate_source_family_policy_audit_v7(REPOSITORY_ROOT)
 
     assert result["status"] == "PASS"

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from pydantic import ValidationError
 
 from agent_runtime.rag.client import build_opensearch_client
@@ -28,6 +30,8 @@ from agent_runtime.rag.postgres_backend import build_postgres_search_backend
 from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
 from agent_runtime.rag.runtime_policy import SourceFamilyRuntimePolicy
 from agent_runtime.rag.search_backend import SearchBackend, SearchHit
+
+logger = logging.getLogger(__name__)
 
 
 class Retriever:
@@ -67,8 +71,9 @@ class Retriever:
                 allow_all_audiences=self._allow_all_audiences,
             )
             hits = await self._search_backend.search(plan)
-        except Exception:
+        except Exception as exc:
             # The public fallback deliberately excludes provider details and query text.
+            _log_retrieval_failure(exc, self._search_backend)
             return failed_response(request.request_id)
 
         results = _eligible_unique_results(
@@ -110,7 +115,8 @@ class Retriever:
                 ),
             )
             hits = await self._search_backend.search(plan)
-        except Exception:
+        except Exception as exc:
+            _log_retrieval_failure(exc, self._search_backend)
             return failed_response_v2(request.request_id)
 
         results = _eligible_unique_results_v2(
@@ -134,6 +140,16 @@ class Retriever:
             fallback_message=None,
             results=results,
         )
+
+
+def _log_retrieval_failure(exc: Exception, backend: SearchBackend) -> None:
+    logger.warning(
+        "rag_retrieval_failed",
+        extra={
+            "failure_type": type(exc).__name__,
+            "search_backend_type": type(backend).__name__,
+        },
+    )
 
 
 def build_retriever(

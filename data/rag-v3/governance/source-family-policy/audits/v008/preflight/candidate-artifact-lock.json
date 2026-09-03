@@ -1,0 +1,515 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_version": "v003",
+  "policy_map_version": "v002",
+  "kind": "source_family_policy_v002_audit_v008_candidate_artifact_lock",
+  "scope": "immutable policy artifacts and audit v001-v007 bytes",
+  "hash_mode": "sha256_utf8_lf_raw_bytes_v1",
+  "inventory_hash_mode": "sha256_canonical_json_v1",
+  "entry_count": 50,
+  "inventory_sha256": "4e39c4dfd02f508a6c0b35b18bf0f14f46a7564887db4fd06c54badb7807a447",
+  "entries": [
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v001/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v001",
+      "size_bytes": 603,
+      "sha256": "f393f695dc9f983ed168f1d4b48467b8152bf32f070cf48d752186f3ff7a2e09",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v001/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v001",
+      "size_bytes": 269,
+      "sha256": "187d95b94729b9255147b71d410428c304c0bbf5e39336171a7f1a787d3fe382",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v001/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v001",
+      "size_bytes": 7239,
+      "sha256": "fb20b3401a61e656145b984a22a8891601090df4f7a6a7215f2c47cdef96fa54",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v001/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v001",
+      "size_bytes": 14110,
+      "sha256": "e45dbb660f66e8377f98df6285bde850b1ad76af2f4dbac09ad5f16819b22654",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v002/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 667,
+      "sha256": "9b93a4fbe0f9dd1f6fc1a5d52f197ca5c96b77f487ab95f0ce0e320e398e4a31",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v002/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 269,
+      "sha256": "49538ba25c81ed7a79ad15900d441f70408919e0a975215defc05ac4b5ae5400",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v002/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 9100,
+      "sha256": "445eb9fc646a8d0e17dc401dca51a498518e732bfe5ee104284518c44759beb3",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v002/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 14110,
+      "sha256": "b861bc79c621afad73fcb87959d8cfe9bca4ce96d96efe4877a4c16c2c346f39",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v003/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 605,
+      "sha256": "8631e9c6fabfc00f884aff68fc50532f3954df9ba050629a43a180ee021617be",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v003/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 269,
+      "sha256": "04e404ef2f602cb1ad616f650629f9ee371b5c583afca5a62d615a2e7be31780",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v003/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 11208,
+      "sha256": "a6fb5de30a097444a9e96de49c5b56f675573c3c8f4885458a049c18759ab49d",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v003/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 15402,
+      "sha256": "bf0b5b98e61331b3851ed30b868312c0e0d219fd574dca3dde89f39b2165011c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v004/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v004",
+      "size_bytes": 641,
+      "sha256": "e1738d8d7f6579392ec5ff3783ef1f9958bcf4749acd8459ed4e5291b5b28698",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v004/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v004",
+      "size_bytes": 269,
+      "sha256": "9594fbb0f2913263a216fdefd3d7f3f8b4faaa321fbec1f42c71c199b6d5f061",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v004/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v004",
+      "size_bytes": 16158,
+      "sha256": "fa82ae578d708d4a4d8d1057b4cabe1a27e9e54af1809ba20d3599d3703fa001",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v004/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v004",
+      "size_bytes": 19314,
+      "sha256": "e7d4e95dd1f2aa1f7ceb3f8c6435a7da7e56e9f93ceef48b29e8866e1e878b88",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v005/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v005",
+      "size_bytes": 616,
+      "sha256": "6c332f41816e7b644c65780e971ad10bb792d9621a284cd28f275ba692f10953",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v005/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v005",
+      "size_bytes": 269,
+      "sha256": "201be1ea4ac4085269e0e1131c2cc9cd3a3d56fda1eda22d639a1e0d29d765e0",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v005/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v005",
+      "size_bytes": 18042,
+      "sha256": "3cba251607121dcd0adf6e1e802a134f1839f234c1de5ee56b354b548e4aef8c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v005/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v005",
+      "size_bytes": 21042,
+      "sha256": "97253a3363b9831dec5093607b71bf4273b21be8c298dad855bdd26baac55975",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v006/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 612,
+      "sha256": "0cf302cfcb261cd823e8d1cd77c4edd9b39df4a2fef450932f2ef7a94af34527",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v006/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 269,
+      "sha256": "74db77295191511a47f5b31268e5164ec1c6227e6987c60b05576fe3a59698aa",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v006/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 19926,
+      "sha256": "962696488b62a39e3d3b0c1746d94e8143db720b4bf1d1a4e101e1436369b9ec",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v006/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 22770,
+      "sha256": "63150bb635b8b1ee449cc95f985cecf532ff707ce9e086df4e6e8fe0265b5b9e",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v007/preflight/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v007",
+      "size_bytes": 735,
+      "sha256": "d57afd82b479f6095025f91d398db828cba8bda8d04cb0e9a29fd1e23c221f1a",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v007/preflight/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v007",
+      "size_bytes": 269,
+      "sha256": "4f3c5dc4b9b90036266028bc50a2bf7c50824a16d371230ddb581407f437cf2b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v007/preflight/candidate-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v007",
+      "size_bytes": 21783,
+      "sha256": "642d08b635b00e75f9fb06389104a2bbc6dc742748d7c7b29eaa3f1d8140fad5",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/audits/v007/preflight/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v007",
+      "size_bytes": 30611,
+      "sha256": "366498abcba8cc56582eb69aaf1d05c50d815e12d999080a1fd65993e9274e61",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 764,
+      "sha256": "ecef05e54a8ddb61e7a36038b15553b8a682ec9bcf0e87e38b17cbe0e60589ae",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 458,
+      "sha256": "78775998eb8ccc77d06a9a79543ab913036fa863265d2d17bb50b14b49c4798c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/remaining-review-worksheet.jsonl",
+      "artifact_kind": "chunk_or_review_jsonl",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 35110,
+      "sha256": "0968211410a441a9ace98365b69ceb47f46c7bc8623be751aa27f458190eb7d1",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 63864,
+      "sha256": "580bb1ce69c10886e0aebbdbdf8192ac76421c8922bdc14e0ed85f37a0026071",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/validation-report.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 2496,
+      "sha256": "b8348f39c94605fdbba0ed5720d432032647532e855cfc681de9b2d8d7d62c86",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/candidates/v002/version-difference-summary.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 880,
+      "sha256": "c57734bb2815fcf2e35cb72ee19f7f90475b5f0c7b74cfa2fb654cfb5c22494c",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v002/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 581,
+      "sha256": "c9238d5b03eb85b6a7ff20f7cc5f5d5bd576ae0435d82830cc33280e03c12c71",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v002/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 265,
+      "sha256": "fab1f60751c42e474107997bc8988e4c59b1416bcd489133454523e73f674edb",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v002/prior-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 19617,
+      "sha256": "1ce17d15ebe1c45a838c610502ee371ad0f676914af2237291152a1bd8629f6b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/governance/source-family-policy/preflight/v002/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v002",
+      "size_bytes": 14107,
+      "sha256": "8ec0c45d28930a790a112bb446b6a1c47652b16156a343b82b8725d8c52c0e7b",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v003/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 651,
+      "sha256": "b7a3425b8de23c4b0333a3776cc280cd4a1cb760cfe1b187db85ad3afa766adb",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v003/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 354,
+      "sha256": "6a1e5396e6546486d0930145043525be75bfcc243f30caa8cb40b4cced739853",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v003/manifest.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 321,
+      "sha256": "5e5d1401d5873d45e9a3cabfce3f095ab26c62fe153731c02c4c860d7769e7f3",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v003/owner-source-family-policy-acceptance.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 4310,
+      "sha256": "fc88af885943bf0d3c91d2a1c3338e6c40faf197ef642fbba79d17a8965eeffc",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v003/validation-report.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v003",
+      "size_bytes": 1573,
+      "sha256": "50adf130886f563c35d37905f537ab89d889cf5158ce9df0ea4854ddc816eea2",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/README.md",
+      "artifact_kind": "policy_document",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 729,
+      "sha256": "d7451723890e7130a4b826620e7cd11aef6dcfa429d25f64f8e7f3439e875a0e",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/SHA256SUMS.txt",
+      "artifact_kind": "checksum_manifest",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 535,
+      "sha256": "70c774be9a0f994d3e81f71572ec417a10c57611fee2b3890f9b7c4f07738803",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/manifest.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 384,
+      "sha256": "fecf8f8ed25456f7a8dec157e3a8eb3e6a1fff3a7c070f47a5674890f67b2d29",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/owner-rag-closeout-acceptance.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 49134,
+      "sha256": "782b6eb1715b79fda07d8fd2a14955e76406347f782b06dc7b54edca710f9524",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/prior-artifact-lock.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 9740,
+      "sha256": "6a94c360d1d9e4e86b72ae73bb6b4e68c8146d7b626dd37512986586d3568d57",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/validation-input-inventory.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 3069,
+      "sha256": "c61f2c3929fc4ac94ab3b088dd77dd51116aa665ab60c9ed6b8dc1e2ea1ba833",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    },
+    {
+      "path": "data/rag-v3/review/acceptance/v006/validation-report.json",
+      "artifact_kind": "schema_or_governance_json",
+      "source_id": "rag-v3-policy-v002",
+      "logical_family": "source_family_policy_v002_audit_v008_formal_artifacts",
+      "version": "v006",
+      "size_bytes": 1814,
+      "sha256": "ac08a67d49dd3b30385062c9b23c9a3367d628adffd6317c6fddba0d91be0561",
+      "hash_mode": "sha256_utf8_lf_raw_bytes_v1"
+    }
+  ],
+  "review_status": "verified",
+  "production_approved": false
+}
