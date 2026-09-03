@@ -1,4 +1,5 @@
 {
+  "_why_invalid": "Care Action provenance hashes must be lowercase 64-character SHA-256 values.",
   "data": {
     "care_action_id": "7a000000-0000-4000-8000-000000000001",
     "elder_id": "30000000-0000-4000-8000-000000000001",
@@ -15,7 +16,7 @@
         "event_type": "MEAL",
         "event_time": "2026-09-02T08:00:00+08:00",
         "source_status": "VERIFIED",
-        "snapshot_sha256": "3bf412083cbb49702795878dd8ffdf2c17f7b3e3476a87e867eb96449d8b3c0d",
+        "snapshot_sha256": "NOT-A-VALID-SHA256",
         "snapshot_schema_version": "care-event-provenance.v1"
       }
     ],

@@ -1,0 +1,1715 @@
+{
+ "Description": "Kinsun canonical staging application runtime (initially scaled to zero)",
+ "Rules": {
+  "UsWest2Only": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Equals": [
+       {
+        "Ref": "AWS::Region"
+       },
+       "us-west-2"
+      ]
+     },
+     "AssertDescription": "The staging application runtime must be deployed in us-west-2."
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "Owner": {
+   "Type": "String",
+   "Default": "member-c",
+   "Description": "Operational owner tag for the staging application runtime.",
+   "MinLength": 1
+  },
+  "ExpiresAt": {
+   "Type": "String",
+   "Default": "2026-09-01",
+   "AllowedPattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$",
+   "ConstraintDescription": "Use an ISO calendar date such as 2026-09-01.",
+   "Description": "Review or teardown date; this tag does not delete resources automatically."
+  },
+  "VpcId": {
+   "Type": "AWS::EC2::VPC::Id",
+   "Description": "VpcId output from kinsun-staging-foundation-v1."
+  },
+  "PrivateSubnet1Id": {
+   "Type": "AWS::EC2::Subnet::Id",
+   "Description": "First private application subnet from the foundation stack."
+  },
+  "PrivateSubnet2Id": {
+   "Type": "AWS::EC2::Subnet::Id",
+   "Description": "Second private application subnet from the foundation stack."
+  },
+  "ApiVpcLinkSecurityGroupId": {
+   "Type": "AWS::EC2::SecurityGroup::Id",
+   "Description": "ApiVpcLinkSecurityGroupId output from the foundation stack."
+  },
+  "FrontendSecurityGroupId": {
+   "Type": "AWS::EC2::SecurityGroup::Id",
+   "Description": "FrontendSecurityGroupId output from the foundation stack."
+  },
+  "CoreSecurityGroupId": {
+   "Type": "AWS::EC2::SecurityGroup::Id",
+   "Description": "CoreSecurityGroupId output from the foundation stack."
+  },
+  "AgentSecurityGroupId": {
+   "Type": "AWS::EC2::SecurityGroup::Id",
+   "Description": "AgentSecurityGroupId output from the foundation stack."
+  },
+  "MigrationSecurityGroupId": {
+   "Type": "AWS::EC2::SecurityGroup::Id",
+   "Description": "MigrationSecurityGroupId output from the foundation stack."
+  },
+  "EcsClusterName": {
+   "Type": "String",
+   "Default": "kinsun-staging",
+   "Description": "Existing foundation ECS cluster name.",
+   "MinLength": 1
+  },
+  "CloudMapNamespace": {
+   "Type": "String",
+   "Default": "staging.kinsun.internal",
+   "Description": "Existing foundation ECS Service Connect namespace.",
+   "MinLength": 1
+  },
+  "DatabaseEndpoint": {
+   "Type": "String",
+   "Description": "Aurora writer endpoint from the foundation stack."
+  },
+  "DatabasePort": {
+   "Type": "Number",
+   "Default": 5432,
+   "AllowedValues": [
+    "5432"
+   ],
+   "Description": "Aurora PostgreSQL port from the foundation stack."
+  },
+  "DatabaseAdminSecretArn": {
+   "Type": "String",
+   "AllowedPattern": "^arn:[a-z0-9-]+:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+$",
+   "Description": "Foundation Aurora administrator Secret ARN; migration task only.",
+   "NoEcho": true
+  },
+  "DatabaseRuntimeSecretArn": {
+   "Type": "String",
+   "AllowedPattern": "^arn:[a-z0-9-]+:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+$",
+   "Description": "Foundation least-privilege Core runtime Secret ARN.",
+   "NoEcho": true
+  },
+  "FamilyInviteSecretArn": {
+   "Type": "String",
+   "AllowedPattern": "^arn:[a-z0-9-]+:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+$",
+   "Description": "Foundation family invitation HMAC secret ARN.",
+   "NoEcho": true
+  },
+  "FrontendImageDigest": {
+   "Type": "String",
+   "AllowedPattern": "^sha256:[a-f0-9]{64}$",
+   "Description": "Immutable ECR sha256 digest. The image must already exist in the matching foundation repository."
+  },
+  "CoreApiImageDigest": {
+   "Type": "String",
+   "AllowedPattern": "^sha256:[a-f0-9]{64}$",
+   "Description": "Immutable ECR sha256 digest. The image must already exist in the matching foundation repository."
+  },
+  "MigrationImageDigest": {
+   "Type": "String",
+   "AllowedPattern": "^sha256:[a-f0-9]{64}$",
+   "Description": "Immutable ECR sha256 digest. The image must already exist in the matching foundation repository."
+  },
+  "AgentImageDigest": {
+   "Type": "String",
+   "AllowedPattern": "^sha256:[a-f0-9]{64}$",
+   "Description": "Immutable ECR sha256 digest. The image must already exist in the matching foundation repository."
+  },
+  "BedrockEmbeddingModelId": {
+   "Type": "String",
+   "Default": "us.cohere.embed-v4:0",
+   "AllowedValues": [
+    "us.cohere.embed-v4:0"
+   ],
+   "Description": "Approved staging query-embedding inference profile ID."
+  },
+  "ServiceDesiredCount": {
+   "Type": "Number",
+   "Default": 0,
+   "AllowedValues": [
+    "0",
+    "1"
+   ],
+   "Description": "Desired count for each staging service. Staging is capped at one task; keep 0 until all deployment gates pass."
+  },
+  "ConsentPolicyVersion": {
+   "Type": "String",
+   "Default": "demo-consent-v1",
+   "AllowedPattern": "^[a-z0-9][a-z0-9._-]{0,39}$",
+   "Description": "Synthetic staging consent policy compiled into the exact frontend release image."
+  },
+  "SsmParameterValuekinsunstagingexternalopensearchendpointC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/kinsun/staging/external/opensearch-endpoint"
+  },
+  "SsmParameterValuekinsunstagingexternalopensearchindexC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/kinsun/staging/external/opensearch-index"
+  },
+  "SsmParameterValuekinsunstagingexternalopensearchaliasC96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/kinsun/staging/external/opensearch-alias"
+  }
+ },
+ "Resources": {
+  "ApiAccessLogsE9DF007D": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/kinsun/staging/api-gateway",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/ApiAccessLogs/Resource"
+   }
+  },
+  "FrontendHttpApi3203218A": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "Description": "Public HTTP entry point for the canonical Next.js BFF only.",
+    "Name": "kinsun-staging-frontend",
+    "ProtocolType": "HTTP",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendHttpApi/Resource"
+   }
+  },
+  "FrontendHttpApiANYFrontendIntegrationB6F6838F": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "FrontendHttpApi3203218A"
+    },
+    "ConnectionId": {
+     "Ref": "FrontendVpcLink50B82E9E"
+    },
+    "ConnectionType": "VPC_LINK",
+    "IntegrationMethod": "ANY",
+    "IntegrationType": "HTTP_PROXY",
+    "IntegrationUri": {
+     "Ref": "FrontendLoadBalancerHttpListenerF1BCA40E"
+    },
+    "PayloadFormatVersion": "1.0",
+    "TimeoutInMillis": 29000
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--/FrontendIntegration/Resource"
+   }
+  },
+  "FrontendHttpApiANY5263126F": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "FrontendHttpApi3203218A"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "FrontendHttpApiANYFrontendIntegrationB6F6838F"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--/Resource"
+   }
+  },
+  "FrontendHttpApiANYproxy41F99C0A": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "FrontendHttpApi3203218A"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "ANY /{proxy+}",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "FrontendHttpApiANYFrontendIntegrationB6F6838F"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--{proxy+}/Resource"
+   }
+  },
+  "FrontendTask1FBAEF7E": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "PORT",
+        "Value": "3000"
+       },
+       {
+        "Name": "HOSTNAME",
+        "Value": "0.0.0.0"
+       },
+       {
+        "Name": "CORE_API_INTERNAL_URL",
+        "Value": "http://core-api:8000"
+       },
+       {
+        "Name": "FRONTEND_ORIGIN",
+        "Value": {
+         "Fn::GetAtt": [
+          "FrontendHttpApi3203218A",
+          "ApiEndpoint"
+         ]
+        }
+       },
+       {
+        "Name": "NEXT_PUBLIC_CONSENT_POLICY_VERSION",
+        "Value": {
+         "Ref": "ConsentPolicyVersion"
+        }
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "node -e \"fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))\""
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 30,
+       "Timeout": 5
+      },
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/kinsun/staging/frontend@",
+         {
+          "Ref": "FrontendImageDigest"
+         }
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": "/kinsun/staging/frontend",
+        "awslogs-stream-prefix": "frontend",
+        "awslogs-region": "us-west-2",
+        "mode": "non-blocking",
+        "max-buffer-size": "4194304b"
+       }
+      },
+      "MountPoints": [
+       {
+        "ContainerPath": "/app/packages/frontend/.next/cache",
+        "ReadOnly": false,
+        "SourceVolume": "next-cache"
+       }
+      ],
+      "Name": "frontend",
+      "PortMappings": [
+       {
+        "AppProtocol": "http",
+        "ContainerPort": 3000,
+        "Name": "frontend-http",
+        "Protocol": "tcp"
+       }
+      ],
+      "ReadonlyRootFilesystem": true
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-frontend-execution-staging"
+      ]
+     ]
+    },
+    "Family": "kinsun-staging-frontend",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "RuntimePlatform": {
+     "CpuArchitecture": "X86_64",
+     "OperatingSystemFamily": "LINUX"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-frontend-ecs-staging"
+      ]
+     ]
+    },
+    "Volumes": [
+     {
+      "Name": "next-cache"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendTask/Resource"
+   }
+  },
+  "CoreTaskFFC43B4A": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "APP_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "HOST",
+        "Value": "0.0.0.0"
+       },
+       {
+        "Name": "PORT",
+        "Value": "8000"
+       },
+       {
+        "Name": "DB_HOST",
+        "Value": {
+         "Ref": "DatabaseEndpoint"
+        }
+       },
+       {
+        "Name": "DB_PORT",
+        "Value": {
+         "Ref": "DatabasePort"
+        }
+       },
+       {
+        "Name": "DB_NAME",
+        "Value": "kinsun"
+       },
+       {
+        "Name": "DB_SSLMODE",
+        "Value": "require"
+       },
+       {
+        "Name": "DB_POOL_MODE",
+        "Value": "null"
+       },
+       {
+        "Name": "DB_CONNECT_TIMEOUT_SECONDS",
+        "Value": "5"
+       },
+       {
+        "Name": "DB_RECOVERY_TIMEOUT_SECONDS",
+        "Value": "10"
+       },
+       {
+        "Name": "AGENT_RUNTIME_URL",
+        "Value": "http://agent-runtime:8001"
+       },
+       {
+        "Name": "AGENT_RUNTIME_MODEL_ID",
+        "Value": "mock"
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)\""
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 30,
+       "Timeout": 5
+      },
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/kinsun/staging/core-api@",
+         {
+          "Ref": "CoreApiImageDigest"
+         }
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": "/kinsun/staging/core-api",
+        "awslogs-stream-prefix": "core-api",
+        "awslogs-region": "us-west-2",
+        "mode": "non-blocking",
+        "max-buffer-size": "4194304b"
+       }
+      },
+      "Name": "core-api",
+      "PortMappings": [
+       {
+        "AppProtocol": "http",
+        "ContainerPort": 8000,
+        "Name": "core-api",
+        "Protocol": "tcp"
+       }
+      ],
+      "ReadonlyRootFilesystem": true,
+      "Secrets": [
+       {
+        "Name": "DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseRuntimeSecretArn"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseRuntimeSecretArn"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "FAMILY_INVITATION_HMAC_SECRET",
+        "ValueFrom": {
+         "Ref": "FamilyInviteSecretArn"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-core-execution-staging"
+      ]
+     ]
+    },
+    "Family": "kinsun-staging-core",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "RuntimePlatform": {
+     "CpuArchitecture": "X86_64",
+     "OperatingSystemFamily": "LINUX"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-core-ecs-staging"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/CoreTask/Resource"
+   }
+  },
+  "AgentTask285670E7": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "APP_ENV",
+        "Value": "staging"
+       },
+       {
+        "Name": "LOG_LEVEL",
+        "Value": "INFO"
+       },
+       {
+        "Name": "MODEL_PROVIDER",
+        "Value": "mock"
+       },
+       {
+        "Name": "CORE_API_BASE_URL",
+        "Value": "http://core-api:8000"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": {
+         "Ref": "AWS::Region"
+        }
+       },
+       {
+        "Name": "BEDROCK_EMBEDDING_MODEL_ID",
+        "Value": {
+         "Ref": "BedrockEmbeddingModelId"
+        }
+       },
+       {
+        "Name": "BEDROCK_EMBEDDING_DIMENSION",
+        "Value": "1024"
+       },
+       {
+        "Name": "OPENSEARCH_HOST",
+        "Value": {
+         "Ref": "SsmParameterValuekinsunstagingexternalopensearchendpointC96584B6F00A464EAD1953AFF4B05118Parameter"
+        }
+       },
+       {
+        "Name": "OPENSEARCH_INDEX",
+        "Value": {
+         "Ref": "SsmParameterValuekinsunstagingexternalopensearchindexC96584B6F00A464EAD1953AFF4B05118Parameter"
+        }
+       },
+       {
+        "Name": "OPENSEARCH_ALIAS",
+        "Value": {
+         "Ref": "SsmParameterValuekinsunstagingexternalopensearchaliasC96584B6F00A464EAD1953AFF4B05118Parameter"
+        }
+       },
+       {
+        "Name": "RAG_MODE",
+        "Value": "staging"
+       },
+       {
+        "Name": "RAG_EMBEDDING_CONFIG_PATH",
+        "Value": "/app/config/rag/embedding.yaml"
+       },
+       {
+        "Name": "RAG_OPENSEARCH_INDEX_CONFIG_PATH",
+        "Value": "/app/config/rag/opensearch-index-v1.json"
+       },
+       {
+        "Name": "RAG_HYBRID_NATURAL_CONFIG_PATH",
+        "Value": "/app/config/rag/hybrid-natural-language.json"
+       },
+       {
+        "Name": "RAG_HYBRID_LEGAL_CONFIG_PATH",
+        "Value": "/app/config/rag/hybrid-legal.json"
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=4)\""
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 30,
+       "Timeout": 5
+      },
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/kinsun/staging/agent-runtime@",
+         {
+          "Ref": "AgentImageDigest"
+         }
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": "/kinsun/staging/agent-runtime",
+        "awslogs-stream-prefix": "agent-runtime",
+        "awslogs-region": "us-west-2",
+        "mode": "non-blocking",
+        "max-buffer-size": "4194304b"
+       }
+      },
+      "Name": "agent-runtime",
+      "PortMappings": [
+       {
+        "AppProtocol": "http",
+        "ContainerPort": 8001,
+        "Name": "agent-runtime",
+        "Protocol": "tcp"
+       }
+      ],
+      "ReadonlyRootFilesystem": true
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-agent-execution-staging"
+      ]
+     ]
+    },
+    "Family": "kinsun-staging-agent",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "RuntimePlatform": {
+     "CpuArchitecture": "X86_64",
+     "OperatingSystemFamily": "LINUX"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-agent-runtime-ecs-staging"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/AgentTask/Resource"
+   }
+  },
+  "MigrationTask69EAEF9D": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "APP_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "DB_HOST",
+        "Value": {
+         "Ref": "DatabaseEndpoint"
+        }
+       },
+       {
+        "Name": "DB_PORT",
+        "Value": {
+         "Ref": "DatabasePort"
+        }
+       },
+       {
+        "Name": "DB_NAME",
+        "Value": "kinsun"
+       },
+       {
+        "Name": "DB_SSLMODE",
+        "Value": "require"
+       },
+       {
+        "Name": "DATABASE_DRIVER",
+        "Value": "postgresql+psycopg"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/kinsun/staging/core-migration@",
+         {
+          "Ref": "MigrationImageDigest"
+         }
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": "/kinsun/staging/migration",
+        "awslogs-stream-prefix": "migration",
+        "awslogs-region": "us-west-2",
+        "mode": "non-blocking",
+        "max-buffer-size": "4194304b"
+       }
+      },
+      "Name": "migration",
+      "ReadonlyRootFilesystem": true,
+      "Secrets": [
+       {
+        "Name": "DB_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseAdminSecretArn"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseAdminSecretArn"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "DB_RUNTIME_USERNAME",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseRuntimeSecretArn"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "DB_RUNTIME_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "DatabaseRuntimeSecretArn"
+           },
+           ":password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-migration-execution-staging"
+      ]
+     ]
+    },
+    "Family": "kinsun-staging-migration",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "RuntimePlatform": {
+     "CpuArchitecture": "X86_64",
+     "OperatingSystemFamily": "LINUX"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/kinsun-migration-ecs-staging"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/MigrationTask/Resource"
+   }
+  },
+  "FrontendServiceBC94BA93": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "EcsClusterName"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 100
+    },
+    "DeploymentController": {
+     "Type": "ECS"
+    },
+    "DesiredCount": {
+     "Ref": "ServiceDesiredCount"
+    },
+    "EnableECSManagedTags": false,
+    "EnableExecuteCommand": false,
+    "HealthCheckGracePeriodSeconds": 90,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "frontend",
+      "ContainerPort": 3000,
+      "TargetGroupArn": {
+       "Ref": "FrontendTargetGroupED7B3E5D"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Ref": "FrontendSecurityGroupId"
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "PrivateSubnet1Id"
+       },
+       {
+        "Ref": "PrivateSubnet2Id"
+       }
+      ]
+     }
+    },
+    "ServiceConnectConfiguration": {
+     "Enabled": true,
+     "Namespace": {
+      "Ref": "CloudMapNamespace"
+     }
+    },
+    "ServiceName": "kinsun-staging-frontend",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "FrontendTask1FBAEF7E"
+    }
+   },
+   "DependsOn": [
+    "CoreServiceFD7ABDE0",
+    "FrontendLoadBalancerHttpListenerF1BCA40E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendService/Service"
+   }
+  },
+  "CoreServiceFD7ABDE0": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "EcsClusterName"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 100
+    },
+    "DeploymentController": {
+     "Type": "ECS"
+    },
+    "DesiredCount": {
+     "Ref": "ServiceDesiredCount"
+    },
+    "EnableECSManagedTags": false,
+    "EnableExecuteCommand": false,
+    "HealthCheckGracePeriodSeconds": 90,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Ref": "CoreSecurityGroupId"
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "PrivateSubnet1Id"
+       },
+       {
+        "Ref": "PrivateSubnet2Id"
+       }
+      ]
+     }
+    },
+    "ServiceConnectConfiguration": {
+     "Enabled": true,
+     "Namespace": {
+      "Ref": "CloudMapNamespace"
+     },
+     "Services": [
+      {
+       "ClientAliases": [
+        {
+         "DnsName": "core-api",
+         "Port": 8000
+        }
+       ],
+       "PortName": "core-api"
+      }
+     ]
+    },
+    "ServiceName": "kinsun-staging-core",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "CoreTaskFFC43B4A"
+    }
+   },
+   "DependsOn": [
+    "AgentService17391595"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/CoreService/Service"
+   }
+  },
+  "AgentService17391595": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "EcsClusterName"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 100
+    },
+    "DeploymentController": {
+     "Type": "ECS"
+    },
+    "DesiredCount": {
+     "Ref": "ServiceDesiredCount"
+    },
+    "EnableECSManagedTags": false,
+    "EnableExecuteCommand": false,
+    "HealthCheckGracePeriodSeconds": 90,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Ref": "AgentSecurityGroupId"
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "PrivateSubnet1Id"
+       },
+       {
+        "Ref": "PrivateSubnet2Id"
+       }
+      ]
+     }
+    },
+    "ServiceConnectConfiguration": {
+     "Enabled": true,
+     "Namespace": {
+      "Ref": "CloudMapNamespace"
+     },
+     "Services": [
+      {
+       "ClientAliases": [
+        {
+         "DnsName": "agent-runtime",
+         "Port": 8001
+        }
+       ],
+       "PortName": "agent-runtime"
+      }
+     ]
+    },
+    "ServiceName": "kinsun-staging-agent",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "AgentTask285670E7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/AgentService/Service"
+   }
+  },
+  "FrontendLoadBalancerDBDBDFF7": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Name": "kinsun-staging-frontend",
+    "Scheme": "internal",
+    "SecurityGroups": [
+     {
+      "Ref": "ApiVpcLinkSecurityGroupId"
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "PrivateSubnet1Id"
+     },
+     {
+      "Ref": "PrivateSubnet2Id"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "Type": "application"
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendLoadBalancer/Resource"
+   }
+  },
+  "FrontendLoadBalancerHttpListenerF1BCA40E": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "FrontendTargetGroupED7B3E5D"
+      },
+      "Type": "forward"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "FrontendLoadBalancerDBDBDFF7"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendLoadBalancer/HttpListener/Resource"
+   }
+  },
+  "VpcLinkToAlbIngress": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "API Gateway VPC Link ENIs to the internal frontend ALB.",
+    "FromPort": 80,
+    "GroupId": {
+     "Ref": "ApiVpcLinkSecurityGroupId"
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Ref": "ApiVpcLinkSecurityGroupId"
+    },
+    "ToPort": 80
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/VpcLinkToAlbIngress"
+   }
+  },
+  "FrontendTargetGroupED7B3E5D": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckIntervalSeconds": 30,
+    "HealthCheckPath": "/health",
+    "HealthCheckTimeoutSeconds": 5,
+    "Matcher": {
+     "HttpCode": "200"
+    },
+    "Port": 3000,
+    "Protocol": "HTTP",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "TargetGroupAttributes": [
+     {
+      "Key": "deregistration_delay.timeout_seconds",
+      "Value": "15"
+     },
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Ref": "VpcId"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendTargetGroup/Resource"
+   }
+  },
+  "FrontendVpcLink50B82E9E": {
+   "Type": "AWS::ApiGatewayV2::VpcLink",
+   "Properties": {
+    "Name": "kinsun-staging-frontend",
+    "SecurityGroupIds": [
+     {
+      "Ref": "ApiVpcLinkSecurityGroupId"
+     }
+    ],
+    "SubnetIds": [
+     {
+      "Ref": "PrivateSubnet1Id"
+     },
+     {
+      "Ref": "PrivateSubnet2Id"
+     }
+    ],
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/FrontendVpcLink/Resource"
+   }
+  },
+  "DefaultStageEE28A986": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "AccessLogSettings": {
+     "DestinationArn": {
+      "Fn::GetAtt": [
+       "ApiAccessLogsE9DF007D",
+       "Arn"
+      ]
+     },
+     "Format": "{\"requestId\":\"$context.requestId\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"integrationStatus\":\"$context.integrationStatus\",\"responseLength\":\"$context.responseLength\"}"
+    },
+    "ApiId": {
+     "Ref": "FrontendHttpApi3203218A"
+    },
+    "AutoDeploy": true,
+    "DefaultRouteSettings": {
+     "DetailedMetricsEnabled": true,
+     "ThrottlingBurstLimit": 50,
+     "ThrottlingRateLimit": 25
+    },
+    "StageName": "$default",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/DefaultStage/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/11QUWsCMQz+Lb7Xbutg77qxTRA2TtnriL1YorUtbarIcf99tOeNw6d8X/Il+RIl1YuSjzO4pLluj3NLO9ltGPRRvO5dky2W+A0RTsgYRYPJ56hRwCX9dqijbDD4ROzjdQkJhfUmyW7tzUf0OZTmEfcCAhlgvMD1rGT3yRwWgYqkhEIbnxkrWjlGE4HJuyK4o4PuJ+g1uWp0hKV1w2Cq6wp6gTrJ7h1iWb2FdHzDPTkaR91nvGMgh3GSu/VuMJ5JD5MH2Au0kJi09dDuwILT5Ey5bRGCJV39rj20y1rDOLxjwqc6SozuphnxpL6FaJD/vzqh5UQlqy2dI/G1ZlfOREypL+KvzCFzL5xvUR7Sw1kpqZ7l0+yQiOYxO6YTymaIf2QA2pkTAgAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingApplication/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "FrontendUrl": {
+   "Value": {
+    "Fn::GetAtt": [
+     "FrontendHttpApi3203218A",
+     "ApiEndpoint"
+    ]
+   }
+  },
+  "MigrationTaskDefinitionArn": {
+   "Value": {
+    "Ref": "MigrationTask69EAEF9D"
+   }
+  },
+  "CoreTaskDefinitionArn": {
+   "Value": {
+    "Ref": "CoreTaskFFC43B4A"
+   }
+  },
+  "ConfiguredConsentPolicyVersion": {
+   "Value": {
+    "Ref": "ConsentPolicyVersion"
+   }
+  },
+  "MigrationNetworkSecurityGroupId": {
+   "Value": {
+    "Ref": "MigrationSecurityGroupId"
+   }
+  },
+  "PrivateSubnetIds": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Ref": "PrivateSubnet1Id"
+      },
+      ",",
+      {
+       "Ref": "PrivateSubnet2Id"
+      }
+     ]
+    ]
+   }
+  }
+ }
+}

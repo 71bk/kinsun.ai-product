@@ -34,12 +34,30 @@ def _create_request(actor_id=None) -> CreateCareActionRequest:
     )
 
 
+def _formal_source(event_id, *, status: str = "VERIFIED", payload=None):
+    event_version_id = uuid4()
+    event = SimpleNamespace(
+        id=event_id,
+        current_version=1,
+        event_type="MEAL",
+        event_time=datetime(2026, 9, 2, 1, 0, tzinfo=UTC),
+        status=status,
+    )
+    version = SimpleNamespace(
+        event_version_id=event_version_id,
+        version=1,
+        structured_payload=payload or {"meal": "breakfast", "reported": True},
+        evidence_text_ref='["evidence:71000000-0000-4000-8000-000000000001"]',
+    )
+    return event, version
+
+
 @pytest.mark.asyncio
 async def test_create_binds_to_professional_and_formal_same_elder_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     actor = _actor()
-    session = SimpleNamespace(scalar=AsyncMock(return_value=1), flush=AsyncMock())
+    session = SimpleNamespace(flush=AsyncMock())
     added: list[CareAction] = []
 
     class Actions:
@@ -52,6 +70,10 @@ async def test_create_binds_to_professional_and_formal_same_elder_events(
     service = CareActionService(session, actor.tenant_id)
     service._actions = Actions()  # type: ignore[assignment]
     request = _create_request()
+    event, event_version = _formal_source(request.related_event_ids[0])
+    service._events = SimpleNamespace(
+        list_formal_current_versions_for_update=AsyncMock(return_value=[(event, event_version)])
+    )
 
     action = await service.create(
         elder_id=uuid4(),
@@ -65,16 +87,35 @@ async def test_create_binds_to_professional_and_formal_same_elder_events(
     assert action.created_by_actor_id == actor.actor_id
     assert action.status == "OPEN"
     assert action.related_event_ids == request.related_event_ids
+    assert len(action.source_event_provenance) == 1
+    provenance = action.source_event_provenance[0]
+    assert provenance.event_id == event.id
+    assert provenance.event_version_id == event_version.event_version_id
+    assert provenance.event_version == 1
+    assert provenance.source_status == "VERIFIED"
+    assert len(provenance.snapshot_sha256) == 64
     outbox.assert_awaited_once()
     assert outbox.await_args.kwargs["payload"]["status"] == "OPEN"
+    assert outbox.await_args.kwargs["payload"]["source_event_provenance"] == [
+        {
+            "event_id": str(event.id),
+            "event_version_id": str(event_version.event_version_id),
+            "event_version": 1,
+            "snapshot_sha256": provenance.snapshot_sha256,
+            "snapshot_schema_version": "care-event-provenance.v1",
+        }
+    ]
     assert "title" not in outbox.await_args.kwargs["payload"]
 
 
 @pytest.mark.asyncio
 async def test_create_rejects_cross_scope_or_unreviewed_source_events() -> None:
     actor = _actor()
-    session = SimpleNamespace(scalar=AsyncMock(return_value=0), flush=AsyncMock())
+    session = SimpleNamespace(flush=AsyncMock())
     service = CareActionService(session, actor.tenant_id)
+    service._events = SimpleNamespace(
+        list_formal_current_versions_for_update=AsyncMock(return_value=[])
+    )
 
     with pytest.raises(ValidationError) as caught:
         await service.create(
@@ -96,8 +137,10 @@ async def test_create_rejects_cross_scope_or_unreviewed_source_events() -> None:
 @pytest.mark.asyncio
 async def test_create_rejects_non_professional_actor_before_writing() -> None:
     actor = _actor("FAMILY_MEMBER")
-    session = SimpleNamespace(scalar=AsyncMock(), flush=AsyncMock())
+    session = SimpleNamespace(flush=AsyncMock())
     service = CareActionService(session, actor.tenant_id)
+    source_lookup = AsyncMock()
+    service._events = SimpleNamespace(list_formal_current_versions_for_update=source_lookup)
 
     with pytest.raises(NotFoundError):
         await service.create(
@@ -108,8 +151,63 @@ async def test_create_rejects_non_professional_actor_before_writing() -> None:
             idempotency_key="idem-family-denied",
         )
 
-    session.scalar.assert_not_awaited()
+    source_lookup.assert_not_awaited()
     session.flush.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_captured_provenance_survives_later_source_correction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    actor = _actor()
+    session = SimpleNamespace(flush=AsyncMock())
+    request = _create_request()
+    event, event_version = _formal_source(request.related_event_ids[0])
+    service = CareActionService(session, actor.tenant_id)
+    service._events = SimpleNamespace(
+        list_formal_current_versions_for_update=AsyncMock(return_value=[(event, event_version)])
+    )
+
+    class Actions:
+        def add(self, action: CareAction) -> None:
+            action.id = uuid4()
+
+    service._actions = Actions()  # type: ignore[assignment]
+    monkeypatch.setattr(service_module, "write_outbox_entry", AsyncMock())
+
+    action = await service.create(
+        elder_id=uuid4(),
+        actor_context=actor,
+        request=request,
+        trace_id="trace-care-action-provenance",
+        idempotency_key="idem-care-action-provenance",
+    )
+    captured = action.source_event_provenance[0]
+    original = (
+        captured.event_version_id,
+        captured.event_version,
+        captured.event_type,
+        captured.event_time,
+        captured.source_status,
+        captured.snapshot_sha256,
+    )
+
+    event.current_version = 2
+    event.event_type = "ACTIVITY"
+    event.event_time = datetime(2026, 9, 3, 1, 0, tzinfo=UTC)
+    event.status = "CORRECTED"
+    event_version.event_version_id = uuid4()
+    event_version.version = 2
+    event_version.structured_payload = {"activity": "walk"}
+
+    assert (
+        captured.event_version_id,
+        captured.event_version,
+        captured.event_type,
+        captured.event_time,
+        captured.source_status,
+        captured.snapshot_sha256,
+    ) == original
 
 
 @pytest.mark.asyncio

@@ -424,11 +424,13 @@ secure_link_id、recipient_id、report_id、token_hash、expires_at、revoked_at
 
 6.21 Care Action
 
-care_action_id、elder_id、tenant_id、action_type、trigger_reason、related_event_ids、assignee_id、due_at、status、resolution、created_by。
+care_action_id、elder_id、tenant_id、action_type、trigger_reason、related_event_ids、source_event_provenance[]、assignee_id、due_at、status、resolution、created_by。
+
+source_event_provenance：event_id、event_version_id、event_version、event_type、event_time、source_status、snapshot_sha256、snapshot_schema_version。
 
 action_type：CONTACT_ELDER、CONTACT_FAMILY、CONFIRM_INFORMATION、INVITE_ACTIVITY、FOLLOW_UP、OTHER。
 
-規則：不得建立改藥、停藥、診斷疾病等 action_type。
+規則：不得建立改藥、停藥、診斷疾病等 action_type。正式 Care Action 建立時，系統必須鎖定並保存每個來源 Care Event 當下的 immutable version 與 canonical SHA-256；來源綁定與 provenance row 建立後不得改寫，後續 correction 只能建立新的 Care Event version。
 
 6.22 Proactive Trigger
 

@@ -18,6 +18,7 @@ CareActionType = Literal[
 ]
 CareActionPriority = Literal["LOW", "MEDIUM", "HIGH"]
 CareActionStatus = Literal["OPEN", "IN_PROGRESS", "COMPLETED", "POSTPONED", "CANCELLED"]
+SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
 
 def _aware(value: datetime | None) -> datetime | None:
@@ -78,6 +79,19 @@ class UpdateCareActionRequest(BaseModel):
         return self
 
 
+class CareActionSourceEventProvenance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: UUID
+    event_version_id: UUID
+    event_version: int = Field(ge=1)
+    event_type: str = Field(min_length=1, max_length=64)
+    event_time: datetime | None
+    source_status: Literal["VERIFIED", "CORRECTED"]
+    snapshot_sha256: str = Field(pattern=SHA256_PATTERN)
+    snapshot_schema_version: Literal["care-event-provenance.v1"]
+
+
 class CareActionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -88,6 +102,14 @@ class CareActionResponse(BaseModel):
     description: str | None
     trigger_reason: str | None
     related_event_ids: list[UUID]
+    source_event_provenance: list[CareActionSourceEventProvenance] = Field(
+        default_factory=list,
+        max_length=16,
+        description=(
+            "Server-captured immutable source versions; empty only for legacy actions "
+            "created before provenance capture was introduced."
+        ),
+    )
     assignee_actor_id: UUID
     due_at: datetime | None
     priority: CareActionPriority

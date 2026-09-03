@@ -37,7 +37,7 @@
 - [x] M-07 清理 exception、traceback 與 database URL logging。
 - [ ] M-08 加入 RLS 或等價的 database-level tenant isolation。
 - [ ] M-09 為 email/password auth 加入 distributed abuse limiting。
-- [ ] M-10 為 Care Action provenance 保存 immutable event version/hash。
+- [x] M-10 為 Care Action provenance 保存 immutable event version/hash。
 - [ ] M-11 建立 outbox publisher、recovery、DLQ 與 duplicate-safe consumer。
 
 ### P2 — API / frontend / tooling / documentation
@@ -56,8 +56,8 @@
 production-readiness release gate 管理。排除這些外部條件後，目前沒有未處理的 Critical／High finding，
 但下列項目仍須依 Wave 2 相依性安排：
 
-1. **回家續作的第一項：M-10。** 在擴充 Wave 2 Care Action 前，先確立 immutable event
-   version/hash provenance，避免功能完成後再次修改資料模型與歷史證據語意。
+1. **M-10 已完成。** Care Action 現在會鎖定來源 Care Event 並保存 exact immutable version、
+   canonical hash 與 schema version；資料庫同時阻止 provenance 改寫與來源 UUID rebinding。
 2. **M-11 為條件式 Wave 2 前置。** 若本輪包含 notification、projection、Agent handoff 或其他
    非同步事件流程，須先完成 outbox publisher、recovery、DLQ 與 duplicate-safe consumer；若不包含，
    保留為後續 reliability milestone。
@@ -69,7 +69,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
    H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
 
-建議續作順序：`M-10` → 視 Wave 2 範圍決定是否立即做 `M-11` → `L-01` → `L-02`；
+建議續作順序：視 Wave 2 範圍決定是否立即做 `M-11` → `L-01` → `L-02`；
 `M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
 
 ---
@@ -362,6 +362,15 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 - 修正：保存 immutable event version/hash，或限制已被 action reference 的 event destructive mutation。
 - 驗證：建立 action 後修改/刪除 event，確認 provenance 仍可驗證或操作被拒絕。
 - 應新增測試：是。
+- 修正結果：新增 append-only `care_action_event_provenance`，以 composite FK 綁定
+  `event_version_id + event_id + event_version`，並保存 canonical SHA-256 與 schema version。建立 action
+  時以 `FOR UPDATE` 捕捉同 tenant／elder 的正式 current version；trigger 禁止 provenance UPDATE／DELETE
+  與 `related_event_ids` rebinding，Care Event correction 只會建立新 version，既有 action 仍指向原證據。
+  API／frontend／outbox 已帶出安全的 provenance 欄位，legacy action 則相容地回空陣列。
+- 驗證結果：Core `1055 passed`、Care Action 聚焦測試 `42 passed`、frontend `288 passed` 加
+  typecheck／lint／production build、Ruff lint／format、static 與 live contract 均通過。已新增 PostgreSQL
+  migration integration case，覆蓋 correction、來源 rebinding、provenance mutation 與 event deletion；本機
+  Docker engine 因 Windows service 權限無法啟動，須由下一次 Gate 1 或 disposable PostgreSQL 補跑該 case。
 
 ### M-11 — Outbox 缺少 production publisher/recovery/DLQ
 

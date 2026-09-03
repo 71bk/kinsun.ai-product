@@ -57,6 +57,15 @@ class CareEventVersion(Base):
     """Immutable structured content and evidence reference version."""
 
     __tablename__ = "care_event_version"
+    __table_args__ = (
+        sa.UniqueConstraint("event_id", "version", name="uq_care_event_version"),
+        sa.UniqueConstraint(
+            "event_version_id",
+            "event_id",
+            "version",
+            name="uq_care_event_version_identity",
+        ),
+    )
 
     event_version_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

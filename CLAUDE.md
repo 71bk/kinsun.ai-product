@@ -52,10 +52,10 @@
   IaC reference 與 actor legacy identity 已移除；committed example gates 預設關閉。不得把「本機可登入」
   寫成「雲端環境已部署驗證」。
 - Baseline migration 已凍結；新增 schema 只加新的 Alembic revision，不改寫既有 migration。
-  2026-09-02 工作樹基準為 30 個 revisions、head `e2f4a6c8b013`；baseline 仍是 48 張 table，
-  後續 revision 另加 `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session`，
-  `app/models/` 目前宣告 51 個 `__tablename__`。Alembic 另外擁有 `rag_public` 與
-  `service_identity` 兩個非 domain schema，兩者都沒有 ORM model。model attribute `id` 常透過 `__pk_name__` 對應
+  2026-09-04 工作樹基準為 32 個 revisions、head `a7c9e1f3b5d6`；baseline 仍是 48 張 table，
+  後續 revision 另加 `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session`、
+  `care_action_event_provenance` 等表；`app/models/` 目前宣告 52 個 `__tablename__`。Alembic 另外擁有
+  `rag_public` 與 `service_identity` 兩個非 domain schema，兩者都沒有 ORM model。model attribute `id` 常透過 `__pk_name__` 對應
   DB 的領域主鍵，不要把欄位名稱不同誤判成 schema drift。
 - Staff-assisted accountless Elder Session（`f7a9b1c3d456`／`b8c2d4e5f607`）預設關閉，且在
   `APP_ENV=production` 一律拒絕。`ks1_`／`ep1_`／`es1_` 是三種不同憑證，assisted token 不帶任何

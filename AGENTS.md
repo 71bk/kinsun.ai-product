@@ -659,9 +659,10 @@ kinsun.ai/
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - 2026-09-02 工作樹有 30 個 revision，head 是 `e2f4a6c8b013`。baseline 仍是 48 張 table，
+  - 2026-09-04 工作樹有 32 個 revision，head 是 `a7c9e1f3b5d6`。baseline 仍是 48 張 table，
     後續 revision 另外加了 `elder_enrollment`、`elder_care_profile_entry`、
-    `assisted_elder_session` 等表；`app/models/` 目前宣告 51 個 `__tablename__`。
+    `assisted_elder_session`、`care_action_event_provenance` 等表；`app/models/` 目前宣告 52 個
+    `__tablename__`。
     Alembic 另外擁有兩個非 domain schema：`rag_public`（RAG projection）與
     `service_identity`（service credential replay claims）。兩者都**沒有** ORM model，
     因此不在 `Base.metadata`；`database_runtime_principal.py` 對它們用

@@ -676,7 +676,7 @@ title
 
 description
 
-source_event_ids[]
+related_event_ids[]
 
 assignee_id
 
@@ -687,6 +687,11 @@ priority
 expected_elder_scope
 
 不得由 Care Insight Candidate 自動建立，必須由專業照護者確認。
+
+Response 另回傳 server-captured `source_event_provenance[]`，其中包含來源 `event_id`、精確
+`event_version_id`／`event_version`、事件 metadata、canonical `snapshot_sha256` 與
+`snapshot_schema_version`。此陣列由服務端建立且不可由 client 指定或改寫；導入此欄位前建立的 legacy
+Care Action 可回空陣列。
 
 # 十一、日照與居服派案 API
 

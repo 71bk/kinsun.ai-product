@@ -59,6 +59,15 @@
           "title": "Related Event Ids",
           "type": "array"
         },
+        "source_event_provenance": {
+          "description": "Server-captured immutable source versions; empty only for legacy actions created before provenance capture was introduced.",
+          "items": {
+            "$ref": "#/$defs/CareActionSourceEventProvenance"
+          },
+          "maxItems": 16,
+          "title": "Source Event Provenance",
+          "type": "array"
+        },
         "assignee_actor_id": {
           "format": "uuid",
           "title": "Assignee Actor Id",
@@ -146,6 +155,74 @@
         "updated_at"
       ],
       "title": "CareActionResponse",
+      "type": "object"
+    },
+    "CareActionSourceEventProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_version_id": {
+          "format": "uuid",
+          "title": "Event Version Id",
+          "type": "string"
+        },
+        "event_version": {
+          "minimum": 1,
+          "title": "Event Version",
+          "type": "integer"
+        },
+        "event_type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Event Type",
+          "type": "string"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event Time"
+        },
+        "source_status": {
+          "enum": [
+            "VERIFIED",
+            "CORRECTED"
+          ],
+          "title": "Source Status",
+          "type": "string"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        },
+        "snapshot_schema_version": {
+          "const": "care-event-provenance.v1",
+          "title": "Snapshot Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "event_version_id",
+        "event_version",
+        "event_type",
+        "event_time",
+        "source_status",
+        "snapshot_sha256",
+        "snapshot_schema_version"
+      ],
+      "title": "CareActionSourceEventProvenance",
       "type": "object"
     }
   },

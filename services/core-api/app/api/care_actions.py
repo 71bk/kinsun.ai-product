@@ -18,6 +18,7 @@ from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.care_action import (
     CareActionListResponse,
     CareActionResponse,
+    CareActionSourceEventProvenance,
     CareActionStatus,
     CreateCareActionRequest,
     UpdateCareActionRequest,
@@ -37,6 +38,19 @@ def _response(action) -> CareActionResponse:
         description=action.description,
         trigger_reason=action.trigger_reason,
         related_event_ids=action.related_event_ids,
+        source_event_provenance=[
+            CareActionSourceEventProvenance(
+                event_id=source.event_id,
+                event_version_id=source.event_version_id,
+                event_version=source.event_version,
+                event_type=source.event_type,
+                event_time=source.event_time,
+                source_status=source.source_status,
+                snapshot_sha256=source.snapshot_sha256,
+                snapshot_schema_version=source.snapshot_schema_version,
+            )
+            for source in action.source_event_provenance
+        ],
         assignee_actor_id=action.assignee_actor_id,
         due_at=action.due_at,
         priority=action.priority,

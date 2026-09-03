@@ -87,6 +87,7 @@ DATA_SCHEMA_FOR = {
     "care-action-create.json": "domain/CreateCareActionRequestV1.json",
     "care-action-update.json": "domain/UpdateCareActionRequestV1.json",
     "care-action.json": "domain/CareActionV1.json",
+    "care-action-provenance-invalid-hash.json": "domain/CareActionV1.json",
     "care-action-create-medical.json": "domain/CreateCareActionRequestV1.json",
     "care-action-update-without-reason.json": "domain/UpdateCareActionRequestV1.json",
     "voice-ticket-issue-request.json": "domain/CreateVoiceTicketRequestV1.json",

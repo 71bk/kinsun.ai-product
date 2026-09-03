@@ -38,6 +38,7 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "policy_registry": _READ_ONLY,
     # Immutable evidence/version rows written by the application.
     "agent_tool_call": _APPEND_ONLY,
+    "care_action_event_provenance": _APPEND_ONLY,
     "care_event_version": _APPEND_ONLY,
     "deletion_tombstone": _APPEND_ONLY,
     "elder_care_profile_entry": _APPEND_ONLY,

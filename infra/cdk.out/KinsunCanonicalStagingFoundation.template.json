@@ -1,0 +1,3562 @@
+{
+ "Description": "Kinsun canonical staging foundation (no application services and no legacy backend)",
+ "Rules": {
+  "UsWest2Only": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Equals": [
+       {
+        "Ref": "AWS::Region"
+       },
+       "us-west-2"
+      ]
+     },
+     "AssertDescription": "The staging foundation must be deployed in us-west-2."
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "Owner": {
+   "Type": "String",
+   "Default": "member-c",
+   "Description": "Operational owner tag for the staging foundation.",
+   "MinLength": 1
+  },
+  "ExpiresAt": {
+   "Type": "String",
+   "Default": "2026-09-01",
+   "AllowedPattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$",
+   "ConstraintDescription": "Use an ISO calendar date such as 2026-09-01.",
+   "Description": "Review or teardown date; this tag does not delete resources automatically."
+  },
+  "OpenSearchCollectionId": {
+   "Type": "String",
+   "Default": "e682tp81hza27g3cp378",
+   "AllowedPattern": "^[a-z0-9]{3,40}$",
+   "Description": "Existing kinsun-rag-staging OpenSearch Serverless collection ID."
+  },
+  "OpenSearchEndpoint": {
+   "Type": "String",
+   "Default": "https://e682tp81hza27g3cp378.aoss.us-west-2.on.aws",
+   "AllowedPattern": "^https://[a-z0-9-]+\\.aoss\\.us-west-2\\.on\\.aws$",
+   "Description": "Existing kinsun-rag-staging collection endpoint."
+  },
+  "OpenSearchIndex": {
+   "Type": "String",
+   "Default": "ltc-public-knowledge-staging-v1",
+   "Description": "Existing staging RAG index; no index is created by this stack.",
+   "MinLength": 1
+  },
+  "OpenSearchAlias": {
+   "Type": "String",
+   "Default": "ltc-public-knowledge-staging",
+   "Description": "Existing staging RAG alias; no alias is created by this stack.",
+   "MinLength": 1
+  }
+ },
+ "Resources": {
+  "Vpc8378EB38": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.42.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "kinsun-staging"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/Resource"
+   }
+  },
+  "VpcedgepublicSubnet1SubnetDAA70DFD": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "edge-public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/Subnet"
+   }
+  },
+  "VpcedgepublicSubnet1RouteTable9C3103C3": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/RouteTable"
+   }
+  },
+  "VpcedgepublicSubnet1RouteTableAssociation65B6E6D7": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcedgepublicSubnet1RouteTable9C3103C3"
+    },
+    "SubnetId": {
+     "Ref": "VpcedgepublicSubnet1SubnetDAA70DFD"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcedgepublicSubnet1DefaultRoute47180E91": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "RouteTableId": {
+     "Ref": "VpcedgepublicSubnet1RouteTable9C3103C3"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/DefaultRoute"
+   }
+  },
+  "VpcedgepublicSubnet1EIP0734C6B8": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/EIP"
+   }
+  },
+  "VpcedgepublicSubnet1NATGatewayFC3C3518": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "VpcedgepublicSubnet1EIP0734C6B8",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "VpcedgepublicSubnet1SubnetDAA70DFD"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcedgepublicSubnet1DefaultRoute47180E91",
+    "VpcedgepublicSubnet1RouteTableAssociation65B6E6D7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet1/NATGateway"
+   }
+  },
+  "VpcedgepublicSubnet2Subnet55217640": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "edge-public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2/Subnet"
+   }
+  },
+  "VpcedgepublicSubnet2RouteTable1CDA09F0": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2/RouteTable"
+   }
+  },
+  "VpcedgepublicSubnet2RouteTableAssociation8ABAA0B4": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcedgepublicSubnet2RouteTable1CDA09F0"
+    },
+    "SubnetId": {
+     "Ref": "VpcedgepublicSubnet2Subnet55217640"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcedgepublicSubnet2DefaultRoute37493302": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "RouteTableId": {
+     "Ref": "VpcedgepublicSubnet2RouteTable1CDA09F0"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/edge-publicSubnet2/DefaultRoute"
+   }
+  },
+  "VpcappprivateSubnet1SubnetC8992466": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "app-private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1/Subnet"
+   }
+  },
+  "VpcappprivateSubnet1RouteTableB1CA5FC4": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1/RouteTable"
+   }
+  },
+  "VpcappprivateSubnet1RouteTableAssociation2BFCC920": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcappprivateSubnet1RouteTableB1CA5FC4"
+    },
+    "SubnetId": {
+     "Ref": "VpcappprivateSubnet1SubnetC8992466"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcappprivateSubnet1DefaultRouteB7E46990": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "VpcedgepublicSubnet1NATGatewayFC3C3518"
+    },
+    "RouteTableId": {
+     "Ref": "VpcappprivateSubnet1RouteTableB1CA5FC4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet1/DefaultRoute"
+   }
+  },
+  "VpcappprivateSubnet2Subnet3BD06E36": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "app-private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2/Subnet"
+   }
+  },
+  "VpcappprivateSubnet2RouteTable0507C94C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2/RouteTable"
+   }
+  },
+  "VpcappprivateSubnet2RouteTableAssociation0807CC4A": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcappprivateSubnet2RouteTable0507C94C"
+    },
+    "SubnetId": {
+     "Ref": "VpcappprivateSubnet2Subnet3BD06E36"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcappprivateSubnet2DefaultRoute5305C073": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "VpcedgepublicSubnet1NATGatewayFC3C3518"
+    },
+    "RouteTableId": {
+     "Ref": "VpcappprivateSubnet2RouteTable0507C94C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/app-privateSubnet2/DefaultRoute"
+   }
+  },
+  "VpcdbisolatedSubnet1SubnetDCC2F267": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.4.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "db-isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet1/Subnet"
+   }
+  },
+  "VpcdbisolatedSubnet1RouteTable405D3E59": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet1"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet1/RouteTable"
+   }
+  },
+  "VpcdbisolatedSubnet1RouteTableAssociationF4C56F0F": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcdbisolatedSubnet1RouteTable405D3E59"
+    },
+    "SubnetId": {
+     "Ref": "VpcdbisolatedSubnet1SubnetDCC2F267"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcdbisolatedSubnet2Subnet4734FEC1": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.42.5.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "db-isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet2/Subnet"
+   }
+  },
+  "VpcdbisolatedSubnet2RouteTableD94CA63C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet2"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet2/RouteTable"
+   }
+  },
+  "VpcdbisolatedSubnet2RouteTableAssociationC22B00A5": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcdbisolatedSubnet2RouteTableD94CA63C"
+    },
+    "SubnetId": {
+     "Ref": "VpcdbisolatedSubnet2Subnet4734FEC1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/db-isolatedSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcIGWD7BA715C": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "kinsun-staging"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/IGW"
+   }
+  },
+  "VpcVPCGWBF912B6E": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Vpc/VPCGW"
+   }
+  },
+  "ApiVpcLinkSecurityGroup5B8AD250": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "API Gateway VPC Link ENIs; the application stack will attach it.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/ApiVpcLinkSecurityGroup/Resource"
+   }
+  },
+  "FrontendSecurityGroup69AD9D5B": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Next.js BFF; no Internet ingress.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendSecurityGroup/Resource"
+   }
+  },
+  "FrontendSecurityGroupfromKinsunCanonicalStagingFoundationApiVpcLinkSecurityGroup736A58DD3000B137F5A8": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "HTTP from API Gateway VPC Link",
+    "FromPort": 3000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "FrontendSecurityGroup69AD9D5B",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "ApiVpcLinkSecurityGroup5B8AD250",
+      "GroupId"
+     ]
+    },
+    "ToPort": 3000
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendSecurityGroup/from KinsunCanonicalStagingFoundationApiVpcLinkSecurityGroup736A58DD:3000"
+   }
+  },
+  "CoreSecurityGroupCFA13D6B": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Python Core API; canonical internal peers only.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreSecurityGroup/Resource"
+   }
+  },
+  "CoreSecurityGroupfromKinsunCanonicalStagingFoundationFrontendSecurityGroupDBE7BE6680001339E83C": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Core API from BFF",
+    "FromPort": 8000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "CoreSecurityGroupCFA13D6B",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "FrontendSecurityGroup69AD9D5B",
+      "GroupId"
+     ]
+    },
+    "ToPort": 8000
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreSecurityGroup/from KinsunCanonicalStagingFoundationFrontendSecurityGroupDBE7BE66:8000"
+   }
+  },
+  "CoreSecurityGroupfromKinsunCanonicalStagingFoundationAgentSecurityGroup9D9072A48000A6B67A2D": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Core callbacks from Agent Runtime",
+    "FromPort": 8000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "CoreSecurityGroupCFA13D6B",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AgentSecurityGroupB99A59D2",
+      "GroupId"
+     ]
+    },
+    "ToPort": 8000
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreSecurityGroup/from KinsunCanonicalStagingFoundationAgentSecurityGroup9D9072A4:8000"
+   }
+  },
+  "AgentSecurityGroupB99A59D2": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Agent Runtime; reachable only from Core.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentSecurityGroup/Resource"
+   }
+  },
+  "AgentSecurityGroupfromKinsunCanonicalStagingFoundationCoreSecurityGroupDE3A33E9800175A220E9": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Agent Runtime from Core",
+    "FromPort": 8001,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "AgentSecurityGroupB99A59D2",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "CoreSecurityGroupCFA13D6B",
+      "GroupId"
+     ]
+    },
+    "ToPort": 8001
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentSecurityGroup/from KinsunCanonicalStagingFoundationCoreSecurityGroupDE3A33E9:8001"
+   }
+  },
+  "MigrationSecurityGroupBCB362A0": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "One-off Alembic tasks; no ingress.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationSecurityGroup/Resource"
+   }
+  },
+  "DatabaseSecurityGroup7319C0F6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Aurora PostgreSQL; Core and migration tasks only.",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/DatabaseSecurityGroup/Resource"
+   }
+  },
+  "DatabaseSecurityGroupfromKinsunCanonicalStagingFoundationCoreSecurityGroupDE3A33E95432BF625143": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "PostgreSQL from Core",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "CoreSecurityGroupCFA13D6B",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/DatabaseSecurityGroup/from KinsunCanonicalStagingFoundationCoreSecurityGroupDE3A33E9:5432"
+   }
+  },
+  "DatabaseSecurityGroupfromKinsunCanonicalStagingFoundationMigrationSecurityGroupAFE4A21C5432CA5D3C13": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "PostgreSQL from Alembic migration task",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "MigrationSecurityGroupBCB362A0",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/DatabaseSecurityGroup/from KinsunCanonicalStagingFoundationMigrationSecurityGroupAFE4A21C:5432"
+   }
+  },
+  "ClusterEB0386A7": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "kinsun-staging",
+    "ClusterSettings": [
+     {
+      "Name": "containerInsights",
+      "Value": "enabled"
+     }
+    ],
+    "ServiceConnectDefaults": {
+     "Namespace": {
+      "Fn::GetAtt": [
+       "ClusterDefaultServiceDiscoveryNamespaceC336F9B4",
+       "Arn"
+      ]
+     }
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Cluster/Resource"
+   }
+  },
+  "ClusterDefaultServiceDiscoveryNamespaceC336F9B4": {
+   "Type": "AWS::ServiceDiscovery::PrivateDnsNamespace",
+   "Properties": {
+    "Name": "staging.kinsun.internal",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "Vpc": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Cluster/DefaultServiceDiscoveryNamespace/Resource"
+   }
+  },
+  "Cluster3DA9CCBA": {
+   "Type": "AWS::ECS::ClusterCapacityProviderAssociations",
+   "Properties": {
+    "CapacityProviders": [
+     "FARGATE",
+     "FARGATE_SPOT"
+    ],
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DefaultCapacityProviderStrategy": []
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Cluster/Cluster"
+   }
+  },
+  "FrontendRepository7D714FA2": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "EmptyOnDelete": false,
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "ImageTagMutability": "IMMUTABLE",
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Remove only untagged build leftovers after fourteen days\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countNumber\":14,\"countUnit\":\"days\"},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "kinsun/staging/frontend",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendRepository/Resource"
+   }
+  },
+  "CoreRepositoryE6B4003D": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "EmptyOnDelete": false,
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "ImageTagMutability": "IMMUTABLE",
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Remove only untagged build leftovers after fourteen days\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countNumber\":14,\"countUnit\":\"days\"},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "kinsun/staging/core-api",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreRepository/Resource"
+   }
+  },
+  "MigrationRepositoryE2B2F2AB": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "EmptyOnDelete": false,
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "ImageTagMutability": "IMMUTABLE",
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Remove only untagged build leftovers after fourteen days\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countNumber\":14,\"countUnit\":\"days\"},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "kinsun/staging/core-migration",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationRepository/Resource"
+   }
+  },
+  "AgentRepositoryCEF64969": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "EmptyOnDelete": false,
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "ImageTagMutability": "IMMUTABLE",
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Remove only untagged build leftovers after fourteen days\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countNumber\":14,\"countUnit\":\"days\"},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "kinsun/staging/agent-runtime",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentRepository/Resource"
+   }
+  },
+  "FrontendLogGroupCE4F14E0": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/kinsun/staging/frontend",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendLogGroup/Resource"
+   }
+  },
+  "CoreApiLogGroup66A4A415": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/kinsun/staging/core-api",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreApiLogGroup/Resource"
+   }
+  },
+  "AgentRuntimeLogGroup38B6D9E4": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/kinsun/staging/agent-runtime",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentRuntimeLogGroup/Resource"
+   }
+  },
+  "MigrationLogGroupFD140541": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/kinsun/staging/migration",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationLogGroup/Resource"
+   }
+  },
+  "AuroraPostgresqlLogGroup44FBEE6B": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/rds/cluster/kinsun-staging-aurora-pg/postgresql",
+    "RetentionInDays": 7,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AuroraPostgresqlLogGroup/Resource"
+   }
+  },
+  "AuroraParameterGroup4BFCEB23": {
+   "Type": "AWS::RDS::DBClusterParameterGroup",
+   "Properties": {
+    "Description": "Kinsun staging Aurora PostgreSQL 16 parameters",
+    "Family": "aurora-postgresql16",
+    "Parameters": {
+     "rds.force_ssl": "1"
+    },
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AuroraParameterGroup/Resource"
+   }
+  },
+  "DatabaseSubnets56F17B9A": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnets for Database database",
+    "SubnetIds": [
+     {
+      "Ref": "VpcdbisolatedSubnet1SubnetDCC2F267"
+     },
+     {
+      "Ref": "VpcdbisolatedSubnet2Subnet4734FEC1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "DependsOn": [
+    "AuroraPostgresqlLogGroup44FBEE6B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Database/Subnets/Default"
+   }
+  },
+  "KinsunCanonicalStagingFoundationDatabaseSecret4AA597FE3fdaad7efa858a3daf9490cf0a702aeb": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Generated by the CDK for stack: ",
+       {
+        "Ref": "AWS::StackName"
+       }
+      ]
+     ]
+    },
+    "GenerateSecretString": {
+     "ExcludeCharacters": " %+~`#$&*()|[]{}:;<>?!'/@\"\\",
+     "GenerateStringKey": "password",
+     "PasswordLength": 30,
+     "SecretStringTemplate": "{\"username\":\"kinsun_admin\"}"
+    },
+    "Name": "kinsun/staging/aurora/admin",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "DependsOn": [
+    "AuroraPostgresqlLogGroup44FBEE6B"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Database/Secret/Resource"
+   }
+  },
+  "DatabaseSecretAttachmentE5D1B020": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "KinsunCanonicalStagingFoundationDatabaseSecret4AA597FE3fdaad7efa858a3daf9490cf0a702aeb"
+    },
+    "TargetId": {
+     "Ref": "DatabaseB269D8BB"
+    },
+    "TargetType": "AWS::RDS::DBCluster"
+   },
+   "DependsOn": [
+    "AuroraPostgresqlLogGroup44FBEE6B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Database/Secret/Attachment/Resource"
+   }
+  },
+  "DatabaseB269D8BB": {
+   "Type": "AWS::RDS::DBCluster",
+   "Properties": {
+    "BackupRetentionPeriod": 1,
+    "CopyTagsToSnapshot": true,
+    "DBClusterIdentifier": "kinsun-staging-aurora-pg",
+    "DBClusterParameterGroupName": {
+     "Ref": "AuroraParameterGroup4BFCEB23"
+    },
+    "DBSubnetGroupName": {
+     "Ref": "DatabaseSubnets56F17B9A"
+    },
+    "DatabaseName": "kinsun",
+    "DeletionProtection": true,
+    "EnableCloudwatchLogsExports": [
+     "postgresql"
+    ],
+    "EnableIAMDatabaseAuthentication": false,
+    "Engine": "aurora-postgresql",
+    "EngineVersion": "16.8",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "KinsunCanonicalStagingFoundationDatabaseSecret4AA597FE3fdaad7efa858a3daf9490cf0a702aeb"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": "kinsun_admin",
+    "Port": 5432,
+    "PreferredBackupWindow": "19:00-19:30",
+    "PreferredMaintenanceWindow": "sun:19:30-sun:20:00",
+    "ServerlessV2ScalingConfiguration": {
+     "MaxCapacity": 1,
+     "MinCapacity": 0,
+     "SecondsUntilAutoPause": 900
+    },
+    "StorageEncrypted": true,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ],
+    "VpcSecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "DatabaseSecurityGroup7319C0F6",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "AuroraPostgresqlLogGroup44FBEE6B"
+   ],
+   "UpdateReplacePolicy": "Snapshot",
+   "DeletionPolicy": "Snapshot",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Database/Resource"
+   }
+  },
+  "Databasewriter2462CC03": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "DatabaseB269D8BB"
+    },
+    "DBInstanceClass": "db.serverless",
+    "EnablePerformanceInsights": false,
+    "Engine": "aurora-postgresql",
+    "PromotionTier": 0,
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "DependsOn": [
+    "AuroraPostgresqlLogGroup44FBEE6B",
+    "VpcdbisolatedSubnet1RouteTableAssociationF4C56F0F",
+    "VpcdbisolatedSubnet2RouteTableAssociationC22B00A5"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/Database/writer/Resource"
+   }
+  },
+  "FamilyInviteSecretAFD59EC5": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "Core family invitation-code HMAC secret",
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "PasswordLength": 64
+    },
+    "Name": "kinsun/staging/core/family-invite-hmac",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FamilyInviteSecret/Resource"
+   }
+  },
+  "DatabaseRuntimeSecret0194C3F1": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "Least-privilege Core API Aurora runtime credential",
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "PasswordLength": 64,
+     "SecretStringTemplate": "{\"username\":\"kinsun_app\"}"
+    },
+    "Name": "kinsun/staging/aurora/runtime",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/DatabaseRuntimeSecret/Resource"
+   }
+  },
+  "FrontendExecutionRole3F4523E9": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS task execution role",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "kinsun-frontend-execution-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendExecutionRole/Resource"
+   }
+  },
+  "CoreExecutionRoleA86E856B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS task execution role",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "kinsun-core-execution-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreExecutionRole/Resource"
+   }
+  },
+  "CoreExecutionRoleDefaultPolicyBA410BD2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Ref": "DatabaseRuntimeSecret0194C3F1"
+        },
+        {
+         "Ref": "FamilyInviteSecretAFD59EC5"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "CoreExecutionRoleDefaultPolicyBA410BD2",
+    "Roles": [
+     {
+      "Ref": "CoreExecutionRoleA86E856B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "AgentExecutionRole8AD76C36": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS task execution role",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "kinsun-agent-execution-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentExecutionRole/Resource"
+   }
+  },
+  "MigrationExecutionRoleB6B10AD3": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS task execution role",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "kinsun-migration-execution-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationExecutionRole/Resource"
+   }
+  },
+  "MigrationExecutionRoleDefaultPolicy2DEB579B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Ref": "DatabaseRuntimeSecret0194C3F1"
+        },
+        {
+         "Ref": "DatabaseSecretAttachmentE5D1B020"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "MigrationExecutionRoleDefaultPolicy2DEB579B",
+    "Roles": [
+     {
+      "Ref": "MigrationExecutionRoleB6B10AD3"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "FrontendTaskRoleFDC53C6E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS application task role",
+    "RoleName": "kinsun-frontend-ecs-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/FrontendTaskRole/Resource"
+   }
+  },
+  "CoreTaskRoleEFB1055A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS application task role",
+    "RoleName": "kinsun-core-ecs-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CoreTaskRole/Resource"
+   }
+  },
+  "AgentTaskRoleAB8558E5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS application task role",
+    "RoleName": "kinsun-agent-runtime-ecs-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentTaskRole/Resource"
+   }
+  },
+  "AgentTaskRoleDefaultPolicyD9D35507": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":bedrock:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":inference-profile/us.cohere.embed-v4:0"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":bedrock:*::foundation-model/cohere.embed-v4:0"
+          ]
+         ]
+        }
+       ],
+       "Sid": "InvokeConfiguredEmbeddingModel"
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":aoss:us-west-2:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":collection/",
+          {
+           "Ref": "OpenSearchCollectionId"
+          }
+         ]
+        ]
+       },
+       "Sid": "OpenSearchServerlessDataPlane"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AgentTaskRoleDefaultPolicyD9D35507",
+    "Roles": [
+     {
+      "Ref": "AgentTaskRoleAB8558E5"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/AgentTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "MigrationTaskRole7F23D565": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Canonical staging ECS application task role",
+    "RoleName": "kinsun-migration-ecs-staging",
+    "Tags": [
+     {
+      "Key": "DataClass",
+      "Value": "synthetic-only"
+     },
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "ExpiresAt",
+      "Value": {
+       "Ref": "ExpiresAt"
+      }
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "aws-cdk"
+     },
+     {
+      "Key": "Owner",
+      "Value": {
+       "Ref": "Owner"
+      }
+     },
+     {
+      "Key": "Project",
+      "Value": "kinsun.ai"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/MigrationTaskRole/Resource"
+   }
+  },
+  "OpensearchCollectionIdParameter549DEF9B": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Externally managed staging reference: opensearch-collection-id",
+    "Name": "/kinsun/staging/external/opensearch-collection-id",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Ref": "OpenSearchCollectionId"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/OpensearchCollectionIdParameter/Resource"
+   }
+  },
+  "OpensearchEndpointParameter0C30C80D": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Externally managed staging reference: opensearch-endpoint",
+    "Name": "/kinsun/staging/external/opensearch-endpoint",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Ref": "OpenSearchEndpoint"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/OpensearchEndpointParameter/Resource"
+   }
+  },
+  "OpensearchIndexParameter0D09D62A": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Externally managed staging reference: opensearch-index",
+    "Name": "/kinsun/staging/external/opensearch-index",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Ref": "OpenSearchIndex"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/OpensearchIndexParameter/Resource"
+   }
+  },
+  "OpensearchAliasParameter18A86E4C": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Description": "Externally managed staging reference: opensearch-alias",
+    "Name": "/kinsun/staging/external/opensearch-alias",
+    "Tags": {
+     "DataClass": "synthetic-only",
+     "Environment": "staging",
+     "ExpiresAt": {
+      "Ref": "ExpiresAt"
+     },
+     "ManagedBy": "aws-cdk",
+     "Owner": {
+      "Ref": "Owner"
+     },
+     "Project": "kinsun.ai"
+    },
+    "Tier": "Standard",
+    "Type": "String",
+    "Value": {
+     "Ref": "OpenSearchAlias"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/OpensearchAliasParameter/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SwW7bMAz9lt4VbfOA3btkKAIMneEUvQ60zHpqbckgKQeB4H8fZCW2sQA7kXx8ovhIFrr4VujPD3DmnWk+dp2tdTwJmA+1f3NV6DDZEgh6FCQFZ/4d0RQ6vg4mpV7LvSpD3VlzCrVDSdjqVT4IvkCdy2R8xR6ZvbEg1ruFnJwfxzKZZ5AnEDzDRZVkRxBcCx+dIDlcCLmTa/QoAuZPj07UCU0gK5cn8mGYe/gvcHQtIfOk0LCO+y5wEr1/c/fuHgYwVi4l+dE2SBsxPClGGq3BxrLxI9JFx6uEg+Nn6JEHMHm093D6nXSscPBsxdOsbo0m1fmWdfzp20XEzZ8UNazjsq+FcPh+bfuf1AEEamC86csT3jzbAjfyCQ3lNSxlc3B0LOCSAp4p3IODFknHPOj0KpsXoBZls6iFcJfJ8KQs9DpWPp/SbEvfWTNPJ3uTYu7T+ZJ17Xqz2wOeJlUh+0B5+r+CDEEm5XyD+p0/jUWhi6/6y8M7W7uj4MT2qKts/wI6PUsELAMAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinsunCanonicalStagingFoundation/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VpcId": {
+   "Value": {
+    "Ref": "Vpc8378EB38"
+   }
+  },
+  "PublicEdgeSubnetIds": {
+   "Value": {
+    "Fn::Join": [
+     ",",
+     [
+      {
+       "Ref": "VpcedgepublicSubnet1SubnetDAA70DFD"
+      },
+      {
+       "Ref": "VpcedgepublicSubnet2Subnet55217640"
+      }
+     ]
+    ]
+   }
+  },
+  "PrivateAppSubnetIds": {
+   "Value": {
+    "Fn::Join": [
+     ",",
+     [
+      {
+       "Ref": "VpcappprivateSubnet1SubnetC8992466"
+      },
+      {
+       "Ref": "VpcappprivateSubnet2Subnet3BD06E36"
+      }
+     ]
+    ]
+   }
+  },
+  "IsolatedDatabaseSubnetIds": {
+   "Value": {
+    "Fn::Join": [
+     ",",
+     [
+      {
+       "Ref": "VpcdbisolatedSubnet1SubnetDCC2F267"
+      },
+      {
+       "Ref": "VpcdbisolatedSubnet2Subnet4734FEC1"
+      }
+     ]
+    ]
+   }
+  },
+  "EcsClusterName": {
+   "Value": {
+    "Ref": "ClusterEB0386A7"
+   }
+  },
+  "CloudMapNamespace": {
+   "Value": "staging.kinsun.internal"
+  },
+  "FrontendRepositoryUri": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "FrontendRepository7D714FA2",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "FrontendRepository7D714FA2",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "FrontendRepository7D714FA2"
+      }
+     ]
+    ]
+   }
+  },
+  "CoreRepositoryUri": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "CoreRepositoryE6B4003D",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "CoreRepositoryE6B4003D",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "CoreRepositoryE6B4003D"
+      }
+     ]
+    ]
+   }
+  },
+  "MigrationRepositoryUri": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "MigrationRepositoryE2B2F2AB",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "MigrationRepositoryE2B2F2AB",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "MigrationRepositoryE2B2F2AB"
+      }
+     ]
+    ]
+   }
+  },
+  "AgentRepositoryUri": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "AgentRepositoryCEF64969",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "AgentRepositoryCEF64969",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "AgentRepositoryCEF64969"
+      }
+     ]
+    ]
+   }
+  },
+  "DatabaseEndpoint": {
+   "Value": {
+    "Fn::GetAtt": [
+     "DatabaseB269D8BB",
+     "Endpoint.Address"
+    ]
+   }
+  },
+  "DatabasePort": {
+   "Value": {
+    "Fn::GetAtt": [
+     "DatabaseB269D8BB",
+     "Endpoint.Port"
+    ]
+   }
+  },
+  "DatabaseSecretArn": {
+   "Value": {
+    "Ref": "DatabaseSecretAttachmentE5D1B020"
+   }
+  },
+  "DatabaseAdminSecretArn": {
+   "Value": {
+    "Ref": "DatabaseSecretAttachmentE5D1B020"
+   }
+  },
+  "DatabaseRuntimeSecretArn": {
+   "Value": {
+    "Ref": "DatabaseRuntimeSecret0194C3F1"
+   }
+  },
+  "FamilyInviteSecretArn": {
+   "Value": {
+    "Ref": "FamilyInviteSecretAFD59EC5"
+   }
+  },
+  "ApiVpcLinkSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ApiVpcLinkSecurityGroup5B8AD250",
+     "GroupId"
+    ]
+   }
+  },
+  "FrontendSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "FrontendSecurityGroup69AD9D5B",
+     "GroupId"
+    ]
+   }
+  },
+  "CoreSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CoreSecurityGroupCFA13D6B",
+     "GroupId"
+    ]
+   }
+  },
+  "AgentSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AgentSecurityGroupB99A59D2",
+     "GroupId"
+    ]
+   }
+  },
+  "MigrationSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "MigrationSecurityGroupBCB362A0",
+     "GroupId"
+    ]
+   }
+  },
+  "DatabaseSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "DatabaseSecurityGroup7319C0F6",
+     "GroupId"
+    ]
+   }
+  },
+  "FrontendTaskRoleArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "FrontendTaskRoleFDC53C6E",
+     "Arn"
+    ]
+   }
+  },
+  "CoreTaskRoleArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CoreTaskRoleEFB1055A",
+     "Arn"
+    ]
+   }
+  },
+  "AgentTaskRoleArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AgentTaskRoleAB8558E5",
+     "Arn"
+    ]
+   }
+  },
+  "MigrationTaskRoleArn": {
+   "Value": {
+    "Fn::GetAtt": [
+     "MigrationTaskRole7F23D565",
+     "Arn"
+    ]
+   }
+  },
+  "AgentRuntimeAossDataPolicyName": {
+   "Value": "kinsun-rag-staging-data"
+  },
+  "ApplicationLogGroups": {
+   "Value": {
+    "Fn::Join": [
+     ",",
+     [
+      {
+       "Ref": "FrontendLogGroupCE4F14E0"
+      },
+      {
+       "Ref": "CoreApiLogGroup66A4A415"
+      },
+      {
+       "Ref": "AgentRuntimeLogGroup38B6D9E4"
+      },
+      {
+       "Ref": "MigrationLogGroupFD140541"
+      }
+     ]
+    ]
+   }
+  }
+ }
+}

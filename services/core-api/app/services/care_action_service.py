@@ -5,16 +5,20 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.domain.care_action import (
+    CARE_EVENT_PROVENANCE_SCHEMA_VERSION,
+    care_event_snapshot_sha256,
+)
 from app.domain.state_machine import require_care_action_transition
 from app.events.outbox_writer import write_outbox_entry
-from app.models.care_action import CareAction
-from app.models.care_event import CareEvent
+from app.models.care_action import CareAction, CareActionEventProvenance
+from app.models.care_event import CareEvent, CareEventVersion
 from app.repositories.care_action_repo import CareActionRepository
+from app.repositories.care_event_repo import CareEventRepository
 from app.schemas.care_action import CreateCareActionRequest, UpdateCareActionRequest
 
 PROFESSIONAL_CARE_ROLES = frozenset({"DAYCARE_CARE_WORKER", "HOME_CARE_WORKER"})
@@ -25,6 +29,7 @@ class CareActionService:
         self._session = session
         self._tenant_id = tenant_id
         self._actions = CareActionRepository(session, tenant_id)
+        self._events = CareEventRepository(session, tenant_id)
 
     @staticmethod
     def require_professional(actor_context: ActorContext) -> None:
@@ -62,7 +67,10 @@ class CareActionService:
             raise ValidationError(
                 details=[{"field": "due_at", "reason": "due_at must be in the future"}]
             )
-        await self._require_formal_source_events(elder_id, request.related_event_ids)
+        source_events = await self._capture_formal_source_events(
+            elder_id,
+            request.related_event_ids,
+        )
 
         action = CareAction(
             tenant_id=self._tenant_id,
@@ -79,6 +87,10 @@ class CareActionService:
             resolution=None,
             created_by_actor_id=actor_context.actor_id,
             version=1,
+            source_event_provenance=[
+                self._build_source_event_provenance(source_order, event, event_version)
+                for source_order, (event, event_version) in enumerate(source_events)
+            ],
         )
         self._actions.add(action)
         await self._session.flush()
@@ -130,22 +142,17 @@ class CareActionService:
         )
         return action
 
-    async def _require_formal_source_events(
+    async def _capture_formal_source_events(
         self,
         elder_id: UUID,
         event_ids: list[UUID],
-    ) -> None:
-        count = await self._session.scalar(
-            select(func.count())
-            .select_from(CareEvent)
-            .where(
-                CareEvent.id.in_(event_ids),
-                CareEvent.elder_id == elder_id,
-                CareEvent.tenant_id == self._tenant_id,
-                CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
-            )
+    ) -> list[tuple[CareEvent, CareEventVersion]]:
+        sources = await self._events.list_formal_current_versions_for_update(
+            elder_id=elder_id,
+            event_ids=event_ids,
         )
-        if count != len(event_ids):
+        sources_by_event_id = {event.id: (event, version) for event, version in sources}
+        if len(sources_by_event_id) != len(event_ids):
             raise ValidationError(
                 details=[
                     {
@@ -154,6 +161,34 @@ class CareActionService:
                     }
                 ]
             )
+        return [sources_by_event_id[event_id] for event_id in event_ids]
+
+    @staticmethod
+    def _build_source_event_provenance(
+        source_order: int,
+        event: CareEvent,
+        event_version: CareEventVersion,
+    ) -> CareActionEventProvenance:
+        return CareActionEventProvenance(
+            source_order=source_order,
+            event_id=event.id,
+            event_version_id=event_version.event_version_id,
+            event_version=event_version.version,
+            event_type=event.event_type,
+            event_time=event.event_time,
+            source_status=event.status,
+            snapshot_sha256=care_event_snapshot_sha256(
+                event_id=event.id,
+                event_version_id=event_version.event_version_id,
+                event_version=event_version.version,
+                event_type=event.event_type,
+                event_time=event.event_time,
+                source_status=event.status,
+                structured_payload=event_version.structured_payload,
+                evidence_text_ref=event_version.evidence_text_ref,
+            ),
+            snapshot_schema_version=CARE_EVENT_PROVENANCE_SCHEMA_VERSION,
+        )
 
     async def _write_event(
         self,
@@ -178,6 +213,16 @@ class CareActionService:
                 "action_type": action.action_type,
                 "assignee_actor_id": str(action.assignee_actor_id),
                 "related_event_ids": [str(event_id) for event_id in action.related_event_ids],
+                "source_event_provenance": [
+                    {
+                        "event_id": str(source.event_id),
+                        "event_version_id": str(source.event_version_id),
+                        "event_version": source.event_version,
+                        "snapshot_sha256": source.snapshot_sha256,
+                        "snapshot_schema_version": source.snapshot_schema_version,
+                    }
+                    for source in action.source_event_provenance
+                ],
                 "due_at": action.due_at.isoformat() if action.due_at else None,
                 "priority": action.priority,
                 "status": action.status,

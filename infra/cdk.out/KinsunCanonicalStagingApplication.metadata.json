@@ -1,0 +1,943 @@
+{
+  "/KinsunCanonicalStagingApplication": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "DataClass",
+          "value": "synthetic-only"
+        },
+        {
+          "key": "Environment",
+          "value": "staging"
+        },
+        {
+          "key": "ManagedBy",
+          "value": "aws-cdk"
+        },
+        {
+          "key": "Project",
+          "value": "kinsun.ai"
+        }
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/UsWest2Only": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UsWest2Only"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:50:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/Owner": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Owner"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.stringParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:578:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:59:24)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ExpiresAt": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExpiresAt"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:64:23)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/VpcId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:72:24)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/PrivateSubnet1Id": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PrivateSubnet1Id"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:77:35)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/PrivateSubnet2Id": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PrivateSubnet2Id"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:82:35)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ApiVpcLinkSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiVpcLinkSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "CanonicalStagingApplicationStack.securityGroupParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:587:17)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:87:44)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "CanonicalStagingApplicationStack.securityGroupParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:587:17)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:88:42)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CoreSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CoreSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "CanonicalStagingApplicationStack.securityGroupParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:587:17)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:89:38)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/AgentSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AgentSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "CanonicalStagingApplicationStack.securityGroupParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:587:17)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:90:39)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/MigrationSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "CanonicalStagingApplicationStack.securityGroupParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:587:17)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:91:43)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/EcsClusterName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "EcsClusterName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.stringParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:578:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:92:30)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CloudMapNamespace": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CloudMapNamespace"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.stringParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:578:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:97:36)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/DatabaseEndpoint": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseEndpoint"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.requiredParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:574:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:103:35)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/DatabasePort": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabasePort"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:108:26)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/DatabaseAdminSecretArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseAdminSecretArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.arnParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:595:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:114:41)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/DatabaseRuntimeSecretArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseRuntimeSecretArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.arnParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:595:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:118:43)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FamilyInviteSecretArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FamilyInviteSecretArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.arnParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:595:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:122:40)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendImageDigest": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendImageDigest"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.imageDigestParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:604:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:127:38)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CoreApiImageDigest": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CoreApiImageDigest"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.imageDigestParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:604:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:128:37)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/MigrationImageDigest": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationImageDigest"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.imageDigestParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:604:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:129:39)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/AgentImageDigest": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AgentImageDigest"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "CanonicalStagingApplicationStack.imageDigestParameter (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:604:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:130:35)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/BedrockEmbeddingModelId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BedrockEmbeddingModelId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:131:37)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ServiceDesiredCount": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServiceDesiredCount"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:137:26)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ConsentPolicyVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ConsentPolicyVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:144:34)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/SsmParameterValue:--kinsun--staging--external--opensearch-endpoint:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SsmParameterValuekinsunstagingexternalopensearchendpointC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...StringParameter2.valueForStringParameter in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:276:52)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/SsmParameterValue:--kinsun--staging--external--opensearch-index:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SsmParameterValuekinsunstagingexternalopensearchindexC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...StringParameter2.valueForStringParameter in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:280:49)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/SsmParameterValue:--kinsun--staging--external--opensearch-alias:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SsmParameterValuekinsunstagingexternalopensearchaliasC96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...StringParameter2.valueForStringParameter in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:284:49)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/VpcLinkToAlbIngress": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcLinkToAlbIngress"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:486:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendUrl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendUrl"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:557:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/MigrationTaskDefinitionArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTaskDefinitionArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:558:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CoreTaskDefinitionArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CoreTaskDefinitionArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:561:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ConfiguredConsentPolicyVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ConfiguredConsentPolicyVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:562:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/MigrationNetworkSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationNetworkSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:565:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/PrivateSubnetIds": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PrivateSubnetIds"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:568:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FoundationVpc/PrivateSubnet1": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "No routeTableId was provided to the subnet at 'KinsunCanonicalStagingApplication/FoundationVpc/PrivateSubnet1'. Attempting to read its .routeTable.routeTableId will return null/undefined. (More info: https://github.com/aws/aws-cdk/pull/3171) [ack: @aws-cdk/aws-ec2:noSubnetRouteTableId]",
+      "trace": [
+        "Annotations.addMessage (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:3506)",
+        "Annotations.addWarningV2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2194)",
+        "new ImportedSubnet2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:51099)",
+        "new ImportedSubnet2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "Subnet2.fromSubnetAttributes (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:33113)",
+        "D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\util.js:1:2658",
+        "Array.map (<anonymous>)",
+        "ImportSubnetGroup.import (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\util.js:1:2576)",
+        "new ImportedVpc2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:45757)",
+        "new ImportedVpc2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "Vpc2.fromVpcAttributes (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:13900)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:163:25)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "Object.<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "Module._compile (node:internal/modules/cjs/loader:1781:14)",
+        "Object.transformer (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\tsx\\dist\\register-BoI6-WNn.cjs:9:3252)",
+        "Module.load (node:internal/modules/cjs/loader:1505:32)",
+        "Function._load (node:internal/modules/cjs/loader:1309:12)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:254:19)",
+        "loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:335:3)",
+        "ModuleWrap.<anonymous> (node:internal/modules/esm/translators:235:7)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
+        "async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FoundationVpc/PrivateSubnet2": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "No routeTableId was provided to the subnet at 'KinsunCanonicalStagingApplication/FoundationVpc/PrivateSubnet2'. Attempting to read its .routeTable.routeTableId will return null/undefined. (More info: https://github.com/aws/aws-cdk/pull/3171) [ack: @aws-cdk/aws-ec2:noSubnetRouteTableId]",
+      "trace": [
+        "Annotations.addMessage (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:3506)",
+        "Annotations.addWarningV2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2194)",
+        "new ImportedSubnet2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:51099)",
+        "new ImportedSubnet2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "Subnet2.fromSubnetAttributes (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:33113)",
+        "D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\util.js:1:2658",
+        "Array.map (<anonymous>)",
+        "ImportSubnetGroup.import (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\util.js:1:2576)",
+        "new ImportedVpc2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:45757)",
+        "new ImportedVpc2 (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "Vpc2.fromVpcAttributes (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:13900)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:163:25)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "Object.<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "Module._compile (node:internal/modules/cjs/loader:1781:14)",
+        "Object.transformer (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\tsx\\dist\\register-BoI6-WNn.cjs:9:3252)",
+        "Module.load (node:internal/modules/cjs/loader:1505:32)",
+        "Function._load (node:internal/modules/cjs/loader:1309:12)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:254:19)",
+        "loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:335:3)",
+        "ModuleWrap.<anonymous> (node:internal/modules/esm/translators:235:7)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
+        "async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/ApiAccessLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiAccessLogsE9DF007D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:289:27)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendHttpApi/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendHttpApi3203218A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new HttpApi2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:294:21)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendTask1FBAEF7E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.taskDefinition (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:629:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:301:31)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CoreTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CoreTaskFFC43B4A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.taskDefinition (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:629:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:335:27)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/AgentTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AgentTask285670E7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.taskDefinition (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:629:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:375:28)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/MigrationTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTask69EAEF9D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.taskDefinition (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:629:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:411:32)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendServiceBC94BA93"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.service (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:689:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:447:34)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CoreService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CoreServiceFD7ABDE0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.service (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:689:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:457:30)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/AgentService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AgentService17391595"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in aws-cdk-lib...",
+        "CanonicalStagingApplicationStack.service (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:689:12)",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:467:31)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendLoadBalancer/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendLoadBalancerDBDBDFF7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancer2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:478:26)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendTargetGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendTargetGroupED7B3E5D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationTargetGroup2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:494:33)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendVpcLink/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendVpcLink50B82E9E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new VpcLink2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:514:21)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/DefaultStage/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DefaultStageEE28A986"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new HttpStage2 in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:539:5)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals, tsx..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendHttpApiANY5263126F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-apigatewayv2\\lib\\http\\api.js:1:96 in aws-cdk-lib...",
+        "Array.map (:)",
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:529:13)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--{proxy+}/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendHttpApiANYproxy41F99C0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-apigatewayv2\\lib\\http\\api.js:1:96 in aws-cdk-lib...",
+        "Array.map (:)",
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:534:13)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendLoadBalancer/HttpListener/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendLoadBalancerHttpListenerF1BCA40E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:508:35)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:7:1)",
+        "<anonymous> (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\bin\\canonical-staging-application.ts:20:2)"
+      ]
+    }
+  ],
+  "/KinsunCanonicalStagingApplication/FrontendHttpApi/ANY--/FrontendIntegration/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "FrontendHttpApiANYFrontendIntegrationB6F6838F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\node_modules\\aws-cdk-lib\\aws-apigatewayv2\\lib\\http\\api.js:1:96 in aws-cdk-lib...",
+        "Array.map (:)",
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new CanonicalStagingApplicationStack (D:\\MyDomain\\Hackthon-Product\\kinsun.ai-product\\infra\\lib\\canonical-staging-application-stack.ts:529:13)"
+      ]
+    }
+  ]
+}

@@ -12,6 +12,17 @@ export type CareActionPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type CareActionStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED';
 export type CareActionTransition = Exclude<CareActionStatus, 'OPEN'>;
 
+interface CoreCareActionSourceEventProvenance {
+  event_id: string;
+  event_version_id: string;
+  event_version: number;
+  event_type: string;
+  event_time: string | null;
+  source_status: 'VERIFIED' | 'CORRECTED';
+  snapshot_sha256: string;
+  snapshot_schema_version: 'care-event-provenance.v1';
+}
+
 interface CoreCareAction {
   care_action_id: string;
   elder_id: string;
@@ -20,6 +31,7 @@ interface CoreCareAction {
   description: string | null;
   trigger_reason: string | null;
   related_event_ids: string[];
+  source_event_provenance?: CoreCareActionSourceEventProvenance[];
   assignee_actor_id: string;
   due_at: string | null;
   priority: CareActionPriority;
@@ -45,6 +57,16 @@ export interface CareActionView {
   description: string | null;
   triggerReason: string | null;
   relatedEventIds: string[];
+  sourceEventProvenance: Array<{
+    eventId: string;
+    eventVersionId: string;
+    eventVersion: number;
+    eventType: string;
+    eventTime: string | null;
+    sourceStatus: 'VERIFIED' | 'CORRECTED';
+    snapshotSha256: string;
+    snapshotSchemaVersion: 'care-event-provenance.v1';
+  }>;
   assigneeActorId: string;
   dueAt: string | null;
   priority: CareActionPriority;
@@ -87,6 +109,16 @@ function toCareActionView(action: CoreCareAction): CareActionView {
     description: action.description,
     triggerReason: action.trigger_reason,
     relatedEventIds: action.related_event_ids,
+    sourceEventProvenance: (action.source_event_provenance ?? []).map((source) => ({
+      eventId: source.event_id,
+      eventVersionId: source.event_version_id,
+      eventVersion: source.event_version,
+      eventType: source.event_type,
+      eventTime: source.event_time,
+      sourceStatus: source.source_status,
+      snapshotSha256: source.snapshot_sha256,
+      snapshotSchemaVersion: source.snapshot_schema_version,
+    })),
     assigneeActorId: action.assignee_actor_id,
     dueAt: action.due_at,
     priority: action.priority,

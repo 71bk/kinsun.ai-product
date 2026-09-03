@@ -277,7 +277,7 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
-Core 已實作專業照護者使用的 Care Action list／create／update endpoint。正式待辦只能由照護者從同一 tenant、同一 elder 且已 `VERIFIED`／`CORRECTED` 的 Care Event 人工建立，並以 `expected_version` 控制狀態更新；目前只允許建立者指派自己。Agent Tool 的 `create_care_action` 仍明確拒絕執行，因此 AI 候選不會自動成為正式待辦。
+Core 已實作專業照護者使用的 Care Action list／create／update endpoint。正式待辦只能由照護者從同一 tenant、同一 elder 且已 `VERIFIED`／`CORRECTED` 的 Care Event 人工建立，並以 `expected_version` 控制狀態更新；目前只允許建立者指派自己。建立時會保存 append-only `source_event_provenance`，綁定精確 Care Event version 與 canonical SHA-256，後續 correction 不會重寫既有證據；導入前的 legacy action 可回空陣列。Agent Tool 的 `create_care_action` 仍明確拒絕執行，因此 AI 候選不會自動成為正式待辦。
 
 ## 尚未實作、不得視為 executable contract
 

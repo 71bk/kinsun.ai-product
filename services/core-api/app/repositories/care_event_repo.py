@@ -70,6 +70,32 @@ class CareEventRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def list_formal_current_versions_for_update(
+        self,
+        *,
+        elder_id: UUID,
+        event_ids: list[UUID],
+    ) -> list[tuple[CareEvent, CareEventVersion]]:
+        """Lock and return the exact formal versions used by one Care Action."""
+        result = await self._session.execute(
+            select(CareEvent, CareEventVersion)
+            .join(
+                CareEventVersion,
+                and_(
+                    CareEventVersion.event_id == CareEvent.id,
+                    CareEventVersion.version == CareEvent.current_version,
+                ),
+            )
+            .where(
+                CareEvent.id.in_(event_ids),
+                CareEvent.elder_id == elder_id,
+                CareEvent.tenant_id == self._tenant_id,
+                CareEvent.status.in_(["VERIFIED", "CORRECTED"]),
+            )
+            .with_for_update(of=CareEvent)
+        )
+        return [(row[0], row[1]) for row in result.all()]
+
     async def list_for_elder(
         self,
         *,

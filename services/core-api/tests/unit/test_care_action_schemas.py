@@ -8,7 +8,11 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.care_action import CreateCareActionRequest, UpdateCareActionRequest
+from app.schemas.care_action import (
+    CareActionSourceEventProvenance,
+    CreateCareActionRequest,
+    UpdateCareActionRequest,
+)
 
 
 def _future() -> datetime:
@@ -73,4 +77,18 @@ def test_postponed_update_requires_a_new_due_date() -> None:
             status="POSTPONED",
             expected_version=1,
             resolution="長者今日外出，改期追蹤",
+        )
+
+
+def test_source_event_provenance_rejects_noncanonical_hash() -> None:
+    with pytest.raises(ValidationError, match="snapshot_sha256"):
+        CareActionSourceEventProvenance(
+            event_id=uuid4(),
+            event_version_id=uuid4(),
+            event_version=1,
+            event_type="MEAL",
+            event_time=datetime.now(UTC),
+            source_status="VERIFIED",
+            snapshot_sha256="NOT-A-VALID-SHA256",
+            snapshot_schema_version="care-event-provenance.v1",
         )

@@ -63,11 +63,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 64
+_TOTAL_HEAD_TABLE_COUNT = 65
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "f3a5b7c9d024"
+_HEAD_REVISION = "a7c9e1f3b5d6"
 
 
 def _get_alembic_config() -> Config:
@@ -475,6 +475,153 @@ async def test_service_identity_state_is_isolated_from_the_domain_schema(test_en
 
     async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, "head")
+
+
+@pytest.mark.asyncio
+async def test_care_action_source_event_provenance_is_version_bound_and_immutable(
+    test_engine,
+) -> None:
+    """A later Care Event correction cannot rewrite a Care Action's source evidence."""
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+        await conn.run_sync(_run_upgrade, "head")
+
+    seed_statements = [
+        """
+        INSERT INTO eldercare_ai.tenant (tenant_id, tenant_type, name)
+        VALUES ('81000000-0000-4000-8000-000000000001', 'DEMO', 'Synthetic tenant')
+        """,
+        """
+        INSERT INTO eldercare_ai.actor (actor_id, actor_type, display_name)
+        VALUES ('82000000-0000-4000-8000-000000000001',
+                'DAYCARE_CARE_WORKER', 'Synthetic worker')
+        """,
+        """
+        INSERT INTO eldercare_ai.elder
+            (elder_id, tenant_id, display_name, primary_care_setting)
+        VALUES ('83000000-0000-4000-8000-000000000001',
+                '81000000-0000-4000-8000-000000000001',
+                'Synthetic elder', 'DAYCARE')
+        """,
+        """
+        INSERT INTO eldercare_ai.care_event
+            (event_id, elder_id, tenant_id, event_type, event_time,
+             status, current_version, consent_version)
+        VALUES ('84000000-0000-4000-8000-000000000001',
+                '83000000-0000-4000-8000-000000000001',
+                '81000000-0000-4000-8000-000000000001',
+                'MEAL', '2026-09-02T09:00:00Z', 'VERIFIED', 1, 1)
+        """,
+        """
+        INSERT INTO eldercare_ai.care_event_version
+            (event_version_id, event_id, version, structured_payload,
+             evidence_text_ref, created_by_actor_id)
+        VALUES ('85000000-0000-4000-8000-000000000001',
+                '84000000-0000-4000-8000-000000000001', 1,
+                '{"meal":"breakfast"}'::jsonb,
+                '["evidence:86000000-0000-4000-8000-000000000001"]',
+                '82000000-0000-4000-8000-000000000001')
+        """,
+        """
+        INSERT INTO eldercare_ai.care_action
+            (care_action_id, elder_id, tenant_id, action_type, title,
+             trigger_reason, related_event_ids, assignee_actor_id,
+             priority, status, created_by_actor_id, version)
+        VALUES ('87000000-0000-4000-8000-000000000001',
+                '83000000-0000-4000-8000-000000000001',
+                '81000000-0000-4000-8000-000000000001',
+                'FOLLOW_UP', 'Synthetic follow-up', 'Verified event',
+                ARRAY['84000000-0000-4000-8000-000000000001']::uuid[],
+                '82000000-0000-4000-8000-000000000001',
+                'MEDIUM', 'OPEN',
+                '82000000-0000-4000-8000-000000000001', 1)
+        """,
+        """
+        INSERT INTO eldercare_ai.care_action_event_provenance
+            (care_action_event_provenance_id, care_action_id, source_order,
+             event_id, event_version_id, event_version, event_type, event_time,
+             source_status, snapshot_sha256, snapshot_schema_version)
+        VALUES ('88000000-0000-4000-8000-000000000001',
+                '87000000-0000-4000-8000-000000000001', 0,
+                '84000000-0000-4000-8000-000000000001',
+                '85000000-0000-4000-8000-000000000001', 1,
+                'MEAL', '2026-09-02T09:00:00Z', 'VERIFIED',
+                :snapshot_sha256, 'care-event-provenance.v1')
+        """,
+    ]
+
+    async with test_engine.connect() as conn:
+        transaction = await conn.begin()
+        try:
+            for statement in seed_statements:
+                await conn.execute(text(statement), {"snapshot_sha256": "a" * 64})
+
+            await conn.execute(
+                text(
+                    "INSERT INTO eldercare_ai.care_event_version "
+                    "(event_version_id, event_id, version, structured_payload, "
+                    "evidence_text_ref, created_by_actor_id, supersedes_version_id) "
+                    "VALUES ('85000000-0000-4000-8000-000000000002', "
+                    "'84000000-0000-4000-8000-000000000001', 2, "
+                    '\'{"meal":"lunch"}\'::jsonb, NULL, '
+                    "'82000000-0000-4000-8000-000000000001', "
+                    "'85000000-0000-4000-8000-000000000001')"
+                )
+            )
+            await conn.execute(
+                text(
+                    "UPDATE eldercare_ai.care_event "
+                    "SET current_version = 2, status = 'CORRECTED' "
+                    "WHERE event_id = '84000000-0000-4000-8000-000000000001'"
+                )
+            )
+
+            with pytest.raises(DBAPIError, match="source-event bindings are immutable"):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.care_action SET related_event_ids = '{}' "
+                            "WHERE care_action_id = "
+                            "'87000000-0000-4000-8000-000000000001'"
+                        )
+                    )
+
+            with pytest.raises(DBAPIError, match="immutable"):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.care_action_event_provenance "
+                            "SET snapshot_sha256 = :changed "
+                            "WHERE care_action_event_provenance_id = "
+                            "'88000000-0000-4000-8000-000000000001'"
+                        ),
+                        {"changed": "b" * 64},
+                    )
+
+            with pytest.raises(DBAPIError):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "DELETE FROM eldercare_ai.care_event WHERE event_id = "
+                            "'84000000-0000-4000-8000-000000000001'"
+                        )
+                    )
+
+            provenance = (
+                await conn.execute(
+                    text(
+                        "SELECT event_version_id, event_version, snapshot_sha256 "
+                        "FROM eldercare_ai.care_action_event_provenance "
+                        "WHERE care_action_id = "
+                        "'87000000-0000-4000-8000-000000000001'"
+                    )
+                )
+            ).one()
+            assert str(provenance.event_version_id) == "85000000-0000-4000-8000-000000000001"
+            assert provenance.event_version == 1
+            assert provenance.snapshot_sha256 == "a" * 64
+        finally:
+            await transaction.rollback()
 
 
 @pytest.mark.asyncio
