@@ -85,9 +85,9 @@ class LiveContractServiceAuth(httpx.Auth):
         )
 
     def auth_flow(self, request: httpx.Request):  # noqa: ANN201
-        correlation_id = request.headers.get("X-Correlation-ID") or (
-            f"live-contract-{uuid.uuid4()}"
-        )
+        # The service-auth signature binds this value, so it must already meet
+        # the runtime's canonical UUID v4 boundary before the request is signed.
+        correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
         request.headers["X-Correlation-ID"] = correlation_id
         request.headers[SERVICE_CREDENTIAL_HEADER] = self._signer.sign(
             method=request.method,
@@ -166,7 +166,9 @@ def _resolve_component_refs(node, openapi: dict):
                 **node,
                 "$ref": _component_id(ref.rsplit("/", 1)[1], openapi),
             }
-        return {key: _resolve_component_refs(value, openapi) for key, value in node.items()}
+        return {
+            key: _resolve_component_refs(value, openapi) for key, value in node.items()
+        }
     if isinstance(node, list):
         return [_resolve_component_refs(item, openapi) for item in node]
     return node
@@ -507,7 +509,9 @@ async def main() -> int:
                 inline_schema(RAG_V2_PATH, "post", "200"),
             )
             results = body.get("data", {}).get("results", [])
-            if len(results) != 5 or any(not result.get("source_locator") for result in results):
+            if len(results) != 5 or any(
+                not result.get("source_locator") for result in results
+            ):
                 failures.append("V2 RAG omitted complete source locators")
                 print("FAIL  V2 RAG omitted complete source locators")
             else:
