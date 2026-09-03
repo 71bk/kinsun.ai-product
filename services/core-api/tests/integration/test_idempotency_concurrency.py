@@ -26,13 +26,20 @@ async def test_same_first_use_key_executes_once_and_replays_to_concurrent_caller
             """
             INSERT INTO eldercare_ai.tenant
                 (tenant_id, tenant_type, name, status, timezone)
-            VALUES (:tenant_id, 'DEMO', 'Idempotency concurrency tenant', 'ACTIVE', 'UTC');
-            INSERT INTO eldercare_ai.actor
-                (actor_id, actor_type, display_name, status)
-            VALUES (:actor_id, 'SYSTEM_SERVICE', 'Idempotency concurrency actor', 'ACTIVE');
+            VALUES (:tenant_id, 'DEMO', 'Idempotency concurrency tenant', 'ACTIVE', 'UTC')
             """
         ),
-        {"tenant_id": TENANT_ID, "actor_id": ACTOR_ID},
+        {"tenant_id": TENANT_ID},
+    )
+    await committed_session.execute(
+        text(
+            """
+            INSERT INTO eldercare_ai.actor
+                (actor_id, actor_type, display_name, status)
+            VALUES (:actor_id, 'SYSTEM_SERVICE', 'Idempotency concurrency actor', 'ACTIVE')
+            """
+        ),
+        {"actor_id": ACTOR_ID},
     )
     await committed_session.commit()
 
