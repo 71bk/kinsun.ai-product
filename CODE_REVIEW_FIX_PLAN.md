@@ -31,7 +31,7 @@
 - [x] M-01 完成 idempotency TTL、scope 與 replay response redesign。
 - [x] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
 - [x] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
-- [ ] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
+- [x] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
 - [x] M-05 降低 preferred address 造成 prompt injection 的風險。
 - [x] M-06 修正 audit request context 注入。
 - [x] M-07 清理 exception、traceback 與 database URL logging。
@@ -246,6 +246,15 @@
 - 修正：將 deadline 傳遞至 provider/retrieval，實作 tool counters；或移除尚未支援的欄位。
 - 驗證：測試 timeout、tool round、tool count 邊界值。
 - 應新增測試：是。
+- 修正結果：每個 Agent Run 以 `latency_budget_ms` 建立單一 monotonic deadline，RAG、Model
+  Provider、Event extraction 與 Memory extraction 都使用同一份剩餘時間；超時取消目前 await、
+  丟棄 partial output／proposal，回可預期的 `SAFE_FALLBACK` 與 `LATENCY_BUDGET_EXCEEDED`。
+  `ExecutionBudget` 會在 work 開始前原子保留 decision 或 Tool round，並同時檢查 round／total
+  ceiling；失敗 reservation 不改變 counters。現行 API 並未接受 caller-supplied
+  `max_tool_rounds`／`max_total_tools`，canonical flow 也尚未執行 Tool，因此實際 Tool counters 固定
+  為零，不把設定誤述為已存在的 Tool engine。新增 60 秒 slow provider／retriever cancellation、
+  decision／round／total boundary 與 sanitized structured log tests；Agent Runtime 全套
+  `498 passed`。設計與同步 SDK 的 residual limitation 記錄於 ADR 0020。
 
 ### M-05 — Preferred address 可形成 prompt injection
 
@@ -457,9 +466,9 @@
 
 ## 最新驗證結果
 
-- GitHub Actions Gate 1：run `33733914076` passed（commit `2c6b545`）；M-03 推送後會再跑一次。
+- GitHub Actions Gate 1：run `33737646609` passed（commit `dbe54ce`）；M-04 推送後會再跑一次。
 - Core unit tests：1050 passed。
-- Agent tests：495 passed。
+- Agent tests：498 passed。
 - RAG tests：324 passed。
 - Speech tests：91 passed。
 - Frontend tests：288 passed。
