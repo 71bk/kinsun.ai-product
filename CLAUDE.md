@@ -344,6 +344,8 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
+- Claude 執行 Git commit 時只寫本次變更的 subject／body；不得自行加入 `Co-Authored-By`、
+  `Claude-Session`、`Generated-By` 或任何 AI／工具協作者署名與追蹤連結，除非使用者明確要求。
 - 不為了 Windows Git ownership 問題改 repository owner 或全域安全設定；命令使用 scoped
   `git -c safe.directory=<repo> ...`（`<repo>` 是這台機器上的實際 checkout 路徑）。若 Supabase、
   網路、AWS 或沙箱受限，記錄限制，不以關閉安全檢查繞過。

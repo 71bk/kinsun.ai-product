@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from agent_runtime.agents.companion.agent import CompanionAgent
 from agent_runtime.agents.event_extractor.agent import EventExtractorAgent
 from agent_runtime.agents.event_extractor.models import EventExtractionContext
 from agent_runtime.agents.memory_extractor.agent import MemoryExtractorAgent
 from agent_runtime.agents.safety_evaluator.evaluator import SafetyEvaluator
-from agent_runtime.common.enums import SafetyDecision
+from agent_runtime.common.enums import RiskLevel, SafetyDecision
 from agent_runtime.common.errors import StepLimitError
 from agent_runtime.context.builder import (
     build_minimal_context_manifest,
@@ -20,8 +23,8 @@ from agent_runtime.contracts.models import (
     SafetyEvaluation,
 )
 from agent_runtime.models.provider import ModelProvider
+from agent_runtime.orchestration.execution_budget import ExecutionBudget
 from agent_runtime.orchestration.fallback import fallback_reply
-from agent_runtime.orchestration.loop_controller import LoopController
 from agent_runtime.orchestration.rag_integration import (
     RagRetriever,
     is_rag_request,
@@ -33,6 +36,10 @@ from agent_runtime.rag.citations import append_citations
 from agent_runtime.rag.fallback import failed_response_v2
 from agent_runtime.rag.models import RetrievalResponseV2
 from agent_runtime.tracing.trace import new_agent_run_id, new_trace_id
+
+logger = logging.getLogger(__name__)
+
+LATENCY_BUDGET_FALLBACK = "這次處理時間超過安全限制，請稍後再試。"
 
 
 class AgentOrchestrator:
@@ -74,21 +81,69 @@ class AgentOrchestrator:
         if request.max_steps > self.max_steps:
             raise StepLimitError("max_steps exceeds system limit")
 
+        budget = ExecutionBudget(
+            latency_budget_ms=request.latency_budget_ms,
+            max_decisions=request.max_steps,
+            max_tool_rounds=self.max_tool_rounds,
+            max_total_tools=self.max_total_tools,
+        )
+        try:
+            async with asyncio.timeout(budget.remaining_seconds()):
+                return await self._run_bounded(
+                    request,
+                    budget=budget,
+                    rag_retriever=rag_retriever,
+                )
+        except TimeoutError:
+            logger.warning(
+                "agent_latency_budget_exhausted",
+                extra={
+                    "latency_budget_ms": request.latency_budget_ms,
+                    "decision_count": budget.decision_count,
+                    "tool_round_count": budget.tool_round_count,
+                    "total_tool_count": budget.total_tool_count,
+                },
+            )
+            selected_agent = self.select_agent(request)
+            safety_result = SafetyEvaluation(
+                decision=SafetyDecision.SAFE_FALLBACK,
+                risk_level=RiskLevel.LOW,
+                reason_codes=["LATENCY_BUDGET_EXCEEDED"],
+                matched_terms=[],
+                safe_reply=LATENCY_BUDGET_FALLBACK,
+            )
+            return self._response(
+                request=request,
+                trace_id=request.trace_id or new_trace_id(),
+                selected_agent=selected_agent,
+                context_manifest=build_minimal_context_manifest(request, selected_agent),
+                step_count=max(1, budget.decision_count),
+                safety_result=safety_result,
+                reply_text=LATENCY_BUDGET_FALLBACK,
+            )
+
+    async def _run_bounded(
+        self,
+        request: AgentRunRequest,
+        *,
+        budget: ExecutionBudget,
+        rag_retriever: RagRetriever | None,
+    ) -> AgentRunResponse:
         trace_id = request.trace_id or new_trace_id()
         selected_agent = self.select_agent(request)
         context_manifest = build_minimal_context_manifest(request, selected_agent)
 
         # The companion decision remains one bounded model step. Proposal
         # extraction is deterministic and cannot write Core domain state.
-        step_count = 1
-        if not LoopController(self.max_steps).can_execute(request.max_steps, step_count):
-            raise StepLimitError("max_steps does not allow a single decision step")
+        step_count = budget.consume_decision()
 
         retrieval: RetrievalResponseV2 | None = None
         if is_rag_request(request):
             input_safety = self.safety_evaluator.evaluate(request, "")
             if input_safety.decision == SafetyDecision.ALLOW:
-                retrieval = await retrieve_for_agent(request, rag_retriever)
+                retrieval = await budget.wait_for(
+                    lambda: retrieve_for_agent(request, rag_retriever)
+                )
                 if retrieval.status != "SUCCESS":
                     safety_result = retrieval_fallback_safety(retrieval)
                     return self._response(
@@ -120,7 +175,9 @@ class AgentOrchestrator:
                     )
 
         companion_output = (
-            await self.companion.run(request, context_manifest, request.language)
+            await budget.wait_for(
+                lambda: self.companion.run(request, context_manifest, request.language)
+            )
         ).reply_text
         safety_result = self.safety_evaluator.evaluate(request, companion_output)
 
@@ -139,9 +196,11 @@ class AgentOrchestrator:
             and "event_candidate" in request.requested_outputs
         ):
             try:
-                extraction = await self.event_extractor.run(
-                    request,
-                    EventExtractionContext(),
+                extraction = await budget.wait_for(
+                    lambda: self.event_extractor.run(
+                        request,
+                        EventExtractionContext(),
+                    )
                 )
             except ValueError:
                 extraction = None
@@ -155,9 +214,11 @@ class AgentOrchestrator:
             and event_candidate_proposal is not None
         ):
             try:
-                memory_extraction = await self.memory_extractor.run(
-                    request,
-                    source_event=event_candidate_proposal,
+                memory_extraction = await budget.wait_for(
+                    lambda: self.memory_extractor.run(
+                        request,
+                        source_event=event_candidate_proposal,
+                    )
                 )
             except ValueError:
                 memory_extraction = None

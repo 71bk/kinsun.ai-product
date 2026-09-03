@@ -31,7 +31,7 @@ TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-se
 
 def signed_request() -> tuple[bytes, dict[str, str]]:
     body = canonical_json_bytes(make_payload())
-    correlation_id = "cid-provider-down-001"
+    correlation_id = "44444444-4444-4444-8444-444444444444"
     return body, {
         "Content-Type": "application/json",
         "X-Correlation-ID": correlation_id,

@@ -144,9 +144,5 @@ async def test_tablet_revocation_cancels_active_conversations(
     assert conversation.state == "CANCELLED"
     assert conversation.ended_at is not None
     session.flush.assert_awaited_once()
-    assert outbox.await_args.kwargs["payload"]["reason_code"] == (
-        "ELDER_TABLET_REQUESTED_STOP"
-    )
-    assert outbox.await_args.kwargs["payload"]["assisted_session_id"] == str(
-        assisted_session_id
-    )
+    assert outbox.await_args.kwargs["payload"]["reason_code"] == ("ELDER_TABLET_REQUESTED_STOP")
+    assert outbox.await_args.kwargs["payload"]["assisted_session_id"] == str(assisted_session_id)

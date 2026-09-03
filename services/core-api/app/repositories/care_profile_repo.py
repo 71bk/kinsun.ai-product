@@ -27,6 +27,7 @@ class CareProfileRepository(BaseRepository):
             .order_by(ElderCareProfileEntry.created_at, ElderCareProfileEntry.id)
         )
         return list(result.scalars().all())
+
     async def list_active_ai_context(
         self,
         *,

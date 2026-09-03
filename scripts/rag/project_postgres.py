@@ -33,7 +33,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--schema",
         type=Path,
-        default=REPO_ROOT / "contracts" / "schemas" / "rag" / "rag-chunk-v2.1.schema.json",
+        default=REPO_ROOT
+        / "contracts"
+        / "schemas"
+        / "rag"
+        / "rag-chunk-v2.1.schema.json",
     )
     args = parser.parse_args(argv)
 

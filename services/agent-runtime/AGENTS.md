@@ -40,7 +40,9 @@ Elder／Family／Staff 共用仍通過 public／official／risk／purpose gate �
 回傳 5 筆。Production 仍禁止此 override。2026-08-26 已把本機 source-family policy v002 投影為
 immutable、hash-pinned runtime policy v001 並接入 V2：search backend 先在固定 554 筆 v002 chunk IDs
 搜尋最多 50 筆，Retriever 再以 v003 text SHA-256、四角色、purpose 與 assessment metadata 決定
-3–5 筆回覆；high／unknown、stop、非 current 與 research 不在搜尋 projection。policy 啟用時不得與
+3–5 筆回覆；遠端 live current／stop／retrieval／block reasons／review-production 狀態不可被 policy
+覆蓋，並在搜尋與回覆階段各自 fail closed；high／unknown、stop、非 current 與 research 不在搜尋
+projection。policy 啟用時不得與
 legacy all-audience override 併用。10 個離線 policy／citation Golden cases 已通過，但真實 backend
 relevance／ranking Golden Query 尚未執行。2026-08-28 Owner v006 closeout acceptance 已人工確認
 runtime v003 中 32 筆 A 單位 purpose，並核准 27 筆 `stop_normal_rag=true` 進入身份別條件開放複核；

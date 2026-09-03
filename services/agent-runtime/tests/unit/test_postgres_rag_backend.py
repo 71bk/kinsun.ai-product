@@ -192,6 +192,12 @@ async def test_postgres_backend_uses_fixed_runtime_policy_candidate_pool() -> No
     eligible_clause = str(engine.connection.statement).split("eligible AS (", maxsplit=1)[1]
     eligible_clause = eligible_clause.split("),\nlexical_raw AS (", maxsplit=1)[0]
     policy_branch, legacy_branch = eligible_clause.split("OR (", maxsplit=1)
+    assert "projection.current_status = 'current'" in policy_branch
+    assert "projection.stop_normal_rag IS FALSE" in policy_branch
+    assert "projection.retrieval_eligible IS TRUE" in policy_branch
+    assert "retrieval_block_reasons" in policy_branch
+    assert "projection.review_status = 'verified'" in policy_branch
+    assert "projection.production_approved IS TRUE" in policy_branch
     assert "data_classification" not in policy_branch
     assert "data_classification" in legacy_branch
     assert "distribution_scope" in legacy_branch

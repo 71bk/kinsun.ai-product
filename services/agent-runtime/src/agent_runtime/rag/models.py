@@ -383,6 +383,8 @@ class OpenSearchConnectionSettings(RagBaseModel):
     region: str = Field(min_length=1)
     index_name: str = Field(min_length=1)
     index_alias: str = Field(min_length=1)
+    search_timeout_seconds: float = Field(default=5.0, gt=0.0, le=30.0)
+    max_concurrency: int = Field(default=4, ge=1, le=16)
     mode: Literal["staging"]
 
     @field_validator("index_name", "index_alias")
@@ -523,6 +525,14 @@ class RagRuntimeSettings(RagBaseModel):
                 region=_required_env(env, "AWS_REGION"),
                 index_name=_as_nonempty_str(index_name, "OpenSearch index name"),
                 index_alias=_as_nonempty_str(index_alias, "OpenSearch index alias"),
+                search_timeout_seconds=_as_float(
+                    env.get("RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS", "5"),
+                    "RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS",
+                ),
+                max_concurrency=_as_int(
+                    env.get("RAG_OPENSEARCH_MAX_CONCURRENCY", "4"),
+                    "RAG_OPENSEARCH_MAX_CONCURRENCY",
+                ),
                 mode=env.get("RAG_MODE") or index_document.get("mode"),
             )
             index_alias = opensearch.index_alias
@@ -667,6 +677,15 @@ def _as_int(value: object, label: str) -> int:
         return int(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{label} must be an integer") from exc
+
+
+def _as_float(value: object, label: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be a number")
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a number") from exc
 
 
 def _as_nonempty_str(value: object, label: str) -> str:

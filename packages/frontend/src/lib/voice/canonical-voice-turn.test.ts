@@ -49,7 +49,13 @@ beforeEach(() => {
     gateExpiresAt: '2026-08-10T12:00:00Z',
   });
   mocks.runCompanionTurn.mockReset().mockResolvedValue({
+    session_id: 'session-1',
+    agent_run_id: 'agent-run-1',
     reply_text: '安全的合成回覆',
+    reply_language: 'zh-TW',
+    speech_synthesis_text: '安全的合成回覆',
+    speech_synthesis_capability: 'synthesis-capability',
+    transport_status: 'SYNTHESIS_CAPABILITY_ISSUED',
     result_status: 'SUCCESS',
     safety_decision: 'ALLOW',
   });
@@ -88,15 +94,26 @@ describe('canonical voice turn', () => {
       'session-1',
       'confirmed transcript',
     );
-    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith('安全的合成回覆', 'zh-TW');
+    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith(
+      '安全的合成回覆',
+      'zh-TW',
+      'session-1',
+      'agent-run-1',
+      'synthesis-capability',
+    );
     objectUrl.mockRestore();
   });
 
   it('keeps citations on screen but excludes them from synthesized speech', async () => {
-    const replyText =
-      '回答內容\n\n引用來源：\n- [國民健康署《手冊》](https://example.test/guide)';
+    const replyText = '回答內容\n\n引用來源：\n- [國民健康署《手冊》](https://example.test/guide)';
     mocks.runCompanionTurn.mockResolvedValueOnce({
+      session_id: 'session-1',
+      agent_run_id: 'agent-run-1',
       reply_text: replyText,
+      reply_language: 'zh-TW',
+      speech_synthesis_text: '回答內容',
+      speech_synthesis_capability: 'synthesis-capability',
+      transport_status: 'SYNTHESIS_CAPABILITY_ISSUED',
       result_status: 'SUCCESS',
       safety_decision: 'ALLOW',
     });
@@ -104,9 +121,34 @@ describe('canonical voice turn', () => {
 
     const reply = await speakTurn(config, 'session-1', 'confirmed transcript', 'zh-TW');
 
-    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith('回答內容', 'zh-TW');
+    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith(
+      '回答內容',
+      'zh-TW',
+      'session-1',
+      'agent-run-1',
+      'synthesis-capability',
+    );
     expect(reply.replyText).toBe(replyText);
     objectUrl.mockRestore();
+  });
+
+  it('does not send a language that differs from the Core-bound reply language', async () => {
+    mocks.runCompanionTurn.mockResolvedValueOnce({
+      session_id: 'session-1',
+      agent_run_id: 'agent-run-1',
+      reply_text: 'Authorized English reply',
+      reply_language: 'en-US',
+      speech_synthesis_text: 'Authorized English reply',
+      speech_synthesis_capability: 'synthesis-capability',
+      transport_status: 'SYNTHESIS_CAPABILITY_ISSUED',
+      result_status: 'SUCCESS',
+      safety_decision: 'ALLOW',
+    });
+
+    const reply = await speakTurn(config, 'session-1', 'confirmed transcript', 'zh-TW');
+
+    expect(mocks.synthesizeSpeech).not.toHaveBeenCalled();
+    expect(reply).toMatchObject({ audioUrl: null, textOnlyByLanguage: true });
   });
 
   it('cancels the Core session when ASR is aborted after ticket issuance', async () => {

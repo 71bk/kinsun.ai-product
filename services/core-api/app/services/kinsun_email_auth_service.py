@@ -54,9 +54,7 @@ class RejectedKinsunEmailAuthentication:
     """A uniform rejection whose state changes must still be committed."""
 
 
-KinsunEmailCompletion = (
-    CompletedKinsunEmailAuthentication | RejectedKinsunEmailAuthentication
-)
+KinsunEmailCompletion = CompletedKinsunEmailAuthentication | RejectedKinsunEmailAuthentication
 
 
 class KinsunEmailAuthService:

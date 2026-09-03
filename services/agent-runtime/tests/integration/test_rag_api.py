@@ -43,7 +43,7 @@ def request_payload_v2(**overrides: object) -> dict[str, object]:
 
 async def post(app, payload: dict[str, object], *, path: str = RAG_PATH):
     body = canonical_json_bytes(payload)
-    correlation_id = "cid-rag-test"
+    correlation_id = "33333333-3333-4333-8333-333333333333"
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         return await client.post(
@@ -243,6 +243,8 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         RAG_POSTGRES_STATEMENT_TIMEOUT_MS = 10_000
         RAG_POSTGRES_POOL_MIN_SIZE = 1
         RAG_POSTGRES_POOL_MAX_SIZE = 5
+        RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS = 5.0
+        RAG_OPENSEARCH_MAX_CONCURRENCY = 4
         AWS_REGION = "configured-region"
         BEDROCK_EMBEDDING_MODEL_ID = "configured-model"
         BEDROCK_EMBEDDING_DIMENSION = 1024
@@ -292,6 +294,8 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         "OPENSEARCH_HOST": "https://search.example.test",
         "OPENSEARCH_INDEX": "configured-staging-index",
         "OPENSEARCH_ALIAS": "configured-staging-alias",
+        "RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS": "5.0",
+        "RAG_OPENSEARCH_MAX_CONCURRENCY": "4",
         "RAG_MODE": "staging",
         "RAG_SEARCH_BACKEND": "opensearch",
         "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": "True",

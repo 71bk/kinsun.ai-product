@@ -12,10 +12,13 @@
 最多取得 50 筆候選；Retriever 再逐筆驗證 v002 chunk ID、source ID、v003 文字 SHA-256、角色、
 purpose 與 assessment metadata，最後只回傳 3–5 筆 v003 citation。搜尋排序不負責安全判斷。
 
-啟用 hash-pinned runtime policy 時，PostgreSQL 先以固定 554 個 prior chunk IDs 取代遠端舊版
-governance metadata；Retriever 隨後仍逐筆驗證 source ID、v003 文字 SHA-256、角色與 purpose。這讓
-本機已核准的 immutable policy 能覆蓋尚未同步的遠端 v002 metadata，又不會讓清單外或文字被改動的
-資料進入回答。未啟用 runtime policy 的 legacy 路徑仍必須通過遠端 public／official governance。
+啟用 hash-pinned runtime policy 時，PostgreSQL 先以固定 554 個 prior chunk IDs 補足遠端舊版的
+risk／audience／purpose／assessment／citation metadata；遠端 live `current_status`、
+`stop_normal_rag`、`retrieval_eligible`、block reasons 與 review／production flags 仍是不可覆蓋的
+撤銷邊界。搜尋 backend 與 Retriever 都會檢查這些 live 欄位；Retriever 隨後再逐筆驗證 source ID、
+v003 文字 SHA-256、角色與 purpose。這讓本機已核准的 immutable policy 能補足尚未同步的遠端 v002
+metadata，又不會讓清單外、文字被改動或已撤回的資料進入回答。未啟用 runtime policy 的 legacy
+路徑仍必須通過遠端 public／official governance。
 
 四個角色 `elder`、`family_caregiver`、`care_professional`、`system_admin` 都可搜尋同一個固定
 候選池。`requires_official_assessment=true` 或 `requires_professional_assessment=true` 不再因角色
@@ -37,6 +40,22 @@ v003 再以 staging-only purpose overlay 分類原本空白的 32 筆 A 單位�
 `verified`。同一 acceptance 核准 27 筆 low／medium、`stop_normal_rag=true` 內容進入後續身份別條件
 開放複核，但沒有授權立即檢索：27 筆仍保留原值、均不在 current 554 筆 runtime pool，且需逐筆完成
 audience／purpose verification 後才能建立 runtime successor。v003 policy bytes 與目前啟用方式不變。
+
+2026-09-03 audit v007 將 H-07 的 live governance enforcement 綁定到目前 Agent Runtime 實作與
+驗收測試，但不改寫 runtime policy v003 的資料或 Owner 決策。v003～v006 歷史包改採 sealed inventory
+驗證：CI 驗證封存包本身的 checksum 與 predecessor lock，不再要求歷史 inventory 永遠等於目前 HEAD；
+當時只有最新版 v007 會和安全關鍵程式逐檔比對。一般 UI、文件或無關測試修改不需要建立 RAG successor，
+只有最新版 audit 明列的治理程式、政策或驗收輸入改變時才會要求新的 successor。
+
+2026-09-03 audit v008 接續封存 v007，並綁定 M-03 OpenSearch transport hardening：遠端 endpoint
+強制 HTTPS 與 certificate／hostname validation，search 使用 dedicated bounded worker pool、concurrency
+semaphore 與共用 end-to-end deadline；caller cancellation 不會提前釋放仍執行中的 worker capacity。
+Runtime policy v003 資料與 Owner 決策維持不變，外部同步仍未授權，production 仍 blocked。
+
+2026-09-03 audit v008 延續封存 v007，並將 M-03 的 OpenSearch transport 邊界納入目前 attestation：
+非 loopback endpoint 強制 HTTPS 與 certificate／hostname validation；同步綁定 5 秒 search deadline、
+固定大小 connection／worker pool、bounded concurrency，以及取消後在 blocking worker 真正結束前不釋放
+capacity。v007 現為 frozen predecessor；CI 只以最新版 v008 對目前安全關鍵程式逐檔比對。
 
 ## 啟用方式
 

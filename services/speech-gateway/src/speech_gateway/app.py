@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import base64
 import binascii
+import hashlib
+import hmac
 import logging
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -26,6 +28,7 @@ from speech_gateway.azure_tts import AzureSpeechTtsProvider
 from speech_gateway.core_voice_gate import (
     CoreGateRejectedError,
     CoreGateUnavailableError,
+    CoreSynthesisRateLimitedError,
     CoreVoiceGateClient,
 )
 from speech_gateway.deepgram_asr import DeepgramNova3AsrProvider
@@ -52,6 +55,10 @@ from speech_gateway.sagemaker_asr import transcribe_via_sagemaker
 from speech_gateway.sagemaker_tts import synthesize_via_sagemaker
 from speech_gateway.service_identity import ServiceCredentialSigner
 from speech_gateway.settings import get_settings
+from speech_gateway.synthesis_admission import (
+    SynthesisConcurrencyExceeded,
+    SynthesisConcurrencyLimiter,
+)
 from speech_gateway.tts import synthesize
 
 logger = logging.getLogger("speech_gateway")
@@ -87,6 +94,7 @@ def _memory_response_intent(text: str) -> str:
 def create_app(
     core_client: CoreVoiceGateClient | None = None,
     provider_router: SpeechProviderRouter | None = None,
+    synthesis_limiter: SynthesisConcurrencyLimiter | None = None,
 ) -> FastAPI:
     settings = get_settings()
     providers = provider_router or _build_provider_router(settings)
@@ -104,6 +112,7 @@ def create_app(
             else None
         ),
     )
+    limiter = synthesis_limiter or SynthesisConcurrencyLimiter(settings.TTS_MAX_CONCURRENCY)
     app = FastAPI(title="kinsun-speech-gateway", version="0.1.0")
 
     @app.exception_handler(RequestValidationError)
@@ -126,7 +135,7 @@ def create_app(
             CORSMiddleware,
             allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
             allow_methods=["POST"],
-            allow_headers=["content-type"],
+            allow_headers=["authorization", "content-type"],
         )
 
     @app.get("/health")
@@ -260,15 +269,56 @@ def create_app(
         )
 
     @app.post("/api/v1/speech/syntheses", response_model=SynthesizeResponse)
-    async def create_synthesis(payload: SynthesizeRequest) -> SynthesizeResponse:
+    async def create_synthesis(
+        payload: SynthesizeRequest,
+        request: Request,
+        authorization: str | None = Header(default=None),
+    ) -> SynthesizeResponse:
+        capability = _bearer_capability(authorization)
+        client_ip_hash = _client_ip_hash(request, settings.TTS_CLIENT_IP_HASH_SECRET)
         try:
-            result = await providers.synthesize(
-                TtsProviderRequest(
-                    text=payload.text,
-                    language=payload.language,
-                    speaking_speed=payload.speaking_speed,
+            async with limiter.slot():
+                try:
+                    await core.consume_synthesis_capability(
+                        session_id=payload.session_id,
+                        agent_run_id=payload.agent_run_id,
+                        capability=capability,
+                        text_sha256=hashlib.sha256(payload.text.encode("utf-8")).hexdigest(),
+                        character_count=len(payload.text),
+                        language=payload.language,
+                        client_ip_hash=client_ip_hash,
+                    )
+                except CoreGateRejectedError as exc:
+                    raise HTTPException(
+                        status_code=401,
+                        detail="speech synthesis authorization unavailable",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    ) from exc
+                except CoreSynthesisRateLimitedError as exc:
+                    raise HTTPException(
+                        status_code=429,
+                        detail="speech synthesis quota exceeded",
+                        headers={"Retry-After": str(exc.retry_after_seconds)},
+                    ) from exc
+                except CoreGateUnavailableError as exc:
+                    raise HTTPException(
+                        status_code=503,
+                        detail="speech synthesis authorization unavailable",
+                    ) from exc
+
+                result = await providers.synthesize(
+                    TtsProviderRequest(
+                        text=payload.text,
+                        language=payload.language,
+                        speaking_speed=payload.speaking_speed,
+                    )
                 )
-            )
+        except SynthesisConcurrencyExceeded as exc:
+            raise HTTPException(
+                status_code=429,
+                detail="speech synthesis capacity exceeded",
+                headers={"Retry-After": str(settings.TTS_CONCURRENCY_RETRY_AFTER_SECONDS)},
+            ) from exc
         except SpeechProviderError as exc:
             logger.warning(
                 "TTS provider failed",
@@ -309,6 +359,37 @@ def create_app(
         )
 
     return app
+
+
+def _bearer_capability(authorization: str | None) -> str:
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="speech synthesis authorization required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    capability = authorization.removeprefix("Bearer ")
+    if not 32 <= len(capability) <= 128 or not capability.isascii() or " " in capability:
+        raise HTTPException(
+            status_code=401,
+            detail="speech synthesis authorization required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return capability
+
+
+def _client_ip_hash(request: Request, secret: str) -> str:
+    if len(secret.encode("utf-8")) < 32:
+        raise HTTPException(
+            status_code=503,
+            detail="speech synthesis authorization unavailable",
+        )
+    client_ip = request.client.host if request.client is not None else "unknown"
+    return hmac.new(
+        secret.encode("utf-8"),
+        f"kinsun.speech.client.v1:{client_ip}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def _build_provider_router(settings) -> SpeechProviderRouter:  # noqa: ANN001

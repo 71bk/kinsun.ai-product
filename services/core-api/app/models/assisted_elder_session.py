@@ -61,9 +61,7 @@ class AssistedElderSession(BaseModel, TenantScopedMixin, VersionedMixin):
         sa.UniqueConstraint(
             "pairing_token_digest", name="uq_assisted_elder_session_pairing_digest"
         ),
-        sa.UniqueConstraint(
-            "session_token_digest", name="uq_assisted_elder_session_token_digest"
-        ),
+        sa.UniqueConstraint("session_token_digest", name="uq_assisted_elder_session_token_digest"),
         sa.ForeignKeyConstraint(
             ["elder_id", "tenant_id"],
             [f"{SCHEMA_NAME}.elder.elder_id", f"{SCHEMA_NAME}.elder.tenant_id"],

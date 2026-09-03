@@ -65,8 +65,10 @@ DATA_SCHEMA_FOR = {
     "consent-create-without-confirmation.json": "domain/CreateConsentRequestV1.json",
     "companion-turn-request.json": "domain/CompanionTurnRequestV1.json",
     "companion-turn-response.json": "domain/CompanionTurnV1.json",
+    "companion-turn-synthesis-capability-response.json": "domain/CompanionTurnV1.json",
     "companion-turn-request-extra-field.json": "domain/CompanionTurnRequestV1.json",
     "companion-turn-response-with-input.json": "domain/CompanionTurnV1.json",
+    "companion-turn-synthesis-missing-text.json": "domain/CompanionTurnV1.json",
     "accountless-elder-create.json": "domain/CreateAccountlessElderRequestV1.json",
     "accountless-elder-created.json": "domain/AccountlessElderV1.json",
     "assisted-session-issue-request.json": "domain/IssueAssistedSessionRequestV1.json",
@@ -94,6 +96,9 @@ DATA_SCHEMA_FOR = {
         "domain/CreateVoiceTicketRequestV1.json"
     ),
     "voice-ticket-consume-with-actor.json": ("domain/ConsumeVoiceTicketRequestV1.json"),
+    "speech-synthesis-capability-consume-request.json": (
+        "domain/ConsumeSpeechSynthesisCapabilityRequestV1.json"
+    ),
     "asr-result-submit.json": "domain/SubmitAsrResultRequestV1.json",
     "asr-gate-decision.json": "domain/AsrGateDecisionV1.json",
     "asr-gate-confirm.json": "domain/ConfirmAsrGateRequestV1.json",
@@ -149,9 +154,7 @@ DATA_SCHEMA_FOR = {
     "retrieval-response-half-populated-page-range.json": "rag/retrieval-response.schema.json",
     "retrieval-request-v2.json": "rag/retrieval-request-v2.schema.json",
     "retrieval-response-v2.json": "rag/retrieval-response-v2.schema.json",
-    "retrieval-response-v2-storage-url.json": (
-        "rag/retrieval-response-v2.schema.json"
-    ),
+    "retrieval-response-v2-storage-url.json": ("rag/retrieval-response-v2.schema.json"),
     "retrieval-response-v2-missing-locator.json": (
         "rag/retrieval-response-v2.schema.json"
     ),
@@ -341,6 +344,33 @@ def check_openapi_document(path: Path) -> None:
             failures.append(f"openapi: external $ref target missing: {ref}")
 
     paths = doc.get("paths", {})
+    if path.name == "core-api.v1.yaml":
+        speech_service_paths = {
+            "/api/v1/internal/asr-results",
+            "/api/v1/internal/elders/{elder_id}/memory-candidates/{memory_id}/voice-confirmation",
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            "/api/v1/internal/voice-sessions/{session_id}/transition",
+            "/api/v1/internal/voice-tickets/consume",
+        }
+        expected_security = [{"speechServiceCredential": []}]
+        for speech_path in speech_service_paths:
+            operation = paths.get(speech_path, {}).get("post", {})
+            if operation.get("security") != expected_security:
+                failures.append(
+                    f"openapi: {speech_path} must require speechServiceCredential"
+                )
+        for api_path, path_item in paths.items():
+            for method, operation in path_item.items():
+                if not isinstance(operation, dict):
+                    continue
+                if (
+                    operation.get("security") == expected_security
+                    and api_path not in speech_service_paths
+                ):
+                    failures.append(
+                        f"openapi: {method.upper()} {api_path} has over-broad "
+                        "speechServiceCredential security"
+                    )
     print(f"ok    openapi {path.name} ({len(paths)} paths)")
     for p in sorted(paths):
         print(f"        {p}")

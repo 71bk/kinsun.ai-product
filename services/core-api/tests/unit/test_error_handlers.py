@@ -34,6 +34,7 @@ from app.core.exceptions import (
     DomainException,
     NotFoundError,
     ServiceUnavailableError,
+    SpeechSynthesisRateLimitError,
     TenantScopeError,
     ValidationError,
 )
@@ -91,6 +92,9 @@ class TestExceptionMap:
 
     def test_service_unavailable_maps_to_503(self) -> None:
         assert EXCEPTION_MAP[ServiceUnavailableError] == 503
+
+    def test_speech_synthesis_quota_maps_to_429(self) -> None:
+        assert EXCEPTION_MAP[SpeechSynthesisRateLimitError] == 429
 
     def test_tenant_scope_error_maps_to_401(self) -> None:
         assert EXCEPTION_MAP[TenantScopeError] == 401
@@ -251,6 +255,25 @@ class TestDomainExceptionHandler:
         try:
             response = await _domain_exception_handler(request, ServiceUnavailableError("DB down"))
             assert response.status_code == 503
+        finally:
+            _correlation_id.reset(token)
+
+    @pytest.mark.asyncio
+    @patch("app.api.error_handlers._is_production", return_value=False)
+    async def test_speech_quota_returns_retry_after_and_retryable_body(
+        self, _mock: MagicMock
+    ) -> None:
+        request = self._make_request()
+        token = _correlation_id.set("test-cid")
+        try:
+            response = await _domain_exception_handler(request, SpeechSynthesisRateLimitError(17))
+            import json
+
+            body = json.loads(response.body.decode())
+            assert response.status_code == 429
+            assert response.headers["Retry-After"] == "17"
+            assert body["error"]["retryable"] is True
+            assert body["error"]["reason_code"] == "SPEECH_SYNTHESIS_QUOTA_EXCEEDED"
         finally:
             _correlation_id.reset(token)
 

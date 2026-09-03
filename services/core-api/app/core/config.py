@@ -188,6 +188,16 @@ class Settings(BaseSettings):
     voice_ticket_enabled: bool = False
     voice_ticket_hmac_secret: str = ""
     voice_ticket_ttl_seconds: int = Field(default=60, ge=15, le=120)
+    speech_synthesis_capability_enabled: bool = False
+    speech_synthesis_capability_hmac_secret: str = ""
+    speech_synthesis_capability_ttl_seconds: int = Field(default=60, ge=15, le=120)
+    speech_synthesis_quota_window_seconds: int = Field(default=60, ge=10, le=3600)
+    speech_synthesis_client_request_limit: int = Field(default=30, ge=1, le=10_000)
+    speech_synthesis_client_character_limit: int = Field(default=30_000, ge=1, le=10_000_000)
+    speech_synthesis_actor_request_limit: int = Field(default=20, ge=1, le=10_000)
+    speech_synthesis_actor_character_limit: int = Field(default=20_000, ge=1, le=10_000_000)
+    speech_synthesis_tenant_request_limit: int = Field(default=100, ge=1, le=100_000)
+    speech_synthesis_tenant_character_limit: int = Field(default=100_000, ge=1, le=100_000_000)
     asr_gate_enabled: bool = False
     asr_gate_hmac_secret: str = ""
     asr_gate_confidence_threshold: float = Field(default=0.85, gt=0, le=1)
@@ -248,9 +258,7 @@ class Settings(BaseSettings):
                 )
 
         if self.assisted_elder_idle_ttl_seconds > self.assisted_elder_absolute_ttl_seconds:
-            raise ValueError(
-                "Assisted Elder Session idle TTL must not exceed its absolute TTL"
-            )
+            raise ValueError("Assisted Elder Session idle TTL must not exceed its absolute TTL")
         if self.app_env == AppEnv.PRODUCTION and (
             self.assisted_elder_sessions_enabled or self.care_profile_ai_context_enabled
         ):
@@ -269,14 +277,11 @@ class Settings(BaseSettings):
                 "rotation requires an explicit identity rekey migration"
             )
         if self.kinsun_email_delivery_mode not in {"disabled", "synthetic"}:
-            raise ValueError(
-                "KINSUN_EMAIL_DELIVERY_MODE must be either disabled or synthetic"
-            )
+            raise ValueError("KINSUN_EMAIL_DELIVERY_MODE must be either disabled or synthetic")
         if self.kinsun_native_auth_enabled:
             if not self.app_session_auth_enabled:
                 raise ValueError(
-                    "APP_SESSION_AUTH_ENABLED must be true when "
-                    "KINSUN_NATIVE_AUTH_ENABLED=true"
+                    "APP_SESSION_AUTH_ENABLED must be true when " "KINSUN_NATIVE_AUTH_ENABLED=true"
                 )
             if self.kinsun_email_delivery_mode != "synthetic":
                 raise ValueError(
@@ -284,9 +289,7 @@ class Settings(BaseSettings):
                     "development must select synthetic delivery explicitly"
                 )
             if self.app_env == AppEnv.PRODUCTION:
-                raise ValueError(
-                    "Synthetic Kinsun email delivery is forbidden in production"
-                )
+                raise ValueError("Synthetic Kinsun email delivery is forbidden in production")
             if not re.fullmatch(r"[0-9]{6}", self.kinsun_synthetic_email_code_secret):
                 raise ValueError(
                     "KINSUN_SYNTHETIC_EMAIL_CODE_SECRET must contain exactly six digits"
@@ -454,6 +457,29 @@ class Settings(BaseSettings):
                 "VOICE_TICKET_HMAC_SECRET must contain at least 32 bytes "
                 "when VOICE_TICKET_ENABLED=true"
             )
+        if self.speech_synthesis_capability_enabled:
+            if len(self.speech_synthesis_capability_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET must contain at least 32 bytes "
+                    "when SPEECH_SYNTHESIS_CAPABILITY_ENABLED=true"
+                )
+            if not self.speech_service_identity_enabled:
+                raise ValueError(
+                    "SPEECH_SERVICE_IDENTITY_ENABLED must be true when "
+                    "SPEECH_SYNTHESIS_CAPABILITY_ENABLED=true"
+                )
+            if self.speech_synthesis_capability_hmac_secret in {
+                self.voice_ticket_hmac_secret,
+                self.asr_gate_hmac_secret,
+                self.service_identity_hmac_secret,
+                self.speech_service_identity_hmac_secret,
+                self.google_oidc_handoff_secret,
+                self.line_oidc_handoff_secret,
+            }:
+                raise ValueError(
+                    "SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET must be independent from "
+                    "other secrets"
+                )
         if self.asr_gate_enabled:
             if not self.voice_ticket_enabled:
                 raise ValueError("VOICE_TICKET_ENABLED must be true when ASR_GATE_ENABLED=true")
@@ -494,9 +520,7 @@ class Settings(BaseSettings):
                     "SPEECH_SERVICE_IDENTITY_HMAC_SECRET must be independent from other secrets"
                 )
         if self.auto_low_risk_memory and not self.evidence_aware_memory:
-            raise ValueError(
-                "EVIDENCE_AWARE_MEMORY must be true when AUTO_LOW_RISK_MEMORY=true"
-            )
+            raise ValueError("EVIDENCE_AWARE_MEMORY must be true when AUTO_LOW_RISK_MEMORY=true")
         return self
 
     # ─── Secret redaction ────────────────────────────────────────────────────────

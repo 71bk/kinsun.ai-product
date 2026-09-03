@@ -19,19 +19,22 @@ def build_normal_rag_filter(
 ) -> dict[str, object]:
     """Return mandatory fail-closed filters for ordinary RAG answers."""
 
+    live_governance_must = _live_governance_filters(
+        governed_citations=governed_citations,
+        allow_needs_review=allow_needs_review,
+    )
     if policy_candidate_chunk_ids is not None:
         return {
             "bool": {
                 "must": [
                     {"terms": {"chunk_id": list(policy_candidate_chunk_ids)}},
+                    *live_governance_must,
                 ]
             }
         }
 
     must: list[dict[str, object]] = [
-        {"term": {"current_status": "current"}},
-        {"term": {"stop_normal_rag": False}},
-        {"term": {"retrieval_eligible": True}},
+        *live_governance_must,
         {"terms": {"risk_level": list(NORMAL_RAG_RISK_LEVELS)}},
     ]
     must.append(
@@ -41,8 +44,6 @@ def build_normal_rag_filter(
         )
     )
     must.append(_scope_filter("allowed_purposes", purpose))
-    if governed_citations:
-        must.append(_governance_filter(allow_needs_review=allow_needs_review))
     bool_filter: dict[str, object] = {"must": must}
     return {"bool": bool_filter}
 
@@ -88,6 +89,40 @@ def is_normal_rag_eligible(
     ):
         return False
     return True
+
+
+def is_policy_overlay_live_eligible(
+    source: Mapping[str, object],
+    *,
+    allow_needs_review: bool,
+) -> bool:
+    """Deny overlay candidates whose authoritative live state is no longer eligible."""
+
+    if source.get("current_status") != "current":
+        return False
+    if source.get("stop_normal_rag") is not False:
+        return False
+    if source.get("retrieval_eligible") is not True:
+        return False
+    block_reasons = source.get("retrieval_block_reasons")
+    if not isinstance(block_reasons, list) or block_reasons:
+        return False
+    return _governance_allows(source, allow_needs_review=allow_needs_review)
+
+
+def _live_governance_filters(
+    *,
+    governed_citations: bool,
+    allow_needs_review: bool,
+) -> list[dict[str, object]]:
+    must: list[dict[str, object]] = [
+        {"term": {"current_status": "current"}},
+        {"term": {"stop_normal_rag": False}},
+        {"term": {"retrieval_eligible": True}},
+    ]
+    if governed_citations:
+        must.append(_governance_filter(allow_needs_review=allow_needs_review))
+    return must
 
 
 def _scope_allows(raw_allowed: object, requested: str | None) -> bool:
@@ -150,7 +185,14 @@ def _governance_filter(*, allow_needs_review: bool) -> dict[str, object]:
     return {
         "bool": {
             "should": [
-                {"term": {"review_status": "verified"}},
+                {
+                    "bool": {
+                        "must": [
+                            {"term": {"review_status": "verified"}},
+                            {"terms": {"production_approved": [True, False]}},
+                        ]
+                    }
+                },
                 {
                     "bool": {
                         "must": [

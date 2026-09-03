@@ -10,7 +10,7 @@
 - High：需要在 production rollout 前處理。
 - Medium：需要排入近期 hardening / reliability sprint。
 - Low：需要在 CI、文件或維護性工作中補齊。
-- 完整 PostgreSQL integration suite 尚未執行；H-01 已以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已以一次性 PostgreSQL 16 + pgvector Docker database 完成 runtime-role deny matrix，H-03 已以 development database verifier 完成 cross-replica 與 concurrent nonce claim 驗證。
+- 2026-09-03 GitHub Actions Gate1 已在 PostgreSQL 16 + pgvector service 上完整通過 Core unit／integration suite；H-01 另以 development Demo verifier 完成真實 concurrent transaction 驗證，H-02 已完成 runtime-role deny matrix，H-03 已完成 cross-replica 與 concurrent nonce claim 驗證。
 - Frontend typecheck 與 lint 已恢復綠燈。
 
 ## 修正順序
@@ -21,18 +21,18 @@
 - [x] H-02 收窄 Core runtime database role 權限。
 - [x] H-03 將 service identity replay protection 移至 shared durable store。
 - [ ] H-04 完成 Speech Gateway 的 deployment 與 frontend endpoint wiring。
-- [ ] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
+- [x] H-05 為 Speech TTS 加入認證、quota、rate limit 與 concurrency limit。
 - [x] H-06 加入 production fail-closed configuration，禁止 mock Agent / disabled RAG。
-- [ ] H-07 修正 RAG policy overlay 的 live governance validation。
+- [x] H-07 修正 RAG policy overlay 的 live governance validation。
 - [ ] H-08 若 deletion compliance 已在 production scope，完成所有外部 storage deletion adapter。
 
 ### P1 — Reliability / privacy / tenant isolation
 
 - [x] M-01 完成 idempotency TTL、scope 與 replay response redesign。
-- [ ] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
-- [ ] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
-- [ ] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
-- [ ] M-05 降低 preferred address 造成 prompt injection 的風險。
+- [x] M-02 BFF/Core URL 在非 loopback production environment 強制 HTTPS。
+- [x] M-03 OpenSearch 強制 HTTPS 並加入 timeout/concurrency control。
+- [x] M-04 修正 Agent latency/tool budget 沒有實際 enforcement 的問題。
+- [x] M-05 降低 preferred address 造成 prompt injection 的風險。
 - [x] M-06 修正 audit request context 注入。
 - [x] M-07 清理 exception、traceback 與 database URL logging。
 - [ ] M-08 加入 RLS 或等價的 database-level tenant isolation。
@@ -44,11 +44,33 @@
 
 - [ ] L-01 實作 Care Action 與 source event pagination。
 - [ ] L-02 為 frontend API response 加入 runtime schema validation。
-- [ ] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
+- [x] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
 - [x] L-04 修復 frontend typecheck。
 - [x] L-05 修復 frontend lint。
-- [ ] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
+- [x] L-06 將 Core formatting 納入 CI，並統一 contract validator 的依賴環境。
 - [x] L-07 更新 migration head，並以 ADR 0019 退役過期的 AWS staging profile。
+
+## 2026-09-03 階段決策與續作 checkpoint
+
+目前階段不宣稱 production-complete；production deployment、外部服務整合與合規驗證改由
+production-readiness release gate 管理。排除這些外部條件後，目前沒有未處理的 Critical／High finding，
+但下列項目仍須依 Wave 2 相依性安排：
+
+1. **回家續作的第一項：M-10。** 在擴充 Wave 2 Care Action 前，先確立 immutable event
+   version/hash provenance，避免功能完成後再次修改資料模型與歷史證據語意。
+2. **M-11 為條件式 Wave 2 前置。** 若本輪包含 notification、projection、Agent handoff 或其他
+   非同步事件流程，須先完成 outbox publisher、recovery、DLQ 與 duplicate-safe consumer；若不包含，
+   保留為後續 reliability milestone。
+3. **L-01、L-02 為一般 Wave 2 工程項目。** 分別處理超過 100 筆資料的靜默截斷，以及 frontend
+   對 malformed／drifted API response 的可預期失敗；不阻擋 Wave 2 資料模型骨架。
+4. **M-08、M-09 移入 production-readiness gate。** M-08 必須在共享資料庫承載真實多租戶資料前完成；
+   M-09 必須在 email/password auth 對不受信任網路開放前完成。若開發／staging 已符合上述條件，
+   不得延後。
+5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
+   H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
+
+建議續作順序：`M-10` → 視 Wave 2 範圍決定是否立即做 `M-11` → `L-01` → `L-02`；
+`M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
 
 ---
 
@@ -121,6 +143,24 @@
 - 修正：透過 BFF/Core capability flow 呼叫；驗證 user/session ticket；加入 IP/user/tenant quota、字數限制、concurrency limit 與 `Retry-After`。
 - 驗證：未認證請求應拒絕；超過 quota 應回傳 429；provider failure 不得造成資源洩漏。
 - 應新增測試：是。
+- 修正結果：Core companion turn 只在 completed Agent run 與 live actor／tenant／session binding
+  一致時，為**去除引用區塊後的 exact UTF-8 reply**簽發 15–120 秒的一次性 opaque HMAC
+  capability；capability 綁定 session、Agent run、actor、tenant、文字 SHA-256、字數、語言與
+  completed time，且三個 synthesis response 欄位在 DTO 與 JSON Schema 都是 all-or-none。
+  Speech Gateway 的 TTS route 現在必須收到 bearer capability，先以既有 request-bound Speech
+  service identity 向 Core 兌換，再呼叫 provider；production 若未啟用該 service identity 會在
+  startup fail closed。migration `f3a5b7c9d024` 在 `service_identity` schema 新增 immutable
+  `speech_synthesis_claim`：以 advisory transaction locks 將 client-IP HMAC pseudonym／actor／tenant
+  三個 scope 的 request 與 character window quota 序列化，並以 capability digest PK 保證跨 replica
+  single use。超限回 429、`retryable=true` 與 bounded `Retry-After`。Gateway 另有 1–64 的 process
+  concurrency limit，超量立即回 429，所有 Core／provider exception path 都在 `finally` 釋放 slot。
+  Frontend 不再自行重建 TTS 文字，只傳 Core 回傳的 exact text、session／run binding 與 bearer
+  capability；reply language 不一致或 capability 未簽發時維持 text-only。新增 Core codec／DTO／quota
+  unit tests、PostgreSQL single-use integration test、Gateway auth／quota／concurrency tests、frontend
+  binding tests、OpenAPI／JSON Schema 與 valid／invalid examples。2026-09-03 本機驗證 Core unit
+  `1046 passed`、Speech Gateway `91 passed`、Agent Runtime `488 passed`、frontend `284 passed`，以及
+  Ruff、frontend typecheck／lint／build、contract validator／live drift verifier 全數通過；PostgreSQL
+  integration 由含 PostgreSQL 16 + pgvector disposable service 的 GitHub Actions 執行。
 
 ### H-06 — Production 可使用 mock Agent 或 disabled RAG
 
@@ -153,6 +193,16 @@
 - 修正：overlay 也套用完整 governance predicate，並在 response 階段以 authoritative metadata fail closed。
 - 驗證：將 chunk 改為 withdrawn/expired/review 狀態後，overlay 必須拒絕該 chunk。
 - 應新增測試：是。
+- 修正結果：OpenSearch 與 PostgreSQL 的 policy-overlay 搜尋路徑現在都必須通過 live
+  `current_status=current`、`stop_normal_rag=false`、`retrieval_eligible=true`、空的
+  `retrieval_block_reasons` 與 review／production gate；immutable policy 只可補足固定候選的
+  risk／audience／purpose／assessment／citation metadata，不能覆蓋撤回狀態。Retriever 在建立
+  response 前會以搜尋結果的 authoritative live metadata 再做一次相同的 fail-closed 檢查。
+  新增 withdrawn、expired、stop、retrieval-disabled、block reason 與 review／production mismatch
+  測試；Agent Runtime 全套 `488 passed`，Ruff check／format 皆通過。另以 audit v007 將 H-07
+  的安全關鍵程式與驗收測試綁定為目前 attestation；歷史 v003～v006 inventory 改以 sealed
+  evidence 驗證，不再因目前 HEAD 的無關修改產生 checksum cascade。RAG Ingestion 全套
+  `322 passed`，其 Ruff check／format 與獨立 v007 validator 皆通過。
 
 ### H-08 — External deletion 尚未完成
 
@@ -186,6 +236,11 @@
 - 修正：非 loopback environment 強制 HTTPS；startup/request 時拒絕不安全 URL。
 - 驗證：遠端 HTTP URL 必須被拒絕；localhost development exception 應有明確測試。
 - 應新增測試：是。
+- 修正結果：新增共用 `resolveCoreApiBaseUrl()`，並套用至 Core proxy、assisted elder session、
+  app session、email auth、LINE／Google OIDC handoff 與 LINE account linking。Production 僅允許 HTTPS，
+  明確保留 localhost、`127.0.0.0/8` 與 `::1` sidecar 例外；同時拒絕 credentials、query、fragment
+  與不支援的 protocol。新增 URL policy tests，並通過 frontend typecheck、288 tests、lint 與
+  production build。
 
 ### M-03 — OpenSearch transport 安全與 timeout 不足
 
@@ -196,6 +251,13 @@
 - 修正：遠端強制 HTTPS；加入 certificate validation、semaphore、較短一致的 deadline 與 cancellation。
 - 驗證：模擬 60 秒延遲與高併發，確認 request 可取消且不耗盡 worker。
 - 應新增測試：是，security、timeout、load tests。
+- 修正結果：非 loopback OpenSearch endpoint 強制 HTTPS，並明確啟用 certificate／hostname
+  validation、關閉 transport retry。Search 改用專屬 bounded thread pool、同容量 semaphore 與單一
+  end-to-end deadline（預設 5 秒，可設定為大於 0、最多 30 秒；併發預設 4、上限 16）；caller cancellation
+  立即生效，但仍執行的 blocking worker 完成前不會提前釋放 capacity。新增 remote HTTP、TLS 設定、
+  60 秒 slow-worker、高併發、cancellation 與 sanitized structured warning tests；Agent Runtime 全套
+  `495 passed`。Audit v008 封存 v007 並綁定目前 M-03 runtime／tests；RAG 全套 `324 passed`，
+  v007 frozen predecessor 與 v008 current validator／integration tests 均通過。
 
 ### M-04 — Agent latency/tool budgets 沒有 enforcement
 
@@ -206,6 +268,15 @@
 - 修正：將 deadline 傳遞至 provider/retrieval，實作 tool counters；或移除尚未支援的欄位。
 - 驗證：測試 timeout、tool round、tool count 邊界值。
 - 應新增測試：是。
+- 修正結果：每個 Agent Run 以 `latency_budget_ms` 建立單一 monotonic deadline，RAG、Model
+  Provider、Event extraction 與 Memory extraction 都使用同一份剩餘時間；超時取消目前 await、
+  丟棄 partial output／proposal，回可預期的 `SAFE_FALLBACK` 與 `LATENCY_BUDGET_EXCEEDED`。
+  `ExecutionBudget` 會在 work 開始前原子保留 decision 或 Tool round，並同時檢查 round／total
+  ceiling；失敗 reservation 不改變 counters。現行 API 並未接受 caller-supplied
+  `max_tool_rounds`／`max_total_tools`，canonical flow 也尚未執行 Tool，因此實際 Tool counters 固定
+  為零，不把設定誤述為已存在的 Tool engine。新增 60 秒 slow provider／retriever cancellation、
+  decision／round／total boundary 與 sanitized structured log tests；Agent Runtime 全套
+  `498 passed`。設計與同步 SDK 的 residual limitation 記錄於 ADR 0020。
 
 ### M-05 — Preferred address 可形成 prompt injection
 
@@ -216,6 +287,9 @@
 - 修正：將所有 user-controlled text 放入 delimited data/user section；限制長度與字元。
 - 驗證：輸入 instruction-like preferred address，確認不會改變 system policy 或洩漏資料。
 - 應新增測試：是，adversarial prompt tests。
+- 修正結果：`preferred_address` 不再插入 system prompt，而是正規化後以 compact JSON 放入 user
+  prompt 的 `<preferred_address_data>` data-only 區段；未提供時使用中性行為。新增 instruction-like
+  adversarial case，並隨 Agent Runtime 全套 `490 passed` 驗證。
 
 ### M-06 — Audit request context 沒有被設定
 
@@ -330,6 +404,9 @@
 - 修正：限制長度、只接受 UUID v4；無效值重新生成。
 - 驗證：malformed、oversized、control-character headers。
 - 應新增測試：是。
+- 修正結果：Core API 與 Agent Runtime 共用相同邊界，只接受 canonical lowercase UUID v4；空值、
+  非 v4、非 canonical、過長或 malformed header 一律改產生新的 UUID v4。同步更新 signed-request
+  integration fixtures；Core 全套 `1050 passed`、Agent Runtime 全套 `490 passed`。
 
 ### L-04 — Frontend typecheck 失敗
 
@@ -360,6 +437,10 @@
 - 修正：將 PyYAML 加入明確 dev dependency，將 formatting 納入 CI，統一驗證命令。
 - 驗證：在 clean environment 執行 lint、format、contract validation。
 - 應新增測試：是，CI/tooling smoke test。
+- 修正結果：Gate 1 的 Core job 已加入 `ruff format --check`，並將既有不符合格式的 Core／相關
+  Python 檔案機械式格式化。Contract validator 繼續由 workflow 明確、固定地注入
+  `pyyaml`、`jsonschema`、`referencing`，不再隱含依賴某個 service venv。Core Ruff lint、format 與
+  `1050 passed` 均通過；workflow YAML 與 contract validation 亦可在相同命令環境重現。
 
 ### L-07 — Migration head 文件過時與已失效 AWS staging metadata
 
@@ -405,16 +486,18 @@
 5. 更新 contracts/spec/ADR/runbook。
 6. 在 disposable PostgreSQL 與 deployment-like environment 驗證。
 
-## 已知基準測試結果
+## 最新驗證結果
 
-- Core unit tests：1028 passed。
-- Agent tests：473 passed。
-- RAG unit tests：200 passed。
-- Speech tests：83 passed。
-- Frontend tests：283 passed。
+- GitHub Actions Gate 1：run `33739166227` passed（commit `9bcbc74`，包含 M-04），耗時 6m30s。
+- Core unit tests：1050 passed。
+- Agent tests：498 passed。
+- RAG tests：324 passed。
+- Speech tests：91 passed。
+- Frontend tests：288 passed。
 - Frontend production build：passed。
 - Frontend typecheck：passed（L-04 已修正）。
 - Frontend lint：passed（L-05 已修正）。
 - Core Ruff lint：passed。
-- Core Ruff format check：failed，對應 L-06。
-- PostgreSQL integration tests：未執行，缺少 disposable `TEST_DATABASE_URL`。
+- Core Ruff format check：passed（L-06 已修正並納入 CI）。
+- PostgreSQL integration tests：本機未執行（缺少 disposable `TEST_DATABASE_URL`）；GitHub Actions
+  run `33739166227` 已在 PostgreSQL 16 + pgvector service 上通過。

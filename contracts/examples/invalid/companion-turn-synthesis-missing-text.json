@@ -1,0 +1,22 @@
+{
+  "_why_invalid": "A synthesis-capability transport must include the exact Core-authorized text.",
+  "data": {
+    "session_id": "51000000-0000-4000-8000-000000000001",
+    "agent_run_id": "52000000-0000-4000-8000-000000000001",
+    "trace_id": "trace-demo-synthesis-001",
+    "context_manifest_id": "context-demo-synthesis-001",
+    "reply_text": "這是受 Core 授權的合成回覆。",
+    "reply_language": "zh-TW",
+    "result_status": "SUCCESS",
+    "safety_decision": "ALLOW",
+    "risk_level": "LOW",
+    "reason_codes": [
+      "ALLOW"
+    ],
+    "session_state": "COMPLETED",
+    "transport_status": "SYNTHESIS_CAPABILITY_ISSUED",
+    "speech_synthesis_capability": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "speech_synthesis_expires_at": "2026-09-03T02:01:00Z",
+    "model_route": "synthetic"
+  }
+}

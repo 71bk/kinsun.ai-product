@@ -29,6 +29,7 @@ from rag_ingestion.source_family_runtime_policy_v2 import (
     _new_staging_directory,
     _publish_directory,
     _refuse_overwrite,
+    _validate_frozen_inventory_document_v2,
     _validate_inventory_document,
     _validate_package_inventory,
     _validate_schema,
@@ -485,11 +486,17 @@ def validate_source_family_runtime_policy_v3(
     _validate_checksums(package)
     _validate_prior_runtime_policy_package(root)
     validate_owner_purpose_classification_acceptance(root)
-    _validate_inventory_document(
-        package / VALIDATION_INPUT_FILENAME,
-        "source_family_runtime_policy_v003_validation_input_inventory",
-        _validation_input_entries(root),
-    )
+    if package == (root / RUNTIME_ROOT).resolve():
+        _validate_frozen_inventory_document_v2(
+            package / VALIDATION_INPUT_FILENAME,
+            expected_kind="source_family_runtime_policy_v003_validation_input_inventory",
+        )
+    else:
+        _validate_inventory_document(
+            package / VALIDATION_INPUT_FILENAME,
+            "source_family_runtime_policy_v003_validation_input_inventory",
+            _validation_input_entries(root),
+        )
     _validate_inventory_document(
         package / PRIOR_LOCK_FILENAME,
         "source_family_runtime_policy_v003_prior_artifact_immutable_lock",

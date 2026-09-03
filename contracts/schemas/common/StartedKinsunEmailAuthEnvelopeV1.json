@@ -4,7 +4,10 @@
   "title": "StartedKinsunEmailAuthEnvelopeV1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["data", "meta"],
+  "required": [
+    "data",
+    "meta"
+  ],
   "properties": {
     "data": {
       "$ref": "https://kinsun.ai/contracts/schemas/domain/StartedKinsunEmailAuthV1.json"

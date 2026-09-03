@@ -110,6 +110,10 @@ def build_configured_rag_retriever():
                 "OPENSEARCH_HOST": settings.OPENSEARCH_HOST,
                 "OPENSEARCH_INDEX": settings.OPENSEARCH_INDEX,
                 "OPENSEARCH_ALIAS": settings.OPENSEARCH_ALIAS,
+                "RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS": (
+                    settings.RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS
+                ),
+                "RAG_OPENSEARCH_MAX_CONCURRENCY": settings.RAG_OPENSEARCH_MAX_CONCURRENCY,
                 "RAG_MODE": settings.RAG_MODE,
                 "RAG_SEARCH_BACKEND": settings.RAG_SEARCH_BACKEND,
                 "RAG_ALLOW_NEEDS_REVIEW_CITATIONS": settings.RAG_ALLOW_NEEDS_REVIEW_CITATIONS,

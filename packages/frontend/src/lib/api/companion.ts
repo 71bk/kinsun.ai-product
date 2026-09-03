@@ -46,7 +46,10 @@ export interface CompanionTurn {
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   reason_codes: string[];
   session_state: 'COMPLETED';
-  transport_status: 'TEXT_ONLY';
+  transport_status: 'TEXT_ONLY' | 'SYNTHESIS_CAPABILITY_ISSUED';
+  speech_synthesis_capability: string | null;
+  speech_synthesis_expires_at: string | null;
+  speech_synthesis_text: string | null;
   model_route: string;
 }
 

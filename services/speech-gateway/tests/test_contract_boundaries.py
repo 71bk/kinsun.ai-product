@@ -15,19 +15,30 @@ import pytest
 from fastapi.testclient import TestClient
 
 from speech_gateway.app import create_app
-from speech_gateway.core_voice_gate import CoreGateDecision, CoreMemoryDecision
+from speech_gateway.core_voice_gate import (
+    CoreGateDecision,
+    CoreMemoryDecision,
+    CoreSynthesisPrincipal,
+    CoreSynthesisRateLimitedError,
+)
 from speech_gateway.models import TranscriptSegment
 from speech_gateway.provider_contracts import ProviderErrorCategory, SpeechProviderError
 from speech_gateway.settings import get_settings
 
 SESSION_ID = UUID("51000000-0000-4000-8000-000000000001")
+AGENT_RUN_ID = UUID("52000000-0000-4000-8000-000000000001")
+TENANT_ID = UUID("53000000-0000-4000-8000-000000000001")
+ACTOR_ID = UUID("54000000-0000-4000-8000-000000000001")
 VOICE_TICKET = "synthetic-opaque-voice-ticket-material-000000000001"
+SYNTHESIS_CAPABILITY = "synthetic-speech-capability-material-000000000001"
 
 
 class FakeCoreGate:
-    def __init__(self) -> None:
+    def __init__(self, synthesis_error: Exception | None = None) -> None:
         self.failed_sessions: list[UUID] = []
         self.memory_decisions: list[dict[str, object]] = []
+        self.synthesis_claims: list[dict[str, object]] = []
+        self.synthesis_error = synthesis_error
 
     async def consume_ticket(self, *, session_id, voice_ticket):  # noqa: ANN001
         assert session_id == SESSION_ID
@@ -52,6 +63,17 @@ class FakeCoreGate:
             status=("ACTIVE" if kwargs["response_intent"] == "AFFIRM" else "PENDING_CONFIRMATION"),
         )
 
+    async def consume_synthesis_capability(self, **kwargs):  # noqa: ANN003, ANN201
+        if self.synthesis_error is not None:
+            raise self.synthesis_error
+        self.synthesis_claims.append(kwargs)
+        return CoreSynthesisPrincipal(
+            session_id=SESSION_ID,
+            agent_run_id=AGENT_RUN_ID,
+            tenant_id=TENANT_ID,
+            actor_id=ACTOR_ID,
+        )
+
 
 @pytest.fixture(autouse=True)
 def isolated_provider_routes(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
@@ -68,6 +90,10 @@ def isolated_provider_routes(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     }
     for key, value in routes.items():
         monkeypatch.setenv(key, value)
+    monkeypatch.setenv(
+        "TTS_CLIENT_IP_HASH_SECRET",
+        "synthetic-client-ip-hash-secret-material-at-least-32-bytes",
+    )
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -102,6 +128,25 @@ def _transcription_payload(language: str = "zh-TW") -> dict[str, object]:
         "language": language,
         "sample_rate": 16000,
     }
+
+
+def _synthesis_payload(
+    *,
+    text: str = "synthetic text",
+    language: str = "zh-TW",
+    **extra: object,
+) -> dict[str, object]:
+    return {
+        "text": text,
+        "language": language,
+        "session_id": str(SESSION_ID),
+        "agent_run_id": str(AGENT_RUN_ID),
+        **extra,
+    }
+
+
+def _synthesis_headers() -> dict[str, str]:
+    return {"Authorization": f"Bearer {SYNTHESIS_CAPABILITY}"}
 
 
 def test_transcription_returns_transcript_and_core_gate_decision(client: TestClient) -> None:
@@ -288,7 +333,8 @@ def test_hokkien_and_hakka_synthesis_without_endpoint_fails_closed(
 
     response = client.post(
         "/api/v1/speech/syntheses",
-        json={"text": "汝食飽未", "language": language},
+        json=_synthesis_payload(text="汝食飽未", language=language),
+        headers=_synthesis_headers(),
     )
     assert response.status_code == 501
 
@@ -308,7 +354,8 @@ def test_tts_provider_authentication_failure_is_service_unavailable() -> None:
         )
     ).post(
         "/api/v1/speech/syntheses",
-        json={"text": "synthetic text", "language": "zh-TW"},
+        json=_synthesis_payload(),
+        headers=_synthesis_headers(),
     )
 
     assert response.status_code == 503
@@ -342,7 +389,8 @@ def test_hokkien_and_hakka_synthesis_routes_to_sagemaker_when_configured(
     try:
         response = TestClient(create_app(core_client=FakeCoreGate())).post(
             "/api/v1/speech/syntheses",
-            json={"text": "synthetic text", "language": language, "speaking_speed": "slow"},
+            json=_synthesis_payload(language=language, speaking_speed="slow"),
+            headers=_synthesis_headers(),
         )
     finally:
         get_settings.cache_clear()
@@ -398,7 +446,8 @@ def test_unexpected_field_is_refused(client: TestClient) -> None:
 
     response = client.post(
         "/api/v1/speech/syntheses",
-        json={"text": "測試", "language": "zh-TW", "speed": "fast"},
+        json=_synthesis_payload(text="測試", speed="fast"),
+        headers=_synthesis_headers(),
     )
     assert response.status_code == 422
 
@@ -425,10 +474,10 @@ def test_browser_cannot_select_or_override_provider_policy(
     response = client.post(
         "/api/v1/speech/syntheses",
         json={
-            "text": "synthetic text",
-            "language": "zh-TW",
+            **_synthesis_payload(),
             field: value,
         },
+        headers=_synthesis_headers(),
     )
     assert response.status_code == 422
     assert str(value) not in response.text
@@ -437,7 +486,8 @@ def test_browser_cannot_select_or_override_provider_policy(
 def test_synthesis_returns_base64_audio(client: TestClient) -> None:
     response = client.post(
         "/api/v1/speech/syntheses",
-        json={"text": "測試", "language": "zh-TW", "speaking_speed": "slow"},
+        json=_synthesis_payload(text="測試", speaking_speed="slow"),
+        headers=_synthesis_headers(),
     )
     assert response.status_code == 200
     body = response.json()
@@ -455,8 +505,31 @@ def test_upstream_failure_becomes_502_without_leaking_details(
 
     response = client.post(
         "/api/v1/speech/syntheses",
-        json={"text": "測試", "language": "zh-TW"},
+        json=_synthesis_payload(text="測試"),
+        headers=_synthesis_headers(),
     )
     assert response.status_code == 502
     assert "secret-internal-name" not in response.text
     assert "abc123" not in response.text
+
+
+def test_synthesis_without_core_capability_is_rejected_before_provider(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/speech/syntheses",
+        json=_synthesis_payload(),
+    )
+
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
+
+
+def test_shared_quota_response_preserves_bounded_retry_after() -> None:
+    core = FakeCoreGate(CoreSynthesisRateLimitedError(17))
+    response = TestClient(create_app(core_client=core)).post(
+        "/api/v1/speech/syntheses",
+        json=_synthesis_payload(),
+        headers=_synthesis_headers(),
+    )
+
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "17"

@@ -22,7 +22,7 @@ def _make_settings(**overrides: str) -> Settings:
         "DATABASE_URL": _VALID_DB_URL,
     }
     env.update(overrides)
-    with patch.dict(os.environ, env, clear=False):
+    with patch.dict(os.environ, env, clear=True):
         return Settings(_env_file=None)
 
 
@@ -412,6 +412,35 @@ class TestValidation:
                 SPEECH_SERVICE_IDENTITY_ENABLED="true",
                 SPEECH_SERVICE_IDENTITY_HMAC_SECRET=(
                     "shared-service-secret-material-at-least-32-bytes"
+                ),
+            )
+
+    def test_enabled_speech_synthesis_requires_identity_and_independent_secret(self) -> None:
+        with pytest.raises(ValidationError, match="SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET"):
+            _make_settings(
+                SPEECH_SYNTHESIS_CAPABILITY_ENABLED="true",
+                SPEECH_SERVICE_IDENTITY_ENABLED="true",
+                SPEECH_SERVICE_IDENTITY_HMAC_SECRET=(
+                    "speech-service-secret-material-at-least-32-bytes"
+                ),
+                SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET="too-short",
+            )
+        with pytest.raises(ValidationError, match="SPEECH_SERVICE_IDENTITY_ENABLED"):
+            _make_settings(
+                SPEECH_SYNTHESIS_CAPABILITY_ENABLED="true",
+                SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET=(
+                    "speech-capability-secret-material-at-least-32-bytes"
+                ),
+            )
+        with pytest.raises(ValidationError, match="independent"):
+            _make_settings(
+                SPEECH_SERVICE_IDENTITY_ENABLED="true",
+                SPEECH_SERVICE_IDENTITY_HMAC_SECRET=(
+                    "shared-speech-secret-material-at-least-32-bytes"
+                ),
+                SPEECH_SYNTHESIS_CAPABILITY_ENABLED="true",
+                SPEECH_SYNTHESIS_CAPABILITY_HMAC_SECRET=(
+                    "shared-speech-secret-material-at-least-32-bytes"
                 ),
             )
 

@@ -71,6 +71,14 @@ class ServiceUnavailableError(DomainException):
     pass
 
 
+class SpeechSynthesisRateLimitError(DomainException):
+    """A scoped TTS request or character quota was exhausted (returns 429)."""
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        self.retry_after_seconds = max(1, retry_after_seconds)
+        super().__init__("Too many requests.")
+
+
 class TenantScopeError(DomainException):
     """Missing or invalid tenant context."""
 

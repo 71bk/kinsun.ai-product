@@ -20,14 +20,22 @@ from app.middleware.actor_guard import (
     require_active_actor,
 )
 from app.middleware.speech_service_auth import require_speech_service
+from app.models.agent import AgentRun
 from app.models.conversation import ConversationSession
 from app.repositories.idempotency_repo import IdempotencyRepository
+from app.repositories.speech_synthesis_claim_repo import (
+    SpeechSynthesisClaimRepository,
+    SpeechSynthesisQuota,
+)
 from app.schemas.asr_gate import ConfirmAsrGateRequest, SubmitAsrResultRequest
 from app.schemas.conversation import (
     CompanionTurnRequest,
+    CompanionTurnResponse,
+    ConsumeSpeechSynthesisCapabilityRequest,
     ConsumeVoiceTicketRequest,
     CreateVoiceSessionRequest,
     CreateVoiceTicketRequest,
+    SpeechSynthesisPrincipalResponse,
     TransitionVoiceSessionRequest,
     VoiceSessionResponse,
     VoiceTicketIssuedResponse,
@@ -36,6 +44,11 @@ from app.services.asr_gate_service import AsrGateService
 from app.services.authorization_service import authorize_elder
 from app.services.companion_service import CompanionService
 from app.services.conversation_service import ConversationService
+from app.services.speech_synthesis_capability import (
+    SpeechSynthesisCapabilityCodec,
+    get_speech_synthesis_capability_codec,
+    prepare_speech_synthesis_text,
+)
 from app.services.voice_ticket_codec import (
     IssuedVoiceTicket,
     VoiceTicketCodec,
@@ -43,6 +56,7 @@ from app.services.voice_ticket_codec import (
 )
 
 router = APIRouter(prefix="/api/v1", tags=["voice-sessions"])
+_SPEECH_SYNTHESIS_LANGUAGES = frozenset({"zh-TW", "en-US", "nan-TW", "hak-TW"})
 
 
 def _asr_gate_service(session: AsyncSession, tenant_id: UUID) -> AsrGateService:
@@ -88,6 +102,45 @@ async def _trusted_speech_conversation(
     if conversation is None or conversation.initiator_actor_id is None:
         raise AuthenticationError("Voice session is unavailable")
     return conversation
+
+
+async def _with_speech_synthesis_capability(
+    session: AsyncSession,
+    response: CompanionTurnResponse,
+    actor_context: ActorContext,
+) -> CompanionTurnResponse:
+    settings = get_settings()
+    if not settings.speech_synthesis_capability_enabled:
+        return response
+    speech_text = prepare_speech_synthesis_text(response.reply_text)
+    if speech_text is None or response.reply_language not in _SPEECH_SYNTHESIS_LANGUAGES:
+        return response
+    agent_run = await session.get(AgentRun, response.agent_run_id)
+    if (
+        agent_run is None
+        or agent_run.completed_at is None
+        or agent_run.session_id != response.session_id
+        or agent_run.tenant_id != actor_context.tenant_id
+        or agent_run.actor_id != actor_context.actor_id
+    ):
+        raise AuthenticationError("Speech synthesis authorization is unavailable")
+    issued = get_speech_synthesis_capability_codec().issue(
+        session_id=response.session_id,
+        agent_run_id=response.agent_run_id,
+        tenant_id=actor_context.tenant_id,
+        actor_id=actor_context.actor_id,
+        text=speech_text,
+        language=response.reply_language,
+        completed_at=agent_run.completed_at,
+    )
+    return response.model_copy(
+        update={
+            "transport_status": "SYNTHESIS_CAPABILITY_ISSUED",
+            "speech_synthesis_capability": issued.value,
+            "speech_synthesis_expires_at": issued.expires_at,
+            "speech_synthesis_text": speech_text,
+        }
+    )
 
 
 @router.post(
@@ -210,6 +263,70 @@ async def consume_voice_ticket(
         codec=codec,
     )
     return success(_response(conversation))
+
+
+@router.post("/internal/speech-synthesis-capabilities/consume")
+async def consume_speech_synthesis_capability(
+    request: ConsumeSpeechSynthesisCapabilityRequest,
+    _service_principal: ServicePrincipal = Depends(require_speech_service),
+    session: AsyncSession = Depends(get_db_session),
+    codec: SpeechSynthesisCapabilityCodec = Depends(get_speech_synthesis_capability_codec),
+) -> dict:
+    """Atomically consume a reply-bound TTS capability under shared quotas."""
+
+    conversation = await _trusted_speech_conversation(session, request.session_id)
+    agent_run = await session.get(AgentRun, request.agent_run_id)
+    if (
+        conversation.state != "COMPLETED"
+        or agent_run is None
+        or agent_run.completed_at is None
+        or agent_run.session_id != conversation.id
+        or agent_run.tenant_id != conversation.tenant_id
+        or agent_run.actor_id != conversation.initiator_actor_id
+    ):
+        raise AuthenticationError("Speech synthesis capability is invalid or unavailable")
+    actor_id = conversation.initiator_actor_id
+    if actor_id is None:  # The trusted loader already rejects this; keep typing fail closed.
+        raise AuthenticationError("Speech synthesis capability is invalid or unavailable")
+
+    expires_at = codec.verify(
+        request.capability,
+        session_id=conversation.id,
+        agent_run_id=agent_run.agent_run_id,
+        tenant_id=conversation.tenant_id,
+        actor_id=actor_id,
+        text_sha256=request.text_sha256,
+        character_count=request.character_count,
+        language=request.language,
+        completed_at=agent_run.completed_at,
+    )
+    settings = get_settings()
+    await SpeechSynthesisClaimRepository(session).claim(
+        capability_digest=codec.digest(request.capability),
+        tenant_id=conversation.tenant_id,
+        actor_id=actor_id,
+        session_id=conversation.id,
+        agent_run_id=agent_run.agent_run_id,
+        client_ip_hash=request.client_ip_hash,
+        character_count=request.character_count,
+        expires_at=expires_at,
+        quota=SpeechSynthesisQuota(
+            window_seconds=settings.speech_synthesis_quota_window_seconds,
+            client_requests=settings.speech_synthesis_client_request_limit,
+            client_characters=settings.speech_synthesis_client_character_limit,
+            actor_requests=settings.speech_synthesis_actor_request_limit,
+            actor_characters=settings.speech_synthesis_actor_character_limit,
+            tenant_requests=settings.speech_synthesis_tenant_request_limit,
+            tenant_characters=settings.speech_synthesis_tenant_character_limit,
+        ),
+    )
+    principal = SpeechSynthesisPrincipalResponse(
+        session_id=conversation.id,
+        agent_run_id=agent_run.agent_run_id,
+        tenant_id=conversation.tenant_id,
+        actor_id=actor_id,
+    )
+    return success(principal.model_dump(mode="json"))
 
 
 @router.post("/internal/asr-results")
@@ -453,6 +570,7 @@ async def create_companion_turn(
             max(100, round(settings.agent_runtime_timeout_seconds * 1000)),
         ),
     )
+    response = await _with_speech_synthesis_capability(session, response, actor_context)
     await idem.complete(
         key=idempotency_key,
         resource_type="agent_run",

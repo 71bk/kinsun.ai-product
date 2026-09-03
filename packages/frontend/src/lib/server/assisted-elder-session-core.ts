@@ -1,25 +1,12 @@
-const CORE_TIMEOUT_MS = 30_000;
+import { resolveCoreApiBaseUrl } from './core-api-url';
 
-function coreApiBaseUrl(): URL | null {
-  try {
-    const url = new URL(process.env.CORE_API_INTERNAL_URL ?? 'http://127.0.0.1:8000');
-    if (url.username || url.password || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
-      return null;
-    }
-    url.pathname = `${url.pathname.replace(/\/+$/, '')}/`;
-    url.search = '';
-    url.hash = '';
-    return url;
-  } catch {
-    return null;
-  }
-}
+const CORE_TIMEOUT_MS = 30_000;
 export async function assistedElderCoreRequest(
   path: string,
   init: RequestInit,
   elderSession?: string,
 ): Promise<Response> {
-  const base = coreApiBaseUrl();
+  const base = resolveCoreApiBaseUrl({ allowLocalDefault: true });
   if (!base || path.startsWith('/') || path.includes('..')) {
     throw new Error('INVALID_CORE_TARGET');
   }

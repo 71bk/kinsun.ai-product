@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     RAG_POSTGRES_STATEMENT_TIMEOUT_MS: int = Field(default=10_000, ge=1_000, le=60_000)
     RAG_POSTGRES_POOL_MIN_SIZE: int = Field(default=1, ge=1, le=5)
     RAG_POSTGRES_POOL_MAX_SIZE: int = Field(default=5, ge=1, le=10)
+    RAG_OPENSEARCH_SEARCH_TIMEOUT_SECONDS: float = Field(default=5.0, gt=0.0, le=30.0)
+    RAG_OPENSEARCH_MAX_CONCURRENCY: int = Field(default=4, ge=1, le=16)
     AWS_REGION: str | None = None
     BEDROCK_EMBEDDING_MODEL_ID: str | None = None
     BEDROCK_EMBEDDING_DIMENSION: int = 1024

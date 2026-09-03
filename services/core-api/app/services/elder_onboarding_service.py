@@ -148,6 +148,7 @@ class ElderOnboardingService:
             entries.append(entry)
         await self._care_profile.flush()
         return AccountlessElderBundle(elder, enrollment, relationship, entries)
+
     async def get_created_bundle(
         self,
         *,

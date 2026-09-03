@@ -38,6 +38,9 @@ jobs:
       APP_ENV: development
       FAKE_AUTH_ENABLED: "false"
       AWS_EC2_METADATA_DISABLED: "true"
+      # Synthetic key for the disposable CI gateway only. Deployments must
+      # inject an environment-specific secret and never reuse service identity.
+      TTS_CLIENT_IP_HASH_SECRET: synthetic-ci-tts-client-ip-hash-secret-material
 
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +78,7 @@ jobs:
       - name: Core API quality and PostgreSQL integration
         run: |
           uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
+          uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
           uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
           uv run --frozen --project services/core-api pytest services/core-api/tests/unit
           uv run --frozen --project services/core-api pytest services/core-api/tests/integration
@@ -95,6 +99,7 @@ jobs:
         run: |
           uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
           uv run --frozen --project services/rag-ingestion ruff format --check services/rag-ingestion
+          uv run --frozen --project services/rag-ingestion python scripts/rag/validate_source_family_policy_audit_v8.py
           uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
 
       - name: Executable contracts

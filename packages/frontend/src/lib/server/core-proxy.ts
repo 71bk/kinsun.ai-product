@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { appSessionCookieName, normalizeAppSession } from './app-session-cookie';
 import { isTrustedRequestOrigin } from './auth-cookie';
 import { bffError } from './bff-response';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD']);
 const REQUEST_HEADERS = ['accept', 'content-type', 'idempotency-key', 'if-match'] as const;
@@ -9,21 +10,6 @@ const RESPONSE_HEADERS = ['content-type', 'content-disposition', 'retry-after'] 
 const RESTRICTED_QUERY_KEYS = new Set(['token', 'access_token', 'id_token', 'refresh_token']);
 const MAX_REQUEST_BODY_BYTES = 1_048_576;
 const CORE_TIMEOUT_MS = 30_000;
-
-function coreApiBaseUrl(): URL | null {
-  try {
-    const url = new URL(process.env.CORE_API_INTERNAL_URL ?? 'http://127.0.0.1:8000');
-    if (url.username || url.password || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
-      return null;
-    }
-    url.pathname = `${url.pathname.replace(/\/+$/, '')}/`;
-    url.search = '';
-    url.hash = '';
-    return url;
-  } catch {
-    return null;
-  }
-}
 
 function targetUrl(request: NextRequest, path: string[]): URL | null {
   if (
@@ -37,7 +23,7 @@ function targetUrl(request: NextRequest, path: string[]): URL | null {
     if (RESTRICTED_QUERY_KEYS.has(key.toLowerCase())) return null;
   }
 
-  const base = coreApiBaseUrl();
+  const base = resolveCoreApiBaseUrl({ allowLocalDefault: true });
   if (!base) return null;
   const encodedPath = path.map((segment) => encodeURIComponent(segment)).join('/');
   const target = new URL(encodedPath, base);

@@ -21,6 +21,7 @@ SCHEMA_DIR = REPO_ROOT / "contracts" / "schemas"
 
 RUNS_PATH = "/api/v1/agent/runs"
 TEST_SIGNER = ServiceCredentialSigner(secret="synthetic-test-service-identity-secret-32-bytes")
+DEFAULT_CORRELATION_ID = "11111111-1111-4111-8111-111111111111"
 
 
 def schema(rel: str) -> dict:
@@ -75,7 +76,7 @@ def make_payload(**overrides) -> dict:
 async def _post(payload: dict, headers: dict | None = None) -> tuple[int, dict, dict]:
     body = canonical_json_bytes(payload)
     request_headers = dict(headers or {})
-    correlation_id = request_headers.get("x-correlation-id", "cid-test-default")
+    correlation_id = request_headers.get("x-correlation-id", DEFAULT_CORRELATION_ID)
     request_headers["X-Correlation-ID"] = correlation_id
     request_headers[SERVICE_CREDENTIAL_HEADER] = TEST_SIGNER.sign(
         method="POST",
@@ -362,12 +363,13 @@ async def test_m0_reports_exactly_one_step():
 
 @pytest.mark.asyncio
 async def test_correlation_id_from_request_is_echoed():
+    correlation_id = "22222222-2222-4222-8222-222222222222"
     status, body, headers = await _post(
-        make_payload(), headers={"x-correlation-id": "cid-supplied-001"}
+        make_payload(), headers={"x-correlation-id": correlation_id}
     )
     assert status == 200
-    assert body["meta"]["correlation_id"] == "cid-supplied-001"
-    assert headers["x-correlation-id"] == "cid-supplied-001"
+    assert body["meta"]["correlation_id"] == correlation_id
+    assert headers["x-correlation-id"] == correlation_id
 
 
 @pytest.mark.asyncio

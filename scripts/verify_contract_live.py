@@ -232,7 +232,9 @@ async def main() -> int:
 
         response = await client.post(
             "/api/v1/assisted-elder-sessions/current/first-use-acknowledgement/revoke",
-            headers={"Idempotency-Key": "live-contract-assisted-acknowledgement-revoke"},
+            headers={
+                "Idempotency-Key": "live-contract-assisted-acknowledgement-revoke"
+            },
         )
         if response.status_code != 401:
             failures.append(
@@ -375,6 +377,39 @@ async def main() -> int:
             )
         check(
             "POST /api/v1/internal/voice-tickets/consume 401 body "
+            "vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
+            "/api/v1/internal/speech-synthesis-capabilities/consume",
+            json={
+                "session_id": sample_uuid,
+                "agent_run_id": sample_uuid,
+                "capability": "A" * 43,
+                "text_sha256": "a" * 64,
+                "character_count": 12,
+                "language": "zh-TW",
+                "client_ip_hash": "b" * 64,
+            },
+        )
+        if response.status_code != 401:
+            failures.append(
+                "POST /api/v1/internal/speech-synthesis-capabilities/consume returned "
+                f"{response.status_code}, expected 401"
+            )
+            print(
+                "FAIL  POST /api/v1/internal/speech-synthesis-capabilities/consume "
+                f"fails closed: {response.status_code}"
+            )
+        else:
+            print(
+                "ok    POST /api/v1/internal/speech-synthesis-capabilities/consume "
+                "fails closed with 401"
+            )
+        check(
+            "POST /api/v1/internal/speech-synthesis-capabilities/consume 401 body "
             "vs ErrorEnvelopeV1",
             response.json(),
             load("common/ErrorEnvelopeV1.json"),

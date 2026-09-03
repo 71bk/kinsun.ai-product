@@ -1,4 +1,5 @@
 import { logAuthDiagnostic } from './auth-diagnostics';
+import { resolveCoreApiBaseUrl } from './core-api-url';
 import type { GoogleOidcExchangeResult } from './google-oidc';
 import type { GoogleOidcTransaction } from './google-oidc-transaction';
 
@@ -25,23 +26,9 @@ export interface PendingGoogleCoreHandoff {
 export type GoogleCoreHandoffResult = AuthenticatedGoogleCoreHandoff | PendingGoogleCoreHandoff;
 
 function safeCoreBaseUrl(): URL {
-  const value = process.env.CORE_API_INTERNAL_URL;
-  if (!value) throw new Error('Core Google handoff is unavailable');
-  try {
-    const target = new URL(value);
-    if (
-      target.username ||
-      target.password ||
-      target.search ||
-      target.hash ||
-      (target.protocol !== 'http:' && target.protocol !== 'https:')
-    ) {
-      throw new Error('invalid');
-    }
-    return target;
-  } catch {
-    throw new Error('Core Google handoff is unavailable');
-  }
+  const target = resolveCoreApiBaseUrl();
+  if (!target) throw new Error('Core Google handoff is unavailable');
+  return target;
 }
 
 export function googleOidcCoreTarget(path = HANDOFF_PATH): URL {
