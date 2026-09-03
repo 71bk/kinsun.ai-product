@@ -38,6 +38,9 @@ jobs:
       APP_ENV: development
       FAKE_AUTH_ENABLED: "false"
       AWS_EC2_METADATA_DISABLED: "true"
+      # Synthetic key for the disposable CI gateway only. Deployments must
+      # inject an environment-specific secret and never reuse service identity.
+      TTS_CLIENT_IP_HASH_SECRET: synthetic-ci-tts-client-ip-hash-secret-material
 
     steps:
       - uses: actions/checkout@v4

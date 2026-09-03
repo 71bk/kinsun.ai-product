@@ -21,6 +21,7 @@ def test_production_requires_request_bound_core_identity_and_ip_hash_secret() ->
             CORE_API_SERVICE_IDENTITY_HMAC_SECRET=(
                 "speech-service-identity-secret-material-at-least-32-bytes"
             ),
+            TTS_CLIENT_IP_HASH_SECRET=None,
         )
 
 
