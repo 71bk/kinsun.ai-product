@@ -41,6 +41,12 @@ v003 再以 staging-only purpose overlay 分類原本空白的 32 筆 A 單位�
 開放複核，但沒有授權立即檢索：27 筆仍保留原值、均不在 current 554 筆 runtime pool，且需逐筆完成
 audience／purpose verification 後才能建立 runtime successor。v003 policy bytes 與目前啟用方式不變。
 
+2026-09-03 audit v007 將 H-07 的 live governance enforcement 綁定到目前 Agent Runtime 實作與
+驗收測試，但不改寫 runtime policy v003 的資料或 Owner 決策。v003～v006 歷史包改採 sealed inventory
+驗證：CI 驗證封存包本身的 checksum 與 predecessor lock，不再要求歷史 inventory 永遠等於目前 HEAD；
+只有最新版 v007 會和目前安全關鍵程式逐檔比對。一般 UI、文件或無關測試修改不需要建立 RAG successor，
+只有 v007 明列的治理程式、政策或驗收輸入改變時才會要求新的 audit successor。
+
 ## 啟用方式
 
 本機 repository 執行時設定：

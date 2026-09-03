@@ -177,7 +177,10 @@
   risk／audience／purpose／assessment／citation metadata，不能覆蓋撤回狀態。Retriever 在建立
   response 前會以搜尋結果的 authoritative live metadata 再做一次相同的 fail-closed 檢查。
   新增 withdrawn、expired、stop、retrieval-disabled、block reason 與 review／production mismatch
-  測試；Agent Runtime 全套 `485 passed`，Ruff check／format 皆通過。
+  測試；Agent Runtime 全套 `488 passed`，Ruff check／format 皆通過。另以 audit v007 將 H-07
+  的安全關鍵程式與驗收測試綁定為目前 attestation；歷史 v003～v006 inventory 改以 sealed
+  evidence 驗證，不再因目前 HEAD 的無關修改產生 checksum cascade。RAG Ingestion 全套
+  `322 passed`，其 Ruff check／format 與獨立 v007 validator 皆通過。
 
 ### H-08 — External deletion 尚未完成
 
