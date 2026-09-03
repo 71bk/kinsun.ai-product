@@ -67,7 +67,7 @@ _TOTAL_HEAD_TABLE_COUNT = 64
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "e2f4a6c8b013"
+_HEAD_REVISION = "f3a5b7c9d024"
 
 
 def _get_alembic_config() -> Config:
@@ -332,8 +332,8 @@ async def test_idempotency_hardening_schema_supports_snapshot_expiry_and_cleanup
 
 
 @pytest.mark.asyncio
-async def test_service_credential_nonce_is_isolated_from_the_domain_schema(test_engine) -> None:
-    """The shared replay store must not live inside eldercare_ai."""
+async def test_service_identity_state_is_isolated_from_the_domain_schema(test_engine) -> None:
+    """Shared replay and TTS quota state must not live inside eldercare_ai."""
 
     async with test_engine.begin() as conn:
         await conn.run_sync(_drop_all_tables)
@@ -342,7 +342,7 @@ async def test_service_credential_nonce_is_isolated_from_the_domain_schema(test_
         await conn.run_sync(_run_upgrade, "head")
 
     async with test_engine.begin() as conn:
-        nonce_tables = {
+        security_tables = {
             row.table_name
             for row in (
                 await conn.execute(
@@ -387,13 +387,43 @@ async def test_service_credential_nonce_is_isolated_from_the_domain_schema(test_
             ),
             {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
         )
+        synthesis_columns = {
+            row.column_name
+            for row in (
+                await conn.execute(
+                    text(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_schema = :schema "
+                        "AND table_name = 'speech_synthesis_claim'"
+                    ),
+                    {"schema": SERVICE_IDENTITY_SCHEMA_NAME},
+                )
+            )
+        }
         domain_tables = await conn.run_sync(_get_tables)
 
-    assert nonce_tables == {"credential_nonce"}
+    assert security_tables == {"credential_nonce", "speech_synthesis_claim"}
     assert primary_key_columns == ["audience", "credential_id"]
     assert "ix_credential_nonce_expiry" in indexes
+    assert {
+        "capability_digest",
+        "tenant_id",
+        "actor_id",
+        "session_id",
+        "agent_run_id",
+        "client_ip_hash",
+        "character_count",
+        "expires_at",
+        "claimed_at",
+    } == synthesis_columns
+    assert {
+        "ix_speech_synthesis_tenant_window",
+        "ix_speech_synthesis_actor_window",
+        "ix_speech_synthesis_client_window",
+    } <= indexes
     assert public_grant_count == 0
     assert "credential_nonce" not in domain_tables
+    assert "speech_synthesis_claim" not in domain_tables
 
     # The same credential ID may only be claimed once per audience.
     async with test_engine.begin() as conn:

@@ -557,7 +557,9 @@ async def test_speech_synthesis_capability_binds_text_and_is_single_use(
         started_at=now - timedelta(seconds=1),
         completed_at=now,
     )
-    committed_session.add_all([conversation, agent_run])
+    committed_session.add(conversation)
+    await committed_session.flush()
+    committed_session.add(agent_run)
     await committed_session.commit()
 
     codec = SpeechSynthesisCapabilityCodec(SYNTHESIS_SECRET, now=lambda: now)
