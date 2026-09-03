@@ -22,7 +22,7 @@ def _make_settings(**overrides: str) -> Settings:
         "DATABASE_URL": _VALID_DB_URL,
     }
     env.update(overrides)
-    with patch.dict(os.environ, env, clear=False):
+    with patch.dict(os.environ, env, clear=True):
         return Settings(_env_file=None)
 
 
