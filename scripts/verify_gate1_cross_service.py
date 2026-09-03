@@ -26,6 +26,7 @@ import socket
 import subprocess
 import sys
 import time
+import uuid
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -174,12 +175,12 @@ async def _run_five(
         allowed_request = _request_payload(run_number, fixture)
         allowed = await adapter.run(
             request_payload=allowed_request,
-            correlation_id=f"gate1-correlation-allow-{run_number:02d}",
+            correlation_id=str(uuid.uuid4()),
         )
         blocked_request = _request_payload(run_number, fixture, blocked=True)
         blocked = await adapter.run(
             request_payload=blocked_request,
-            correlation_id=f"gate1-correlation-block-{run_number:02d}",
+            correlation_id=str(uuid.uuid4()),
         )
         if allowed.agent_run_id != allowed_request["agent_run_id"]:
             raise AssertionError(
