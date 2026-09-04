@@ -41,14 +41,18 @@ def envelope() -> dict:
 @pytest.mark.asyncio
 async def test_synthetic_publisher_validates_and_consumes_envelope() -> None:
     payload = envelope()
+    session_factory = MagicMock()
+    session_context = AsyncMock()
     session = MagicMock()
-    savepoint = AsyncMock()
-    session.begin_nested.return_value = savepoint
+    transaction = AsyncMock()
+    session_context.__aenter__.return_value = session
+    session.begin.return_value = transaction
+    session_factory.return_value = session_context
     consumer = AsyncMock()
 
     with patch("app.events.synthetic_projection.SyntheticGraphProjectionConsumer") as consumer_type:
         consumer_type.return_value.consume = consumer
-        await SyntheticProjectionPublisher(session).publish(
+        await SyntheticProjectionPublisher(session_factory).publish(
             payload["event_type"],
             UUID(payload["aggregate"]["id"]),
             UUID(payload["tenant_id"]),
@@ -56,16 +60,16 @@ async def test_synthetic_publisher_validates_and_consumes_envelope() -> None:
         )
 
     consumer.assert_awaited_once()
-    session.begin_nested.assert_called_once_with()
+    session.begin.assert_called_once_with()
 
 
 @pytest.mark.asyncio
 async def test_synthetic_publisher_rejects_mismatched_metadata() -> None:
     payload = envelope()
-    session = MagicMock()
+    session_factory = MagicMock()
 
     with pytest.raises(ValueError, match="metadata does not match"):
-        await SyntheticProjectionPublisher(session).publish(
+        await SyntheticProjectionPublisher(session_factory).publish(
             payload["event_type"],
             uuid4(),
             UUID(payload["tenant_id"]),

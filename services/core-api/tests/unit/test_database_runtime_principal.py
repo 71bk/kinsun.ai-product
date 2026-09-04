@@ -241,6 +241,17 @@ def test_runtime_privilege_contract_denies_sensitive_mutation() -> None:
     )
     assert "expires_at" in RUNTIME_COLUMN_UPDATE_PRIVILEGES["line_link_challenge"]
     assert "event_type" in RUNTIME_COLUMN_UPDATE_PRIVILEGES["line_webhook_receipt"]
+    assert {
+        "next_attempt_at",
+        "last_attempt_at",
+        "lease_token",
+        "lease_owner",
+        "lease_expires_at",
+        "last_dead_lettered_at",
+        "last_dead_letter_reason",
+        "redrive_count",
+        "last_redriven_at",
+    } <= set(RUNTIME_COLUMN_UPDATE_PRIVILEGES["outbox_event"])
     assert RUNTIME_TABLE_PRIVILEGES["context_manifest"] == ("SELECT",)
     assert RUNTIME_TABLE_PRIVILEGES["knowledge_source"] == ("SELECT",)
     assert RUNTIME_TABLE_PRIVILEGES["knowledge_source_version"] == ("SELECT",)

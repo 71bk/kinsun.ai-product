@@ -12,6 +12,7 @@ from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 from uuid import UUID
 
 from pydantic import Field, field_validator, model_validator
@@ -183,6 +184,21 @@ class Settings(BaseSettings):
     line_daily_notification_enabled: bool = False
     line_daily_notification_timezone: str = Field(default="Asia/Taipei", max_length=64)
     line_daily_notification_send_time: str = Field(default="08:00", max_length=5)
+
+    # Provider-neutral outbox delivery. The HTTPS endpoint is expected to be a
+    # durable event ingress selected by the deployment owner; rollout is off by
+    # default and cannot start with a partial credential/configuration set.
+    outbox_worker_enabled: bool = False
+    outbox_publisher_mode: str = Field(default="disabled", max_length=16)
+    outbox_publish_url: str = Field(default="", max_length=2048)
+    outbox_publish_bearer_token: str = ""
+    outbox_publish_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    outbox_poll_interval_seconds: float = Field(default=1.0, ge=0.1, le=60)
+    outbox_batch_size: int = Field(default=50, ge=1, le=500)
+    outbox_lease_seconds: int = Field(default=30, ge=5, le=3_600)
+    outbox_max_attempts: int = Field(default=10, ge=1, le=100)
+    outbox_retry_base_seconds: int = Field(default=2, ge=1, le=3_600)
+    outbox_retry_max_seconds: int = Field(default=300, ge=1, le=86_400)
 
     # ─── Internal service adapters ───────────────────────────────────────────────
     voice_ticket_enabled: bool = False
@@ -452,6 +468,44 @@ class Settings(BaseSettings):
                 raise ValueError("LINE_DAILY_NOTIFICATION_SEND_TIME must use HH:MM")
             if self.line_daily_notification_send_time != "08:00":
                 raise ValueError("LINE_DAILY_NOTIFICATION_SEND_TIME must remain 08:00")
+        if self.outbox_publisher_mode not in {"disabled", "https"}:
+            raise ValueError("OUTBOX_PUBLISHER_MODE must be either disabled or https")
+        if self.outbox_worker_enabled and self.outbox_publisher_mode != "https":
+            raise ValueError("OUTBOX_PUBLISHER_MODE must be https when OUTBOX_WORKER_ENABLED=true")
+        if self.outbox_publisher_mode == "https":
+            publish_url = self.outbox_publish_url.strip()
+            parsed = urlsplit(publish_url)
+            try:
+                parsed_port = parsed.port
+            except ValueError as exc:
+                raise ValueError("OUTBOX_PUBLISH_URL has an invalid port") from exc
+            if (
+                parsed.scheme != "https"
+                or not parsed.hostname
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.query
+                or parsed.fragment
+                or any(character.isspace() for character in publish_url)
+                or parsed_port == 0
+            ):
+                raise ValueError(
+                    "OUTBOX_PUBLISH_URL must be a fixed HTTPS URL without credentials, "
+                    "query, or fragment"
+                )
+            self.outbox_publish_url = publish_url
+            if len(self.outbox_publish_bearer_token.encode("utf-8")) < 32:
+                raise ValueError(
+                    "OUTBOX_PUBLISH_BEARER_TOKEN must contain at least 32 bytes "
+                    "when HTTPS publishing is selected"
+                )
+            if self.outbox_lease_seconds <= self.outbox_publish_timeout_seconds:
+                raise ValueError("OUTBOX_LEASE_SECONDS must exceed OUTBOX_PUBLISH_TIMEOUT_SECONDS")
+        if self.outbox_retry_max_seconds < self.outbox_retry_base_seconds:
+            raise ValueError(
+                "OUTBOX_RETRY_MAX_SECONDS must be greater than or equal to "
+                "OUTBOX_RETRY_BASE_SECONDS"
+            )
         if self.voice_ticket_enabled and len(self.voice_ticket_hmac_secret.encode("utf-8")) < 32:
             raise ValueError(
                 "VOICE_TICKET_HMAC_SECRET must contain at least 32 bytes "

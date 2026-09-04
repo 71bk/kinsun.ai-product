@@ -67,7 +67,7 @@ _TOTAL_HEAD_TABLE_COUNT = 65
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "a7c9e1f3b5d6"
+_HEAD_REVISION = "b8d0f2a4c6e7"
 
 
 def _get_alembic_config() -> Config:
@@ -644,10 +644,12 @@ async def test_dead_letter_status_migration_roundtrip(test_engine):
                 "INSERT INTO eldercare_ai.outbox_event "
                 "(event_id, event_type, aggregate_type, aggregate_id, "
                 "aggregate_version, trace_id, payload, delivery_status, "
-                "attempt_count, last_error) "
+                "attempt_count, last_error, last_dead_lettered_at, "
+                "last_dead_letter_reason) "
                 "VALUES (gen_random_uuid(), 'migration.smoke.v1', 'memory', "
                 "gen_random_uuid(), 1, 'trace-migration', '{}'::jsonb, "
-                "'DEAD_LETTER', 3, 'PUBLISHER_ATTEMPT_LIMIT_REACHED') "
+                "'DEAD_LETTER', 3, 'PUBLISHER_ATTEMPT_LIMIT_REACHED', now(), "
+                "'PUBLISHER_ATTEMPT_LIMIT_REACHED') "
                 "RETURNING event_id"
             )
         )
@@ -1378,7 +1380,9 @@ async def test_baseline_upgrade_creates_all_indexes(test_engine):
         "idx_relationship_elder_actor",
         "idx_assignment_worker_time",
         "idx_assignment_elder_time",
-        "idx_outbox_pending",
+        "idx_outbox_delivery_due",
+        "idx_outbox_expired_lease",
+        "idx_outbox_dead_letter",
         "uq_care_unit_name",
         "outbox_event_event_id_key",
     ]
@@ -1423,6 +1427,10 @@ async def test_baseline_upgrade_creates_check_constraints(test_engine):
         "outbox_event_aggregate_version_check",
         "outbox_event_attempt_count_check",
         "outbox_event_delivery_status_check",
+        "ck_outbox_lease_state",
+        "ck_outbox_published_at",
+        "ck_outbox_dead_letter_metadata",
+        "ck_outbox_redrive_count",
     ]
 
     async with test_engine.begin() as conn:
@@ -1579,7 +1587,9 @@ async def test_baseline_roundtrip_upgrade_downgrade_upgrade(test_engine):
         "idx_relationship_elder_actor",
         "idx_assignment_worker_time",
         "idx_assignment_elder_time",
-        "idx_outbox_pending",
+        "idx_outbox_delivery_due",
+        "idx_outbox_expired_lease",
+        "idx_outbox_dead_letter",
         "uq_care_unit_name",
         "outbox_event_event_id_key",
     ]
@@ -1604,6 +1614,10 @@ async def test_baseline_roundtrip_upgrade_downgrade_upgrade(test_engine):
         "ck_care_relationship_period",
         "ck_assignment_period",
         "tenant_status_check",
+        "ck_outbox_lease_state",
+        "ck_outbox_published_at",
+        "ck_outbox_dead_letter_metadata",
+        "ck_outbox_redrive_count",
     ]
 
     async with test_engine.begin() as conn:
