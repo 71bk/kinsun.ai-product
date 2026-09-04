@@ -94,7 +94,7 @@ async def test_stale_publishing_lease_is_recovered_and_republished(
     event_id = uuid4()
     await _seed_event(committed_session, event_id=event_id)
     session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
-    fixed_now = datetime(2026, 9, 4, 3, 0, tzinfo=UTC)
+    fixed_now = datetime.now(UTC) + timedelta(minutes=1)
     async with session_factory() as session, session.begin():
         event = await session.scalar(
             select(OutboxEvent).where(OutboxEvent.event_id == event_id).with_for_update()
@@ -132,7 +132,7 @@ async def test_retry_exhaustion_enters_durable_dlq_and_can_be_redriven(
     event_id = uuid4()
     await _seed_event(committed_session, event_id=event_id)
     session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
-    first_attempt = datetime(2026, 9, 4, 4, 0, tzinfo=UTC)
+    first_attempt = datetime.now(UTC) + timedelta(minutes=1)
 
     first = await OutboxRelay(
         session_factory,
