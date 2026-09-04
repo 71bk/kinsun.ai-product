@@ -92,11 +92,9 @@ class ConsumerResult:
 class IdempotentEventConsumer:
     """Runs one handler exactly once per consumer and event ID.
 
-    The caller owns transaction commit and queue settlement. On
-    EventConsumerFailure it must roll back first. RETRY means do not
-    acknowledge the source message; DEAD_LETTER means hand off to a durable
-    quarantine/DLQ and acknowledge only after that handoff succeeds. No queue
-    or DLQ adapter is implemented by this foundation.
+    The caller owns transaction commit and queue settlement. EventConsumerWorker
+    provides the provider-neutral commit/ack/retry/DLQ orchestration; a deployed
+    queue binding supplies its durable QueueSettlement operations.
     """
 
     def __init__(self, session: AsyncSession, consumer_name: str) -> None:

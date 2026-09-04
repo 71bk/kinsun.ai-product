@@ -12,6 +12,8 @@ import asyncio
 from dataclasses import dataclass
 from uuid import UUID
 
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from app.core.config import AppEnv, Settings, get_settings
 from app.db.engine import DatabaseEngine
 from app.events.consumer import DomainEvent
@@ -31,8 +33,8 @@ class ProjectionDrainResult:
 class SyntheticProjectionPublisher(EventPublisher):
     """In-process synthetic event bus binding for local Gate 1 QA."""
 
-    def __init__(self, session) -> None:
-        self._session = session
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
 
     async def publish(
         self,
@@ -49,11 +51,10 @@ class SyntheticProjectionPublisher(EventPublisher):
         ):
             raise ValueError("publisher metadata does not match the event envelope")
 
-        # Consumer failures must not leave a partial projection/idempotency row
-        # in the relay transaction.  A real queue provides this settlement
-        # boundary; the in-process development adapter uses a savepoint.
-        async with self._session.begin_nested():
-            await SyntheticGraphProjectionConsumer(self._session).consume(event)
+        # This transaction is independent from the relay lease transaction. A
+        # crash after commit replays event_id through the idempotent consumer.
+        async with self._session_factory() as session, session.begin():
+            await SyntheticGraphProjectionConsumer(session).consume(event)
 
 
 async def drain_synthetic_projection(
@@ -76,19 +77,19 @@ async def drain_synthetic_projection(
             raise RuntimeError("database is unavailable")
 
         totals = ProjectionDrainResult()
+        relay = OutboxRelay(
+            engine.session_factory,
+            SyntheticProjectionPublisher(engine.session_factory),
+            worker_id="synthetic-projection",
+        )
         for batch_number in range(1, max_batches + 1):
-            async with engine.session_factory() as session, session.begin():
-                published, suppressed, failed = await OutboxRelay(
-                    session,
-                    SyntheticProjectionPublisher(session),
-                ).relay_once(batch_size=batch_size)
-            processed = published + suppressed + failed
-            if processed == 0:
+            result = await relay.relay_once(batch_size=batch_size)
+            if not result.made_progress:
                 return totals
             totals = ProjectionDrainResult(
-                published=totals.published + published,
-                suppressed=totals.suppressed + suppressed,
-                failed=totals.failed + failed,
+                published=totals.published + result.published,
+                suppressed=totals.suppressed + result.suppressed,
+                failed=(totals.failed + result.retry_scheduled + result.dead_lettered),
                 batches=batch_number,
             )
         return totals

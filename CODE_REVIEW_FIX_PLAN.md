@@ -38,7 +38,7 @@
 - [ ] M-08 加入 RLS 或等價的 database-level tenant isolation。
 - [ ] M-09 為 email/password auth 加入 distributed abuse limiting。
 - [x] M-10 為 Care Action provenance 保存 immutable event version/hash。
-- [ ] M-11 建立 outbox publisher、recovery、DLQ 與 duplicate-safe consumer。
+- [x] M-11 建立 outbox publisher、recovery、DLQ 與 duplicate-safe consumer。
 
 ### P2 — API / frontend / tooling / documentation
 
@@ -58,9 +58,10 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 
 1. **M-10 已完成。** Care Action 現在會鎖定來源 Care Event 並保存 exact immutable version、
    canonical hash 與 schema version；資料庫同時阻止 provenance 改寫與來源 UUID rebinding。
-2. **M-11 為條件式 Wave 2 前置。** 若本輪包含 notification、projection、Agent handoff 或其他
-   非同步事件流程，須先完成 outbox publisher、recovery、DLQ 與 duplicate-safe consumer；若不包含，
-   保留為後續 reliability milestone。
+2. **M-11 已完成 repository implementation。** Outbox 現在具備短交易 lease claim、stale
+   `PUBLISHING` recovery、bounded retry、durable dead-letter metadata、單筆 redrive、固定 HTTPS
+   publisher 與 commit-before-ack duplicate-safe consumer orchestration。實際 ingress／queue／alarm
+   deployment 仍由 production-readiness release gate 與 hosting owner 驗證。
 3. **L-01、L-02 為一般 Wave 2 工程項目。** 分別處理超過 100 筆資料的靜默截斷，以及 frontend
    對 malformed／drifted API response 的可預期失敗；不阻擋 Wave 2 資料模型骨架。
 4. **M-08、M-09 移入 production-readiness gate。** M-08 必須在共享資料庫承載真實多租戶資料前完成；
@@ -69,7 +70,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
    H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
 
-建議續作順序：視 Wave 2 範圍決定是否立即做 `M-11` → `L-01` → `L-02`；
+建議續作順序：`L-01` → `L-02`；
 `M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
 
 ---
@@ -386,6 +387,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 
 ### M-11 — Outbox 缺少 production publisher/recovery/DLQ
 
+- 狀態：已於 2026-09-04 完成 repository implementation；外部 hosting binding 不在此項宣稱範圍。
 - Severity：Medium
 - 位置：`services/core-api/app/events/relay.py:50-115`；`events/consumer.py:86-93`；`events/synthetic_projection.py:1-5,51-104`
 - 問題：目前 relay/projection 偏向 synthetic/foundation implementation，沒有完整 queue adapter、DLQ、lease recovery 或 production consumer。
@@ -393,6 +395,10 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 - 修正：加入 worker lease、stale `PUBLISHING` recovery、at-least-once delivery、idempotent consumer、DLQ 與 runbook。
 - 驗證：模擬 publish crash、downstream failure、duplicate delivery 與 worker restart。
 - 應新增測試：是，failure/recovery integration tests。
+- 完成證據：migration `b8d0f2a4c6e7`、`HttpsEventPublisher`、`OutboxRelay`、
+  `EventConsumerWorker`、可執行 worker／單筆 redrive、ADR 0021 與
+  `docs/runbooks/outbox-delivery.md`；新增 PostgreSQL concurrency／stale lease／retry exhaustion／
+  redrive integration tests，開發資料庫 schema verifier 四項全數通過。
 
 ## P2 詳細項目
 

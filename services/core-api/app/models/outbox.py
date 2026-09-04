@@ -1,8 +1,8 @@
-"""Transactional outbox model for reliable domain event persistence.
+"""Transactional outbox model for reliable domain event delivery.
 
 The OutboxEvent is written in the same database transaction as domain entity
-changes, ensuring atomicity. A separate relay process (out of scope for this
-foundation) reads committed entries and publishes them externally.
+changes, ensuring atomicity. The outbox worker claims committed entries with a
+bounded lease and publishes them outside the database transaction.
 
 Maps to `eldercare_ai.outbox_event`, which is richer than a minimal outbox:
 the primary key is outbox_event_id, while event_id is a separate UNIQUE column
@@ -118,6 +118,38 @@ class OutboxEvent(Base):
         Integer,
         nullable=False,
         server_default="0",
+    )
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    last_attempt_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    lease_token: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
+    lease_owner: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    last_dead_lettered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    last_dead_letter_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    redrive_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+    )
+    last_redriven_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
     )
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

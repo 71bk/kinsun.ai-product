@@ -2,9 +2,11 @@
 
 import uuid
 
+import httpx
 import pytest
 
-from app.events.publisher import EventPublisher, FakePublisher
+from app.events.failures import EventPublishError
+from app.events.publisher import EventPublisher, FakePublisher, HttpsEventPublisher
 
 
 class TestEventPublisherABC:
@@ -143,3 +145,114 @@ class TestFakePublisher:
         assert len(publisher.events) == 1
         assert publisher.events[0]["event_type"] == "second"
         assert publisher.events[0]["aggregate_id"] == aggregate_id
+
+
+def _envelope(*, event_id: uuid.UUID, aggregate_id: uuid.UUID, tenant_id: uuid.UUID) -> dict:
+    return {
+        "event_id": str(event_id),
+        "event_type": "memory.confirmed.v1",
+        "tenant_id": str(tenant_id),
+        "aggregate": {"id": str(aggregate_id)},
+    }
+
+
+class TestHttpsEventPublisher:
+    @pytest.mark.asyncio
+    async def test_posts_envelope_with_event_idempotency_key(self) -> None:
+        event_id = uuid.uuid4()
+        aggregate_id = uuid.uuid4()
+        tenant_id = uuid.uuid4()
+        seen_request: httpx.Request | None = None
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            nonlocal seen_request
+            seen_request = request
+            return httpx.Response(202)
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        publisher = HttpsEventPublisher(
+            "https://events.example.test/ingress",
+            "a" * 32,
+            client=client,
+        )
+
+        await publisher.publish(
+            "memory.confirmed.v1",
+            aggregate_id,
+            tenant_id,
+            _envelope(event_id=event_id, aggregate_id=aggregate_id, tenant_id=tenant_id),
+        )
+
+        assert seen_request is not None
+        assert seen_request.headers["Idempotency-Key"] == str(event_id)
+        assert seen_request.headers["Authorization"] == f"Bearer {'a' * 32}"
+        await client.aclose()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("status_code", [408, 425, 429, 500, 503])
+    async def test_retryable_status_is_classified_without_response_body(
+        self,
+        status_code: int,
+    ) -> None:
+        aggregate_id = uuid.uuid4()
+        tenant_id = uuid.uuid4()
+        event_id = uuid.uuid4()
+        client = httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda _request: httpx.Response(status_code))
+        )
+        publisher = HttpsEventPublisher(
+            "https://events.example.test/ingress",
+            "b" * 32,
+            client=client,
+        )
+
+        with pytest.raises(EventPublishError) as exc_info:
+            await publisher.publish(
+                "memory.confirmed.v1",
+                aggregate_id,
+                tenant_id,
+                _envelope(event_id=event_id, aggregate_id=aggregate_id, tenant_id=tenant_id),
+            )
+
+        assert exc_info.value.reason_code == "PUBLISHER_DEPENDENCY_TIMEOUT"
+        assert exc_info.value.retryable is True
+        await client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_schema_rejection_is_not_retryable(self) -> None:
+        aggregate_id = uuid.uuid4()
+        tenant_id = uuid.uuid4()
+        event_id = uuid.uuid4()
+        client = httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda _request: httpx.Response(422))
+        )
+        publisher = HttpsEventPublisher(
+            "https://events.example.test/ingress",
+            "c" * 32,
+            client=client,
+        )
+
+        with pytest.raises(EventPublishError) as exc_info:
+            await publisher.publish(
+                "memory.confirmed.v1",
+                aggregate_id,
+                tenant_id,
+                _envelope(event_id=event_id, aggregate_id=aggregate_id, tenant_id=tenant_id),
+            )
+
+        assert exc_info.value.reason_code == "PUBLISHER_SCHEMA_REJECTED"
+        assert exc_info.value.retryable is False
+        await client.aclose()
+
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            "http://events.example.test/ingress",
+            "https://user:pass@events.example.test/ingress",
+            "https://events.example.test/ingress?target=other",
+            "https://events.example.test/ingress#fragment",
+        ],
+    )
+    def test_rejects_unsafe_endpoint(self, endpoint: str) -> None:
+        with pytest.raises(ValueError):
+            HttpsEventPublisher(endpoint, "d" * 32)

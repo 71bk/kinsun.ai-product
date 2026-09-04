@@ -2,8 +2,8 @@
 
 Provides the write-path of the transactional outbox pattern. Events are
 written in the same database transaction as domain entity changes, ensuring
-atomicity. A separate relay process (out of scope) reads committed entries
-and publishes them externally.
+atomicity. The leased outbox worker reads committed entries and publishes them
+through the configured provider-neutral adapter.
 """
 
 from __future__ import annotations
