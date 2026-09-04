@@ -52,7 +52,10 @@ async def test_concurrent_relays_claim_each_event_once(committed_session, test_e
 
     session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
     publisher = FakePublisher()
-    fixed_now = datetime(2026, 9, 4, 2, 0, tzinfo=UTC)
+    # Keep the worker clock after PostgreSQL's server_default now(); a fixed
+    # wall-clock earlier than the CI database clock would correctly make the
+    # freshly inserted rows not due yet.
+    fixed_now = datetime.now(UTC) + timedelta(minutes=1)
     relays = [
         OutboxRelay(
             session_factory,
