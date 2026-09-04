@@ -19,9 +19,11 @@ from app.domain.state_machine import CARE_EVENT_REVIEW_STATES
 from app.events.outbox_writer import write_outbox_entry
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision
 from app.models.summary import DailySummary, SummaryVersion
+from app.policies.care_action_candidate_policy import evaluate_care_action_candidate
 from app.policies.memory_policy import SourceSpeakerEvidence, evaluate_memory_candidate
 from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.conversation_repo import ConversationRepository
+from app.schemas.care_action import AgentCareActionCandidateProposal
 from app.schemas.care_event import (
     ConfidenceBand,
     CreateCareEventCandidateRequest,
@@ -29,6 +31,7 @@ from app.schemas.care_event import (
 )
 from app.schemas.memory import CreateMemoryCandidateRequest
 from app.services.authorization_service import authorize_elder
+from app.services.care_action_candidate_service import CareActionCandidateService
 from app.services.consent_service import ConsentService
 from app.services.memory_service import MemoryService
 
@@ -73,6 +76,7 @@ class CareEventService:
         trace_id: str,
         idempotency_key: str,
         memory_candidate_proposal: dict[str, Any] | None = None,
+        care_action_candidate_proposal: dict[str, Any] | None = None,
         source_speaker_evidence: SourceSpeakerEvidence | None = None,
     ) -> CareEvent:
         consent = await ConsentService(self._session, self._tenant_id).require_active(
@@ -108,6 +112,30 @@ class CareEventService:
                     extra={"reason_code": "LONG_TERM_MEMORY_CONSENT_INACTIVE"},
                 )
                 memory_candidate_proposal = None
+
+        if care_action_candidate_proposal is not None:
+            try:
+                action_proposal = AgentCareActionCandidateProposal.model_validate(
+                    care_action_candidate_proposal
+                )
+                action_decision = evaluate_care_action_candidate(
+                    action_proposal,
+                    source_event_type=request.event_type.value,
+                )
+            except (PydanticValidationError, TypeError, ValueError):
+                action_decision = None
+            if action_decision is None or not action_decision.accepted:
+                logger.info(
+                    "care action proposal discarded before care-event persistence",
+                    extra={
+                        "reason_code": (
+                            action_decision.reason_code
+                            if action_decision is not None
+                            else "INVALID_PROPOSAL"
+                        )
+                    },
+                )
+                care_action_candidate_proposal = None
         if memory_candidate_proposal is not None:
             try:
                 proposal_decision = evaluate_memory_candidate(
@@ -155,6 +183,7 @@ class CareEventService:
                 version=1,
                 structured_payload=request.structured_payload,
                 memory_candidate_proposal=memory_candidate_proposal,
+                care_action_candidate_proposal=care_action_candidate_proposal,
                 evidence_text_ref=json.dumps(request.evidence_refs),
                 confidence=CONFIDENCE_VALUES[request.confidence_band],
                 speaker_role=speaker_evidence.speaker_role,
@@ -220,6 +249,7 @@ class CareEventService:
                     version=event.current_version,
                     structured_payload=request.corrected_payload,
                     memory_candidate_proposal=None,
+                    care_action_candidate_proposal=None,
                     evidence_text_ref=current.evidence_text_ref,
                     confidence=current.confidence,
                     speaker_role=current.speaker_role,
@@ -267,6 +297,12 @@ class CareEventService:
                 proposal=current.memory_candidate_proposal,
                 trace_id=trace_id,
                 idempotency_key=f"memory-candidate:{event.id}:{before_version}",
+            )
+        if request.decision == "VERIFY" and current.care_action_candidate_proposal is not None:
+            await self._promote_care_action_candidate(
+                event=event,
+                event_version=current,
+                proposal=current.care_action_candidate_proposal,
             )
         event_name = {
             "VERIFY": "verified",
@@ -339,5 +375,29 @@ class CareEventService:
             # A malformed stale proposal must never block the human event review.
             logger.warning(
                 "memory candidate promotion skipped",
+                extra={"care_event_id": str(event.id), "reason_code": "INVALID_PROPOSAL"},
+            )
+
+    async def _promote_care_action_candidate(
+        self,
+        *,
+        event: CareEvent,
+        event_version: CareEventVersion,
+        proposal: dict[str, Any],
+    ) -> None:
+        """Promote a valid proposal only after its source event becomes formal."""
+        try:
+            await CareActionCandidateService(
+                self._session,
+                self._tenant_id,
+            ).create_from_verified_event(
+                event=event,
+                event_version=event_version,
+                proposal_payload=proposal,
+            )
+        except (PydanticValidationError, ValidationError):
+            # A malformed or stale proposal must never roll back the human event review.
+            logger.warning(
+                "care action candidate promotion skipped",
                 extra={"care_event_id": str(event.id), "reason_code": "INVALID_PROPOSAL"},
             )

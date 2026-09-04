@@ -40,6 +40,10 @@ DATA_SCHEMA_FOR = {
     "agent-run-response.json": "agent/AgentRunResponseV1.json",
     "event-candidate-proposal.json": "agent/EventCandidateProposalV1.json",
     "memory-candidate-proposal.json": "agent/MemoryCandidateProposalV1.json",
+    "care-action-candidate-proposal.json": "agent/CareActionCandidateProposalV1.json",
+    "care-action-candidate-proposal-with-scope.json": (
+        "agent/CareActionCandidateProposalV1.json"
+    ),
     "memory-candidate-proposal-with-scope.json": (
         "agent/MemoryCandidateProposalV1.json"
     ),
@@ -90,6 +94,18 @@ DATA_SCHEMA_FOR = {
     "care-action-provenance-invalid-hash.json": "domain/CareActionV1.json",
     "care-action-create-medical.json": "domain/CreateCareActionRequestV1.json",
     "care-action-update-without-reason.json": "domain/UpdateCareActionRequestV1.json",
+    "care-action-candidate.json": "domain/CareActionCandidateV1.json",
+    "care-action-candidate-adopt.json": "domain/AdoptCareActionCandidateRequestV1.json",
+    "care-action-candidate-dismiss.json": "domain/DismissCareActionCandidateRequestV1.json",
+    "care-action-candidate-pending-with-decision.json": (
+        "domain/CareActionCandidateV1.json"
+    ),
+    "care-action-candidate-adopted-without-reason.json": (
+        "domain/CareActionCandidateV1.json"
+    ),
+    "care-action-candidate-dismiss-without-reason.json": (
+        "domain/DismissCareActionCandidateRequestV1.json"
+    ),
     "voice-ticket-issue-request.json": "domain/CreateVoiceTicketRequestV1.json",
     "voice-ticket-issued-response.json": "domain/VoiceTicketIssuedV1.json",
     "voice-ticket-consume-request.json": "domain/ConsumeVoiceTicketRequestV1.json",

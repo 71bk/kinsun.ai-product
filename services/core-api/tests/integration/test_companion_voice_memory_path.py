@@ -308,7 +308,11 @@ async def test_gated_elder_only_voice_session_unlocks_memory_proposal(
     assert evidence.verification_method == "ELDER_ONLY_VOICE_SESSION"
     assert evidence.speaker_actor_id == voice_seed.elder_actor_id
     assert str(asr_evidence.id) in evidence.evidence_reference
-    assert outputs == ["event_candidate", "memory_candidate"]
+    assert outputs == [
+        "event_candidate",
+        "care_action_candidate",
+        "memory_candidate",
+    ]
 
 
 @pytest.mark.asyncio
@@ -336,7 +340,7 @@ async def test_staff_initiated_voice_session_withholds_memory_proposal(
     assert evidence.verification_level == "UNKNOWN"
     assert evidence.verification_method == "UNVERIFIED_VOICE"
     assert evidence.speaker_actor_id is None
-    assert outputs == ["event_candidate"]
+    assert outputs == ["event_candidate", "care_action_candidate"]
 
 
 @pytest.mark.asyncio
@@ -361,7 +365,7 @@ async def test_voice_turn_without_asr_gate_evidence_withholds_memory_proposal(
     )
 
     assert evidence.verification_level == "UNKNOWN"
-    assert outputs == ["event_candidate"]
+    assert outputs == ["event_candidate", "care_action_candidate"]
 
 
 @pytest.mark.asyncio
@@ -397,4 +401,4 @@ async def test_expired_long_term_memory_consent_withholds_memory_proposal(
     )
 
     assert evidence.verification_level == "VERIFIED_ELDER"
-    assert outputs == ["event_candidate"]
+    assert outputs == ["event_candidate", "care_action_candidate"]

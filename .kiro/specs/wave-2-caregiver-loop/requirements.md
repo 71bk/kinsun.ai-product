@@ -32,4 +32,4 @@
 - 不由 Agent Tool 自動建立正式待辦；`create_care_action` 維持 blocked。
 - 不實作 arbitrary assignee、跨機構轉派、排班或通知。
 - 不把優先順序呈現成健康風險或長者排名。
-- R2 candidate lifecycle、人工採納與排除仍是後續工作，不能由 R1 的完成狀態推論已完成。
+- R2 candidate lifecycle 不屬於當時的 R1 slice；其後已以獨立 proposal/candidate boundary、人工採納與排除流程完成，不能反向視為 R1 的 Agent 自動寫入能力。

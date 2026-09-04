@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.8.0",
-    "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security, assisted Elder Session, professional Care Action and outbox APIs.",
+    "version": "1.9.0",
+    "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security, assisted Elder Session, professional Care Action, human-gated Care Action Candidate and outbox APIs.",
     "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination."
   },
   "paths": {
@@ -2587,6 +2587,285 @@
               "application/json": {
                 "schema": {
                   "$ref": "../schemas/common/CareActionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/care-action-candidates": {
+      "get": {
+        "tags": [
+          "care-action-candidates"
+        ],
+        "summary": "List Care Action Candidates",
+        "operationId": "list_care_action_candidates_api_v1_elders__elder_id__care_action_candidates_get",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "PENDING_REVIEW",
+                      "ADOPTED",
+                      "REJECTED",
+                      "EXCLUDED"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CareActionCandidateListEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/care-action-candidates/{candidate_id}/adopt": {
+      "post": {
+        "tags": [
+          "care-action-candidates"
+        ],
+        "summary": "Adopt Care Action Candidate",
+        "operationId": "adopt_care_action_candidate_api_v1_elders__elder_id__care_action_candidates__candidate_id__adopt_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/AdoptCareActionCandidateRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CareActionCandidateEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/elders/{elder_id}/care-action-candidates/{candidate_id}/dismiss": {
+      "post": {
+        "tags": [
+          "care-action-candidates"
+        ],
+        "summary": "Dismiss Care Action Candidate",
+        "operationId": "dismiss_care_action_candidate_api_v1_elders__elder_id__care_action_candidates__candidate_id__dismiss_post",
+        "parameters": [
+          {
+            "name": "elder_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Elder Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/DismissCareActionCandidateRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/CareActionCandidateEnvelopeV1.json"
                 }
               }
             }

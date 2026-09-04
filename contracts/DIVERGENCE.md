@@ -205,11 +205,20 @@ voice／voice fallback session 未通過 server-side ASR Gate 時不得呼叫 Ag
 `AgentRunResponseV1` 是 Agent Runtime 的 HTTP 回應，不是文件 10 的 Handoff Result，不能用它代替 Handoff Result。現有 result status 只有 `SUCCESS`、`SAFE_FALLBACK`、`BLOCKED`、`FAILED`，尚未涵蓋文件 10 的 `NEEDS_CLARIFICATION`、`HUMAN_REVIEW`、`NO_DATA` 等狀態。
 
 Gate 1 Event Candidate 現採 Core-owned proposal boundary：Core 以可信 scope 與
-`CARE_EVENT_EXTRACTION` Consent 推導 optional `requested_outputs=["event_candidate"]`，Runtime
+`CARE_EVENT_EXTRACTION` Consent 推導 optional `requested_outputs`（包含 `event_candidate`，並可同時要求
+`care_action_candidate`），Runtime
 只有在 Safety `ALLOW` 且 deterministic extraction 成功時回 optional
 `EventCandidateProposalV1`。Proposal 不含 actor、tenant、elder、session、consent 或逐字稿；
 Runtime 不再 register／complete Core AgentRun 或 callback Core Tool。舊 `allowed_tools` 欄位僅保留
 同 major 解析相容，canonical Core path 為空陣列。這仍不是文件 10 的正式 Handoff Result。
+
+Wave 2 R2 Care Action Candidate 現有 bounded human-gated slice：Runtime 只會在 Safety `ALLOW`、
+Event proposal 已成立且事件／行動配對在固定 allowlist 時回最多一筆 `CareActionCandidateProposalV1`；
+proposal 不含 scope 或 source ID。Core 先將 proposal 私下綁在 `CareEventVersion`，只有專業照護者
+VERIFY source event 後才重驗 medical boundary、期限與 formal source，建立獨立 `PENDING_REVIEW`
+Candidate 及 immutable exact-version provenance。只有人工 ADOPT 會再次重驗 candidate/source version 並
+呼叫既有 R1 formal create command；REJECT／EXCLUDE 只保存原因，不建立 Care Action 或 outbox。
+Agent direct formal write、任意 assignee／transfer、通知與 production extraction quality gate 仍未實作。
 
 Gate 1 Memory Candidate 現有 bounded first slice：只有 Event proposal 已產生，且 Core 另外通過
 `memory:candidate:create` 與 active `LONG_TERM_MEMORY` Consent 時，才會要求 optional

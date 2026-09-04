@@ -1,6 +1,15 @@
 'use client';
 
-import { CheckCircle, Clock, PauseCircle, Play, Prohibit, Plus, X } from '@phosphor-icons/react';
+import {
+  CheckCircle,
+  Clock,
+  PauseCircle,
+  Play,
+  Prohibit,
+  Plus,
+  Sparkle,
+  X,
+} from '@phosphor-icons/react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Skeleton } from '@/components/Skeleton';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
@@ -8,9 +17,14 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Toast } from '@/components/ui/Toast';
 import {
+  adoptCareActionCandidate,
   createCareAction,
+  dismissCareActionCandidate,
+  listCareActionCandidates,
   listCareActions,
   updateCareAction,
+  type CareActionCandidateDecision,
+  type CareActionCandidateView,
   type CareActionPriority,
   type CareActionStatus,
   type CareActionTransition,
@@ -21,7 +35,11 @@ import { ApiRequestError, type ApiConfig } from '@/lib/api/client';
 import { listEvents, type EventView } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { appendCareActionPage, mergeFormalEventPages } from './care-action-pagination';
+import {
+  appendCareActionCandidatePage,
+  appendCareActionPage,
+  mergeFormalEventPages,
+} from './care-action-pagination';
 import styles from './CareActionPanel.module.css';
 
 const ACTION_TYPES: CareActionType[] = [
@@ -69,6 +87,14 @@ function minimumDueLocal(): string {
   return new Date(due.getTime() - due.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function toLocalDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now() + 5 * 60_000) {
+    return defaultDueLocal();
+  }
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 function describeActionError(error: unknown, fallback: MessageKey): MessageKey {
   if (error instanceof ApiRequestError && error.status === 409) return 'error.versionConflict';
   if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404)) {
@@ -100,12 +126,17 @@ export function CareActionPanel({
 }: CareActionPanelProps) {
   const { t, formatDateTime } = useLocale();
   const [actions, setActions] = useState<CareActionView[]>([]);
+  const [candidates, setCandidates] = useState<CareActionCandidateView[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [candidateHasMore, setCandidateHasMore] = useState(false);
+  const [candidateNextCursor, setCandidateNextCursor] = useState<string | null>(null);
   const [formalEvents, setFormalEvents] = useState<EventView[]>([]);
   const [sourceCursors, setSourceCursors] = useState(emptySourceCursors);
   const [loading, setLoading] = useState(true);
+  const [candidatesLoading, setCandidatesLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [candidatesLoadingMore, setCandidatesLoadingMore] = useState(false);
   const [sourcesLoading, setSourcesLoading] = useState(canCreate);
   const [sourcesLoadingMore, setSourcesLoadingMore] = useState(false);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
@@ -113,6 +144,19 @@ export function CareActionPanel({
   const [showCreate, setShowCreate] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [transitionBusy, setTransitionBusy] = useState(false);
+  const [candidateBusyId, setCandidateBusyId] = useState<string | null>(null);
+  const [pendingAdoption, setPendingAdoption] = useState<{
+    candidate: CareActionCandidateView;
+    title: string;
+    dueAt: string;
+    priority: CareActionPriority;
+  } | null>(null);
+  const [pendingDismissal, setPendingDismissal] = useState<{
+    candidate: CareActionCandidateView;
+    decision: CareActionCandidateDecision;
+  } | null>(null);
+  const [dismissReasonCode, setDismissReasonCode] = useState('NOT_NEEDED');
+  const [dismissNotes, setDismissNotes] = useState('');
   const [pendingTransition, setPendingTransition] = useState<{
     action: CareActionView;
     status: Exclude<CareActionTransition, 'IN_PROGRESS'>;
@@ -136,6 +180,23 @@ export function CareActionPanel({
       setErrorKey(describeActionError(error, 'error.loadCareActionsFailed'));
     } finally {
       setLoading(false);
+    }
+  }, [apiConfig, elderId]);
+
+  const loadCandidates = useCallback(async () => {
+    setCandidatesLoading(true);
+    setCandidates([]);
+    setCandidateHasMore(false);
+    setCandidateNextCursor(null);
+    try {
+      const result = await listCareActionCandidates(apiConfig, elderId);
+      setCandidates(result.items);
+      setCandidateHasMore(result.hasMore);
+      setCandidateNextCursor(result.nextCursor);
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.loadCareActionCandidatesFailed'));
+    } finally {
+      setCandidatesLoading(false);
     }
   }, [apiConfig, elderId]);
 
@@ -177,6 +238,24 @@ export function CareActionPanel({
     }
   }
 
+  async function loadMoreCandidates() {
+    if (!candidateNextCursor || candidatesLoadingMore) return;
+    setCandidatesLoadingMore(true);
+    setErrorKey(null);
+    try {
+      const result = await listCareActionCandidates(apiConfig, elderId, {
+        cursor: candidateNextCursor,
+      });
+      setCandidates((current) => appendCareActionCandidatePage(current, result.items));
+      setCandidateHasMore(result.hasMore);
+      setCandidateNextCursor(result.nextCursor);
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.loadCareActionCandidatesFailed'));
+    } finally {
+      setCandidatesLoadingMore(false);
+    }
+  }
+
   async function loadMoreSources() {
     if (sourcesLoadingMore) return;
     const pendingStatuses = FORMAL_EVENT_STATUSES.filter((status) => sourceCursors[status]);
@@ -215,6 +294,10 @@ export function CareActionPanel({
   useEffect(() => {
     void loadActions();
   }, [loadActions]);
+
+  useEffect(() => {
+    void loadCandidates();
+  }, [loadCandidates]);
 
   useEffect(() => {
     void loadSources();
@@ -288,6 +371,75 @@ export function CareActionPanel({
     setPendingTransition({ action, status });
   }
 
+  function openAdoption(candidate: CareActionCandidateView) {
+    setPendingDismissal(null);
+    setPendingAdoption({
+      candidate,
+      title: candidate.suggestedTitle,
+      dueAt: toLocalDateTime(candidate.suggestedDueAt),
+      priority: candidate.priority,
+    });
+  }
+
+  function openDismissal(
+    candidate: CareActionCandidateView,
+    decision: CareActionCandidateDecision,
+  ) {
+    setPendingAdoption(null);
+    setDismissReasonCode('NOT_NEEDED');
+    setDismissNotes('');
+    setPendingDismissal({ candidate, decision });
+  }
+
+  async function runAdoption() {
+    if (!pendingAdoption) return;
+    const { candidate, title, dueAt, priority } = pendingAdoption;
+    setCandidateBusyId(candidate.careActionCandidateId);
+    setErrorKey(null);
+    try {
+      await adoptCareActionCandidate(apiConfig, elderId, candidate, {
+        title,
+        dueAt: new Date(dueAt).toISOString(),
+        priority,
+      });
+      setCandidates((current) =>
+        current.filter((item) => item.careActionCandidateId !== candidate.careActionCandidateId),
+      );
+      setPendingAdoption(null);
+      await loadActions();
+      setToastKey('toast.careActionCandidateAdopted');
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.adoptCareActionCandidateFailed'));
+    } finally {
+      setCandidateBusyId(null);
+    }
+  }
+
+  async function runDismissal(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!pendingDismissal) return;
+    const { candidate, decision } = pendingDismissal;
+    setCandidateBusyId(candidate.careActionCandidateId);
+    setErrorKey(null);
+    try {
+      await dismissCareActionCandidate(apiConfig, elderId, candidate, {
+        decision,
+        reasonCode: dismissReasonCode,
+        notes: dismissNotes,
+      });
+      setCandidates((current) =>
+        current.filter((item) => item.careActionCandidateId !== candidate.careActionCandidateId),
+      );
+      setPendingDismissal(null);
+      setDismissNotes('');
+      setToastKey('toast.careActionCandidateDismissed');
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.dismissCareActionCandidateFailed'));
+    } finally {
+      setCandidateBusyId(null);
+    }
+  }
+
   return (
     <div className={styles.panel}>
       <div className={styles.panelHeader}>
@@ -313,6 +465,199 @@ export function CareActionPanel({
       </div>
 
       {errorKey && <ErrorState description={t(errorKey)} />}
+
+      <section aria-labelledby="care-action-candidate-heading" className={styles.candidateSection}>
+        <div className={styles.candidateHeader}>
+          <div>
+            <div className={styles.candidateTitleRow}>
+              <Sparkle aria-hidden="true" size={22} weight="fill" />
+              <h3 id="care-action-candidate-heading">
+                {t('careAction.candidateHeading', { count: candidates.length })}
+              </h3>
+            </div>
+            <p>{t('careAction.candidateIntro')}</p>
+          </div>
+          <span className={styles.candidateBoundary}>{t('careAction.candidateBoundary')}</span>
+        </div>
+
+        {candidatesLoading ? (
+          <Skeleton rows={2} />
+        ) : candidates.length === 0 ? (
+          <p className={styles.candidateEmpty}>{t('careAction.candidateEmpty')}</p>
+        ) : (
+          <div className={styles.candidateList}>
+            {candidates.map((candidate) => {
+              const dismissing =
+                pendingDismissal?.candidate.careActionCandidateId ===
+                candidate.careActionCandidateId;
+              const busy = candidateBusyId === candidate.careActionCandidateId;
+              return (
+                <article className={styles.candidateCard} key={candidate.careActionCandidateId}>
+                  <div className={styles.cardHeader}>
+                    <div>
+                      <span className={styles.type}>
+                        {t(`careActionType.${candidate.actionType}` as MessageKey)}
+                      </span>
+                      <h4>{candidate.suggestedTitle}</h4>
+                    </div>
+                    <span className={styles.candidateBadge}>
+                      <Sparkle aria-hidden="true" size={16} weight="fill" />
+                      {t('careAction.candidateBadge')}
+                    </span>
+                  </div>
+                  <p className={styles.candidateReason}>{candidate.triggerReason}</p>
+                  <dl className={styles.details}>
+                    <div>
+                      <dt>{t('careAction.priority')}</dt>
+                      <dd>{t(`careActionPriority.${candidate.priority}` as MessageKey)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('careAction.candidateSuggestedDue')}</dt>
+                      <dd>{formatDateTime(candidate.suggestedDueAt)}</dd>
+                    </div>
+                    <div className={styles.fullWidth}>
+                      <dt>
+                        {t('careAction.candidateSources', {
+                          count: candidate.sourceEventProvenance.length,
+                        })}
+                      </dt>
+                      <dd>
+                        {candidate.sourceEventProvenance
+                          .map((source) =>
+                            t('careAction.candidateSource', {
+                              type: t(`eventType.${source.eventType}` as MessageKey),
+                              version: source.eventVersion,
+                            }),
+                          )
+                          .join(' · ')}
+                      </dd>
+                    </div>
+                  </dl>
+                  {!dismissing && (canCreate || canUpdate) && (
+                    <div className={styles.candidateActions}>
+                      {canUpdate && (
+                        <>
+                          <button
+                            className={styles.destructiveButton}
+                            disabled={candidateBusyId !== null}
+                            onClick={() => openDismissal(candidate, 'REJECT')}
+                            type="button"
+                          >
+                            {t('careAction.candidateReject')}
+                          </button>
+                          <button
+                            className={styles.secondaryButton}
+                            disabled={candidateBusyId !== null}
+                            onClick={() => openDismissal(candidate, 'EXCLUDE')}
+                            type="button"
+                          >
+                            {t('careAction.candidateExclude')}
+                          </button>
+                        </>
+                      )}
+                      {canCreate && (
+                        <button
+                          className={styles.primaryButton}
+                          disabled={candidateBusyId !== null}
+                          onClick={() => openAdoption(candidate)}
+                          type="button"
+                        >
+                          {t('careAction.candidateAdopt')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {dismissing && pendingDismissal && (
+                    <form
+                      className={styles.transitionForm}
+                      onSubmit={(event) => void runDismissal(event)}
+                    >
+                      <h4>
+                        {t(
+                          pendingDismissal.decision === 'REJECT'
+                            ? 'careAction.candidateRejectHeading'
+                            : 'careAction.candidateExcludeHeading',
+                        )}
+                      </h4>
+                      <label className={styles.field}>
+                        <span>{t('careAction.candidateDismissReason')}</span>
+                        <select
+                          disabled={busy}
+                          onChange={(event) => setDismissReasonCode(event.target.value)}
+                          value={dismissReasonCode}
+                        >
+                          <option value="NOT_NEEDED">
+                            {t('careAction.candidateReasonNotNeeded')}
+                          </option>
+                          <option value="ALREADY_HANDLED">
+                            {t('careAction.candidateReasonAlreadyHandled')}
+                          </option>
+                          <option value="SOURCE_INSUFFICIENT">
+                            {t('careAction.candidateReasonSourceInsufficient')}
+                          </option>
+                          <option value="OUT_OF_SCOPE">
+                            {t('careAction.candidateReasonOutOfScope')}
+                          </option>
+                        </select>
+                      </label>
+                      <label className={styles.field}>
+                        <span>{t('careAction.candidateDismissNotes')}</span>
+                        <textarea
+                          disabled={busy}
+                          maxLength={2000}
+                          onChange={(event) => setDismissNotes(event.target.value)}
+                          rows={3}
+                          value={dismissNotes}
+                        />
+                      </label>
+                      <div className={styles.formActions}>
+                        <button
+                          className={styles.secondaryButton}
+                          disabled={busy}
+                          onClick={() => setPendingDismissal(null)}
+                          type="button"
+                        >
+                          {t('common.cancel')}
+                        </button>
+                        <button
+                          className={
+                            pendingDismissal.decision === 'REJECT'
+                              ? styles.destructiveButton
+                              : styles.primaryButton
+                          }
+                          disabled={busy}
+                          type="submit"
+                        >
+                          {t('careAction.candidateDismissSubmit')}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </article>
+              );
+            })}
+            {candidateHasMore && (
+              <div className={styles.pagination}>
+                <p aria-live="polite" className={styles.notice}>
+                  {t('careAction.candidateListLimited')}
+                </p>
+                <button
+                  className={styles.secondaryButton}
+                  disabled={candidatesLoadingMore || candidateNextCursor === null}
+                  onClick={() => void loadMoreCandidates()}
+                  type="button"
+                >
+                  {t(
+                    candidatesLoadingMore
+                      ? 'careAction.loadingMoreCandidates'
+                      : 'careAction.loadMoreCandidates',
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {canCreate && !sourcesLoading && formalEvents.length === 0 && (
         <EmptyState
@@ -437,9 +782,7 @@ export function CareActionPanel({
                 onClick={() => void loadMoreActions()}
                 type="button"
               >
-                {t(
-                  loadingMore ? 'careAction.loadingMoreActions' : 'careAction.loadMoreActions',
-                )}
+                {t(loadingMore ? 'careAction.loadingMoreActions' : 'careAction.loadMoreActions')}
               </button>
             </div>
           )}
@@ -579,6 +922,70 @@ export function CareActionPanel({
         </div>
       )}
 
+      <ConfirmationDialog
+        busy={
+          pendingAdoption !== null &&
+          candidateBusyId === pendingAdoption.candidate.careActionCandidateId
+        }
+        confirmLabel={t('careAction.candidateAdoptConfirm')}
+        description={
+          pendingAdoption ? (
+            <div className={styles.candidateAdoptFields}>
+              <p>{t('careAction.candidateAdoptDescription')}</p>
+              <label className={styles.field}>
+                <span>{t('careAction.title')}</span>
+                <input
+                  maxLength={200}
+                  onChange={(event) =>
+                    setPendingAdoption((current) =>
+                      current ? { ...current, title: event.target.value } : null,
+                    )
+                  }
+                  required
+                  value={pendingAdoption.title}
+                />
+              </label>
+              <label className={styles.field}>
+                <span>{t('careAction.dueAt')}</span>
+                <input
+                  min={minimumDueLocal()}
+                  onChange={(event) =>
+                    setPendingAdoption((current) =>
+                      current ? { ...current, dueAt: event.target.value } : null,
+                    )
+                  }
+                  required
+                  type="datetime-local"
+                  value={pendingAdoption.dueAt}
+                />
+              </label>
+              <label className={styles.field}>
+                <span>{t('careAction.priority')}</span>
+                <select
+                  onChange={(event) =>
+                    setPendingAdoption((current) =>
+                      current
+                        ? { ...current, priority: event.target.value as CareActionPriority }
+                        : null,
+                    )
+                  }
+                  value={pendingAdoption.priority}
+                >
+                  {PRIORITIES.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {t(`careActionPriority.${priority}` as MessageKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null
+        }
+        onCancel={() => setPendingAdoption(null)}
+        onConfirm={() => void runAdoption()}
+        open={pendingAdoption !== null}
+        title={t('careAction.candidateAdoptTitle')}
+      />
       <ConfirmationDialog
         busy={transitionBusy}
         confirmLabel={t('careAction.start')}

@@ -1,0 +1,45 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "decision": {
+      "enum": [
+        "REJECT",
+        "EXCLUDE"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "expected_version": {
+      "minimum": 1,
+      "title": "Expected Version",
+      "type": "integer"
+    },
+    "reason_code": {
+      "pattern": "^[A-Z][A-Z0-9_]{2,119}$",
+      "title": "Reason Code",
+      "type": "string"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "decision",
+    "expected_version",
+    "reason_code"
+  ],
+  "title": "DismissCareActionCandidateRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/DismissCareActionCandidateRequestV1.json"
+}

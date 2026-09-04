@@ -73,6 +73,17 @@ def _memory_proposal_payload() -> dict:
     }
 
 
+def _care_action_proposal_payload() -> dict:
+    return {
+        "action_type": "CONTACT_FAMILY",
+        "suggested_title": "確認預期聯繫狀況",
+        "trigger_reason": "預期聯繫未發生，需要由照護者確認。",
+        "suggested_due_at": "2026-09-05T06:00:00Z",
+        "priority": "MEDIUM",
+        "extractor_version": "care-action-candidate-v1",
+    }
+
+
 @pytest.mark.asyncio
 async def test_agent_runtime_client_posts_contract_and_validates_response() -> None:
     captured: dict[str, object] = {}
@@ -209,6 +220,44 @@ async def test_agent_runtime_client_rejects_memory_proposal_with_core_scope() ->
     proposal = _memory_proposal_payload()
     proposal["elder_id"] = "runtime-must-not-supply-scope"
     payload["data"]["memory_candidate_proposal"] = proposal
+    client = AgentRuntimeClient(
+        base_url="https://agent-runtime:8001",
+        timeout_seconds=1,
+        credential_signer=TEST_SIGNER,
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)),
+    )
+
+    with pytest.raises(ServiceUnavailableError, match="Agent runtime is unavailable"):
+        await client.run(request_payload={}, correlation_id="correlation-1")
+
+
+@pytest.mark.asyncio
+async def test_agent_runtime_client_accepts_minimized_care_action_candidate() -> None:
+    payload = _success_payload()
+    payload["data"]["care_action_candidate_proposal"] = _care_action_proposal_payload()
+    client = AgentRuntimeClient(
+        base_url="https://agent-runtime:8001",
+        timeout_seconds=1,
+        credential_signer=TEST_SIGNER,
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)),
+    )
+
+    result = await client.run(request_payload={}, correlation_id="correlation-1")
+
+    assert result.care_action_candidate_proposal is not None
+    assert result.care_action_candidate_proposal.action_type == "CONTACT_FAMILY"
+    assert result.care_action_candidate_proposal.as_payload() == {
+        **_care_action_proposal_payload(),
+        "suggested_due_at": result.care_action_candidate_proposal.suggested_due_at,
+    }
+
+
+@pytest.mark.asyncio
+async def test_agent_runtime_client_rejects_action_candidate_with_core_scope() -> None:
+    payload = _success_payload()
+    proposal = _care_action_proposal_payload()
+    proposal["source_event_ids"] = ["runtime-must-not-supply-source"]
+    payload["data"]["care_action_candidate_proposal"] = proposal
     client = AgentRuntimeClient(
         base_url="https://agent-runtime:8001",
         timeout_seconds=1,

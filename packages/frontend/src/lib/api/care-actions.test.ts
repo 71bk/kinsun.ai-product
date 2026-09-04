@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from './client';
 import {
+  adoptCareActionCandidate,
   createCareAction,
+  dismissCareActionCandidate,
+  listCareActionCandidates,
   listCareActions,
   updateCareAction,
+  type CareActionCandidateView,
   type CareActionView,
 } from './care-actions';
 
@@ -87,6 +91,50 @@ const action: CareActionView = {
   updatedAt: '2026-09-02T01:00:00Z',
 };
 
+function coreCandidate(status = 'PENDING_REVIEW', version = 1) {
+  return {
+    care_action_candidate_id: 'synthetic-candidate',
+    elder_id: 'synthetic-elder',
+    action_type: 'CONTACT_FAMILY',
+    suggested_title: 'Confirm the missed contact',
+    trigger_reason: 'A reviewed missed-contact event needs follow-up',
+    source_event_provenance: coreAction().source_event_provenance,
+    suggested_due_at: '2026-09-05T01:00:00Z',
+    priority: 'MEDIUM',
+    status,
+    disposition_reason_code: status === 'PENDING_REVIEW' ? null : 'HUMAN_CONFIRMED',
+    disposition_notes: null,
+    decided_by_actor_id: status === 'PENDING_REVIEW' ? null : 'synthetic-worker',
+    decided_at: status === 'PENDING_REVIEW' ? null : '2026-09-04T02:00:00Z',
+    adopted_care_action_id: status === 'ADOPTED' ? 'synthetic-action' : null,
+    extractor_version: 'care-action-candidate-v1',
+    version,
+    created_at: '2026-09-04T01:00:00Z',
+    updated_at: '2026-09-04T01:00:00Z',
+  };
+}
+
+const candidate: CareActionCandidateView = {
+  careActionCandidateId: 'synthetic-candidate',
+  elderId: 'synthetic-elder',
+  actionType: 'CONTACT_FAMILY',
+  suggestedTitle: 'Confirm the missed contact',
+  triggerReason: 'A reviewed missed-contact event needs follow-up',
+  sourceEventProvenance: action.sourceEventProvenance,
+  suggestedDueAt: '2026-09-05T01:00:00Z',
+  priority: 'MEDIUM',
+  status: 'PENDING_REVIEW',
+  dispositionReasonCode: null,
+  dispositionNotes: null,
+  decidedByActorId: null,
+  decidedAt: null,
+  adoptedCareActionId: null,
+  extractorVersion: 'care-action-candidate-v1',
+  version: 1,
+  createdAt: '2026-09-04T01:00:00Z',
+  updatedAt: '2026-09-04T01:00:00Z',
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -160,5 +208,74 @@ describe('care action API boundary', () => {
     });
     expect(result.status).toBe('COMPLETED');
     expect(result.version).toBe(2);
+  });
+
+  it('lists pending AI candidates separately from formal actions', async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      success({ items: [coreCandidate()], next_cursor: 'candidate-next', has_more: true }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await listCareActionCandidates(config, 'synthetic-elder');
+
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url).toContain('/care-action-candidates?');
+    expect(url).not.toContain('/care-actions?');
+    expect(result).toEqual({ items: [candidate], nextCursor: 'candidate-next', hasMore: true });
+  });
+
+  it('adopts with the candidate version and no caller-controlled source ids', async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      success(coreCandidate('ADOPTED', 2)),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await adoptCareActionCandidate(config, 'synthetic-elder', candidate);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/care-action-candidates/synthetic-candidate/adopt');
+    expect(new Headers(init?.headers).get('Idempotency-Key')).toMatch(
+      'care-action-candidate-adopt-',
+    );
+    expect(JSON.parse(String(init?.body))).toEqual({
+      expected_version: 1,
+      title: null,
+      due_at: null,
+      priority: null,
+    });
+    expect(String(init?.body)).not.toContain('source_event');
+    expect(result.status).toBe('ADOPTED');
+  });
+
+  it('rejects or excludes with a mandatory auditable reason', async () => {
+    const rejected = {
+      ...coreCandidate('REJECTED', 2),
+      disposition_reason_code: 'NOT_NEEDED',
+      adopted_care_action_id: null,
+    };
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      success(rejected),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await dismissCareActionCandidate(config, 'synthetic-elder', candidate, {
+      decision: 'REJECT',
+      reasonCode: 'NOT_NEEDED',
+      notes: 'Already contacted',
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/care-action-candidates/synthetic-candidate/dismiss');
+    expect(new Headers(init?.headers).get('Idempotency-Key')).toMatch(
+      'care-action-candidate-dismiss-',
+    );
+    expect(JSON.parse(String(init?.body))).toEqual({
+      decision: 'REJECT',
+      expected_version: 1,
+      reason_code: 'NOT_NEEDED',
+      notes: 'Already contacted',
+    });
+    expect(result.status).toBe('REJECTED');
+    expect(result.adoptedCareActionId).toBeNull();
   });
 });

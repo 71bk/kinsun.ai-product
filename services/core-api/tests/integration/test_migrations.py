@@ -63,11 +63,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 65
+_TOTAL_HEAD_TABLE_COUNT = 67
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "b8d0f2a4c6e7"
+_HEAD_REVISION = "d1f3a5c7e9b0"
 
 
 def _get_alembic_config() -> Config:
@@ -553,6 +553,30 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
                 'MEAL', '2026-09-02T09:00:00Z', 'VERIFIED',
                 :snapshot_sha256, 'care-event-provenance.v1')
         """,
+        """
+        INSERT INTO eldercare_ai.care_action_candidate
+            (care_action_candidate_id, elder_id, tenant_id, action_type,
+             suggested_title, trigger_reason, suggested_due_at, priority,
+             status, extractor_version, version)
+        VALUES ('89000000-0000-4000-8000-000000000001',
+                '83000000-0000-4000-8000-000000000001',
+                '81000000-0000-4000-8000-000000000001',
+                'FOLLOW_UP', 'Synthetic candidate', 'Verified source requires follow-up',
+                '2026-09-05T09:00:00Z', 'MEDIUM', 'PENDING_REVIEW',
+                'care-action-candidate-v1', 1)
+        """,
+        """
+        INSERT INTO eldercare_ai.care_action_candidate_event_provenance
+            (care_action_candidate_event_provenance_id, care_action_candidate_id,
+             source_order, event_id, event_version_id, event_version, event_type,
+             event_time, source_status, snapshot_sha256, snapshot_schema_version)
+        VALUES ('8a000000-0000-4000-8000-000000000001',
+                '89000000-0000-4000-8000-000000000001', 0,
+                '84000000-0000-4000-8000-000000000001',
+                '85000000-0000-4000-8000-000000000001', 1,
+                'MEAL', '2026-09-02T09:00:00Z', 'VERIFIED',
+                :snapshot_sha256, 'care-event-provenance.v1')
+        """,
     ]
 
     async with test_engine.connect() as conn:
@@ -603,6 +627,29 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
                         {"changed": "b" * 64},
                     )
 
+            with pytest.raises(DBAPIError, match="candidate source provenance is immutable"):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.care_action_candidate_event_provenance "
+                            "SET snapshot_sha256 = :changed "
+                            "WHERE care_action_candidate_event_provenance_id = "
+                            "'8a000000-0000-4000-8000-000000000001'"
+                        ),
+                        {"changed": "b" * 64},
+                    )
+
+            with pytest.raises(IntegrityError):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.care_action_candidate "
+                            "SET disposition_reason_code = 'NOT_NEEDED' "
+                            "WHERE care_action_candidate_id = "
+                            "'89000000-0000-4000-8000-000000000001'"
+                        )
+                    )
+
             with pytest.raises(DBAPIError):
                 async with conn.begin_nested():
                     await conn.execute(
@@ -625,6 +672,22 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
             assert str(provenance.event_version_id) == "85000000-0000-4000-8000-000000000001"
             assert provenance.event_version == 1
             assert provenance.snapshot_sha256 == "a" * 64
+
+            candidate_provenance = (
+                await conn.execute(
+                    text(
+                        "SELECT event_version_id, event_version, snapshot_sha256 "
+                        "FROM eldercare_ai.care_action_candidate_event_provenance "
+                        "WHERE care_action_candidate_id = "
+                        "'89000000-0000-4000-8000-000000000001'"
+                    )
+                )
+            ).one()
+            assert str(candidate_provenance.event_version_id) == (
+                "85000000-0000-4000-8000-000000000001"
+            )
+            assert candidate_provenance.event_version == 1
+            assert candidate_provenance.snapshot_sha256 == "a" * 64
         finally:
             await transaction.rollback()
 
@@ -810,6 +873,8 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
         "elder_enrollment",
         "elder_care_profile_entry",
         "assisted_elder_session",
+        "care_action_candidate",
+        "care_action_candidate_event_provenance",
     } <= set(tables)
 
 

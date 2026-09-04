@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/common/CareActionCandidateListEnvelopeV1.json",
+  "title": "CareActionCandidateListEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta"
+  ],
+  "properties": {
+    "data": {
+      "$ref": "https://kinsun.ai/contracts/schemas/domain/CareActionCandidateListV1.json"
+    },
+    "meta": {
+      "$ref": "https://kinsun.ai/contracts/schemas/common/ResponseMetaV1.json"
+    }
+  }
+}

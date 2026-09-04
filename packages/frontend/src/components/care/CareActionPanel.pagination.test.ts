@@ -4,7 +4,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  adoptCareActionCandidate,
+  dismissCareActionCandidate,
+  listCareActionCandidates,
   listCareActions,
+  type CareActionCandidateListView,
+  type CareActionCandidateView,
   type CareActionListView,
   type CareActionView,
 } from '@/lib/api/care-actions';
@@ -13,10 +18,15 @@ import { LocaleProvider } from '@/lib/i18n/locale-context';
 import { CareActionPanel } from './CareActionPanel';
 
 vi.mock('@/lib/api/care-actions', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api/care-actions')>(
-    '@/lib/api/care-actions',
-  );
-  return { ...actual, listCareActions: vi.fn() };
+  const actual =
+    await vi.importActual<typeof import('@/lib/api/care-actions')>('@/lib/api/care-actions');
+  return {
+    ...actual,
+    adoptCareActionCandidate: vi.fn(),
+    dismissCareActionCandidate: vi.fn(),
+    listCareActionCandidates: vi.fn(),
+    listCareActions: vi.fn(),
+  };
 });
 
 vi.mock('@/lib/api/events', async () => {
@@ -25,6 +35,9 @@ vi.mock('@/lib/api/events', async () => {
 });
 
 const listCareActionsMock = vi.mocked(listCareActions);
+const listCareActionCandidatesMock = vi.mocked(listCareActionCandidates);
+const adoptCareActionCandidateMock = vi.mocked(adoptCareActionCandidate);
+const dismissCareActionCandidateMock = vi.mocked(dismissCareActionCandidate);
 const listEventsMock = vi.mocked(listEvents);
 
 function action(id: string, title: string): CareActionView {
@@ -65,24 +78,49 @@ function sourceEvent(id: string, status: EventView['status']): EventView {
   };
 }
 
-function renderPanel() {
+function candidate(id = 'candidate-1'): CareActionCandidateView {
+  return {
+    careActionCandidateId: id,
+    elderId: 'synthetic-elder',
+    actionType: 'CONTACT_FAMILY',
+    suggestedTitle: '確認預期聯繫狀況',
+    triggerReason: '預期聯繫未發生，需要由照護者確認。',
+    sourceEventProvenance: [],
+    suggestedDueAt: '2026-09-05T09:00:00+08:00',
+    priority: 'MEDIUM',
+    status: 'PENDING_REVIEW',
+    dispositionReasonCode: null,
+    dispositionNotes: null,
+    decidedByActorId: null,
+    decidedAt: null,
+    adoptedCareActionId: null,
+    extractorVersion: 'care-action-candidate-v1',
+    version: 1,
+    createdAt: '2026-09-04T08:00:00+08:00',
+    updatedAt: '2026-09-04T08:00:00+08:00',
+  };
+}
+
+function renderPanel({ canCreate = true, canUpdate = false } = {}) {
   return render(
-    createElement(
-      LocaleProvider,
-      {
-        initialLocale: 'zh-Hant',
-        children: createElement(CareActionPanel, {
-          apiConfig: { apiBaseUrl: '/backend/core' },
-          elderId: 'synthetic-elder',
-          canCreate: true,
-          canUpdate: false,
-        }),
-      },
-    ),
+    createElement(LocaleProvider, {
+      initialLocale: 'zh-Hant',
+      children: createElement(CareActionPanel, {
+        apiConfig: { apiBaseUrl: '/backend/core' },
+        elderId: 'synthetic-elder',
+        canCreate,
+        canUpdate,
+      }),
+    }),
   );
 }
 
 beforeEach(() => {
+  listCareActionCandidatesMock.mockResolvedValue({
+    items: [],
+    nextCursor: null,
+    hasMore: false,
+  } satisfies CareActionCandidateListView);
   listCareActionsMock.mockImplementation(async (_config, _elderId, options = {}) => {
     if (options.cursor === 'actions-next') {
       return {
@@ -157,5 +195,84 @@ describe('CareActionPanel pagination', () => {
       'synthetic-elder',
       { status: 'CORRECTED', cursor: 'corrected-next' },
     );
+  });
+
+  it('adopts an AI candidate only after explicit confirmation and refreshes formal actions', async () => {
+    const pending = candidate();
+    listCareActionCandidatesMock.mockResolvedValueOnce({
+      items: [pending],
+      nextCursor: null,
+      hasMore: false,
+    });
+    adoptCareActionCandidateMock.mockResolvedValue({
+      ...pending,
+      status: 'ADOPTED',
+      adoptedCareActionId: 'action-created-from-candidate',
+      dispositionReasonCode: 'HUMAN_CONFIRMED',
+      decidedByActorId: 'synthetic-worker',
+      decidedAt: '2026-09-04T09:00:00+08:00',
+      version: 2,
+    });
+    renderPanel({ canCreate: true, canUpdate: true });
+    await screen.findByText('確認預期聯繫狀況');
+
+    fireEvent.click(screen.getByRole('button', { name: '檢視並採用' }));
+    fireEvent.click(screen.getByRole('button', { name: '採用並建立待辦' }));
+
+    await waitFor(() => expect(adoptCareActionCandidateMock).toHaveBeenCalledTimes(1));
+    expect(adoptCareActionCandidateMock).toHaveBeenCalledWith(
+      { apiBaseUrl: '/backend/core' },
+      'synthetic-elder',
+      pending,
+      expect.objectContaining({
+        title: '確認預期聯繫狀況',
+        priority: 'MEDIUM',
+        dueAt: expect.any(String),
+      }),
+    );
+    await waitFor(() => expect(screen.queryByText('確認預期聯繫狀況')).toBeNull());
+    expect(listCareActionsMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('records a reject reason without refreshing or creating a formal action', async () => {
+    const pending = candidate();
+    listCareActionCandidatesMock.mockResolvedValueOnce({
+      items: [pending],
+      nextCursor: null,
+      hasMore: false,
+    });
+    dismissCareActionCandidateMock.mockResolvedValue({
+      ...pending,
+      status: 'REJECTED',
+      dispositionReasonCode: 'ALREADY_HANDLED',
+      dispositionNotes: '已完成聯繫',
+      decidedByActorId: 'synthetic-worker',
+      decidedAt: '2026-09-04T09:00:00+08:00',
+      version: 2,
+    });
+    renderPanel({ canCreate: true, canUpdate: true });
+    await screen.findByText('確認預期聯繫狀況');
+    const actionCallsBeforeDismissal = listCareActionsMock.mock.calls.length;
+
+    fireEvent.click(screen.getByRole('button', { name: '拒絕' }));
+    fireEvent.change(screen.getByLabelText('原因'), { target: { value: 'ALREADY_HANDLED' } });
+    fireEvent.change(screen.getByLabelText('補充說明（選填）'), {
+      target: { value: '已完成聯繫' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認不採用' }));
+
+    await waitFor(() => expect(dismissCareActionCandidateMock).toHaveBeenCalledTimes(1));
+    expect(dismissCareActionCandidateMock).toHaveBeenCalledWith(
+      { apiBaseUrl: '/backend/core' },
+      'synthetic-elder',
+      pending,
+      {
+        decision: 'REJECT',
+        reasonCode: 'ALREADY_HANDLED',
+        notes: '已完成聯繫',
+      },
+    );
+    expect(adoptCareActionCandidateMock).not.toHaveBeenCalled();
+    expect(listCareActionsMock).toHaveBeenCalledTimes(actionCallsBeforeDismissal);
   });
 });

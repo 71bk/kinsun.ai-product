@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from agent_runtime.agents.care_action_candidate.agent import CareActionCandidateAgent
 from agent_runtime.agents.companion.agent import CompanionAgent
 from agent_runtime.agents.event_extractor.agent import EventExtractorAgent
 from agent_runtime.agents.event_extractor.models import EventExtractionContext
@@ -17,6 +18,7 @@ from agent_runtime.context.builder import (
 from agent_runtime.contracts.models import (
     AgentRunRequest,
     AgentRunResponse,
+    CareActionCandidateProposal,
     ContextManifest,
     EventCandidateProposal,
     MemoryCandidateProposal,
@@ -65,6 +67,7 @@ class AgentOrchestrator:
         self.max_tool_rounds = max_tool_rounds
         self.max_total_tools = max_total_tools
         self.companion = CompanionAgent(provider)
+        self.care_action_candidate = CareActionCandidateAgent()
         self.event_extractor = EventExtractorAgent()
         self.memory_extractor = MemoryExtractorAgent()
         self.safety_evaluator = SafetyEvaluator()
@@ -225,6 +228,24 @@ class AgentOrchestrator:
             if isinstance(memory_extraction, MemoryCandidateProposal):
                 memory_candidate_proposal = memory_extraction
 
+        care_action_candidate_proposal: CareActionCandidateProposal | None = None
+        if (
+            safety_result.decision == SafetyDecision.ALLOW
+            and "care_action_candidate" in request.requested_outputs
+            and event_candidate_proposal is not None
+        ):
+            try:
+                action_extraction = await budget.wait_for(
+                    lambda: self.care_action_candidate.run(
+                        request,
+                        source_event=event_candidate_proposal,
+                    )
+                )
+            except ValueError:
+                action_extraction = None
+            if isinstance(action_extraction, CareActionCandidateProposal):
+                care_action_candidate_proposal = action_extraction
+
         return self._response(
             request=request,
             trace_id=trace_id,
@@ -235,6 +256,7 @@ class AgentOrchestrator:
             reply_text=reply_text,
             event_candidate_proposal=event_candidate_proposal,
             memory_candidate_proposal=memory_candidate_proposal,
+            care_action_candidate_proposal=care_action_candidate_proposal,
         )
 
     @staticmethod
@@ -249,6 +271,7 @@ class AgentOrchestrator:
         reply_text: str,
         event_candidate_proposal: EventCandidateProposal | None = None,
         memory_candidate_proposal: MemoryCandidateProposal | None = None,
+        care_action_candidate_proposal: CareActionCandidateProposal | None = None,
     ) -> AgentRunResponse:
         return AgentRunResponse(
             request_id=request.request_id,
@@ -264,4 +287,5 @@ class AgentOrchestrator:
             reason_codes=list(dict.fromkeys(safety_result.reason_codes)),
             event_candidate_proposal=event_candidate_proposal,
             memory_candidate_proposal=memory_candidate_proposal,
+            care_action_candidate_proposal=care_action_candidate_proposal,
         )

@@ -134,6 +134,17 @@
           "type": "null"
         }
       ]
+    },
+    "care_action_candidate_proposal": {
+      "description": "Optional untrusted follow-up proposal. Core may persist only a separate Candidate after a formal source-event review; Runtime cannot create a formal Care Action.",
+      "oneOf": [
+        {
+          "$ref": "https://kinsun.ai/contracts/schemas/agent/CareActionCandidateProposalV1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   }
 }

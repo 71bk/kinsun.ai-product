@@ -1,0 +1,280 @@
+{
+  "$defs": {
+    "CareActionCandidateResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "care_action_candidate_id": {
+          "format": "uuid",
+          "title": "Care Action Candidate Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "action_type": {
+          "enum": [
+            "CONTACT_ELDER",
+            "CONTACT_FAMILY",
+            "CONFIRM_INFORMATION",
+            "INVITE_ACTIVITY",
+            "FOLLOW_UP",
+            "OTHER"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "suggested_title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Suggested Title",
+          "type": "string"
+        },
+        "trigger_reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Trigger Reason",
+          "type": "string"
+        },
+        "source_event_provenance": {
+          "items": {
+            "$ref": "#/$defs/CareActionSourceEventProvenance"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Source Event Provenance",
+          "type": "array"
+        },
+        "suggested_due_at": {
+          "format": "date-time",
+          "title": "Suggested Due At",
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "LOW",
+            "MEDIUM"
+          ],
+          "title": "Priority",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "PENDING_REVIEW",
+            "ADOPTED",
+            "REJECTED",
+            "EXCLUDED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "disposition_reason_code": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z][A-Z0-9_]{2,119}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Disposition Reason Code"
+        },
+        "disposition_notes": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Disposition Notes"
+        },
+        "decided_by_actor_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Decided By Actor Id"
+        },
+        "decided_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Decided At"
+        },
+        "adopted_care_action_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adopted Care Action Id"
+        },
+        "extractor_version": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Extractor Version",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "care_action_candidate_id",
+        "elder_id",
+        "action_type",
+        "suggested_title",
+        "trigger_reason",
+        "source_event_provenance",
+        "suggested_due_at",
+        "priority",
+        "status",
+        "disposition_reason_code",
+        "disposition_notes",
+        "decided_by_actor_id",
+        "decided_at",
+        "adopted_care_action_id",
+        "extractor_version",
+        "version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "CareActionCandidateResponse",
+      "type": "object"
+    },
+    "CareActionSourceEventProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_version_id": {
+          "format": "uuid",
+          "title": "Event Version Id",
+          "type": "string"
+        },
+        "event_version": {
+          "minimum": 1,
+          "title": "Event Version",
+          "type": "integer"
+        },
+        "event_type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Event Type",
+          "type": "string"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event Time"
+        },
+        "source_status": {
+          "enum": [
+            "VERIFIED",
+            "CORRECTED"
+          ],
+          "title": "Source Status",
+          "type": "string"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        },
+        "snapshot_schema_version": {
+          "const": "care-event-provenance.v1",
+          "title": "Snapshot Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "event_version_id",
+        "event_version",
+        "event_type",
+        "event_time",
+        "source_status",
+        "snapshot_sha256",
+        "snapshot_schema_version"
+      ],
+      "title": "CareActionSourceEventProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CareActionCandidateResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Cursor"
+    },
+    "has_more": {
+      "title": "Has More",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "next_cursor",
+    "has_more"
+  ],
+  "title": "CareActionCandidateListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CareActionCandidateListV1.json"
+}

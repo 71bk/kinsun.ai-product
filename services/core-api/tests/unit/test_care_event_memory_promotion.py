@@ -46,7 +46,10 @@ async def test_verify_promotes_private_proposal_after_event_becomes_verified(
         current_version=1,
         consent_version=2,
     )
-    version = SimpleNamespace(memory_candidate_proposal=_proposal())
+    version = SimpleNamespace(
+        memory_candidate_proposal=_proposal(),
+        care_action_candidate_proposal=None,
+    )
     repository = SimpleNamespace(
         get_current_version=AsyncMock(return_value=version),
         add_review=MagicMock(),
@@ -151,3 +154,69 @@ async def test_revoked_memory_gate_does_not_block_event_review_or_write_candidat
     )
 
     create_candidate.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_verify_promotes_action_proposal_only_after_event_becomes_formal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = uuid4()
+    actor = _actor(tenant_id)
+    event = SimpleNamespace(
+        id=uuid4(),
+        elder_id=uuid4(),
+        status="NEEDS_REVIEW",
+        current_version=1,
+        consent_version=2,
+    )
+    proposal = {
+        "action_type": "CONTACT_FAMILY",
+        "suggested_title": "確認預期聯繫狀況",
+        "trigger_reason": "預期聯繫未發生，需要由照護者確認。",
+        "suggested_due_at": "2026-09-05T06:00:00+00:00",
+        "priority": "MEDIUM",
+        "extractor_version": "care-action-candidate-v1",
+    }
+    version = SimpleNamespace(
+        memory_candidate_proposal=None,
+        care_action_candidate_proposal=proposal,
+    )
+    repository = SimpleNamespace(
+        get_current_version=AsyncMock(return_value=version),
+        add_review=MagicMock(),
+    )
+    session = MagicMock()
+    session.flush = AsyncMock()
+    service = CareEventService(session, tenant_id)
+    service._events = repository
+    promote = AsyncMock()
+    service._promote_care_action_candidate = promote
+    monkeypatch.setattr(
+        care_event_service,
+        "ConsentService",
+        MagicMock(
+            return_value=SimpleNamespace(
+                require_active=AsyncMock(return_value=SimpleNamespace(version=2))
+            )
+        ),
+    )
+    monkeypatch.setattr(care_event_service, "write_outbox_entry", AsyncMock())
+
+    await service.review(
+        event=event,
+        actor_context=actor,
+        request=ReviewCareEventRequest(
+            decision="VERIFY",
+            reason_code="SOURCE_CONFIRMED",
+            expected_version=1,
+        ),
+        trace_id="trace-action-candidate-review",
+        idempotency_key="action-candidate-review",
+    )
+
+    assert event.status == "VERIFIED"
+    promote.assert_awaited_once_with(
+        event=event,
+        event_version=version,
+        proposal=proposal,
+    )

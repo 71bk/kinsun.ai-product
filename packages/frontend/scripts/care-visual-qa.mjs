@@ -240,6 +240,39 @@ const CARE_ACTIONS = [
     updated_at: '2026-09-02T03:00:00Z',
   },
 ];
+const CARE_ACTION_CANDIDATES = [
+  {
+    care_action_candidate_id: 'care-action-candidate-001',
+    elder_id: ELDER_ID,
+    action_type: 'CONTACT_FAMILY',
+    suggested_title: '確認預期聯繫狀況',
+    trigger_reason: '原始事件顯示預期聯繫未發生，需要由照護者確認。',
+    source_event_provenance: [
+      {
+        event_id: 'event-contact-missed-001',
+        event_version_id: 'event-contact-missed-version-001',
+        event_version: 1,
+        event_type: 'EXPECTED_CONTACT_MISSED',
+        event_time: '2026-09-04T08:00:00+08:00',
+        source_status: 'VERIFIED',
+        snapshot_sha256: '4bf412083cbb49702795878dd8ffdf2c17f7b3e3476a87e867eb96449d8b3c0e',
+        snapshot_schema_version: 'care-event-provenance.v1',
+      },
+    ],
+    suggested_due_at: '2026-09-05T10:00:00+08:00',
+    priority: 'MEDIUM',
+    status: 'PENDING_REVIEW',
+    disposition_reason_code: null,
+    disposition_notes: null,
+    decided_by_actor_id: null,
+    decided_at: null,
+    adopted_care_action_id: null,
+    extractor_version: 'care-action-candidate-v1',
+    version: 1,
+    created_at: '2026-09-04T10:00:00+08:00',
+    updated_at: '2026-09-04T10:00:00+08:00',
+  },
+];
 const ASSIGNMENTS = [
   {
     assignment_id: 'assignment-confirmed-001',
@@ -362,6 +395,14 @@ async function installContractFixtures(context) {
     }
     if (path === `/api/v1/elders/${ELDER_ID}/care-actions`) {
       await json(route, { items: CARE_ACTIONS, next_cursor: null, has_more: false });
+      return;
+    }
+    if (path === `/api/v1/elders/${ELDER_ID}/care-action-candidates`) {
+      await json(route, {
+        items: CARE_ACTION_CANDIDATES,
+        next_cursor: null,
+        has_more: false,
+      });
       return;
     }
     if (path === `/api/v1/elders/${ELDER_ID}/memory-candidates`) {
@@ -492,6 +533,23 @@ for (const viewport of VIEWPORTS.filter(
       await page.locator('#elder-tab-actions').click();
       await settle(page, '追蹤下次聯繫安排');
       await capture(page, viewport, locale, 'elder-care-actions', problems);
+
+      const candidateCard = page
+        .locator('section[aria-labelledby="care-action-candidate-heading"] article')
+        .first();
+      await candidateCard.getByRole('button').nth(2).click();
+      await page.waitForSelector('dialog[open]');
+      await page.screenshot({
+        path: join(OUT, `elder-care-action-candidate-adopt__${viewport.name}__${locale}.png`),
+        fullPage: false,
+      });
+      await page.keyboard.press('Escape');
+      await page.waitForSelector('dialog[open]', { state: 'detached' });
+
+      await candidateCard.getByRole('button').first().click();
+      await candidateCard.locator('form').waitFor();
+      await capture(page, viewport, locale, 'elder-care-action-candidate-reject', problems);
+      await candidateCard.locator('form button[type="button"]').click();
 
       await page.locator('#elder-panel-actions button[aria-expanded]').click();
       await page.locator('#elder-panel-actions input[name="title"]').waitFor({ timeout: 20_000 });

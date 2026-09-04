@@ -46,7 +46,7 @@ EVENT_PROPOSAL_RESTRICTED_KEYS = TOOL_RESTRICTED_PARAMETER_KEYS | {
 
 SchemaVersion = Literal["1.0.0"]
 ToolName = Annotated[str, Field(pattern=TOOL_NAME_REGEX)]
-RequestedOutput = Literal["event_candidate", "memory_candidate"]
+RequestedOutput = Literal["event_candidate", "memory_candidate", "care_action_candidate"]
 EvidenceReference = Annotated[
     str,
     Field(min_length=45, max_length=45, pattern=EVIDENCE_REF_REGEX),
@@ -63,6 +63,12 @@ UUIDField = Annotated[UUID, Field(strict=False)]
 
 def _now_utc() -> datetime:
     return datetime.now(tz=UTC)
+
+
+def _aware(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("datetime must include a timezone offset")
+    return value
 
 
 class ContractBaseModel(BaseModel):
@@ -288,7 +294,7 @@ class AgentRunRequest(ContractBaseModel):
         max_length=20,
     )
     allowed_tools: list[ToolName] = Field(default_factory=list)
-    requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=2)
+    requested_outputs: list[RequestedOutput] = Field(default_factory=list, max_length=3)
     max_steps: int = Field(default=3, ge=1, le=20)
     latency_budget_ms: int = Field(ge=100, le=300000)
 
@@ -367,6 +373,26 @@ class MemoryCandidateProposal(ContractBaseModel):
     extractor_version: str = Field(min_length=1, max_length=80)
 
 
+class CareActionCandidateProposal(ContractBaseModel):
+    """Untrusted non-medical follow-up proposal; Core owns sources and state."""
+
+    action_type: Literal[
+        "CONTACT_ELDER",
+        "CONTACT_FAMILY",
+        "CONFIRM_INFORMATION",
+        "INVITE_ACTIVITY",
+        "FOLLOW_UP",
+        "OTHER",
+    ]
+    suggested_title: str = Field(min_length=1, max_length=200)
+    trigger_reason: str = Field(min_length=1, max_length=2000)
+    suggested_due_at: Annotated[datetime, Field(strict=False)]
+    priority: Literal["LOW", "MEDIUM"]
+    extractor_version: str = Field(min_length=1, max_length=80)
+
+    _validate_suggested_due_at = field_validator("suggested_due_at")(_aware)
+
+
 class AgentRunResponse(ContractBaseModel):
     schema_version: SchemaVersion = Field(default=SCHEMA_VERSION)
     request_id: str = Field(pattern=ID_REGEX, min_length=2, max_length=128)
@@ -382,3 +408,4 @@ class AgentRunResponse(ContractBaseModel):
     reason_codes: list[str] = Field(default_factory=list)
     event_candidate_proposal: EventCandidateProposal | None = None
     memory_candidate_proposal: MemoryCandidateProposal | None = None
+    care_action_candidate_proposal: CareActionCandidateProposal | None = None
