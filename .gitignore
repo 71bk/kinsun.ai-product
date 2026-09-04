@@ -35,6 +35,8 @@ Thumbs.db
 # 本機產物
 *.log
 docker/postgres/data/
+# ADR 0019 retired the historical CDK workspace. Never recommit synthesized output.
+infra/cdk.out/
 .rag-work/
 rag-embeddings-*.jsonl
 

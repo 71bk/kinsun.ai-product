@@ -369,8 +369,16 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
   API／frontend／outbox 已帶出安全的 provenance 欄位，legacy action 則相容地回空陣列。
 - 驗證結果：Core `1055 passed`、Care Action 聚焦測試 `42 passed`、frontend `288 passed` 加
   typecheck／lint／production build、Ruff lint／format、static 與 live contract 均通過。已新增 PostgreSQL
-  migration integration case，覆蓋 correction、來源 rebinding、provenance mutation 與 event deletion；本機
-  Docker engine 因 Windows service 權限無法啟動，須由下一次 Gate 1 或 disposable PostgreSQL 補跑該 case。
+  migration integration case，覆蓋 correction、來源 rebinding、provenance mutation 與 event deletion。
+  2026-09-04 已將 development database 由 `e2f4a6c8b013` additive upgrade 至 `a7c9e1f3b5d6`，並讀回
+  current head。直接推到 `main` 的 Gate 1 run `33819817535` 雖通過 Core 1055 個 unit tests，卻在一般
+  API integration tests 之後、destructive migration suite 尚未產出第一個結果時停止進度，最終觸發
+  30 分鐘 timeout；日誌沒有留下精確 blocker，時序符合 request transaction 與 schema DDL 的 lock wait。
+  後續 jobs 因此未執行。Gate 1 現改為先以獨立 pytest process 執行 `test_migrations.py`，再以第二個
+  process 跑其餘 integration tests，隔離 request fixture 與 destructive schema lifecycle。
+  本機已重跑 Core `1055 passed`、Agent `498 passed`、Speech `91 passed`、RAG `324 passed`、Frontend
+  `288 passed`、四服務 Ruff、Frontend typecheck／lint／build、三支 contract 驗證與五輪 synthetic
+  Core-to-Agent 證據；隔離後的 PostgreSQL migration suite 仍須由下一次 branch PR Gate 1 確認。
 
 ### M-11 — Outbox 缺少 production publisher/recovery/DLQ
 
