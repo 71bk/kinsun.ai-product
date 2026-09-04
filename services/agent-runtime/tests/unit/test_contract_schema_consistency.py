@@ -11,6 +11,7 @@ from agent_runtime.common.enums import RiskLevel, SafetyDecision
 from agent_runtime.contracts.models import (
     AgentRunRequest,
     AgentRunResponse,
+    CareActionCandidateProposal,
     ContextManifest,
     EventCandidateProposal,
     HandoffEnvelope,
@@ -88,6 +89,10 @@ def test_every_schema_file_is_a_valid_draft_2020_12_schema(path):
         ("agent-run-response.json", "agent/AgentRunResponseV1.json"),
         ("event-candidate-proposal.json", "agent/EventCandidateProposalV1.json"),
         ("memory-candidate-proposal.json", "agent/MemoryCandidateProposalV1.json"),
+        (
+            "care-action-candidate-proposal.json",
+            "agent/CareActionCandidateProposalV1.json",
+        ),
     ],
 )
 def test_valid_examples_pass_json_schema(example_name, schema_name):
@@ -101,6 +106,7 @@ def test_valid_examples_pass_json_schema(example_name, schema_name):
         ("agent-run-response.json", AgentRunResponse),
         ("event-candidate-proposal.json", EventCandidateProposal),
         ("memory-candidate-proposal.json", MemoryCandidateProposal),
+        ("care-action-candidate-proposal.json", CareActionCandidateProposal),
     ],
 )
 def test_valid_examples_pass_pydantic_models(example_name, model):
@@ -192,6 +198,16 @@ def test_memory_candidate_proposal_rejects_core_owned_scope() -> None:
         MemoryCandidateProposal.model_validate(payload)
 
 
+def test_care_action_candidate_proposal_rejects_core_owned_scope() -> None:
+    payload = load_example(
+        EXAMPLE_DIR / "invalid" / "care-action-candidate-proposal-with-scope.json"
+    )
+    with pytest.raises(ValidationError):
+        validator_for("agent/CareActionCandidateProposalV1.json").validate(payload)
+    with pytest.raises(PydanticValidationError):
+        CareActionCandidateProposal.model_validate(payload)
+
+
 def test_context_manifest_model_output_matches_schema():
     manifest = make_context_manifest()
     validator_for("agent/ContextManifestV1.json").validate(json.loads(manifest.model_dump_json()))
@@ -243,6 +259,7 @@ def test_handoff_envelope_model_output_matches_schema():
         (AgentRunResponse, "agent/AgentRunResponseV1.json"),
         (EventCandidateProposal, "agent/EventCandidateProposalV1.json"),
         (MemoryCandidateProposal, "agent/MemoryCandidateProposalV1.json"),
+        (CareActionCandidateProposal, "agent/CareActionCandidateProposalV1.json"),
         (ContextManifest, "agent/ContextManifestV1.json"),
         (SafetyEvaluation, "agent/SafetyEvaluationV1.json"),
         (HandoffEnvelope, "agent/HandoffEnvelopeV1.json"),

@@ -36,9 +36,13 @@ from app.schemas.assisted_elder import (  # noqa: E402
     IssuedAssistedSessionResponse,
 )
 from app.schemas.care_action import (  # noqa: E402
+    AdoptCareActionCandidateRequest,
+    CareActionCandidateListResponse,
+    CareActionCandidateResponse,
     CareActionListResponse,
     CareActionResponse,
     CreateCareActionRequest,
+    DismissCareActionCandidateRequest,
     UpdateCareActionRequest,
 )
 from app.schemas.care_event import (  # noqa: E402
@@ -141,6 +145,10 @@ EXPORTS = {
         "UpdateCareActionRequestV1": UpdateCareActionRequest,
         "CareActionV1": CareActionResponse,
         "CareActionListV1": CareActionListResponse,
+        "AdoptCareActionCandidateRequestV1": AdoptCareActionCandidateRequest,
+        "DismissCareActionCandidateRequestV1": DismissCareActionCandidateRequest,
+        "CareActionCandidateV1": CareActionCandidateResponse,
+        "CareActionCandidateListV1": CareActionCandidateListResponse,
         "CreateCareEventCandidateRequestV1": CreateCareEventCandidateRequest,
         "ReviewCareEventRequestV1": ReviewCareEventRequest,
         "CareEventV1": CareEventResponse,
@@ -209,6 +217,8 @@ SUCCESS_ENVELOPES = {
     "SpeechSynthesisPrincipalEnvelopeV1": "domain/SpeechSynthesisPrincipalV1.json",
     "CareActionEnvelopeV1": "domain/CareActionV1.json",
     "CareActionListEnvelopeV1": "domain/CareActionListV1.json",
+    "CareActionCandidateEnvelopeV1": "domain/CareActionCandidateV1.json",
+    "CareActionCandidateListEnvelopeV1": "domain/CareActionCandidateListV1.json",
     "CareEventEnvelopeV1": "domain/CareEventV1.json",
     "CareEventReviewEnvelopeV1": "domain/CareEventReviewV1.json",
     "CareEventListEnvelopeV1": "domain/CareEventListV1.json",
@@ -449,6 +459,63 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                         "properties": {
                             "due_at": {"type": "string", "format": "date-time"}
                         },
+                    },
+                },
+            ]
+        )
+    elif title == "AdoptCareActionCandidateRequestV1":
+        title_schema = properties["title"]["anyOf"][0]
+        title_schema["pattern"] = r".*\S.*"
+    elif title == "CareActionCandidateV1":
+        schema.setdefault("allOf", []).extend(
+            [
+                {
+                    "if": {
+                        "properties": {"status": {"const": "PENDING_REVIEW"}},
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "properties": {
+                            field: {"type": "null"}
+                            for field in (
+                                "disposition_reason_code",
+                                "disposition_notes",
+                                "decided_by_actor_id",
+                                "decided_at",
+                                "adopted_care_action_id",
+                            )
+                        }
+                    },
+                },
+                {
+                    "if": {
+                        "properties": {"status": {"const": "ADOPTED"}},
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "properties": {
+                            "disposition_reason_code": {"type": "string"},
+                            "decided_by_actor_id": {"type": "string", "format": "uuid"},
+                            "decided_at": {"type": "string", "format": "date-time"},
+                            "adopted_care_action_id": {
+                                "type": "string",
+                                "format": "uuid",
+                            },
+                        }
+                    },
+                },
+                {
+                    "if": {
+                        "properties": {"status": {"enum": ["REJECTED", "EXCLUDED"]}},
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "properties": {
+                            "disposition_reason_code": {"type": "string"},
+                            "decided_by_actor_id": {"type": "string", "format": "uuid"},
+                            "decided_at": {"type": "string", "format": "date-time"},
+                            "adopted_care_action_id": {"type": "null"},
+                        }
                     },
                 },
             ]

@@ -15,6 +15,7 @@ from app.adapters.service_identity import (
     canonical_json_bytes,
 )
 from app.core.agent_runtime import (
+    AgentCareActionCandidateProposal,
     AgentEventCandidateProposal,
     AgentMemoryCandidateProposal,
     AgentRunResult,
@@ -150,6 +151,26 @@ class _AgentMemoryCandidateProposalPayload(BaseModel):
     extractor_version: str = Field(min_length=1, max_length=80)
 
 
+class _AgentCareActionCandidateProposalPayload(BaseModel):
+    """Untrusted proposal; Core binds formal sources and owns adoption."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action_type: Literal[
+        "CONTACT_ELDER",
+        "CONTACT_FAMILY",
+        "CONFIRM_INFORMATION",
+        "INVITE_ACTIVITY",
+        "FOLLOW_UP",
+        "OTHER",
+    ]
+    suggested_title: str = Field(min_length=1, max_length=200)
+    trigger_reason: str = Field(min_length=1, max_length=2000)
+    suggested_due_at: datetime
+    priority: Literal["LOW", "MEDIUM"]
+    extractor_version: str = Field(min_length=1, max_length=80)
+
+
 class _AgentRunPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -167,6 +188,7 @@ class _AgentRunPayload(BaseModel):
     reason_codes: list[str]
     event_candidate_proposal: _AgentEventCandidateProposalPayload | None = None
     memory_candidate_proposal: _AgentMemoryCandidateProposalPayload | None = None
+    care_action_candidate_proposal: _AgentCareActionCandidateProposalPayload | None = None
 
 
 class _AgentResponseMeta(BaseModel):
@@ -254,6 +276,7 @@ class AgentRuntimeClient:
         data = envelope.data
         event_proposal = data.event_candidate_proposal
         memory_proposal = data.memory_candidate_proposal
+        care_action_proposal = data.care_action_candidate_proposal
         return AgentRunResult(
             schema_version=data.schema_version,
             request_id=data.request_id,
@@ -275,6 +298,11 @@ class AgentRuntimeClient:
             memory_candidate_proposal=(
                 AgentMemoryCandidateProposal(**memory_proposal.model_dump())
                 if memory_proposal is not None
+                else None
+            ),
+            care_action_candidate_proposal=(
+                AgentCareActionCandidateProposal(**care_action_proposal.model_dump())
+                if care_action_proposal is not None
                 else None
             ),
         )

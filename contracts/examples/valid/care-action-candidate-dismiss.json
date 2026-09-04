@@ -1,0 +1,8 @@
+{
+  "data": {
+    "decision": "REJECT",
+    "expected_version": 1,
+    "reason_code": "ALREADY_CONTACTED",
+    "notes": "照護人員已於稍早完成聯繫。"
+  }
+}

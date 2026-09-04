@@ -6,6 +6,9 @@
 
 .panelHeader,
 .cardHeader,
+.candidateHeader,
+.candidateTitleRow,
+.candidateActions,
 .transitionActions,
 .formActions,
 .createToggle,
@@ -17,7 +20,8 @@
 }
 
 .panelHeader,
-.cardHeader {
+.cardHeader,
+.candidateHeader {
   justify-content: space-between;
 }
 
@@ -25,6 +29,12 @@
 .panelHeader p,
 .card h3,
 .card p,
+.candidateHeader h3,
+.candidateHeader p,
+.candidateCard h4,
+.candidateCard p,
+.transitionForm h4,
+.candidateAdoptFields p,
 .createForm h3 {
   margin: 0;
 }
@@ -33,6 +43,86 @@
   max-width: 70ch;
   margin-block-start: var(--space-1);
   color: var(--color-muted-foreground);
+}
+
+.candidateSection {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--card-pad);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-weak);
+}
+
+.candidateHeader {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.candidateTitleRow,
+.candidateActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.candidateTitleRow {
+  color: var(--color-primary-text);
+}
+
+.candidateHeader p,
+.candidateEmpty {
+  margin-block-start: var(--space-1);
+  color: var(--color-muted-foreground);
+}
+
+.candidateBoundary,
+.candidateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--state-review-fg);
+  border-radius: var(--radius-sm);
+  background: var(--state-review-bg);
+  color: var(--state-review-fg);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.candidateList {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.candidateCard {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--state-review-fg);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.candidateReason {
+  line-height: 1.55;
+}
+
+.candidateActions {
+  justify-content: flex-end;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--color-border);
+}
+
+.candidateAdoptFields {
+  display: grid;
+  gap: var(--space-3);
+  min-width: min(32rem, 75vw);
 }
 
 .createToggle,
@@ -255,6 +345,9 @@
 
 @media (max-width: 47.99rem) {
   .panelHeader,
+  .candidateHeader,
+  .candidateBoundary,
+  .candidateActions,
   .createToggle,
   .formGrid,
   .details,
@@ -265,6 +358,10 @@
   .secondaryButton,
   .destructiveButton {
     width: 100%;
+  }
+
+  .candidateAdoptFields {
+    min-width: 0;
   }
 
   .formGrid,

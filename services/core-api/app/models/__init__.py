@@ -12,6 +12,10 @@ from app.models.app_session import AppSession  # noqa: F401
 from app.models.asr_gate import AsrGateEvidence  # noqa: F401
 from app.models.assisted_elder_session import AssistedElderSession  # noqa: F401
 from app.models.care_action import CareAction  # noqa: F401
+from app.models.care_action_candidate import (  # noqa: F401
+    CareActionCandidate,
+    CareActionCandidateEventProvenance,
+)
 from app.models.care_assignment import CareAssignment  # noqa: F401
 from app.models.care_event import CareEvent, CareEventVersion, ReviewDecision  # noqa: F401
 from app.models.care_profile import ElderCareProfileEntry  # noqa: F401

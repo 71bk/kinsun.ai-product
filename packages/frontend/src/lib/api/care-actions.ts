@@ -11,6 +11,8 @@ export type CareActionType =
 export type CareActionPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type CareActionStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'POSTPONED' | 'CANCELLED';
 export type CareActionTransition = Exclude<CareActionStatus, 'OPEN'>;
+export type CareActionCandidateStatus = 'PENDING_REVIEW' | 'ADOPTED' | 'REJECTED' | 'EXCLUDED';
+export type CareActionCandidateDecision = 'REJECT' | 'EXCLUDE';
 
 interface CoreCareActionSourceEventProvenance {
   event_id: string;
@@ -45,6 +47,33 @@ interface CoreCareAction {
 
 interface CoreCareActionList {
   items: CoreCareAction[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
+interface CoreCareActionCandidate {
+  care_action_candidate_id: string;
+  elder_id: string;
+  action_type: CareActionType;
+  suggested_title: string;
+  trigger_reason: string;
+  source_event_provenance: CoreCareActionSourceEventProvenance[];
+  suggested_due_at: string;
+  priority: Exclude<CareActionPriority, 'HIGH'>;
+  status: CareActionCandidateStatus;
+  disposition_reason_code: string | null;
+  disposition_notes: string | null;
+  decided_by_actor_id: string | null;
+  decided_at: string | null;
+  adopted_care_action_id: string | null;
+  extractor_version: string;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CoreCareActionCandidateList {
+  items: CoreCareActionCandidate[];
   next_cursor: string | null;
   has_more: boolean;
 }
@@ -84,8 +113,40 @@ export interface CareActionListView {
   hasMore: boolean;
 }
 
+export interface CareActionCandidateView {
+  careActionCandidateId: string;
+  elderId: string;
+  actionType: CareActionType;
+  suggestedTitle: string;
+  triggerReason: string;
+  sourceEventProvenance: CareActionView['sourceEventProvenance'];
+  suggestedDueAt: string;
+  priority: Exclude<CareActionPriority, 'HIGH'>;
+  status: CareActionCandidateStatus;
+  dispositionReasonCode: string | null;
+  dispositionNotes: string | null;
+  decidedByActorId: string | null;
+  decidedAt: string | null;
+  adoptedCareActionId: string | null;
+  extractorVersion: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CareActionCandidateListView {
+  items: CareActionCandidateView[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export interface ListCareActionsOptions {
   statuses?: CareActionStatus[];
+  cursor?: string;
+}
+
+export interface ListCareActionCandidatesOptions {
+  statuses?: CareActionCandidateStatus[];
   cursor?: string;
 }
 
@@ -105,6 +166,31 @@ export interface UpdateCareActionInput {
   dueAt?: string;
 }
 
+export interface AdoptCareActionCandidateInput {
+  title?: string;
+  dueAt?: string;
+  priority?: CareActionPriority;
+}
+
+export interface DismissCareActionCandidateInput {
+  decision: CareActionCandidateDecision;
+  reasonCode: string;
+  notes?: string;
+}
+
+function toSourceEventProvenance(source: CoreCareActionSourceEventProvenance) {
+  return {
+    eventId: source.event_id,
+    eventVersionId: source.event_version_id,
+    eventVersion: source.event_version,
+    eventType: source.event_type,
+    eventTime: source.event_time,
+    sourceStatus: source.source_status,
+    snapshotSha256: source.snapshot_sha256,
+    snapshotSchemaVersion: source.snapshot_schema_version,
+  };
+}
+
 function toCareActionView(action: CoreCareAction): CareActionView {
   return {
     careActionId: action.care_action_id,
@@ -114,16 +200,7 @@ function toCareActionView(action: CoreCareAction): CareActionView {
     description: action.description,
     triggerReason: action.trigger_reason,
     relatedEventIds: action.related_event_ids,
-    sourceEventProvenance: (action.source_event_provenance ?? []).map((source) => ({
-      eventId: source.event_id,
-      eventVersionId: source.event_version_id,
-      eventVersion: source.event_version,
-      eventType: source.event_type,
-      eventTime: source.event_time,
-      sourceStatus: source.source_status,
-      snapshotSha256: source.snapshot_sha256,
-      snapshotSchemaVersion: source.snapshot_schema_version,
-    })),
+    sourceEventProvenance: (action.source_event_provenance ?? []).map(toSourceEventProvenance),
     assigneeActorId: action.assignee_actor_id,
     dueAt: action.due_at,
     priority: action.priority,
@@ -133,6 +210,29 @@ function toCareActionView(action: CoreCareAction): CareActionView {
     version: action.version,
     createdAt: action.created_at,
     updatedAt: action.updated_at,
+  };
+}
+
+function toCareActionCandidateView(candidate: CoreCareActionCandidate): CareActionCandidateView {
+  return {
+    careActionCandidateId: candidate.care_action_candidate_id,
+    elderId: candidate.elder_id,
+    actionType: candidate.action_type,
+    suggestedTitle: candidate.suggested_title,
+    triggerReason: candidate.trigger_reason,
+    sourceEventProvenance: candidate.source_event_provenance.map(toSourceEventProvenance),
+    suggestedDueAt: candidate.suggested_due_at,
+    priority: candidate.priority,
+    status: candidate.status,
+    dispositionReasonCode: candidate.disposition_reason_code,
+    dispositionNotes: candidate.disposition_notes,
+    decidedByActorId: candidate.decided_by_actor_id,
+    decidedAt: candidate.decided_at,
+    adoptedCareActionId: candidate.adopted_care_action_id,
+    extractorVersion: candidate.extractor_version,
+    version: candidate.version,
+    createdAt: candidate.created_at,
+    updatedAt: candidate.updated_at,
   };
 }
 
@@ -175,6 +275,71 @@ export async function createCareAction(
     }),
   });
   return toCareActionView(result);
+}
+
+export async function listCareActionCandidates(
+  config: ApiConfig,
+  elderId: string,
+  options: ListCareActionCandidatesOptions = {},
+): Promise<CareActionCandidateListView> {
+  const params = new URLSearchParams({ limit: '100' });
+  for (const status of options.statuses ?? []) params.append('status', status);
+  if (options.cursor) params.set('cursor', options.cursor);
+  const result = await apiFetch<CoreCareActionCandidateList>(
+    config,
+    `/api/v1/elders/${elderId}/care-action-candidates?${params.toString()}`,
+  );
+  return {
+    items: result.items.map(toCareActionCandidateView),
+    nextCursor: result.next_cursor,
+    hasMore: result.has_more,
+  };
+}
+
+export async function adoptCareActionCandidate(
+  config: ApiConfig,
+  elderId: string,
+  candidate: CareActionCandidateView,
+  input: AdoptCareActionCandidateInput = {},
+): Promise<CareActionCandidateView> {
+  const result = await apiFetch<CoreCareActionCandidate>(
+    config,
+    `/api/v1/elders/${elderId}/care-action-candidates/${candidate.careActionCandidateId}/adopt`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('care-action-candidate-adopt') },
+      body: JSON.stringify({
+        expected_version: candidate.version,
+        title: input.title?.trim() || null,
+        due_at: input.dueAt ?? null,
+        priority: input.priority ?? null,
+      }),
+    },
+  );
+  return toCareActionCandidateView(result);
+}
+
+export async function dismissCareActionCandidate(
+  config: ApiConfig,
+  elderId: string,
+  candidate: CareActionCandidateView,
+  input: DismissCareActionCandidateInput,
+): Promise<CareActionCandidateView> {
+  const result = await apiFetch<CoreCareActionCandidate>(
+    config,
+    `/api/v1/elders/${elderId}/care-action-candidates/${candidate.careActionCandidateId}/dismiss`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': createIdempotencyKey('care-action-candidate-dismiss') },
+      body: JSON.stringify({
+        decision: input.decision,
+        expected_version: candidate.version,
+        reason_code: input.reasonCode,
+        notes: input.notes?.trim() || null,
+      }),
+    },
+  );
+  return toCareActionCandidateView(result);
 }
 
 export async function updateCareAction(

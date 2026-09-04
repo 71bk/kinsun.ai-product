@@ -58,6 +58,28 @@ class AgentMemoryCandidateProposal:
 
 
 @dataclass(frozen=True)
+class AgentCareActionCandidateProposal:
+    """Minimized untrusted action proposal with no Core-owned source facts."""
+
+    action_type: str
+    suggested_title: str
+    trigger_reason: str
+    suggested_due_at: datetime
+    priority: str
+    extractor_version: str
+
+    def as_payload(self) -> dict[str, object]:
+        return {
+            "action_type": self.action_type,
+            "suggested_title": self.suggested_title,
+            "trigger_reason": self.trigger_reason,
+            "suggested_due_at": self.suggested_due_at,
+            "priority": self.priority,
+            "extractor_version": self.extractor_version,
+        }
+
+
+@dataclass(frozen=True)
 class AgentRunResult:
     """Transport-neutral result consumed by Core application services."""
 
@@ -75,6 +97,7 @@ class AgentRunResult:
     reason_codes: list[str]
     event_candidate_proposal: AgentEventCandidateProposal | None = None
     memory_candidate_proposal: AgentMemoryCandidateProposal | None = None
+    care_action_candidate_proposal: AgentCareActionCandidateProposal | None = None
 
 
 class AgentRuntimePort(Protocol):

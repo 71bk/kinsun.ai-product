@@ -135,6 +135,31 @@ async def test_create_rejects_cross_scope_or_unreviewed_source_events() -> None:
 
 
 @pytest.mark.asyncio
+async def test_candidate_adoption_rejects_source_event_version_drift() -> None:
+    actor = _actor()
+    session = SimpleNamespace(flush=AsyncMock())
+    service = CareActionService(session, actor.tenant_id)
+    request = _create_request()
+    event, event_version = _formal_source(request.related_event_ids[0])
+    event_version.version = 2
+    service._events = SimpleNamespace(
+        list_formal_current_versions_for_update=AsyncMock(return_value=[(event, event_version)])
+    )
+
+    with pytest.raises(ConflictError, match="candidate source event changed"):
+        await service.create(
+            elder_id=uuid4(),
+            actor_context=actor,
+            request=request,
+            trace_id="trace-care-action-stale-candidate",
+            idempotency_key="idem-care-action-stale-candidate",
+            expected_source_versions={event.id: 1},
+        )
+
+    session.flush.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_create_rejects_non_professional_actor_before_writing() -> None:
     actor = _actor("FAMILY_MEMBER")
     session = SimpleNamespace(flush=AsyncMock())

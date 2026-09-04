@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { CareActionView } from '@/lib/api/care-actions';
+import type { CareActionCandidateView, CareActionView } from '@/lib/api/care-actions';
 import type { EventView } from '@/lib/api/events';
-import { appendCareActionPage, mergeFormalEventPages } from './care-action-pagination';
+import {
+  appendCareActionCandidatePage,
+  appendCareActionPage,
+  mergeFormalEventPages,
+} from './care-action-pagination';
 
 function action(id: string, version = 1): CareActionView {
   return {
@@ -41,6 +45,29 @@ function sourceEvent(id: string, eventDate: string): EventView {
   };
 }
 
+function candidate(id: string, version = 1): CareActionCandidateView {
+  return {
+    careActionCandidateId: id,
+    elderId: 'synthetic-elder',
+    actionType: 'CONTACT_FAMILY',
+    suggestedTitle: `Synthetic candidate ${id}`,
+    triggerReason: 'Synthetic reviewed event',
+    sourceEventProvenance: [],
+    suggestedDueAt: '2026-09-05T01:00:00Z',
+    priority: 'MEDIUM',
+    status: 'PENDING_REVIEW',
+    dispositionReasonCode: null,
+    dispositionNotes: null,
+    decidedByActorId: null,
+    decidedAt: null,
+    adoptedCareActionId: null,
+    extractorVersion: 'care-action-candidate-v1',
+    version,
+    createdAt: '2026-09-04T01:00:00Z',
+    updatedAt: '2026-09-04T01:00:00Z',
+  };
+}
+
 describe('Care Action cursor page merging', () => {
   it('keeps every item beyond the first 100 and de-duplicates a page boundary', () => {
     const firstPage = Array.from({ length: 100 }, (_, index) => action(`action-${index + 1}`));
@@ -72,5 +99,19 @@ describe('Care Action cursor page merging', () => {
     expect(merged).toHaveLength(101);
     expect(new Set(merged.map((item) => item.eventId)).size).toBe(101);
     expect(merged.some((item) => item.eventId === 'event-101')).toBe(true);
+  });
+
+  it('keeps every pending candidate across opaque cursor pages', () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) =>
+      candidate(`candidate-${index + 1}`),
+    );
+    const merged = appendCareActionCandidatePage(firstPage, [
+      candidate('candidate-100', 2),
+      candidate('candidate-101'),
+    ]);
+
+    expect(merged).toHaveLength(101);
+    expect(merged.at(-1)?.careActionCandidateId).toBe('candidate-101');
+    expect(merged.find((item) => item.careActionCandidateId === 'candidate-100')?.version).toBe(2);
   });
 });

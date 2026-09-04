@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/agent/CareActionCandidateProposalV1.json",
+  "title": "CareActionCandidateProposalV1",
+  "description": "Untrusted non-medical follow-up proposal. Core supplies tenant, elder, actor and formal source-event bindings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "action_type",
+    "suggested_title",
+    "trigger_reason",
+    "suggested_due_at",
+    "priority",
+    "extractor_version"
+  ],
+  "properties": {
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "CONTACT_ELDER",
+        "CONTACT_FAMILY",
+        "CONFIRM_INFORMATION",
+        "INVITE_ACTIVITY",
+        "FOLLOW_UP",
+        "OTHER"
+      ]
+    },
+    "suggested_title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "trigger_reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "suggested_due_at": { "type": "string", "format": "date-time" },
+    "priority": { "type": "string", "enum": ["LOW", "MEDIUM"] },
+    "extractor_version": { "type": "string", "minLength": 1, "maxLength": 80 }
+  }
+}

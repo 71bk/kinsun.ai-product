@@ -198,9 +198,9 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["event_candidate", "memory_candidate"]
+        "enum": ["event_candidate", "memory_candidate", "care_action_candidate"]
       },
-      "maxItems": 2,
+      "maxItems": 3,
       "uniqueItems": true,
       "default": []
     },

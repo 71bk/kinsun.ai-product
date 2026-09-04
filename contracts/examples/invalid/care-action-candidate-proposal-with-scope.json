@@ -1,0 +1,12 @@
+{
+  "_why_invalid": "Runtime proposals must not supply Core-owned elder or source-event scope.",
+  "data": {
+    "action_type": "CONTACT_FAMILY",
+    "suggested_title": "確認預期聯繫狀況",
+    "trigger_reason": "原始事件顯示預期聯繫未發生，需要由照護者確認。",
+    "suggested_due_at": "2026-09-05T06:00:00Z",
+    "priority": "MEDIUM",
+    "extractor_version": "care-action-candidate-v1",
+    "elder_id": "runtime-must-not-supply-scope"
+  }
+}

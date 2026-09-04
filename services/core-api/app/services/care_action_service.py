@@ -50,6 +50,7 @@ class CareActionService:
         request: CreateCareActionRequest,
         trace_id: str,
         idempotency_key: str,
+        expected_source_versions: dict[UUID, int] | None = None,
     ) -> CareAction:
         self.require_professional(actor_context)
         assignee_id = request.assignee_actor_id or actor_context.actor_id
@@ -71,6 +72,11 @@ class CareActionService:
             elder_id,
             request.related_event_ids,
         )
+        if expected_source_versions is not None and any(
+            expected_source_versions.get(event.id) != event_version.version
+            for event, event_version in source_events
+        ):
+            raise ConflictError("Care Action candidate source event changed")
 
         action = CareAction(
             tenant_id=self._tenant_id,

@@ -495,7 +495,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 以下項目不是目前第一 slice 的單檔 bug，但若要宣稱 production-complete，仍需排程：
 
 - [ ] Real login、browser、voice deployment E2E。
-- [ ] Wave 2 R2 candidate Care Action。
+- [x] Wave 2 R2 candidate Care Action：proposal-only Agent path、VERIFY promotion、immutable Candidate provenance、人工 adopt/reject/exclude 與零副作用拒絕流程已完成 repository implementation。
 - [ ] Agent-created Care Action、任意 assignee/transfer、通知流程。
 - [ ] WebSocket speech event、AI Care Action、notification/email、Agent handoff、Graph projection contracts。
 - [ ] Governed RAG embedding rebuild、approved release、rollback、evaluation evidence、production integration。

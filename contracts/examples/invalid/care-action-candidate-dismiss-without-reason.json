@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "Reject and exclude decisions require an auditable reason code.",
+  "data": {
+    "decision": "EXCLUDE",
+    "expected_version": 1
+  }
+}

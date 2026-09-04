@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -31,6 +32,8 @@ async def _create(
     *,
     proposal: dict,
     speaker: SourceSpeakerEvidence,
+    action_proposal: dict | None = None,
+    event_type: str = "ACTIVITY",
 ):
     tenant_id = uuid4()
     elder_id = uuid4()
@@ -70,7 +73,7 @@ async def _create(
         request=CreateCareEventCandidateRequest(
             source_type="CONVERSATION_SESSION",
             source_id=source_session_id,
-            event_type="ACTIVITY",
+            event_type=event_type,
             structured_payload={"activity": "breakfast"},
             confidence_band="HIGH",
             extractor_version="event-extractor-v1",
@@ -78,6 +81,7 @@ async def _create(
         trace_id="trace-care-event-memory-policy",
         idempotency_key="care-event-memory-policy",
         memory_candidate_proposal=proposal,
+        care_action_candidate_proposal=action_proposal,
         source_speaker_evidence=speaker,
     )
     return versions[0]
@@ -134,3 +138,59 @@ async def test_high_or_unverified_speaker_proposal_is_discarded_before_persisten
         ),
     )
     assert version.memory_candidate_proposal is None
+
+
+def _action_proposal(**overrides: object) -> dict[str, object]:
+    values: dict[str, object] = {
+        "action_type": "CONTACT_FAMILY",
+        "suggested_title": "確認預期聯繫狀況",
+        "trigger_reason": "預期聯繫未發生，需要由照護者確認。",
+        "suggested_due_at": datetime.now(UTC) + timedelta(days=1),
+        "priority": "MEDIUM",
+        "extractor_version": "care-action-candidate-v1",
+    }
+    values.update(overrides)
+    return values
+
+
+@pytest.mark.asyncio
+async def test_safe_action_proposal_is_kept_private_with_event_version(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    proposal = _action_proposal()
+    version = await _create(
+        monkeypatch,
+        proposal=_proposal(),
+        action_proposal=proposal,
+        event_type="EXPECTED_CONTACT_MISSED",
+        speaker=SourceSpeakerEvidence(
+            verification_level="VERIFIED_ELDER",
+            evidence_reference="conversation-session:test:authenticated-text",
+            speaker_role="ELDER",
+            speaker_actor_id=uuid4(),
+            verification_method="AUTHENTICATED_TEXT",
+        ),
+    )
+
+    assert version.care_action_candidate_proposal == proposal
+
+
+@pytest.mark.asyncio
+async def test_medical_action_proposal_is_discarded_before_persistence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    version = await _create(
+        monkeypatch,
+        proposal=_proposal(),
+        action_proposal=_action_proposal(trigger_reason="請直接替長者停藥"),
+        event_type="EXPECTED_CONTACT_MISSED",
+        speaker=SourceSpeakerEvidence(
+            verification_level="VERIFIED_ELDER",
+            evidence_reference="conversation-session:test:authenticated-text",
+            speaker_role="ELDER",
+            speaker_actor_id=uuid4(),
+            verification_method="AUTHENTICATED_TEXT",
+        ),
+    )
+
+    assert version.care_action_candidate_proposal is None

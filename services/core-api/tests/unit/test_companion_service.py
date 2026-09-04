@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import NAMESPACE_URL, uuid4, uuid5
@@ -9,6 +10,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 import pytest
 
 from app.core.agent_runtime import (
+    AgentCareActionCandidateProposal,
     AgentEventCandidateProposal,
     AgentMemoryCandidateProposal,
     AgentRunResult,
@@ -74,6 +76,17 @@ def _memory_proposal() -> AgentMemoryCandidateProposal:
     )
 
 
+def _care_action_proposal() -> AgentCareActionCandidateProposal:
+    return AgentCareActionCandidateProposal(
+        action_type="CONTACT_FAMILY",
+        suggested_title="聯絡家屬確認近況",
+        trigger_reason="長者提到預期聯絡未完成。",
+        suggested_due_at=datetime(2030, 1, 2, 9, tzinfo=UTC),
+        priority="MEDIUM",
+        extractor_version="care-action-candidate-v1",
+    )
+
+
 def _runtime_result(
     *,
     request_id: str,
@@ -81,6 +94,7 @@ def _runtime_result(
     agent_run_id: str,
     proposal: AgentEventCandidateProposal | None = None,
     memory_proposal: AgentMemoryCandidateProposal | None = None,
+    care_action_proposal: AgentCareActionCandidateProposal | None = None,
     decision: str = "ALLOW",
     result_status: str = "SUCCESS",
 ) -> AgentRunResult:
@@ -106,6 +120,7 @@ def _runtime_result(
         reason_codes=[decision],
         event_candidate_proposal=proposal,
         memory_candidate_proposal=memory_proposal,
+        care_action_candidate_proposal=care_action_proposal,
     )
 
 
@@ -243,6 +258,7 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request_payload["allowed_tools"] == []
         assert request_payload["requested_outputs"] == [
             "event_candidate",
+            "care_action_candidate",
             "memory_candidate",
         ]
         assert request_payload["confirmed_memories"] == []
@@ -265,6 +281,7 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
             agent_run_id=request_payload["agent_run_id"],
             proposal=_proposal(),
             memory_proposal=_memory_proposal(),
+            care_action_proposal=_care_action_proposal(),
         )
 
     async def persist_candidate(**kwargs):
@@ -274,6 +291,7 @@ async def test_run_turn_uses_core_owned_run_and_persists_proposal_after_completi
         assert request.event_type.value == "MEAL"
         assert request.review_requirement == "REQUIRED"
         assert kwargs["memory_candidate_proposal"] == _memory_proposal().as_payload()
+        assert kwargs["care_action_candidate_proposal"] == _care_action_proposal().as_payload()
         speaker = kwargs["source_speaker_evidence"]
         assert speaker.verification_level == "VERIFIED_ELDER"
         assert speaker.speaker_actor_id == actor.actor_id
@@ -351,8 +369,8 @@ async def test_untrusted_speaker_never_requests_memory_proposal(
         ),
     )
 
-    assert family_outputs == ["event_candidate"]
-    assert voice_outputs == ["event_candidate"]
+    assert family_outputs == ["event_candidate", "care_action_candidate"]
+    assert voice_outputs == ["event_candidate", "care_action_candidate"]
     assert authorize.await_count == 2
     assert require_active.await_count == 2
 
@@ -384,7 +402,11 @@ async def test_gated_elder_only_voice_turn_requests_memory_proposal(
         ),
     )
 
-    assert outputs == ["event_candidate", "memory_candidate"]
+    assert outputs == [
+        "event_candidate",
+        "care_action_candidate",
+        "memory_candidate",
+    ]
 
 
 @pytest.mark.asyncio

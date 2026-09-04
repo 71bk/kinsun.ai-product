@@ -255,6 +255,32 @@ def test_runtime_privilege_contract_denies_sensitive_mutation() -> None:
     assert RUNTIME_TABLE_PRIVILEGES["context_manifest"] == ("SELECT",)
     assert RUNTIME_TABLE_PRIVILEGES["knowledge_source"] == ("SELECT",)
     assert RUNTIME_TABLE_PRIVILEGES["knowledge_source_version"] == ("SELECT",)
+    assert RUNTIME_TABLE_PRIVILEGES["care_action_candidate"] == ("SELECT", "INSERT")
+    assert RUNTIME_TABLE_PRIVILEGES["care_action_candidate_event_provenance"] == (
+        "SELECT",
+        "INSERT",
+    )
+    assert set(RUNTIME_COLUMN_UPDATE_PRIVILEGES["care_action_candidate"]) == {
+        "status",
+        "disposition_reason_code",
+        "disposition_notes",
+        "decided_by_actor_id",
+        "decided_at",
+        "adopted_care_action_id",
+        "version",
+        "updated_at",
+    }
+    assert {
+        "tenant_id",
+        "elder_id",
+        "action_type",
+        "suggested_title",
+        "trigger_reason",
+        "suggested_due_at",
+        "priority",
+        "extractor_version",
+        "created_at",
+    } == set(PROTECTED_COLUMN_UPDATE_DENY_MATRIX["care_action_candidate"])
 
 
 def test_shared_schema_nonce_claims_are_insert_and_purge_only() -> None:

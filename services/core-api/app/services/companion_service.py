@@ -160,7 +160,7 @@ class CompanionService:
             )
         except NotFoundError:
             return []
-        requested_outputs = ["event_candidate"]
+        requested_outputs = ["event_candidate", "care_action_candidate"]
         if speaker_evidence.verification_level not in TRUSTED_SPEAKER_LEVELS:
             return requested_outputs
         try:
@@ -475,6 +475,7 @@ class CompanionService:
 
         proposal = runtime_result.event_candidate_proposal
         memory_proposal = runtime_result.memory_candidate_proposal
+        care_action_proposal = runtime_result.care_action_candidate_proposal
         if (
             proposal is not None
             and "event_candidate" in requested_outputs
@@ -513,6 +514,12 @@ class CompanionService:
                     memory_candidate_proposal=(
                         memory_proposal.as_payload()
                         if memory_proposal is not None and "memory_candidate" in requested_outputs
+                        else None
+                    ),
+                    care_action_candidate_proposal=(
+                        care_action_proposal.as_payload()
+                        if care_action_proposal is not None
+                        and "care_action_candidate" in requested_outputs
                         else None
                     ),
                     source_speaker_evidence=speaker_evidence,

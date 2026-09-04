@@ -66,6 +66,8 @@ MODEL_FILES = {
     "AssistedCompanionTurnRequest": "domain/AssistedCompanionTurnRequestV1.json",
     "CreateCareActionRequest": "domain/CreateCareActionRequestV1.json",
     "UpdateCareActionRequest": "domain/UpdateCareActionRequestV1.json",
+    "AdoptCareActionCandidateRequest": "domain/AdoptCareActionCandidateRequestV1.json",
+    "DismissCareActionCandidateRequest": "domain/DismissCareActionCandidateRequestV1.json",
     "CreateCareEventCandidateRequest": "domain/CreateCareEventCandidateRequestV1.json",
     "ReviewCareEventRequest": "domain/ReviewCareEventRequestV1.json",
     "CreateMemoryCandidateRequest": "domain/CreateMemoryCandidateRequestV1.json",
@@ -201,6 +203,17 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "update_care_action_api_v1_elders__elder_id__care_actions__care_action_id__patch": (
         "CareActionEnvelopeV1"
     ),
+    "list_care_action_candidates_api_v1_elders__elder_id__care_action_candidates_get": (
+        "CareActionCandidateListEnvelopeV1"
+    ),
+    (
+        "adopt_care_action_candidate_api_v1_elders__elder_id__care_action_candidates"
+        "__candidate_id__adopt_post"
+    ): "CareActionCandidateEnvelopeV1",
+    (
+        "dismiss_care_action_candidate_api_v1_elders__elder_id__care_action_candidates"
+        "__candidate_id__dismiss_post"
+    ): "CareActionCandidateEnvelopeV1",
     "create_care_event_candidate_api_v1_elders__elder_id__care_event_candidates_post": (
         "CareEventEnvelopeV1"
     ),
@@ -329,10 +342,11 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.8.0",
+        "version": "1.9.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
-            "security, assisted Elder Session, professional Care Action and outbox APIs."
+            "security, assisted Elder Session, professional Care Action, human-gated "
+            "Care Action Candidate and outbox APIs."
         ),
         "description": (
             "Current executable Core API contract. Every protected operation "
