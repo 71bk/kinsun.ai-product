@@ -10,7 +10,7 @@
 
 ## Evidence boundary
 
-目前已證明人工建立／更新 formal Care Action，以及 AI proposal、VERIFY promotion、Candidate 採納／拒絕／排除的 Core 與 UI contract。R2 Alembic graph 已驗證單一 head `d1f3a5c7e9b0`；development database 仍停在 parent `b8d0f2a4c6e7`，本次未把 schema deployment 納入 repository implementation。production build 與 zh-Hant／en 的 390／768／1024／1280 deterministic browser fixture QA 已通過。尚未執行真實登入、真實 Agent-to-database 或 production deployment E2E。
+目前已證明人工建立／更新 formal Care Action，以及 AI proposal、VERIFY promotion、Candidate 採納／拒絕／排除的 Core 與 UI contract。R2 Alembic graph 已驗證單一 head `d1f3a5c7e9b0`；2026-09-04 已對 Supabase development database 完成由 `b8d0f2a4c6e7` 至 `d1f3a5c7e9b0` 的 additive upgrade，並讀回 2 張新表、proposal 欄位、索引與 triggers。production build 與 zh-Hant／en 的 390／768／1024／1280 deterministic browser fixture QA 已通過。尚未執行真實登入、真實 Agent-to-database 或 production deployment E2E。
 
 ## Remaining acceptance gaps
 
