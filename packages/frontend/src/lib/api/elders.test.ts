@@ -16,7 +16,16 @@ function response(data: unknown, status = 200): Response {
               schema_version: '1.0',
             },
           }
-        : { error: { message: 'Resource not found' } },
+        : {
+            error: {
+              code: 'not_found',
+              message: 'Resource not found',
+              correlation_id: 'synthetic-correlation',
+              reason_code: 'RESOURCE_NOT_FOUND',
+              retryable: false,
+              details: null,
+            },
+          },
     ),
     { status, headers: { 'Content-Type': 'application/json' } },
   );

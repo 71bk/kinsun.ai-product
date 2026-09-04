@@ -43,7 +43,7 @@
 ### P2 — API / frontend / tooling / documentation
 
 - [x] L-01 實作 Care Action 與 source event pagination。
-- [ ] L-02 為 frontend API response 加入 runtime schema validation。
+- [x] L-02 為 frontend API response 加入 runtime schema validation。
 - [x] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
 - [x] L-04 修復 frontend typecheck。
 - [x] L-05 修復 frontend lint。
@@ -62,15 +62,15 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
    `PUBLISHING` recovery、bounded retry、durable dead-letter metadata、單筆 redrive、固定 HTTPS
    publisher 與 commit-before-ack duplicate-safe consumer orchestration。實際 ingress／queue／alarm
    deployment 仍由 production-readiness release gate 與 hosting owner 驗證。
-3. **L-01、L-02 為一般 Wave 2 工程項目。** 分別處理超過 100 筆資料的靜默截斷，以及 frontend
-   對 malformed／drifted API response 的可預期失敗；不阻擋 Wave 2 資料模型骨架。
+3. **L-01、L-02 已完成。** 分別處理超過 100 筆資料的靜默截斷，以及 frontend
+   對 malformed／drifted API response 的可預期失敗。
 4. **M-08、M-09 移入 production-readiness gate。** M-08 必須在共享資料庫承載真實多租戶資料前完成；
    M-09 必須在 email/password auth 對不受信任網路開放前完成。若開發／staging 已符合上述條件，
    不得延後。
 5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
    H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
 
-建議續作順序：`L-01` → `L-02`；
+一般 Wave 2 hardening 已完成；下一個產品 slice 為 deferred work 的 Wave 2 R2 candidate Care Action。
 `M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
 
 ---
@@ -420,12 +420,18 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 ### L-02 — Frontend API response 缺少 runtime validation
 
 - Severity：Medium/Low
+- 狀態：已完成（2026-09-04）。
 - 位置：`packages/frontend/src/lib/api/client.ts:39-67`
 - 問題：`response.json()` 直接 cast，沒有 schema validation。
 - 影響：API drift 或 malformed response 會在 component 層以 undefined state 或 late error 失敗。
 - 修正：使用 Zod 或等價 schema guard，統一處理 malformed success/error envelope。
 - 驗證：回傳缺欄位、錯誤型別、錯誤 envelope 時，client 應產生可預期錯誤。
 - 應新增測試：是。
+- 修正結果：以無額外 runtime dependency 的 schema guard 對齊 `ResponseMetaV1` 與
+  `ErrorEnvelopeV1`，嚴格驗證必要欄位、型別、schema version、error code、validation details 與
+  additional properties。無效 JSON 或 drifted success/error envelope 統一轉為不含 response body 的
+  `ApiRequestError(502, MALFORMED_API_RESPONSE)`；合法 error envelope 仍保留 status、reason code 與
+  retryable semantics。新增 14 個 client 邊界測試，並校準兩個舊 fixture 至正式 envelope contract。
 
 ### L-03 — Correlation ID 沒有嚴格 UUID v4 validation
 
@@ -525,7 +531,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 - Agent tests：498 passed。
 - RAG tests：324 passed。
 - Speech tests：91 passed。
-- Frontend tests：293 passed（2026-09-04 本機完整 suite）。
+- Frontend tests：307 passed（2026-09-04 本機完整 suite，包含 L-01／L-02）。
 - Frontend production build：passed。
 - Frontend typecheck：passed（L-04 已修正）。
 - Frontend lint：passed（L-05 已修正）。
