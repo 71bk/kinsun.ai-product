@@ -380,7 +380,9 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
   再以第二個 process 跑其餘 integration tests，隔離 destructive schema lifecycle。
   本機已重跑 Core `1055 passed`、Agent `498 passed`、Speech `91 passed`、RAG `324 passed`、Frontend
   `288 passed`、四服務 Ruff、Frontend typecheck／lint／build、三支 contract 驗證與五輪 synthetic
-  Core-to-Agent 證據；隔離後的 PostgreSQL migration suite 仍須由下一次 branch PR Gate 1 確認。
+  Core-to-Agent 證據。PR Gate 1 run `33829472059` 於 2026-09-04 在 disposable PostgreSQL 確認
+  migration suite `19 passed` 與其餘 integration tests 全數通過，完整 Gate 於 `7m39s` 成功結束並
+  上傳 bounded evidence artifact。
 
 ### M-11 — Outbox 缺少 production publisher/recovery/DLQ
 
