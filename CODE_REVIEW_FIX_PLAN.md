@@ -373,9 +373,11 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
   2026-09-04 已將 development database 由 `e2f4a6c8b013` additive upgrade 至 `a7c9e1f3b5d6`，並讀回
   current head。直接推到 `main` 的 Gate 1 run `33819817535` 雖通過 Core 1055 個 unit tests，卻在一般
   API integration tests 之後、destructive migration suite 尚未產出第一個結果時停止進度，最終觸發
-  30 分鐘 timeout；日誌沒有留下精確 blocker，時序符合 request transaction 與 schema DDL 的 lock wait。
-  後續 jobs 因此未執行。Gate 1 現改為先以獨立 pytest process 執行 `test_migrations.py`，再以第二個
-  process 跑其餘 integration tests，隔離 request fixture 與 destructive schema lifecycle。
+  30 分鐘 timeout；PR run `33828528492` 改成先跑 migration suite 後重現同一停滯，因已定位而主動取消。
+  根因是新增的 Care Action migration case 在同一個未提交 transaction 先 drop schema，再呼叫會另開
+  connection 的 Alembic upgrade，後者因此等待前者持有的 DDL lock。該測試現已把 schema reset 與
+  Alembic rebuild 拆成兩個 transaction。Gate 1 同時保留獨立 pytest process 執行 `test_migrations.py`，
+  再以第二個 process 跑其餘 integration tests，隔離 destructive schema lifecycle。
   本機已重跑 Core `1055 passed`、Agent `498 passed`、Speech `91 passed`、RAG `324 passed`、Frontend
   `288 passed`、四服務 Ruff、Frontend typecheck／lint／build、三支 contract 驗證與五輪 synthetic
   Core-to-Agent 證據；隔離後的 PostgreSQL migration suite 仍須由下一次 branch PR Gate 1 確認。

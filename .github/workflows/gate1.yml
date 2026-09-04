@@ -82,8 +82,8 @@ jobs:
           uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
           uv run --frozen --project services/core-api pytest services/core-api/tests/unit
           # Migration lifecycle tests repeatedly drop/rebuild the complete schema. Run them
-          # in their own process before request-level integration tests so an application
-          # fixture cannot retain a transaction that blocks destructive DDL until job timeout.
+          # in their own process before request-level integration tests so their destructive
+          # schema state and database connections cannot leak into application-level tests.
           uv run --frozen --project services/core-api pytest services/core-api/tests/integration/test_migrations.py
           uv run --frozen --project services/core-api pytest services/core-api/tests/integration --ignore=services/core-api/tests/integration/test_migrations.py
 

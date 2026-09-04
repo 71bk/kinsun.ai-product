@@ -199,8 +199,10 @@
     `tests/unit` 與 **`tests/integration`**。CI 自建 disposable `kinsun_test` database，**這是目前唯一
     會實際執行 Core integration 測試的環境**；本機因為沒有獨立 `TEST_DATABASE_URL` 一直略過。
     `test_migrations.py` 會反覆 drop／rebuild 完整 schema，必須先在獨立 pytest process 執行，再以
-    第二個 process 跑其餘 integration tests；不得把它和 request-level tests 放在同一 process，
-    否則殘留 transaction 可能讓 destructive DDL 等鎖直到 CI timeout。
+    第二個 process 跑其餘 integration tests。Alembic 會另開 database connection，因此 migration test
+    內的 schema reset 必須先結束並 commit transaction，才可呼叫 Alembic rebuild；不得在同一個
+    `test_engine.begin()` 先 `_drop_all_tables` 再 `_run_upgrade`，否則 PostgreSQL 會等未提交的 DDL lock
+    直到 CI timeout。
   - Agent Runtime、Speech Gateway、RAG Ingestion 三者各自的 `ruff check` ＋ `ruff format --check`
     ＋ `pytest`。
   - 靜態 `validate_contracts.py` 與兩支 live verifier。live verifier 以 `httpx.ASGITransport`

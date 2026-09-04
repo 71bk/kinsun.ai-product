@@ -203,8 +203,10 @@
   lint／format／pytest、Core `tests/integration`（CI 自建 disposable `kinsun_test`）、三支 contract 驗證、
   五輪 synthetic Core-to-Agent 證據與完整 Frontend build。細節見 `AGENTS.md` §1。兩個要記住的
   邊界：Core 的 destructive migration lifecycle tests 必須先在獨立 pytest process 執行，再跑其餘
-  request-level integration tests，避免殘留 transaction 讓 schema DDL 等鎖到 timeout；repository
-  目前沒有 production IaC verification，已被取代的 `.github/workflows-disabled/pr.yml` 也已移除。
+  request-level integration tests；Alembic 另開 connection，所以 schema reset transaction 必須先 commit，
+  不得在同一個 `test_engine.begin()` 先 drop schema 再執行 Alembic，否則會等自己的 DDL lock 到 timeout。
+  Repository 目前沒有 production IaC verification，已被取代的
+  `.github/workflows-disabled/pr.yml` 也已移除。
   **新增 import 時字母序是 CI 等級的地雷**：`8adba0f` 讓 core-api `ruff check` 出現 2 個 `I001`
   （`assisted_elders` 排在 `assignments` 前、`assisted_elder_session` 排在 `asr_gate` 前），
   同時讓 agent-runtime 的 `context/manifest.py`、`contracts/models.py` 沒過
