@@ -484,6 +484,11 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
     """A later Care Event correction cannot rewrite a Care Action's source evidence."""
     async with test_engine.begin() as conn:
         await conn.run_sync(_drop_all_tables)
+
+    # Alembic creates its own engine/connection. Commit the schema reset before
+    # asking that connection to rebuild it, otherwise PostgreSQL waits on this
+    # transaction's uncommitted DROP locks until the CI job times out.
+    async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, "head")
 
     seed_statements = [
@@ -586,7 +591,7 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
                         )
                     )
 
-            with pytest.raises(DBAPIError, match="immutable"):
+            with pytest.raises(DBAPIError, match="append-only"):
                 async with conn.begin_nested():
                     await conn.execute(
                         text(

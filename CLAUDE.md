@@ -200,10 +200,13 @@
   ADR 定案。Portable images 可用 `scripts/build_runtime_images.ps1`／`.sh` 在本機驗證；外部 endpoint
   可用 `scripts/smoke_test_deployment.py` 驗證，兩者都不代表 infrastructure 已部署。
 - CI 已啟用：`.github/workflows/gate1.yml` 在對 `main` 的 PR 與 push 觸發，跑四個 Python 服務的
-  lint／pytest、Core `tests/integration`（CI 自建 disposable `kinsun_test`）、三支 contract 驗證、
+  lint／format／pytest、Core `tests/integration`（CI 自建 disposable `kinsun_test`）、三支 contract 驗證、
   五輪 synthetic Core-to-Agent 證據與完整 Frontend build。細節見 `AGENTS.md` §1。兩個要記住的
-  邊界：core-api 在 CI 只跑 `ruff check` 不跑 `ruff format --check`；repository 目前沒有
-  production IaC verification，已被取代的 `.github/workflows-disabled/pr.yml` 也已移除。
+  邊界：Core 的 destructive migration lifecycle tests 必須先在獨立 pytest process 執行，再跑其餘
+  request-level integration tests；Alembic 另開 connection，所以 schema reset transaction 必須先 commit，
+  不得在同一個 `test_engine.begin()` 先 drop schema 再執行 Alembic，否則會等自己的 DDL lock 到 timeout。
+  Repository 目前沒有 production IaC verification，已被取代的
+  `.github/workflows-disabled/pr.yml` 也已移除。
   **新增 import 時字母序是 CI 等級的地雷**：`8adba0f` 讓 core-api `ruff check` 出現 2 個 `I001`
   （`assisted_elders` 排在 `assignments` 前、`assisted_elder_session` 排在 `asr_gate` 前），
   同時讓 agent-runtime 的 `context/manifest.py`、`contracts/models.py` 沒過
@@ -220,6 +223,8 @@
 cd services/core-api
 uv sync --extra test --extra dev
 uv run pytest tests/unit
+uv run pytest tests/integration/test_migrations.py
+uv run pytest tests/integration --ignore=tests/integration/test_migrations.py
 uv run ruff check .
 uv run ruff format --check .
 ```

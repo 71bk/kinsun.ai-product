@@ -195,9 +195,14 @@
 - **CI quality gate 已啟用**：`.github/workflows/gate1.yml`（Gate 1 Quality Gate）於 2026-08-26
   建立，在對 `main` 的 pull request 與 push 觸發，在 `ubuntu-latest` 搭 pinned pgvector service
   container 執行，timeout 30 分鐘。涵蓋範圍：
-  - Core API `ruff check`、`scripts/rag/project_postgres.py dry-run`、`tests/unit` 與
-    **`tests/integration`**。CI 自建 disposable `kinsun_test` database，**這是目前唯一會實際執行
-    Core integration 測試的環境**；本機因為沒有獨立 `TEST_DATABASE_URL` 一直略過。
+  - Core API `ruff check`、`ruff format --check`、`scripts/rag/project_postgres.py dry-run`、
+    `tests/unit` 與 **`tests/integration`**。CI 自建 disposable `kinsun_test` database，**這是目前唯一
+    會實際執行 Core integration 測試的環境**；本機因為沒有獨立 `TEST_DATABASE_URL` 一直略過。
+    `test_migrations.py` 會反覆 drop／rebuild 完整 schema，必須先在獨立 pytest process 執行，再以
+    第二個 process 跑其餘 integration tests。Alembic 會另開 database connection，因此 migration test
+    內的 schema reset 必須先結束並 commit transaction，才可呼叫 Alembic rebuild；不得在同一個
+    `test_engine.begin()` 先 `_drop_all_tables` 再 `_run_upgrade`，否則 PostgreSQL 會等未提交的 DDL lock
+    直到 CI timeout。
   - Agent Runtime、Speech Gateway、RAG Ingestion 三者各自的 `ruff check` ＋ `ruff format --check`
     ＋ `pytest`。
   - 靜態 `validate_contracts.py` 與兩支 live verifier。live verifier 以 `httpx.ASGITransport`
@@ -205,8 +210,7 @@
   - 五輪 synthetic Core-to-Agent 證據（`scripts/verify_gate1_cross_service.py`），成功時上傳
     artifact 保留 30 天。
   - Frontend `npm ci`／typecheck／test／lint／production build。
-  - **注意：core-api 只跑 `ruff check`，不跑 `ruff format --check`**，所以本機 format 未通過的
-    既有檔案不會擋 CI；不要因為 CI 綠燈就認定 core-api format 是乾淨的。
+  - Core formatting 已由 L-06 納入 CI；`ruff check` 與 `ruff format --check` 都是正式 gate。
   - **新增 router／model 時，import 字母序是 CI 等級的地雷。** `8adba0f` 把
     `assisted_elders` 排在 `assignments` 之前、`assisted_elder_session` 排在 `asr_gate` 之前，
     使 `app/main.py` 與 `app/models/__init__.py` 各出現一個 `I001`；`ruff check` **在 CI 內**，
@@ -733,7 +737,9 @@ kinsun.ai/
 cd services/core-api
 uv sync --extra test --extra dev
 uv run pytest tests/unit          # 不需資料庫
-uv run pytest tests/integration   # 只可使用獨立、可丟棄的 TEST_DATABASE_URL
+# 下列兩支只可使用獨立、可丟棄的 TEST_DATABASE_URL，且 migration lifecycle 必須隔離 process
+uv run pytest tests/integration/test_migrations.py
+uv run pytest tests/integration --ignore=tests/integration/test_migrations.py
 uv run ruff check .
 uv run ruff format --check .
 ```
