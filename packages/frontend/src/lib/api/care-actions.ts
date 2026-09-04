@@ -84,6 +84,11 @@ export interface CareActionListView {
   hasMore: boolean;
 }
 
+export interface ListCareActionsOptions {
+  statuses?: CareActionStatus[];
+  cursor?: string;
+}
+
 export interface CreateCareActionInput {
   actionType: CareActionType;
   title: string;
@@ -134,10 +139,11 @@ function toCareActionView(action: CoreCareAction): CareActionView {
 export async function listCareActions(
   config: ApiConfig,
   elderId: string,
-  statuses: CareActionStatus[] = [],
+  options: ListCareActionsOptions = {},
 ): Promise<CareActionListView> {
   const params = new URLSearchParams({ limit: '100' });
-  for (const status of statuses) params.append('status', status);
+  for (const status of options.statuses ?? []) params.append('status', status);
+  if (options.cursor) params.set('cursor', options.cursor);
   const result = await apiFetch<CoreCareActionList>(
     config,
     `/api/v1/elders/${elderId}/care-actions?${params.toString()}`,
