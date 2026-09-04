@@ -591,7 +591,7 @@ async def test_care_action_source_event_provenance_is_version_bound_and_immutabl
                         )
                     )
 
-            with pytest.raises(DBAPIError, match="immutable"):
+            with pytest.raises(DBAPIError, match="append-only"):
                 async with conn.begin_nested():
                     await conn.execute(
                         text(
