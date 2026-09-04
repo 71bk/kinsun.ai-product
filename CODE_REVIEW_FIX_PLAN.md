@@ -42,7 +42,7 @@
 
 ### P2 — API / frontend / tooling / documentation
 
-- [ ] L-01 實作 Care Action 與 source event pagination。
+- [x] L-01 實作 Care Action 與 source event pagination。
 - [ ] L-02 為 frontend API response 加入 runtime schema validation。
 - [x] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
 - [x] L-04 修復 frontend typecheck。
@@ -405,12 +405,17 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 ### L-01 — Frontend 未實作 API pagination
 
 - Severity：Medium
+- 狀態：已完成（2026-09-04）。
 - 位置：`packages/frontend/src/lib/api/care-actions.ts:102-117`；`packages/frontend/src/components/care/CareActionPanel.tsx:127-150,326,352`
 - 問題：Core 支援 cursor，但 frontend 固定 `limit=100` 且只載入一次；source events 也未完整處理 cursor。
 - 影響：資料超過 100 筆後會被靜默截斷。
 - 修正：加入 cursor pagination、load-more/infinite scroll、完整 `has_more` UI。
 - 驗證：建立超過 100 筆 Care Actions/source events，確認全部可瀏覽。
 - 應新增測試：是，component/API pagination tests。
+- 修正結果：Care Action API client 現在接受 opaque cursor；待辦列表提供 load-more 並追加、去重跨頁資料。
+  VERIFIED／CORRECTED 來源事件各自保存 cursor，單一 load-more 可繼續兩條來源流，直到兩者都耗盡。
+  純函式測試覆蓋第 101 筆資料與跨頁重複邊界；Playwright production-build QA 驗證待辦 2→3 筆、
+  來源事件 3→5 筆，以及 375／390／430／1440 px 無水平溢位或小於 48px 的操作按鈕。
 
 ### L-02 — Frontend API response 缺少 runtime validation
 
@@ -520,7 +525,7 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 - Agent tests：498 passed。
 - RAG tests：324 passed。
 - Speech tests：91 passed。
-- Frontend tests：288 passed。
+- Frontend tests：293 passed（2026-09-04 本機完整 suite）。
 - Frontend production build：passed。
 - Frontend typecheck：passed（L-04 已修正）。
 - Frontend lint：passed（L-05 已修正）。

@@ -144,6 +144,18 @@
   gap: var(--space-4);
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.pagination .notice {
+  margin: 0;
+}
+
 .card {
   display: grid;
   gap: var(--space-4);
@@ -248,6 +260,7 @@
   .details,
   .formActions,
   .transitionActions,
+  .pagination,
   .primaryButton,
   .secondaryButton,
   .destructiveButton {
@@ -257,6 +270,10 @@
   .formGrid,
   .details {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pagination {
+    align-items: stretch;
   }
 
   .fullWidth {

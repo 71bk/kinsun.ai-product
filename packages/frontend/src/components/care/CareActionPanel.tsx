@@ -21,6 +21,7 @@ import { ApiRequestError, type ApiConfig } from '@/lib/api/client';
 import { listEvents, type EventView } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
+import { appendCareActionPage, mergeFormalEventPages } from './care-action-pagination';
 import styles from './CareActionPanel.module.css';
 
 const ACTION_TYPES: CareActionType[] = [
@@ -76,10 +77,12 @@ function describeActionError(error: unknown, fallback: MessageKey): MessageKey {
   return fallback;
 }
 
-function mergeFormalEvents(verified: EventView[], corrected: EventView[]): EventView[] {
-  return [...verified, ...corrected].sort((left, right) =>
-    right.eventDate.localeCompare(left.eventDate),
-  );
+type FormalEventStatus = 'VERIFIED' | 'CORRECTED';
+
+const FORMAL_EVENT_STATUSES: FormalEventStatus[] = ['VERIFIED', 'CORRECTED'];
+
+function emptySourceCursors(): Record<FormalEventStatus, string | null> {
+  return { VERIFIED: null, CORRECTED: null };
 }
 
 export interface CareActionPanelProps {
@@ -98,10 +101,13 @@ export function CareActionPanel({
   const { t, formatDateTime } = useLocale();
   const [actions, setActions] = useState<CareActionView[]>([]);
   const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [formalEvents, setFormalEvents] = useState<EventView[]>([]);
-  const [sourceHasMore, setSourceHasMore] = useState(false);
+  const [sourceCursors, setSourceCursors] = useState(emptySourceCursors);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [sourcesLoading, setSourcesLoading] = useState(canCreate);
+  const [sourcesLoadingMore, setSourcesLoadingMore] = useState(false);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
   const [toastKey, setToastKey] = useState<MessageKey | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -118,10 +124,14 @@ export function CareActionPanel({
   const loadActions = useCallback(async () => {
     setLoading(true);
     setErrorKey(null);
+    setActions([]);
+    setHasMore(false);
+    setNextCursor(null);
     try {
       const result = await listCareActions(apiConfig, elderId);
       setActions(result.items);
       setHasMore(result.hasMore);
+      setNextCursor(result.nextCursor);
     } catch (error) {
       setErrorKey(describeActionError(error, 'error.loadCareActionsFailed'));
     } finally {
@@ -132,19 +142,75 @@ export function CareActionPanel({
   const loadSources = useCallback(async () => {
     if (!canCreate) return;
     setSourcesLoading(true);
+    setFormalEvents([]);
+    setSourceCursors(emptySourceCursors());
     try {
       const [verified, corrected] = await Promise.all([
         listEvents(apiConfig, elderId, { status: 'VERIFIED' }),
         listEvents(apiConfig, elderId, { status: 'CORRECTED' }),
       ]);
-      setFormalEvents(mergeFormalEvents(verified.items, corrected.items));
-      setSourceHasMore(verified.nextCursor !== null || corrected.nextCursor !== null);
+      setFormalEvents(mergeFormalEventPages([], [...verified.items, ...corrected.items]));
+      setSourceCursors({
+        VERIFIED: verified.nextCursor,
+        CORRECTED: corrected.nextCursor,
+      });
     } catch (error) {
       setErrorKey(describeActionError(error, 'error.loadEventsFailed'));
     } finally {
       setSourcesLoading(false);
     }
   }, [apiConfig, canCreate, elderId]);
+
+  async function loadMoreActions() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setErrorKey(null);
+    try {
+      const result = await listCareActions(apiConfig, elderId, { cursor: nextCursor });
+      setActions((current) => appendCareActionPage(current, result.items));
+      setHasMore(result.hasMore);
+      setNextCursor(result.nextCursor);
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.loadCareActionsFailed'));
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function loadMoreSources() {
+    if (sourcesLoadingMore) return;
+    const pendingStatuses = FORMAL_EVENT_STATUSES.filter((status) => sourceCursors[status]);
+    if (pendingStatuses.length === 0) return;
+
+    setSourcesLoadingMore(true);
+    setErrorKey(null);
+    try {
+      const pages = await Promise.all(
+        pendingStatuses.map(async (status) => ({
+          status,
+          result: await listEvents(apiConfig, elderId, {
+            status,
+            cursor: sourceCursors[status] ?? undefined,
+          }),
+        })),
+      );
+      setFormalEvents((current) =>
+        mergeFormalEventPages(
+          current,
+          pages.flatMap((page) => page.result.items),
+        ),
+      );
+      setSourceCursors((current) => {
+        const updated = { ...current };
+        for (const page of pages) updated[page.status] = page.result.nextCursor;
+        return updated;
+      });
+    } catch (error) {
+      setErrorKey(describeActionError(error, 'error.loadEventsFailed'));
+    } finally {
+      setSourcesLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     void loadActions();
@@ -153,6 +219,8 @@ export function CareActionPanel({
   useEffect(() => {
     void loadSources();
   }, [loadSources]);
+
+  const sourceHasMore = FORMAL_EVENT_STATUSES.some((status) => sourceCursors[status] !== null);
 
   async function submitCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -314,7 +382,25 @@ export function CareActionPanel({
               />
             </label>
           </div>
-          {sourceHasMore && <p className={styles.notice}>{t('careAction.sourceLimited')}</p>}
+          {sourceHasMore && (
+            <div className={styles.pagination}>
+              <p aria-live="polite" className={styles.notice}>
+                {t('careAction.sourceLimited')}
+              </p>
+              <button
+                className={styles.secondaryButton}
+                disabled={sourcesLoadingMore}
+                onClick={() => void loadMoreSources()}
+                type="button"
+              >
+                {t(
+                  sourcesLoadingMore
+                    ? 'careAction.loadingMoreSources'
+                    : 'careAction.loadMoreSources',
+                )}
+              </button>
+            </div>
+          )}
           <div className={styles.formActions}>
             <button
               className={styles.secondaryButton}
@@ -340,7 +426,23 @@ export function CareActionPanel({
         />
       ) : (
         <div className={styles.list}>
-          {hasMore && <p className={styles.notice}>{t('careAction.listLimited')}</p>}
+          {hasMore && (
+            <div className={styles.pagination}>
+              <p aria-live="polite" className={styles.notice}>
+                {t('careAction.listLimited')}
+              </p>
+              <button
+                className={styles.secondaryButton}
+                disabled={loadingMore || nextCursor === null}
+                onClick={() => void loadMoreActions()}
+                type="button"
+              >
+                {t(
+                  loadingMore ? 'careAction.loadingMoreActions' : 'careAction.loadMoreActions',
+                )}
+              </button>
+            </div>
+          )}
           {actions.map((action) => {
             const Icon = STATUS_ICON[action.status];
             const availableTransitions = canUpdate ? TRANSITIONS[action.status] : [];

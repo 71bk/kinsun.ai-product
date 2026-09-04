@@ -99,11 +99,15 @@ describe('care action API boundary', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await listCareActions(config, 'synthetic-elder', ['OPEN', 'IN_PROGRESS']);
+    const result = await listCareActions(config, 'synthetic-elder', {
+      statuses: ['OPEN', 'IN_PROGRESS'],
+      cursor: 'opaque-current',
+    });
 
     const url = String(fetchMock.mock.calls[0][0]);
     expect(url).toContain('status=OPEN');
     expect(url).toContain('status=IN_PROGRESS');
+    expect(url).toContain('cursor=opaque-current');
     expect(url).not.toContain('offset');
     expect(result).toEqual({ items: [action], nextCursor: 'opaque-next', hasMore: true });
   });
