@@ -118,13 +118,24 @@ jobs:
           scripts/verify_gate1_cross_service.py
           --evidence-out /tmp/gate1-synthetic-five-run.json
 
-      - name: Frontend quality
-        run: |
-          npm ci
-          npm run typecheck --workspace @elderly-care/frontend
-          npm run test --workspace @elderly-care/frontend -- --run
-          npm run lint
-          npm run build --workspace @elderly-care/frontend
+      # The five frontend commands are separate steps so that each one reports its own
+      # duration in the run summary. Splitting changes no command, order, or failure
+      # behaviour: a failed step still stops the job, exactly as `bash -e` stopped the
+      # previous combined block. Branch protection matches the job, not step names.
+      - name: Frontend dependencies
+        run: npm ci
+
+      - name: Frontend typecheck
+        run: npm run typecheck --workspace @elderly-care/frontend
+
+      - name: Frontend unit tests
+        run: npm run test --workspace @elderly-care/frontend -- --run
+
+      - name: Frontend lint
+        run: npm run lint
+
+      - name: Frontend production build
+        run: npm run build --workspace @elderly-care/frontend
 
       - name: Upload bounded Gate 1 evidence
         if: success()
