@@ -50,71 +50,102 @@ jobs:
           python-version: "3.12"
 
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
         with:
           version: "0.11.25"
           enable-cache: true
 
       - uses: actions/setup-node@v4
+        id: node
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install locked Python environments
-        run: |
-          uv sync --frozen --project services/core-api --extra test --extra dev
-          uv sync --frozen --project services/agent-runtime --extra test --extra dev
-          uv sync --frozen --project services/speech-gateway --extra test --extra dev
-          uv sync --frozen --project services/rag-ingestion --extra test --extra dev
+      - name: Install Core environment
+        run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
+
+      - name: Install Agent environment
+        run: python scripts/ci/telemetry.py run --id install-agent -- uv sync --frozen --project services/agent-runtime --extra test --extra dev
+
+      - name: Install Speech environment
+        run: python scripts/ci/telemetry.py run --id install-speech -- uv sync --frozen --project services/speech-gateway --extra test --extra dev
+
+      - name: Install RAG environment
+        run: python scripts/ci/telemetry.py run --id install-rag -- uv sync --frozen --project services/rag-ingestion --extra test --extra dev
+
+      - name: CI instrumentation regression tests
+        run: python scripts/ci/telemetry.py run --id ci-tools -- python -m unittest discover -s scripts/ci -p 'test_*.py'
 
       - name: Create disposable integration database
         run: >-
-          uv run --frozen --project services/core-api python -c
+          python scripts/ci/telemetry.py run --id database-create -- uv run --frozen --project services/core-api python -c
           "import psycopg;
           connection = psycopg.connect('postgresql://kinsun:kinsun_local_dev@localhost:5432/postgres', autocommit=True);
           connection.execute('CREATE DATABASE kinsun_test');
           connection.close()"
 
-      - name: Core API quality and PostgreSQL integration
-        run: |
-          uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
-          uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py
-          uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
-          uv run --frozen --project services/core-api pytest services/core-api/tests/unit
-          # Migration lifecycle tests repeatedly drop/rebuild the complete schema. Run them
-          # in their own process before request-level integration tests so their destructive
-          # schema state and database connections cannot leak into application-level tests.
-          uv run --frozen --project services/core-api pytest services/core-api/tests/integration/test_migrations.py
-          uv run --frozen --project services/core-api pytest services/core-api/tests/integration --ignore=services/core-api/tests/integration/test_migrations.py
+      - name: Core lint
+        run: python scripts/ci/telemetry.py run --id core-lint -- uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
 
-      - name: Agent Runtime quality
-        run: |
-          uv run --frozen --project services/agent-runtime ruff check services/agent-runtime
-          uv run --frozen --project services/agent-runtime ruff format --check services/agent-runtime
-          uv run --frozen --project services/agent-runtime pytest services/agent-runtime/tests
+      - name: Core format
+        run: python scripts/ci/telemetry.py run --id core-format -- uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
 
-      - name: Speech Gateway quality
-        run: |
-          uv run --frozen --project services/speech-gateway ruff check services/speech-gateway
-          uv run --frozen --project services/speech-gateway ruff format --check services/speech-gateway
-          uv run --frozen --project services/speech-gateway pytest services/speech-gateway/tests
+      - name: RAG projection dry-run
+        run: python scripts/ci/telemetry.py run --id core-rag-dry-run -- uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
 
-      - name: RAG Ingestion quality
-        run: |
-          uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
-          uv run --frozen --project services/rag-ingestion ruff format --check services/rag-ingestion
-          uv run --frozen --project services/rag-ingestion python scripts/rag/validate_source_family_policy_audit_v8.py
-          uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
+      - name: Core unit tests
+        run: python scripts/ci/telemetry.py run --id core-unit --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/unit
 
-      - name: Executable contracts
-        run: |
-          uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/validate_contracts.py contracts
-          uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_contract_live.py contracts
-          uv run --frozen --project services/agent-runtime --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_agent_contract_live.py contracts
+      # Migration lifecycle must finish in its own process before request integration.
+      - name: Core migration lifecycle
+        run: python scripts/ci/telemetry.py run --id core-migrations --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/integration/test_migrations.py
+
+      - name: Core PostgreSQL integration
+        run: python scripts/ci/telemetry.py run --id core-integration --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/integration --ignore=services/core-api/tests/integration/test_migrations.py
+
+      - name: Agent lint
+        run: python scripts/ci/telemetry.py run --id agent-lint -- uv run --frozen --project services/agent-runtime ruff check services/agent-runtime
+
+      - name: Agent format
+        run: python scripts/ci/telemetry.py run --id agent-format -- uv run --frozen --project services/agent-runtime ruff format --check services/agent-runtime
+
+      - name: Agent tests
+        run: python scripts/ci/telemetry.py run --id agent-tests --test-format pytest -- uv run --frozen --project services/agent-runtime pytest services/agent-runtime/tests
+
+      - name: Speech lint
+        run: python scripts/ci/telemetry.py run --id speech-lint -- uv run --frozen --project services/speech-gateway ruff check services/speech-gateway
+
+      - name: Speech format
+        run: python scripts/ci/telemetry.py run --id speech-format -- uv run --frozen --project services/speech-gateway ruff format --check services/speech-gateway
+
+      - name: Speech tests
+        run: python scripts/ci/telemetry.py run --id speech-tests --test-format pytest -- uv run --frozen --project services/speech-gateway pytest services/speech-gateway/tests
+
+      - name: RAG lint
+        run: python scripts/ci/telemetry.py run --id rag-lint -- uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
+
+      - name: RAG format
+        run: python scripts/ci/telemetry.py run --id rag-format -- uv run --frozen --project services/rag-ingestion ruff format --check services/rag-ingestion
+
+      - name: RAG policy audit
+        run: python scripts/ci/telemetry.py run --id rag-policy-audit -- uv run --frozen --project services/rag-ingestion python scripts/rag/validate_source_family_policy_audit_v8.py
+
+      - name: RAG tests
+        run: python scripts/ci/telemetry.py run --id rag-tests --test-format pytest -- uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
+
+      - name: Static contracts
+        run: python scripts/ci/telemetry.py run --id contracts-static -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/validate_contracts.py contracts
+
+      - name: Core live contracts
+        run: python scripts/ci/telemetry.py run --id contracts-core -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_contract_live.py contracts
+
+      - name: Agent live contracts
+        run: python scripts/ci/telemetry.py run --id contracts-agent -- uv run --frozen --project services/agent-runtime --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_agent_contract_live.py contracts
 
       - name: Five-run synthetic Core-to-Agent evidence
         run: >-
-          uv run --frozen --project services/core-api python
+          python scripts/ci/telemetry.py run --id cross-service -- uv run --frozen --project services/core-api python
           scripts/verify_gate1_cross_service.py
           --evidence-out /tmp/gate1-synthetic-five-run.json
 
@@ -123,19 +154,19 @@ jobs:
       # behaviour: a failed step still stops the job, exactly as `bash -e` stopped the
       # previous combined block. Branch protection matches the job, not step names.
       - name: Frontend dependencies
-        run: npm ci
+        run: python scripts/ci/telemetry.py run --id frontend-install -- npm ci
 
       - name: Frontend typecheck
-        run: npm run typecheck --workspace @elderly-care/frontend
+        run: python scripts/ci/telemetry.py run --id frontend-typecheck -- npm run typecheck --workspace @elderly-care/frontend
 
       - name: Frontend unit tests
-        run: npm run test --workspace @elderly-care/frontend -- --run
+        run: python scripts/ci/telemetry.py run --id frontend-tests --test-format vitest -- npm run test --workspace @elderly-care/frontend -- --run
 
       - name: Frontend lint
-        run: npm run lint
+        run: python scripts/ci/telemetry.py run --id frontend-lint -- npm run lint
 
       - name: Frontend production build
-        run: npm run build --workspace @elderly-care/frontend
+        run: python scripts/ci/telemetry.py run --id frontend-build -- npm run build --workspace @elderly-care/frontend
 
       - name: Upload bounded Gate 1 evidence
         if: success()
@@ -143,5 +174,21 @@ jobs:
         with:
           name: gate1-synthetic-evidence
           path: /tmp/gate1-synthetic-five-run.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+          CI_NPM_CACHE_HIT: ${{ steps.node.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
           if-no-files-found: error
           retention-days: 30

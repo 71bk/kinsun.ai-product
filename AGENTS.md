@@ -715,6 +715,11 @@ kinsun.ai/
 
 ## 10. 驗證與完成條件
 
+CI 命令耗時與 bounded 測試報告由 `scripts/ci/telemetry.py` 收集，說明見
+`docs/project/ci-pipeline-optimization.md`。輸出一律放 runner 暫存目錄，不能讓報告污染
+synthetic evidence 的 working-tree 狀態。Wrapper 必須保留原始 exit code；上傳報告成功
+不代表測試通過。Native job/step 與 command 耗時分開計算，不能把平行 job 秒數相加當總等待時間。
+
 每個變更至少驗證：
 
 - Acceptance Criteria 的正常、低信心、拒絕、撤回、失敗與重試路徑。
