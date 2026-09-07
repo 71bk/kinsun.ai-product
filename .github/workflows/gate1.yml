@@ -25,7 +25,55 @@ env:
 
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      plan: ${{ steps.plan.outputs.plan }}
+      core-fast: ${{ steps.plan.outputs.core-fast }}
+      core-db: ${{ steps.plan.outputs.core-db }}
+      agent-quality: ${{ steps.plan.outputs.agent-quality }}
+      speech-quality: ${{ steps.plan.outputs.speech-quality }}
+      rag-quality: ${{ steps.plan.outputs.rag-quality }}
+      contracts: ${{ steps.plan.outputs.contracts }}
+      cross-service: ${{ steps.plan.outputs.cross-service }}
+      frontend-quality: ${{ steps.plan.outputs.frontend-quality }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Local merge-base diff avoids truncated PR files APIs and includes fork heads.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.11.25"
+          enable-cache: false
+      - name: CI instrumentation regression tests
+        run: python scripts/ci/telemetry.py run --id ci-tools -- uv run --no-project --with "pyyaml==6.0.2" python -m unittest discover -s scripts/ci -p 'test_*.py'
+      - name: CI policy lint
+        run: python scripts/ci/telemetry.py run --id ci-policy-lint -- uv run --no-project --with "ruff==0.8.6" ruff check scripts/ci
+      - name: CI policy format
+        run: python scripts/ci/telemetry.py run --id ci-policy-format -- uv run --no-project --with "ruff==0.8.6" ruff format --check scripts/ci
+      - name: Determine affected workers and check diff
+        id: plan
+        run: python scripts/ci/telemetry.py run --id impact -- python scripts/ci/impact.py --out "${{ runner.temp }}/ci-metrics/impact-plan.json"
+      - name: Summarize CI metrics
+        if: always()
+        run: python scripts/ci/telemetry.py summary
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
   core-fast:
+    needs: changes
+    if: needs.changes.outputs.core-fast == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -47,9 +95,6 @@ jobs:
 
       - name: Install Core environment
         run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
-
-      - name: CI instrumentation regression tests
-        run: python scripts/ci/telemetry.py run --id ci-tools -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" python -m unittest discover -s scripts/ci -p 'test_*.py'
 
       - name: Core lint
         run: python scripts/ci/telemetry.py run --id core-lint -- uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
@@ -79,6 +124,8 @@ jobs:
           retention-days: 30
 
   core-db:
+    needs: changes
+    if: needs.changes.outputs.core-db == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -149,6 +196,8 @@ jobs:
           retention-days: 30
 
   agent-quality:
+    needs: changes
+    if: needs.changes.outputs.agent-quality == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -196,6 +245,8 @@ jobs:
           retention-days: 30
 
   speech-quality:
+    needs: changes
+    if: needs.changes.outputs.speech-quality == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -243,6 +294,8 @@ jobs:
           retention-days: 30
 
   rag-quality:
+    needs: changes
+    if: needs.changes.outputs.rag-quality == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -293,6 +346,8 @@ jobs:
           retention-days: 30
 
   contracts:
+    needs: changes
+    if: needs.changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -342,6 +397,8 @@ jobs:
           retention-days: 30
 
   cross-service:
+    needs: changes
+    if: needs.changes.outputs.cross-service == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -400,6 +457,8 @@ jobs:
           retention-days: 30
 
   frontend-quality:
+    needs: changes
+    if: needs.changes.outputs.frontend-quality == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -449,7 +508,7 @@ jobs:
   synthetic-gate1:
     name: synthetic-gate1
     if: always()
-    needs: [core-fast, core-db, agent-quality, speech-quality, rag-quality, contracts, cross-service, frontend-quality]
+    needs: [changes, core-fast, core-db, agent-quality, speech-quality, rag-quality, contracts, cross-service, frontend-quality]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

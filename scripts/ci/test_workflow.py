@@ -17,16 +17,16 @@ class WorkflowTests(unittest.TestCase):
         cls.jobs = cls.workflow["jobs"]
 
     def test_independent_workers_and_strict_aggregate(self):
-        self.assertEqual(set(self.jobs), {*EXPECTED_JOBS, "synthetic-gate1"})
+        self.assertEqual(set(self.jobs), {*EXPECTED_JOBS, "changes", "synthetic-gate1"})
         gate = self.jobs["synthetic-gate1"]
         self.assertEqual(gate["name"], "synthetic-gate1")
         self.assertEqual(gate["if"], "always()")
-        self.assertCountEqual(gate["needs"], EXPECTED_JOBS)
+        self.assertCountEqual(gate["needs"], ["changes", *EXPECTED_JOBS])
         for name, job in self.jobs.items():
             self.assertNotIn("continue-on-error", job)
             if name in EXPECTED_JOBS:
-                self.assertNotIn("needs", job)
-                self.assertNotIn("if", job)
+                self.assertEqual(job["needs"], "changes")
+                self.assertEqual(job["if"], f"needs.changes.outputs.{name} == 'true'")
             for step in job["steps"]:
                 self.assertNotIn("continue-on-error", step)
         downloads = [
@@ -38,12 +38,24 @@ class WorkflowTests(unittest.TestCase):
         check = next(step for step in gate["steps"] if "gate.py" in step.get("run", ""))
         self.assertEqual(check["if"], "always()")
         self.assertEqual(check["env"]["NEEDS_JSON"], "${{ toJSON(needs) }}")
+        changes = self.jobs["changes"]
+        self.assertNotIn("if", changes)
+        self.assertNotIn("needs", changes)
+        self.assertEqual(changes["steps"][0]["with"]["fetch-depth"], 0)
+        self.assertEqual(set(changes["outputs"]), {"plan", *EXPECTED_JOBS})
+        for key, expression in changes["outputs"].items():
+            self.assertEqual(expression, "${{ steps.plan.outputs." + key + " }}")
+        # PyYAML 1.1 treats the workflow's unquoted `on` key as True.
+        triggers = self.workflow.get("on", self.workflow.get(True))
+        self.assertEqual(set(triggers), {"pull_request", "push"})
+        for trigger in triggers.values():
+            self.assertEqual(trigger, {"branches": ["main"]})
 
     def test_all_command_coverage_and_db_order(self):
         expected = {
+            "changes": ["ci-tools", "ci-policy-lint", "ci-policy-format", "impact"],
             "core-fast": [
                 "install-core",
-                "ci-tools",
                 "core-lint",
                 "core-format",
                 "core-rag-dry-run",
