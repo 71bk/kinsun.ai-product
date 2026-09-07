@@ -2,8 +2,11 @@
 
 > Implementation update (2026-09-07): PR #24 exposed the five frontend step timings;
 > PR #25 fixed the async pagination-test race and passed on main. Command-level
-> telemetry is now being implemented as phase 1; job parallelization and the final
-> aggregate gate remain phase 2. Execution details and measured baselines are tracked
+> telemetry shipped in PR #26 and passed on main. Phase 2 splits eight workers and
+> adds a fail-closed `synthetic-gate1` aggregate in PR #27. Its first remote run passed
+> all nine jobs and 2,459 tests: 130s wall time / 424 runner-seconds versus the serial
+> PR sample's 374s / 374. This is a measured sample, not a guaranteed speedup or cost saving.
+> Execution details and measured baselines are tracked
 > in [CI implementation notes](docs/project/ci-pipeline-optimization.md). The original
 > 38/100 review below is a historical baseline, not a fresh maturity score.
 

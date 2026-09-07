@@ -720,6 +720,13 @@ CI 命令耗時與 bounded 測試報告由 `scripts/ci/telemetry.py` 收集，�
 synthetic evidence 的 working-tree 狀態。Wrapper 必須保留原始 exit code；上傳報告成功
 不代表測試通過。Native job/step 與 command 耗時分開計算，不能把平行 job 秒數相加當總等待時間。
 
+Gate 1 拆為八個獨立 worker，`synthetic-gate1` 僅作 aggregate，必須 `always()` 且八個
+`needs` 全部明確 success；failure／cancelled／skipped／缺少結果或 metrics 都不可放行。
+只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready` 也依賴 DB，不可移到無 DB job。
+Core 與 Agent 的 httpx 依賴不同，維持各自 uv project environment。平行 uv cache 使用 job suffix。
+Artifact 名稱須含 run attempt；rerun failed jobs 可沿用同 run／commit 的先前成功 worker metrics。
+此 gate 不等於已設定 branch protection，也不代表真實部署 E2E 已完成。
+
 每個變更至少驗證：
 
 - Acceptance Criteria 的正常、低信心、拒絕、撤回、失敗與重試路徑。

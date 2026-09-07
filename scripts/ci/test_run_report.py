@@ -33,6 +33,14 @@ class NativeTimingTests(unittest.TestCase):
         self.assertEqual(report["wall_seconds"], 120)
         self.assertEqual(report["runner_seconds"], 180)
         self.assertEqual(report["initial_dispatch_seconds"], 10)
+        # Worker completion does not imply completion of an aggregate still scheduling.
+        run["status"] = "in_progress"
+        self.assertFalse(build_report(run, jobs)["complete"])
+        run["status"] = "completed"
+        original_start = jobs[1]["started_at"]
+        jobs[1]["started_at"] = None
+        self.assertIsNone(build_report(run, jobs)["wall_seconds"])
+        jobs[1]["started_at"] = original_start
         jobs[1].update(status="in_progress", completed_at=None)
         pending = build_report(run, jobs)
         self.assertIsNone(pending["wall_seconds"])

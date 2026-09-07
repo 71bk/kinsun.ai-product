@@ -23,7 +23,15 @@ def seconds(start: str | None, end: str | None) -> float | None:
 def build_report(run: dict, jobs: list[dict]) -> dict:
     started = [job["started_at"] for job in jobs if job.get("started_at")]
     completed = [job["completed_at"] for job in jobs if job.get("completed_at")]
-    all_complete = bool(jobs) and all(job["status"] == "completed" for job in jobs)
+    all_complete = (
+        run["status"] == "completed"
+        and bool(jobs)
+        and all(
+            job["status"] == "completed"
+            and seconds(job.get("started_at"), job.get("completed_at")) is not None
+            for job in jobs
+        )
+    )
     entries = [
         {
             "job": job["name"],
