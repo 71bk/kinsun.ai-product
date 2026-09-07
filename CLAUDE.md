@@ -215,6 +215,10 @@
 
 ## 驗證矩陣
 
+CI 指標與後續 job 拆分依 `docs/project/ci-pipeline-optimization.md`。`scripts/ci/` 工具必須保留
+命令失敗狀態，metrics／raw JUnit 寫 runner 暫存目錄；只上傳去除輸出內容的 bounded 報告。
+實際 job/step 耗時可由 `run_report.py` 唯讀取得，未完成的 run 不得宣稱完整耗時或節省比例。
+
 只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
 
 ### Core API

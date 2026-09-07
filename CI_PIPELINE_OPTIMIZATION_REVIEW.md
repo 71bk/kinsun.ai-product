@@ -1,5 +1,12 @@
 # CI Optimization Review
 
+> Implementation update (2026-09-07): PR #24 exposed the five frontend step timings;
+> PR #25 fixed the async pagination-test race and passed on main. Command-level
+> telemetry is now being implemented as phase 1; job parallelization and the final
+> aggregate gate remain phase 2. Execution details and measured baselines are tracked
+> in [CI implementation notes](docs/project/ci-pipeline-optimization.md). The original
+> 38/100 review below is a historical baseline, not a fresh maturity score.
+
 > Review date: 2026-09-04
 > Scope: read-only review of the whole repository's CI/CD-related configuration, build inputs, tests, container definitions, deployment scripts, and documentation.
 > No application code, CI configuration, or deployment setting was changed during this review.
