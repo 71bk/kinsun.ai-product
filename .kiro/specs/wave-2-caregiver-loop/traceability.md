@@ -1,7 +1,7 @@
 # Wave 2 Caregiver Loop Traceability
 
 - 更新日期：2026-09-07
-- 狀態：C04 與 F02 repository implementation 均已完成並通過本地驗證
+- 狀態：C04／F02 PostgreSQL-backed HTTP／transaction slice 已通過 CI；Browser／真實登入與 live Agent E2E 尚未完成
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -31,11 +31,18 @@ promotion service 建立，不把它當成 live Agent／VERIFY HTTP 全鏈路的
   現依既有 contract 回 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`；unit regression 先重現再通過。
 - 第一輪 `core-db`（run `34094687215`）揭露 Candidate provenance ORM 錯誤繼承 `updated_at`，
   與 append-only migration 不符，造成真實 INSERT 失敗。已改為 `Base` 明確映射既有欄位並補
-  unit regression；不變更已套用 migration，修正後待 CI 重驗。
-- 本機：Core unit `1104 passed`、完整 Core Ruff lint／format 通過；DB integration 僅收集，
-  真正執行結果待本 PR 的 `core-db` CI。未對 Supabase development database 執行 fixture 或 rebuild。
+  unit regression；不變更已套用 migration，已通過下列 CI 重驗。
+- 第二輪（run `34095985265`）有 13 個 update-response cases 回 500；為兩個 mutable Care
+  aggregate 加入 `eager_defaults=True`，在 async flush 取回 server／on-update timestamp，避免
+  DTO 讀取 expired `updated_at` 觸發隱含 SQL；修正後 13 個案例均通過。
+- 本機：Core unit `1107 passed`、完整 Core Ruff lint／format、static contracts 通過；DB
+  integration 僅收集。未對 Supabase development database 執行 fixture 或 rebuild。
+- 遠端：[PR #29](https://github.com/71bk/kinsun.ai-product/pull/29)，code commit `473dad5`；
+  [CI run 34097721039](https://github.com/71bk/kinsun.ai-product/actions/runs/34097721039) 的
+  10 個 jobs（含 aggregate）全部成功。`core-db`：19 migration tests、142 request integration
+  tests（包含此檔新增 34 個案例）、Core live contract 全通過。無新 migration／CI job。
 
-Task 3.1a 尚待遠端 CI；Task 3.1b／整體 3.1 仍保持未完成，不能以此 slice 宣告真實登入、
+Task 3.1a 已完成；Task 3.1b／整體 3.1 仍保持未完成，不能以此 slice 宣告真實登入、
 Browser → BFF → Core、live Agent 或 production deployment E2E 已完成。
 
 ## Remaining product gaps

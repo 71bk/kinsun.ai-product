@@ -20,7 +20,7 @@
 
 - [ ] 3. Wave 2 caregiver-loop closeout
   - [ ] 3.1 驗證 C04/F02 end-to-end、replay、concurrency、permission expiry 與 no-medical-action cases
-    - [ ] 3.1a PostgreSQL-backed HTTP／transaction 驗收：人工 lifecycle、候選採納／拒絕／排除、replay、row-lock concurrency、授權過期、跨範圍與 medical proposal 零副作用（測試已新增，待 `core-db` CI 驗證）
+    - [x] 3.1a PostgreSQL-backed HTTP／transaction 驗收：人工 lifecycle、候選採納／拒絕／排除、replay、row-lock concurrency、授權過期、跨範圍與 medical proposal 零副作用（34 個新案例；CI run `34097721039` 的 142 integration／19 migration tests 與 aggregate 全部通過）
     - [ ] 3.1b 真實登入與 Browser → BFF → Core caregiver workflow E2E；真實 Agent-to-database 驗證另記環境證據
   - [ ] 3.2 更新 traceability 與 Story Map 狀態；不得把 C04 first slice 誤記為 F02 完成
   - _Requirements: R1, R2_
