@@ -667,6 +667,8 @@ kinsun.ai/
   - `CareActionCandidateEventProvenance` 的 append-only migration 只有 `created_at`，必須繼承
     `Base` 並明確映射 `id`／`created_at`；不能繼承會帶入 `updated_at` 的 `BaseModel`。
     否則 ORM SELECT／INSERT RETURNING 會引用不存在欄位；不要為配合錯誤 ORM 修改已套用 migration。
+  - `CareAction`／`CareActionCandidate` 的 async UPDATE 必須在 flush 時 eager fetch server／on-update
+    timestamps，避免 response DTO 讀取 expired `updated_at` 時隱含 SQL 而發生 `MissingGreenlet`。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
   - 2026-09-04 工作樹有 32 個 revision，head 是 `a7c9e1f3b5d6`。baseline 仍是 48 張 table，

@@ -8,7 +8,8 @@ from uuid import UUID
 import pytest
 
 from app.domain.care_action import care_event_snapshot_sha256
-from app.models.care_action_candidate import CareActionCandidateEventProvenance
+from app.models.care_action import CareAction
+from app.models.care_action_candidate import CareActionCandidate, CareActionCandidateEventProvenance
 
 EVENT_ID = UUID("71000000-0000-4000-8000-000000000001")
 EVENT_VERSION_ID = UUID("72000000-0000-4000-8000-000000000001")
@@ -21,6 +22,11 @@ def test_candidate_provenance_maps_only_append_only_migration_timestamps() -> No
     assert CareActionCandidateEventProvenance.id.property.columns[0].name == (
         "care_action_candidate_event_provenance_id"
     )
+
+
+@pytest.mark.parametrize("model", [CareAction, CareActionCandidate])
+def test_mutable_care_aggregates_fetch_server_timestamps_during_async_flush(model) -> None:
+    assert model.__mapper__.eager_defaults is True
 
 
 def _hash(*, payload: dict, event_version: int = 1, source_status: str = "VERIFIED") -> str:

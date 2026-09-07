@@ -158,10 +158,19 @@ async def care_data(committed_session):
     return ids
 
 
-def _client(engine, ids, *, actor="worker", role="HOME_CARE_WORKER", tenant="tenant"):
+def _client(
+    engine,
+    ids,
+    *,
+    actor="worker",
+    role="HOME_CARE_WORKER",
+    tenant="tenant",
+    raise_app_exceptions=True,
+):
     app = _build_client_app(engine, ids[actor], role, ids[tenant])
     return AsyncClient(
-        transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test"
+        transport=ASGITransport(app=app, raise_app_exceptions=raise_app_exceptions),
+        base_url="http://test",
     )
 
 
@@ -576,7 +585,7 @@ async def test_outbox_failure_rolls_back_entire_adoption_and_allows_retry(
         await self._session.execute(text("SELECT 1 / 0"))
 
     headers = _headers()
-    async with _client(test_engine, ids) as client:
+    async with _client(test_engine, ids, raise_app_exceptions=False) as client:
         with monkeypatch.context() as patch:
             patch.setattr(CareActionService, "_write_event", fail_after_real_outbox_insert)
             failed = await client.post(_adopt(ids), json={"expected_version": 1}, headers=headers)

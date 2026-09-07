@@ -30,6 +30,8 @@ class CareActionCandidate(
 
     __tablename__ = "care_action_candidate"
     __pk_name__ = "care_action_candidate_id"
+    # UPDATE must return updated_at before the HTTP response is serialized.
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

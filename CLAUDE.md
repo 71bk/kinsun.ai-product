@@ -221,6 +221,8 @@ Core `error_handlers` 以 exact exception type 查 status／reason mapping；DB 
 
 `CareActionCandidateEventProvenance` migration 只有 `created_at`；ORM 使用 `Base` 明確映射
 `id`／`created_at`，不得繼承含 `updated_at` 的 `BaseModel`，也不得改歷史 migration 迎合錯誤映射。
+`CareAction`／`CareActionCandidate` 使用 `eager_defaults=True`，讓 async flush 取回 UPDATE 的
+`updated_at`；同步 DTO 組裝不可觸發 expired 欄位的隱含 SQL。
 
 CI 指標與八個獨立 worker 拆分依 `docs/project/ci-pipeline-optimization.md`。`scripts/ci/` 工具必須保留
 命令失敗狀態，metrics／raw JUnit 寫 runner 暫存目錄；只上傳去除輸出內容的 bounded 報告。
