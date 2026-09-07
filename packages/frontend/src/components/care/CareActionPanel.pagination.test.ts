@@ -110,6 +110,7 @@ function renderPanel({ canCreate = true, canUpdate = false } = {}) {
         elderId: 'synthetic-elder',
         canCreate,
         canUpdate,
+        onAccessCheck: vi.fn(),
       }),
     }),
   );

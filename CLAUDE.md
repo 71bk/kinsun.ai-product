@@ -304,6 +304,10 @@ npm run build --workspace @elderly-care/frontend
 資料載入與 React DOM 更新已完成。`CareActionPanel.pagination.test.ts` 曾因只等 `listEvents`
 呼叫兩次就查按鈕而在 CI 偶發失敗，不要以固定 sleep 或測試重試掩蓋這類等待條件缺漏。
 
+Core unit test 匯入 repository 根目錄的 `scripts/` 工具時，用 `importlib.util` 依明確檔案路徑
+載入，避免 Core 自己的 `scripts` package 遮蔽根目錄工具。手動 DB 工具必須在 main／明確命令
+中才讀 `.env` 或連線，讓單元測試的 import 保持無外部副作用。
+
 ### Contracts 與 deployment-neutral artifacts
 
 ```powershell

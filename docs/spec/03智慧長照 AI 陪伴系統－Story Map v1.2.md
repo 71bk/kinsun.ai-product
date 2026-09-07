@@ -8,7 +8,10 @@ US-C04／US-F02 已完成 repository implementation 與 PostgreSQL-backed HTTP�
 驗收：新增 34 個 lifecycle、採納／拒絕／排除、replay、真實並行與負向安全案例；CI run
 [34097721039](https://github.com/71bk/kinsun.ai-product/actions/runs/34097721039) 的 142 integration、
 19 migration tests、live contracts 與 aggregate 通過。這是資料庫驗收切片，不代表 Wave 2
-整體完成：真實登入、Browser → BFF → Core 與 live Agent E2E 仍待驗證；self-assignment 邊界不變，
+整體完成：2026-09-07 真實登入與 Browser → BFF → Core → Supabase QA 已執行，lifecycle、replay、
+舊分頁 409 與權限失效拒絕已驗證；失效後舊畫面與登入入口文案兩項問題已修正並以另一批隔離資料、
+production rebuild 與真實登入重驗通過（前端 315 tests），live Agent E2E 尚未驗證
+（[QA report](../project/wave2-browser-qa-20260907.md)）。self-assignment 邊界不變，
 dashboard 待辦數屬 US-C01 後續增量。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 

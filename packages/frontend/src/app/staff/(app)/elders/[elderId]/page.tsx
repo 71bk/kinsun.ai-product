@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
 import { CareActionPanel } from '@/components/care/CareActionPanel';
 import { EventFilterBar } from '@/components/dashboard/EventFilterBar';
@@ -76,6 +76,9 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   );
   const [workspace, setWorkspace] = useState<ElderWorkspaceView | null>(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState<MessageKey | null>(null);
+  const [accessRevision, setAccessRevision] = useState(0);
+  const accessCheckAttempted = useRef(false);
   const [tab, setTab] = useState<Tab>('events');
   const [events, setEvents] = useState<EventView[]>([]);
   const [eventFilters, setEventFilters] = useState<ListEventsFilters>({});
@@ -96,6 +99,33 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   const [summaryBusy, setSummaryBusy] = useState(false);
   const [toastKey, setToastKey] = useState<MessageKey | null>(null);
 
+  const recheckAccess = useCallback(() => {
+    // Unmount every elder surface immediately, including child forms/dialogs.
+    // Dedicated workspace error state cannot be cleared by late list responses.
+    setWorkspace(null);
+    setWorkspaceLoading(true);
+    setWorkspaceError(null);
+    setEvents([]);
+    setMemories({ candidates: [], confirmed: [], candidateHasMore: false, confirmedHasMore: false });
+    setSummaries([]);
+    setNeedsReview(null);
+    setPendingSummary(null);
+    setToastKey(null);
+    // A successful workspace read followed by another denied list must not
+    // create an automatic unmount/refetch loop. Explicit Retry starts a new check.
+    if (accessCheckAttempted.current) {
+      setWorkspaceLoading(false);
+      setWorkspaceError('error.loadElderFailed');
+      return;
+    }
+    accessCheckAttempted.current = true;
+    setAccessRevision((revision) => revision + 1);
+  }, []);
+
+  useEffect(() => {
+    accessCheckAttempted.current = false;
+  }, [elderId, apiConfig]);
+
   useEffect(() => {
     let cancelled = false;
     void getRuntimeConfig().then((nextConfig) => {
@@ -111,13 +141,18 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     let cancelled = false;
     setWorkspace(null);
     setWorkspaceLoading(true);
+    setWorkspaceError(null);
     setErrorKey(null);
     getElderWorkspace(apiConfig, elderId)
       .then((view) => {
         if (!cancelled) setWorkspace(view);
       })
       .catch((error) => {
-        if (!cancelled) setErrorKey(describeError(error, 'error.loadElderFailed'));
+        if (!cancelled) setWorkspaceError(
+          error instanceof ApiRequestError && error.status === 401
+            ? 'auth.credentialMissing'
+            : describeError(error, 'error.loadElderFailed'),
+        );
       })
       .finally(() => {
         if (!cancelled) setWorkspaceLoading(false);
@@ -125,7 +160,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     return () => {
       cancelled = true;
     };
-  }, [apiConfig, elderId, runtimeConfig?.credentialStatus]);
+  }, [apiConfig, elderId, runtimeConfig?.credentialStatus, accessRevision]);
 
   const loadEvents = useCallback(() => {
     setErrorKey(null);
@@ -267,7 +302,11 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     }
   }
 
-  if (errorKey === 'error.noElderDataPermission') {
+  if (workspaceError === 'auth.credentialMissing') {
+    return <NotLoggedIn reason={t(workspaceError)} linkLabel={t('common.signIn')} />;
+  }
+
+  if (workspaceError === 'error.noElderDataPermission' || errorKey === 'error.noElderDataPermission') {
     return (
       <main className={styles.denied}>
         <ErrorState
@@ -286,7 +325,16 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   if (workspaceLoading || !workspace) {
     return (
       <main className={styles.page}>
-        {errorKey ? <ErrorState description={t(errorKey)} /> : <Skeleton rows={6} />}
+        {workspaceError ? (
+          <ErrorState description={t(workspaceError)} action={
+            <button type="button" className={styles.primaryButton} onClick={() => {
+              accessCheckAttempted.current = false;
+              recheckAccess();
+            }}>
+              {t('common.retry')}
+            </button>
+          } />
+        ) : <Skeleton rows={6} />}
       </main>
     );
   }
@@ -392,6 +440,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
             canCreate={canCreateCareActions}
             canUpdate={canUpdateCareActions}
             elderId={elderId}
+            onAccessCheck={recheckAccess}
           />
         </section>
       )}
