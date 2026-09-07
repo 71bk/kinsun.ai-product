@@ -664,6 +664,9 @@ kinsun.ai/
     `docs/project/*.sql text eol=lf`。兩份若出現實質差異，以 Alembic baseline 為準。
   - ORM model 的 Python 屬性統一是 `id`，實際對應各表自己的 PK 欄位（`__pk_name__`）。
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
+  - `CareActionCandidateEventProvenance` 的 append-only migration 只有 `created_at`，必須繼承
+    `Base` 並明確映射 `id`／`created_at`；不能繼承會帶入 `updated_at` 的 `BaseModel`。
+    否則 ORM SELECT／INSERT RETURNING 會引用不存在欄位；不要為配合錯誤 ORM 修改已套用 migration。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
   - 2026-09-04 工作樹有 32 個 revision，head 是 `a7c9e1f3b5d6`。baseline 仍是 48 張 table，

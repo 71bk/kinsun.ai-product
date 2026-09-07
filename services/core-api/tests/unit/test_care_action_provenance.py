@@ -8,9 +8,19 @@ from uuid import UUID
 import pytest
 
 from app.domain.care_action import care_event_snapshot_sha256
+from app.models.care_action_candidate import CareActionCandidateEventProvenance
 
 EVENT_ID = UUID("71000000-0000-4000-8000-000000000001")
 EVENT_VERSION_ID = UUID("72000000-0000-4000-8000-000000000001")
+
+
+def test_candidate_provenance_maps_only_append_only_migration_timestamps() -> None:
+    table = CareActionCandidateEventProvenance.__table__
+    assert "created_at" in table.c
+    assert "updated_at" not in table.c
+    assert CareActionCandidateEventProvenance.id.property.columns[0].name == (
+        "care_action_candidate_event_provenance_id"
+    )
 
 
 def _hash(*, payload: dict, event_version: int = 1, source_status: str = "VERIFIED") -> str:

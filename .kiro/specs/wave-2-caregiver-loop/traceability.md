@@ -29,6 +29,9 @@ promotion service 建立，不把它當成 live Agent／VERIFY HTTP 全鏈路的
   cross-scope／不存在回應一致、非專業／無 assignment 拒絕、medical AI proposal 零寫入。
 - 發現並修正 `OptimisticConcurrencyError` exact-type error mapping 遺漏：原本回 500，
   現依既有 contract 回 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`；unit regression 先重現再通過。
+- 第一輪 `core-db`（run `34094687215`）揭露 Candidate provenance ORM 錯誤繼承 `updated_at`，
+  與 append-only migration 不符，造成真實 INSERT 失敗。已改為 `Base` 明確映射既有欄位並補
+  unit regression；不變更已套用 migration，修正後待 CI 重驗。
 - 本機：Core unit `1104 passed`、完整 Core Ruff lint／format 通過；DB integration 僅收集，
   真正執行結果待本 PR 的 `core-db` CI。未對 Supabase development database 執行 fixture 或 rebuild。
 
