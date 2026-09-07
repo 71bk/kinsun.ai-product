@@ -276,6 +276,10 @@ npm run build --workspace @elderly-care/frontend
 有畫面或互動改動時，再做 375／390／430 px、keyboard、loading／empty／error、`prefers-reduced-motion`
 與 feature-on／feature-off 視覺驗證。
 
+非同步元件測試先用 `findByRole` 等待可操作的 UI，再驗證 mock 呼叫次數；呼叫已發出不代表
+資料載入與 React DOM 更新已完成。`CareActionPanel.pagination.test.ts` 曾因只等 `listEvents`
+呼叫兩次就查按鈕而在 CI 偶發失敗，不要以固定 sleep 或測試重試掩蓋這類等待條件缺漏。
+
 ### Contracts 與 deployment-neutral artifacts
 
 ```powershell

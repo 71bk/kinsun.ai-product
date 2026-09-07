@@ -174,10 +174,9 @@ describe('CareActionPanel pagination', () => {
 
   it('advances VERIFIED and CORRECTED source cursors independently', async () => {
     const { container } = renderPanel();
-    await waitFor(() => expect(listEventsMock).toHaveBeenCalledTimes(2));
-    const createToggle = container.querySelector<HTMLButtonElement>('button[aria-expanded]');
-    expect(createToggle).not.toBeNull();
-    fireEvent.click(createToggle!);
+    const createToggle = await screen.findByRole('button', { name: '建立待辦' });
+    expect(listEventsMock).toHaveBeenCalledTimes(2);
+    fireEvent.click(createToggle);
 
     const sourceSelect = container.querySelector<HTMLSelectElement>('select[name="sourceEvent"]');
     expect(sourceSelect?.options).toHaveLength(2);
