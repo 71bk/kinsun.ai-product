@@ -36,7 +36,7 @@ wall/runner totals. Compare like-for-like runner/cache conditions across several
 - Pre-telemetry baseline: main `7fa7e25`, run `34075977852`, successful job 409 seconds.
   Core block 121 seconds; RAG block 168 seconds; frontend commands 59 seconds.
 - Phase 1 passed the full serial pipeline: PR run `34078429651` (374 seconds), then
-  main run `34079584129` at `6db3d3d`. The PR restored both uv and npm caches.
+  main run `34079584129` at `6db3d3d` (417 seconds). The PR restored both uv and npm caches.
 - Phase 1 command measurements: Core unit 30.1s, migrations 20.6s, integration 58.2s;
   RAG pytest 143.9s versus policy audit 0.7s; frontend tests 20.5s and build 13.9s.
   These are individual command times, not comparable to whole-job timing directly.
@@ -84,7 +84,32 @@ from a still-running aggregate job.
 Workflow regression tests pin job membership, command coverage/order, DB isolation,
 always-run metrics, aggregate wiring and cache separation. Gate tests cover failed,
 cancelled, skipped, missing and unexpected dependencies plus report provenance/reruns.
-Actual parallel PR/main results must be recorded before claiming a speedup.
+The first parallel PR run passed; final-head and post-merge main verification follow.
+
+### Measured rollout samples
+
+| Topology / event | Run | Wall seconds | Runner seconds |
+| --- | --- | ---: | ---: |
+| Serial telemetry / PR #26 | [34078429651](https://github.com/71bk/kinsun.ai-product/actions/runs/34078429651) | 374 | 374 |
+| Serial telemetry / main | [34079584129](https://github.com/71bk/kinsun.ai-product/actions/runs/34079584129) | 417 | 417 |
+| Parallel / PR #27 first head `4ea276f` | [34081407110](https://github.com/71bk/kinsun.ai-product/actions/runs/34081407110) | 130 | 424 |
+
+All are successful attempt-1 runs, measured from first job start through final job end
+(including aggregate/setup/post, excluding initial dispatch). The first parallel run
+restored npm cache; all seven newly scoped uv cache keys were misses. All nine jobs
+passed, including the aggregate with eight valid reports and no errors. The seven
+pytest/Vitest suites retained all 2,459 tests (zero failures/errors/skips): Core unit
+1,103, migrations 19, integration 108, Agent 515, Speech 91, RAG 324, frontend 299.
+CI helper unittests and contract/synthetic verifiers are additional checks.
+
+Relative to the serial PR sample, wall time fell 65.2% while runner seconds rose 13.4%.
+This is not a controlled benchmark: runner performance/cache state vary (RAG pytest
+alone ranged from 143.9s serial to 97.5s parallel). Do not infer billed-minute savings
+or promise a fixed latency reduction. First-run native jobs: Core fast 44s, DB 113s,
+Agent 19s, Speech 12s, RAG 113s, contracts 21s, cross-service 17s, frontend 75s,
+aggregate 10s. Job start offsets/dependency scheduling explain wall time versus the
+longest worker plus aggregate. Native reports remain outside the checkout; bounded
+per-command reports and aggregate results are downloadable Actions artifacts (30 days).
 
 ## Local validation
 
