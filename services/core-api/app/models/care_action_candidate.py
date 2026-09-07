@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import (
     SCHEMA_NAME,
+    Base,
     BaseModel,
     OptimisticConcurrencyMixin,
     TenantScopedMixin,
@@ -29,6 +30,8 @@ class CareActionCandidate(
 
     __tablename__ = "care_action_candidate"
     __pk_name__ = "care_action_candidate_id"
+    # UPDATE must return updated_at before the HTTP response is serialized.
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -62,11 +65,19 @@ class CareActionCandidate(
     )
 
 
-class CareActionCandidateEventProvenance(BaseModel):
+class CareActionCandidateEventProvenance(Base):
     """Append-only source version that justified one candidate."""
 
     __tablename__ = "care_action_candidate_event_provenance"
     __pk_name__ = "care_action_candidate_event_provenance_id"
+    # The append-only migration has created_at only; BaseModel would map a
+    # nonexistent updated_at column into every SELECT / INSERT RETURNING.
+    id: Mapped[uuid.UUID] = mapped_column(
+        __pk_name__, UUID(as_uuid=True), primary_key=True, server_default=sa.func.gen_random_uuid()
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+    )
     __table_args__ = (
         sa.CheckConstraint(
             "source_order BETWEEN 0 AND 15",

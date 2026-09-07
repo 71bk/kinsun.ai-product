@@ -34,6 +34,7 @@ from app.core.exceptions import (
     ConflictError,
     DomainException,
     NotFoundError,
+    OptimisticConcurrencyError,
     ServiceUnavailableError,
     SpeechSynthesisRateLimitError,
     TenantScopeError,
@@ -55,6 +56,7 @@ _correlation_id = correlation_id_var
 EXCEPTION_MAP: dict[type[DomainException], int] = {
     NotFoundError: 404,
     ConflictError: 409,
+    OptimisticConcurrencyError: 409,
     ValidationError: 422,
     AuthorizationDeniedError: 404,  # Hide resource existence
     AuthenticationError: 401,
@@ -95,6 +97,7 @@ _HTTP_STATUS_MESSAGES: dict[int, str] = {
 _REASON_CODE_BY_EXCEPTION: dict[type[Exception], str] = {
     NotFoundError: "RESOURCE_NOT_FOUND",
     ConflictError: "VERSION_OR_IDEMPOTENCY_CONFLICT",
+    OptimisticConcurrencyError: "VERSION_OR_IDEMPOTENCY_CONFLICT",
     ValidationError: "SCHEMA_OR_SEMANTIC_VALIDATION_FAILED",
     AuthorizationDeniedError: "RESOURCE_NOT_FOUND_OR_FORBIDDEN",
     AuthenticationError: "AUTHENTICATION_FAILED",

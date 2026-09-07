@@ -29,6 +29,9 @@ class CareAction(
 
     __tablename__ = "care_action"
     __pk_name__ = "care_action_id"
+    # Fetch server/on-update timestamps during flush, before synchronous DTO
+    # serialization; an implicit async load here would raise MissingGreenlet.
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

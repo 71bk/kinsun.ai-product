@@ -55,6 +55,8 @@
 
 ### HTTP status
 
+- DB optimistic concurrency conflict 明確回 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`；
+  `OptimisticConcurrencyError` 子類已補入 exact-type mapping，避免誤回 500。既有 409 contract 不變。
 - Pydantic／semantic validation 目前皆為 422；文件 10 對部分 validation 使用 400。
 - 未授權 elder scope 與不存在 elder 均回 404，以避免資源探測。
 - 410、429、502、504 尚未建立對應 DomainException 與 endpoint 行為。

@@ -2,6 +2,16 @@
 
 > **2026-08-14 Target Domain Overlay**：後續 backlog 必須依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md) 與 [Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md) 執行。新增的優先 Enablers 為 Account／Elder decoupling、Organization／Household context、Elder Enrollment、Service Entitlement、Staff-assisted Elder Session、single-Elder offboarding 與 Household continuation。這些工作不得被誤列為既有 Gate 1 已完成項目；Gate 1 的 Agent、ASR／TTS 與 CI 暫緩決策不因此改變。
 
+## 2026-09-07 Wave 2 驗收進度
+
+US-C04／US-F02 已完成 repository implementation 與 PostgreSQL-backed HTTP／transaction
+驗收：新增 34 個 lifecycle、採納／拒絕／排除、replay、真實並行與負向安全案例；CI run
+[34097721039](https://github.com/71bk/kinsun.ai-product/actions/runs/34097721039) 的 142 integration、
+19 migration tests、live contracts 與 aggregate 通過。這是資料庫驗收切片，不代表 Wave 2
+整體完成：真實登入、Browser → BFF → Core 與 live Agent E2E 仍待驗證；self-assignment 邊界不變，
+dashboard 待辦數屬 US-C01 後續增量。詳細範圍與證據見
+[Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
+
 ## 工作表：00_總覽
 
 | 智慧長照 AI 陪伴系統｜Story Map v1.2 |  |  |  |  |  |  |  |  |  |

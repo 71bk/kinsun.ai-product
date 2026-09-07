@@ -546,6 +546,9 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
   由 `app/api/error_handlers.py` 統一轉為 `ErrorEnvelope` 與對應狀態碼。
 - 例外流程固定為：`DomainException → error_handlers → ErrorEnvelope`。
   這樣狀態碼對應只有一份（`EXCEPTION_MAP`），不會每個 endpoint 各寫一套而逐漸分歧。
+- `error_handlers` 的 status／reason mapping 使用 exact exception type；新增子類時也要明確登記。
+  DB optimistic write 的 `OptimisticConcurrencyError` 必須對應 409 與
+  `VERSION_OR_IDEMPOTENCY_CONFLICT`，不能只登記父類 `ConflictError`，否則真實並行失敗會變成 500。
 - 非 `DomainException` 的例外若需要特定狀態碼，要在 `register_exception_handlers()`
   明確註冊，否則會掉進 catch-all 變成 500。已知案例：
   `NoAuthenticatorConfiguredError` 必須是 401（fail closed），不是 500。
@@ -661,6 +664,11 @@ kinsun.ai/
     `docs/project/*.sql text eol=lf`。兩份若出現實質差異，以 Alembic baseline 為準。
   - ORM model 的 Python 屬性統一是 `id`，實際對應各表自己的 PK 欄位（`__pk_name__`）。
     新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
+  - `CareActionCandidateEventProvenance` 的 append-only migration 只有 `created_at`，必須繼承
+    `Base` 並明確映射 `id`／`created_at`；不能繼承會帶入 `updated_at` 的 `BaseModel`。
+    否則 ORM SELECT／INSERT RETURNING 會引用不存在欄位；不要為配合錯誤 ORM 修改已套用 migration。
+  - `CareAction`／`CareActionCandidate` 的 async UPDATE 必須在 flush 時 eager fetch server／on-update
+    timestamps，避免 response DTO 讀取 expired `updated_at` 時隱含 SQL 而發生 `MissingGreenlet`。
   - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
     加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
   - 2026-09-04 工作樹有 32 個 revision，head 是 `a7c9e1f3b5d6`。baseline 仍是 48 張 table，
