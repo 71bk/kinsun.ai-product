@@ -33,6 +33,7 @@ from app.core.exceptions import (
     ConflictError,
     DomainException,
     NotFoundError,
+    OptimisticConcurrencyError,
     ServiceUnavailableError,
     SpeechSynthesisRateLimitError,
     TenantScopeError,
@@ -188,6 +189,19 @@ class TestDomainExceptionHandler:
         request = MagicMock()
         request.url.path = path
         return request
+
+    @pytest.mark.asyncio
+    async def test_database_optimistic_conflict_returns_nonretryable_409(self) -> None:
+        import json
+
+        response = await _domain_exception_handler(
+            self._make_request(), OptimisticConcurrencyError("Synthetic stale version")
+        )
+        body = json.loads(response.body)
+        assert response.status_code == 409
+        assert body["error"]["code"] == "conflict"
+        assert body["error"]["reason_code"] == "VERSION_OR_IDEMPOTENCY_CONFLICT"
+        assert body["error"]["retryable"] is False
 
     @pytest.mark.asyncio
     @patch("app.api.error_handlers._is_production", return_value=False)

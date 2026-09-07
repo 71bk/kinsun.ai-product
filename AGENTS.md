@@ -546,6 +546,9 @@ uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/v
   由 `app/api/error_handlers.py` 統一轉為 `ErrorEnvelope` 與對應狀態碼。
 - 例外流程固定為：`DomainException → error_handlers → ErrorEnvelope`。
   這樣狀態碼對應只有一份（`EXCEPTION_MAP`），不會每個 endpoint 各寫一套而逐漸分歧。
+- `error_handlers` 的 status／reason mapping 使用 exact exception type；新增子類時也要明確登記。
+  DB optimistic write 的 `OptimisticConcurrencyError` 必須對應 409 與
+  `VERSION_OR_IDEMPOTENCY_CONFLICT`，不能只登記父類 `ConflictError`，否則真實並行失敗會變成 500。
 - 非 `DomainException` 的例外若需要特定狀態碼，要在 `register_exception_handlers()`
   明確註冊，否則會掉進 catch-all 變成 500。已知案例：
   `NoAuthenticatorConfiguredError` 必須是 401（fail closed），不是 500。

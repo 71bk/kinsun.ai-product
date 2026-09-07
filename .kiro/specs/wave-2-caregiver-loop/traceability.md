@@ -1,6 +1,6 @@
 # Wave 2 Caregiver Loop Traceability
 
-- 更新日期：2026-09-04
+- 更新日期：2026-09-07
 - 狀態：C04 與 F02 repository implementation 均已完成並通過本地驗證
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
@@ -12,7 +12,30 @@
 
 目前已證明人工建立／更新 formal Care Action，以及 AI proposal、VERIFY promotion、Candidate 採納／拒絕／排除的 Core 與 UI contract。R2 Alembic graph 已驗證單一 head `d1f3a5c7e9b0`；2026-09-04 已對 Supabase development database 完成由 `b8d0f2a4c6e7` 至 `d1f3a5c7e9b0` 的 additive upgrade，並讀回 2 張新表、proposal 欄位、索引與 triggers。production build 與 zh-Hant／en 的 390／768／1024／1280 deterministic browser fixture QA 已通過。尚未執行真實登入、真實 Agent-to-database 或 production deployment E2E。
 
-## Remaining acceptance gaps
+## PostgreSQL acceptance slice（2026-09-07）
+
+新增 `services/core-api/tests/integration/test_care_action_workflow.py` 的 34 個案例，沿用
+`core-db` job 的 disposable PostgreSQL 與既有 migration／request integration 分段，不新增 CI job。
+身分使用 `FakeAuthenticator` 注入；elder authorization、repository、transaction、row lock、
+optimistic write、idempotency snapshot 與 outbox 都使用實際資料庫。Candidate fixture 透過真實
+promotion service 建立，不把它當成 live Agent／VERIFY HTTP 全鏈路的證據。
+
+- C04：manual create、自我指派、來源 provenance、開始／延期／完成／取消、舊回應 replay、
+  payload conflict、終態拒絕、existing cross-elder／tenant／unreviewed source 拒絕。
+- F02：候選採納／拒絕／排除與 reason、正式 action 連結、minimal outbox；same-key／different-key
+  adoption、adopt-vs-dismiss 與 formal update 的真實 row-lock contention。
+- 故障／安全：candidate/source stale version、來源失效、過期 due、outbox INSERT 後 DB 故障的
+  完整回滾與同 key retry；四種 command 在 assignment 過期後連成功 snapshot replay 也拒絕；
+  cross-scope／不存在回應一致、非專業／無 assignment 拒絕、medical AI proposal 零寫入。
+- 發現並修正 `OptimisticConcurrencyError` exact-type error mapping 遺漏：原本回 500，
+  現依既有 contract 回 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`；unit regression 先重現再通過。
+- 本機：Core unit `1104 passed`、完整 Core Ruff lint／format 通過；DB integration 僅收集，
+  真正執行結果待本 PR 的 `core-db` CI。未對 Supabase development database 執行 fixture 或 rebuild。
+
+Task 3.1a 尚待遠端 CI；Task 3.1b／整體 3.1 仍保持未完成，不能以此 slice 宣告真實登入、
+Browser → BFF → Core、live Agent 或 production deployment E2E 已完成。
+
+## Remaining product gaps
 
 - US-C04 的 manual create、reason/source/creator/due/status、complete/postpone/cancel reason，以及 US-F02 的 adopt/reject/exclude reason 均已覆蓋。
 - Arbitrary assignee／轉派未實作；第一切片刻意只允許 self-assignment。
