@@ -1,5 +1,11 @@
 # CI Optimization Review
 
+> PR A update (2026-09-07): selective PR execution is being implemented with an
+> always-required `changes` job, versioned impact rules, planned-skip-aware aggregate,
+> and unchanged full main coverage. Unknown paths and unavailable diffs run all workers.
+> RAG-governed Agent files and Markdown remain covered. Validation status is recorded
+> in [CI implementation notes](docs/project/ci-pipeline-optimization.md).
+
 > Implementation update (2026-09-07): PR #24 exposed the five frontend step timings;
 > PR #25 fixed the async pagination-test race and passed on main. Command-level
 > telemetry shipped in PR #26 and passed on main. Phase 2 splits eight workers and

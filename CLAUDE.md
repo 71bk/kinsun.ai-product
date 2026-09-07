@@ -218,8 +218,14 @@
 CI 指標與八個獨立 worker 拆分依 `docs/project/ci-pipeline-optimization.md`。`scripts/ci/` 工具必須保留
 命令失敗狀態，metrics／raw JUnit 寫 runner 暫存目錄；只上傳去除輸出內容的 bounded 報告。
 實際 job/step 耗時可由 `run_report.py` 唯讀取得，未完成的 run 不得宣稱完整耗時或節省比例。
-`synthetic-gate1` 是 `always()` aggregate，八個 needs 必須全 success；失敗／取消／skip／缺少
-結果或 metrics 均不可放行。只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready`
+PR 由永遠執行的 `changes`／`scripts/ci/impact.py` 選擇 workers，main push 全跑。
+`synthetic-gate1` 是 `always()` aggregate，needs 含 changes 與八個 workers。changes 與選定
+worker 須 success 且有 metrics；只有有效、同 run／commit 的計畫明確排除者才能 skipped。
+意外 skip／失敗／取消／缺少結果或計畫均不可放行；未知路徑或 diff 不完整回退全跑。
+新增跨服務依賴須補影響規則測試：RAG hash inputs 包含 Agent 程式／測試與 public retrieval
+plan Markdown，不能把全部 .md 當純文件。PR diff 用 merge-base→head、NUL 分隔且停用 rename
+detection，保留新舊路徑；不能用 HEAD~1 或截斷的 files API，也不加 workflow-level paths filter。
+只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready`
 也需要 DB。Core／Agent 保留分離的 uv environment（httpx constraints 不同），uv cache 以 job
 suffix 隔離。Artifact 名稱含 run attempt，failed-jobs rerun 可沿用同 run／commit 的先前成功
 worker metrics。Aggregate 不等於已啟用 branch protection，也不是部署 E2E 證據。

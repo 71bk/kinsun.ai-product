@@ -45,7 +45,8 @@ wall/runner totals. Compare like-for-like runner/cache conditions across several
 
 ## Phase 2: independent workers and aggregate
 
-Every PR and main push still runs the full suite; selective execution is deferred.
+Phase 2 ran every PR and main push in full. PR A adds the selective policy below;
+main remains full coverage.
 The original 31 distinct command IDs remain covered. Dependency installs are repeated
 only where a worker requires them; Core and Agent keep separate project environments.
 
@@ -67,7 +68,7 @@ uv cache suffix to avoid parallel save collisions. Caches contain downloads, not
 shared virtualenvs. Cold cache and duplicate setup costs may increase runner seconds.
 
 `synthetic-gate1` keeps the old check name and uses `if: always()` with all eight
-workers in `needs`. `scripts/ci/gate.py` accepts only eight explicit `success` results;
+workers in `needs`. Before PR A, `scripts/ci/gate.py` accepted only eight explicit `success` results;
 failure, cancellation, skip, missing or unexpected jobs fail closed. Missing,
 incomplete or unsuccessful command metrics also fail the gate. Uploading an artifact
 cannot override command failure. Branch protection must separately require this check
@@ -121,3 +122,52 @@ uv run --frozen --project services/core-api ruff format --check scripts/ci
 
 Use actionlint to validate workflow contexts and syntax. CI continues to own disposable
 PostgreSQL lifecycle tests; never run those against the Supabase development database.
+
+## PR A: conservative selective execution
+
+`scripts/ci/impact.py` is the single versioned policy authority (`POLICY_VERSION=1`).
+The new `changes` job always runs CI-tool tests/lint/format, then computes a PR's
+merge-base-to-head Git diff and runs `git diff --check` on that range. Full checkout
+history avoids file-list API pagination limits; NUL separation handles Unicode and
+spaces. Rename detection is disabled so both deleted and added paths are classified.
+No PR-supplied filename/ref is interpolated into a shell command. Unknown paths,
+empty diffs or unavailable comparison commits select all workers. A whitespace check
+failure fails `changes`; it is not converted into a successful docs-only skip.
+For non-PR events, including every main push, all workers are selected.
+
+| Changed paths | Selected workers (union for mixed changes) |
+| --- | --- |
+| `packages/frontend/`, `packages/shared/`, root package.json/lock/.npmrc | frontend-quality |
+| `services/core-api/` | core-fast, core-db, contracts, cross-service, speech-quality |
+| `services/agent-runtime/` | core-fast, core-db, contracts, cross-service, agent-quality, rag-quality |
+| `services/speech-gateway/`, `evals/speech/` | core-fast, core-db, contracts, cross-service, agent-quality, speech-quality |
+| `services/rag-ingestion/`, `config/rag/`, `data/rag/`, `data/rag-*`, `scripts/rag/`, public retrieval plan | core-fast, core-db, contracts, cross-service, agent-quality, rag-quality |
+| `docs/spec/*.md`, `docs/adr/*.md`, this CI note, CI_PIPELINE_OPTIMIZATION_REVIEW.md | changes only; workers skipped |
+| Everything else, including contracts, CI files, new services and shared controls | all workers |
+
+The public retrieval plan is `docs/project/rag-v3-public-retrieval-plan.md`. It and
+Agent implementation/test files are hashed inputs of RAG governance validators.
+Their changes MUST select RAG even if the edited file is Markdown or outside the
+ingestion service. A regression test scans repository `Path(...)` literals in RAG
+implementation to guard this dependency. It is a supplementary guard, not a universal
+dependency discovery engine; new dynamic dependencies still require policy review.
+Most documentation outside the explicit whitelist deliberately falls back to full CI.
+
+Workers depend only on `changes` and literal `true` output flags. The aggregate still
+always runs and now needs `changes` plus all eight workers. It validates the plan's
+schema/policy version, event, run, commit, attempt, all eight boolean decisions and
+bounded reasons, and checks that each scheduling flag agrees with that plan.
+`changes` and selected workers require success plus valid metrics. Only explicitly
+unselected workers may be skipped and omit metrics; unexpected skips, missing results,
+failed/cancelled jobs, invalid plans or metrics for skipped workers fail closed.
+Even docs-only runs upload `changes` metrics, so aggregate download is never empty on
+a successful run. Plan JSON is included in that artifact and the aggregate summary;
+no raw changed filenames or event payloads are exported. Existing attempt-aware
+artifact selection continues to support successful jobs reused by failed-job reruns.
+
+Acceptance coverage: pure docs/frontend/Core/Agent/Speech/RAG, mixed paths, migrations,
+contracts/shared tooling/unknown paths, 3,500+ paths, real Git rename/delete/Unicode,
+base-only commits, unavailable diff, whitespace rejection, full non-PR events,
+planned vs accidental skips, condition/plan mismatch, missing plan/metrics and reruns.
+This PR changes scheduling only: no RAG performance changes, new build caches,
+branch protection, provider credentials, deployment or browser E2E are included.
