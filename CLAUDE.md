@@ -215,9 +215,14 @@
 
 ## 驗證矩陣
 
-CI 指標與後續 job 拆分依 `docs/project/ci-pipeline-optimization.md`。`scripts/ci/` 工具必須保留
+CI 指標與八個獨立 worker 拆分依 `docs/project/ci-pipeline-optimization.md`。`scripts/ci/` 工具必須保留
 命令失敗狀態，metrics／raw JUnit 寫 runner 暫存目錄；只上傳去除輸出內容的 bounded 報告。
 實際 job/step 耗時可由 `run_report.py` 唯讀取得，未完成的 run 不得宣稱完整耗時或節省比例。
+`synthetic-gate1` 是 `always()` aggregate，八個 needs 必須全 success；失敗／取消／skip／缺少
+結果或 metrics 均不可放行。只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready`
+也需要 DB。Core／Agent 保留分離的 uv environment（httpx constraints 不同），uv cache 以 job
+suffix 隔離。Artifact 名稱含 run attempt，failed-jobs rerun 可沿用同 run／commit 的先前成功
+worker metrics。Aggregate 不等於已啟用 branch protection，也不是部署 E2E 證據。
 
 只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
 

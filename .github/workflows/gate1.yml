@@ -13,8 +13,72 @@ concurrency:
   group: gate1-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun
+  TEST_DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun_test
+  APP_ENV: development
+  FAKE_AUTH_ENABLED: "false"
+  AWS_EC2_METADATA_DISABLED: "true"
+  # Synthetic key for the disposable CI gateway only. Deployments must
+  # inject an environment-specific secret and never reuse service identity.
+  TTS_CLIENT_IP_HASH_SECRET: synthetic-ci-tts-client-ip-hash-secret-material
+
+
 jobs:
-  synthetic-gate1:
+  core-fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: core-fast
+          cache-dependency-glob: |
+            services/core-api/pyproject.toml
+            services/core-api/uv.lock
+
+      - name: Install Core environment
+        run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
+
+      - name: CI instrumentation regression tests
+        run: python scripts/ci/telemetry.py run --id ci-tools -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" python -m unittest discover -s scripts/ci -p 'test_*.py'
+
+      - name: Core lint
+        run: python scripts/ci/telemetry.py run --id core-lint -- uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
+
+      - name: Core format
+        run: python scripts/ci/telemetry.py run --id core-format -- uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
+
+      - name: RAG projection dry-run
+        run: python scripts/ci/telemetry.py run --id core-rag-dry-run -- uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
+
+      - name: Core unit tests
+        run: python scripts/ci/telemetry.py run --id core-unit --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/unit
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  core-db:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -31,17 +95,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-
-    env:
-      DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun
-      TEST_DATABASE_URL: postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun_test
-      APP_ENV: development
-      FAKE_AUTH_ENABLED: "false"
-      AWS_EC2_METADATA_DISABLED: "true"
-      # Synthetic key for the disposable CI gateway only. Deployments must
-      # inject an environment-specific secret and never reuse service identity.
-      TTS_CLIENT_IP_HASH_SECRET: synthetic-ci-tts-client-ip-hash-secret-material
-
     steps:
       - uses: actions/checkout@v4
 
@@ -54,28 +107,13 @@ jobs:
         with:
           version: "0.11.25"
           enable-cache: true
-
-      - uses: actions/setup-node@v4
-        id: node
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: package-lock.json
+          cache-suffix: core-db
+          cache-dependency-glob: |
+            services/core-api/pyproject.toml
+            services/core-api/uv.lock
 
       - name: Install Core environment
         run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
-
-      - name: Install Agent environment
-        run: python scripts/ci/telemetry.py run --id install-agent -- uv sync --frozen --project services/agent-runtime --extra test --extra dev
-
-      - name: Install Speech environment
-        run: python scripts/ci/telemetry.py run --id install-speech -- uv sync --frozen --project services/speech-gateway --extra test --extra dev
-
-      - name: Install RAG environment
-        run: python scripts/ci/telemetry.py run --id install-rag -- uv sync --frozen --project services/rag-ingestion --extra test --extra dev
-
-      - name: CI instrumentation regression tests
-        run: python scripts/ci/telemetry.py run --id ci-tools -- python -m unittest discover -s scripts/ci -p 'test_*.py'
 
       - name: Create disposable integration database
         run: >-
@@ -85,24 +123,53 @@ jobs:
           connection.execute('CREATE DATABASE kinsun_test');
           connection.close()"
 
-      - name: Core lint
-        run: python scripts/ci/telemetry.py run --id core-lint -- uv run --frozen --project services/core-api ruff check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
-
-      - name: Core format
-        run: python scripts/ci/telemetry.py run --id core-format -- uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/ci
-
-      - name: RAG projection dry-run
-        run: python scripts/ci/telemetry.py run --id core-rag-dry-run -- uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
-
-      - name: Core unit tests
-        run: python scripts/ci/telemetry.py run --id core-unit --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/unit
-
-      # Migration lifecycle must finish in its own process before request integration.
+      # Keep destructive migration and request integration in separate, ordered processes.
       - name: Core migration lifecycle
         run: python scripts/ci/telemetry.py run --id core-migrations --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/integration/test_migrations.py
 
       - name: Core PostgreSQL integration
         run: python scripts/ci/telemetry.py run --id core-integration --test-format pytest -- uv run --frozen --project services/core-api pytest services/core-api/tests/integration --ignore=services/core-api/tests/integration/test_migrations.py
+
+      - name: Core live contracts
+        run: python scripts/ci/telemetry.py run --id contracts-core -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_contract_live.py contracts
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  agent-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: agent-quality
+          cache-dependency-glob: |
+            services/agent-runtime/pyproject.toml
+            services/agent-runtime/uv.lock
+
+      - name: Install Agent environment
+        run: python scripts/ci/telemetry.py run --id install-agent -- uv sync --frozen --project services/agent-runtime --extra test --extra dev
 
       - name: Agent lint
         run: python scripts/ci/telemetry.py run --id agent-lint -- uv run --frozen --project services/agent-runtime ruff check services/agent-runtime
@@ -113,6 +180,44 @@ jobs:
       - name: Agent tests
         run: python scripts/ci/telemetry.py run --id agent-tests --test-format pytest -- uv run --frozen --project services/agent-runtime pytest services/agent-runtime/tests
 
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  speech-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: speech-quality
+          cache-dependency-glob: |
+            services/speech-gateway/pyproject.toml
+            services/speech-gateway/uv.lock
+
+      - name: Install Speech environment
+        run: python scripts/ci/telemetry.py run --id install-speech -- uv sync --frozen --project services/speech-gateway --extra test --extra dev
+
       - name: Speech lint
         run: python scripts/ci/telemetry.py run --id speech-lint -- uv run --frozen --project services/speech-gateway ruff check services/speech-gateway
 
@@ -121,6 +226,44 @@ jobs:
 
       - name: Speech tests
         run: python scripts/ci/telemetry.py run --id speech-tests --test-format pytest -- uv run --frozen --project services/speech-gateway pytest services/speech-gateway/tests
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  rag-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: rag-quality
+          cache-dependency-glob: |
+            services/rag-ingestion/pyproject.toml
+            services/rag-ingestion/uv.lock
+
+      - name: Install RAG environment
+        run: python scripts/ci/telemetry.py run --id install-rag -- uv sync --frozen --project services/rag-ingestion --extra test --extra dev
 
       - name: RAG lint
         run: python scripts/ci/telemetry.py run --id rag-lint -- uv run --frozen --project services/rag-ingestion ruff check services/rag-ingestion
@@ -134,14 +277,97 @@ jobs:
       - name: RAG tests
         run: python scripts/ci/telemetry.py run --id rag-tests --test-format pytest -- uv run --frozen --project services/rag-ingestion pytest services/rag-ingestion/tests
 
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: contracts
+          cache-dependency-glob: |
+            services/core-api/pyproject.toml
+            services/core-api/uv.lock
+            services/agent-runtime/pyproject.toml
+            services/agent-runtime/uv.lock
+
+      - name: Install Core environment
+        run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
+
+      - name: Install Agent environment
+        run: python scripts/ci/telemetry.py run --id install-agent -- uv sync --frozen --project services/agent-runtime --extra test --extra dev
+
       - name: Static contracts
         run: python scripts/ci/telemetry.py run --id contracts-static -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/validate_contracts.py contracts
 
-      - name: Core live contracts
-        run: python scripts/ci/telemetry.py run --id contracts-core -- uv run --frozen --project services/core-api --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_contract_live.py contracts
-
       - name: Agent live contracts
         run: python scripts/ci/telemetry.py run --id contracts-agent -- uv run --frozen --project services/agent-runtime --with "pyyaml==6.0.2" --with "jsonschema==4.23.0" --with "referencing==0.35.1" python scripts/verify_agent_contract_live.py contracts
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  cross-service:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        id: uv
+        with:
+          version: "0.11.25"
+          enable-cache: true
+          cache-suffix: cross-service
+          cache-dependency-glob: |
+            services/core-api/pyproject.toml
+            services/core-api/uv.lock
+            services/agent-runtime/pyproject.toml
+            services/agent-runtime/uv.lock
+
+      - name: Install Core environment
+        run: python scripts/ci/telemetry.py run --id install-core -- uv sync --frozen --project services/core-api --extra test --extra dev
+
+      - name: Install Agent environment
+        run: python scripts/ci/telemetry.py run --id install-agent -- uv sync --frozen --project services/agent-runtime --extra test --extra dev
 
       - name: Five-run synthetic Core-to-Agent evidence
         run: >-
@@ -149,10 +375,47 @@ jobs:
           scripts/verify_gate1_cross_service.py
           --evidence-out /tmp/gate1-synthetic-five-run.json
 
-      # The five frontend commands are separate steps so that each one reports its own
-      # duration in the run summary. Splitting changes no command, order, or failure
-      # behaviour: a failed step still stops the job, exactly as `bash -e` stopped the
-      # previous combined block. Branch protection matches the job, not step names.
+      - name: Upload bounded Gate 1 evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate1-synthetic-evidence-${{ github.run_attempt }}
+          path: /tmp/gate1-synthetic-five-run.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize CI metrics
+        if: always()
+        env:
+          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
+        run: python scripts/ci/telemetry.py summary
+
+      - name: Upload bounded CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  frontend-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        id: node
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
       - name: Frontend dependencies
         run: python scripts/ci/telemetry.py run --id frontend-install -- npm ci
 
@@ -168,19 +431,9 @@ jobs:
       - name: Frontend production build
         run: python scripts/ci/telemetry.py run --id frontend-build -- npm run build --workspace @elderly-care/frontend
 
-      - name: Upload bounded Gate 1 evidence
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gate1-synthetic-evidence
-          path: /tmp/gate1-synthetic-five-run.json
-          if-no-files-found: error
-          retention-days: 30
-
       - name: Summarize CI metrics
         if: always()
         env:
-          CI_UV_CACHE_HIT: ${{ steps.uv.outputs.cache-hit }}
           CI_NPM_CACHE_HIT: ${{ steps.node.outputs.cache-hit }}
         run: python scripts/ci/telemetry.py summary
 
@@ -190,5 +443,40 @@ jobs:
         with:
           name: ci-metrics-${{ github.job }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/ci-metrics/
+          if-no-files-found: error
+          retention-days: 30
+
+  synthetic-gate1:
+    name: synthetic-gate1
+    if: always()
+    needs: [core-fast, core-db, agent-quality, speech-quality, rag-quality, contracts, cross-service, frontend-quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download worker metrics
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          # Include previous attempts: rerun-failed-jobs reuses successful worker jobs.
+          pattern: ci-metrics-*
+          path: ${{ runner.temp }}/worker-metrics
+      - name: Require every worker and summarize metrics
+        if: always()
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: >-
+          python scripts/ci/gate.py
+          --metrics "${{ runner.temp }}/worker-metrics"
+          --out "${{ runner.temp }}/gate1-aggregate/summary.json"
+      - name: Upload aggregate result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate1-aggregate-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/gate1-aggregate/
           if-no-files-found: error
           retention-days: 30

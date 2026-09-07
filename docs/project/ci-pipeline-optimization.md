@@ -1,6 +1,6 @@
 # Gate 1 timing and parallelization
 
-## Phase 1: command telemetry
+## Command telemetry (phase 1 merged as PR #26)
 
 The first change keeps the serial Gate 1 topology and command order. Each dependency
 install, lint/format check, test suite, audit and verifier is a separately timed step.
@@ -35,16 +35,61 @@ wall/runner totals. Compare like-for-like runner/cache conditions across several
 
 - Pre-telemetry baseline: main `7fa7e25`, run `34075977852`, successful job 409 seconds.
   Core block 121 seconds; RAG block 168 seconds; frontend commands 59 seconds.
-- Phase 1 must pass the full serial pipeline before parallelization.
-- Phase 2 will keep every existing command, isolate the Core database job, and preserve
-  the `synthetic-gate1` check name as an aggregate of eight required jobs.
+- Phase 1 passed the full serial pipeline: PR run `34078429651` (374 seconds), then
+  main run `34079584129` at `6db3d3d`. The PR restored both uv and npm caches.
+- Phase 1 command measurements: Core unit 30.1s, migrations 20.6s, integration 58.2s;
+  RAG pytest 143.9s versus policy audit 0.7s; frontend tests 20.5s and build 13.9s.
+  These are individual command times, not comparable to whole-job timing directly.
 - GitHub read-only inspection on 2026-09-07 found main unprotected and no applicable
   ruleset. Publishing an aggregate check does not itself enforce branch protection.
+
+## Phase 2: independent workers and aggregate
+
+Every PR and main push still runs the full suite; selective execution is deferred.
+The original 31 distinct command IDs remain covered. Dependency installs are repeated
+only where a worker requires them; Core and Agent keep separate project environments.
+
+| Worker | Checks |
+| --- | --- |
+| `core-fast` | CI tooling regression, Core lint/format, RAG projection dry-run, Core unit |
+| `core-db` | Disposable PostgreSQL creation, migrations, integration, Core live contracts |
+| `agent-quality` | Agent lint/format/tests |
+| `speech-quality` | Speech lint/format/tests |
+| `rag-quality` | RAG lint/format, policy audit, tests |
+| `contracts` | Static contracts and Agent live contracts |
+| `cross-service` | Five-run synthetic Core-to-Agent evidence |
+| `frontend-quality` | npm ci, typecheck, tests, lint, production build |
+
+Only `core-db` starts PostgreSQL. Migration lifecycle and request integration remain
+separate ordered processes; Core live contracts also need the database for `/ready`.
+Each Python worker caches only its installed project lockfiles, with a job-specific
+uv cache suffix to avoid parallel save collisions. Caches contain downloads, not
+shared virtualenvs. Cold cache and duplicate setup costs may increase runner seconds.
+
+`synthetic-gate1` keeps the old check name and uses `if: always()` with all eight
+workers in `needs`. `scripts/ci/gate.py` accepts only eight explicit `success` results;
+failure, cancellation, skip, missing or unexpected jobs fail closed. Missing,
+incomplete or unsuccessful command metrics also fail the gate. Uploading an artifact
+cannot override command failure. Branch protection must separately require this check
+if merge blocking is desired; this rollout does not change repository settings.
+
+Metrics and synthetic evidence artifacts include the run attempt to permit reruns.
+The aggregate selects the latest report per job from the same run and commit, allowing
+earlier successful worker attempts when using **Re-run failed jobs**. Foreign/future
+or conflicting reports are rejected. Aggregate summaries show worker result, source
+attempt and command seconds; worker JSON retains test and cache details. Native full
+wall/runner timing is collected after completion with `run_report.py`, not inferred
+from a still-running aggregate job.
+
+Workflow regression tests pin job membership, command coverage/order, DB isolation,
+always-run metrics, aggregate wiring and cache separation. Gate tests cover failed,
+cancelled, skipped, missing and unexpected dependencies plus report provenance/reruns.
+Actual parallel PR/main results must be recorded before claiming a speedup.
 
 ## Local validation
 
 ```powershell
-python -m unittest discover -s scripts/ci -p 'test_*.py'
+uv run --frozen --project services/core-api --with pyyaml==6.0.2 python -m unittest discover -s scripts/ci -p 'test_*.py'
 uv run --frozen --project services/core-api ruff check scripts/ci
 uv run --frozen --project services/core-api ruff format --check scripts/ci
 ```
