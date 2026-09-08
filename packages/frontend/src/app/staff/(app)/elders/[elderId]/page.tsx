@@ -66,8 +66,16 @@ function describeError(error: unknown, fallback: MessageKey): MessageKey {
   return fallback;
 }
 
-export default function ElderDetailPage({ params }: { params: Promise<{ elderId: string }> }) {
+export default function ElderDetailPage({ params, searchParams }: {
+  params: Promise<{ elderId: string }>;
+  searchParams?: Promise<{ review?: string | string[] }>;
+}) {
   const { elderId } = use(params);
+  const pendingReview = searchParams ? use(searchParams).review === 'pending' : false;
+  return <ElderDetailWorkspace key={`${elderId}:${pendingReview}`} elderId={elderId} pendingReview={pendingReview} />;
+}
+
+function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pendingReview: boolean }) {
   const { t, locale, formatDateTime } = useLocale();
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(null);
   const apiConfig = useMemo(
@@ -81,7 +89,12 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   const accessCheckAttempted = useRef(false);
   const [tab, setTab] = useState<Tab>('events');
   const [events, setEvents] = useState<EventView[]>([]);
-  const [eventFilters, setEventFilters] = useState<ListEventsFilters>({});
+  const [eventFilters, setEventFilters] = useState<ListEventsFilters>(
+    pendingReview ? { status: 'PENDING_REVIEW' } : {},
+  );
+  const [eventCursor, setEventCursor] = useState<string | null>(null);
+  const [eventsLoadingMore, setEventsLoadingMore] = useState(false);
+  const eventRequest = useRef(0);
   const [memories, setMemories] = useState<MemoryListView>({
     candidates: [],
     confirmed: [],
@@ -106,6 +119,9 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     setWorkspaceLoading(true);
     setWorkspaceError(null);
     setEvents([]);
+    eventRequest.current += 1;
+    setEventCursor(null);
+    setEventsLoadingMore(false);
     setMemories({ candidates: [], confirmed: [], candidateHasMore: false, confirmedHasMore: false });
     setSummaries([]);
     setNeedsReview(null);
@@ -163,13 +179,52 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
   }, [apiConfig, elderId, runtimeConfig?.credentialStatus, accessRevision]);
 
   const loadEvents = useCallback(() => {
+    const request = ++eventRequest.current;
     setErrorKey(null);
     setLoading(true);
+    setEvents([]);
+    setEventCursor(null);
+    setEventsLoadingMore(false);
     listEvents(apiConfig, elderId, eventFilters)
-      .then((response) => setEvents(response.items))
-      .catch((error) => setErrorKey(describeError(error, 'error.loadEventsFailed')))
-      .finally(() => setLoading(false));
-  }, [apiConfig, elderId, eventFilters]);
+      .then((response) => {
+        if (request !== eventRequest.current) return;
+        setEvents(response.items);
+        setEventCursor(response.nextCursor);
+      })
+      .catch((error) => {
+        if (request !== eventRequest.current) return;
+        if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) recheckAccess();
+        setErrorKey(describeError(error, 'error.loadEventsFailed'));
+      })
+      .finally(() => { if (request === eventRequest.current) setLoading(false); });
+  }, [apiConfig, elderId, eventFilters, recheckAccess]);
+
+  async function loadMoreEvents() {
+    if (!eventCursor || loading || eventsLoadingMore) return;
+    const request = eventRequest.current;
+    setEventsLoadingMore(true);
+    setErrorKey(null);
+    try {
+      const response = await listEvents(apiConfig, elderId, { ...eventFilters, cursor: eventCursor });
+      if (request !== eventRequest.current) return;
+      setEvents((current) => {
+        const merged = new Map(current.map((event) => [event.eventId, event]));
+        for (const event of response.items) {
+          if (!merged.has(event.eventId) || merged.get(event.eventId)!.version <= event.version) {
+            merged.set(event.eventId, event);
+          }
+        }
+        return [...merged.values()];
+      });
+      setEventCursor(response.nextCursor);
+    } catch (error) {
+      if (request !== eventRequest.current) return;
+      if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) recheckAccess();
+      setErrorKey(describeError(error, 'error.loadEventsFailed'));
+    } finally {
+      if (request === eventRequest.current) setEventsLoadingMore(false);
+    }
+  }
 
   const loadMemories = useCallback(() => {
     setErrorKey(null);
@@ -213,6 +268,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
     if (tab === 'events') loadEvents();
     if (tab === 'memories') loadMemories();
     if (tab === 'summaries') loadSummaries();
+    return () => { eventRequest.current += 1; };
   }, [loadEvents, loadMemories, loadSummaries, tab, workspace]);
 
   useEffect(() => {
@@ -366,7 +422,7 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
               <button
                 className={styles.primaryButton}
                 onClick={() => {
-                  setEventFilters({ status: 'NEEDS_REVIEW' });
+                  setEventFilters({ status: 'PENDING_REVIEW' });
                   setTab('events');
                 }}
                 type="button"
@@ -424,6 +480,12 @@ export default function ElderDetailPage({ params }: { params: Promise<{ elderId:
             <Skeleton rows={5} />
           ) : (
             <EventTable events={events} onReview={handleReviewEvent} />
+          )}
+          {eventCursor && !loading && (
+            <button className={styles.secondaryButton} disabled={eventsLoadingMore}
+              onClick={() => void loadMoreEvents()} type="button">
+              {t(eventsLoadingMore ? 'eventTable.loadingMore' : 'eventTable.loadMore')}
+            </button>
           )}
         </section>
       )}

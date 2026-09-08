@@ -85,4 +85,5 @@ PR #32 修正 commit `e94f0f8` 的 [CI run 34183906570](https://github.com/71bk/
 
 - US-C04 的 manual create、reason/source/creator/due/status、complete/postpone/cancel reason，以及 US-F02 的 adopt/reject/exclude reason 均已覆蓋。
 - Arbitrary assignee／轉派未實作；第一切片刻意只允許 self-assignment。
-- Dashboard `open_care_action_count` 已接入本機增量，尚待新 PR／CI；US-C01 其他 overview 指標仍未完成。範圍與驗證見 [Dashboard count report](../../../docs/project/dashboard-care-action-count-20260908.md)。
+- Dashboard `open_care_action_count` 已隨 PR #33 合併，PR CI `34192019631`／main CI `34192336870` 通過。見 [Dashboard count report](../../../docs/project/dashboard-care-action-count-20260908.md)。
+- US-C01 `pending_event_review_count` 與待覆核篩選入口已完成本機增量，尚待新 PR／CI；其他 overview 指標仍未完成。見 [Pending review report](../../../docs/project/dashboard-pending-event-review-20260908.md)。

@@ -30,7 +30,7 @@ describe('getCaregiverDashboard', () => {
       const fetchMock = vi.fn()
         .mockResolvedValueOnce(success({ role: 'DAYCARE_CARE_WORKER', display_name: 'Worker' }))
         .mockResolvedValueOnce(success({
-          items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: count }],
+          items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: count, pending_event_review_count: count }],
           page: { has_more: false, next_cursor: null, limit: 100 },
         }));
       vi.stubGlobal('fetch', fetchMock);
@@ -39,6 +39,9 @@ describe('getCaregiverDashboard', () => {
         typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null,
       );
       expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(result.elders[0].pendingEventReviewCount).toBe(
+        typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null,
+      );
     },
   );
 
@@ -46,10 +49,12 @@ describe('getCaregiverDashboard', () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(success({ role: 'FAMILY_MEMBER', display_name: 'Family' }))
       .mockResolvedValueOnce(success({
-        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9 }],
+        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9, pending_event_review_count: 9 }],
         page: { has_more: false, next_cursor: null, limit: 100 },
       })));
-    expect((await getCaregiverDashboard(config)).elders[0].openCareActionCount).toBeNull();
+    const elder = (await getCaregiverDashboard(config)).elders[0];
+    expect(elder.openCareActionCount).toBeNull();
+    expect(elder.pendingEventReviewCount).toBeNull();
   });
   it('derives the authorized-elder mode from Core identity and preserves cursor metadata', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -84,6 +89,7 @@ describe('getCaregiverDashboard', () => {
         careUnitName: null,
         authorizationSummary: 'assignment authorization',
         openCareActionCount: null,
+        pendingEventReviewCount: null,
       },
     ]);
     expect(dashboard).not.toHaveProperty('total');

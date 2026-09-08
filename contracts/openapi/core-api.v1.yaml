@@ -467,7 +467,7 @@
           "identity"
         ],
         "summary": "Get Authorized Elders",
-        "description": "Return paginated elders the actor is authorized to access.\n\nMode must be compatible with the actor's role. Incompatible\ncombinations return 403 via RoleModeIncompatibleError. Each item includes nullable open_care_action_count: formal OPEN/IN_PROGRESS/POSTPONED actions across assignees, only after live professional care_action:read authorization. Family and insufficient scope receive null, not zero. No global or cross-page total.",
+        "description": "Return paginated elders the actor is authorized to access.\n\nMode must be compatible with the actor's role. Incompatible\ncombinations return 403 via RoleModeIncompatibleError. Each item includes nullable open_care_action_count: formal OPEN/IN_PROGRESS/POSTPONED actions across assignees, only after live professional care_action:read authorization. Nullable pending_event_review_count counts current CANDIDATE/NEEDS_REVIEW events only after live professional care_event:read AND care_event:review authorization. Family and insufficient scope receive null, not zero. No global or cross-page total.",
         "operationId": "get_authorized_elders_api_v1_me_authorized_elders_get",
         "parameters": [
           {

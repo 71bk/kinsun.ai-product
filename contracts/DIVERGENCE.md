@@ -295,6 +295,13 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
+`GET /api/v1/me/authorized-elders` 另新增選填 `pending_event_review_count`：計當頁長者目前
+CANDIDATE／NEEDS_REVIEW 事件，不計版本、正式／拒絕／排除／刪除狀態。與非正式事件 list 相同，
+必須同時通過 live `care_event:read` 與 `care_event:review`；非專業角色／權限不足回 null。
+數字為查詢當下的授權範圍計數，點擊 `/staff/elders/{id}?review=pending` 後仍重新授權，
+不是可繞過 Core 的憑證。前端以重複的 `status=CANDIDATE&status=NEEDS_REVIEW` 查詢既有 API，
+沿用 opaque cursor；不新增後端 status enum 或 endpoint。
+
 `GET /api/v1/me/authorized-elders` 新增相容選填 `open_care_action_count`：只計當頁各長者的
 正式 OPEN／IN_PROGRESS／POSTPONED 待辦（不限 assignee），不含 Candidate／COMPLETED／CANCELLED。
 Core 逐筆沿用正式待辦 list 的 live `care_action:read` policy，之後在 tenant／當頁 elder IDs 內

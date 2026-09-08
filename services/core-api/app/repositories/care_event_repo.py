@@ -23,6 +23,21 @@ class VerifiedCareEventContextRecord:
 
 
 class CareEventRepository(BaseRepository):
+    async def count_pending_review_by_elder(self, elder_ids: list[UUID]) -> dict[UUID, int]:
+        """Count current pending events, never versions or event contents."""
+        if not elder_ids:
+            return {}
+        result = await self._session.execute(
+            select(CareEvent.elder_id, func.count(CareEvent.id))
+            .where(
+                CareEvent.tenant_id == self._tenant_id,
+                CareEvent.elder_id.in_(elder_ids),
+                CareEvent.status.in_(["CANDIDATE", "NEEDS_REVIEW"]),
+            )
+            .group_by(CareEvent.elder_id)
+        )
+        return {elder_id: count for elder_id, count in result.all()}
+
     def add_event(self, event: CareEvent) -> None:
         self._session.add(event)
 

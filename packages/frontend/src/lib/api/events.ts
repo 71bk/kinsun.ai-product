@@ -57,7 +57,7 @@ export interface ListEventsFilters {
   dateFrom?: string;
   dateTo?: string;
   eventType?: CoreCareEventType;
-  status?: CoreCareEventStatus;
+  status?: CoreCareEventStatus | 'PENDING_REVIEW';
   cursor?: string;
 }
 
@@ -100,7 +100,10 @@ export async function listEvents(
   filters: ListEventsFilters = {},
 ): Promise<ListEventsResult> {
   const params = new URLSearchParams();
-  if (filters.status) params.append('status', filters.status);
+  if (filters.status === 'PENDING_REVIEW') {
+    params.append('status', 'CANDIDATE');
+    params.append('status', 'NEEDS_REVIEW');
+  } else if (filters.status) params.append('status', filters.status);
   if (filters.eventType) params.set('event_type', filters.eventType);
   if (filters.dateFrom) params.set('date_from', filters.dateFrom);
   if (filters.dateTo) params.set('date_to', filters.dateTo);
@@ -134,14 +137,14 @@ export interface NeedsReviewSummary {
  * Counts the care events waiting on this caregiver, for MASTER.md §10.2's
  * Needs Review state ("顯示數量與原因").
  *
- * Requests only the review status: date and type filters are valid server-side
+ * Requests both pending statuses: date and type filters are valid server-side
  * view filters, but applying them here would undercount the whole review queue.
  */
 export async function summariseNeedsReview(
   config: ApiConfig,
   elderId: string,
 ): Promise<NeedsReviewSummary> {
-  const result = await listEvents(config, elderId, { status: 'NEEDS_REVIEW' });
+  const result = await listEvents(config, elderId, { status: 'PENDING_REVIEW' });
   const byConfidence: Record<ConfidenceBand, number> = { LOW: 0, MEDIUM: 0, HIGH: 0 };
   for (const event of result.items) byConfidence[event.confidenceBand] += 1;
 

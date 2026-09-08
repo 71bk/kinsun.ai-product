@@ -138,14 +138,16 @@ beforeEach(() => {
   });
 
   listEventsMock.mockImplementation(async (_config, _elderId, filters = {}) => {
+    // This panel loads only formal sources, never the combined review queue.
+    const status = filters.status === 'CORRECTED' ? 'CORRECTED' : 'VERIFIED';
     if (filters.cursor) {
       return {
-        items: [sourceEvent(`${filters.status?.toLowerCase()}-2`, filters.status ?? 'VERIFIED')],
+        items: [sourceEvent(`${filters.status?.toLowerCase()}-2`, status)],
         nextCursor: null,
       } satisfies ListEventsResult;
     }
     return {
-      items: [sourceEvent(`${filters.status?.toLowerCase()}-1`, filters.status ?? 'VERIFIED')],
+      items: [sourceEvent(`${filters.status?.toLowerCase()}-1`, status)],
       nextCursor: `${filters.status?.toLowerCase()}-next`,
     } satisfies ListEventsResult;
   });

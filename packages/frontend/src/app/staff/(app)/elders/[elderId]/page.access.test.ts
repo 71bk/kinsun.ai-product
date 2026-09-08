@@ -8,7 +8,7 @@ import ElderDetailPage from './page';
 
 const mocks = vi.hoisted(() => ({
   workspace: vi.fn(), actions: vi.fn(), candidates: vi.fn(), events: vi.fn(),
-  create: vi.fn(), update: vi.fn(), adopt: vi.fn(), dismiss: vi.fn(), needsReview: vi.fn(),
+  create: vi.fn(), update: vi.fn(), adopt: vi.fn(), dismiss: vi.fn(), needsReview: vi.fn(), review: vi.fn(),
 }));
 vi.mock('@/lib/runtime-config', () => ({ getRuntimeConfig: async () => ({ credentialStatus: 'present', apiBaseUrl: '/backend/core' }) }));
 vi.mock('@/lib/api/elders', () => ({ getElderWorkspace: mocks.workspace }));
@@ -17,7 +17,7 @@ vi.mock('@/lib/api/care-actions', () => ({
   createCareAction: mocks.create, updateCareAction: mocks.update,
   adoptCareActionCandidate: mocks.adopt, dismissCareActionCandidate: mocks.dismiss,
 }));
-vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: vi.fn() }));
+vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: mocks.review }));
 
 const workspace = {
   elderId: 'synthetic-elder', displayName: 'Synthetic private elder',
@@ -97,6 +97,61 @@ function expectHidden() {
   expect(screen.queryByRole('tab')).toBeNull();
   expect(document.querySelector('input, textarea, select, [role="dialog"]')).toBeNull();
 }
+
+async function openPending(review = 'pending') {
+  const params = Promise.resolve({ elderId: 'synthetic-elder' });
+  const searchParams = Promise.resolve({ review });
+  await act(async () => {
+    render(createElement(LocaleProvider, { initialLocale: 'en', children:
+      createElement(Suspense, { fallback: 'Loading' }, createElement(ElderDetailPage, { params, searchParams })),
+    }));
+  });
+  await screen.findByRole('tab', { name: 'Care events' });
+}
+
+describe('dashboard pending review entry', () => {
+  it('opens both pending states, pages with the same filter and deduplicates events', async () => {
+    mocks.events.mockResolvedValueOnce({ items: [source], nextCursor: 'opaque' });
+    await openPending();
+    expect(mocks.events).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', { status: 'PENDING_REVIEW' });
+    expect((screen.getByRole('combobox', { name: 'Status' }) as HTMLSelectElement).value).toBe('PENDING_REVIEW');
+    mocks.events.mockResolvedValueOnce({ items: [source, { ...source, eventId: 'second', content: 'Synthetic second event' }], nextCursor: null });
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more events' }));
+    await screen.findAllByText('Synthetic second event');
+    expect(mocks.events).toHaveBeenLastCalledWith(expect.anything(), 'synthetic-elder', { status: 'PENDING_REVIEW', cursor: 'opaque' });
+    expect(screen.queryByRole('button', { name: 'Load more events' })).toBeNull();
+    expect(screen.getAllByText(source.content)).toHaveLength(2); // table + responsive card
+  });
+
+  it('ignores an unsupported review query', async () => {
+    await openPending('all-private');
+    expect(mocks.events).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', {});
+  });
+
+  it('discards an old page response after filters change', async () => {
+    mocks.events.mockResolvedValueOnce({ items: [source], nextCursor: 'opaque' });
+    await openPending();
+    const pending = deferred<{ items: typeof source[]; nextCursor: string | null }>();
+    mocks.events.mockReturnValueOnce(pending.promise);
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more events' }));
+    mocks.events.mockResolvedValueOnce({ items: [], nextCursor: null });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: 'VERIFIED' } });
+    await act(async () => pending.resolve({ items: [{ ...source, content: 'Stale private page' }], nextCursor: 'stale' }));
+    expect(screen.queryByText('Stale private page')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Load more events' })).toBeNull();
+  });
+
+  it('clears private content when next-page authorization expires', async () => {
+    mocks.events.mockResolvedValueOnce({ items: [source], nextCursor: 'opaque' });
+    await openPending();
+    mocks.events.mockRejectedValueOnce(new ApiRequestError(404, 'Resource not found'));
+    mocks.workspace.mockRejectedValueOnce(new ApiRequestError(404, 'Resource not found'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more events' }));
+    await waitFor(() => expect(mocks.workspace).toHaveBeenCalledTimes(2));
+    expectHidden();
+    expect(screen.queryByText(source.content)).toBeNull();
+  });
+});
 
 describe('care command authorization recovery', () => {
   it.each(['create', 'update', 'adopt', 'reject', 'exclude'])('clears all elder surfaces immediately on %s denial', async (command) => {

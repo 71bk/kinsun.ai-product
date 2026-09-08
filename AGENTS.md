@@ -480,6 +480,10 @@ contracts/
 
 ### 範例
 
+- `scripts/validate_contracts.py` 的一般 domain example mapping 會取 envelope 的 `data` 驗證。
+  新增這類 invalid example 必須沿用 `data`／`meta` 包裝並在頂層加 `_why_invalid`；
+  裸 domain payload 會造成 `KeyError: data`，並不是預期的 schema rejection。
+
 - `examples/valid/` 至少一個，代表正常回應。
 - `examples/invalid/` 至少一個，且**必須帶 `_why_invalid` 欄位**說明為何該被拒絕。
 - invalid 範例通過驗證＝schema 太寬鬆，視同測試失敗。這些範例的用途是把

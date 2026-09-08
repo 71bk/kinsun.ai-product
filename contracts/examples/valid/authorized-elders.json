@@ -6,14 +6,16 @@
         "display_name": "林阿嬤",
         "care_unit_name": "幸福日照中心",
         "authorization_summary": "daycare authorization",
-        "open_care_action_count": 3
+        "open_care_action_count": 3,
+        "pending_event_review_count": 105
       },
       {
         "elder_id": "9b3e7d15-4c62-4a08-b7f9-5e1c8a2d6034",
         "display_name": "張阿姨",
         "care_unit_name": "幸福日照中心",
         "authorization_summary": "daycare authorization",
-        "open_care_action_count": null
+        "open_care_action_count": null,
+        "pending_event_review_count": null
       }
     ],
     "page": {
