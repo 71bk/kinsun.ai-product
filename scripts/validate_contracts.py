@@ -35,6 +35,7 @@ DATA_SCHEMA_FOR = {
     "actor-profile-legal-representative.json": "domain/ActorProfileV1.json",
     "authorized-elders-offset-pagination.json": "domain/AuthorizedElderListV1.json",
     "authorized-elders-negative-care-action-count.json": "domain/AuthorizedElderListV1.json",
+    "authorized-elders-negative-event-review-count.json": "domain/AuthorizedElderListV1.json",
     "deletion-request.json": "domain/DeletionRequestV1.json",
     "deletion-request-completed-with-pending-item.json": "domain/DeletionRequestV1.json",
     "agent-run-request.json": "agent/AgentRunRequestV1.json",

@@ -80,11 +80,12 @@ export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
           onChange={(event) =>
             onChange({
               ...filters,
-              status: (event.target.value || undefined) as CoreCareEventStatus | undefined,
+              status: (event.target.value || undefined) as ListEventsFilters['status'],
             })
           }
         >
           <option value="">{t('eventFilter.officialEvents')}</option>
+          <option value="PENDING_REVIEW">{t('eventFilter.pendingReview')}</option>
           {EVENT_STATUSES.map((status) => (
             <option key={status} value={status}>
               {t(`eventStatus.${status}` as MessageKey)}

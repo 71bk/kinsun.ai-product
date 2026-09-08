@@ -31,6 +31,7 @@ from app.middleware.auth import FakeAuthenticator, get_authenticator
 from app.models.actor import Actor
 from app.models.care_action import CareAction
 from app.models.care_assignment import CareAssignment
+from app.models.care_event import CareEvent
 from app.models.care_relationship import CareRelationship
 from app.models.care_unit import CareUnit
 from app.models.elder import Elder
@@ -347,6 +348,84 @@ async def test_dashboard_counts_require_live_professional_scope(
         await committed_session.commit()
         expired = await client.get(path)
         assert expired.status_code == 200 and expired.json()["data"]["items"] == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role,actor_key,elder_key,mode",
+    [
+        ("DAYCARE_CARE_WORKER", "daycare_worker_id", "elder_1_id", "daycare"),
+        ("HOME_CARE_WORKER", "worker_id", "elder_2_id", "home-care"),
+        ("FAMILY_MEMBER", "family_member_id", "elder_1_id", "family"),
+    ],
+)
+async def test_pending_event_counts_require_both_live_scopes(
+    test_engine, seed_api_data, committed_session, role, actor_key, elder_key, mode
+):
+    ids = seed_api_data
+    model = CareAssignment if mode == "home-care" else CareRelationship
+    owner = model.worker_id if mode == "home-care" else model.actor_id
+    grant = (
+        await committed_session.execute(select(model).where(owner == ids[actor_key]))
+    ).scalar_one()
+    scope_attr = "service_scope" if mode == "home-care" else "scope"
+    base_scopes = list(getattr(grant, scope_attr))
+    app = _build_client_app(test_engine, ids[actor_key], role, ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        path = f"/api/v1/me/authorized-elders?mode={mode}&limit=1"
+        # Read-only, review-only, and neither cannot reveal pending metadata.
+        for scopes in [[], ["care_event:read"], ["care_event:review"]]:
+            setattr(grant, scope_attr, base_scopes + scopes)
+            await committed_session.commit()
+            response = await client.get(path)
+            assert response.status_code == 200
+            assert response.json()["data"]["items"][0]["pending_event_review_count"] is None
+        setattr(grant, scope_attr, base_scopes + ["care_event:read", "care_event:review"])
+        await committed_session.commit()
+        assert (await client.get(path)).json()["data"]["items"][0][
+            "pending_event_review_count"
+        ] == (None if mode == "family" else 0)
+        for state in (
+            ["NEEDS_REVIEW"] * 103
+            + ["CANDIDATE"] * 2
+            + ["VERIFIED", "CORRECTED", "REJECTED", "EXCLUDED", "DELETED"]
+        ):
+            committed_session.add(
+                CareEvent(
+                    tenant_id=ids["tenant_id"],
+                    elder_id=ids[elder_key],
+                    event_type="MEAL",
+                    status=state,
+                    consent_version=1,
+                )
+            )
+        for target, tenant in [
+            ("elder_2_id" if elder_key == "elder_1_id" else "elder_1_id", "tenant_id"),
+            ("elder_3_id", "tenant_b_id"),
+        ]:
+            committed_session.add(
+                CareEvent(
+                    tenant_id=ids[tenant],
+                    elder_id=ids[target],
+                    event_type="MEAL",
+                    status="NEEDS_REVIEW",
+                    consent_version=1,
+                )
+            )
+        await committed_session.commit()
+        response = await client.get(path)
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data["items"]) == 1
+        assert data["items"][0]["pending_event_review_count"] == (None if mode == "family" else 105)
+        assert "total" not in data
+        setattr(
+            grant,
+            "service_end" if mode == "home-care" else "effective_to",
+            datetime.now(UTC) - timedelta(seconds=1),
+        )
+        await committed_session.commit()
+        assert (await client.get(path)).json()["data"]["items"] == []
 
 
 class TestGetMe:

@@ -16,6 +16,7 @@ interface AuthorizedElderItem {
   care_unit_name: string | null;
   authorization_summary: string | null;
   open_care_action_count?: number | null;
+  pending_event_review_count?: number | null;
 }
 
 interface AuthorizedElderList {
@@ -33,6 +34,7 @@ export interface DashboardElder {
   careUnitName: string | null;
   authorizationSummary: string | null;
   openCareActionCount: number | null;
+  pendingEventReviewCount: number | null;
 }
 
 export interface CaregiverDashboard {
@@ -74,6 +76,13 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
       elderName: item.display_name,
       careUnitName: item.care_unit_name,
       authorizationSummary: item.authorization_summary,
+      pendingEventReviewCount:
+        mode !== 'family' &&
+        typeof item.pending_event_review_count === 'number' &&
+        Number.isSafeInteger(item.pending_event_review_count) &&
+        item.pending_event_review_count >= 0
+          ? item.pending_event_review_count
+          : null,
       openCareActionCount:
         mode !== 'family' &&
         typeof item.open_care_action_count === 'number' &&

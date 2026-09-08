@@ -42,6 +42,15 @@ afterEach(() => {
 });
 
 describe('listEvents', () => {
+  it('requests both pending statuses in one cursor-paginated server query', async () => {
+    const fetchMock = vi.fn(async () => success({ items: [], next_cursor: null, has_more: false }));
+    vi.stubGlobal('fetch', fetchMock);
+    await listEvents(config, 'elder-1', { status: 'PENDING_REVIEW', cursor: 'opaque' });
+    const url = new URL(String((fetchMock.mock.calls as unknown[][])[0][0]), 'http://frontend.test');
+    expect(url.searchParams.getAll('status')).toEqual(['CANDIDATE', 'NEEDS_REVIEW']);
+    expect(url.searchParams.get('cursor')).toBe('opaque');
+    expect(url.searchParams.get('limit')).toBe('100');
+  });
   it('sends date and event-type filters to Core before cursor pagination', async () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
       success({ items: [], next_cursor: null, has_more: false }),
@@ -77,6 +86,7 @@ describe('summariseNeedsReview', () => {
 
     const [url] = fetchMock.mock.calls[0];
     expect(String(url)).toContain('status=NEEDS_REVIEW');
+    expect(String(url)).toContain('status=CANDIDATE');
   });
 
   it('counts the queue and breaks it down by confidence band', async () => {

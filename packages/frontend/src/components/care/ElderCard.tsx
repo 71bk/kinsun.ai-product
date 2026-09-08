@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { ArrowRight, ClipboardText, UserCircle } from '@phosphor-icons/react';
+import { ArrowRight, ClipboardText, ListChecks, UserCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
 import type { DashboardElder } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -33,6 +33,13 @@ export function ElderCard({ elder }: { elder: DashboardElder }) {
           <ClipboardText aria-hidden="true" size={20} weight="bold" />
           <span>{t('dashboard.openCareActionCount', { count: elder.openCareActionCount })}</span>
         </p>
+      )}
+      {elder.pendingEventReviewCount !== null && elder.pendingEventReviewCount !== undefined && (
+        <Link className={styles.reviewLink} href={`/staff/elders/${elder.elderId}?review=pending`}>
+          <ListChecks aria-hidden="true" size={20} weight="bold" />
+          <span>{t('dashboard.pendingEventReviewCount', { count: elder.pendingEventReviewCount })}</span>
+          <ArrowRight aria-hidden="true" size={20} weight="bold" />
+        </Link>
       )}
     </article>
   );

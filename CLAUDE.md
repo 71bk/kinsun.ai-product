@@ -186,6 +186,9 @@
 
 ### Contract 與 deployment
 
+- 靜態 validator 的一般 domain example mapping 取 envelope `data`；invalid example 也要沿用
+  `data`／`meta` 與頂層 `_why_invalid`。裸 payload 的 `KeyError: data` 不算 schema 拒絕通過。
+
 - OpenAPI、AsyncAPI、JSON Schema、Pydantic model、實際 route 與 live verifier 必須一起演進。
   不可實作未登記 API；不相容變更必須有新 major version 或正式 migration plan。
 - [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 是差異說明，不是 executable truth，而且局部摘要

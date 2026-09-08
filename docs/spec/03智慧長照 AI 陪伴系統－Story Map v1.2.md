@@ -17,8 +17,10 @@ Core → Gemini Runtime → Event → 人工 VERIFY → Candidate → UI 採用 
 新 DB regression 已隨 PR #32 通過 CI `34183906570` 並合併，main CI `34184219797` 亦通過；
 C04/F02 第一切片結案，不宣稱 production 或全部 Wave 2 stories 完成
 （[Agent chain QA](../project/wave2-agent-chain-qa-20260908.md)）。self-assignment 邊界不變，
-dashboard 待辦數的 US-C01 增量已完成本機實作與驗證，尚待新 PR／CI，其他 overview 指標未完成
-（[Dashboard count report](../project/dashboard-care-action-count-20260908.md)）。詳細範圍與證據見
+dashboard 待辦數的 US-C01 增量已隨 PR #33 合併，PR／main CI 均通過
+（[Dashboard count report](../project/dashboard-care-action-count-20260908.md)）。待覆核事件數＋入口為下一個
+已完成本機驗證、待新 CI 的增量（[Pending review report](../project/dashboard-pending-event-review-20260908.md)）；
+最後互動／今日互動／摘要狀態等其他 overview 指標仍未完成。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 
 ## 工作表：00_總覽

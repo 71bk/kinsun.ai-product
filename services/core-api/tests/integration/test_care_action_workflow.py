@@ -273,10 +273,17 @@ async def test_native_action_proposal_persists_then_http_verify_and_adopt(
         path = f"/api/v1/elders/{ids['elder']}/care-events/{event_id}/review"
         headers = _headers()
         request = {"decision": "VERIFY", "reason_code": "SYNTHETIC_QA", "expected_version": 1}
+        dashboard_path = "/api/v1/me/authorized-elders?mode=home-care"
+        assert (await client.get(dashboard_path)).json()["data"]["items"][0][
+            "pending_event_review_count"
+        ] == 1
         reviewed = await client.post(path, json=request, headers=headers)
         assert reviewed.status_code == 200, reviewed.text
         result = reviewed.json()["data"]
         assert result["status"] == "VERIFIED" and result["updated_at"]
+        assert (await client.get(dashboard_path)).json()["data"]["items"][0][
+            "pending_event_review_count"
+        ] == 0
         replay = await client.post(path, json=request, headers=headers)
         assert replay.status_code == 200 and replay.json()["data"] == result
         candidates = (await client.get(_candidates(ids))).json()["data"]["items"]

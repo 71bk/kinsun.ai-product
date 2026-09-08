@@ -90,3 +90,23 @@
 .actionCount svg {
   flex: none;
 }
+
+.reviewLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-2);
+  border: 1px solid var(--state-review-fg);
+  border-inline-start-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--state-review-bg);
+  color: var(--state-review-fg);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.reviewLink svg {
+  flex: none;
+}

@@ -47,6 +47,11 @@
           "type": ["integer", "null"],
           "minimum": 0
         },
+        "pending_event_review_count": {
+          "description": "Current CANDIDATE/NEEDS_REVIEW events for this elder, not event versions. Null or absent without professional care_event:read AND care_event:review access; always null for family. Excludes formal, rejected, excluded and deleted events. Not a global total.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
         "authorization_summary": {
           "description": "Short description of why the elder is visible. Must not disclose other actors' identities.",
           "oneOf": [

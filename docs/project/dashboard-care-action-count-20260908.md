@@ -1,8 +1,11 @@
 # US-C01 Dashboard care-action count — 2026-09-08
 
-Status: implemented and verified locally on `feat/dashboard-care-action-count`, based
-on main `84ef958`. Not committed, pushed, or CI-verified yet. This is one US-C01
-increment, not the complete overview story or production acceptance.
+Status: merged as [PR #33](https://github.com/71bk/kinsun.ai-product/pull/33), code
+`26894e6`. All 10 jobs passed in [PR CI 34192019631](https://github.com/71bk/kinsun.ai-product/actions/runs/34192019631);
+merge `693850c` also passed [main CI 34192336870](https://github.com/71bk/kinsun.ai-product/actions/runs/34192336870).
+This supersedes the pre-commit handoff below. It is one US-C01 increment, not the
+complete overview story or production acceptance. Verification sections retain
+the original local evidence boundary; the added DB cases have now passed CI.
 
 ## Scope and security
 

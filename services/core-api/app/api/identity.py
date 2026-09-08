@@ -32,7 +32,10 @@ from app.schemas.identity import (
     MeResponse,
     PaginationMeta,
 )
-from app.services.dashboard_service import get_open_care_action_counts
+from app.services.dashboard_service import (
+    get_open_care_action_counts,
+    get_pending_event_review_counts,
+)
 from app.services.identity_service import IdentityService
 
 router = APIRouter(prefix="/api/v1", tags=["identity"])
@@ -127,6 +130,9 @@ async def get_authorized_elders(
     counts = await get_open_care_action_counts(
         session, actor_context, [row.elder_id for row in result.items]
     )
+    review_counts = await get_pending_event_review_counts(
+        session, actor_context, [row.elder_id for row in result.items]
+    )
     items = [
         AuthorizedElderItem(
             elder_id=row.elder_id,
@@ -134,6 +140,7 @@ async def get_authorized_elders(
             care_unit_name=row.care_unit_name,
             authorization_summary=f"{mode.value} authorization",
             open_care_action_count=counts.get(row.elder_id),
+            pending_event_review_count=review_counts.get(row.elder_id),
         )
         for row in result.items
     ]

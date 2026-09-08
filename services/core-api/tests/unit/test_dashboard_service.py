@@ -10,6 +10,7 @@ from sqlalchemy.dialects import postgresql
 from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
 from app.repositories.care_action_repo import CareActionRepository
+from app.repositories.care_event_repo import CareEventRepository
 from app.services import dashboard_service
 
 
@@ -37,6 +38,8 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
     monkeypatch.setattr(identity, "_build_identity_service", lambda *_: service)
     count = AsyncMock(side_effect=[{first: 105}, {second: 0}])
     monkeypatch.setattr(identity, "get_open_care_action_counts", count)
+    review_count = AsyncMock(side_effect=[{first: 103}, {second: 0}])
+    monkeypatch.setattr(identity, "get_pending_event_review_counts", review_count)
     for index, (cursor, elder, expected) in enumerate(
         [(None, first, 105), ("next-page", second, 0)]
     ):
@@ -48,6 +51,10 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
             session=session,
         )
         assert response["data"]["items"][0]["open_care_action_count"] == expected
+        assert response["data"]["items"][0]["pending_event_review_count"] == (
+            103 if index == 0 else 0
+        )
+        assert review_count.await_args_list[index].args == (session, actor, [elder])
         assert len(response["data"]["items"]) == 1
         assert response["data"]["page"] == {
             "limit": 1,
@@ -86,6 +93,72 @@ async def test_nonprofessionals_never_query_task_data(role, monkeypatch):
     assert await dashboard_service.get_open_care_action_counts(session, actor, [uuid4()]) == {}
     auth.assert_not_awaited()
     session.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role", ["FAMILY_MEMBER", "ELDER", "ADMIN", "SYSTEM_SERVICE"])
+async def test_nonprofessionals_never_query_event_counts(role, monkeypatch):
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role=role)
+    auth = AsyncMock()
+    monkeypatch.setattr(dashboard_service, "authorize_elder", auth)
+    session = AsyncMock()
+    assert await dashboard_service.get_pending_event_review_counts(session, actor, [uuid4()]) == {}
+    auth.assert_not_awaited()
+    session.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_pending_event_counts_require_both_scopes_and_deduplicate_page(monkeypatch):
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role="HOME_CARE_WORKER")
+    allowed, read_only, review_only, empty = [uuid4() for _ in range(4)]
+
+    async def authorize(session, actor, elder, scope):
+        if (elder == read_only and scope == "care_event:review") or (
+            elder == review_only and scope == "care_event:read"
+        ):
+            raise NotFoundError("Resource not found")
+
+    auth = AsyncMock(side_effect=authorize)
+    count = AsyncMock(return_value={allowed: 105, read_only: 9})
+    monkeypatch.setattr(dashboard_service, "authorize_elder", auth)
+    monkeypatch.setattr(CareEventRepository, "count_pending_review_by_elder", count)
+    assert await dashboard_service.get_pending_event_review_counts(
+        AsyncMock(), actor, [allowed, read_only, review_only, empty, allowed]
+    ) == {allowed: 105, empty: 0}
+    count.assert_awaited_once_with([allowed, empty])
+    assert [c.args[3] for c in auth.await_args_list[:2]] == ["care_event:read", "care_event:review"]
+
+
+@pytest.mark.asyncio
+async def test_event_count_failure_is_not_zero(monkeypatch):
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role="DAYCARE_CARE_WORKER")
+    monkeypatch.setattr(dashboard_service, "authorize_elder", AsyncMock(return_value=None))
+    monkeypatch.setattr(
+        CareEventRepository, "count_pending_review_by_elder", AsyncMock(side_effect=RuntimeError)
+    )
+    with pytest.raises(RuntimeError):
+        await dashboard_service.get_pending_event_review_counts(AsyncMock(), actor, [uuid4()])
+
+
+@pytest.mark.asyncio
+async def test_pending_event_sql_is_bounded_and_does_not_count_versions():
+    tenant, elder = uuid4(), uuid4()
+    session = AsyncMock()
+    result = MagicMock()
+    result.all.return_value = [(elder, 105)]
+    session.execute.return_value = result
+    repo = CareEventRepository(session, tenant)
+    assert await repo.count_pending_review_by_elder([]) == {}
+    session.execute.assert_not_awaited()
+    assert await repo.count_pending_review_by_elder([elder]) == {elder: 105}
+    query = session.execute.await_args.args[0].compile(dialect=postgresql.dialect())
+    assert tenant in query.params.values() and [elder] in query.params.values()
+    assert ["CANDIDATE", "NEEDS_REVIEW"] in query.params.values()
+    assert "GROUP BY" in str(query) and "count(" in str(query)
+    assert all(
+        word not in str(query)
+        for word in ["JOIN", "LIMIT", "structured_payload", "care_event_version"]
+    )
 
 
 @pytest.mark.asyncio
