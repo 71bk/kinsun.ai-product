@@ -10,8 +10,33 @@ from app.core.exceptions import NotFoundError
 from app.repositories.care_action_repo import CareActionRepository
 from app.repositories.care_event_repo import CareEventRepository
 from app.repositories.conversation_repo import ConversationRepository, InteractionMetrics
+from app.repositories.summary_repo import DailySummarySnapshot, SummaryRepository
 from app.services.authorization_service import authorize_elder
 from app.services.care_action_service import PROFESSIONAL_CARE_ROLES
+
+
+async def get_daily_summary_snapshots(
+    session: AsyncSession, actor: ActorContext, elder_ids: list[UUID], as_of: datetime
+) -> dict[UUID, DailySummarySnapshot]:
+    """Reuse summary read/review gates; a hidden draft must not reveal existence."""
+    if actor.actor_role not in PROFESSIONAL_CARE_ROLES:
+        return {}
+    allowed, reviewers = [], []
+    for elder_id in dict.fromkeys(elder_ids):
+        try:
+            await authorize_elder(session, actor, elder_id, "summary:read")
+        except NotFoundError:
+            continue
+        allowed.append(elder_id)
+        try:
+            await authorize_elder(session, actor, elder_id, "summary:review")
+        except NotFoundError:
+            continue
+        reviewers.append(elder_id)
+    snapshots = await SummaryRepository(session, actor.tenant_id).dashboard_snapshots(
+        allowed, reviewers, as_of
+    )
+    return {elder_id: snapshots[elder_id] for elder_id in allowed if elder_id in snapshots}
 
 
 async def get_interaction_metrics(

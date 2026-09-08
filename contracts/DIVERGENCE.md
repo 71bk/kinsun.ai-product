@@ -295,6 +295,19 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
+`GET /api/v1/me/authorized-elders` 的選填 nullable `daily_summary` 只回當頁長者當地今日的
+PROFESSIONAL_DAILY metadata：`local_date`／`timezone`／`as_of`，以及 nullable `summary`
+（summary_id／status／version）。只允許 professional role＋live `summary:read`；
+READY／PUBLISHED 沿用正式讀取規則，其他既有狀態另需 live `summary:review`，共享 visibility
+constants 與既有摘要 API。外層 null 是不可用；內層 null 是「沒有可查看摘要」，隱藏的草稿與
+不存在摘要的回應相同。家屬永遠拿不到此 professional metadata。
+單次 tenant／已授權 elder IDs 範圍的 outer join，沿用 elder/date/type 唯一鍵；不讀版本內容、
+逐字稿或來源 ID，不新增 migration／summary state／自動生成／發布流程。
+as_of 固定 Elder 當地日曆日，metadata 為查詢時的目前版本，不是跨查詢的歷史／可重播快照。
+日期入口 `/staff/elders/{id}?tab=summaries&date=YYYY-MM-DD` 只切換與篩選既有摘要頁，
+workspace 與摘要 API 仍分別重驗權限；UI 語言不改日期，失效權限先卸載再重查。
+本增量不修訂現有生成按鈕的台北日期規則、不提供昨日替代今日，也不等於整個 US-C01 完成。
+
 `GET /api/v1/me/authorized-elders` 的選填 nullable `interaction_metrics` 是互動 metadata snapshot，
 不是新計數器／事件抽取／健康評分。僅專業角色且通過 live `voice_session:read` 才可取得，
 與既有 Voice Session metadata 讀取 gate 相同；家屬、無 scope、已失效關係不會取得統計。

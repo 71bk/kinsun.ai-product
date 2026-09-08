@@ -1,7 +1,16 @@
 # US-C01 今日互動次數／最後互動 — 2026-09-08
 
 分支 `feat/dashboard-interaction-metrics`，基於 PR #34 合併後 `3b48bea`。
-狀態：本機實作／驗證完成，尚未 commit／push／新 PR／CI，不代表完整 US-C01／Wave 2 結案。
+狀態：PR #35 已合併至 `main`（`0d0d294`）；不代表完整 US-C01／Wave 2 結案。
+
+## PR／main CI 結案
+
+- [PR #35](https://github.com/71bk/kinsun.ai-product/pull/35)，code `e66431f`，
+  [PR CI 34201101849](https://github.com/71bk/kinsun.ai-product/actions/runs/34201101849)
+  全部 10 jobs 成功，含 core-db 與 aggregate。
+- 2026-09-08 07:58:57 UTC 合併，
+  [main CI 34202072018](https://github.com/71bk/kinsun.ai-product/actions/runs/34202072018) 成功。
+- 下列「僅收集／待 CI」是提交前的本機驗證邊界；遠端 DB 驗證已隨本 PR 通過。
 
 ## 定義與邊界
 

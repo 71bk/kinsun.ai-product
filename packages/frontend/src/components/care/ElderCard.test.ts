@@ -8,6 +8,33 @@ import { ElderCard } from './ElderCard';
 
 afterEach(cleanup);
 
+it.each(['zh-Hant', 'en'] as const)('links the snapshot date to summaries without carrying permission: %s', (locale) => {
+  render(createElement(LocaleProvider, { initialLocale: locale, children:
+    createElement(ElderCard, { elder: {
+      elderId: 'synthetic', elderName: 'Synthetic Elder', careUnitName: null,
+      authorizationSummary: null, openCareActionCount: null, pendingEventReviewCount: null,
+      dailySummary: { localDate: '2026-09-09', timezone: 'Asia/Taipei', asOf: '2026-09-08T16:00:00Z',
+        summary: { summaryId: 'synthetic-summary', status: 'NEEDS_REVIEW', version: 1 } },
+    } }),
+  }));
+  expect(screen.getByRole('link', { name: locale === 'en' ? 'View daily summary' : '查看當日摘要' }).getAttribute('href'))
+    .toBe('/staff/elders/synthetic?tab=summaries&date=2026-09-09');
+  expect(screen.getByText(locale === 'en' ? 'Needs review' : '待覆核')).toBeDefined();
+  expect(screen.getByText(/2026-09-09.*Asia\/Taipei/)).toBeDefined();
+});
+
+it.each([null, undefined, 'empty'] as const)('does not link unavailable or absent summary: %s', (state) => {
+  render(createElement(LocaleProvider, { initialLocale: 'en', children:
+    createElement(ElderCard, { elder: {
+      elderId: 'synthetic', elderName: 'Synthetic Elder', careUnitName: null,
+      authorizationSummary: null, openCareActionCount: null, pendingEventReviewCount: null,
+      dailySummary: state === 'empty' ? { localDate: '2026-09-09', timezone: 'Asia/Taipei', asOf: '2026-09-08T16:00:00Z', summary: null } : state,
+    } }),
+  }));
+  expect(screen.getByText(state === 'empty' ? 'No viewable summary for this day' : 'Summary information unavailable')).toBeDefined();
+  expect(screen.queryByRole('link', { name: 'View daily summary' })).toBeNull();
+});
+
 it.each(['zh-Hant', 'en'] as const)('shows interaction snapshot in the elder timezone: %s', (locale) => {
   const last = '2026-09-07T16:01:00Z';
   const { container } = render(createElement(LocaleProvider, { initialLocale: locale, children:

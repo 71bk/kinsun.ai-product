@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Toast } from '@/components/ui/Toast';
 import { ApiRequestError } from '@/lib/api/client';
+import { calendarDate } from '@/lib/api/daily-summary-snapshot';
 import { getElderWorkspace, type ElderWorkspaceView } from '@/lib/api/elders';
 import {
   listEvents,
@@ -37,6 +38,7 @@ import {
   generateSummary,
   listSummaries,
   reviewSummary,
+  type CoreSummaryStatus,
   type ReviewSummaryDecision,
   type SummaryView,
 } from '@/lib/api/summaries';
@@ -68,14 +70,20 @@ function describeError(error: unknown, fallback: MessageKey): MessageKey {
 
 export default function ElderDetailPage({ params, searchParams }: {
   params: Promise<{ elderId: string }>;
-  searchParams?: Promise<{ review?: string | string[] }>;
+  searchParams?: Promise<{ review?: string | string[]; tab?: string | string[]; date?: string | string[] }>;
 }) {
   const { elderId } = use(params);
-  const pendingReview = searchParams ? use(searchParams).review === 'pending' : false;
-  return <ElderDetailWorkspace key={`${elderId}:${pendingReview}`} elderId={elderId} pendingReview={pendingReview} />;
+  const query = searchParams ? use(searchParams) : {};
+  const pendingReview = query.review === 'pending';
+  const openSummaries = !pendingReview && query.tab === 'summaries';
+  const summaryDate = openSummaries ? calendarDate(query.date) : undefined;
+  return <ElderDetailWorkspace key={`${elderId}:${pendingReview}:${openSummaries}:${summaryDate}`}
+    elderId={elderId} pendingReview={pendingReview} openSummaries={openSummaries} initialSummaryDate={summaryDate} />;
 }
 
-function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pendingReview: boolean }) {
+function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSummaryDate }: {
+  elderId: string; pendingReview: boolean; openSummaries: boolean; initialSummaryDate?: string;
+}) {
   const { t, locale, formatDateTime } = useLocale();
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(null);
   const apiConfig = useMemo(
@@ -87,7 +95,9 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
   const [workspaceError, setWorkspaceError] = useState<MessageKey | null>(null);
   const [accessRevision, setAccessRevision] = useState(0);
   const accessCheckAttempted = useRef(false);
-  const [tab, setTab] = useState<Tab>('events');
+  const [tab, setTab] = useState<Tab>(openSummaries ? 'summaries' : 'events');
+  const [summaryDate, setSummaryDate] = useState(initialSummaryDate);
+  const summaryRequest = useRef(0);
   const [events, setEvents] = useState<EventView[]>([]);
   const [eventFilters, setEventFilters] = useState<ListEventsFilters>(
     pendingReview ? { status: 'PENDING_REVIEW' } : {},
@@ -124,6 +134,7 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
     setEventsLoadingMore(false);
     setMemories({ candidates: [], confirmed: [], candidateHasMore: false, confirmedHasMore: false });
     setSummaries([]);
+    summaryRequest.current += 1;
     setNeedsReview(null);
     setPendingSummary(null);
     setToastKey(null);
@@ -236,26 +247,37 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
   }, [apiConfig, elderId]);
 
   const canReviewSummaries = workspace?.allowedActions.includes('summary:review') ?? false;
+  const canReadSummaries = workspace?.allowedActions.includes('summary:read') ?? false;
   const canReadCareActions = workspace?.allowedActions.includes('care_action:read') ?? false;
   const canCreateCareActions = workspace?.allowedActions.includes('care_action:create') ?? false;
   const canUpdateCareActions = workspace?.allowedActions.includes('care_action:update') ?? false;
 
   const loadSummaries = useCallback(() => {
+    const request = ++summaryRequest.current;
+    setSummaries([]);
     setErrorKey(null);
+    if (!canReadSummaries) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     listSummaries(
       apiConfig,
       elderId,
-      canReviewSummaries
-        ? {
-            statuses: ['DRAFT', 'READY', 'NEEDS_REVIEW', 'PUBLISHED', 'STALE', 'WITHDRAWN'],
-          }
-        : {},
+      { ...(summaryDate ? { date: summaryDate } : {}),
+        ...(canReviewSummaries ? {
+          statuses: ['DRAFT', 'READY', 'NEEDS_REVIEW', 'PUBLISHED', 'STALE', 'WITHDRAWN'] as CoreSummaryStatus[],
+        } : {}),
+      },
     )
-      .then((response) => setSummaries(response.items))
-      .catch((error) => setErrorKey(describeError(error, 'error.loadSummariesFailed')))
-      .finally(() => setLoading(false));
-  }, [apiConfig, canReviewSummaries, elderId]);
+      .then((response) => { if (request === summaryRequest.current) setSummaries(response.items); })
+      .catch((error) => {
+        if (request !== summaryRequest.current) return;
+        if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) recheckAccess();
+        else setErrorKey(describeError(error, 'error.loadSummariesFailed'));
+      })
+      .finally(() => { if (request === summaryRequest.current) setLoading(false); });
+  }, [apiConfig, canReadSummaries, canReviewSummaries, elderId, recheckAccess, summaryDate]);
 
   const loadNeedsReview = useCallback(() => {
     summariseNeedsReview(apiConfig, elderId)
@@ -268,7 +290,7 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
     if (tab === 'events') loadEvents();
     if (tab === 'memories') loadMemories();
     if (tab === 'summaries') loadSummaries();
-    return () => { eventRequest.current += 1; };
+    return () => { eventRequest.current += 1; summaryRequest.current += 1; };
   }, [loadEvents, loadMemories, loadSummaries, tab, workspace]);
 
   useEffect(() => {
@@ -534,12 +556,18 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
           role="tabpanel"
           tabIndex={0}
         >
-          {loading ? (
+          {!canReadSummaries ? <ErrorState description={t('dashboard.summaryUnavailable')} /> : loading ? (
             <Skeleton rows={4} />
           ) : (
             <div className={styles.summaryList}>
+              {summaryDate && <div>
+                <p>{t('elderDetail.summaryDateFilter', { date: summaryDate })}</p>
+                <button className={styles.secondaryButton} type="button" onClick={() => setSummaryDate(undefined)}>
+                  {t('elderDetail.allSummaryDates')}
+                </button>
+              </div>}
               <p className={styles.notice}>{t('elderDetail.summaryNotice')}</p>
-              {canReviewSummaries && (
+              {canReviewSummaries && !summaryDate && (
                 <button
                   className={styles.primaryButton}
                   disabled={summaryBusy}
@@ -549,7 +577,7 @@ function ElderDetailWorkspace({ elderId, pendingReview }: { elderId: string; pen
                   {t('summaryReview.generateToday')}
                 </button>
               )}
-              {summaries.length === 0 && (
+              {!errorKey && summaries.length === 0 && (
                 <EmptyState
                   description={t('elderDetail.summaryEmpty')}
                   title={t('elderDetail.summaryEmptyTitle')}

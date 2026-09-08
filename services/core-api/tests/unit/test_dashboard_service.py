@@ -47,6 +47,20 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
     )
     interaction = AsyncMock(side_effect=[{first: metrics}, {}])
     monkeypatch.setattr(identity, "get_interaction_metrics", interaction)
+    snapshots = AsyncMock(
+        side_effect=[
+            {
+                first: {
+                    "local_date": "2026-09-08",
+                    "timezone": "Asia/Taipei",
+                    "as_of": datetime(2026, 9, 8, tzinfo=UTC),
+                    "summary": None,
+                }
+            },
+            {},
+        ]
+    )
+    monkeypatch.setattr(identity, "get_daily_summary_snapshots", snapshots)
     for index, (cursor, elder, expected) in enumerate(
         [(None, first, 105), ("next-page", second, 0)]
     ):
@@ -64,6 +78,11 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
         assert review_count.await_args_list[index].args == (session, actor, [elder])
         assert interaction.await_args_list[index].args[:3] == (session, actor, [elder])
         actual = response["data"]["items"][0]["interaction_metrics"]
+        assert snapshots.await_args_list[index].args[:3] == (session, actor, [elder])
+        assert (
+            snapshots.await_args_list[index].args[3] == interaction.await_args_list[index].args[3]
+        )
+        assert (response["data"]["items"][0]["daily_summary"] is None) == (index == 1)
         assert (actual["today_count"] if actual else None) == (3 if index == 0 else None)
         assert len(response["data"]["items"]) == 1
         assert response["data"]["page"] == {

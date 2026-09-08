@@ -9,6 +9,7 @@ import ElderDetailPage from './page';
 const mocks = vi.hoisted(() => ({
   workspace: vi.fn(), actions: vi.fn(), candidates: vi.fn(), events: vi.fn(),
   create: vi.fn(), update: vi.fn(), adopt: vi.fn(), dismiss: vi.fn(), needsReview: vi.fn(), review: vi.fn(),
+  summaries: vi.fn(), generateSummary: vi.fn(), reviewSummary: vi.fn(),
 }));
 vi.mock('@/lib/runtime-config', () => ({ getRuntimeConfig: async () => ({ credentialStatus: 'present', apiBaseUrl: '/backend/core' }) }));
 vi.mock('@/lib/api/elders', () => ({ getElderWorkspace: mocks.workspace }));
@@ -18,6 +19,7 @@ vi.mock('@/lib/api/care-actions', () => ({
   adoptCareActionCandidate: mocks.adopt, dismissCareActionCandidate: mocks.dismiss,
 }));
 vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: mocks.review }));
+vi.mock('@/lib/api/summaries', () => ({ listSummaries: mocks.summaries, generateSummary: mocks.generateSummary, reviewSummary: mocks.reviewSummary }));
 
 const workspace = {
   elderId: 'synthetic-elder', displayName: 'Synthetic private elder',
@@ -55,6 +57,7 @@ beforeEach(() => {
   mocks.candidates.mockResolvedValue({ items: [candidate], hasMore: false, nextCursor: null });
   mocks.events.mockResolvedValue({ items: [source], nextCursor: null });
   mocks.needsReview.mockResolvedValue(null);
+  mocks.summaries.mockResolvedValue({ items: [] });
 });
 afterEach(cleanup);
 
@@ -108,6 +111,88 @@ async function openPending(review = 'pending') {
   });
   await screen.findByRole('tab', { name: 'Care events' });
 }
+
+async function openSummaryQuery(query: { tab?: string; date?: string | string[] } = { tab: 'summaries', date: '2026-09-09' }) {
+  await act(async () => {
+    render(createElement(LocaleProvider, { initialLocale: 'en', children:
+      createElement(Suspense, { fallback: 'Loading' }, createElement(ElderDetailPage, {
+        params: Promise.resolve({ elderId: 'synthetic-elder' }), searchParams: Promise.resolve(query),
+      })),
+    }));
+  });
+  await screen.findByRole('tab', { name: 'Daily summaries' });
+}
+
+const daily = { summaryId: 'summary', elderId: 'synthetic-elder', date: '2026-09-09',
+  status: 'READY', items: [], missingFields: [], conflictFlags: [], version: 1,
+  generatedAt: null, updatedAt: '2026-09-08T16:00:00Z' };
+
+describe('dashboard daily summary entry', () => {
+  it('opens the exact snapshot date after authorization and permits clearing the filter', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read'] });
+    mocks.summaries.mockResolvedValue({ items: [daily] });
+    await openSummaryQuery();
+    await screen.findByText('2026-09-09');
+    expect(screen.getByRole('tab', { name: 'Daily summaries' }).getAttribute('aria-selected')).toBe('true');
+    expect(mocks.summaries).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', { date: '2026-09-09' });
+    expect(mocks.events).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'View all summary dates' }));
+    await waitFor(() => expect(mocks.summaries).toHaveBeenLastCalledWith(expect.anything(), 'synthetic-elder', {}));
+  });
+
+  it('requests non-formal statuses only for an authorized reviewer', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read', 'summary:review'] });
+    await openSummaryQuery();
+    await waitFor(() => expect(mocks.summaries).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', {
+      date: '2026-09-09', statuses: ['DRAFT', 'READY', 'NEEDS_REVIEW', 'PUBLISHED', 'STALE', 'WITHDRAWN'],
+    }));
+    expect(mocks.generateSummary).not.toHaveBeenCalled();
+  });
+
+  it('does not fetch summary data when a deep link has no read scope', async () => {
+    await openSummaryQuery();
+    await screen.findByText('Summary information unavailable');
+    expect(mocks.summaries).not.toHaveBeenCalled();
+  });
+
+  it.each(['2026-02-30', '2026-09-09&status=DRAFT', ['2026-09-09', '2026-09-10']])('ignores invalid query date %j', async (date) => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read'] });
+    await openSummaryQuery({ tab: 'summaries', date });
+    await waitFor(() => expect(mocks.summaries).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', {}));
+  });
+
+  it.each([401, 403, 404])('clears the workspace and rechecks live scope after summary %s', async (status) => {
+    mocks.workspace.mockResolvedValueOnce({ ...workspace, allowedActions: ['summary:read'] });
+    const recheck = deferred<typeof workspace>();
+    mocks.workspace.mockReturnValueOnce(recheck.promise);
+    mocks.summaries.mockRejectedValueOnce(new ApiRequestError(status, 'Synthetic denial'));
+    await act(async () => {
+      render(createElement(LocaleProvider, { initialLocale: 'en', children:
+        createElement(Suspense, { fallback: 'Loading' }, createElement(ElderDetailPage, {
+          params: Promise.resolve({ elderId: 'synthetic-elder' }), searchParams: Promise.resolve({ tab: 'summaries' }),
+        })),
+      }));
+    });
+    await waitFor(() => expect(mocks.workspace).toHaveBeenCalledTimes(2));
+    expectHidden();
+    await act(async () => recheck.resolve(workspace));
+    await screen.findByText('Summary information unavailable');
+    expect(mocks.summaries).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores late summary data after switching tabs', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read'] });
+    const pending = deferred<{ items: typeof daily[] }>();
+    mocks.summaries.mockReturnValueOnce(pending.promise);
+    await openSummaryQuery();
+    fireEvent.click(screen.getByRole('tab', { name: 'Care events' }));
+    await act(async () => pending.resolve({ items: [daily] }));
+    mocks.summaries.mockResolvedValueOnce({ items: [] });
+    fireEvent.click(screen.getByRole('tab', { name: 'Daily summaries' }));
+    await waitFor(() => expect(mocks.summaries).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('2026-09-09')).toBeNull();
+  });
+});
 
 describe('dashboard pending review entry', () => {
   it('opens both pending states, pages with the same filter and deduplicates events', async () => {

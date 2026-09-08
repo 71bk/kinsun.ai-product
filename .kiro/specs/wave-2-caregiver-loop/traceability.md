@@ -87,4 +87,5 @@ PR #32 修正 commit `e94f0f8` 的 [CI run 34183906570](https://github.com/71bk/
 - Arbitrary assignee／轉派未實作；第一切片刻意只允許 self-assignment。
 - Dashboard `open_care_action_count` 已隨 PR #33 合併，PR CI `34192019631`／main CI `34192336870` 通過。見 [Dashboard count report](../../../docs/project/dashboard-care-action-count-20260908.md)。
 - US-C01 `pending_event_review_count` 與待覆核入口已隨 PR #34 合併（`3b48bea`），PR CI `34195574308`／main CI `34195871383` 均通過。見 [Pending review report](../../../docs/project/dashboard-pending-event-review-20260908.md)。
-- 今日已完成互動次數／最後互動 snapshot 已完成本機增量（Core 1197／Frontend 434 tests、contracts、build 與 13 張視覺 QA）；新增 4 個 DB 參數案例只收集、待新 PR／core-db CI。摘要狀態等 overview 仍未完成。見 [Interaction metrics report](../../../docs/project/dashboard-interaction-metrics-20260908.md)。
+- 今日已完成互動次數／最後互動已隨 PR #35 合併（`0d0d294`），PR CI `34201101849`／main CI `34202072018` 均通過，含新增 DB 案例。見 [Interaction metrics report](../../../docs/project/dashboard-interaction-metrics-20260908.md)。
+- 今日摘要狀態／日期入口已完成本機增量（Core 1206／Frontend 477 tests、contracts、build、21 張合成視覺 QA）；新增 4 個 DB 參數案例僅收集，尚未提交／新 PR／CI。見 [Summary status report](../../../docs/project/dashboard-summary-status-20260908.md)。居服行程／派案狀態等完整 overview 仍未完成。

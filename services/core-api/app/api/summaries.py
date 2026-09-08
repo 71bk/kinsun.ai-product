@@ -13,6 +13,7 @@ from app.api.responses import get_correlation_id, success
 from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
 from app.db.session import get_db_session
+from app.domain.summary_visibility import ALLOWED_SUMMARY_STATUSES, FORMAL_SUMMARY_STATUSES
 from app.middleware.actor_guard import (
     require_active_actor,
     require_system_service_actor,
@@ -40,17 +41,6 @@ SummaryReadStatus = Literal[
     "STALE",
     "WITHDRAWN",
 ]
-ALLOWED_SUMMARY_STATUSES = frozenset(
-    {
-        "DRAFT",
-        "READY",
-        "NEEDS_REVIEW",
-        "PUBLISHED",
-        "STALE",
-        "WITHDRAWN",
-    }
-)
-FORMAL_SUMMARY_STATUSES = ("READY", "PUBLISHED")
 
 
 async def _response(service: SummaryService, summary) -> SummaryResponse:

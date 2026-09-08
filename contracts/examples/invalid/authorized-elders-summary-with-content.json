@@ -1,0 +1,14 @@
+{
+  "_why_invalid": "Dashboard summary metadata must never carry summary content.",
+  "data": {
+    "items": [{
+      "elder_id": "11111111-1111-4111-a111-111111111111", "display_name": "Synthetic Elder",
+      "daily_summary": {
+        "local_date": "2026-09-08", "timezone": "Asia/Taipei", "as_of": "2026-09-08T00:00:00Z",
+        "summary": {"summary_id": "22222222-2222-4222-a222-222222222222", "status": "DRAFT", "version": 1, "content": "Synthetic private content"}
+      }
+    }],
+    "page": {"next_cursor": null, "has_more": false, "limit": 20}
+  },
+  "meta": {}
+}

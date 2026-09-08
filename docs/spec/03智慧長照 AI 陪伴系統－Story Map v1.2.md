@@ -20,8 +20,11 @@ C04/F02 第一切片結案，不宣稱 production 或全部 Wave 2 stories 完�
 dashboard 待辦數的 US-C01 增量已隨 PR #33 合併，PR／main CI 均通過
 （[Dashboard count report](../project/dashboard-care-action-count-20260908.md)）。待覆核事件數＋入口已隨
 PR #34 合併，PR／main CI 均成功（[Pending review report](../project/dashboard-pending-event-review-20260908.md)）；
-最後互動／今日互動 snapshot 已完成本機驗證（Core 1197／Frontend 434 tests、contracts、build 與視覺 QA），尚待新 PR／DB CI
-（[Interaction metrics report](../project/dashboard-interaction-metrics-20260908.md)）；摘要狀態等其他 overview 指標仍未完成。詳細範圍與證據見
+最後互動／今日互動已隨 PR #35 合併（`0d0d294`），PR CI `34201101849`／main CI `34202072018` 通過
+（[Interaction metrics report](../project/dashboard-interaction-metrics-20260908.md)）。今日摘要狀態＋日期入口
+已完成本機驗證（Core 1206／Frontend 477、contracts、build、21 張合成視覺 QA）；新增 4 個 DB
+參數案例僅收集，尚待提交與新 PR CI（[Summary status report](../project/dashboard-summary-status-20260908.md)）。
+居服行程／派案狀態等完整 overview 仍未完成。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 
 ## 工作表：00_總覽

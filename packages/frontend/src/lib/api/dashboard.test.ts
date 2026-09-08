@@ -7,6 +7,8 @@ const validMetrics = {
   today_count: 3, last_interaction_at: '2026-09-08T00:00:00Z',
   local_date: '2026-09-08', timezone: 'Asia/Taipei', as_of: '2026-09-08T01:00:00Z',
 };
+const validDaily = { local_date: '2026-09-08', timezone: 'Asia/Taipei', as_of: '2026-09-08T01:00:00Z',
+  summary: { summary_id: '11111111-1111-4111-a111-111111111111', status: 'DRAFT', version: 1 } };
 
 function success<T>(data: T): Response {
   return new Response(
@@ -28,6 +30,13 @@ afterEach(() => {
 });
 
 describe('getCaregiverDashboard', () => {
+  it('maps daily summary metadata without extra requests', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(success({ role: 'DAYCARE_CARE_WORKER' }))
+      .mockResolvedValueOnce(success({ items: [{ elder_id: 'elder', daily_summary: validDaily }], page: {} }));
+    vi.stubGlobal('fetch', fetchMock);
+    expect((await getCaregiverDashboard(config)).elders[0].dailySummary?.summary?.status).toBe('DRAFT');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
   it.each([
     [validMetrics, 3],
     [{ ...validMetrics, today_count: 0, last_interaction_at: null }, 0],
@@ -74,13 +83,14 @@ describe('getCaregiverDashboard', () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(success({ role: 'FAMILY_MEMBER', display_name: 'Family' }))
       .mockResolvedValueOnce(success({
-        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9, pending_event_review_count: 9, interaction_metrics: validMetrics }],
+        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9, pending_event_review_count: 9, interaction_metrics: validMetrics, daily_summary: validDaily }],
         page: { has_more: false, next_cursor: null, limit: 100 },
       })));
     const elder = (await getCaregiverDashboard(config)).elders[0];
     expect(elder.openCareActionCount).toBeNull();
     expect(elder.pendingEventReviewCount).toBeNull();
     expect(elder.interactionMetrics).toBeNull();
+    expect(elder.dailySummary).toBeNull();
   });
   it('derives the authorized-elder mode from Core identity and preserves cursor metadata', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -117,6 +127,7 @@ describe('getCaregiverDashboard', () => {
         openCareActionCount: null,
         pendingEventReviewCount: null,
         interactionMetrics: null,
+        dailySummary: null,
       },
     ]);
     expect(dashboard).not.toHaveProperty('total');

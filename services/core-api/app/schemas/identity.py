@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -53,6 +54,23 @@ class InteractionMetricsResponse(BaseModel):
     as_of: datetime
 
 
+class DailySummaryMetadataResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+    summary_id: UUID
+    status: Literal["DRAFT", "READY", "NEEDS_REVIEW", "PUBLISHED", "STALE", "WITHDRAWN"]
+    version: int = Field(ge=1)
+
+
+class DailySummarySnapshotResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+    local_date: date
+    timezone: str
+    as_of: datetime
+    summary: DailySummaryMetadataResponse | None
+
+
 class AuthorizedElderItem(BaseModel):
     """A single elder entry in the authorized-elders listing."""
 
@@ -63,6 +81,7 @@ class AuthorizedElderItem(BaseModel):
     care_unit_name: str | None = None
     authorization_summary: str | None = None
     interaction_metrics: InteractionMetricsResponse | None = None
+    daily_summary: DailySummarySnapshotResponse | None = None
     pending_event_review_count: int | None = Field(
         default=None,
         ge=0,

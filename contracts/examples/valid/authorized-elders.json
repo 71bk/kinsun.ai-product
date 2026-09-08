@@ -8,6 +8,10 @@
         "authorization_summary": "daycare authorization",
         "open_care_action_count": 3,
         "pending_event_review_count": 105,
+        "daily_summary": {
+          "local_date": "2026-07-31", "timezone": "Asia/Taipei", "as_of": "2026-07-31T04:12:09Z",
+          "summary": {"summary_id": "11111111-1111-4111-a111-111111111111", "status": "NEEDS_REVIEW", "version": 1}
+        },
         "interaction_metrics": {
           "today_count": 3,
           "last_interaction_at": "2026-07-31T04:00:00Z",
@@ -23,7 +27,8 @@
         "authorization_summary": "daycare authorization",
         "open_care_action_count": null,
         "pending_event_review_count": null,
-        "interaction_metrics": null
+        "interaction_metrics": null,
+        "daily_summary": null
       }
     ],
     "page": {

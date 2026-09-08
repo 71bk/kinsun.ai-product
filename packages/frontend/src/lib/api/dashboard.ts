@@ -1,4 +1,5 @@
 import { ApiRequestError, apiFetch, type ApiConfig } from './client';
+import { dailySummarySnapshot, type DailySummarySnapshot } from './daily-summary-snapshot';
 
 export type ActorRole = 'DAYCARE_CARE_WORKER' | 'HOME_CARE_WORKER' | 'FAMILY_MEMBER' | string;
 type ElderMode = 'daycare' | 'home-care' | 'family';
@@ -18,6 +19,7 @@ interface AuthorizedElderItem {
   open_care_action_count?: number | null;
   pending_event_review_count?: number | null;
   interaction_metrics?: unknown;
+  daily_summary?: unknown;
 }
 
 interface AuthorizedElderList {
@@ -37,6 +39,7 @@ export interface DashboardElder {
   openCareActionCount: number | null;
   pendingEventReviewCount: number | null;
   interactionMetrics?: InteractionMetrics | null;
+  dailySummary?: DailySummarySnapshot | null;
 }
 
 export interface InteractionMetrics {
@@ -109,6 +112,7 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
       careUnitName: item.care_unit_name,
       authorizationSummary: item.authorization_summary,
       interactionMetrics: mode === 'family' ? null : interactionMetrics(item.interaction_metrics),
+      dailySummary: mode === 'family' ? null : dailySummarySnapshot(item.daily_summary),
       pendingEventReviewCount:
         mode !== 'family' &&
         typeof item.pending_event_review_count === 'number' &&
