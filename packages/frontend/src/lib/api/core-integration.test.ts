@@ -65,6 +65,8 @@ describe('Core API integration clients', () => {
               error: {
                 code: 'service_unavailable',
                 message: 'Agent runtime is unavailable',
+                correlation_id: 'synthetic-correlation',
+                details: null,
                 reason_code: 'SERVICE_UNAVAILABLE',
                 retryable: true,
               },

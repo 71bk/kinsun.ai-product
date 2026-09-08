@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { apiFetch } from '../api/client';
 import { appSessionCookieName, appSessionCookieOptions } from './app-session-cookie';
 import { proxyCoreRequest } from './core-proxy';
 
@@ -67,6 +68,12 @@ describe('Core BFF proxy', () => {
 
     expect(response.status).toBe(401);
     expect(fetchMock).not.toHaveBeenCalled();
+    fetchMock.mockResolvedValue(response);
+    await expect(apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example')).rejects.toMatchObject({
+      status: 401,
+      reasonCode: 'AUTHENTICATION_REQUIRED',
+      retryable: false,
+    });
   });
 
   it('fails closed when the credential cookie is malformed', async () => {
@@ -104,6 +111,12 @@ describe('Core BFF proxy', () => {
 
     expect(response.status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();
+    fetchMock.mockResolvedValue(response);
+    await expect(apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example')).rejects.toMatchObject({
+      status: 403,
+      reasonCode: 'CSRF_ORIGIN_REJECTED',
+      retryable: false,
+    });
   });
 
   it('rejects credentials in a proxied query string', async () => {

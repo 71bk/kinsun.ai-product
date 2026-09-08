@@ -87,7 +87,11 @@ describe('generateSummary', () => {
             created_at: '2026-08-14T00:00:00Z',
             updated_at: '2026-08-14T00:00:00Z',
           },
-          meta: {},
+          meta: {
+            correlation_id: 'synthetic-correlation',
+            timestamp: '2026-08-14T00:00:00Z',
+            schema_version: '1.0',
+          },
         }),
         { status: 201, headers: { 'Content-Type': 'application/json' } },
       ),

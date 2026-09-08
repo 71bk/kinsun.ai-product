@@ -1,22 +1,7 @@
+import { isErrorEnvelope, isSuccessEnvelope } from './response-envelope';
+
 export interface ApiConfig {
   apiBaseUrl: string;
-}
-
-interface ApiSuccessEnvelope<T> {
-  data: T;
-  meta: {
-    correlation_id: string;
-    timestamp: string;
-    schema_version: '1.0';
-  };
-}
-
-interface ApiErrorEnvelope {
-  error?: {
-    message?: string;
-    reason_code?: string | null;
-    retryable?: boolean;
-  };
 }
 
 export class ApiRequestError extends Error {
@@ -29,6 +14,17 @@ export class ApiRequestError extends Error {
     super(message);
     this.name = 'ApiRequestError';
   }
+}
+
+function malformedResponseError(response: Response): ApiRequestError {
+  // Preserve HTTP denials even if a proxy returned HTML or a broken envelope.
+  // Turning a 401/403/404 into 502 would bypass the UI's access-loss recovery.
+  return new ApiRequestError(
+    response.ok ? 502 : response.status,
+    'The server returned an invalid API response.',
+    'MALFORMED_API_RESPONSE',
+    false,
+  );
 }
 
 /**
@@ -51,19 +47,27 @@ export async function apiFetch<T>(
     credentials: 'same-origin',
   });
 
+  if (response.status === 204) return undefined as T;
+
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw malformedResponseError(response);
+  }
+
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as ApiErrorEnvelope;
+    if (!isErrorEnvelope(body)) throw malformedResponseError(response);
     throw new ApiRequestError(
       response.status,
-      body.error?.message || `Request to ${path} failed with ${response.status}`,
-      body.error?.reason_code ?? undefined,
-      body.error?.retryable ?? false,
+      body.error.message,
+      body.error.reason_code ?? undefined,
+      body.error.retryable,
     );
   }
 
-  if (response.status === 204) return undefined as T;
-  const envelope = (await response.json()) as ApiSuccessEnvelope<T>;
-  return envelope.data;
+  if (!isSuccessEnvelope(body)) throw malformedResponseError(response);
+  return body.data as T;
 }
 
 export function createIdempotencyKey(prefix: string): string {

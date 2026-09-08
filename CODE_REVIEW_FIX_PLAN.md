@@ -43,7 +43,7 @@
 ### P2 — API / frontend / tooling / documentation
 
 - [x] L-01 實作 Care Action 與 source event pagination。
-- [ ] L-02 為 frontend API response 加入 runtime schema validation。
+- [x] L-02 為 frontend API response 加入 runtime envelope validation（Core／BFF 分開驗證；不代表所有 domain DTO 已驗證）。
 - [x] L-03 嚴格驗證 correlation ID 為受限格式的 UUID v4。
 - [x] L-04 修復 frontend typecheck。
 - [x] L-05 修復 frontend lint。
@@ -70,7 +70,8 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 5. **H-04、H-08 保持 production milestone。** H-04 等待 hosting/network topology 與部署環境；
    H-08 等待 deletion compliance scope 與外部 storage adapters 定案。未取得部署或合規證據前不得勾選。
 
-建議續作順序：`L-01` → `L-02`；
+2026-09-08 更新：L-01 與 L-02 的共用 envelope slice 已完成，下一步為 Wave 2 Task 3.1c 的
+live Agent → VERIFY HTTP → DB 全鏈路驗證；各 endpoint `data` 的完整 runtime schema 仍屬後續增量。
 `M-08`、`M-09`、`H-04`、`H-08` 由 production-readiness gate 持續追蹤。
 
 ---
@@ -420,12 +421,31 @@ production-readiness release gate 管理。排除這些外部條件後，目前�
 ### L-02 — Frontend API response 缺少 runtime validation
 
 - Severity：Medium/Low
+- 狀態：共用 envelope slice 已完成（2026-09-08）；未把 TypeScript `T` 視為已通過 runtime DTO 驗證。
 - 位置：`packages/frontend/src/lib/api/client.ts:39-67`
 - 問題：`response.json()` 直接 cast，沒有 schema validation。
 - 影響：API drift 或 malformed response 會在 component 層以 undefined state 或 late error 失敗。
 - 修正：使用 Zod 或等價 schema guard，統一處理 malformed success/error envelope。
 - 驗證：回傳缺欄位、錯誤型別、錯誤 envelope 時，client 應產生可預期錯誤。
 - 應新增測試：是。
+
+2026-09-08 實作與驗證：
+
+- 從最新 main `1f7c36b` 開 `fix/frontend-api-response-validation`；參考舊提交 `585c496`，
+  但不直接合併它的舊進度宣告。舊版本只接受 Core error shape，會錯拒現有 BFF 的 401／403。
+- `response-envelope.ts` 分別驗證 Core `{ data, meta }` success、Core `{ error }` 與 BFF
+  `{ error, meta }` error；required／extra fields、型別、schema version、日期與 error details 都有 gate。
+- malformed success 回固定 `MALFORMED_API_RESPONSE`／502；malformed error 保留原始 HTTP status，
+  並用固定訊息及 `retryable=false`，不帶 response 原文／path 或自動重送。特別保留 401／403／404
+  供既有權限失效清除流程使用；合法 BFF timeout／unavailable 仍保留 reason／retryable。
+- 204 保持無 body；network failure 維持既有拒絕行為。沒有新增 dependency、修改 API producer
+  或放寬 Core contract。每個 endpoint `data` 的欄位驗證不在這次 envelope slice 內。
+- 新增 82 個 client tests；Core error code／required keys 對照 repository schema，BFF cases 使用
+  真正 `bffError` producer。既有 BFF proxy tests 另串上 `apiFetch` 檢查 401／403 行為。
+- 本機完整 frontend **397 tests／51 files**、typecheck、ESLint、production build 通過；
+  補入 proxy→client assertions 後相關 6 個 tests 再次通過。既有 14 個 workspace 權限回歸亦通過。
+- 本次沒有連線開發 DB、重建 integration DB、browser visual QA 或 live Agent 驗證；
+  不將先前 browser QA 當成此版 client 的即時瀏覽器證據。CI 使用原有 jobs，觸發設定不變。
 
 ### L-03 — Correlation ID 沒有嚴格 UUID v4 validation
 
