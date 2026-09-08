@@ -208,7 +208,7 @@ async def test_native_action_proposal_persists_then_http_verify_and_adopt(
         id=uuid4(),
         owner_tenant_id=ids["tenant"],
         policy_code="synthetic-chain",
-        policy_type="CONSENT_POLICY",
+        policy_type="CONSENT",
         version="synthetic-v1",
         status="ACTIVE",
         policy_payload={"synthetic_only": True},

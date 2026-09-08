@@ -176,3 +176,15 @@ zero-write proof, and intentionally excludes the changed authorization row.
   push, PR or new CI result. Next: review/commit this slice and run its regression
   through the existing Gate 1; do not equate local completion with production or
   every Wave 2 story being complete.
+
+## PR #32 CI follow-up
+
+Initial run `34183483978` on `d1601bf` reached the new PostgreSQL regression but
+failed during fixture setup: `policy_type="CONSENT_POLICY"` violated the baseline
+`policy_registry_policy_type_check`. The canonical value is `CONSENT`, as used by
+the existing integration fixtures. Result: 1 failed, 142 passed; the aggregate
+correctly failed because `core-db` failed. All other workers passed.
+
+Corrected only the fixture value; no schema, runtime policy or gate change.
+Disposable PostgreSQL execution must be rechecked on the new CI run. The earlier
+live development acceptance is separate from this test-fixture failure.
