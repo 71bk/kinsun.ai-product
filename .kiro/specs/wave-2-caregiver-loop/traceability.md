@@ -1,7 +1,7 @@
 # Wave 2 Caregiver Loop Traceability
 
-- 更新日期：2026-09-07
-- 狀態：C04／F02 PostgreSQL-backed HTTP／transaction slice 已通過 CI；真實登入與 Browser QA 的兩項 UI 問題已修正並本機重驗；live Agent E2E 尚未完成
+- 更新日期：2026-09-08
+- 狀態：C04／F02 原 PostgreSQL slice 已通過 CI；真實登入／Browser 與 live Agent → VERIFY → 採用本機驗收已完成；本次兩項 Core 修正與新 DB regression 仍待 CI／合併，非 production 或整個 Wave 2 完成
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -10,7 +10,7 @@
 
 ## Evidence boundary
 
-以下為 R2 implementation slice 當時的證據邊界；後續實際執行結果見本文件的 DB 與 Real-auth Browser QA 段落。
+以下為 R2 implementation slice 當時的證據邊界；後續結果見本文件的 DB、Real-auth Browser QA 與 2026-09-08 Agent chain 段落，當時的未完成狀態不代表目前狀態。
 
 目前已證明人工建立／更新 formal Care Action，以及 AI proposal、VERIFY promotion、Candidate 採納／拒絕／排除的 Core 與 UI contract。R2 Alembic graph 已驗證單一 head `d1f3a5c7e9b0`；2026-09-04 已對 Supabase development database 完成由 `b8d0f2a4c6e7` 至 `d1f3a5c7e9b0` 的 additive upgrade，並讀回 2 張新表、proposal 欄位、索引與 triggers。production build 與 zh-Hant／en 的 390／768／1024／1280 deterministic browser fixture QA 已通過。尚未執行真實登入、真實 Agent-to-database 或 production deployment E2E。
 
@@ -64,6 +64,17 @@ Task 3.1b 與文件同步 3.2 已完成；上述為 commit 前的本機驗證，
 Task 3.1c 的 live Agent／VERIFY HTTP 不在這次 fixture 範圍，完整 Wave 2 closeout 仍開放。
 完整結果、限制與本機截圖檔名見
 [Browser QA report](../../../docs/project/wave2-browser-qa-20260907.md)。
+
+## Live Agent chain acceptance（2026-09-08）
+
+2026-09-08 Task 3.1c 已完成本機全鏈路：真實登入、BFF → Core → Gemini Runtime 產生 NEEDS_REVIEW
+事件與私有行動 proposal，人工 VERIFY 後才產生候選，再由 UI 採用成一筆 OPEN 自我指派待辦。
+實跑修正 datetime JSONB persistence 與 VERIFY updated_at MissingGreenlet 兩個 500。
+Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB regression，僅收集
+未在 development DB 執行，仍待 CI／合併。Owner 核准的新四小時 membership 已提前失效，
+既有 legacy membership／assignment／Consent 未變。成功覆核／採用重送各 200，失效後各 404；
+來源版本與 snapshot hash 一致，核對的 chain metadata digest 未變。詳見
+[Agent chain QA report](../../../docs/project/wave2-agent-chain-qa-20260908.md)。
 
 ## Remaining product gaps
 

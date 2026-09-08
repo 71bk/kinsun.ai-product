@@ -136,6 +136,10 @@ class CareEventService:
                     },
                 )
                 care_action_candidate_proposal = None
+            else:
+                # Persist the validated JSON form, not adapter-native datetime
+                # values: JSONB's standard serializer cannot encode datetime.
+                care_action_candidate_proposal = action_proposal.model_dump(mode="json")
         if memory_candidate_proposal is not None:
             try:
                 proposal_decision = evaluate_memory_candidate(

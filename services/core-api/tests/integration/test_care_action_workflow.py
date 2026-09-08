@@ -28,12 +28,16 @@ from app.models.care_action_candidate import (
 from app.models.care_assignment import CareAssignment
 from app.models.care_event import CareEvent, CareEventVersion
 from app.models.care_unit import CareUnit
+from app.models.consent import ConsentGrant
 from app.models.elder import Elder
 from app.models.idempotency import IdempotencyRecord
 from app.models.outbox import OutboxEvent
+from app.models.policy import PolicyRegistry
 from app.models.tenant import Tenant
+from app.schemas.care_event import CreateCareEventCandidateRequest
 from app.services.care_action_candidate_service import CareActionCandidateService
 from app.services.care_action_service import CareActionService
+from app.services.care_event_service import CareEventService
 from tests.integration.test_identity_api import _build_client_app
 
 pytestmark = pytest.mark.asyncio
@@ -188,6 +192,90 @@ def _adopt(ids):
 
 def _headers(key=None):
     return {"Idempotency-Key": key or str(uuid4())}
+
+
+async def test_native_action_proposal_persists_then_http_verify_and_adopt(
+    test_engine, care_data, committed_session
+):
+    """DB regression for datetime JSONB and event updated_at async serialization.
+
+    Setup uses the real persistence service, not the live Agent provider. Only
+    CI's disposable DB may execute this test; live browser evidence is separate.
+    """
+    ids = care_data
+    now = datetime.now(UTC)
+    policy = PolicyRegistry(
+        id=uuid4(),
+        owner_tenant_id=ids["tenant"],
+        policy_code="synthetic-chain",
+        policy_type="CONSENT",
+        version="synthetic-v1",
+        status="ACTIVE",
+        policy_payload={"synthetic_only": True},
+        effective_from=now - timedelta(days=1),
+    )
+    committed_session.add(policy)
+    await committed_session.flush()
+    committed_session.add(
+        ConsentGrant(
+            elder_id=ids["elder"],
+            purpose_code="CARE_EVENT_EXTRACTION",
+            status="GRANTED",
+            version=1,
+            scope={},
+            granted_by_actor_id=ids["elder_actor"],
+            policy_id=policy.id,
+            granted_at=now,
+            effective_at=now - timedelta(minutes=1),
+        )
+    )
+    assignment = await committed_session.get(CareAssignment, ids["assignment"])
+    assignment.service_scope = [*assignment.service_scope, "care_event:read", "care_event:review"]
+    await committed_session.flush()
+    proposal = {**_proposal(ids), "suggested_due_at": now + timedelta(days=1)}
+    event = await CareEventService(committed_session, ids["tenant"]).create_candidate(
+        elder_id=ids["elder"],
+        actor_id=ids["elder_actor"],
+        request=CreateCareEventCandidateRequest(
+            source_type="MANUAL",
+            event_type="EXPECTED_CONTACT_MISSED",
+            structured_payload={"contact_status": "MISSED"},
+            confidence_band="MEDIUM",
+            extractor_version="synthetic-chain-v1",
+        ),
+        trace_id="synthetic-chain",
+        idempotency_key="synthetic-chain-event",
+        care_action_candidate_proposal=proposal,
+    )
+    event_id = event.id
+    await committed_session.commit()
+    async with _client(test_engine, ids, raise_app_exceptions=False) as client:
+        path = f"/api/v1/elders/{ids['elder']}/care-events/{event_id}/review"
+        headers = _headers()
+        request = {"decision": "VERIFY", "reason_code": "SYNTHETIC_QA", "expected_version": 1}
+        reviewed = await client.post(path, json=request, headers=headers)
+        assert reviewed.status_code == 200, reviewed.text
+        result = reviewed.json()["data"]
+        assert result["status"] == "VERIFIED" and result["updated_at"]
+        replay = await client.post(path, json=request, headers=headers)
+        assert replay.status_code == 200 and replay.json()["data"] == result
+        candidates = (await client.get(_candidates(ids))).json()["data"]["items"]
+        matching = [
+            c for c in candidates if c["source_event_provenance"][0]["event_id"] == str(event_id)
+        ]
+        assert len(matching) == 1
+        candidate = matching[0]
+        assert candidate["status"] == "PENDING_REVIEW"
+        adopted = await client.post(
+            f"{_candidates(ids)}/{candidate['care_action_candidate_id']}/adopt",
+            json={"expected_version": 1},
+            headers=_headers(),
+        )
+        assert adopted.status_code == 200, adopted.text
+        assert adopted.json()["data"]["status"] == "ADOPTED"
+        actions = (await client.get(_actions(ids))).json()["data"]["items"]
+        assert len(actions) == 1
+        assert actions[0]["source_event_provenance"] == candidate["source_event_provenance"]
 
 
 def _create_body(ids):

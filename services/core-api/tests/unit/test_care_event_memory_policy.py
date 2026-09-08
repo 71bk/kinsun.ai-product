@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+import json
+from datetime import UTC, datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -10,6 +11,7 @@ from uuid import uuid4
 import pytest
 
 from app.policies.memory_policy import SourceSpeakerEvidence
+from app.schemas.care_action import AgentCareActionCandidateProposal
 from app.schemas.care_event import CreateCareEventCandidateRequest
 from app.services import care_event_service
 from app.services.care_event_service import CareEventService
@@ -154,10 +156,18 @@ def _action_proposal(**overrides: object) -> dict[str, object]:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("wire_format", ["datetime", "iso", "offset"])
 async def test_safe_action_proposal_is_kept_private_with_event_version(
     monkeypatch: pytest.MonkeyPatch,
+    wire_format: str,
 ) -> None:
     proposal = _action_proposal()
+    if wire_format == "iso":
+        proposal["suggested_due_at"] = proposal["suggested_due_at"].isoformat()
+    elif wire_format == "offset":
+        proposal["suggested_due_at"] = proposal["suggested_due_at"].astimezone(
+            timezone(timedelta(hours=8))
+        )
     version = await _create(
         monkeypatch,
         proposal=_proposal(),
@@ -172,7 +182,13 @@ async def test_safe_action_proposal_is_kept_private_with_event_version(
         ),
     )
 
-    assert version.care_action_candidate_proposal == proposal
+    # Exercise the standard JSON serializer used for JSONB, not a permissive
+    # default=str encoder that would hide datetime persistence failures.
+    persisted = json.loads(json.dumps(version.care_action_candidate_proposal))
+    assert AgentCareActionCandidateProposal.model_validate(persisted) == (
+        AgentCareActionCandidateProposal.model_validate(proposal)
+    )
+    assert isinstance(persisted["suggested_due_at"], str)
 
 
 @pytest.mark.asyncio
