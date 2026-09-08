@@ -2,6 +2,8 @@
 
 import { ArrowRight, ClipboardText, ListChecks, UserCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
+import { StateCard, summaryState } from '@/components/StateCard';
+import type { MessageKey } from '@/lib/i18n/messages';
 import type { DashboardElder } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
 import styles from './ElderCard.module.css';
@@ -9,6 +11,7 @@ import styles from './ElderCard.module.css';
 export function ElderCard({ elder }: { elder: DashboardElder }) {
   const { t, locale } = useLocale();
   const metrics = elder.interactionMetrics;
+  const daily = elder.dailySummary;
   const formatInteractionTime = (value: string) => new Intl.DateTimeFormat(locale, {
     timeZone: metrics?.timezone, dateStyle: 'short', timeStyle: 'short',
   }).format(new Date(value));
@@ -43,6 +46,27 @@ export function ElderCard({ elder }: { elder: DashboardElder }) {
           <p>{t('dashboard.interactionAsOf', { at: formatInteractionTime(metrics.asOf) })}</p>
         </div>
       ) : <p className={styles.metricsUnavailable}>{t('dashboard.interactionsUnavailable')}</p>}
+      {daily ? (
+        <StateCard
+          title={t('dashboard.dailySummary')}
+          state={daily.summary ? summaryState(daily.summary.status) : 'dataInsufficient'}
+          stateLabel={daily.summary ? t(`summaryStatus.${daily.summary.status}` as MessageKey) : undefined}
+          meta={<>
+            <p>{daily.localDate} · {daily.timezone}</p>
+            <p>{t('dashboard.interactionAsOf', { at: new Intl.DateTimeFormat(locale, {
+              timeZone: daily.timezone, dateStyle: 'short', timeStyle: 'short',
+            }).format(new Date(daily.asOf)) })}</p>
+          </>}
+          actions={daily.summary ? (
+            <Link className={styles.reviewLink} href={`/staff/elders/${elder.elderId}?tab=summaries&date=${daily.localDate}`}>
+              <span>{t('dashboard.viewDailySummary')}</span>
+              <ArrowRight aria-hidden="true" size={20} weight="bold" />
+            </Link>
+          ) : undefined}
+        >
+          {!daily.summary && <p>{t('dashboard.noVisibleSummary')}</p>}
+        </StateCard>
+      ) : <p className={styles.metricsUnavailable}>{t('dashboard.summaryUnavailable')}</p>}
       <Link className={styles.link} href={`/staff/elders/${elder.elderId}`}>
         <span>{t('dashboard.openElder')}</span>
         <ArrowRight size={20} weight="bold" aria-hidden="true" />

@@ -18,6 +18,28 @@
     }
   },
   "$defs": {
+    "DailySummarySnapshot": {
+      "description": "Current-day PROFESSIONAL_DAILY metadata in Elder.timezone. summary=null means no visible summary, including hidden non-formal rows; it does not prove no draft exists. Non-formal states require summary:review in addition to summary:read. as_of fixes the calendar day, not a historical version snapshot.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["local_date", "timezone", "as_of", "summary"],
+      "properties": {
+        "local_date": {"type": "string", "format": "date"},
+        "timezone": {"type": "string"},
+        "as_of": {"type": "string", "format": "date-time"},
+        "summary": {
+          "oneOf": [{"type": "null"}, {
+            "type": "object", "additionalProperties": false,
+            "required": ["summary_id", "status", "version"],
+            "properties": {
+              "summary_id": {"type": "string", "format": "uuid"},
+              "status": {"enum": ["DRAFT", "READY", "NEEDS_REVIEW", "PUBLISHED", "STALE", "WITHDRAWN"]},
+              "version": {"type": "integer", "minimum": 1}
+            }
+          }]
+        }
+      }
+    },
     "InteractionMetrics": {
       "description": "Professional voice_session:read metadata snapshot. Each COMPLETED session with a completed SUCCESS/BLOCKED/HUMAN_REVIEW AgentRun counts once; dependency failures, cancelled, incomplete and future sessions are excluded. Day and last interaction use ended_at, in the persisted Elder timezone. No transcript, model output or global total.",
       "type": "object",
@@ -68,6 +90,10 @@
         "interaction_metrics": {
           "description": "Null or absent without professional voice_session:read permission. A permitted elder with no qualifying sessions has today_count=0 and last_interaction_at=null. Snapshot does not authorize future reads.",
           "oneOf": [{"type": "null"}, {"$ref": "#/$defs/InteractionMetrics"}]
+        },
+        "daily_summary": {
+          "description": "Null/absent when unavailable, always null for family. Professional summary:read required; metadata only, no summary text or source event identifiers. Navigation reauthorizes independently.",
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/DailySummarySnapshot"}]
         },
         "authorization_summary": {
           "description": "Short description of why the elder is visible. Must not disclose other actors' identities.",

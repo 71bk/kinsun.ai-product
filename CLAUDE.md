@@ -309,6 +309,8 @@ npm run build --workspace @elderly-care/frontend
 
 Browser QA 的 `/backend/auth/session` fixture 使用 `credential_present`，不是 `authenticated`；
 先讀 `lib/auth-session.ts` 的實際解析規則，避免錯誤 mock 使 dashboard 根本不發出資料請求。
+Skeleton QA 用 `role="status"`／`aria-busy="true"`，不猜 CSS Modules class 的名稱或大小寫；
+錯誤的 `[class*="skeleton"]` selector 會讓已渲染的 loading 狀態被誤判為 timeout。
 
 Core unit test 匯入 repository 根目錄的 `scripts/` 工具時，用 `importlib.util` 依明確檔案路徑
 載入，避免 Core 自己的 `scripts` package 遮蔽根目錄工具。手動 DB 工具必須在 main／明確命令

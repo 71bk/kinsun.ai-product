@@ -40,6 +40,7 @@ from app.models.conversation import ConversationSession
 from app.models.elder import Elder
 from app.models.membership import ActorTenantMembership
 from app.models.policy import PolicyRegistry
+from app.models.summary import DailySummary
 from app.models.tenant import Tenant
 
 # ─── Fixed time ──────────────────────────────────────────────────────────────
@@ -625,6 +626,167 @@ async def test_interaction_metrics_scope_calendar_and_session_dedup(
         setattr(grant, scope_attr, base)
         await committed_session.commit()
         assert (await client.get(path)).json()["data"]["items"][0]["interaction_metrics"] is None
+        setattr(
+            grant,
+            "service_end" if mode == "home-care" else "effective_to",
+            datetime.now(UTC) - timedelta(seconds=1),
+        )
+        await committed_session.commit()
+        assert (await client.get(path)).json()["data"]["items"] == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role,actor_key,elder_key,mode,zone,clock",
+    [
+        (
+            "DAYCARE_CARE_WORKER",
+            "daycare_worker_id",
+            "elder_1_id",
+            "daycare",
+            "Asia/Taipei",
+            "2026-09-08T16:00:00+00:00",
+        ),
+        (
+            "HOME_CARE_WORKER",
+            "worker_id",
+            "elder_2_id",
+            "home-care",
+            "America/New_York",
+            "2026-03-09T03:59:00+00:00",
+        ),
+        (
+            "DAYCARE_CARE_WORKER",
+            "daycare_worker_id",
+            "elder_1_id",
+            "daycare",
+            "America/New_York",
+            "2026-11-02T04:59:00+00:00",
+        ),
+        (
+            "FAMILY_MEMBER",
+            "family_member_id",
+            "elder_1_id",
+            "family",
+            "Asia/Taipei",
+            "2026-09-08T16:00:00+00:00",
+        ),
+    ],
+)
+async def test_dashboard_summary_visibility_and_local_day(
+    test_engine,
+    seed_api_data,
+    committed_session,
+    monkeypatch,
+    role,
+    actor_key,
+    elder_key,
+    mode,
+    zone,
+    clock,
+):
+    from zoneinfo import ZoneInfo
+
+    from app.api import identity
+
+    ids = seed_api_data
+    as_of = datetime.fromisoformat(clock)
+    day = as_of.astimezone(ZoneInfo(zone)).date()
+    original = identity.get_daily_summary_snapshots
+
+    async def snapshot(session, actor, elders, _now):
+        return await original(session, actor, elders, as_of)
+
+    monkeypatch.setattr(identity, "get_daily_summary_snapshots", snapshot)
+    model = CareAssignment if mode == "home-care" else CareRelationship
+    owner = model.worker_id if mode == "home-care" else model.actor_id
+    grant = (
+        await committed_session.execute(select(model).where(owner == ids[actor_key]))
+    ).scalar_one()
+    scope_attr = "service_scope" if mode == "home-care" else "scope"
+    base = list(getattr(grant, scope_attr))
+    elder = await committed_session.get(Elder, ids[elder_key])
+    elder.timezone = zone
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids[actor_key], role, ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        path = f"/api/v1/me/authorized-elders?mode={mode}&limit=1"
+
+        async def get_snapshot():
+            response = await client.get(path)
+            assert response.status_code == 200
+            items = response.json()["data"]["items"]
+            assert len(items) == 1 and items[0]["elder_id"] == str(ids[elder_key])
+            return items[0]["daily_summary"]
+
+        assert await get_snapshot() is None
+        setattr(grant, scope_attr, base + ["summary:read"])
+        await committed_session.commit()
+        empty = await get_snapshot()
+        if mode != "family":
+            assert empty == {
+                "local_date": day.isoformat(),
+                "timezone": zone,
+                "as_of": as_of.isoformat().replace("+00:00", "Z"),
+                "summary": None,
+            }
+        else:
+            assert empty is None
+
+        def row(target, tenant, date_value, kind="PROFESSIONAL_DAILY", status="PUBLISHED"):
+            return DailySummary(
+                id=uuid.uuid4(),
+                tenant_id=tenant,
+                elder_id=target,
+                summary_date=date_value,
+                summary_type=kind,
+                status=status,
+                current_version=1,
+            )
+
+        # None of these may become this elder's current professional daily summary.
+        other = ids["elder_2_id" if elder_key == "elder_1_id" else "elder_1_id"]
+        committed_session.add_all(
+            [
+                row(ids[elder_key], ids["tenant_id"], day - timedelta(days=1)),
+                row(ids[elder_key], ids["tenant_id"], day + timedelta(days=1)),
+                row(ids[elder_key], ids["tenant_id"], day, "FAMILY_DAILY"),
+                row(other, ids["tenant_id"], day),
+                row(ids["elder_3_id"], ids["tenant_b_id"], day),
+            ]
+        )
+        await committed_session.commit()
+        assert await get_snapshot() == empty
+        today = row(ids[elder_key], ids["tenant_b_id"], day, status="DRAFT")
+        committed_session.add(today)
+        await committed_session.commit()
+        assert await get_snapshot() == empty  # mismatched summary tenant
+        today.tenant_id = ids["tenant_id"]
+        await committed_session.commit()
+        assert await get_snapshot() == empty  # hidden draft must equal absence
+        for status in ["DRAFT", "NEEDS_REVIEW", "STALE", "WITHDRAWN", "READY", "PUBLISHED"]:
+            today.status = status
+            await committed_session.commit()
+            for review in [False, True]:
+                setattr(
+                    grant,
+                    scope_attr,
+                    base + ["summary:read"] + (["summary:review"] if review else []),
+                )
+                await committed_session.commit()
+                actual = await get_snapshot()
+                if mode == "family" or (not review and status not in ["READY", "PUBLISHED"]):
+                    assert actual == empty
+                else:
+                    assert actual["summary"] == {
+                        "summary_id": str(today.id),
+                        "status": status,
+                        "version": 1,
+                    }
+        # Metadata is not a capability: removing read keeps the object unavailable.
+        setattr(grant, scope_attr, base + ["summary:review"])
+        await committed_session.commit()
+        assert await get_snapshot() is None
         setattr(
             grant,
             "service_end" if mode == "home-care" else "effective_to",
