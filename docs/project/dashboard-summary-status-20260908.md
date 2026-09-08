@@ -72,3 +72,12 @@
 效能／Lighthouse 尚未驗證；合成 UI 不代表真實資料全鏈路或 production deployment。
 居服行程／派案狀態、完整 US-C01／US-B02、摘要自動排程／發布不是本次範圍。
 原有 14 個 schema 工作樹修改與無關 QA artifacts 保留，不納入本次交付。
+
+## PR 首輪 CI 追蹤
+
+PR #36（`77869c5`），run `34209282481`：8 個檢查成功；Core integration
+`154 passed / 4 failed`，aggregate 正確阻擋。新增 4 個案例在建立 fixture 時修改
+`DailySummary.tenant_id`，觸發既有 `TenantImmutabilityError`，尚未完成後段狀態驗證。
+修正為刪除 synthetic 錯租戶 row、flush 後建立正確租戶 row，保留租戶不可變更保護；
+此操作只存在 disposable DB 測試中。修正後的 DB 執行結果待後續 CI，不以首輪成功項目
+宣稱整體通過。上方「新 PR CI 尚未驗證」為提交前的歷史狀態。

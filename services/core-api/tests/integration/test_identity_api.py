@@ -761,7 +761,12 @@ async def test_dashboard_summary_visibility_and_local_day(
         committed_session.add(today)
         await committed_session.commit()
         assert await get_snapshot() == empty  # mismatched summary tenant
-        today.tenant_id = ids["tenant_id"]
+        # Tenant identity is immutable. Replace the synthetic mismatched row
+        # before creating the valid fixture for the same unique summary key.
+        await committed_session.delete(today)
+        await committed_session.flush()
+        today = row(ids[elder_key], ids["tenant_id"], day, status="DRAFT")
+        committed_session.add(today)
         await committed_session.commit()
         assert await get_snapshot() == empty  # hidden draft must equal absence
         for status in ["DRAFT", "NEEDS_REVIEW", "STALE", "WITHDRAWN", "READY", "PUBLISHED"]:
