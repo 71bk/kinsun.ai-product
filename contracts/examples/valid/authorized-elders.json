@@ -7,7 +7,14 @@
         "care_unit_name": "幸福日照中心",
         "authorization_summary": "daycare authorization",
         "open_care_action_count": 3,
-        "pending_event_review_count": 105
+        "pending_event_review_count": 105,
+        "interaction_metrics": {
+          "today_count": 3,
+          "last_interaction_at": "2026-07-31T04:00:00Z",
+          "local_date": "2026-07-31",
+          "timezone": "Asia/Taipei",
+          "as_of": "2026-07-31T04:12:09Z"
+        }
       },
       {
         "elder_id": "9b3e7d15-4c62-4a08-b7f9-5e1c8a2d6034",
@@ -15,7 +22,8 @@
         "care_unit_name": "幸福日照中心",
         "authorization_summary": "daycare authorization",
         "open_care_action_count": null,
-        "pending_event_review_count": null
+        "pending_event_review_count": null,
+        "interaction_metrics": null
       }
     ],
     "page": {

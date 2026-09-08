@@ -838,6 +838,10 @@ Frontend 非同步元件測試必須等待可觀察的 UI 狀態，再操作元�
 `listEvents` 呼叫兩次後立即查按鈕，造成 CI 偶發取得 `null`；應使用
 `await screen.findByRole(...)` 等待按鈕出現，再驗證呼叫次數與分頁行為。
 
+前端 synthetic Browser QA 的 `/backend/auth/session` mock 必須使用實際回應欄位
+`credential_present: true`，不是 `authenticated: true`。後者會讓 runtime config 判成未登入，
+完全不載入 dashboard API；不要把這類 fixture 錯誤當成產品權限／資料載入 regression。
+
 整合測試會對 `TEST_DATABASE_URL` 指向的資料庫執行 `alembic upgrade head`，
 預設是 `kinsun_test`，不要指向 `kinsun`。測試資料全部由 fixture 產生，
 均為 Synthetic，不得改用任何真實長者資料。

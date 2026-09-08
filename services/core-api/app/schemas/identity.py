@@ -9,6 +9,7 @@ All responses are wrapped in SuccessEnvelope at the handler layer.
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from enum import Enum
 from uuid import UUID
 
@@ -40,6 +41,18 @@ class MeResponse(BaseModel):
     elder_id: UUID | None = None
 
 
+class InteractionMetricsResponse(BaseModel):
+    """Snapshot of completed response sessions in the Elder's local calendar."""
+
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+    today_count: int = Field(ge=0)
+    last_interaction_at: datetime | None
+    local_date: date
+    timezone: str
+    as_of: datetime
+
+
 class AuthorizedElderItem(BaseModel):
     """A single elder entry in the authorized-elders listing."""
 
@@ -49,6 +62,7 @@ class AuthorizedElderItem(BaseModel):
     display_name: str
     care_unit_name: str | None = None
     authorization_summary: str | None = None
+    interaction_metrics: InteractionMetricsResponse | None = None
     pending_event_review_count: int | None = Field(
         default=None,
         ge=0,

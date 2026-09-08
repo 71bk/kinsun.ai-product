@@ -17,6 +17,7 @@ interface AuthorizedElderItem {
   authorization_summary: string | null;
   open_care_action_count?: number | null;
   pending_event_review_count?: number | null;
+  interaction_metrics?: unknown;
 }
 
 interface AuthorizedElderList {
@@ -35,6 +36,37 @@ export interface DashboardElder {
   authorizationSummary: string | null;
   openCareActionCount: number | null;
   pendingEventReviewCount: number | null;
+  interactionMetrics?: InteractionMetrics | null;
+}
+
+export interface InteractionMetrics {
+  todayCount: number;
+  lastInteractionAt: string | null;
+  localDate: string;
+  timezone: string;
+  asOf: string;
+}
+
+function interactionMetrics(value: unknown): InteractionMetrics | null {
+  if (!value || typeof value !== 'object') return null;
+  const wire = value as Record<string, unknown>;
+  const timestamp = (input: unknown): input is string =>
+    typeof input === 'string' && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(input) &&
+    Number.isFinite(Date.parse(input));
+  if (typeof wire.today_count !== 'number' || !Number.isSafeInteger(wire.today_count) ||
+      wire.today_count < 0 || !timestamp(wire.as_of) ||
+      (wire.last_interaction_at !== null && !timestamp(wire.last_interaction_at)) ||
+      typeof wire.local_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(wire.local_date) ||
+      typeof wire.timezone !== 'string') return null;
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: wire.timezone }).format(new Date(wire.as_of));
+  } catch { return null; }
+  if (wire.last_interaction_at !== null && Date.parse(wire.last_interaction_at) > Date.parse(wire.as_of)) return null;
+  if (wire.today_count > 0 && wire.last_interaction_at === null) return null;
+  return {
+    todayCount: wire.today_count, lastInteractionAt: wire.last_interaction_at,
+    localDate: wire.local_date, timezone: wire.timezone, asOf: wire.as_of,
+  };
 }
 
 export interface CaregiverDashboard {
@@ -76,6 +108,7 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
       elderName: item.display_name,
       careUnitName: item.care_unit_name,
       authorizationSummary: item.authorization_summary,
+      interactionMetrics: mode === 'family' ? null : interactionMetrics(item.interaction_metrics),
       pendingEventReviewCount:
         mode !== 'family' &&
         typeof item.pending_event_review_count === 'number' &&

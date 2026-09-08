@@ -1,5 +1,6 @@
 """Dashboard metadata must never bypass the formal care-action read gate."""
 
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -11,6 +12,7 @@ from app.core.auth import ActorContext
 from app.core.exceptions import NotFoundError
 from app.repositories.care_action_repo import CareActionRepository
 from app.repositories.care_event_repo import CareEventRepository
+from app.repositories.conversation_repo import ConversationRepository, InteractionMetrics
 from app.services import dashboard_service
 
 
@@ -40,6 +42,11 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
     monkeypatch.setattr(identity, "get_open_care_action_counts", count)
     review_count = AsyncMock(side_effect=[{first: 103}, {second: 0}])
     monkeypatch.setattr(identity, "get_pending_event_review_counts", review_count)
+    metrics = InteractionMetrics(
+        3, None, date(2026, 9, 8), "Asia/Taipei", datetime(2026, 9, 8, tzinfo=UTC)
+    )
+    interaction = AsyncMock(side_effect=[{first: metrics}, {}])
+    monkeypatch.setattr(identity, "get_interaction_metrics", interaction)
     for index, (cursor, elder, expected) in enumerate(
         [(None, first, 105), ("next-page", second, 0)]
     ):
@@ -55,6 +62,9 @@ async def test_identity_route_counts_only_returned_page_and_preserves_cursor(mon
             103 if index == 0 else 0
         )
         assert review_count.await_args_list[index].args == (session, actor, [elder])
+        assert interaction.await_args_list[index].args[:3] == (session, actor, [elder])
+        actual = response["data"]["items"][0]["interaction_metrics"]
+        assert (actual["today_count"] if actual else None) == (3 if index == 0 else None)
         assert len(response["data"]["items"]) == 1
         assert response["data"]["page"] == {
             "limit": 1,
@@ -188,3 +198,66 @@ async def test_group_count_is_tenant_and_page_bounded_without_content_or_provena
     assert "GROUP BY" in sql and "count(" in sql
     assert "JOIN" not in sql and "LIMIT" not in sql
     assert "title" not in sql and "provenance" not in sql and "candidate" not in sql
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role", ["FAMILY_MEMBER", "ELDER", "ADMIN", "SYSTEM_SERVICE"])
+async def test_nonprofessionals_never_query_interactions(role, monkeypatch):
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role=role)
+    auth, session = AsyncMock(), AsyncMock()
+    monkeypatch.setattr(dashboard_service, "authorize_elder", auth)
+    assert (
+        await dashboard_service.get_interaction_metrics(
+            session, actor, [uuid4()], datetime.now(UTC)
+        )
+        == {}
+    )
+    auth.assert_not_awaited()
+    session.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_interactions_reauthorize_page_without_fabricating_zero(monkeypatch):
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role="DAYCARE_CARE_WORKER")
+    first, denied, gone, unrelated = [uuid4() for _ in range(4)]
+    as_of = datetime.now(UTC)
+    metrics = InteractionMetrics(0, None, as_of.date(), "UTC", as_of)
+    auth = AsyncMock(side_effect=[None, NotFoundError("Resource not found"), None])
+    query = AsyncMock(return_value={first: metrics, unrelated: metrics})
+    monkeypatch.setattr(dashboard_service, "authorize_elder", auth)
+    monkeypatch.setattr(ConversationRepository, "interaction_metrics_by_elder", query)
+    assert await dashboard_service.get_interaction_metrics(
+        AsyncMock(), actor, [first, denied, gone, first], as_of
+    ) == {first: metrics}
+    query.assert_awaited_once_with([first, gone], as_of)
+    assert all(call.args[3] == "voice_session:read" for call in auth.await_args_list)
+    query.side_effect = RuntimeError
+    auth.side_effect = None
+    with pytest.raises(RuntimeError):
+        await dashboard_service.get_interaction_metrics(AsyncMock(), actor, [first], as_of)
+
+
+@pytest.mark.asyncio
+async def test_interaction_sql_uses_snapshot_local_day_and_exists_without_private_content():
+    tenant, elder = uuid4(), uuid4()
+    as_of = datetime(2026, 9, 8, tzinfo=UTC)
+    session, result = AsyncMock(), MagicMock()
+    result.all.return_value = [(elder, 0, None, date(2026, 9, 8), "Asia/Taipei")]
+    session.execute.return_value = result
+    repo = ConversationRepository(session, tenant)
+    assert await repo.interaction_metrics_by_elder([], as_of) == {}
+    session.execute.assert_not_awaited()
+    assert (await repo.interaction_metrics_by_elder([elder], as_of))[elder].today_count == 0
+    query = session.execute.await_args.args[0].compile(dialect=postgresql.dialect())
+    assert tenant in query.params.values() and [elder] in query.params.values()
+    assert as_of in query.params.values()
+    assert ["SUCCESS", "BLOCKED", "HUMAN_REVIEW"] in query.params.values()
+    sql = str(query)
+    assert all(
+        term in sql
+        for term in ["EXISTS", "LEFT OUTER JOIN", "GROUP BY", "timezone(", "FILTER", "max("]
+    )
+    assert all(
+        term not in sql
+        for term in ["LIMIT", "transcript", "token_usage", "prompt", "response_body"]
+    )
