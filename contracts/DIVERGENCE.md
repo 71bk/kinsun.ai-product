@@ -53,6 +53,13 @@
 
 目前 `code` 仍是依 HTTP status 產生的較粗粒度 slug；`reason_code` 才是穩定的細分原因。欄位名稱仍使用 `details`，尚未改為文件 10 的 `field_errors`／`safe_details`／`support_reference`。
 
+Next.js BFF 自行拒絕請求時使用另一個既有 browser-facing 格式：`{ error, meta }`；
+`error` 只有 `code`、`message`、`reason_code`、`retryable`，correlation ID 在 `meta`，
+沒有 Core 的 `details`。其 executable authority 是 `lib/server/bff-response.ts`，
+不屬於 Core `ErrorEnvelopeV1`。Frontend `apiFetch` 分別驗證這兩種格式，不為相容 BFF
+而放寬 Core schema；損壞的 error body 仍保留 HTTP status，以免 401／403／404 被
+誤轉成 502 而跳過 UI 的失效權限處理。此驗證限於 envelope，未涵蓋每個 endpoint 的 domain DTO。
+
 ### HTTP status
 
 - DB optimistic concurrency conflict 明確回 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`；
