@@ -540,6 +540,20 @@ live Agent → VERIFY HTTP → DB 全鏈路驗證；各 endpoint `data` 的完�
 
 ## 最新驗證結果
 
+### 2026-09-08 C04／F02 live Agent chain 本機驗收
+
+- 真實登入 → BFF/Core → Gemini Runtime → NEEDS_REVIEW Event → 人工 VERIFY → Candidate
+  → UI 採用 → OPEN 自我指派待辦完成；來源版本/hash、同 key replay 與授權過期後拒絕已核對。
+- 修正 accepted Agent proposal 的 native datetime JSONB serialization 500，以及 CareEvent
+  VERIFY flush 後讀取 expired updated_at 的 MissingGreenlet 500；未改 contract／migration。
+- Core unit **1176 passed**。新增 PostgreSQL native proposal → VERIFY HTTP → adoption
+  regression 僅 collect，等待既有 CI 的 disposable DB；沒有重建 development Supabase。
+- 本次核准的新四小時 membership 已提前失效，未恢復舊授權；服務已關閉、staff 已登出。
+- 尚未 commit／push／開 PR；不以歷史 CI 代表本次修正已過 CI，也不宣稱 voice／production E2E。
+  詳見 [驗收報告](docs/project/wave2-agent-chain-qa-20260908.md)。
+
+### 2026-09-04 歷史基線
+
 - GitHub Actions Gate 1：run `33739166227` passed（commit `9bcbc74`，包含 M-04），耗時 6m30s。
 - Core unit tests：1050 passed。
 - Agent tests：498 passed。

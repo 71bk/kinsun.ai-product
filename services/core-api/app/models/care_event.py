@@ -28,6 +28,9 @@ class CareEvent(BaseModel, TenantScopedMixin):
 
     __tablename__ = "care_event"
     __pk_name__ = "event_id"
+    # Review responses serialize updated_at after async flush. Fetch the
+    # generated timestamp there, rather than triggering implicit synchronous IO.
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

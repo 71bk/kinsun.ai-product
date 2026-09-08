@@ -67,3 +67,34 @@ uv run --frozen --project services/core-api pytest services/core-api/tests/unit/
 Real-browser and live Agent evidence must remain separate from the offline tests
 and from PR #29's PostgreSQL-backed HTTP tests. Do not mark Wave 2 Task 3.1b
 complete just because this helper or its safety tests passed.
+
+## Live Agent chain inspection (2026-09-08)
+
+`wave2_agent_chain_inspect.py` is read-only and fixed to the synthetic
+`wave2-agent-chain-20260908` campaign. It neither prepares fixtures nor changes
+authorization. Run from the repository root:
+
+```powershell
+uv run --project services/core-api python scripts/qa/wave2_agent_chain_inspect.py
+```
+
+It resolves the exact session claim, then follows event/version, review,
+candidate, adopted action, provenance and outbox links in one read-only snapshot.
+No credentials or conversation/proposal content are printed. See
+`docs/project/wave2-agent-chain-qa-20260908.md` for completed local chain acceptance
+and remaining CI/merge work; successful inspection alone is not acceptance.
+
+`wave2_agent_chain_membership.py` defaults to read-only inspection of the exact
+owner-approved campaign membership:
+
+```powershell
+uv run --project services/core-api python scripts/qa/wave2_agent_chain_membership.py inspect
+```
+
+The campaign membership already exists and is expired. **Do not prepare again or
+renew it.** `prepare`/`expire` require `--allow-synthetic-write`; prepare refuses an
+existing ID, creates at most four hours of access and never repairs legacy roles.
+Expire locks and validates membership/actor/tenant/unit/role ownership and can
+only shorten validity. Imports do not load settings or connect. Target validation
+is the same development Supabase URL-shape check as the inspector, not independent
+proof of environment identity. No assignment/Consent/credential or schema changes.

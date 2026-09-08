@@ -2,7 +2,7 @@
 
 > **2026-08-14 Target Domain Overlay**：後續 backlog 必須依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md) 與 [Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md) 執行。新增的優先 Enablers 為 Account／Elder decoupling、Organization／Household context、Elder Enrollment、Service Entitlement、Staff-assisted Elder Session、single-Elder offboarding 與 Household continuation。這些工作不得被誤列為既有 Gate 1 已完成項目；Gate 1 的 Agent、ASR／TTS 與 CI 暫緩決策不因此改變。
 
-## 2026-09-07 Wave 2 驗收進度
+## 2026-09-08 Wave 2 驗收進度
 
 US-C04／US-F02 已完成 repository implementation 與 PostgreSQL-backed HTTP／transaction
 驗收：新增 34 個 lifecycle、採納／拒絕／排除、replay、真實並行與負向安全案例；CI run
@@ -10,8 +10,12 @@ US-C04／US-F02 已完成 repository implementation 與 PostgreSQL-backed HTTP�
 19 migration tests、live contracts 與 aggregate 通過。這是資料庫驗收切片，不代表 Wave 2
 整體完成：2026-09-07 真實登入與 Browser → BFF → Core → Supabase QA 已執行，lifecycle、replay、
 舊分頁 409 與權限失效拒絕已驗證；失效後舊畫面與登入入口文案兩項問題已修正並以另一批隔離資料、
-production rebuild 與真實登入重驗通過（前端 315 tests），live Agent E2E 尚未驗證
-（[QA report](../project/wave2-browser-qa-20260907.md)）。self-assignment 邊界不變，
+production rebuild 與真實登入重驗通過（前端 315 tests，
+[QA report](../project/wave2-browser-qa-20260907.md)）。2026-09-08 已完成 real-auth
+Core → Gemini Runtime → Event → 人工 VERIFY → Candidate → UI 採用 → DB/outbox 本機全鏈路，
+來源版本/hash、成功重送及短期授權失效後拒絕均已核對。兩項 Core 500 修正後 unit 1176 passed；
+新 DB regression 待 CI／合併，不宣稱 production 或全部 Wave 2 stories 完成
+（[Agent chain QA](../project/wave2-agent-chain-qa-20260908.md)）。self-assignment 邊界不變，
 dashboard 待辦數屬 US-C01 後續增量。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 

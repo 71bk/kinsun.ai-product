@@ -699,6 +699,12 @@ kinsun.ai/
 - Core unit test 載入根目錄 `scripts/` 工具時，使用檔案路徑的 `importlib.util` loader；
   不要假設 `from scripts...` 指向 repository 根目錄，Core 自己的 `scripts` package 可能遮蔽它。
   手動 DB 工具的 import 不得載入 `.env`、建立 connection 或執行 provisioning。
+- Agent proposal 寫入 JSONB 前，應保存通過 schema／policy 的 `model_dump(mode="json")`，
+  不可原封保存含 Python `datetime` 的 adapter dictionary。事件行動建議曾因此在 live
+  companion 回合回 500；回歸測試需用標準 JSON serializer，不以 `default=str` 掩蓋問題。
+- Async ORM flush 後若 DTO 立即讀取 server/on-update timestamp，mutable aggregate
+  應以 `eager_defaults=True` 或明確 async refresh 取回欄位；僅 `expire_on_commit=False`
+  不足以防止 `MissingGreenlet`。CareEvent VERIFY 曾因 `updated_at` 過期而回 500。
 - 不進行與任務無關的大規模重構、格式化、依賴升級或文件重寫。
 - 保留使用者既有變更；不要以 Reset、Checkout 或大量覆寫清除未知修改。
 - 任何變更需要 Push 到遠端時，必須先從最新的 `origin/main` 建立新的工作分支；
