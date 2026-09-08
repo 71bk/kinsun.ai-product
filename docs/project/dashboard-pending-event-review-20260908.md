@@ -1,5 +1,15 @@
 # US-C01 待覆核事件數與入口 — 2026-09-08
 
+## 合併驗收更新
+
+PR [#34](https://github.com/71bk/kinsun.ai-product/pull/34) 已合併為 `3b48bea`。
+PR run [34195574308](https://github.com/71bk/kinsun.ai-product/actions/runs/34195574308) 的
+10 項檢查（含 core-db、aggregate）全部成功；合併後 main run
+[34195871383](https://github.com/71bk/kinsun.ai-product/actions/runs/34195871383) 亦成功。
+以下為提交前本機證據快照，歷史「尚未 commit／待 CI」由本節取代；仍非完整 US-C01／Wave 2。
+
+## 提交前本機紀錄
+
 狀態：`feat/dashboard-pending-event-review`，基於 main `693850c`。
 本機實作／驗證完成，尚未 commit、push、開 PR 或執行本增量 CI；不是完整 US-C01／Wave 2 結案。
 

@@ -3,6 +3,10 @@ import type { ApiConfig } from './client';
 import { getCaregiverDashboard } from './dashboard';
 
 const config: ApiConfig = { apiBaseUrl: '/backend/core/' };
+const validMetrics = {
+  today_count: 3, last_interaction_at: '2026-09-08T00:00:00Z',
+  local_date: '2026-09-08', timezone: 'Asia/Taipei', as_of: '2026-09-08T01:00:00Z',
+};
 
 function success<T>(data: T): Response {
   return new Response(
@@ -24,6 +28,27 @@ afterEach(() => {
 });
 
 describe('getCaregiverDashboard', () => {
+  it.each([
+    [validMetrics, 3],
+    [{ ...validMetrics, today_count: 0, last_interaction_at: null }, 0],
+    [null, null], [undefined, null], [{}, null],
+    [{ ...validMetrics, today_count: -1 }, null],
+    [{ ...validMetrics, today_count: 1.5 }, null],
+    [{ ...validMetrics, today_count: '3' }, null],
+    [{ ...validMetrics, timezone: 'invalid-zone' }, null],
+    [{ ...validMetrics, last_interaction_at: 'invalid-date' }, null],
+    [{ ...validMetrics, last_interaction_at: '2026-09-09T00:00:00Z' }, null],
+    [{ ...validMetrics, last_interaction_at: null }, null],
+    [{ ...validMetrics, as_of: '2026-09-08T12:00:00' }, null],
+  ])('maps a valid atomic interaction snapshot: %j', async (metrics, count) => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(success({ role: 'DAYCARE_CARE_WORKER' }))
+      .mockResolvedValueOnce(success({ items: [{ elder_id: 'elder', interaction_metrics: metrics }], page: {} }));
+    vi.stubGlobal('fetch', fetchMock);
+    const elder = (await getCaregiverDashboard(config)).elders[0];
+    expect(elder.interactionMetrics?.todayCount ?? null).toBe(count);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
   it.each([0, 3, 105, null, undefined, -1, 1.5, '3'])(
     'maps only valid task counts without additional API requests: %s',
     async (count) => {
@@ -49,12 +74,13 @@ describe('getCaregiverDashboard', () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(success({ role: 'FAMILY_MEMBER', display_name: 'Family' }))
       .mockResolvedValueOnce(success({
-        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9, pending_event_review_count: 9 }],
+        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9, pending_event_review_count: 9, interaction_metrics: validMetrics }],
         page: { has_more: false, next_cursor: null, limit: 100 },
       })));
     const elder = (await getCaregiverDashboard(config)).elders[0];
     expect(elder.openCareActionCount).toBeNull();
     expect(elder.pendingEventReviewCount).toBeNull();
+    expect(elder.interactionMetrics).toBeNull();
   });
   it('derives the authorized-elder mode from Core identity and preserves cursor metadata', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -90,6 +116,7 @@ describe('getCaregiverDashboard', () => {
         authorizationSummary: 'assignment authorization',
         openCareActionCount: null,
         pendingEventReviewCount: null,
+        interactionMetrics: null,
       },
     ]);
     expect(dashboard).not.toHaveProperty('total');

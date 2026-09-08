@@ -8,6 +8,36 @@ import { ElderCard } from './ElderCard';
 
 afterEach(cleanup);
 
+it.each(['zh-Hant', 'en'] as const)('shows interaction snapshot in the elder timezone: %s', (locale) => {
+  const last = '2026-09-07T16:01:00Z';
+  const { container } = render(createElement(LocaleProvider, { initialLocale: locale, children:
+    createElement(ElderCard, { elder: {
+      elderId: 'synthetic', elderName: 'Synthetic Elder', careUnitName: null,
+      authorizationSummary: null, openCareActionCount: 0, pendingEventReviewCount: 0,
+      interactionMetrics: { todayCount: 105, lastInteractionAt: last, localDate: '2026-09-08', timezone: 'Asia/Taipei', asOf: '2026-09-08T00:00:00Z' },
+    } }),
+  }));
+  expect(screen.getByText('105')).toBeDefined();
+  expect(screen.getByText(/2026-09-08.*Asia\/Taipei/)).toBeDefined();
+  expect(container.querySelector('time')?.dateTime).toBe(last);
+  expect(container.querySelector('time')?.textContent).toBe(new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Taipei', dateStyle: 'short', timeStyle: 'short',
+  }).format(new Date(last)));
+});
+
+it('distinguishes no history from unavailable statistics', () => {
+  render(createElement(LocaleProvider, { initialLocale: 'en', children:
+    createElement(ElderCard, { elder: {
+      elderId: 'synthetic', elderName: 'Synthetic Elder', careUnitName: null,
+      authorizationSummary: null, openCareActionCount: null, pendingEventReviewCount: null,
+      interactionMetrics: { todayCount: 0, lastInteractionAt: null, localDate: '2026-09-08', timezone: 'Asia/Taipei', asOf: '2026-09-08T00:00:00Z' },
+    } }),
+  }));
+  expect(screen.getByText('0')).toBeDefined();
+  expect(screen.getByText('No completed interactions recorded')).toBeDefined();
+  expect(screen.queryByText('Interaction statistics unavailable')).toBeNull();
+});
+
 it.each([
   ['zh-Hant', 0, '未結案待辦：0 筆'],
   ['zh-Hant', 105, '未結案待辦：105 筆'],
@@ -32,6 +62,8 @@ it('hides unavailable count instead of claiming zero', () => {
   }));
   expect(screen.queryByText(/Unfinished care actions/)).toBeNull();
   expect(screen.queryByText(/Pending events/)).toBeNull();
+  expect(screen.getByText('Interaction statistics unavailable')).toBeDefined();
+  expect(screen.queryByText('0')).toBeNull();
 });
 
 it.each([

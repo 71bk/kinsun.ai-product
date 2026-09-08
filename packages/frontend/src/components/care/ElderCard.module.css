@@ -110,3 +110,34 @@
 .reviewLink svg {
   flex: none;
 }
+
+.interactions {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.interactions dl,
+.interactions p,
+.metricsUnavailable {
+  margin: 0;
+}
+
+.interactions dl {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.interactions dt,
+.interactions p,
+.metricsUnavailable {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+
+.interactions dd {
+  margin: var(--space-1) 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

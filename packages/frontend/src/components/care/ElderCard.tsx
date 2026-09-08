@@ -7,7 +7,11 @@ import { useLocale } from '@/lib/i18n/locale-context';
 import styles from './ElderCard.module.css';
 
 export function ElderCard({ elder }: { elder: DashboardElder }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const metrics = elder.interactionMetrics;
+  const formatInteractionTime = (value: string) => new Intl.DateTimeFormat(locale, {
+    timeZone: metrics?.timezone, dateStyle: 'short', timeStyle: 'short',
+  }).format(new Date(value));
 
   return (
     <article className={styles.card}>
@@ -24,6 +28,21 @@ export function ElderCard({ elder }: { elder: DashboardElder }) {
         <span className={styles.authorizationLabel}>{t('dashboard.authorizationLabel')}</span>
         <span>{elder.authorizationSummary ?? t('dashboard.authorized')}</span>
       </div>
+      {metrics ? (
+        <div className={styles.interactions}>
+          <dl>
+            <div><dt>{t('dashboard.todayInteractions')}</dt><dd>{metrics.todayCount}</dd></div>
+            <div>
+              <dt>{t('dashboard.lastInteraction')}</dt>
+              <dd>{metrics.lastInteractionAt ? (
+                <time dateTime={metrics.lastInteractionAt}>{formatInteractionTime(metrics.lastInteractionAt)}</time>
+              ) : t('dashboard.noCompletedInteraction')}</dd>
+            </div>
+          </dl>
+          <p>{t('dashboard.interactionDay', { date: metrics.localDate, timezone: metrics.timezone })}</p>
+          <p>{t('dashboard.interactionAsOf', { at: formatInteractionTime(metrics.asOf) })}</p>
+        </div>
+      ) : <p className={styles.metricsUnavailable}>{t('dashboard.interactionsUnavailable')}</p>}
       <Link className={styles.link} href={`/staff/elders/${elder.elderId}`}>
         <span>{t('dashboard.openElder')}</span>
         <ArrowRight size={20} weight="bold" aria-hidden="true" />

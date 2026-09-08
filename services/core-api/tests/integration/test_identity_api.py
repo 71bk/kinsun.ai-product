@@ -29,13 +29,17 @@ from app.db.session import get_db_engine
 from app.main import create_app
 from app.middleware.auth import FakeAuthenticator, get_authenticator
 from app.models.actor import Actor
+from app.models.agent import AgentRun
 from app.models.care_action import CareAction
 from app.models.care_assignment import CareAssignment
 from app.models.care_event import CareEvent
 from app.models.care_relationship import CareRelationship
 from app.models.care_unit import CareUnit
+from app.models.consent import ConsentGrant
+from app.models.conversation import ConversationSession
 from app.models.elder import Elder
 from app.models.membership import ActorTenantMembership
+from app.models.policy import PolicyRegistry
 from app.models.tenant import Tenant
 
 # ─── Fixed time ──────────────────────────────────────────────────────────────
@@ -419,6 +423,208 @@ async def test_pending_event_counts_require_both_live_scopes(
         assert len(data["items"]) == 1
         assert data["items"][0]["pending_event_review_count"] == (None if mode == "family" else 105)
         assert "total" not in data
+        setattr(
+            grant,
+            "service_end" if mode == "home-care" else "effective_to",
+            datetime.now(UTC) - timedelta(seconds=1),
+        )
+        await committed_session.commit()
+        assert (await client.get(path)).json()["data"]["items"] == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role,actor_key,elder_key,mode,zone,start,as_of",
+    [
+        (
+            "DAYCARE_CARE_WORKER",
+            "daycare_worker_id",
+            "elder_1_id",
+            "daycare",
+            "Asia/Taipei",
+            "2026-09-08T16:00:00+00:00",
+            "2026-09-08T16:02:00+00:00",
+        ),
+        (
+            "HOME_CARE_WORKER",
+            "worker_id",
+            "elder_2_id",
+            "home-care",
+            "America/New_York",
+            "2026-03-08T05:00:00+00:00",
+            "2026-03-09T03:59:00+00:00",
+        ),
+        (
+            "DAYCARE_CARE_WORKER",
+            "daycare_worker_id",
+            "elder_1_id",
+            "daycare",
+            "America/New_York",
+            "2026-11-01T04:00:00+00:00",
+            "2026-11-02T04:59:00+00:00",
+        ),
+        (
+            "FAMILY_MEMBER",
+            "family_member_id",
+            "elder_1_id",
+            "family",
+            "Asia/Taipei",
+            "2026-09-08T16:00:00+00:00",
+            "2026-09-08T16:02:00+00:00",
+        ),
+    ],
+)
+async def test_interaction_metrics_scope_calendar_and_session_dedup(
+    test_engine,
+    seed_api_data,
+    committed_session,
+    monkeypatch,
+    role,
+    actor_key,
+    elder_key,
+    mode,
+    zone,
+    start,
+    as_of,
+):
+    from zoneinfo import ZoneInfo
+
+    from app.api import identity
+
+    ids = seed_api_data
+    start, as_of = datetime.fromisoformat(start), datetime.fromisoformat(as_of)
+
+    # Only the metric snapshot clock is fixed. Live authorization keeps real time.
+    # Identity list also needs the real clock for time-bounded home-care grants.
+    original_metrics = identity.get_interaction_metrics
+
+    async def snapshot_metrics(session, actor, elders, _now):
+        return await original_metrics(session, actor, elders, as_of)
+
+    monkeypatch.setattr(identity, "get_interaction_metrics", snapshot_metrics)
+    model = CareAssignment if mode == "home-care" else CareRelationship
+    owner = model.worker_id if mode == "home-care" else model.actor_id
+    grant = (
+        await committed_session.execute(select(model).where(owner == ids[actor_key]))
+    ).scalar_one()
+    scope_attr = "service_scope" if mode == "home-care" else "scope"
+    base = list(getattr(grant, scope_attr))
+    elder = await committed_session.get(Elder, ids[elder_key])
+    elder.timezone = zone
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids[actor_key], role, ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        path = f"/api/v1/me/authorized-elders?mode={mode}&limit=1"
+        assert (await client.get(path)).json()["data"]["items"][0]["interaction_metrics"] is None
+        setattr(grant, scope_attr, base + ["voice_session:read"])
+        await committed_session.commit()
+        empty = (await client.get(path)).json()["data"]["items"][0]["interaction_metrics"]
+        if mode != "family":
+            assert empty["today_count"] == 0 and empty["last_interaction_at"] is None
+        else:
+            assert empty is None
+
+        policy = PolicyRegistry(
+            policy_code="synthetic-interactions",
+            policy_type="CONSENT",
+            version="v1",
+            status="ACTIVE",
+            policy_payload={},
+            effective_from=start - timedelta(days=2),
+        )
+        committed_session.add(policy)
+        await committed_session.flush()
+        consent = ConsentGrant(
+            elder_id=ids[elder_key],
+            purpose_code="BASIC_VOICE",
+            status="GRANTED",
+            version=1,
+            granted_by_actor_id=ids[actor_key],
+            policy_id=policy.id,
+            effective_at=start - timedelta(days=2),
+        )
+        committed_session.add(consent)
+        await committed_session.flush()
+
+        async def add_session(
+            ended,
+            states=("SUCCESS",),
+            state="COMPLETED",
+            target=None,
+            tenant=None,
+            run_tenant=None,
+            run_elder=None,
+        ):
+            row = ConversationSession(
+                id=uuid.uuid4(),
+                tenant_id=tenant or ids["tenant_id"],
+                elder_id=target or ids[elder_key],
+                initiator_type="ELDER",
+                language_route="ZH_TW",
+                input_mode="text",
+                state=state,
+                started_at=ended - timedelta(minutes=1),
+                ended_at=ended,
+                trace_id=str(uuid.uuid4()),
+                consent_id=consent.id,
+                consent_version=1,
+            )
+            committed_session.add(row)
+            await committed_session.flush()
+            for result in states:
+                committed_session.add(
+                    AgentRun(
+                        session_id=row.id,
+                        tenant_id=run_tenant or row.tenant_id,
+                        elder_id=run_elder or row.elder_id,
+                        agent_id="synthetic-companion",
+                        agent_version="v1",
+                        result_status=result,
+                        started_at=row.started_at,
+                        completed_at=ended,
+                        trace_id=str(uuid.uuid4()),
+                    )
+                )
+
+        await add_session(start - timedelta(microseconds=1))
+        await committed_session.commit()
+        historical = (await client.get(path)).json()["data"]["items"][0]["interaction_metrics"]
+        if mode != "family":
+            assert historical["today_count"] == 0
+            assert datetime.fromisoformat(historical["last_interaction_at"]) == start - timedelta(
+                microseconds=1
+            )
+        for _ in range(103):
+            await add_session(start, states=("SUCCESS", "SUCCESS"))
+        await add_session(as_of, states=("BLOCKED",))
+        await add_session(as_of, states=("HUMAN_REVIEW",))
+        await add_session(as_of + timedelta(seconds=1))  # future
+        await add_session(as_of, states=("DEPENDENCY_FAILED",))
+        await add_session(as_of, states=())  # manual completion without a response
+        for state in ["CREATED", "PROCESSING", "FAILED", "CANCELLED"]:
+            await add_session(as_of, state=state)
+        other = ids["elder_2_id" if elder_key == "elder_1_id" else "elder_1_id"]
+        await add_session(as_of, target=other)
+        await add_session(as_of, target=ids["elder_3_id"], tenant=ids["tenant_b_id"])
+        await add_session(as_of, run_tenant=ids["tenant_b_id"])
+        await add_session(as_of, run_elder=other)
+        await committed_session.commit()
+        for _ in range(2):  # reading again never changes the count
+            response = await client.get(path)
+            assert response.status_code == 200
+            items = response.json()["data"]["items"]
+            assert len(items) == 1
+            metric = items[0]["interaction_metrics"]
+            if mode == "family":
+                assert metric is None
+            else:
+                assert metric["today_count"] == 105
+                assert datetime.fromisoformat(metric["last_interaction_at"]) == as_of
+                assert metric["local_date"] == as_of.astimezone(ZoneInfo(zone)).date().isoformat()
+                assert metric["timezone"] == zone
+        setattr(grant, scope_attr, base)
+        await committed_session.commit()
+        assert (await client.get(path)).json()["data"]["items"][0]["interaction_metrics"] is None
         setattr(
             grant,
             "service_end" if mode == "home-care" else "effective_to",

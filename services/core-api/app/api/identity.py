@@ -33,6 +33,7 @@ from app.schemas.identity import (
     PaginationMeta,
 )
 from app.services.dashboard_service import (
+    get_interaction_metrics,
     get_open_care_action_counts,
     get_pending_event_review_counts,
 )
@@ -133,6 +134,9 @@ async def get_authorized_elders(
     review_counts = await get_pending_event_review_counts(
         session, actor_context, [row.elder_id for row in result.items]
     )
+    interactions = await get_interaction_metrics(
+        session, actor_context, [row.elder_id for row in result.items], current_time
+    )
     items = [
         AuthorizedElderItem(
             elder_id=row.elder_id,
@@ -141,6 +145,7 @@ async def get_authorized_elders(
             authorization_summary=f"{mode.value} authorization",
             open_care_action_count=counts.get(row.elder_id),
             pending_event_review_count=review_counts.get(row.elder_id),
+            interaction_metrics=interactions.get(row.elder_id),
         )
         for row in result.items
     ]

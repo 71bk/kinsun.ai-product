@@ -295,6 +295,18 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
+`GET /api/v1/me/authorized-elders` 的選填 nullable `interaction_metrics` 是互動 metadata snapshot，
+不是新計數器／事件抽取／健康評分。僅專業角色且通過 live `voice_session:read` 才可取得，
+與既有 Voice Session metadata 讀取 gate 相同；家屬、無 scope、已失效關係不會取得統計。
+一次互動定義為一個 COMPLETED ConversationSession，且同 tenant／elder／session 存在已完成的
+SUCCESS／BLOCKED／HUMAN_REVIEW AgentRun；多筆 run 透過 EXISTS 仍只計一次。安全拒絕與安全降級
+算互動，技術失敗、取消、未完成、沒有 Agent 結果的手動完成及未來紀錄不計。
+`today_count` 以 ended_at 在 Elder.timezone 的日曆日歸日；`last_interaction_at` 是歷史符合條件的
+最大 ended_at，輸出 UTC。`local_date`／`timezone`／`as_of` 明示 snapshot，瀏覽器不決定日期。
+有權限但無紀錄回 0／null；整個 object 為 null 則不可用。單次 tenant／當頁授權 IDs 內 GROUP BY，
+不讀逐字稿或模型內容、不放寬 scope／同意，也不更動既有歷史 metadata 的 retention 語意。
+不代表使用者聽完 TTS、健康狀況或跨長者總計；仍非完整 US-C01。
+
 `GET /api/v1/me/authorized-elders` 另新增選填 `pending_event_review_count`：計當頁長者目前
 CANDIDATE／NEEDS_REVIEW 事件，不計版本、正式／拒絕／排除／刪除狀態。與非正式事件 list 相同，
 必須同時通過 live `care_event:read` 與 `care_event:review`；非專業角色／權限不足回 null。
