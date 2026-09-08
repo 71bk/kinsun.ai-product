@@ -25,6 +25,18 @@ beforeEach(() => {
 });
 
 describe('sign-in browser-state cleanup guard', () => {
+  it.each(['zh-Hant', 'en'])('describes email/password login in %s without requiring Google', async (locale) => {
+    mocks.cookieGet.mockImplementation((name: string) =>
+      name === 'kinsun_ui_locale' ? { value: locale } : undefined,
+    );
+    const markup = renderToStaticMarkup(await SignInPage({ searchParams: Promise.resolve({ error: 'login' }) }));
+    expect(markup).toContain(locale === 'en' ? 'email and password' : 'Email 與密碼');
+    expect(markup).not.toContain('Google');
+    expect(markup).toContain('role="alert"');
+    expect(markup).toContain('/staff/sign-in');
+    expect(markup).toContain('/family/join');
+    expect(markup).toContain('/elder/start');
+  });
   it('preserves browser state while an App Session cookie remains', async () => {
     mocks.cookieGet.mockImplementation((name: string) =>
       name === 'kinsun_session' ? { value: `ks1_${'a'.repeat(43)}` } : undefined,

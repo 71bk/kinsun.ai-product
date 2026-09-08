@@ -1,7 +1,7 @@
 # Wave 2 Caregiver Loop Traceability
 
 - 更新日期：2026-09-07
-- 狀態：C04／F02 PostgreSQL-backed HTTP／transaction slice 已通過 CI；Browser／真實登入與 live Agent E2E 尚未完成
+- 狀態：C04／F02 PostgreSQL-backed HTTP／transaction slice 已通過 CI；真實登入與 Browser QA 的兩項 UI 問題已修正並本機重驗；live Agent E2E 尚未完成
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -9,6 +9,8 @@
 | R2 candidate action | US-F02；Story Map Wave 2 | Runtime proposal → private `CareEventVersion` proposal → VERIFY promotion → Core `CareActionCandidate`；只有 ADOPT 呼叫 R1 formal command | `care_action:*` elder scope、professional role、allowlisted source/action、medical text deny gate、future ≤30-day due、optimistic candidate/source version、immutable provenance | Agent 515 tests；Core 1103 unit tests；frontend 299 tests；82-path contract validator；production build；8 組 RWD/locale visual QA | `VERIFIED_LOCAL` |
 
 ## Evidence boundary
+
+以下為 R2 implementation slice 當時的證據邊界；後續實際執行結果見本文件的 DB 與 Real-auth Browser QA 段落。
 
 目前已證明人工建立／更新 formal Care Action，以及 AI proposal、VERIFY promotion、Candidate 採納／拒絕／排除的 Core 與 UI contract。R2 Alembic graph 已驗證單一 head `d1f3a5c7e9b0`；2026-09-04 已對 Supabase development database 完成由 `b8d0f2a4c6e7` 至 `d1f3a5c7e9b0` 的 additive upgrade，並讀回 2 張新表、proposal 欄位、索引與 triggers。production build 與 zh-Hant／en 的 390／768／1024／1280 deterministic browser fixture QA 已通過。尚未執行真實登入、真實 Agent-to-database 或 production deployment E2E。
 
@@ -42,8 +44,26 @@ promotion service 建立，不把它當成 live Agent／VERIFY HTTP 全鏈路的
   10 個 jobs（含 aggregate）全部成功。`core-db`：19 migration tests、142 request integration
   tests（包含此檔新增 34 個案例）、Core live contract 全通過。無新 migration／CI job。
 
-Task 3.1a 已完成；Task 3.1b／整體 3.1 仍保持未完成，不能以此 slice 宣告真實登入、
-Browser → BFF → Core、live Agent 或 production deployment E2E 已完成。
+Task 3.1a 已完成；此 DB slice 本身不是 Browser、live Agent 或 production E2E 證據。
+
+## Real-auth Browser QA（2026-09-07）
+
+已使用 production frontend build、既有 synthetic staff 的真實帳密登入與 Supabase，執行
+Browser → BFF → Core → DB 的候選採納／拒絕／排除、人工建立、開始／延期／完成／取消、
+雙擊、9 次成功 snapshot replay、真實舊分頁 409、未派案長者與授權失效後 fresh/replay 拒絕。
+Mobile 375／390／430 與 desktop 1440 requested viewports 的截圖及 DOM 已檢查。
+只將本次建立的兩筆臨時授權到期，保留 synthetic audit rows，沒有 reset 或重設 demo 密碼。
+
+初次發現的兩項問題已修正：care-action 401/403/404 立即卸載舊內容，再查 live elder scope，
+不把 resource 404 直接當成 elder-wide denial；登入入口改為中英文 Email/password 文案。
+production rebuild 後使用另一批隔離 synthetic campaign 與真實登入，在兩個分頁重驗 create/adopt：
+各一次 POST 404，重查請求發出時所有長者名稱／卡片／輸入／對話框已消失，無 reload／自動重送。
+前端 315 tests（含 14 權限回歸）／typecheck／lint／build 通過；375／390／430／1440 denied 畫面、
+中英文入口與有限 keyboard／reduced-motion 檢查通過；新舊 campaign 權限都已到期，bounded DB digest 未變。
+Task 3.1b 與文件同步 3.2 已完成；上述為 commit 前的本機驗證，沒有新的遠端 CI 證據。
+Task 3.1c 的 live Agent／VERIFY HTTP 不在這次 fixture 範圍，完整 Wave 2 closeout 仍開放。
+完整結果、限制與本機截圖檔名見
+[Browser QA report](../../../docs/project/wave2-browser-qa-20260907.md)。
 
 ## Remaining product gaps
 

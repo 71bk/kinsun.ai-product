@@ -10,7 +10,7 @@ import {
   Sparkle,
   X,
 } from '@phosphor-icons/react';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Skeleton } from '@/components/Skeleton';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -116,6 +116,7 @@ export interface CareActionPanelProps {
   elderId: string;
   canCreate: boolean;
   canUpdate: boolean;
+  onAccessCheck: () => void;
 }
 
 export function CareActionPanel({
@@ -123,6 +124,7 @@ export function CareActionPanel({
   elderId,
   canCreate,
   canUpdate,
+  onAccessCheck,
 }: CareActionPanelProps) {
   const { t, formatDateTime } = useLocale();
   const [actions, setActions] = useState<CareActionView[]>([]);
@@ -164,6 +166,21 @@ export function CareActionPanel({
   const [confirmStart, setConfirmStart] = useState<CareActionView | null>(null);
   const [resolution, setResolution] = useState('');
   const [newDueAt, setNewDueAt] = useState(defaultDueLocal);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const reportError = useCallback((error: unknown, fallback: MessageKey) => {
+    if (!mounted.current) return;
+    if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) {
+      // A resource 404 is ambiguous. The workspace owner hides cached content
+      // and revalidates live elder access before mounting any commands again.
+      onAccessCheck();
+    }
+    setErrorKey(describeActionError(error, fallback));
+  }, [onAccessCheck]);
 
   const loadActions = useCallback(async () => {
     setLoading(true);
@@ -177,11 +194,11 @@ export function CareActionPanel({
       setHasMore(result.hasMore);
       setNextCursor(result.nextCursor);
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadCareActionsFailed'));
+      reportError(error, 'error.loadCareActionsFailed');
     } finally {
       setLoading(false);
     }
-  }, [apiConfig, elderId]);
+  }, [apiConfig, elderId, reportError]);
 
   const loadCandidates = useCallback(async () => {
     setCandidatesLoading(true);
@@ -194,11 +211,11 @@ export function CareActionPanel({
       setCandidateHasMore(result.hasMore);
       setCandidateNextCursor(result.nextCursor);
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadCareActionCandidatesFailed'));
+      reportError(error, 'error.loadCareActionCandidatesFailed');
     } finally {
       setCandidatesLoading(false);
     }
-  }, [apiConfig, elderId]);
+  }, [apiConfig, elderId, reportError]);
 
   const loadSources = useCallback(async () => {
     if (!canCreate) return;
@@ -216,11 +233,11 @@ export function CareActionPanel({
         CORRECTED: corrected.nextCursor,
       });
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadEventsFailed'));
+      reportError(error, 'error.loadEventsFailed');
     } finally {
       setSourcesLoading(false);
     }
-  }, [apiConfig, canCreate, elderId]);
+  }, [apiConfig, canCreate, elderId, reportError]);
 
   async function loadMoreActions() {
     if (!nextCursor || loadingMore) return;
@@ -232,7 +249,7 @@ export function CareActionPanel({
       setHasMore(result.hasMore);
       setNextCursor(result.nextCursor);
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadCareActionsFailed'));
+      reportError(error, 'error.loadCareActionsFailed');
     } finally {
       setLoadingMore(false);
     }
@@ -250,7 +267,7 @@ export function CareActionPanel({
       setCandidateHasMore(result.hasMore);
       setCandidateNextCursor(result.nextCursor);
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadCareActionCandidatesFailed'));
+      reportError(error, 'error.loadCareActionCandidatesFailed');
     } finally {
       setCandidatesLoadingMore(false);
     }
@@ -285,7 +302,7 @@ export function CareActionPanel({
         return updated;
       });
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.loadEventsFailed'));
+      reportError(error, 'error.loadEventsFailed');
     } finally {
       setSourcesLoadingMore(false);
     }
@@ -326,7 +343,7 @@ export function CareActionPanel({
       formElement.reset();
       setToastKey('toast.careActionCreated');
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.createCareActionFailed'));
+      reportError(error, 'error.createCareActionFailed');
     } finally {
       setCreateBusy(false);
     }
@@ -355,7 +372,7 @@ export function CareActionPanel({
       setNewDueAt(defaultDueLocal());
       setToastKey('toast.careActionUpdated');
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.updateCareActionFailed'));
+      reportError(error, 'error.updateCareActionFailed');
     } finally {
       setTransitionBusy(false);
     }
@@ -409,7 +426,7 @@ export function CareActionPanel({
       await loadActions();
       setToastKey('toast.careActionCandidateAdopted');
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.adoptCareActionCandidateFailed'));
+      reportError(error, 'error.adoptCareActionCandidateFailed');
     } finally {
       setCandidateBusyId(null);
     }
@@ -434,7 +451,7 @@ export function CareActionPanel({
       setDismissNotes('');
       setToastKey('toast.careActionCandidateDismissed');
     } catch (error) {
-      setErrorKey(describeActionError(error, 'error.dismissCareActionCandidateFailed'));
+      reportError(error, 'error.dismissCareActionCandidateFailed');
     } finally {
       setCandidateBusyId(null);
     }

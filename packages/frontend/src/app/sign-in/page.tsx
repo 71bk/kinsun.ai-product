@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ClearBrowserSessionState } from '@/components/ClearBrowserSessionState';
 import { browserAuthCookieNames } from '@/lib/server/app-session-cookie';
+import { LOCALE_COOKIE, parseLocaleCookie } from '@/lib/i18n/locale-cookie';
+import { translate, type MessageKey } from '@/lib/i18n/messages';
 
 /* The role chooser is the one page whose audience is unknown — an elder, a
    family member and a care worker all land here before anything is known about
@@ -27,6 +29,8 @@ export default async function SignInPage({
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
   const [{ error }, cookieStore] = await Promise.all([searchParams, cookies()]);
+  const locale = parseLocaleCookie(cookieStore.get(LOCALE_COOKIE)?.value);
+  const t = (key: MessageKey) => translate(locale, key);
   const sessionCookiePresent = browserAuthCookieNames().some((name) =>
     Boolean(cookieStore.get(name)?.value),
   );
@@ -37,7 +41,7 @@ export default async function SignInPage({
           its browser selection instead of creating a half-signed-in state. */}
       {!sessionCookiePresent && <ClearBrowserSessionState />}
       <h1 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-2)' }}>
-        登入智慧長照 AI 陪伴系統
+        {t('signInChooser.title')}
       </h1>
       <p
         style={{
@@ -47,28 +51,28 @@ export default async function SignInPage({
           marginBottom: 'var(--space-6)',
         }}
       >
-        請選擇您要使用的服務。我們會先使用 Google 確認身分，再由系統確認可使用的資料範圍。
+        {t('signInChooser.description')}
       </p>
       {error && (
         <p
           role="alert"
           style={{ color: 'var(--color-destructive)', marginBottom: 'var(--space-4)' }}
         >
-          這次登入沒有完成，請再試一次；若持續失敗，請聯絡服務單位。
+          {t('signInChooser.error')}
         </p>
       )}
       <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
         <Link href="/elder/start" style={cardStyle}>
-          <strong style={{ fontSize: 'var(--text-lg)' }}>我是長者</strong>
-          <p style={{ marginBottom: 0 }}>用簡單的大按鈕開始語音陪伴。</p>
+          <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.elder')}</strong>
+          <p style={{ marginBottom: 0 }}>{t('signInChooser.elderDescription')}</p>
         </Link>
         <Link href="/family/join" style={cardStyle}>
-          <strong style={{ fontSize: 'var(--text-lg)' }}>我是家屬</strong>
-          <p style={{ marginBottom: 0 }}>使用邀請連結或登入後查看已授權的報表。</p>
+          <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.family')}</strong>
+          <p style={{ marginBottom: 0 }}>{t('signInChooser.familyDescription')}</p>
         </Link>
         <Link href="/staff/sign-in" style={cardStyle}>
-          <strong style={{ fontSize: 'var(--text-lg)' }}>我是照服員／居服員</strong>
-          <p style={{ marginBottom: 0 }}>由所屬機構啟用的專業照護帳號登入。</p>
+          <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.staff')}</strong>
+          <p style={{ marginBottom: 0 }}>{t('signInChooser.staffDescription')}</p>
         </Link>
       </div>
     </main>

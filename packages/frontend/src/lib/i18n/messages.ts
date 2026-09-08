@@ -23,6 +23,15 @@ export function localeTag(locale: Locale): string {
 }
 
 const zhHant = {
+  'signInChooser.title': '登入智慧長照 AI 陪伴系統',
+  'signInChooser.description': '請選擇您要使用的服務，以 Email 與密碼登入。系統會確認您的身分與可使用的資料範圍。',
+  'signInChooser.error': '這次登入沒有完成，請再試一次；若持續失敗，請聯絡服務單位。',
+  'signInChooser.elder': '我是長者',
+  'signInChooser.elderDescription': '用簡單的大按鈕開始語音陪伴。',
+  'signInChooser.family': '我是家屬',
+  'signInChooser.familyDescription': '使用邀請連結或登入後查看已授權的報表。',
+  'signInChooser.staff': '我是照服員／居服員',
+  'signInChooser.staffDescription': '由所屬機構啟用的專業照護帳號登入。',
   // ---- language switch ----
   'lang.label': '語言',
   'lang.zh-Hant': '中文',
@@ -785,6 +794,15 @@ export type MessageKey = keyof typeof zhHant;
      domain states from `eldercare_ai`, not prose, and MASTER.md §4.2 requires the
      same state to read identically across all three surfaces. */
 const en: Record<MessageKey, string> = {
+  'signInChooser.title': 'Sign in to Kinsun AI Care Companion',
+  'signInChooser.description': 'Choose your service and sign in with your email and password. The system will verify your identity and which information you may access.',
+  'signInChooser.error': 'Sign-in was not completed. Please try again, or contact your service provider if the issue continues.',
+  'signInChooser.elder': 'I am an elder',
+  'signInChooser.elderDescription': 'Start voice companionship with simple, large buttons.',
+  'signInChooser.family': 'I am a family member',
+  'signInChooser.familyDescription': 'Use an invitation link or sign in to view authorized reports.',
+  'signInChooser.staff': 'I am a care worker',
+  'signInChooser.staffDescription': 'Sign in with a professional care account activated by your organization.',
   'lang.label': 'Language',
   'lang.zh-Hant': '中文',
   'lang.en': 'English',

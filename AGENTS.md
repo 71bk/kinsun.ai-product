@@ -696,6 +696,9 @@ kinsun.ai/
   - UI 語言切換（`src/lib/i18n/`）只改瀏覽器偏好，**不得寫入任何 domain state**，
     尤其不得改動長者語言偏好或 consent。新增使用者可見字串時同時補 `zh-Hant` 與 `en`。
 - 優先做最小、可測試、可回復且能貫穿 Vertical Slice 的變更。
+- Core unit test 載入根目錄 `scripts/` 工具時，使用檔案路徑的 `importlib.util` loader；
+  不要假設 `from scripts...` 指向 repository 根目錄，Core 自己的 `scripts` package 可能遮蔽它。
+  手動 DB 工具的 import 不得載入 `.env`、建立 connection 或執行 provisioning。
 - 不進行與任務無關的大規模重構、格式化、依賴升級或文件重寫。
 - 保留使用者既有變更；不要以 Reset、Checkout 或大量覆寫清除未知修改。
 - 任何變更需要 Push 到遠端時，必須先從最新的 `origin/main` 建立新的工作分支；
