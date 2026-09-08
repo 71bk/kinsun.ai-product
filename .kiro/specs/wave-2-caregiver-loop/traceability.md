@@ -1,7 +1,7 @@
 # Wave 2 Caregiver Loop Traceability
 
 - 更新日期：2026-09-08
-- 狀態：C04／F02 原 PostgreSQL slice 已通過 CI；真實登入／Browser 與 live Agent → VERIFY → 採用本機驗收已完成；本次兩項 Core 修正與新 DB regression 仍待 CI／合併，非 production 或整個 Wave 2 完成
+- 狀態：C04／F02 第一切片已完成本機驗收、PR #32 CI／合併與 main CI；非 production 或整個 Wave 2 完成。下表保留各階段本機基線，最新結案證據見下方。
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -71,13 +71,18 @@ Task 3.1c 的 live Agent／VERIFY HTTP 不在這次 fixture 範圍，完整 Wave
 事件與私有行動 proposal，人工 VERIFY 後才產生候選，再由 UI 採用成一筆 OPEN 自我指派待辦。
 實跑修正 datetime JSONB persistence 與 VERIFY updated_at MissingGreenlet 兩個 500。
 Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB regression，僅收集
-未在 development DB 執行，仍待 CI／合併。Owner 核准的新四小時 membership 已提前失效，
+未在 development DB 執行；後續已在 PR #32 CI 通過並合併。Owner 核准的新四小時 membership 已提前失效，
 既有 legacy membership／assignment／Consent 未變。成功覆核／採用重送各 200，失效後各 404；
 來源版本與 snapshot hash 一致，核對的 chain metadata digest 未變。詳見
 [Agent chain QA report](../../../docs/project/wave2-agent-chain-qa-20260908.md)。
 
 ## Remaining product gaps
 
+PR #32 修正 commit `e94f0f8` 的 [CI run 34183906570](https://github.com/71bk/kinsun.ai-product/actions/runs/34183906570)
+全部 10 jobs 成功（含 core-db／aggregate）；合併 commit `84ef958` 的
+[main run 34184219797](https://github.com/71bk/kinsun.ai-product/actions/runs/34184219797) 亦成功。
+此證據完成 Task 3 closeout，取代前述各階段「待 CI」的歷史狀態。
+
 - US-C04 的 manual create、reason/source/creator/due/status、complete/postpone/cancel reason，以及 US-F02 的 adopt/reject/exclude reason 均已覆蓋。
 - Arbitrary assignee／轉派未實作；第一切片刻意只允許 self-assignment。
-- Dashboard `open_care_action_count` 尚未接入，屬 US-C01 overview 增量，不影響本 detail workflow 的 Core command 完成度。
+- Dashboard `open_care_action_count` 已接入本機增量，尚待新 PR／CI；US-C01 其他 overview 指標仍未完成。範圍與驗證見 [Dashboard count report](../../../docs/project/dashboard-care-action-count-20260908.md)。

@@ -18,10 +18,10 @@
   - [x] 2.5 補 contract、cross-scope、zero-side-effect、red-team 與 visual evidence
   - _Requirements: R2_
 
-- [ ] 3. Wave 2 caregiver-loop closeout（功能驗收完成；本次修正仍待 CI／合併）
+- [x] 3. Wave 2 caregiver-loop 第一切片 closeout（PR #32 與 main CI 通過；非整個 Wave 2 完成）
   - [x] 3.1 驗證 C04/F02 end-to-end、replay、concurrency、permission expiry 與 no-medical-action cases
     - [x] 3.1a PostgreSQL-backed HTTP／transaction 驗收：人工 lifecycle、候選採納／拒絕／排除、replay、row-lock concurrency、授權過期、跨範圍與 medical proposal 零副作用（34 個新案例；CI run `34097721039` 的 142 integration／19 migration tests 與 aggregate 全部通過）
     - [x] 3.1b 真實登入與 Browser → BFF → Core caregiver workflow E2E：2026-09-07 已執行 lifecycle／replay／stale-tab／expiry QA；失效後舊畫面與登入入口文案兩項問題已修正，production rebuild 後另建隔離 campaign 重驗 create/adopt 404 即清除內容，前端 315 tests／typecheck／lint／build 通過（見 `docs/project/wave2-browser-qa-20260907.md`；本機證據，未宣稱新 CI）
-    - [x] 3.1c 真實 Agent-to-database 全鏈路：2026-09-08 real-auth BFF → Core → Gemini Runtime → NEEDS_REVIEW Event → 人工 VERIFY → Candidate → UI 採用 → OPEN self-assigned action 全部完成。修正 datetime JSONB 與 VERIFY updated_at 兩個 500；同 key 重送 200、短期 membership 失效後重送 404，來源版本/hash 一致。Core unit 1176 passed；新 DB regression 僅 collect，待 CI。見 `docs/project/wave2-agent-chain-qa-20260908.md`
-  - [x] 3.2 更新 traceability 與 Story Map 狀態；區分本機 C04/F02 驗收完成、本次 CI／合併未完成與其他 Wave 2 backlog
+    - [x] 3.1c 真實 Agent-to-database 全鏈路：2026-09-08 real-auth BFF → Core → Gemini Runtime → NEEDS_REVIEW Event → 人工 VERIFY → Candidate → UI 採用 → OPEN self-assigned action 全部完成。修正 datetime JSONB 與 VERIFY updated_at 兩個 500；同 key 重送 200、短期 membership 失效後重送 404，來源版本/hash 一致。Core unit 1176 passed；新 DB regression 已隨 PR #32 通過 run `34183906570`，合併後 main run `34184219797` 亦通過。見 `docs/project/wave2-agent-chain-qa-20260908.md`
+  - [x] 3.2 更新 traceability 與 Story Map 狀態；C04/F02 第一切片已結案，其他 Wave 2 backlog 與 production readiness 分開追蹤
   - _Requirements: R1, R2_

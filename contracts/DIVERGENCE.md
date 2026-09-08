@@ -295,6 +295,12 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
+`GET /api/v1/me/authorized-elders` 新增相容選填 `open_care_action_count`：只計當頁各長者的
+正式 OPEN／IN_PROGRESS／POSTPONED 待辦（不限 assignee），不含 Candidate／COMPLETED／CANCELLED。
+Core 逐筆沿用正式待辦 list 的 live `care_action:read` policy，之後在 tenant／當頁 elder IDs 內
+單次 GROUP BY 計數；無權限及 family 一律 null，不假裝為 0。沒有跨頁或 tenant 全域總數。
+前端對舊服務缺欄位／null 隱藏數字，不自行抓取待辦清單計數。此增量不代表完整 US-C01 完成。
+
 Core 已實作專業照護者使用的 Care Action list／create／update endpoint。正式待辦只能由照護者從同一 tenant、同一 elder 且已 `VERIFIED`／`CORRECTED` 的 Care Event 人工建立，並以 `expected_version` 控制狀態更新；目前只允許建立者指派自己。建立時會保存 append-only `source_event_provenance`，綁定精確 Care Event version 與 canonical SHA-256，後續 correction 不會重寫既有證據；導入前的 legacy action 可回空陣列。Agent Tool 的 `create_care_action` 仍明確拒絕執行，因此 AI 候選不會自動成為正式待辦。
 
 ## 尚未實作、不得視為 executable contract

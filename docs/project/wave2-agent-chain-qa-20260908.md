@@ -186,5 +186,11 @@ the existing integration fixtures. Result: 1 failed, 142 passed; the aggregate
 correctly failed because `core-db` failed. All other workers passed.
 
 Corrected only the fixture value; no schema, runtime policy or gate change.
-Disposable PostgreSQL execution must be rechecked on the new CI run. The earlier
-live development acceptance is separate from this test-fixture failure.
+Commit `e94f0f8a4a2ab88ee06481b1428838bfb9ed250f` passed all 10 jobs in
+[PR run 34183906570](https://github.com/71bk/kinsun.ai-product/actions/runs/34183906570),
+including disposable PostgreSQL and aggregate. [PR #32](https://github.com/71bk/kinsun.ai-product/pull/32)
+merged on 2026-09-08 at `84ef9581b7593f80a9a426207eb3bee896ff2474`; its
+[main run 34184219797](https://github.com/71bk/kinsun.ai-product/actions/runs/34184219797)
+also succeeded. This supersedes the pre-commit handoff above and closes the bounded
+C04/F02 first slice, not production readiness or every Wave 2 story. The earlier
+live development acceptance remains separate from the fixture-auth CI evidence.

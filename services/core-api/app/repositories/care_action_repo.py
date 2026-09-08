@@ -5,13 +5,32 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 
 from app.models.care_action import CareAction
 from app.repositories.base import BaseRepository
 
 
 class CareActionRepository(BaseRepository):
+    async def count_open_by_elder(self, elder_ids: list[UUID]) -> dict[UUID, int]:
+        """Count unfinished formal actions only within the authorized page.
+
+        Authorization is the caller's responsibility. Never load action content
+        or join provenance (which could multiply the count).
+        """
+        if not elder_ids:
+            return {}
+        result = await self._session.execute(
+            select(CareAction.elder_id, func.count(CareAction.id))
+            .where(
+                CareAction.tenant_id == self._tenant_id,
+                CareAction.elder_id.in_(elder_ids),
+                CareAction.status.in_(["OPEN", "IN_PROGRESS", "POSTPONED"]),
+            )
+            .group_by(CareAction.elder_id)
+        )
+        return {elder_id: count for elder_id, count in result.all()}
+
     def add(self, action: CareAction) -> None:
         self._session.add(action)
 

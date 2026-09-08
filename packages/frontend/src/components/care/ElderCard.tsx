@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { ArrowRight, UserCircle } from '@phosphor-icons/react';
+import { ArrowRight, ClipboardText, UserCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
 import type { DashboardElder } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -28,6 +28,12 @@ export function ElderCard({ elder }: { elder: DashboardElder }) {
         <span>{t('dashboard.openElder')}</span>
         <ArrowRight size={20} weight="bold" aria-hidden="true" />
       </Link>
+      {elder.openCareActionCount !== null && elder.openCareActionCount !== undefined && (
+        <p className={styles.actionCount}>
+          <ClipboardText aria-hidden="true" size={20} weight="bold" />
+          <span>{t('dashboard.openCareActionCount', { count: elder.openCareActionCount })}</span>
+        </p>
+      )}
     </article>
   );
 }
