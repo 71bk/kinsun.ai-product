@@ -1,0 +1,12 @@
+{
+  "_why_invalid": "Authorized elder task counts cannot be negative.",
+  "data": {
+    "items": [{
+      "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+      "display_name": "Synthetic Elder",
+      "open_care_action_count": -1
+    }],
+    "page": {"next_cursor": null, "has_more": false, "limit": 20}
+  },
+  "meta": {"correlation_id": "4d9f2a71-6c38-4e5b-9a02-1f7d3e8c5b64", "timestamp": "2026-09-08T00:00:00Z"}
+}

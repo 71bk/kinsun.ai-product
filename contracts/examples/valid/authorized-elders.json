@@ -5,13 +5,15 @@
         "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
         "display_name": "林阿嬤",
         "care_unit_name": "幸福日照中心",
-        "authorization_summary": "daycare authorization"
+        "authorization_summary": "daycare authorization",
+        "open_care_action_count": 3
       },
       {
         "elder_id": "9b3e7d15-4c62-4a08-b7f9-5e1c8a2d6034",
         "display_name": "張阿姨",
         "care_unit_name": "幸福日照中心",
-        "authorization_summary": "daycare authorization"
+        "authorization_summary": "daycare authorization",
+        "open_care_action_count": null
       }
     ],
     "page": {

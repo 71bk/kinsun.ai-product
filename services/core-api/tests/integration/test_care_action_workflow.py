@@ -194,6 +194,26 @@ def _headers(key=None):
     return {"Idempotency-Key": key or str(uuid4())}
 
 
+async def test_dashboard_excludes_candidate_and_tracks_adoption_completion(test_engine, care_data):
+    ids = care_data
+    async with _client(test_engine, ids) as client:
+        path = "/api/v1/me/authorized-elders?mode=home-care"
+        before = await client.get(path)
+        assert before.status_code == 200
+        assert before.json()["data"]["items"][0]["open_care_action_count"] == 0
+        adopted = await client.post(_adopt(ids), json={"expected_version": 1}, headers=_headers())
+        assert adopted.status_code == 200
+        action_id = adopted.json()["data"]["adopted_care_action_id"]
+        assert (await client.get(path)).json()["data"]["items"][0]["open_care_action_count"] == 1
+        completed = await client.patch(
+            f"{_actions(ids)}/{action_id}",
+            json={"expected_version": 1, "status": "COMPLETED", "resolution": "Synthetic complete"},
+            headers=_headers(),
+        )
+        assert completed.status_code == 200
+        assert (await client.get(path)).json()["data"]["items"][0]["open_care_action_count"] == 0
+
+
 async def test_native_action_proposal_persists_then_http_verify_and_adopt(
     test_engine, care_data, committed_session
 ):

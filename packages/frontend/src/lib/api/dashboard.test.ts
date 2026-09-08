@@ -24,6 +24,33 @@ afterEach(() => {
 });
 
 describe('getCaregiverDashboard', () => {
+  it.each([0, 3, 105, null, undefined, -1, 1.5, '3'])(
+    'maps only valid task counts without additional API requests: %s',
+    async (count) => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(success({ role: 'DAYCARE_CARE_WORKER', display_name: 'Worker' }))
+        .mockResolvedValueOnce(success({
+          items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: count }],
+          page: { has_more: false, next_cursor: null, limit: 100 },
+        }));
+      vi.stubGlobal('fetch', fetchMock);
+      const result = await getCaregiverDashboard(config);
+      expect(result.elders[0].openCareActionCount).toBe(
+        typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null,
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('does not surface professional task counts to family even if supplied', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(success({ role: 'FAMILY_MEMBER', display_name: 'Family' }))
+      .mockResolvedValueOnce(success({
+        items: [{ elder_id: 'elder', display_name: 'Elder', open_care_action_count: 9 }],
+        page: { has_more: false, next_cursor: null, limit: 100 },
+      })));
+    expect((await getCaregiverDashboard(config)).elders[0].openCareActionCount).toBeNull();
+  });
   it('derives the authorized-elder mode from Core identity and preserves cursor metadata', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -56,6 +83,7 @@ describe('getCaregiverDashboard', () => {
         elderName: 'Synthetic Elder',
         careUnitName: null,
         authorizationSummary: 'assignment authorization',
+        openCareActionCount: null,
       },
     ]);
     expect(dashboard).not.toHaveProperty('total');

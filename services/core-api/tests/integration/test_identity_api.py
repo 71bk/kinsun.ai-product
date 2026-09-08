@@ -22,12 +22,14 @@ from datetime import UTC, datetime, timedelta
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.session import get_db_engine
 from app.main import create_app
 from app.middleware.auth import FakeAuthenticator, get_authenticator
 from app.models.actor import Actor
+from app.models.care_action import CareAction
 from app.models.care_assignment import CareAssignment
 from app.models.care_relationship import CareRelationship
 from app.models.care_unit import CareUnit
@@ -260,6 +262,91 @@ async def seed_api_data(committed_session, api_ids):
 
 
 # ─── Test: GET /api/v1/me ────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role,actor_key,elder_key,mode",
+    [
+        ("DAYCARE_CARE_WORKER", "daycare_worker_id", "elder_1_id", "daycare"),
+        ("HOME_CARE_WORKER", "worker_id", "elder_2_id", "home-care"),
+        ("FAMILY_MEMBER", "family_member_id", "elder_1_id", "family"),
+    ],
+)
+async def test_dashboard_counts_require_live_professional_scope(
+    test_engine, seed_api_data, committed_session, role, actor_key, elder_key, mode
+):
+    ids = seed_api_data
+    if mode == "home-care":
+        grant = (
+            await committed_session.execute(
+                select(CareAssignment).where(CareAssignment.worker_id == ids[actor_key])
+            )
+        ).scalar_one()
+    else:
+        grant = (
+            await committed_session.execute(
+                select(CareRelationship).where(CareRelationship.actor_id == ids[actor_key])
+            )
+        ).scalar_one()
+    app = _build_client_app(test_engine, ids[actor_key], role, ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        path = f"/api/v1/me/authorized-elders?mode={mode}&limit=1"
+        initial = await client.get(path)
+        assert initial.status_code == 200
+        assert initial.json()["data"]["items"][0]["open_care_action_count"] is None
+        if mode == "home-care":
+            grant.service_scope = [*grant.service_scope, "care_action:read"]
+        else:
+            grant.scope = [*grant.scope, "care_action:read"]
+        await committed_session.commit()
+        empty = (await client.get(path)).json()["data"]["items"][0]
+        assert empty["open_care_action_count"] == (None if mode == "family" else 0)
+        # More than a list page: the count must not be capped at 50/100.
+        for state in ["OPEN"] * 103 + ["IN_PROGRESS", "POSTPONED", "COMPLETED", "CANCELLED"]:
+            committed_session.add(
+                CareAction(
+                    tenant_id=ids["tenant_id"],
+                    elder_id=ids[elder_key],
+                    action_type="FOLLOW_UP",
+                    title="Synthetic task",
+                    assignee_actor_id=ids["worker_id"],
+                    created_by_actor_id=ids["worker_id"],
+                    due_at=NOW + timedelta(days=1),
+                    status=state,
+                    resolution="Synthetic outcome" if state != "OPEN" else None,
+                )
+            )
+        # Existing but unauthorized elders and another tenant cannot inflate counts.
+        for target, tenant in [
+            ("elder_2_id" if elder_key == "elder_1_id" else "elder_1_id", "tenant_id"),
+            ("elder_3_id", "tenant_b_id"),
+        ]:
+            committed_session.add(
+                CareAction(
+                    tenant_id=ids[tenant],
+                    elder_id=ids[target],
+                    action_type="FOLLOW_UP",
+                    title="Synthetic hidden task",
+                    assignee_actor_id=ids["worker_id"],
+                    created_by_actor_id=ids["worker_id"],
+                    status="OPEN",
+                )
+            )
+        await committed_session.commit()
+        response = await client.get(path)
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data["items"]) == 1 and not data["page"]["has_more"]
+        assert data["items"][0]["open_care_action_count"] == (None if mode == "family" else 105)
+        assert "total" not in data
+        if mode == "home-care":
+            grant.service_end = datetime.now(UTC) - timedelta(seconds=1)
+        else:
+            grant.effective_to = datetime.now(UTC) - timedelta(seconds=1)
+        await committed_session.commit()
+        expired = await client.get(path)
+        assert expired.status_code == 200 and expired.json()["data"]["items"] == []
 
 
 class TestGetMe:

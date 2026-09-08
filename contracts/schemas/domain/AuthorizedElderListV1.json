@@ -42,6 +42,11 @@
             }
           ]
         },
+        "open_care_action_count": {
+          "description": "Formal OPEN/IN_PROGRESS/POSTPONED actions across assignees for this elder. Null or absent without professional care_action:read access. Excludes candidates and terminal actions; not a global total.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
         "authorization_summary": {
           "description": "Short description of why the elder is visible. Must not disclose other actors' identities.",
           "oneOf": [

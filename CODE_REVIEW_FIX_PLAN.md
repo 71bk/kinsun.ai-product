@@ -552,6 +552,15 @@ live Agent → VERIFY HTTP → DB 全鏈路驗證；各 endpoint `data` 的完�
 - 尚未 commit／push／開 PR；不以歷史 CI 代表本次修正已過 CI，也不宣稱 voice／production E2E。
   詳見 [驗收報告](docs/project/wave2-agent-chain-qa-20260908.md)。
 
+### 2026-09-08 後續結案與 Dashboard 增量
+
+- 前述「尚未 commit／CI」為當時紀錄：PR #32 已合併，修正 commit `e94f0f8` 的
+  CI `34183906570` 全部成功；main `84ef958` 的 CI `34184219797` 亦成功。
+- C04/F02 第一切片結案。US-C01 本機新增每位授權長者未結案待辦數，延用 live
+  `care_action:read` gate；無權限／家屬隱藏、零筆顯示 0，不新增全域總數或 CI job。
+- 新增 Dashboard DB regression 僅收集、待新 CI；沒有重建開發資料庫，沒有本次 commit／push。
+  詳見 [Dashboard count report](docs/project/dashboard-care-action-count-20260908.md)。
+
 ### 2026-09-04 歷史基線
 
 - GitHub Actions Gate 1：run `33739166227` passed（commit `9bcbc74`，包含 M-04），耗時 6m30s。

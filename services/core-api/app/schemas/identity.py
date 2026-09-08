@@ -49,6 +49,14 @@ class AuthorizedElderItem(BaseModel):
     display_name: str
     care_unit_name: str | None = None
     authorization_summary: str | None = None
+    open_care_action_count: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Unfinished formal actions (OPEN/IN_PROGRESS/POSTPONED); "
+            "null without professional care_action:read access."
+        ),
+    )
 
 
 class PaginationMeta(BaseModel):

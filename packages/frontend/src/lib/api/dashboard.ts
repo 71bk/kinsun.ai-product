@@ -15,6 +15,7 @@ interface AuthorizedElderItem {
   display_name: string;
   care_unit_name: string | null;
   authorization_summary: string | null;
+  open_care_action_count?: number | null;
 }
 
 interface AuthorizedElderList {
@@ -31,6 +32,7 @@ export interface DashboardElder {
   elderName: string;
   careUnitName: string | null;
   authorizationSummary: string | null;
+  openCareActionCount: number | null;
 }
 
 export interface CaregiverDashboard {
@@ -72,6 +74,13 @@ export async function getCaregiverDashboard(config: ApiConfig): Promise<Caregive
       elderName: item.display_name,
       careUnitName: item.care_unit_name,
       authorizationSummary: item.authorization_summary,
+      openCareActionCount:
+        mode !== 'family' &&
+        typeof item.open_care_action_count === 'number' &&
+        Number.isSafeInteger(item.open_care_action_count) &&
+        item.open_care_action_count >= 0
+          ? item.open_care_action_count
+          : null,
     })),
   };
 }
