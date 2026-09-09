@@ -44,6 +44,7 @@ from app.models.summary import DailySummary
 from app.models.tenant import Tenant
 
 # ─── Fixed time ──────────────────────────────────────────────────────────────
+# Schedule preview integration tests use the same disposable DB fixtures below.
 #
 # Unlike test_repositories.py (which calls repository methods directly with an
 # explicit `current_time` argument), these tests exercise the real HTTP
@@ -55,6 +56,138 @@ from app.models.tenant import Tenant
 # real time moves on. Open-ended CareRelationships (effective_to=None) aren't
 # affected since they have no upper bound to outlive.
 NOW = datetime.now(UTC)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "zone,clock",
+    [
+        ("UTC", "2026-09-09T10:00:00+00:00"),
+        ("Asia/Taipei", "2026-09-08T16:00:00+00:00"),
+        ("America/New_York", "2026-03-08T06:30:00+00:00"),
+        ("America/New_York", "2026-11-01T05:30:00+00:00"),
+    ],
+)
+async def test_home_care_schedule_preview_is_not_elder_authorization(
+    test_engine, seed_api_data, committed_session, monkeypatch, zone, clock
+):
+    from app.api import elders, identity
+    from app.services import authorization_service
+
+    ids = seed_api_data
+    fixed = datetime.fromisoformat(clock)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed
+
+    monkeypatch.setattr(identity, "datetime", Clock)
+    monkeypatch.setattr(elders, "datetime", Clock)
+    monkeypatch.setattr(authorization_service, "datetime", Clock)
+    elder = await committed_session.get(Elder, ids["elder_2_id"])
+    elder.timezone = zone
+    memberships = (await committed_session.execute(select(ActorTenantMembership))).scalars().all()
+    for membership in memberships:
+        membership.effective_from = fixed - timedelta(days=1)
+    existing = (await committed_session.execute(select(CareAssignment))).scalars().all()
+    for item in existing:
+        item.status = "CANCELLED"
+    await committed_session.commit()
+
+    def row(start, end, status="CONFIRMED", **overrides):
+        fields = dict(
+            tenant_id=ids["tenant_id"],
+            care_unit_id=ids["care_unit_id"],
+            elder_id=ids["elder_2_id"],
+            worker_id=ids["worker_id"],
+            service_start=start,
+            service_end=end,
+            status=status,
+            service_scope=["assignment:read", "elder:basic:read"],
+            version=1,
+        )
+        fields.update(overrides)
+        return CareAssignment(**fields)
+
+    future = row(fixed + timedelta(hours=1), fixed + timedelta(hours=2))
+    later = row(fixed + timedelta(hours=3), fixed + timedelta(hours=4))
+    committed_session.add_all(
+        [
+            future,
+            later,
+            row(fixed + timedelta(days=1), fixed + timedelta(days=1, hours=1)),
+            row(fixed - timedelta(hours=1), fixed),
+            *[
+                row(fixed, fixed + timedelta(hours=1), state)
+                for state in ["DRAFT", "CANCELLED", "EXPIRED", "COMPLETED", "NO_SHOW"]
+            ],
+            row(fixed, fixed + timedelta(hours=1), service_scope=["assignment:read"]),
+            row(fixed, fixed + timedelta(hours=1), worker_id=ids["daycare_worker_id"]),
+            row(fixed, fixed + timedelta(hours=1), tenant_id=ids["tenant_b_id"]),
+            row(fixed, fixed + timedelta(hours=1), elder_id=ids["elder_3_id"]),
+        ]
+    )
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        first = await client.get("/api/v1/me/home-care-schedule?limit=1")
+        assert first.status_code == 200
+        data = first.json()["data"]
+        assert [x["assignment_id"] for x in data["items"]] == [str(future.id)]
+        assert set(data["items"][0]) == {
+            "assignment_id",
+            "elder_id",
+            "display_name",
+            "scheduled_start",
+            "scheduled_end",
+            "status",
+            "timezone",
+            "local_date",
+        }
+        assert data["page"]["has_more"]
+        # Preview never unlocks even basic profile, let alone summaries/events.
+        assert (await client.get(f'/api/v1/elders/{ids["elder_2_id"]}')).status_code == 404
+        second = await client.get(
+            "/api/v1/me/home-care-schedule", params={"cursor": data["page"]["next_cursor"]}
+        )
+        assert [x["assignment_id"] for x in second.json()["data"]["items"]] == [str(later.id)]
+        later.status = "CANCELLED"
+        future.service_end = fixed
+        future.service_start = fixed - timedelta(hours=1)
+        await committed_session.commit()
+        assert (await client.get("/api/v1/me/home-care-schedule")).json()["data"]["items"] == []
+        assert (
+            await client.get(
+                "/api/v1/me/home-care-schedule", params={"cursor": data["page"]["next_cursor"]}
+            )
+        ).json()["data"]["items"] == []
+        assert (await client.get("/api/v1/me/home-care-schedule?cursor=bad")).status_code == 422
+        later.status = "CONFIRMED"
+        await committed_session.commit()
+        unit = await committed_session.get(CareUnit, ids["care_unit_id"])
+        tenant = await committed_session.get(Tenant, ids["tenant_id"])
+        worker_membership = next(m for m in memberships if m.actor_id == ids["worker_id"])
+        for entity, field, denied in [
+            (elder, "status", "INACTIVE"),
+            (unit, "status", "INACTIVE"),
+            (tenant, "status", "INACTIVE"),
+            (worker_membership, "effective_to", fixed),
+            (later, "service_scope", ["elder:basic:read"]),
+        ]:
+            previous = getattr(entity, field)
+            setattr(entity, field, denied)
+            await committed_session.commit()
+            assert (await client.get("/api/v1/me/home-care-schedule")).json()["data"]["items"] == []
+            setattr(entity, field, previous)
+            await committed_session.commit()
+    for role, key in [
+        ("FAMILY_MEMBER", "family_member_id"),
+        ("DAYCARE_CARE_WORKER", "daycare_worker_id"),
+    ]:
+        app = _build_client_app(test_engine, ids[key], role, ids["tenant_id"])
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            assert (await client.get("/api/v1/me/home-care-schedule")).status_code == 403
 
 
 # ─── Helper: build client with custom ActorContext ───────────────────────────

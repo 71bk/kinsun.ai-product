@@ -1,8 +1,9 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ElderOverviewList } from '@/components/dashboard/ElderOverviewList';
+import { HomeCareSchedule } from '@/components/care/HomeCareSchedule';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
@@ -19,6 +20,7 @@ export default function CaregiverDashboardPage() {
   const { t } = useLocale();
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
   const [dashboard, setDashboard] = useState<CaregiverDashboard | null>(null);
+  const loadSequence = useRef(0);
   // Stored as a key, not a rendered string: an error raised before the switch is
   // used must re-render in the new language, not stay frozen in the old one.
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
@@ -35,13 +37,15 @@ export default function CaregiverDashboardPage() {
 
   const load = useCallback(() => {
     if (!config) return;
+    const request = ++loadSequence.current;
     setErrorKey(null);
     // §10.2: drop the previous result before refetching. Leaving it on screen
     // would present a stale list as a finished load.
     setDashboard(null);
     getCaregiverDashboard(config)
-      .then(setDashboard)
+      .then((result) => { if (request === loadSequence.current) setDashboard(result); })
       .catch((caught) => {
+        if (request !== loadSequence.current) return;
         setErrorKey(
           caught instanceof ApiRequestError && (caught.status === 403 || caught.status === 404)
             ? 'error.noElderAccess'
@@ -50,8 +54,15 @@ export default function CaregiverDashboardPage() {
       });
   }, [config]);
 
+  const invalidateAccess = useCallback(() => {
+    ++loadSequence.current;
+    setDashboard(null);
+    setErrorKey('error.noElderAccess');
+  }, []);
+
   useEffect(() => {
     if (config?.credentialStatus === 'present') load();
+    return () => { ++loadSequence.current; };
   }, [config, load]);
 
   if (!config) return null;
@@ -98,6 +109,7 @@ export default function CaregiverDashboardPage() {
       {!dashboard && !errorKey && <Skeleton rows={5} />}
       {dashboard && (
         <>
+          {dashboard.actorRole === 'HOME_CARE_WORKER' && <HomeCareSchedule config={config} onAccessCheck={invalidateAccess} />}
           <div className={styles.metrics}>
             <SummaryMetricCard
               description={

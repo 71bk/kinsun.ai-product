@@ -186,6 +186,9 @@
 
 ### Contract 與 deployment
 
+- JSON Schema 的跨檔 `$ref` 用絕對 `$id`；OpenAPI 外部 response schema 則沿用
+  exporter／validator 的 `../schemas/...` 文件相對路徑，不要混用兩套解析慣例。
+
 - 靜態 validator 的一般 domain example mapping 取 envelope `data`；invalid example 也要沿用
   `data`／`meta` 與頂層 `_why_invalid`。裸 payload 的 `KeyError: data` 不算 schema 拒絕通過。
 

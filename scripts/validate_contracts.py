@@ -31,6 +31,8 @@ DATA_SCHEMA_FOR = {
     "elder-summary.json": "domain/ElderSummaryV1.json",
     "elder-access-context.json": "domain/ElderAccessContextV1.json",
     "authorized-elders.json": "domain/AuthorizedElderListV1.json",
+    "home-care-schedule.json": "domain/HomeCareScheduleV1.json",
+    "home-care-schedule-content.json": "domain/HomeCareScheduleV1.json",
     "elder-summary-bad-care-setting.json": "domain/ElderSummaryV1.json",
     "actor-profile-legal-representative.json": "domain/ActorProfileV1.json",
     "authorized-elders-offset-pagination.json": "domain/AuthorizedElderListV1.json",

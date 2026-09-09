@@ -88,6 +88,7 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "home_care_schedule_api_v1_me_home_care_schedule_get": "HomeCareScheduleEnvelopeV1",
     "register_agent_run_api_v1_internal_agent_runs_post": (
         "AgentRunRegistrationEnvelopeV1"
     ),

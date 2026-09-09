@@ -22,9 +22,10 @@ dashboard 待辦數的 US-C01 增量已隨 PR #33 合併，PR／main CI 均通�
 PR #34 合併，PR／main CI 均成功（[Pending review report](../project/dashboard-pending-event-review-20260908.md)）；
 最後互動／今日互動已隨 PR #35 合併（`0d0d294`），PR CI `34201101849`／main CI `34202072018` 通過
 （[Interaction metrics report](../project/dashboard-interaction-metrics-20260908.md)）。今日摘要狀態＋日期入口
-已完成本機驗證（Core 1206／Frontend 477、contracts、build、21 張合成視覺 QA）；新增 4 個 DB
-參數案例僅收集，尚待提交與新 PR CI（[Summary status report](../project/dashboard-summary-status-20260908.md)）。
-居服行程／派案狀態等完整 overview 仍未完成。詳細範圍與證據見
+已隨 PR #36 合併（`8f03402`），PR CI `34210026829`／main CI `34211153156` 全過
+（[Summary status report](../project/dashboard-summary-status-20260908.md)）。居服今日最小行程預覽
+已本機實作；服務前僅姓名／時段／狀態，不提前開放摘要／事件，新 DB 案例仍待 CI
+（[Schedule preview report](../project/home-care-schedule-preview-20260909.md)）。上次服務摘要與完整 overview 仍未完成。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 
 ## 工作表：00_總覽
