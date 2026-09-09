@@ -28,9 +28,12 @@ PR #34 合併，PR／main CI 均成功（[Pending review report](../project/dash
 （[Schedule preview report](../project/home-care-schedule-preview-20260909.md)）。上次服務摘要與完整 overview 仍未完成。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
 
-2026-09-09 上次服務摘要之前置：派案服務紀錄 Core API 第一切片已本機實作，沿用既有
-baseline 表並 additive 擴充；UI、完成派案整合及上次服務摘要尚未實作，新 DB 案例待 CI。
-見 [Service record report](../project/assignment-service-record-20260909.md)。
+2026-09-09 上次服務摘要之前置：派案服務紀錄 Core API 已隨 PR #38 合併，PR／main CI
+全過，Supabase development 已 additive 升級至 `e3a5c7d9f102`，無 backfill／新 scope grant。
+UI 入口、二次確認、same-key retry 與權限失效清除已完成本機 527 frontend tests／production
+build／synthetic Browser QA，提交獨立 PR 審查；完成派案原子整合、上次服務摘要與 runtime
+least-privilege activation 仍未完成。見 [API report](../project/assignment-service-record-20260909.md)
+與 [UI report](../project/service-record-entry-ui-20260909.md)。
 
 ## 工作表：00_總覽
 

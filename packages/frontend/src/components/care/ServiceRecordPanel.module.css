@@ -1,0 +1,71 @@
+.panel {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.panel h3,
+.panel p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.panel form {
+  display: grid;
+  gap: var(--space-3);
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  padding: var(--space-3);
+  border: 1px solid var(--color-interactive-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+}
+.primary,
+.secondary {
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.primary {
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+  border: 1px solid var(--color-primary-strong);
+}
+.secondary {
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-interactive-border);
+}
+.panel button:disabled,
+.panel textarea:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hint {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+}
+.content {
+  white-space: pre-wrap;
+}
+.status {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-weight: 700;
+  color: var(--color-accent-text);
+}

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import type { AssignmentStatus, AssignmentView } from '@/lib/api/assignments';
+import type { ApiConfig } from '@/lib/api/client';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './AssignmentCard.module.css';
+import { ServiceRecordPanel } from './ServiceRecordPanel';
 
 const STATUS_ICON = {
   DRAFT: CalendarCheck,
@@ -22,12 +24,20 @@ const STATUS_ICON = {
 export interface AssignmentCardProps {
   assignment: AssignmentView;
   onCommand: (assignment: AssignmentView, command: 'start' | 'complete') => Promise<void>;
+  config: ApiConfig;
+  onAccessCheck: () => void;
 }
 
-export function AssignmentCard({ assignment, onCommand }: AssignmentCardProps) {
+export function AssignmentCard({
+  assignment,
+  onCommand,
+  config,
+  onAccessCheck,
+}: AssignmentCardProps) {
   const { t, formatDateTime } = useLocale();
   const [confirming, setConfirming] = useState<'start' | 'complete' | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showRecord, setShowRecord] = useState(false);
   const Icon = STATUS_ICON[assignment.status];
   const availableCommand =
     assignment.status === 'CONFIRMED'
@@ -42,6 +52,8 @@ export function AssignmentCard({ assignment, onCommand }: AssignmentCardProps) {
     try {
       await onCommand(assignment, confirming);
       setConfirming(null);
+    } catch {
+      // The page owns the visible command error. Do not leak an unhandled rejection.
     } finally {
       setBusy(false);
     }
@@ -91,12 +103,37 @@ export function AssignmentCard({ assignment, onCommand }: AssignmentCardProps) {
           </button>
         )}
       </div>
+      {assignment.status === 'IN_PROGRESS' &&
+        (assignment.canReadServiceRecord || assignment.canWriteServiceRecord) && (
+          <>
+            <button
+              className={`${styles.elderLink} ${styles.recordToggle}`}
+              type="button"
+              aria-expanded={showRecord}
+              onClick={() => setShowRecord((current) => !current)}
+            >
+              {t(showRecord ? 'serviceRecord.close' : 'serviceRecord.open')}
+            </button>
+            {showRecord && (
+              <ServiceRecordPanel
+                key={`${assignment.assignmentId}:${assignment.version}`}
+                assignment={assignment}
+                config={config}
+                onAccessCheck={onAccessCheck}
+              />
+            )}
+          </>
+        )}
       <ConfirmationDialog
         busy={busy}
         confirmLabel={
           confirming ? t(`assignments.${confirming}` as MessageKey) : t('common.confirm')
         }
-        description={t('assignments.confirmDescription')}
+        description={t(
+          confirming === 'complete'
+            ? 'serviceRecord.completeWarning'
+            : 'assignments.confirmDescription',
+        )}
         onCancel={() => setConfirming(null)}
         onConfirm={() => void runCommand()}
         open={confirming !== null}

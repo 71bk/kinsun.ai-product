@@ -398,6 +398,8 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
+- 手動 DB 檢查沿用 `to_psycopg_database_url`（包含 ssl→sslmode），不要只替換 driver；
+  Alembic 版本表依 `alembic/env.py` 位於 `public.alembic_version`，不得猜測或輸出連線密碼。
 - 無 ORM 的功能可能已有 baseline SQL 表；`service_record` 就是 JSONB、worker_actor_id 的
   既有表。建模前查 `.sql`；只做 additive migration，legacy rows 不自動提升為正式 v1。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。

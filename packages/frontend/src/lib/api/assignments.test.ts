@@ -46,6 +46,8 @@ const assignment: AssignmentView = {
   scheduledEnd: '2026-08-13T02:00:00Z',
   status: 'CONFIRMED',
   scopeCount: 2,
+  canReadServiceRecord: false,
+  canWriteServiceRecord: false,
   version: 3,
   expiresAt: '2026-08-13T02:00:00Z',
 };
@@ -56,6 +58,26 @@ afterEach(() => {
 });
 
 describe('assignment API boundary', () => {
+  it.each([
+    [['assignment:read', 'service_record:read'], true, false],
+    [['assignment:read', 'service_record:write'], false, true],
+    [['service_record:read', 'service_record:write'], false, false],
+  ] as const)(
+    'derives record capabilities only from this assignment scopes: %s',
+    async (scopes, read, write) => {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue(
+            success({ items: [{ ...coreAssignment(), allowed_data_scopes: scopes }] }),
+          ),
+      );
+      const [view] = await listAssignments(config, '2026-09-09');
+      expect(view.canReadServiceRecord).toBe(read);
+      expect(view.canWriteServiceRecord).toBe(write);
+    },
+  );
   it('sends the selected date to Core and exposes only the limited UI view', async () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
       success({ items: [coreAssignment()] }),

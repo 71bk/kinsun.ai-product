@@ -98,6 +98,14 @@
   background: var(--color-primary-weak);
 }
 
+.recordToggle {
+  background: var(--color-surface);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
 .command:disabled {
   opacity: 0.45;
   cursor: not-allowed;

@@ -77,12 +77,16 @@ describe('Care Surface safety semantics', () => {
     const confirmed = renderWithLocale(
       createElement(AssignmentCard, {
         assignment: assignment('CONFIRMED'),
+        config: { apiBaseUrl: '/backend/core' },
+        onAccessCheck: () => undefined,
         onCommand: async () => undefined,
       }),
     );
     const completed = renderWithLocale(
       createElement(AssignmentCard, {
         assignment: assignment('COMPLETED'),
+        config: { apiBaseUrl: '/backend/core' },
+        onAccessCheck: () => undefined,
         onCommand: async () => undefined,
       }),
     );
@@ -97,6 +101,8 @@ describe('Care Surface safety semantics', () => {
     const markup = renderWithLocale(
       createElement(AssignmentCard, {
         assignment: assignment('CONFIRMED'),
+        config: { apiBaseUrl: '/backend/core' },
+        onAccessCheck: () => undefined,
         onCommand: async () => undefined,
       }),
     );
