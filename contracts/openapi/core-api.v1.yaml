@@ -461,6 +461,27 @@
         ]
       }
     },
+    "/api/v1/me/home-care-schedule": {
+      "get": {
+        "tags": ["identity"],
+        "summary": "Home Care Schedule",
+        "description": "Minimal pre-service preview, not an elder-data access grant. Only the active HOME_CARE_WORKER's same-tenant, active-care-unit, active-elder assignments with assignment:read and elder:basic:read scopes, CONFIRMED/IN_PROGRESS status, and unexpired service window. Includes future starts today in each Elder timezone. Each page rechecks live state; cursor never authorizes access. No summary, event, address or scope content. Existing elder APIs still require their current service-window authorization.",
+        "operationId": "home_care_schedule_api_v1_me_home_care_schedule_get",
+        "parameters": [
+          {"name":"cursor","in":"query","required":false,"schema":{"anyOf":[{"type":"string","maxLength":2048},{"type":"null"}]}},
+          {"name":"limit","in":"query","required":false,"schema":{"type":"integer","minimum":1,"maximum":100,"default":20}}
+        ],
+        "responses": {
+          "200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"../schemas/common/HomeCareScheduleEnvelopeV1.json"}}}},
+          "401":{"$ref":"#/components/responses/Unauthorized"},
+          "403":{"$ref":"#/components/responses/Forbidden"},
+          "404":{"$ref":"#/components/responses/NotFoundOrForbidden"},
+          "422":{"$ref":"#/components/responses/ValidationFailed"},
+          "503":{"$ref":"#/components/responses/Unavailable"}
+        },
+        "security":[{"bearerAuth":[]}]
+      }
+    },
     "/api/v1/me/authorized-elders": {
       "get": {
         "tags": [

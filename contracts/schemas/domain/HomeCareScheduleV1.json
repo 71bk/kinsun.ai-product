@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/HomeCareScheduleV1.json",
+  "title": "HomeCareScheduleV1",
+  "type": "object", "additionalProperties": false,
+  "required": ["items", "as_of", "page"],
+  "properties": {
+    "as_of": {"type": "string", "format": "date-time"},
+    "items": {"type": "array", "maxItems": 100, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assignment_id", "elder_id", "display_name", "scheduled_start", "scheduled_end", "status", "timezone", "local_date"],
+      "properties": {
+        "assignment_id": {"type": "string", "format": "uuid"},
+        "elder_id": {"type": "string", "format": "uuid"},
+        "display_name": {"type": "string"},
+        "scheduled_start": {"type": "string", "format": "date-time"},
+        "scheduled_end": {"type": "string", "format": "date-time"},
+        "status": {"enum": ["CONFIRMED", "IN_PROGRESS"]},
+        "timezone": {"type": "string"},
+        "local_date": {"type": "string", "format": "date"}
+      }
+    }},
+    "page": {"type": "object", "additionalProperties": false,
+      "required": ["next_cursor", "has_more", "limit"],
+      "properties": {
+        "next_cursor": {"type": ["string", "null"]},
+        "has_more": {"type": "boolean"},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+      }
+    }
+  }
+}

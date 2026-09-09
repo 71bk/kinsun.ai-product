@@ -195,6 +195,11 @@ RBAC 決定角色可執行的功能；ABAC 再依 tenant_id、elder_id、care_un
 
 沒有明確 Allow 條件時一律拒絕；任何查詢即使已在前端過濾，後端仍需重新驗證。
 
+2026-09-09 Owner 核准的服務前最小揭露，僅限居服今日本人已確認派案的姓名、時段與狀態
+預覽；獨立 endpoint 每頁重查有效角色、tenant、membership、派案與 scope，不放寬既有
+長者詳情、摘要或事件的服務時段授權。取消／到期／撤權於下一次請求排除；本機 UI 採
+30 秒輪詢及回到前景重查，不宣稱即時推播撤銷。詳見[範圍與驗證紀錄](../project/home-care-schedule-preview-20260909.md)。
+
 # 五、Session、Token 與裝置安全
 
 • Access Token 短效，Refresh Token 可撤銷並綁定裝置或 Session。

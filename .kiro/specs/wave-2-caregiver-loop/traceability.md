@@ -88,4 +88,5 @@ PR #32 修正 commit `e94f0f8` 的 [CI run 34183906570](https://github.com/71bk/
 - Dashboard `open_care_action_count` 已隨 PR #33 合併，PR CI `34192019631`／main CI `34192336870` 通過。見 [Dashboard count report](../../../docs/project/dashboard-care-action-count-20260908.md)。
 - US-C01 `pending_event_review_count` 與待覆核入口已隨 PR #34 合併（`3b48bea`），PR CI `34195574308`／main CI `34195871383` 均通過。見 [Pending review report](../../../docs/project/dashboard-pending-event-review-20260908.md)。
 - 今日已完成互動次數／最後互動已隨 PR #35 合併（`0d0d294`），PR CI `34201101849`／main CI `34202072018` 均通過，含新增 DB 案例。見 [Interaction metrics report](../../../docs/project/dashboard-interaction-metrics-20260908.md)。
-- 今日摘要狀態／日期入口已完成本機增量（Core 1206／Frontend 477 tests、contracts、build、21 張合成視覺 QA）；新增 4 個 DB 參數案例僅收集，尚未提交／新 PR／CI。見 [Summary status report](../../../docs/project/dashboard-summary-status-20260908.md)。居服行程／派案狀態等完整 overview 仍未完成。
+- 今日摘要狀態／日期入口已隨 PR #36 合併（`8f03402`）；PR CI `34210026829`／main CI `34211153156` 全數成功，含修正 fixture 後的 DB 案例。見 [Summary status report](../../../docs/project/dashboard-summary-status-20260908.md)。
+- 居服今日最小行程預覽已本機實作，服務前只顯示姓名／時段／狀態，不提前授予摘要／事件權限；新 DB 案例尚待新 PR CI。上次服務摘要與完整 overview 仍未完成。見 [Schedule preview report](../../../docs/project/home-care-schedule-preview-20260909.md)。

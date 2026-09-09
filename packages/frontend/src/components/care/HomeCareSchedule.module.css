@@ -1,0 +1,7 @@
+.section { margin-block-end: var(--block-gap); min-width: 0; }
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
+.list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-4); margin-block: var(--space-4); }
+.card { min-width: 0; overflow-wrap: anywhere; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); }
+.status { display: flex; align-items: center; gap: var(--space-2); }
+.status svg { flex-shrink: 0; }
+.button { min-height: var(--touch-min); padding: var(--space-2) var(--space-4); border: 1px solid var(--color-interactive-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-primary-text); font-weight: 700; cursor: pointer; }

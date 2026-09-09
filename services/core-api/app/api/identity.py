@@ -25,6 +25,7 @@ from app.repositories.care_assignment_repo import CareAssignmentRepository
 from app.repositories.care_relationship_repo import CareRelationshipRepository
 from app.repositories.care_unit_membership_repo import CareUnitMembershipRepository
 from app.repositories.tenant_membership_repo import TenantMembershipRepository
+from app.schemas.home_care_schedule import HomeCareScheduleResponse
 from app.schemas.identity import (
     AuthorizedElderItem,
     AuthorizedEldersResponse,
@@ -38,9 +39,30 @@ from app.services.dashboard_service import (
     get_open_care_action_counts,
     get_pending_event_review_counts,
 )
+from app.services.home_care_schedule_service import get_home_care_schedule
 from app.services.identity_service import IdentityService
 
 router = APIRouter(prefix="/api/v1", tags=["identity"])
+
+
+@router.get("/me/home-care-schedule")
+async def home_care_schedule(
+    cursor: str | None = Query(default=None, max_length=2048),
+    limit: int = Query(default=20, ge=1, le=100),
+    actor_context: ActorContext = Depends(require_active_actor),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    result = await get_home_care_schedule(session, actor_context, datetime.now(UTC), cursor, limit)
+    return SuccessEnvelope(
+        data=HomeCareScheduleResponse(
+            items=result.items,
+            as_of=result.as_of,
+            page=PaginationMeta(
+                next_cursor=result.next_cursor, has_more=result.has_more, limit=result.limit
+            ),
+        ),
+        meta=ResponseMeta(correlation_id=_get_correlation_id(), timestamp=datetime.now(UTC)),
+    ).model_dump(mode="json")
 
 
 def _build_identity_service(session: AsyncSession, actor_context: ActorContext) -> IdentityService:

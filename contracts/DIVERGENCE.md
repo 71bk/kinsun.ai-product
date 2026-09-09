@@ -295,6 +295,17 @@ Core 已實作 `POST /api/v1/internal/tools/execute`，因此 `ToolRequestV1` �
 
 ### Care Action 邊界
 
+`GET /api/v1/me/home-care-schedule` 是 Owner 於 2026-09-09 確認的服務前最小預覽，
+不是一般 Elder 授權。僅本人／同 tenant ACTIVE HOME_CARE_WORKER 與有效同角色 membership，
+同次 SQL 確認 ACTIVE tenant／care unit／elder、CONFIRMED／IN_PROGRESS（後者已開始）、
+未過 service_end、同派案同時含 assignment:read＋elder:basic:read；不回 DRAFT／COMPLETED／
+NO_SHOW／CANCELLED／EXPIRED。今日依 Elder.timezone，含今日未開始與跨午夜仍有效的服務。
+只回姓名、起訖、status、UUID 與時區／日期 metadata；不回 scope／地址／摘要／事件。
+每一頁都重查狀態與授權，opaque cursor 不授權、不提供歷史快照；沒有全域 total。
+既有 authorized-elders、ElderAccessPolicy、摘要／事件服務時段 gate 不變。
+Browser 取消偵測靠 30 秒輪詢／回到頁面重查，不宣稱即時推播；完整範圍與限制見
+[交付紀錄](../docs/project/home-care-schedule-preview-20260909.md)。
+
 `GET /api/v1/me/authorized-elders` 的選填 nullable `daily_summary` 只回當頁長者當地今日的
 PROFESSIONAL_DAILY metadata：`local_date`／`timezone`／`as_of`，以及 nullable `summary`
 （summary_id／status／version）。只允許 professional role＋live `summary:read`；
