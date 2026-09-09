@@ -16,13 +16,15 @@ Requirements: 10.1, 11.1, 12.1, 12.2, 12.3, 14.1, 14.2
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.session import get_db_engine
@@ -39,7 +41,9 @@ from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.elder import Elder
 from app.models.membership import ActorTenantMembership
+from app.models.outbox import OutboxEvent
 from app.models.policy import PolicyRegistry
+from app.models.service_record import ServiceRecord
 from app.models.summary import DailySummary
 from app.models.tenant import Tenant
 
@@ -196,6 +200,216 @@ async def test_home_care_schedule_preview_is_not_elder_authorization(
 # ─── Helper: build client with custom ActorContext ───────────────────────────
 
 
+@pytest.mark.asyncio
+async def test_legacy_service_record_is_not_promoted_or_overwritten(
+    test_engine, seed_api_data, committed_session
+):
+    ids = seed_api_data
+    assignment = (
+        (
+            await committed_session.execute(
+                select(CareAssignment).where(
+                    CareAssignment.elder_id == ids["elder_2_id"],
+                    CareAssignment.status == "CONFIRMED",
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    assignment.status = "IN_PROGRESS"
+    assignment.service_scope = ["assignment:read", "service_record:read", "service_record:write"]
+    legacy = ServiceRecord(
+        assignment_id=assignment.id,
+        elder_id=assignment.elder_id,
+        worker_id=assignment.worker_id,
+        service_date=assignment.service_start.date(),
+        record_type="SERVICE_NOTE",
+        content={"legacy": "Synthetic old note"},
+    )
+    committed_session.add(legacy)
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    path = f"/api/v1/home-care/assignments/{assignment.id}/service-record"
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        assert (await client.get(path)).status_code == 404
+        response = await client.post(
+            path,
+            json={"expected_assignment_version": assignment.version, "content": "New note"},
+            headers={"Idempotency-Key": "new-note"},
+        )
+        assert response.status_code == 409
+    await committed_session.refresh(legacy)
+    assert legacy.version is None and legacy.status == "DRAFT"
+    assert legacy.content == {"legacy": "Synthetic old note"}
+    assert await committed_session.scalar(select(func.count()).select_from(ServiceRecord)) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("concurrent", [False, True])
+async def test_service_record_transaction_and_live_replay(
+    test_engine, seed_api_data, committed_session, monkeypatch, concurrent
+):
+    from app.services import service_record_service
+
+    ids = seed_api_data
+    now = datetime.now(UTC)
+    assignment = (
+        (
+            await committed_session.execute(
+                select(CareAssignment).where(
+                    CareAssignment.elder_id == ids["elder_2_id"],
+                    CareAssignment.status == "CONFIRMED",
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    assignment.status = "IN_PROGRESS"
+    assignment.service_start = now - timedelta(minutes=10)
+    assignment.service_end = now + timedelta(hours=1)
+    assignment.service_scope = ["assignment:read", "service_record:read", "service_record:write"]
+    elder = await committed_session.get(Elder, ids["elder_2_id"])
+    elder.timezone = "Asia/Taipei"
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    path = f"/api/v1/home-care/assignments/{assignment.id}/service-record"
+    body = {"expected_assignment_version": assignment.version, "content": "Synthetic service note"}
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        assert (await client.get(path)).status_code == 404
+        assert (
+            await client.post(
+                path,
+                json={**body, "expected_assignment_version": 999},
+                headers={"Idempotency-Key": "stale"},
+            )
+        ).status_code == 409
+        # Outbox failure must roll back both the formal row and the idempotency claim.
+        original = service_record_service.write_outbox_entry
+
+        async def failed_outbox(*args, **kwargs):
+            await original(*args, **kwargs)
+            raise RuntimeError("synthetic transaction failure")
+
+        monkeypatch.setattr(service_record_service, "write_outbox_entry", failed_outbox)
+        assert (
+            await client.post(path, json=body, headers={"Idempotency-Key": "record"})
+        ).status_code == 500
+        assert await committed_session.scalar(select(func.count()).select_from(ServiceRecord)) == 0
+        assert (
+            await committed_session.scalar(
+                select(func.count())
+                .select_from(OutboxEvent)
+                .where(OutboxEvent.event_type == "care.service_record.completed.v1")
+            )
+            == 0
+        )
+        monkeypatch.setattr(service_record_service, "write_outbox_entry", original)
+        if concurrent:
+            responses = await asyncio.gather(
+                *[
+                    client.post(path, json=body, headers={"Idempotency-Key": key})
+                    for key in ["record", "other"]
+                ]
+            )
+            assert sorted(r.status_code for r in responses) == [201, 409]
+            winner = next(r for r in responses if r.status_code == 201)
+            key = "record" if responses[0].status_code == 201 else "other"
+        else:
+            winner = await client.post(path, json=body, headers={"Idempotency-Key": "record"})
+            key = "record"
+            assert winner.status_code == 201
+        data = winner.json()["data"]
+        assert (
+            data["content"] == body["content"] and data["assignment_version"] == assignment.version
+        )
+        from zoneinfo import ZoneInfo
+
+        assert (
+            data["service_date"]
+            == assignment.service_start.astimezone(ZoneInfo("Asia/Taipei")).date().isoformat()
+        )
+        replay = await client.post(path, json=body, headers={"Idempotency-Key": key})
+        assert replay.status_code == 201 and replay.json()["data"] == data
+        assert (await client.get(path)).json()["data"] == data
+        assert (
+            await client.post(
+                path, json={**body, "content": "Different"}, headers={"Idempotency-Key": key}
+            )
+        ).status_code == 409
+        assert (
+            await client.post(path, json=body, headers={"Idempotency-Key": "duplicate"})
+        ).status_code == 409
+        assert await committed_session.scalar(select(func.count()).select_from(ServiceRecord)) == 1
+        events = (
+            (
+                await committed_session.execute(
+                    select(OutboxEvent).where(
+                        OutboxEvent.event_type == "care.service_record.completed.v1"
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert len(events) == 1
+        assert set(events[0].payload) == {"service_record_id", "assignment_id", "version", "status"}
+        # SQL protection complements the absence of update/delete API commands.
+        for statement in [
+            'UPDATE eldercare_ai.service_record SET content = \'{"note":"changed"}\'::jsonb',
+            "DELETE FROM eldercare_ai.service_record",
+        ]:
+            with pytest.raises(DBAPIError):
+                async with committed_session.begin_nested():
+                    await committed_session.execute(text(statement))
+        # No content or successful snapshot remains readable after resource/scope revocation.
+        member = (
+            (
+                await committed_session.execute(
+                    select(ActorTenantMembership).where(
+                        ActorTenantMembership.actor_id == ids["worker_id"]
+                    )
+                )
+            )
+            .scalars()
+            .one()
+        )
+        for entity, field, denied in [
+            (elder, "status", "INACTIVE"),
+            (member, "effective_to", datetime.now(UTC)),
+            (assignment, "service_scope", ["assignment:read"]),
+            (assignment, "status", "COMPLETED"),
+            (assignment, "status", "CANCELLED"),
+            (assignment, "service_end", datetime.now(UTC)),
+        ]:
+            previous = getattr(entity, field)
+            setattr(entity, field, denied)
+            await committed_session.commit()
+            assert (await client.get(path)).status_code == 404
+            assert (
+                await client.post(path, json=body, headers={"Idempotency-Key": key})
+            ).status_code == 404
+            setattr(entity, field, previous)
+            await committed_session.commit()
+
+    # A different worker or tenant cannot borrow this assignment for writes or reads.
+    for actor_id, role, tenant_id in [
+        (ids["daycare_worker_id"], "DAYCARE_CARE_WORKER", ids["tenant_id"]),
+        (ids["daycare_worker_id"], "HOME_CARE_WORKER", ids["tenant_id"]),
+        (ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_b_id"]),
+    ]:
+        denied_app = _build_client_app(test_engine, actor_id, role, tenant_id)
+        async with AsyncClient(
+            transport=ASGITransport(app=denied_app), base_url="http://test"
+        ) as client:
+            assert (await client.get(path)).status_code == 404
+            assert (
+                await client.post(path, json=body, headers={"Idempotency-Key": key})
+            ).status_code == 404
+
+
 def _build_client_app(test_engine, actor_id: uuid.UUID, actor_role: str, tenant_id: uuid.UUID):
     """Build a FastAPI app with dependency overrides for a given actor context."""
     app = create_app()
@@ -255,7 +469,7 @@ def api_ids():
     }
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def seed_api_data(committed_session, api_ids):
     """Seed the database with data for API integration tests.
 

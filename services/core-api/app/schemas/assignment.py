@@ -20,6 +20,8 @@ AssignmentScope = Literal[
     "care_action:read",
     "care_action:update",
     "summary:read",
+    "service_record:read",
+    "service_record:write",
 ]
 
 
@@ -31,7 +33,7 @@ class CreateAssignmentRequest(BaseModel):
     worker_actor_id: UUID
     service_start: datetime
     service_end: datetime
-    allowed_data_scopes: list[AssignmentScope] = Field(min_length=1, max_length=12)
+    allowed_data_scopes: list[AssignmentScope] = Field(min_length=1, max_length=14)
 
     @model_validator(mode="after")
     def validate_period(self) -> CreateAssignmentRequest:

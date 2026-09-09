@@ -461,6 +461,42 @@
         ]
       }
     },
+    "/api/v1/home-care/assignments/{assignment_id}/service-record": {
+      "parameters": [{"name":"assignment_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],
+      "get": {
+        "tags":["service-records"],
+        "summary":"Get current assignment service record",
+        "description":"Requires the caller's exact IN_PROGRESS assignment within its service window, assignment:read and service_record:read. Completed, expired, revoked and other-worker assignments return non-disclosing 404. This is not a historical service-summary endpoint.",
+        "operationId":"get_service_record_api_v1_home_care_assignments__assignment_id__service_record_get",
+        "security":[{"bearerAuth":[]}],
+        "responses":{
+          "200":{"description":"Formal service record","content":{"application/json":{"schema":{"$ref":"../schemas/common/ServiceRecordEnvelopeV1.json"}}}},
+          "401":{"$ref":"#/components/responses/Unauthorized"},
+          "403":{"$ref":"#/components/responses/Forbidden"},
+          "404":{"$ref":"#/components/responses/NotFoundOrForbidden"},
+          "422":{"$ref":"#/components/responses/ValidationFailed"},
+          "503":{"$ref":"#/components/responses/Unavailable"}
+        }
+      },
+      "post": {
+        "tags":["service-records"],
+        "summary":"Submit immutable professional service record",
+        "description":"Requires exact live IN_PROGRESS assignment ownership, assignment:read and service_record:write. Server derives scope and the assignment start's elder-local service date. One formal SERVICE_NOTE per assignment; no overwrite, post-window submission or implicit assignment completion. Idempotency replay is reauthorized before any response. Human-authored content is not an AI summary or verified Care Event.",
+        "operationId":"create_service_record_api_v1_home_care_assignments__assignment_id__service_record_post",
+        "security":[{"bearerAuth":[]}],
+        "parameters":[{"name":"Idempotency-Key","in":"header","required":true,"schema":{"type":"string","minLength":1,"maxLength":160}}],
+        "requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"../schemas/domain/CreateServiceRecordRequestV1.json"}}}},
+        "responses":{
+          "201":{"description":"Formal record created or authorized immutable replay","content":{"application/json":{"schema":{"$ref":"../schemas/common/ServiceRecordEnvelopeV1.json"}}}},
+          "401":{"$ref":"#/components/responses/Unauthorized"},
+          "403":{"$ref":"#/components/responses/Forbidden"},
+          "404":{"$ref":"#/components/responses/NotFoundOrForbidden"},
+          "409":{"$ref":"#/components/responses/Conflict"},
+          "422":{"$ref":"#/components/responses/ValidationFailed"},
+          "503":{"$ref":"#/components/responses/Unavailable"}
+        }
+      }
+    },
     "/api/v1/me/home-care-schedule": {
       "get": {
         "tags": ["identity"],

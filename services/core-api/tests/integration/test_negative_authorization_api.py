@@ -29,7 +29,7 @@ seed_api_data = identity_api_tests.seed_api_data
 NONEXISTENT_ELDER_ID = uuid.UUID("99999999-9999-4999-9999-999999999999")
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def negative_authorization_data(committed_session, seed_api_data):
     """Add invalid authorization sources that must never grant access."""
     ids = seed_api_data

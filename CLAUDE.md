@@ -223,6 +223,11 @@
 
 ## 驗證矩陣
 
+Async fixture 的預設 session loop 不會改變 test body 的 function loop。`committed_session`、
+`db_session` 及相依 async seed fixture 必須顯式 `loop_scope="function"`；SELECT 也會開啟交易，
+須在同一 loop rollback／close 後才清理 disposable DB。NullPool 不能修復持有中的跨 loop session；
+不得靠測試尾端 commit 或重跑掩蓋，清理失敗也不能吞掉原始測試錯誤。
+
 Core `error_handlers` 以 exact exception type 查 status／reason mapping；DB optimistic write
 拋出的 `OptimisticConcurrencyError` 必須明確登記為 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`。
 只登記父類 `ConflictError` 不會套用到子類；用 mock 代替 DB update 會漏掉這個競爭失敗路徑。
@@ -393,6 +398,8 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
+- 無 ORM 的功能可能已有 baseline SQL 表；`service_record` 就是 JSONB、worker_actor_id 的
+  既有表。建模前查 `.sql`；只做 additive migration，legacy rows 不自動提升為正式 v1。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
 - Claude 執行 Git commit 時只寫本次變更的 subject／body；不得自行加入 `Co-Authored-By`、
   `Claude-Session`、`Generated-By` 或任何 AI／工具協作者署名與追蹤連結，除非使用者明確要求。

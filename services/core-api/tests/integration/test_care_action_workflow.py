@@ -54,7 +54,7 @@ def _proposal(ids):
     }
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def care_data(committed_session):
     ids = {
         key: uuid4()

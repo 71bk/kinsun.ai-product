@@ -418,6 +418,9 @@ ADR 0019 退役。
 - 正式 Event 發布後視為不可變歷史契約；破壞性變更建立新 `event_version`。
 - Consumer 先支援新舊版本，Producer 才切換。
 - Database 變更採 Expand → Migrate → Contract。
+- 新功能沒有 ORM 不代表沒有表；先查 frozen baseline 的 `.sql`，不能只搜尋 migration `.py`。
+  `service_record` 原已存在（JSONB content、`worker_actor_id`、DRAFT default、updated_at）；
+  新 API 必須 additive 擴充並隔離 legacy rows，不可重建表或把舊內容自動當成正式 v1 紀錄。
 - 使用 Idempotency Key、Optimistic Concurrency、Correlation／Causation ID 與明確 Error Code。
 - 不可只記錄 `latest`；需保存實際使用的 API、Event、Schema、Agent、Prompt、Model、Policy、Speech、RAG、Graph、Export 與 Release Version。
 
@@ -776,6 +779,12 @@ Artifact 名稱須含 run attempt；rerun failed jobs 可沿用同 run／commit 
 - 所有測試資料均為 Synthetic／De-identified。
 
 不要虛構測試結果。
+
+`asyncio_default_fixture_loop_scope="session"` 只設定 fixture，不會把 test body 改成 session loop。
+`committed_session`／`db_session` 及持有它們的 async seed fixture 必須明確使用
+`loop_scope="function"`，讓 setup、測試內 SELECT 所開啟的交易、rollback／close 都留在同一 loop。
+NullPool 只避免閒置連線重用，不能讓持有中的 session 跨 loop。不得靠每個測試尾端補 commit
+掩蓋問題；disposable DB 清理須先釋放連線，再 truncate，且保留原始及清理失敗。
 
 `services/core-api`：
 

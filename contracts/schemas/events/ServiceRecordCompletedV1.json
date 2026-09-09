@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/ServiceRecordCompletedV1.json",
+  "title": "ServiceRecordCompletedV1",
+  "allOf": [
+    {
+      "$ref": "https://kinsun.ai/contracts/schemas/events/DomainEventEnvelopeV1.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "event_type": {
+          "const": "care.service_record.completed.v1"
+        },
+        "classification": {
+          "const": "RESTRICTED"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "service_record_id",
+            "assignment_id",
+            "version",
+            "status"
+          ],
+          "properties": {
+            "service_record_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "assignment_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "version": {
+              "const": 1
+            },
+            "status": {
+              "const": "COMPLETED"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

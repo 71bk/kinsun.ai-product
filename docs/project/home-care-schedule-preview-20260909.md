@@ -1,7 +1,8 @@
 # 居服今日行程最小預覽
 
 日期：2026-09-09。分支：`feat/home-care-schedule`，基於 `origin/main` 的 `8f03402`。
-狀態：本機實作與合成驗證；尚未 commit／push／新 PR CI。不是完整 US-C01 或 production 完成。
+狀態：PR #37 已合併（`5e9f142`），PR CI `34303327254`／main CI `34304691991` 全過。
+下方保留本機驗證與首次 CI 修正歷史；不是完整 US-C01 或 production 完成。
 
 ## 產品決策與邊界
 
