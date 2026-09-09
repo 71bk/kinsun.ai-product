@@ -28,6 +28,8 @@ export interface AssignmentView {
   scheduledEnd: string;
   status: AssignmentStatus;
   scopeCount: number;
+  canReadServiceRecord?: boolean;
+  canWriteServiceRecord?: boolean;
   version: number;
   expiresAt: string;
 }
@@ -40,6 +42,12 @@ function toAssignmentView(assignment: CoreAssignment): AssignmentView {
     scheduledEnd: assignment.scheduled_end,
     status: assignment.status,
     scopeCount: assignment.allowed_data_scopes.length,
+    canReadServiceRecord:
+      assignment.allowed_data_scopes.includes('assignment:read') &&
+      assignment.allowed_data_scopes.includes('service_record:read'),
+    canWriteServiceRecord:
+      assignment.allowed_data_scopes.includes('assignment:read') &&
+      assignment.allowed_data_scopes.includes('service_record:write'),
     version: assignment.version,
     expiresAt: assignment.expires_at,
   };

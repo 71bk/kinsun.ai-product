@@ -3,6 +3,8 @@
 日期：2026-09-09。分支 `feat/assignment-service-record`，基於 `origin/main` 的 `5e9f142`。
 本次是 API／資料層前置實作，供 PR 審查；不是完整 UI、WF-05 或上次服務摘要完成。
 
+以上與下列各節保留當時的實作基線；最新 CI、development migration 與 UI 進度見文末更新。
+
 ## 範圍與規則
 
 依 Spec 06 §6.14、Spec 05 WF-05 與本次 Owner 同意，先保存派案綁定的人工專業紀錄。
@@ -83,3 +85,19 @@ teardown 的 session loop 不同，close／rollback 失敗，未執行 truncate�
 
 技術依據：[pytest-asyncio loop_scope](https://pytest-asyncio.readthedocs.io/en/v0.24.0/reference/decorators/)
 可獨立於 fixture cache scope 設定；全域 fixture loop 預設不會改變 test body 的 loop。
+
+## 合併與 development migration 更新（2026-09-09）
+
+- PR #38 修正 commit `1eaf368` 的 [CI 34316911448](https://github.com/71bk/kinsun.ai-product/actions/runs/34316911448)
+  全部 10 jobs 成功：20 migration、168 integration、91-operation Core live verifier 通過。
+- 合併 commit `9caf7cc` 的 [main CI 34317304938](https://github.com/71bk/kinsun.ai-product/actions/runs/34317304938)
+  亦全部成功；取代前述「DB 待 CI」狀態。
+- Owner 要求繼續後，先讀取 revision、檢查 additive migration，再以 5 秒 lock timeout／
+  60 秒 statement timeout 對 Supabase development 執行 `alembic upgrade e3a5c7d9f102`。
+  讀回 revision、4 個新增欄位與 immutable／updated-at triggers；service_record 筆數前後皆 0。
+  未執行 downgrade、rebuild、backfill、授予既有派案新 scope 或修改 runtime credentials。
+- 現有設定的 DB 連線是高權限 principal，仍有 UPDATE／DELETE／TRUNCATE；不可把
+  migration／trigger 通過當成 runtime least-privilege 已啟用。SELECT／INSERT-only runtime
+  principal 的配置、切換與驗收仍需 Owner 核准，不在此擅自建立角色或撤權。
+- 接續 UI 切片已完成本機測試與 synthetic production-build Browser QA，提交獨立 PR 審查。
+  詳見 [Service record entry UI](service-record-entry-ui-20260909.md)。

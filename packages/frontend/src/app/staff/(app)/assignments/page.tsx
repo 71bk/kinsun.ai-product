@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AssignmentCard } from '@/components/care/AssignmentCard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
@@ -46,6 +46,7 @@ export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<AssignmentView[] | null>(null);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
   const [toastKey, setToastKey] = useState<MessageKey | null>(null);
+  const sequence = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,16 +59,42 @@ export default function AssignmentsPage() {
   }, []);
 
   const load = useCallback(() => {
+    const request = ++sequence.current;
     setAssignments(null);
     setErrorKey(null);
     listAssignments(apiConfig, date)
-      .then(setAssignments)
-      .catch((error) => setErrorKey(assignmentError(error)));
+      .then((result) => {
+        if (request === sequence.current && !document.hidden) setAssignments(result);
+      })
+      .catch((error) => {
+        if (request === sequence.current) setErrorKey(assignmentError(error));
+      });
   }, [apiConfig, date]);
 
   useEffect(() => {
     if (config?.credentialStatus === 'present') load();
+    const visibility = () => {
+      ++sequence.current;
+      setAssignments(null);
+      if (!document.hidden && config?.credentialStatus === 'present') load();
+    };
+    const focus = () => {
+      if (config?.credentialStatus === 'present') load();
+    };
+    document.addEventListener('visibilitychange', visibility);
+    window.addEventListener('focus', focus);
+    return () => {
+      ++sequence.current;
+      document.removeEventListener('visibilitychange', visibility);
+      window.removeEventListener('focus', focus);
+    };
   }, [config?.credentialStatus, load]);
+
+  const onAccessCheck = useCallback(() => {
+    ++sequence.current;
+    setAssignments(null);
+    setErrorKey('error.assignmentAccess');
+  }, []);
 
   if (!config) return null;
   if (config.credentialStatus === 'unavailable') {
@@ -78,11 +105,13 @@ export default function AssignmentsPage() {
   }
 
   async function handleCommand(assignment: AssignmentView, command: 'start' | 'complete') {
+    const request = sequence.current;
     try {
       const updated =
         command === 'start'
           ? await startAssignment(apiConfig, assignment)
           : await completeAssignment(apiConfig, assignment);
+      if (request !== sequence.current || document.hidden) return;
       setAssignments(
         (current) =>
           current?.map((item) => (item.assignmentId === updated.assignmentId ? updated : item)) ??
@@ -90,6 +119,9 @@ export default function AssignmentsPage() {
       );
       setToastKey('toast.assignmentUpdated');
     } catch (error) {
+      if (request !== sequence.current) throw error;
+      if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status))
+        onAccessCheck();
       setErrorKey(assignmentError(error));
       throw error;
     }
@@ -132,6 +164,8 @@ export default function AssignmentsPage() {
               assignment={assignment}
               key={assignment.assignmentId}
               onCommand={handleCommand}
+              config={apiConfig}
+              onAccessCheck={onAccessCheck}
             />
           ))}
         </div>

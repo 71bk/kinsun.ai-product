@@ -312,6 +312,9 @@ Wave 順序：
 - SQLAlchemy development `echo` 也不得輸出 bind parameter；engine 必須維持
   `hide_parameters=True`，避免 Email、credential hash、token digest 或其他 Restricted Data
   因本機 SQL diagnostics 寫入 log。
+- 手動 DB 檢查也用 `app.database_url.to_psycopg_database_url`，不可只替換 driver 字串；
+  asyncpg 的 `ssl` 需轉成 psycopg 的 `sslmode`。Alembic revision 表位於 `public.alembic_version`，
+  不要因 domain schema 是 `eldercare_ai` 就猜測版本表位置；錯誤只輸出類型／SQLSTATE，不印 DSN。
 - 一般 log 不得出現 `str(exc)`、`exc_info=True`、`traceback.format_exc()` 或任何 DSN。
   2026-09-02 起 core-api 由 `app/core/log_safety.py` 統一處理：一般 log 只留 exception type、
   內部 code 與 correlation ID；traceback 一律送 `app.diagnostics`（`propagate=False` ＋
