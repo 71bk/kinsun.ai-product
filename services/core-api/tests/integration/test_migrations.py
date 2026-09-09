@@ -67,7 +67,7 @@ _TOTAL_HEAD_TABLE_COUNT = 67
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "d1f3a5c7e9b0"
+_HEAD_REVISION = "e3a5c7d9f102"
 
 
 def _get_alembic_config() -> Config:
@@ -300,6 +300,36 @@ async def test_upgrade_from_empty_to_head(test_engine):
             {"schema": SCHEMA_NAME},
         )
         assert tombstone_result.scalar_one_or_none() == "deletion_tombstone"
+
+
+@pytest.mark.asyncio
+async def test_service_record_schema_is_immutable_and_unique(test_engine):
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+        columns = await conn.run_sync(_get_columns, "service_record")
+        unique = await conn.run_sync(_get_unique_constraints, "service_record")
+        indexes = await conn.run_sync(_get_indexes, "service_record")
+        trigger = await conn.scalar(
+            text(
+                "SELECT count(*) FROM pg_trigger WHERE tgrelid = "
+                "'eldercare_ai.service_record'::regclass "
+                "AND tgname = 'trg_service_record_immutable'"
+            )
+        )
+    assert {
+        "assignment_id",
+        "tenant_id",
+        "elder_id",
+        "worker_actor_id",
+        "content",
+        "service_date",
+        "assignment_version",
+        "completed_at",
+    } <= set(columns)
+    assert "updated_at" in columns  # Preserve the baseline; v1 does not allow updates.
+    assert "uq_service_record" in unique
+    assert "uq_service_record_single_note" in indexes
+    assert trigger == 1
 
 
 @pytest.mark.asyncio

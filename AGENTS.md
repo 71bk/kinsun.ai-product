@@ -418,6 +418,9 @@ ADR 0019 退役。
 - 正式 Event 發布後視為不可變歷史契約；破壞性變更建立新 `event_version`。
 - Consumer 先支援新舊版本，Producer 才切換。
 - Database 變更採 Expand → Migrate → Contract。
+- 新功能沒有 ORM 不代表沒有表；先查 frozen baseline 的 `.sql`，不能只搜尋 migration `.py`。
+  `service_record` 原已存在（JSONB content、`worker_actor_id`、DRAFT default、updated_at）；
+  新 API 必須 additive 擴充並隔離 legacy rows，不可重建表或把舊內容自動當成正式 v1 紀錄。
 - 使用 Idempotency Key、Optimistic Concurrency、Correlation／Causation ID 與明確 Error Code。
 - 不可只記錄 `latest`；需保存實際使用的 API、Event、Schema、Agent、Prompt、Model、Policy、Speech、RAG、Graph、Export 與 Release Version。
 

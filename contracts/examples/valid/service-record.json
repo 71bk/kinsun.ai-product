@@ -1,0 +1,21 @@
+{
+  "data": {
+    "service_record_id": "10000000-0000-4000-a000-000000000001",
+    "assignment_id": "20000000-0000-4000-a000-000000000001",
+    "elder_id": "30000000-0000-4000-a000-000000000001",
+    "worker_id": "40000000-0000-4000-a000-000000000001",
+    "service_date": "2026-09-09",
+    "service_timezone": "Asia/Taipei",
+    "record_type": "SERVICE_NOTE",
+    "content": "Synthetic professional service note.",
+    "status": "COMPLETED",
+    "version": 1,
+    "assignment_version": 2,
+    "created_at": "2026-09-09T02:00:00Z",
+    "completed_at": "2026-09-09T02:00:00Z"
+  },
+  "meta": {
+    "correlation_id": "synthetic-service-record",
+    "timestamp": "2026-09-09T02:00:00Z"
+  }
+}

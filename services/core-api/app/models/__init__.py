@@ -54,6 +54,7 @@ from app.models.pending_identity import PendingExternalIdentity  # noqa: F401
 from app.models.policy import PolicyRegistry  # noqa: F401
 from app.models.report import FamilyRelationship, FamilyReport, ReportVersion  # noqa: F401
 from app.models.safety import SafetyEvaluation  # noqa: F401
+from app.models.service_record import ServiceRecord  # noqa: F401
 from app.models.summary import DailySummary, SummaryVersion  # noqa: F401
 from app.models.tenant import Tenant  # noqa: F401
 from app.models.transcript import TranscriptVersion  # noqa: F401

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateServiceRecordRequestV1.json",
+  "title": "CreateServiceRecordRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "expected_assignment_version",
+    "content"
+  ],
+  "properties": {
+    "expected_assignment_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "record_type": {
+      "type": "string",
+      "const": "SERVICE_NOTE",
+      "default": "SERVICE_NOTE"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "pattern": "\\S"
+    }
+  }
+}

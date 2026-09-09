@@ -51,6 +51,7 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "review_decision": _APPEND_ONLY,
     "safety_evaluation": _APPEND_ONLY,
     "summary_version": _APPEND_ONLY,
+    "service_record": _APPEND_ONLY,
     # Mutable application-owned state.  DELETE remains denied.
     "agent_run": _READ_WRITE,
     "asr_gate_evidence": _READ_WRITE,
@@ -252,6 +253,7 @@ RUNTIME_COLUMN_UPDATE_PRIVILEGES: dict[str, tuple[str, ...]] = {
 # These assertions are part of the security contract and are also exercised against
 # PostgreSQL by the integration suite.
 PROTECTED_TABLE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
+    "service_record": ("UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"),
     "audit_record": ("SELECT", "INSERT", "UPDATE", "DELETE"),
     "consent_grant": ("DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"),
     "idempotency_record": ("TRUNCATE", "REFERENCES", "TRIGGER"),

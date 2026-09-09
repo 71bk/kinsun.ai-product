@@ -24,9 +24,13 @@ PR #34 合併，PR／main CI 均成功（[Pending review report](../project/dash
 （[Interaction metrics report](../project/dashboard-interaction-metrics-20260908.md)）。今日摘要狀態＋日期入口
 已隨 PR #36 合併（`8f03402`），PR CI `34210026829`／main CI `34211153156` 全過
 （[Summary status report](../project/dashboard-summary-status-20260908.md)）。居服今日最小行程預覽
-已本機實作；服務前僅姓名／時段／狀態，不提前開放摘要／事件，新 DB 案例仍待 CI
+已隨 PR #37 合併（`5e9f142`），PR／main CI 全過；服務前僅姓名／時段／狀態，不提前開放摘要／事件
 （[Schedule preview report](../project/home-care-schedule-preview-20260909.md)）。上次服務摘要與完整 overview 仍未完成。詳細範圍與證據見
 [Wave 2 traceability](../../.kiro/specs/wave-2-caregiver-loop/traceability.md)。
+
+2026-09-09 上次服務摘要之前置：派案服務紀錄 Core API 第一切片已本機實作，沿用既有
+baseline 表並 additive 擴充；UI、完成派案整合及上次服務摘要尚未實作，新 DB 案例待 CI。
+見 [Service record report](../project/assignment-service-record-20260909.md)。
 
 ## 工作表：00_總覽
 

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ServiceRecordV1.json",
+  "title": "ServiceRecordV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "service_record_id",
+    "assignment_id",
+    "elder_id",
+    "worker_id",
+    "service_date",
+    "service_timezone",
+    "record_type",
+    "content",
+    "status",
+    "version",
+    "assignment_version",
+    "created_at",
+    "completed_at"
+  ],
+  "properties": {
+    "service_record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "elder_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "worker_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "service_timezone": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "record_type": {
+      "type": "string",
+      "const": "SERVICE_NOTE"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "status": {
+      "type": "string",
+      "const": "COMPLETED"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "assignment_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

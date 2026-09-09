@@ -35,6 +35,11 @@ operations:
       $ref: "#/components/schemas/EventDeliveryFailureV1"
 components:
   messages:
+    ServiceRecordCompletedV1:
+      name: ServiceRecordCompletedV1
+      title: Formal professional service record completed (not assignment completion)
+      payload:
+        $ref: "../schemas/events/ServiceRecordCompletedV1.json"
     DomainEventV1:
       name: DomainEventV1
       title: Core domain event

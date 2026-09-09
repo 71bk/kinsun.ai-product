@@ -393,6 +393,8 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
+- 無 ORM 的功能可能已有 baseline SQL 表；`service_record` 就是 JSONB、worker_actor_id 的
+  既有表。建模前查 `.sql`；只做 additive migration，legacy rows 不自動提升為正式 v1。
 - 不執行 `git reset --hard`、`git checkout --` 覆蓋變更，不直接 push `main`。
 - Claude 執行 Git commit 時只寫本次變更的 subject／body；不得自行加入 `Co-Authored-By`、
   `Claude-Session`、`Generated-By` 或任何 AI／工具協作者署名與追蹤連結，除非使用者明確要求。

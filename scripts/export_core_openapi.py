@@ -39,6 +39,7 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "CreateServiceRecordRequest": "domain/CreateServiceRecordRequestV1.json",
     "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
     "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
     "CreateFamilyInvitationRequest": "domain/CreateFamilyInvitationRequestV1.json",
@@ -88,6 +89,8 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "create_service_record_api_v1_home_care_assignments__assignment_id__service_record_post": "ServiceRecordEnvelopeV1",
+    "get_service_record_api_v1_home_care_assignments__assignment_id__service_record_get": "ServiceRecordEnvelopeV1",
     "home_care_schedule_api_v1_me_home_care_schedule_get": "HomeCareScheduleEnvelopeV1",
     "register_agent_run_api_v1_internal_agent_runs_post": (
         "AgentRunRegistrationEnvelopeV1"
