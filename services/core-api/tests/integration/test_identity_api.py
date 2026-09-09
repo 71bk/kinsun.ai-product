@@ -469,7 +469,7 @@ def api_ids():
     }
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def seed_api_data(committed_session, api_ids):
     """Seed the database with data for API integration tests.
 

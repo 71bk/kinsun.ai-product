@@ -780,6 +780,12 @@ Artifact 名稱須含 run attempt；rerun failed jobs 可沿用同 run／commit 
 
 不要虛構測試結果。
 
+`asyncio_default_fixture_loop_scope="session"` 只設定 fixture，不會把 test body 改成 session loop。
+`committed_session`／`db_session` 及持有它們的 async seed fixture 必須明確使用
+`loop_scope="function"`，讓 setup、測試內 SELECT 所開啟的交易、rollback／close 都留在同一 loop。
+NullPool 只避免閒置連線重用，不能讓持有中的 session 跨 loop。不得靠每個測試尾端補 commit
+掩蓋問題；disposable DB 清理須先釋放連線，再 truncate，且保留原始及清理失敗。
+
 `services/core-api`：
 
 ```powershell

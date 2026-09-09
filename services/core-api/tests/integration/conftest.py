@@ -20,7 +20,6 @@ from collections.abc import AsyncGenerator
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -28,7 +27,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from app.db.base import Base
 from app.db.session import get_db_engine
 from app.main import create_app
 from app.middleware.auth import (
@@ -36,6 +34,7 @@ from app.middleware.auth import (
     FakeAuthenticator,
     get_authenticator,
 )
+from tests.committed_session import committed_session_scope
 
 # On Windows, asyncio defaults to ProactorEventLoopPolicy. Combined with
 # asyncpg + SQLAlchemy's greenlet-based async bridging across many fixtures
@@ -86,17 +85,10 @@ def _sync_url(async_url: str) -> str:
 async def test_engine():
     """Create an async engine connected to the test database.
 
-    Uses NullPool: every checkout opens a genuinely fresh asyncpg connection
-    and every checkin closes it, rather than reusing one from a pool. The
-    app's `RequestLoggerMiddleware` is a Starlette `BaseHTTPMiddleware`,
-    which runs the actual endpoint in a separate anyio task from the
-    outer request task; a pooled asyncpg connection checked out across that
-    boundary intermittently raises `RuntimeError: Future ... attached to a
-    different loop` / `InterfaceError: another operation is in progress`
-    even though everything runs on the same session-scoped event loop. Since
-    app/middleware/logging.py cannot be edited from tests/, NullPool avoids
-    the failure class entirely by never handing out a connection that was
-    established under a different task context.
+    NullPool prevents idle connections from being reused across test loops.
+    It does not make a checked-out connection or live AsyncSession safe to
+    move between loops. Fixtures sharing sessions with test bodies therefore
+    use explicit function loops, including their dependent seed fixtures.
     """
     engine = create_async_engine(get_test_database_url(), echo=False, poolclass=NullPool)
     yield engine
@@ -160,10 +152,9 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     Ensures complete test isolation — no data persists between tests.
 
     Deliberately does NOT depend on the session-scoped `test_engine` fixture.
-    `db_session` yields its live connection straight to the test body (unlike
-    `committed_session`, which the test body never touches directly — see its
-    docstring), so setup and the test's own repository calls must run in the
-    same task context. When this used the shared session-scoped engine,
+    Both `db_session` and `committed_session` yield live sessions to test
+    bodies, so setup, repository calls, and teardown must run on the same
+    event loop. When this used the shared session-scoped engine,
     running the full integration suite (as opposed to this file alone) could
     raise `RuntimeError: ... attached to a different loop`. This fixture uses
     an explicit function-scoped loop because its live session is consumed by
@@ -188,54 +179,22 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 # ─── committed_session for tests needing visible committed data ──────────────
 
 
-@pytest_asyncio.fixture
-async def committed_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    """Session that commits data — for tests needing cross-connection visibility.
+@pytest_asyncio.fixture(loop_scope="function")
+async def committed_session() -> AsyncGenerator[AsyncSession, None]:
+    """Function-loop session, also consumed by function-loop seed fixtures.
 
-    Performs explicit cleanup by truncating all user tables after the test.
+    A dedicated NullPool engine is created and disposed on that same loop.
+    Committed rows are visible to request connections; cleanup always ends
+    the session transaction before truncating the disposable test tables.
     """
-    factory = async_sessionmaker(test_engine, expire_on_commit=False)
-    session = factory()
+    engine = create_async_engine(
+        get_test_database_url(), echo=False, hide_parameters=True, poolclass=NullPool
+    )
     try:
-        yield session
+        async with committed_session_scope(engine) as session:
+            yield session
     finally:
-        await session.close()
-        # Cleanup: truncate all tables that are part of our metadata AND
-        # actually exist right now.
-        #
-        # Every table lives in the `eldercare_ai` schema (see app/db/base.py's
-        # Base.metadata = MetaData(schema=SCHEMA_NAME)), which is NOT on the
-        # default connection search_path (just "$user", public) — table.name
-        # alone ("outbox_event") does not resolve. table.fullname includes
-        # the schema qualifier ("eldercare_ai.outbox_event").
-        #
-        # The existence check matters because Base.metadata is process-wide:
-        # test_property_outbox_atomicity.py / test_property_tenant_scope.py
-        # define their own throwaway entities as subclasses of BaseModel,
-        # which registers their tables on this SAME Base.metadata as soon as
-        # those modules are merely *imported* (pytest collects every test
-        # file up front) — regardless of whether their own module-scoped
-        # fixture has created (or has already dropped) those tables yet. An
-        # unconditional TRUNCATE would fail with UndefinedTableError whenever
-        # this fixture's cleanup runs before/after that table's brief
-        # lifetime.
-        async with test_engine.begin() as conn:
-            existing = {
-                row[0]
-                for row in await conn.execute(
-                    text(
-                        "SELECT table_name FROM information_schema.tables "
-                        "WHERE table_schema = 'eldercare_ai'"
-                    )
-                )
-            }
-            tables_to_truncate = [
-                table.fullname for table in Base.metadata.sorted_tables if table.name in existing
-            ]
-            if tables_to_truncate:
-                await conn.execute(
-                    text("TRUNCATE TABLE " f"{', '.join(tables_to_truncate)} CASCADE")
-                )
+        await engine.dispose()
 
 
 # ─── Test actor context ──────────────────────────────────────────────────────

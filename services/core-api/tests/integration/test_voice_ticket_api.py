@@ -53,7 +53,7 @@ def voice_ids() -> dict[str, UUID]:
     }
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def voice_data(committed_session, voice_ids):
     ids = voice_ids
     now = datetime.now(UTC)

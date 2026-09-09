@@ -223,6 +223,11 @@
 
 ## 驗證矩陣
 
+Async fixture 的預設 session loop 不會改變 test body 的 function loop。`committed_session`、
+`db_session` 及相依 async seed fixture 必須顯式 `loop_scope="function"`；SELECT 也會開啟交易，
+須在同一 loop rollback／close 後才清理 disposable DB。NullPool 不能修復持有中的跨 loop session；
+不得靠測試尾端 commit 或重跑掩蓋，清理失敗也不能吞掉原始測試錯誤。
+
 Core `error_handlers` 以 exact exception type 查 status／reason mapping；DB optimistic write
 拋出的 `OptimisticConcurrencyError` 必須明確登記為 409／`VERSION_OR_IDEMPOTENCY_CONFLICT`。
 只登記父類 `ConflictError` 不會套用到子類；用 mock 代替 DB update 會漏掉這個競爭失敗路徑。

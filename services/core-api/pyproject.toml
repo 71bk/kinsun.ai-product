@@ -50,9 +50,9 @@ package = false
 [tool.pytest.ini_options]
 testpaths = ["tests/unit", "tests/integration"]
 asyncio_mode = "auto"
-# pytest-asyncio 0.24 起，自訂 event_loop fixture 已棄用。改用這兩個設定讓
-# session-scoped 的 engine fixture 與測試跑在同一個 loop，否則 asyncpg 連線會
-# 出現 "attached to a different loop"。
+# This default applies to fixtures, not test bodies (which use function loops).
+# Fixtures that share live sessions with tests, including their seed fixtures,
+# must explicitly use loop_scope="function". Do not override event_loop.
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff]

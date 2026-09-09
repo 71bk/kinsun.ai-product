@@ -63,3 +63,23 @@ Actor／Tenant／Elder／CareUnit，以及有效同角色 membership（含 care-
 
 下一步：先 CI／migration 驗證，再接紀錄 UI、完成派案整合，最後提供上次已完成派案摘要；
 歷史查詢需另定同機構／當前服務授權，不以最近每日摘要猜測服務歸屬。
+
+## PR #38：DB fixture lifecycle 修正
+
+首輪 CI `34308417396` migration 成功，但 integration 為 `164 passed, 2 errors`：
+legacy 紀錄測試最後 SELECT 留下交易；test body 的 function loop 與 committed_session
+teardown 的 session loop 不同，close／rollback 失敗，未執行 truncate，下一個案例 seed 才主鍵重複。
+這不是 migration 或 Supabase 連線故障，aggregate 是正常阻擋失敗 worker。
+
+- committed_session 改成 function loop，專屬 NullPool engine 也在同 loop 建立／釋放。
+  identity、care-action、voice、negative-authorization 四個 async seed fixtures 同步對齊。
+- 清理順序為 rollback、close、必要時 invalidate，確認釋放後才清理測試表；錯誤不吞掉，
+  無法釋放時不冒險執行 truncate；truncate 加 5 秒 lock timeout 防止無限等待。
+- 新增 9 個 DB-free cases 與 3 個 PostgreSQL cases：開啟中的 SELECT 交易、固定主鍵隔離、
+  body 失敗後清理、清理故障回報，以及相依 fixture loop 的結構回歸。
+- 本機 Core 全套 `1255 passed`，Ruff lint／format 通過；全 integration 共 188 cases 已收集，
+  實際 DB 驗證交由修正後 CI。
+  不新增 retry／skip、不改 production API、migration 或業務授權，也不碰 Supabase 資料。
+
+技術依據：[pytest-asyncio loop_scope](https://pytest-asyncio.readthedocs.io/en/v0.24.0/reference/decorators/)
+可獨立於 fixture cache scope 設定；全域 fixture loop 預設不會改變 test body 的 loop。
