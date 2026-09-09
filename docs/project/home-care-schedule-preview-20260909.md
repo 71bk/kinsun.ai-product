@@ -65,6 +65,15 @@ Server 在下一次 request 即排除取消、到期或撤權派案。Browser �
 
 ## 後續
 
+### PR #37 CI 修正紀錄
+
+首次 CI `34302409354` 的 Core integration 為 `158 passed / 4 failed`；四個 schedule
+參數案例都在最後的角色拒絕斷言預期 403，但既有 `AuthorizationDeniedError` 映射是 404。
+前面的行程、分頁、取消與失效檢查已執行通過；aggregate 因 core-db failure 正確阻擋。
+修正斷言並驗證 `RESOURCE_NOT_FOUND_OR_FORBIDDEN`，補 OpenAPI 404；不更動 runtime
+權限邏輯。既有 5 個角色單元案例擴充真實 router／error handler 的 DB-free HTTP 檢查，
+schedule unit `9 passed`。修正後完整 DB 結果仍以新 CI 為準。
+
 既有 `/home-care/assignments` 的日期／清單與 command UI 保持不變，不以本次窄預覽證據宣稱
 完整派案中心已收斂。上次服務摘要、自動排程／發布、完整 US-C01／US-B02 仍待後續。
 原有 14 個 schema dirty files 與其他 QA artifacts 保留、不納入本次交付。

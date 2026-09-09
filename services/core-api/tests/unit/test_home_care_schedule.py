@@ -5,11 +5,17 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.dialects import postgresql
 
+from app.api.error_handlers import register_exception_handlers
+from app.api.identity import router
 from app.core.auth import ActorContext
 from app.core.cursor import encode_cursor
 from app.core.exceptions import AuthorizationDeniedError, ValidationError
+from app.db.session import get_db_session
+from app.middleware.actor_guard import require_active_actor
 from app.repositories.home_care_schedule_repo import HomeCareScheduleRepository
 from app.services.home_care_schedule_service import get_home_care_schedule
 
@@ -20,14 +26,28 @@ from app.services.home_care_schedule_service import get_home_care_schedule
 )
 async def test_other_roles_do_not_query(role):
     session = AsyncMock()
+    actor = ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role=role)
     with pytest.raises(AuthorizationDeniedError):
         await get_home_care_schedule(
             session,
-            ActorContext(actor_id=uuid4(), tenant_id=uuid4(), actor_role=role),
+            actor,
             datetime.now(UTC),
             None,
             20,
         )
+    session.execute.assert_not_awaited()
+
+    # Exercise the actual route/error mapper without needing a database.
+    app = FastAPI()
+    app.include_router(router)
+    register_exception_handlers(app)
+    app.dependency_overrides[require_active_actor] = lambda: actor
+    app.dependency_overrides[get_db_session] = lambda: session
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/me/home-care-schedule")
+    assert response.status_code == 404
+    assert response.json()["error"]["reason_code"] == "RESOURCE_NOT_FOUND_OR_FORBIDDEN"
+    assert "data" not in response.json()
     session.execute.assert_not_awaited()
 
 

@@ -465,6 +465,9 @@ contracts/
   上述適用 JSON Schema；既有 OpenAPI exporter／validator 則以文件相對路徑
   `../schemas/...` 解析外部 response schema，新增 OpenAPI operation 應沿用此慣例，
   不可直接套用 JSON Schema 的絕對 `$id` 規則。
+- HTTP 拒絕狀態須依 `app/api/error_handlers.py` 的實際映射驗證：
+  `AuthorizationDeniedError` 是隱藏資源存在的 404，不是一般角色拒絕的 403。
+  新 endpoint 應補不依賴 DB 的 route／error-handler 回歸，並同步 OpenAPI error response。
 - JSON 欄位 snake_case；REST 路徑複數名詞、kebab-case；時間 ISO 8601 UTC。
 - ID 一律 UUID，不得暴露遞增流水號。
 

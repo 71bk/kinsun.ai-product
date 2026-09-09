@@ -188,6 +188,8 @@
 
 - JSON Schema 的跨檔 `$ref` 用絕對 `$id`；OpenAPI 外部 response schema 則沿用
   exporter／validator 的 `../schemas/...` 文件相對路徑，不要混用兩套解析慣例。
+- Core `AuthorizationDeniedError` 經 HTTP error handler 回傳 404（隱藏資源存在），
+  不要僅依「角色拒絕」推測 403；測試與 OpenAPI 須對齊，補 DB-free HTTP 回歸。
 
 - 靜態 validator 的一般 domain example mapping 取 envelope `data`；invalid example 也要沿用
   `data`／`meta` 與頂層 `_why_invalid`。裸 payload 的 `KeyError: data` 不算 schema 拒絕通過。

@@ -187,7 +187,10 @@ async def test_home_care_schedule_preview_is_not_elder_authorization(
     ]:
         app = _build_client_app(test_engine, ids[key], role, ids["tenant_id"])
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            assert (await client.get("/api/v1/me/home-care-schedule")).status_code == 403
+            # AuthorizationDeniedError hides resource existence through the HTTP mapper.
+            response = await client.get("/api/v1/me/home-care-schedule")
+            assert response.status_code == 404
+            assert response.json()["error"]["reason_code"] == "RESOURCE_NOT_FOUND_OR_FORBIDDEN"
 
 
 # ─── Helper: build client with custom ActorContext ───────────────────────────

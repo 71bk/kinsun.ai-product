@@ -475,6 +475,7 @@
           "200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"../schemas/common/HomeCareScheduleEnvelopeV1.json"}}}},
           "401":{"$ref":"#/components/responses/Unauthorized"},
           "403":{"$ref":"#/components/responses/Forbidden"},
+          "404":{"$ref":"#/components/responses/NotFoundOrForbidden"},
           "422":{"$ref":"#/components/responses/ValidationFailed"},
           "503":{"$ref":"#/components/responses/Unavailable"}
         },
