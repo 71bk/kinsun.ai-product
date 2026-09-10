@@ -252,6 +252,9 @@ detection，保留新舊路徑；不能用 HEAD~1 或截斷的 files API，也�
 suffix 隔離。Artifact 名稱含 run attempt，failed-jobs rerun 可沿用同 run／commit 的先前成功
 worker metrics。Aggregate 不等於已啟用 branch protection，也不是部署 E2E 證據。
 
+法規修復稽核會雜湊 Core `app/rag_*`、`test_rag_*`、`test_law_*`，因此這些變更也必須選取
+RAG／Agent jobs；提交前跑 CI instrumentation／impact 測試，不能只驗證服務測試。
+
 只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
 
 ### Core API
@@ -395,7 +398,17 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不因 route 或 optional provider adapter 存在，就宣稱功能已啟用、已部署或 production-ready。
 - 不把 Memory API 當成 Agent Context、不把 RAG retrieval 當成 projection、不把 notification README
   當成 worker deployment。
+- RAG `NO_DATA` 要分開檢查 live projection 封鎖、policy eligibility 與 ranking；本機補齊
+  assessment 不會解除遠端 `retrieval_eligible=false`。同步預覽不等於外部寫入授權，
+  immutable release 的 metadata 變更也不能沿用舊 record／candidate hashes。
+  參考 `docs/project/rag-law-governance-sync-plan-20260909.md` 的唯讀證據與 successor 計畫。
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
+- 本機啟動器必須支援 dotenv 變數展開，不能把 `RAG_DATABASE_URL=${DATABASE_URL}` 原樣寫進
+  process environment。BFF 登入測試使用 `strictRelativeReturnTo` 的既有 allowlist，不猜返回路徑。
+- RAG 最終回歸須先凍結 `.gitattributes`，執行期間不修改 LF 規則或其他驗證輸入；打包後雜湊漂移
+  會使 deterministic rebuild 測試正確失敗，必須保留證據並在輸入穩定後重跑。
+  根目錄 `.gitattributes` 本身受歷史 acceptance v006 雜湊保護；新 LF 規則使用子目錄層級檔案，
+  不覆寫根目錄或歷史核准紀錄。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
 - 手動 DB 檢查沿用 `to_psycopg_database_url`（包含 ssl→sslmode），不要只替換 driver；

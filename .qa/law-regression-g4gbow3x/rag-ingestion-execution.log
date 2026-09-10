@@ -1,0 +1,8 @@
+........................................................................ [ 21%]
+........................................................................ [ 43%]
+........................................................................ [ 65%]
+........................................................................ [ 87%]
+........................................                                 [100%]
+- generated xml file: D:\Hackthon\kinsun.ai\.qa\law-regression-g4gbow3x\rag-ingestion.xml -
+328 passed in 401.10s (0:06:41)
+warning: `VIRTUAL_ENV=services\core-api\.venv` does not match the project environment path `services\rag-ingestion\.venv` and will be ignored; use `--active` to target the active environment instead

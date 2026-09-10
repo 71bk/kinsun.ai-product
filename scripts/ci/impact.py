@@ -12,7 +12,7 @@ from pathlib import Path
 
 from telemetry import identity, write_json
 
-POLICY_VERSION = 1
+POLICY_VERSION = 2
 EXPECTED_JOBS = (
     "core-fast",
     "core-db",
@@ -30,6 +30,16 @@ SPEECH = CORE | {"speech-quality", "agent-quality"}
 # Service prefixes include the trailing slash; RAG data additionally uses versioned names.
 RULES = (
     ("core", ("services/core-api/",), CORE | {"speech-quality"}),
+    # Law-repair governance audits also hash Core importers and their unit tests.
+    (
+        "core-rag",
+        (
+            "services/core-api/app/rag_",
+            "services/core-api/tests/unit/test_rag_",
+            "services/core-api/tests/unit/test_law_",
+        ),
+        RAG,
+    ),
     # RAG governance hashes Agent implementation/tests as inputs, not just RAG files.
     ("agent", ("services/agent-runtime/",), RAG),
     ("speech", ("services/speech-gateway/", "evals/speech/"), SPEECH),

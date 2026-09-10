@@ -144,6 +144,24 @@ class ImpactTests(unittest.TestCase):
         ):
             self.assertEqual(self.selected(path), set(EXPECTED_JOBS), path)
 
+    def test_core_rag_audit_inputs_include_rag_and_agent_without_frontend(self):
+        for path in (
+            "services/core-api/app/rag_projection_importer.py",
+            "services/core-api/app/rag_embedding_importer.py",
+            "services/core-api/app/rag_embedding_reuse_preflight.py",
+            "services/core-api/tests/unit/test_law_governance_preview.py",
+            "services/core-api/tests/unit/test_law_repair_candidate.py",
+            "services/core-api/tests/unit/test_law_repair_sync.py",
+            "services/core-api/tests/unit/test_rag_embedding_reuse_preflight.py",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    self.selected(path), set(EXPECTED_JOBS) - {"frontend-quality"}
+                )
+                plan = plan_for([path])
+                self.assertIn("core-rag", plan["reasons"]["rag-quality"])
+                validate_plan(plan, "pull_request", "run", "a" * 40, 1)
+
     def test_docs_allowlist_is_narrow_and_union_never_suppresses_code(self):
         for path in (
             "docs/spec/故事.md",

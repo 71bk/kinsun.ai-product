@@ -410,7 +410,19 @@ ADR 0019 退役。
   Verified care data／Graph 仍未接入 Agent Context。
 - 每次重要 Agent 執行需能追溯實際的 Agent、Prompt、Model route、Policy、Guardrail、Tool schema、Context manifest 與 Release Version。
 - RAG 必須保存來源、版本、有效日期、覆核狀態與 Metadata Filter；沒有可靠來源時明確回覆資料不足。
+- RAG `NO_DATA` 先核對 live projection 的 `retrieval_eligible`／block reasons，不得只憑本機
+  runtime policy 已補 metadata 就判定為排序問題。2026-09-09 法規唯讀預覽發現本機 assessment
+  overlay 與遠端缺失封鎖並存；既有 acceptance 的 `external_sync=NOT_AUTHORIZED` 仍須尊重。
+  不可直接改 immutable release rows 卻沿用原 record／candidate hashes；同步前先產生差異、
+  另取外部寫入授權並設計 successor／安全回復。見 `docs/project/rag-law-governance-sync-plan-20260909.md`。
 - LLM-as-Judge 不得覆蓋 Deterministic Security／Schema／Permission Gate。
+- 本機啟動器不得用逐行 split 取代 dotenv：`RAG_DATABASE_URL=${DATABASE_URL}` 需要變數展開，
+  否則 shell 環境中的字面值會蓋過正確設定，導致 `staging_rag_unavailable`。
+  BFF 登入測試的 `returnTo` 必須取自 `strictRelativeReturnTo` allowlist；拒絕任意路徑不是密碼錯誤。
+- RAG 打包回歸會把 `.gitattributes` 納入輸入雜湊；最終驗證期間不可同時修改它或其他測試輸入。
+  提交前補 LF 規則也須在凍結／collection 之前完成，否則應保留失敗證據並重新完整驗證。
+  根目錄 `.gitattributes` 亦被歷史 acceptance v006 固定；新檔案的 LF 規則放在適用子目錄，
+  不改寫根目錄檔案或舊 acceptance 來通過測試。
 
 ## 8. API、Event 與版本規則
 
@@ -760,6 +772,8 @@ changes 與選定 worker 必須 success 並有 metrics；只有有效、同 run�
 未知路徑／無法取得完整 diff 回退全跑；不得用 workflow-level paths filter 消除 aggregate。
 新增檔案或跨服務依賴時同步影響規則與測試。RAG governance 的 hash inputs 含 Agent 程式／
 測試與 `docs/project/rag-v3-public-retrieval-plan.md`，不能只按副檔名或單服務目錄略過。
+法規修復稽核亦包含 Core `app/rag_*`、`test_rag_*` 與 `test_law_*`；這些路徑須觸發 RAG／Agent
+驗證。開 PR 前另跑 `scripts/ci/test_*.py`，不能只靠各服務 pytest 通過推定影響規則完整。
 PR 使用 merge-base→head 的 NUL-delimited Git diff，停用 rename detection 以納入新舊路徑；
 不能只比 HEAD~1 或用可能截斷的 PR files API。純文件白名單也必須過 CI 規則與 diff 檢查。
 只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready` 也依賴 DB，不可移到無 DB job。

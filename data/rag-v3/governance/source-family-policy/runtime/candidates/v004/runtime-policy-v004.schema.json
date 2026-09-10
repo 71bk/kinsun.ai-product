@@ -1,0 +1,895 @@
+{
+  "$defs": {
+    "RuntimeCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_version": {
+          "const": "v003",
+          "title": "Artifact Version",
+          "type": "string"
+        },
+        "direct_official_source_url": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Direct Official Source Url"
+        },
+        "direct_source_url": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Direct Source Url"
+        },
+        "is_official_source": {
+          "const": true,
+          "title": "Is Official Source",
+          "type": "boolean"
+        },
+        "last_verified_at": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Verified At"
+        },
+        "official_source_page_url": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Official Source Page Url"
+        },
+        "physical_page_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Physical Page End"
+        },
+        "physical_page_start": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Physical Page Start"
+        },
+        "printed_page_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Printed Page End"
+        },
+        "printed_page_start": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Printed Page Start"
+        },
+        "production_approved": {
+          "const": false,
+          "title": "Production Approved",
+          "type": "boolean"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published At"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Publisher"
+        },
+        "review_status": {
+          "const": "verified",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "section": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        },
+        "source_locator": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Source Locator",
+          "type": "string"
+        },
+        "source_page_updated_at": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Page Updated At"
+        },
+        "source_page_url": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Page Url"
+        },
+        "source_version": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Version"
+        },
+        "source_version_date": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Version Date"
+        },
+        "title": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "version_published_at": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version Published At"
+        }
+      },
+      "required": [
+        "artifact_version",
+        "title",
+        "publisher",
+        "section",
+        "physical_page_start",
+        "physical_page_end",
+        "printed_page_start",
+        "printed_page_end",
+        "source_locator",
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+        "is_official_source",
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+        "review_status",
+        "production_approved"
+      ],
+      "title": "RuntimeCitation",
+      "type": "object"
+    },
+    "RuntimePolicyChunkV2": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_allowed_purposes": {
+          "items": {
+            "enum": [
+              "care_record",
+              "care_summary",
+              "evaluation",
+              "explainable_evidence",
+              "form_reference",
+              "general_information",
+              "health_education",
+              "human_administered_assessment_design",
+              "legal_reference",
+              "manual_review",
+              "research_reference",
+              "resource_navigation",
+              "safety_routing",
+              "scale_explanation",
+              "source_lookup"
+            ],
+            "type": "string"
+          },
+          "title": "Chunk Allowed Purposes",
+          "type": "array"
+        },
+        "chunk_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "citation": {
+          "$ref": "#/$defs/RuntimeCitation"
+        },
+        "effective_risk_level": {
+          "enum": [
+            "low",
+            "medium"
+          ],
+          "title": "Effective Risk Level",
+          "type": "string"
+        },
+        "embedding_text_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Embedding Text Sha256",
+          "type": "string"
+        },
+        "prior_chunk_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Prior Chunk Id",
+          "type": "string"
+        },
+        "requires_official_assessment": {
+          "title": "Requires Official Assessment",
+          "type": "boolean"
+        },
+        "requires_professional_assessment": {
+          "title": "Requires Professional Assessment",
+          "type": "boolean"
+        },
+        "retrieval_audiences": {
+          "items": {
+            "enum": [
+              "elder",
+              "family_caregiver",
+              "care_professional",
+              "system_admin"
+            ],
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Retrieval Audiences",
+          "type": "array"
+        },
+        "source_allowed_purposes": {
+          "items": {
+            "enum": [
+              "care_record",
+              "care_summary",
+              "evaluation",
+              "explainable_evidence",
+              "form_reference",
+              "general_information",
+              "health_education",
+              "human_administered_assessment_design",
+              "legal_reference",
+              "manual_review",
+              "research_reference",
+              "resource_navigation",
+              "safety_routing",
+              "scale_explanation",
+              "source_lookup"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Allowed Purposes",
+          "type": "array"
+        },
+        "source_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "text_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Text Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prior_chunk_id",
+        "chunk_id",
+        "source_id",
+        "text_sha256",
+        "embedding_text_sha256",
+        "effective_risk_level",
+        "retrieval_audiences",
+        "source_allowed_purposes",
+        "chunk_allowed_purposes",
+        "requires_official_assessment",
+        "requires_professional_assessment",
+        "citation"
+      ],
+      "title": "RuntimePolicyChunkV2",
+      "type": "object"
+    },
+    "RuntimePolicyDocumentV3": {
+      "additionalProperties": false,
+      "properties": {
+        "assessment_acceptance_binding": {
+          "$ref": "#/$defs/_AssessmentAcceptanceBinding"
+        },
+        "candidate_artifact_version": {
+          "const": "v003",
+          "title": "Candidate Artifact Version",
+          "type": "string"
+        },
+        "candidate_binding": {
+          "$ref": "#/$defs/_CandidateBinding"
+        },
+        "chunks": {
+          "items": {
+            "$ref": "#/$defs/RuntimePolicyChunkV2"
+          },
+          "maxItems": 554,
+          "minItems": 554,
+          "title": "Chunks",
+          "type": "array"
+        },
+        "gates": {
+          "$ref": "#/$defs/_Gates"
+        },
+        "global_policy": {
+          "$ref": "#/$defs/_GlobalPolicyV2"
+        },
+        "prior_runtime_policy_binding": {
+          "$ref": "#/$defs/_PriorRuntimePolicyBindingV3"
+        },
+        "purpose_classification_binding": {
+          "$ref": "#/$defs/_PurposeClassificationBinding"
+        },
+        "runtime_policy_version": {
+          "const": "v003",
+          "title": "Runtime Policy Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "3.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_policy_binding": {
+          "$ref": "#/$defs/_SourcePolicyBinding"
+        },
+        "source_policy_map_version": {
+          "const": "v002",
+          "title": "Source Policy Map Version",
+          "type": "string"
+        },
+        "status": {
+          "const": "STAGING_RUNTIME_CANDIDATE",
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/_SummaryV3"
+        }
+      },
+      "required": [
+        "schema_version",
+        "runtime_policy_version",
+        "source_policy_map_version",
+        "candidate_artifact_version",
+        "status",
+        "source_policy_binding",
+        "candidate_binding",
+        "assessment_acceptance_binding",
+        "purpose_classification_binding",
+        "prior_runtime_policy_binding",
+        "global_policy",
+        "chunks",
+        "summary",
+        "gates"
+      ],
+      "title": "RuntimePolicyDocumentV3",
+      "type": "object"
+    },
+    "_AssessmentAcceptanceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_version": {
+          "const": "v004",
+          "title": "Acceptance Version",
+          "type": "string"
+        },
+        "path": {
+          "const": "data/rag-v3/review/acceptance/v004/owner-assessment-response-policy-acceptance.json",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "acceptance_version"
+      ],
+      "title": "_AssessmentAcceptanceBinding",
+      "type": "object"
+    },
+    "_CandidateBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "checksums_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Checksums Sha256",
+          "type": "string"
+        },
+        "crosswalk_path": {
+          "const": "data/rag-v3/candidates/v003/crosswalk/chunk-id-crosswalk-v003.jsonl",
+          "title": "Crosswalk Path",
+          "type": "string"
+        },
+        "crosswalk_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Crosswalk Sha256",
+          "type": "string"
+        },
+        "embedding_profile_id": {
+          "const": "ep-google-00a12ec45096fa9d97d9e9b6",
+          "title": "Embedding Profile Id",
+          "type": "string"
+        },
+        "path": {
+          "const": "data/rag-v3/candidates/v003",
+          "title": "Path",
+          "type": "string"
+        },
+        "source_release_id": {
+          "const": "rag-v2-v002-bab68588963b",
+          "title": "Source Release Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "checksums_sha256",
+        "crosswalk_path",
+        "crosswalk_sha256",
+        "source_release_id",
+        "embedding_profile_id"
+      ],
+      "title": "_CandidateBinding",
+      "type": "object"
+    },
+    "_Gates": {
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "const": "STAGING",
+          "title": "Environment",
+          "type": "string"
+        },
+        "external_sync": {
+          "const": "NOT_AUTHORIZED",
+          "title": "External Sync",
+          "type": "string"
+        },
+        "golden_query": {
+          "const": "NOT_EXECUTED",
+          "title": "Golden Query",
+          "type": "string"
+        },
+        "production_approved": {
+          "const": false,
+          "title": "Production Approved",
+          "type": "boolean"
+        },
+        "production_status": {
+          "const": "BLOCKED",
+          "title": "Production Status",
+          "type": "string"
+        },
+        "runtime_integration": {
+          "const": "READY_FOR_STAGING_TEST",
+          "title": "Runtime Integration",
+          "type": "string"
+        }
+      },
+      "required": [
+        "environment",
+        "runtime_integration",
+        "golden_query",
+        "external_sync",
+        "production_status",
+        "production_approved"
+      ],
+      "title": "_Gates",
+      "type": "object"
+    },
+    "_GlobalPolicyV2": {
+      "additionalProperties": false,
+      "properties": {
+        "assessment_response_gate": {
+          "const": "ALLOW_GENERAL_INFORMATION_TRUE_REQUIRES_DETERMINISTIC_ADVISORY_NULL_DENIES",
+          "title": "Assessment Response Gate",
+          "type": "string"
+        },
+        "high_or_unknown_normal_rag": {
+          "const": "DENY",
+          "title": "High Or Unknown Normal Rag",
+          "type": "string"
+        },
+        "ordinary_retrieval_risk_levels": {
+          "items": {
+            "enum": [
+              "low",
+              "medium"
+            ],
+            "type": "string"
+          },
+          "title": "Ordinary Retrieval Risk Levels",
+          "type": "array"
+        },
+        "ordinary_retrieval_stop_normal_rag": {
+          "const": false,
+          "title": "Ordinary Retrieval Stop Normal Rag",
+          "type": "boolean"
+        },
+        "production_approved": {
+          "const": false,
+          "title": "Production Approved",
+          "type": "boolean"
+        },
+        "purpose_response_gate": {
+          "const": "EVALUATE_AFTER_RETRIEVAL",
+          "title": "Purpose Response Gate",
+          "type": "string"
+        },
+        "research_route": {
+          "const": "INDEPENDENT_RESEARCH_REVIEW_REQUIRED",
+          "title": "Research Route",
+          "type": "string"
+        },
+        "retrieval_audiences": {
+          "items": {
+            "enum": [
+              "elder",
+              "family_caregiver",
+              "care_professional",
+              "system_admin"
+            ],
+            "type": "string"
+          },
+          "title": "Retrieval Audiences",
+          "type": "array"
+        },
+        "retrieve_before_response_policy": {
+          "const": true,
+          "title": "Retrieve Before Response Policy",
+          "type": "boolean"
+        },
+        "runtime_safety_from_embedding_similarity": {
+          "const": false,
+          "title": "Runtime Safety From Embedding Similarity",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "retrieval_audiences",
+        "retrieve_before_response_policy",
+        "ordinary_retrieval_risk_levels",
+        "ordinary_retrieval_stop_normal_rag",
+        "purpose_response_gate",
+        "assessment_response_gate",
+        "high_or_unknown_normal_rag",
+        "research_route",
+        "runtime_safety_from_embedding_similarity",
+        "production_approved"
+      ],
+      "title": "_GlobalPolicyV2",
+      "type": "object"
+    },
+    "_PriorRuntimePolicyBindingV3": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/governance/source-family-policy/runtime/candidates/v002/source-family-runtime-policy.json",
+          "title": "Path",
+          "type": "string"
+        },
+        "relationship": {
+          "const": "SUPERSEDES_WITHOUT_MUTATING_PRIOR_BYTES",
+          "title": "Relationship",
+          "type": "string"
+        },
+        "runtime_policy_version": {
+          "const": "v002",
+          "title": "Runtime Policy Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "runtime_policy_version",
+        "relationship"
+      ],
+      "title": "_PriorRuntimePolicyBindingV3",
+      "type": "object"
+    },
+    "_PurposeClassificationBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_version": {
+          "const": "v005",
+          "title": "Acceptance Version",
+          "type": "string"
+        },
+        "path": {
+          "const": "data/rag-v3/review/acceptance/v005/owner-purpose-classification-acceptance.json",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "acceptance_version"
+      ],
+      "title": "_PurposeClassificationBinding",
+      "type": "object"
+    },
+    "_RepairProjectionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "crosswalk_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Crosswalk Sha256",
+          "type": "string"
+        },
+        "embedding_profile_id": {
+          "const": "ep-google-00a12ec45096fa9d97d9e9b6",
+          "title": "Embedding Profile Id",
+          "type": "string"
+        },
+        "id_mapping": {
+          "const": "PRESERVE_SOURCE_AND_INDEX_V002_TO_V004",
+          "title": "Id Mapping",
+          "type": "string"
+        },
+        "prior_release_id": {
+          "const": "rag-v2-v002-bab68588963b",
+          "title": "Prior Release Id",
+          "type": "string"
+        },
+        "production_approved": {
+          "const": false,
+          "title": "Production Approved",
+          "type": "boolean"
+        },
+        "release_id": {
+          "pattern": "^rag-v2-v004-[a-f0-9]{12}$",
+          "title": "Release Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "release_id",
+        "candidate_sha256",
+        "embedding_profile_id",
+        "crosswalk_sha256",
+        "prior_release_id",
+        "id_mapping",
+        "production_approved"
+      ],
+      "title": "_RepairProjectionBinding",
+      "type": "object"
+    },
+    "_SourcePolicyBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "const": "data/rag-v3/governance/source-family-policy/candidates/v002/source-family-policy-map.json",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "_SourcePolicyBinding",
+      "type": "object"
+    },
+    "_SummaryV3": {
+      "additionalProperties": false,
+      "properties": {
+        "assessment_advisory_chunk_count": {
+          "const": 372,
+          "title": "Assessment Advisory Chunk Count",
+          "type": "integer"
+        },
+        "chunk_count": {
+          "const": 554,
+          "title": "Chunk Count",
+          "type": "integer"
+        },
+        "official_null_to_true_count": {
+          "const": 5,
+          "title": "Official Null To True Count",
+          "type": "integer"
+        },
+        "professional_null_to_true_count": {
+          "const": 220,
+          "title": "Professional Null To True Count",
+          "type": "integer"
+        },
+        "purpose_needs_review_count": {
+          "const": 32,
+          "title": "Purpose Needs Review Count",
+          "type": "integer"
+        },
+        "purpose_overlay_count": {
+          "const": 32,
+          "title": "Purpose Overlay Count",
+          "type": "integer"
+        },
+        "response_metadata_ready_count": {
+          "const": 554,
+          "title": "Response Metadata Ready Count",
+          "type": "integer"
+        },
+        "risk_overlay_count": {
+          "const": 5,
+          "title": "Risk Overlay Count",
+          "type": "integer"
+        },
+        "source_count": {
+          "const": 14,
+          "title": "Source Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_count",
+        "chunk_count",
+        "response_metadata_ready_count",
+        "risk_overlay_count",
+        "professional_null_to_true_count",
+        "official_null_to_true_count",
+        "assessment_advisory_chunk_count",
+        "purpose_overlay_count",
+        "purpose_needs_review_count"
+      ],
+      "title": "_SummaryV3",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Projection-only successor: the complete v003 response policy stays byte-pinned.",
+  "properties": {
+    "base_policy": {
+      "$ref": "#/$defs/RuntimePolicyDocumentV3"
+    },
+    "base_policy_sha256": {
+      "const": "99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd",
+      "title": "Base Policy Sha256",
+      "type": "string"
+    },
+    "projection_binding": {
+      "$ref": "#/$defs/_RepairProjectionBinding"
+    },
+    "runtime_policy_version": {
+      "const": "v004",
+      "title": "Runtime Policy Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "4.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "runtime_policy_version",
+    "base_policy_sha256",
+    "base_policy",
+    "projection_binding"
+  ],
+  "title": "RuntimePolicyDocumentV4",
+  "type": "object"
+}

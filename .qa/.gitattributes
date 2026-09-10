@@ -1,0 +1,2 @@
+law-regression-*/** text eol=lf
+run_law_regression.py text eol=lf

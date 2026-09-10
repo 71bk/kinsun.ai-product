@@ -1,0 +1,35 @@
+{
+  "status": "RAG_BROWSER_ACCEPTANCE_PASSED_WITH_MINOR_LAYOUT_FINDING",
+  "date": "2026-09-10",
+  "base_url": "http://localhost:3000",
+  "transport": "REAL_PLAYWRIGHT_BROWSER_TO_BFF_CORE_AGENT",
+  "account": "EXISTING_SYNTHETIC_ELDER_DEMO",
+  "frontend": "EXISTING_PRODUCTION_BUILD_NOT_REBUILT_THIS_TURN",
+  "input_mode": "text",
+  "queries": [
+    {"query": "長照法", "http_status": 200, "result_status": "SUCCESS", "safety_decision": "ALLOW", "visible_citation_count": 3, "answer_visible": true, "assessment_advisory_visible": true},
+    {"query": "長照法第二條", "http_status": 200, "result_status": "SUCCESS", "safety_decision": "ALLOW", "visible_citation_count": 2, "answer_visible": true, "assessment_advisory_visible": true, "answer_describes_central_and_local_competent_authorities": true}
+  ],
+  "citation_disclosure_expanded": true,
+  "citation_href": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0070040",
+  "external_citation_page_opened": false,
+  "measurements": [
+    {"requested_width": 1440, "requested_height": 900, "inner_width": 1440, "client_width": 1425, "scroll_width": 1425},
+    {"requested_width": 375, "requested_height": 812, "inner_width": 376, "client_width": 361, "scroll_width": 364},
+    {"requested_width": 390, "requested_height": 844, "inner_width": 391, "client_width": 376, "scroll_width": 376},
+    {"requested_width": 430, "requested_height": 932, "inner_width": 431, "client_width": 416, "scroll_width": 416}
+  ],
+  "screenshots_visually_inspected": [
+    "rag-law-browser-general-1440.png",
+    "rag-law-browser-article2-1440.png",
+    "rag-law-browser-article2-375.png",
+    "rag-law-browser-article2-390.png",
+    "rag-law-browser-article2-430.png"
+  ],
+  "layout_finding": "375px requested viewport consistently has 3 CSS px document overflow and a horizontal scrollbar; answer and citation text are readable. Not classified as a RAG failure. Root cause and stale-build exclusion not fully established; no UI fix attempted.",
+  "authenticated_page_console_errors": 0,
+  "console_warnings": "Unused CSS preload warnings",
+  "logout": "CLICKED_LOGOUT_AND_OBSERVED_SIGN_IN_PAGE",
+  "not_verified": ["Physical phone", "Microphone/ASR/TTS", "Fresh frontend build", "Official law currency", "Production deployment"],
+  "production_approved": false
+}

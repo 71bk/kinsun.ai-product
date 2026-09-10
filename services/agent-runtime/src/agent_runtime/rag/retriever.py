@@ -161,6 +161,14 @@ def build_retriever(
 ) -> Retriever:
     """Compose explicitly configured embedding and search adapters."""
 
+    if source_family_policy is not None:
+        source_family_policy.validate_search_binding(
+            backend=settings.search_backend,
+            release_id=settings.postgres.release_id if settings.postgres else None,
+            embedding_profile_id=settings.postgres.embedding_profile_id
+            if settings.postgres
+            else None,
+        )
     if settings.search_backend == "postgresql":
         if settings.postgres is None:
             raise ValueError("PostgreSQL search settings are unavailable")
