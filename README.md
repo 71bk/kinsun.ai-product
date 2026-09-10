@@ -22,16 +22,32 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 
 ## 現在能跑什麼
 
+以下為 2026-09-10 的程式與本機驗證狀態，不代表 production 已部署。
+
 | 單元 | 狀態 |
 | --- | --- |
-| `services/core-api` | ✅ 主線。Direct Google／LINE OIDC、Core App Session、Identity、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Family Report、LINE 與 transactional outbox |
+| `services/core-api` | ✅ 主線。Email／Password、選用 Google／LINE OIDC、Core App Session、Elder 授權、Consent、Voice Ticket／ASR gate、Care Event、Memory、Daily Summary、Care Action、Assignment／Service Record、Family Report、LINE 與 transactional outbox |
 | `services/agent-runtime` | ✅ 單輪 Agent 閉環可跑；預設 deterministic mock，也可切換明確設定的 model provider |
-| `packages/frontend` | ✅ Multi-role PWA + BFF；文字與語音主線、麥克風錄音、角色動畫及 LINE 帳號連結已接入 |
+| `packages/frontend` | ✅ Multi-role PWA + BFF；文字／語音介面、角色動畫、LINE 帳號連結，以及照護 Dashboard、事件覆核、照護行動與服務紀錄輸入 |
 | `services/rag-ingestion` | ⚠️ staging-only；治理簽章與 production gate 尚未完成，不可視為正式照護知識來源 |
 | `services/speech-gateway` | ⚠️ 已有語音主線與 provider adapters；目前沒有已部署的雲端 ASR／TTS provider，未設定時 fail closed |
 
 Gate 1 CI 已啟用，涵蓋四個 Python 元件、Core PostgreSQL integration、contracts、五輪 synthetic
-Core-to-Agent evidence 與 Frontend production build；完整 browser／外部部署 E2E 仍未建立。
+Core-to-Agent evidence 與 Frontend production build；完整自動化 browser／外部部署 E2E 仍未建立。
+RAG 已完成 Supabase 開發資料同步及「長照法」「長照法第二條」本機瀏覽器文字問答驗收；
+仍屬 staging-only，詳見下方 RAG 說明。
+
+### CI 執行方式
+
+- 八個獨立 jobs：`core-fast`、`core-db`、`agent-quality`、`speech-quality`、`rag-quality`、
+  `contracts`、`cross-service`、`frontend-quality`；只有 `core-db` 啟動測試 PostgreSQL。
+- PR 的 `changes` job 依影響範圍選擇 jobs；未知路徑或不完整 diff 回退全跑。合併後的 `main` push 仍全跑。
+- `synthetic-gate1` 是永遠執行的 aggregate gate：選定 jobs 必須成功且有 metrics；只有計畫排除的
+  jobs 可略過，失敗、取消、意外略過或缺少結果皆不可放行。這不等於 GitHub 已設定合併保護。
+- 收集 job／step、命令與測試耗時；平行 job 秒數不能相加當作整體等待時間。
+
+設定與量測方式見 [CI 優化紀錄](docs/project/ci-pipeline-optimization.md)及
+[workflow](.github/workflows/gate1.yml)。
 
 ## 小暖｜陪伴角色
 
@@ -62,67 +78,73 @@ kinsun.ai/
 
 ### 需求
 
-- Docker Desktop（含 Docker Compose v2）
 - [uv](https://docs.astral.sh/uv/)（本機跑 Python 服務與 Alembic）
+- Python 3.12（可由 uv 安裝）
 - Node.js ≥ 20.9
+- 已授權的 Supabase 開發資料庫連線；Docker Desktop／Compose v2 只用於明確選用的隔離環境
 
-### 起資料層
-
-```powershell
-Copy-Item .env.example .env   # 第一次才需要，.env 不進版控
-docker compose up -d postgres
-docker compose ps             # 顯示 healthy 才算就緒
-docker compose run --rm migrate   # 建立 eldercare_ai schema
-```
-
-本機 5432 被占用時，改 `.env` 的 `POSTGRES_PORT`（例如 `15432`）再重跑。
-
-目前外部資料庫 provider 是 **Supabase PostgreSQL**，但程式只依賴標準 PostgreSQL／asyncpg
-連線字串與 Alembic，不使用 Supabase Auth 或專有資料 API。本節的 Docker PostgreSQL 是可替換的本機環境。
-
-| 項目 | 值 |
-| --- | --- |
-| Host / Port | `localhost:5432`（`POSTGRES_PORT` 可改） |
-| Database | `kinsun`（測試用 `kinsun_test`） |
-| User / Password | `kinsun` / `kinsun_local_dev` |
-| 版本 | PostgreSQL 16（與 migration／CI baseline 一致） |
-
-### 起四個服務
+### 安裝與環境設定
 
 ```powershell
-# Core API :8000
-cd services/core-api;    uv sync --extra test --extra dev; uv run uvicorn app.main:app --reload
-
-# Agent Runtime :8001（預設 mock provider 不需雲端憑證或網路）
-cd services/agent-runtime; uv sync --extra test --extra dev
-uv run uvicorn --app-dir src agent_runtime.app:app --reload --port 8001
-
-# Speech Gateway :8002（雲端 ASR／TTS 需明確設定對應 provider）
-cd services/speech-gateway; uv sync --extra test --extra dev
-uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002
-
-# Frontend :3000
-npm install
-npm run dev --workspace @elderly-care/frontend
+npm ci
+uv sync --frozen --project services/core-api --extra test --extra dev
+uv sync --frozen --project services/agent-runtime --extra test --extra dev
+uv sync --frozen --project services/speech-gateway --extra test --extra dev
+uv sync --frozen --project services/rag-ingestion --extra test --extra dev
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+if (-not (Test-Path packages/frontend/.env.local)) {
+  Copy-Item packages/frontend/.env.example packages/frontend/.env.local
+}
 ```
 
-### 常用 Docker 指令
+以上從 repository 根目錄執行，已有 ENV 檔案不得覆寫。將 root `.env` 的 `DATABASE_URL`
+改成 Owner 提供的 Supabase 開發連線，採 `postgresql+asyncpg://` 形式；不要直接使用 example
+中的 localhost 值。Next.js 另讀 `packages/frontend/.env.local`，不會自動沿用 root `.env`。
+所有密碼、驗證碼與 provider secrets 只經安全管道交付，不進 Git。
+
+預設開發直接使用 **Supabase PostgreSQL**，不啟動 Docker 或本機 PostgreSQL；不使用 Supabase
+Auth 或專有資料 API。Migration 檢查與 additive upgrade 見下方章節；一般啟動不重建資料庫。
+`TEST_DATABASE_URL` 必須另指向獨立、可丟棄的測試資料庫，不能拿 Supabase 開發庫代替。
+
+瀏覽器登入以 Kinsun Email／Password 為主，Google／LINE OIDC 為選配。Example 中相關 gates
+預設關閉；`FAKE_AUTH_ENABLED=true` 只能供直接 Core API 開發，不會建立瀏覽器 Session。
+登入所需設定與 synthetic 帳號使用邊界見 [建置指南](docs/project/COLLABORATOR_SETUP.md)。
+
+### 啟動服務
+
+每個服務使用獨立 PowerShell terminal，且各自從 repository 根目錄執行對應指令。
 
 ```powershell
-docker compose exec postgres psql -U kinsun -d kinsun   # 進 psql
-docker compose logs -f postgres                          # 看 log
-docker compose down                                      # 移除容器（保留資料）
-docker compose down -v                                   # 連資料清掉，下次重跑 init
-docker compose --profile tools up -d                     # Adminer → localhost:8080
+# Terminal 1：Agent Runtime :8001（預設 mock 不需雲端憑證）
+.\scripts\ide\run-local.ps1 -Target agent-runtime
+
+# Terminal 2：Core API :8000
+.\scripts\ide\run-local.ps1 -Target core-api
+
+# Terminal 3：Frontend :3000
+.\scripts\ide\run-local.ps1 -Target frontend
+
+# Terminal 4：Speech Gateway :8002（選配，文字測試不需要）
+.\scripts\ide\run-local.ps1 -Target speech-gateway
 ```
+
+這些啟動命令不會建立資料庫或自動啟用登入、RAG、ASR／TTS provider。
+其他作業系統可使用 [建置指南](docs/project/COLLABORATOR_SETUP.md)中的等價 uv／npm 命令。
+
+### 選用 Docker 隔離環境
+
+只有明確要求可丟棄的本機隔離環境時，才使用 `docker-compose.yml`；步驟見
+[建置指南](docs/project/COLLABORATOR_SETUP.md)。它不是預設開發或登入測試流程。
+`docker compose down` 保留資料 volume；`docker compose down -v` 會刪除資料，不能作為例行啟停指令。
 
 ### Schema 從哪來
 
 分兩層，不要混：
 
 - `docker/postgres/init/` 只建立 extension（`pgcrypto`、`citext`）與測試資料庫，**不建表**。
-  只在資料 volume 為空時執行一次；改了內容要 `docker compose down -v` 才會重跑。
-- **所有 table／index／constraint／trigger 由 Alembic 管理**，PostgreSQL schema 名稱是 `eldercare_ai`。
+  僅供 Docker 隔離環境，且只在資料 volume 為空時執行一次，不應靠刪除 volume 更新正式 schema。
+- **所有 table／index／constraint／trigger 由 Alembic 管理**；Domain schema 是 `eldercare_ai`，
+  另有受 Alembic 管理的 `rag_public` 與 `service_identity`。
 
 ## Core API
 
@@ -131,8 +153,19 @@ docker compose --profile tools up -d                     # Adminer → localhost
 ```powershell
 cd services/core-api
 uv run pytest tests/unit          # 不需資料庫
-uv run pytest tests/integration   # 需要 postgres 容器
 uv run ruff check .
+uv run ruff format --check .
+```
+
+Integration 會 drop／rebuild／清理資料，只可在已確認的獨立 disposable `TEST_DATABASE_URL`
+執行；沒有就略過。不得對 Supabase 開發庫或其他共享／production DB 執行。
+Migration lifecycle 必須先在獨立 pytest process 執行，成功後才跑其餘 integration：
+
+```powershell
+# 從 services/core-api 執行；先確認 TEST_DATABASE_URL 是可丟棄的測試庫
+uv run pytest tests/integration/test_migrations.py
+# 僅在上一支成功後執行
+uv run pytest tests/integration --ignore=tests/integration/test_migrations.py
 ```
 
 授權模型的重點：
@@ -180,21 +213,31 @@ query embedding ＋ Supabase PostgreSQL FTS／trigram＋pgvector hybrid search�
 只保留為顯式 opt-in legacy adapters，沒有 live AWS evidence。只有 `general_information`／
 `legal_reference` purpose 的回合會檢索，
 成功時 3～5 個帶引用的 chunk 進入 Context Manifest，查無資料時**不呼叫模型猜測**。
-治理 gate：Allowlist 尚未簽署，Human Review 未完成。僅在 staging 明確設定
+治理 gate：staging review／Owner acceptance 不等於正式簽章或 production approval。僅在 staging 明確設定
 `RAG_REQUIRE_OWNER_SIGNATURE=false` 才可用 unsigned development override；即使啟用，
 外部 `RAG_ALLOWLIST_EXPECTED_SHA256` 精確比對與來源／chunk／數量驗證仍是不可略過的
 hard gate，receipt 與 log 必須標記 `governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、
-`production_approved=false`。Production 需正式簽署並明確設定 `RAG_PRODUCTION_ENABLED=true`。
+`production_approved=false`。目前 runtime 的 production 核准 RAG modes 清單仍為空，
+不能只設定 `RAG_PRODUCTION_ENABLED=true` 就視為可上線。
 V2 另需明確設定 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true` 才會讓 staging 讀取
-`needs_review` citation；這不會授予 production approval。PostgreSQL 的獨立 read-only principal、
-v003 activation／rollback 與完整 relevance evaluation 仍未完成。
+`needs_review` citation；這不會授予 production approval。
+
+2026-09-10 經獨立授權，已將 successor release `rag-v2-v004-f3339ceae77c` 的 726 筆 projection
+與既有向量同步至 Supabase 開發庫，獨立讀回核對通過；僅 71 筆法規治理 metadata 修正，文字、
+其他限制與舊 release 保留。本機 Agent 已切換對應 v004 runtime policy，瀏覽器文字輸入
+「長照法」「長照法第二條」均為 `SUCCESS / ALLOW`，並確認引用與固定的專業諮詢提醒。
+
+同步、驗收與安全回復條件見 [RAG 修復紀錄](docs/project/rag-law-governance-sync-plan-20260909.md)。
+這是特定 synthetic 帳號與問題的本機驗收，不是真機語音或外部部署 E2E，也不代表全部法規問答
+品質已驗證。375px 驗收仍記錄約 3 CSS px 水平溢出。獨立 read-only DB principal、完整 live
+relevance／ranking evaluation 與 production 核准仍未完成。
 
 回應與 core-api 共用 envelope（`{"data","meta"}` / `{"error"}`），見
 [ADR 0005](docs/adr/0005-agent-runtime-api-conventions.md)。範圍見
 [`docs/ownership/member-c-scope.md`](docs/ownership/member-c-scope.md)，架構見
 [`docs/architecture/agent-runtime-overview.md`](docs/architecture/agent-runtime-overview.md)。
 
-兩個 Python 服務各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
+四個 Python 元件各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
 
 ## Frontend → Speech Gateway → Core → Agent 閉環
 
@@ -252,16 +295,19 @@ uv run --with pyyaml --with jsonschema --with referencing python scripts/validat
 
 ## Database Migration（Alembic）
 
-```powershell
-# 用 Docker（不需本機 Python）
-docker compose run --rm migrate                     # upgrade head
-docker compose run --rm migrate alembic current
+先確認 root `.env` 指向已授權的開發資料庫，唯讀檢查 revision 並人工審查待套用 migration。
+只有確認後才執行 additive upgrade；不是每次啟動都需要 migration。
 
-# 用本機 uv
+```powershell
 cd services/core-api
+uv run alembic current
+uv run alembic heads
+# 人工審查與確認後才執行
 uv run alembic upgrade head
-uv run alembic downgrade base    # 砍掉整個 eldercare_ai schema
 ```
+
+禁止對 Supabase 開發庫或其他共享／production DB 執行 `downgrade base`、reset、truncate 或空庫
+重建。破壞性的 migration roundtrip 僅能在獨立 disposable 測試庫執行。
 
 連線字串取自 `DATABASE_URL`，只維護一份且統一寫成 **asyncpg** 形式。應用層直接用；
 Alembic 走同步連線，`alembic/env.py` 自行換成 psycopg——刻意保留兩個 driver
@@ -274,8 +320,8 @@ cd services/core-api
 uv run alembic revision -m "PROJ-123 add xxx table"
 ```
 
-**`--autogenerate` 目前不能直接採用**：v0.1 baseline 來自手寫 SQL，48 張 baseline table
-中只有 33 張有 SQLAlchemy model，autogenerate 會把未映射的 table 誤判為應刪除。必須人工
+**`--autogenerate` 目前不能直接採用**：v0.1 baseline 來自手寫 SQL，ORM metadata 不涵蓋所有
+Alembic 管理的資料表（包含 `rag_public`、`service_identity`），會把未映射的 table 誤判為應刪除。必須人工
 撰寫或逐項審查，不得套用自動產生的 drop（[ADR 0002](docs/adr/0002-alembic-baseline-strategy.md)）。
 
 已套用的 migration 視為不可變。要改 schema 就新增 revision，不要動 baseline。
@@ -324,9 +370,11 @@ deployment。舊 AWS CDK profile 已由
 | --- | --- |
 | 開發規則與不可違反的邊界 | [`AGENTS.md`](AGENTS.md) |
 | 新協作者工具、ENV 與本機建置 | [`docs/project/COLLABORATOR_SETUP.md`](docs/project/COLLABORATOR_SETUP.md) |
-| 產品規格（17 份） | [`docs/spec/`](docs/spec/) |
+| 產品規格 | [`docs/spec/`](docs/spec/) |
 | 技術決策與理由 | [`docs/adr/`](docs/adr/) |
 | Agent Runtime 架構 | [`docs/architecture/`](docs/architecture/) |
 | 視覺與無障礙規範 | [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md) |
 | 契約與實作的已知差異 | [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) |
 | 外部部署驗證 | [`docs/runbooks/deployment-smoke.md`](docs/runbooks/deployment-smoke.md) |
+| CI 選擇性執行與耗時指標 | [`docs/project/ci-pipeline-optimization.md`](docs/project/ci-pipeline-optimization.md) |
+| RAG 法規修復、驗收與安全回復 | [`docs/project/rag-law-governance-sync-plan-20260909.md`](docs/project/rag-law-governance-sync-plan-20260909.md) |
