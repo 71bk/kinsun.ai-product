@@ -772,6 +772,8 @@ changes 與選定 worker 必須 success 並有 metrics；只有有效、同 run�
 未知路徑／無法取得完整 diff 回退全跑；不得用 workflow-level paths filter 消除 aggregate。
 新增檔案或跨服務依賴時同步影響規則與測試。RAG governance 的 hash inputs 含 Agent 程式／
 測試與 `docs/project/rag-v3-public-retrieval-plan.md`，不能只按副檔名或單服務目錄略過。
+法規修復稽核亦包含 Core `app/rag_*`、`test_rag_*` 與 `test_law_*`；這些路徑須觸發 RAG／Agent
+驗證。開 PR 前另跑 `scripts/ci/test_*.py`，不能只靠各服務 pytest 通過推定影響規則完整。
 PR 使用 merge-base→head 的 NUL-delimited Git diff，停用 rename detection 以納入新舊路徑；
 不能只比 HEAD~1 或用可能截斷的 PR files API。純文件白名單也必須過 CI 規則與 diff 檢查。
 只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready` 也依賴 DB，不可移到無 DB job。

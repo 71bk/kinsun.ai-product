@@ -252,6 +252,9 @@ detection，保留新舊路徑；不能用 HEAD~1 或截斷的 files API，也�
 suffix 隔離。Artifact 名稱含 run attempt，failed-jobs rerun 可沿用同 run／commit 的先前成功
 worker metrics。Aggregate 不等於已啟用 branch protection，也不是部署 E2E 證據。
 
+法規修復稽核會雜湊 Core `app/rag_*`、`test_rag_*`、`test_law_*`，因此這些變更也必須選取
+RAG／Agent jobs；提交前跑 CI instrumentation／impact 測試，不能只驗證服務測試。
+
 只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
 
 ### Core API

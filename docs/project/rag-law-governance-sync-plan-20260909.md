@@ -245,3 +245,8 @@ unit regression 共 47 passed、0 failed；collection 與執行前後的輸入�
 本機未執行 Core DB integration（沒有 disposable TEST_DATABASE_URL）或重新 Frontend build。
 本機前端沿用既有 build，未修改 UI；實際 Browser 文字問答已另行驗證，離線 regression report 中
 原有的 browser 欄位保留當時歷史狀態，不覆寫成後續結果。遠端 PR CI 以該 PR 實際執行結果為準。
+
+PR #40 的首次 `changes` 檢查發現 Core RAG 匯入器／法規測試已成為 v009／v010 稽核輸入，
+但舊 impact policy 未選取 `rag-quality`。已新增精確 Core RAG 路徑前綴並升至 policy version 2，
+維持其他 Core 路徑原有選擇；CI instrumentation／impact 本機 26 項測試與 lint／format 通過。
+未修改 workflow YAML 或放寬 aggregate gate；後續遠端執行仍需以 GitHub 結果判定。
