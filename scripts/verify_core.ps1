@@ -102,7 +102,10 @@ Push-Location $coreProject
 try {
     & $corePython -m pytest tests/unit
     Assert-NativeSuccess -Step "Core unit tests" -ExitCode $LASTEXITCODE
-    & $corePython -m pytest tests/integration
+    # Migration lifecycle owns schema resets; isolate it from request-level fixtures.
+    & $corePython -m pytest tests/integration/test_migrations.py
+    Assert-NativeSuccess -Step "Core migration tests" -ExitCode $LASTEXITCODE
+    & $corePython -m pytest tests/integration --ignore=tests/integration/test_migrations.py
     Assert-NativeSuccess -Step "Core integration tests" -ExitCode $LASTEXITCODE
     & $corePython -m ruff check .
     Assert-NativeSuccess -Step "Ruff lint" -ExitCode $LASTEXITCODE

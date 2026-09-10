@@ -1,12 +1,13 @@
 # kinsun.ai 新協作者環境建置指南
 
-- 更新日期：2026-09-02
+- 更新日期：2026-09-10
 - 適用範圍：本機開發、測試與 Synthetic Demo
 - 主要環境：Windows 11 + PowerShell；其他作業系統請換成等價指令
 
 這份文件提供新協作者從乾淨電腦開始建置 `kinsun.ai` 的步驟。它只描述 repository
 目前真正存在的功能與設定。Repository 沒有使用中的 AWS 服務或 production IaC，也不代表
-Production、真實語音 Provider 或 RAG 已部署可用。
+Production 或真實語音 Provider 已部署可用。RAG 已有 Supabase 開發資料面及本機瀏覽器文字問答
+驗收，仍屬 staging-only，見第 13 節。
 
 ## 1. 開始前先讀
 
@@ -36,7 +37,7 @@ Production、真實語音 Provider 或 RAG 已部署可用。
 | npm | 隨 Node.js 安裝 | repository workspaces |
 | Python | 3.12 | Core、Agent、Speech、RAG |
 | uv | 建議最新版 | Python 版本、依賴與 lockfile |
-| Docker Desktop | 含 Compose v2 | PostgreSQL 16、migration、Adminer |
+| Docker Desktop（選配） | 含 Compose v2 | 僅供明確要求的本機 PostgreSQL 隔離環境／image build |
 
 先確認工具：
 
@@ -45,8 +46,6 @@ git --version
 node --version
 npm --version
 uv --version
-docker version
-docker compose version
 ```
 
 若本機沒有 Python 3.12，可讓 uv 安裝：
@@ -120,13 +119,14 @@ if (-not (Test-Path packages/frontend/.env.local)) {
 }
 ```
 
-最小本機開發可以保留 example 的 PostgreSQL 與 mock model 設定。至少確認 root `.env`：
+預設直接使用 Owner 授權的 Supabase 開發資料庫，不啟動 Docker 或本機 PostgreSQL。
+Root `.env.example` 的 localhost 連線只是隔離環境範例，不能複製後直接當成預設開發設定。
+透過安全管道取得連線及登入 secrets，至少確認 root `.env`（下列連線是佔位符，不能直接執行）：
 
 ```dotenv
 APP_ENV=development
-DATABASE_URL=postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun
-TEST_DATABASE_URL=postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun_test
-FAKE_AUTH_ENABLED=true
+DATABASE_URL=<owner-provided-supabase-development-url-in-asyncpg-format>
+FAKE_AUTH_ENABLED=false
 MODEL_PROVIDER=mock
 AGENT_RUNTIME_URL=http://127.0.0.1:8001
 ```
@@ -142,56 +142,82 @@ NEXT_PUBLIC_CONSENT_POLICY_VERSION=demo-consent-v1
 注意：
 
 - `DATABASE_URL` 必須使用 `postgresql+asyncpg://`；Alembic 會自行轉成 psycopg。
-- 若修改 `POSTGRES_PORT`，必須同步修改 `DATABASE_URL` 與 `TEST_DATABASE_URL`。
+- `TEST_DATABASE_URL` 只能指向另外提供的 disposable 測試庫；沒有就略過 integration，不能填同一個開發庫。
+- `FAKE_AUTH_ENABLED=false` 適用瀏覽器登入；登入 gates 尚未設定時，受保護 API 拒絕存取是預期行為。
+  只有明確以 direct Core API 做 synthetic 開發時才選用 fake auth，不能以它取代第 8 節的瀏覽器登入。
 - `NEXT_PUBLIC_*` 會送到瀏覽器，只能放公開設定，絕不能放 Secret 或 Token。
 - Next.js 不會以 root `.env` 取代 `packages/frontend/.env.local`。
 - ENV 改完後要重啟對應 service；`NEXT_PUBLIC_*` 改動後也要重啟或重新 build 前端。
 - `APP_ENV=production` 時 Core 不讀本機 `.env`，Production 必須由 runtime secret store 注入。
 
-## 6. 建立本機資料庫
+## 6. 資料庫準備
 
-從 repository 根目錄執行：
+### 預設：Supabase 開發資料庫
 
-```powershell
-docker compose config --quiet
-docker compose up -d postgres
-docker compose ps
-```
-
-等 `kinsun-postgres` 顯示 `healthy` 後，套用正式 Alembic migration：
+先確認連線目標與待套用 migration，從 repository 根目錄執行唯讀 revision 檢查：
 
 ```powershell
-docker compose run --rm migrate
-docker compose run --rm migrate alembic current
+cd services/core-api
+uv run alembic current
+uv run alembic heads
 ```
 
-Schema 名稱是 `eldercare_ai`。`docker/postgres/init/` 只建立 extension 與 `kinsun_test`，
-table／index／constraint／trigger 的唯一權威仍是 Alembic。
+若確實需要 upgrade，先人工審查並取得操作確認，再從獨立 terminal 執行：
 
-### 建立 Synthetic Demo 資料
+```powershell
+cd services/core-api
+uv run alembic upgrade head
+```
 
-首次 migration 後，可建立固定的 Synthetic Persona、Consent、Event、Memory 與 Report：
+一般啟動不做 reset、downgrade 或重跑 seed。Supabase 開發庫與其他共享／production DB
+不得執行 integration rebuild、`downgrade base`、truncate 或空庫重建。
+Domain schema 是 `eldercare_ai`；`rag_public`、`service_identity` 也由 Alembic 管理。
+Table／index／constraint／trigger 的唯一權威是 Alembic，不是 Docker init 或 ORM autogenerate。
+
+### Synthetic Demo 帳號與資料
+
+先向 Owner 確認既有 synthetic 帳號與授權範圍，密碼／驗證碼經安全管道取得，不能寫入 README、
+PR 或截圖。Seed ID 清單在 [`data/seed/demo_ids.json`](../../data/seed/demo_ids.json)，它不是憑證。
+既有開發庫不要為了登入而重跑 seed 或重建帳號。
+
+只有另行確認需要建立 synthetic fixtures 時，才使用以下工具；執行前審查目標庫與資料差異：
 
 ```powershell
 uv run --project services/core-api python scripts/seed_demo.py
 ```
 
-Seed ID 清單在 [`data/seed/demo_ids.json`](../../data/seed/demo_ids.json)。這些 ID 是測試資源
-識別碼，不是憑證。
+工具預設僅允許 localhost `kinsun`；Supabase 開發庫需另外取得寫入授權，且明確設定
+`KINSUN_ALLOW_REMOTE_DEMO_SEED=true` 才能通過遠端 gate。這不是預設建置步驟，也不允許 reset。
+遇到既有資料或衝突先停止查明，不依錯誤訊息對共享庫重建。
 
-Seed script 只允許操作 localhost 的 `kinsun` database。若資料已存在，它會拒絕重複寫入。
-需要重建時才執行下列破壞性指令：
+### 選配：明確要求的本機 Docker 隔離環境
+
+只在 Owner 明確要求此模式時安裝／啟動 Docker Desktop。使用專用 checkout／ENV，不能覆寫
+既有 Supabase 設定；將 `DATABASE_URL`、`TEST_DATABASE_URL` 設為 localhost 的 `kinsun`、
+`kinsun_test`，沿用 `.env.example` 的 synthetic credentials。改 `POSTGRES_PORT` 時同步改兩個 URL。
+從該 checkout 根目錄執行：
 
 ```powershell
-.\scripts\reset_demo.ps1 -ConfirmLocalReset
+docker version
+docker compose version
+docker compose config --quiet
+docker compose up -d postgres
+docker compose ps
+# 僅在 postgres healthy 且確認為上述隔離環境後套用 migration
+docker compose run --rm migrate
+docker compose run --rm migrate alembic current
 ```
 
-這會刪除並重建本機 `kinsun` 的整個 `eldercare_ai` schema，不能對共享、staging、Supabase
-或 production database 使用。
+`docker/postgres/init/` 只建立 extension 與 `kinsun_test`，僅在空 volume 初始化時執行。
+停止使用 `docker compose down` 保留 volume。`docker compose down -v` 與
+`scripts/reset_demo.ps1 -ConfirmLocalReset` 都是破壞性操作，不能作為一般建置／啟停／修復步驟；
+後者會重建本機 `kinsun` 的整個 `eldercare_ai` schema，禁止對共享、staging、Supabase 或 production 使用。
 
 ## 7. 啟動最小本機 Stack
 
-每個 service 開一個 PowerShell terminal。啟動順序建議為 Agent → Core → Frontend。
+每個 service 開一個 PowerShell terminal，且各 terminal 都從 repository 根目錄開始。
+啟動順序建議為 Agent → Core → Frontend。Windows 也可用 README 的
+`scripts/ide/run-local.ps1 -Target <service>`，以下保留等價 uv／npm 指令。
 
 ### Terminal 1：Agent Runtime（port 8001）
 
@@ -253,9 +279,41 @@ Cookie，也不要新增繞過 Auth 的 Demo route。
 - Core、Agent、DB 與 contracts。
 - 使用 fake auth 直接呼叫 Core API。
 
-若要操作受保護的 Elder、Care、Family 前端頁面，必須完成下一節的 Google 或 LINE OIDC
-設定並由 Core 正式核發 App Session。登入成功也不代表具有任意 elder scope；Core 仍會根據
+若要操作受保護的 Elder、Care、Family 前端頁面，必須設定 Kinsun Email／Password（主線）或
+選用 Google／LINE OIDC，由 Core 正式核發 App Session。登入成功也不代表具有任意 elder scope；Core 仍會根據
 TenantMembership、Relationship、Assignment、Consent 與 resource state 重新授權。
+
+### Kinsun Email／Password（development synthetic delivery）
+
+既有環境請先向 Owner 確認已設定值；不要重新產生 secret 使既有 identity 或 challenge 失效。
+全新開發環境才依 `.env.example` 與 [ADR 0015](../adr/0015-email-password-primary-authenticator.md)
+設定下列欄位。所有 secret 佔位符須替換成安全管道交付的值，不得提交：
+
+```dotenv
+# Root .env（Core）
+APP_ENV=development
+FAKE_AUTH_ENABLED=false
+APP_SESSION_AUTH_ENABLED=true
+KINSUN_NATIVE_AUTH_ENABLED=true
+KINSUN_IDENTITY_HMAC_SECRET=<independent-32-byte-secret>
+KINSUN_IDENTITY_HMAC_KEY_VERSION=1
+KINSUN_EMAIL_CHALLENGE_HMAC_SECRET=<different-independent-32-byte-secret>
+KINSUN_AUTH_HANDOFF_SECRET=<private-shared-bff-core-32-byte-secret>
+FAMILY_INVITATION_HMAC_SECRET=<another-independent-32-byte-secret>
+KINSUN_EMAIL_DELIVERY_MODE=synthetic
+KINSUN_SYNTHETIC_EMAIL_CODE_SECRET=<private-six-digit-development-code>
+```
+
+```dotenv
+# packages/frontend/.env.local（BFF）
+KINSUN_NATIVE_AUTH_ENABLED=true
+KINSUN_AUTH_HANDOFF_SECRET=<same-private-shared-bff-core-secret>
+```
+
+兩側 handoff secret 必須相同，但不得與其他 secret 共用。設定後重啟 Core／Frontend，從
+`/sign-in` 選擇角色並以既有 synthetic 帳號登入。Synthetic delivery 不寄送真實 Email，驗證碼
+由 Owner 私下提供，不能從 API／log 取得。Production email delivery、password reset／change、
+MFA 等仍未完成，不得把此流程描述成 production-ready。
 
 ## 9. 完整 Google OIDC 登入（選配）
 
@@ -390,7 +448,7 @@ Frontend `.env.local`：
 NEXT_PUBLIC_SPEECH_GATEWAY_URL=http://127.0.0.1:8002
 ```
 
-要走正式 browser voice path，Core root `.env` 還必須使用兩個不同的 32+ byte Secret：
+要走 browser voice path，Core root `.env` 還必須使用下列四個彼此獨立的 32+ byte Secret：
 
 ```dotenv
 VOICE_TICKET_ENABLED=true
@@ -451,8 +509,10 @@ RAG 不是最小本機 Stack 的必要服務。它目前只允許 staging、官�
 處理真實長者個資。
 
 從 repository root 執行時，它使用 root `.env`。現行 target 是 Supabase PostgreSQL／pgvector，
-Runtime 要明確綁定 `RAG_DATABASE_URL`、release、embedding profile 與治理 policy digest；完整設定見
-[`rag-v3-runtime-policy-integration.md`](rag-v3-runtime-policy-integration.md)。Legacy
+Runtime 要明確綁定 `RAG_DATABASE_URL`、release、embedding profile 與治理 policy digest；治理機制見
+[`rag-v3-runtime-policy-integration.md`](rag-v3-runtime-policy-integration.md)，2026-09-10 v004 的最新
+同步、啟用與回復條件以 [`rag-law-governance-sync-plan-20260909.md`](rag-law-governance-sync-plan-20260909.md)
+及其授權／執行 receipts 為準，不要直接複製歷史 v003 的 release 設定。Legacy
 OpenSearch／Bedrock adapter 只在顯式 opt-in 時使用，沒有現行 AWS deployment evidence。
 
 本機 Agent Runtime 使用 port 8001 時，RAG smoke 應明確設定：
@@ -467,6 +527,14 @@ RAG_PRODUCTION_ENABLED=false
 `RAG_REQUIRE_OWNER_SIGNATURE=false` 只代表 unsigned development override，不代表 Human Review 或
 production approval。完整流程與安全 gate 見
 [`services/rag-ingestion/README.md`](../../services/rag-ingestion/README.md)。
+
+上述四個設定並不足以啟用 RAG；release、embedding provider／profile、policy path 與 SHA-256
+仍須完全匹配。啟動器必須支援 dotenv 變數展開，不能將 `RAG_DATABASE_URL=${DATABASE_URL}`
+原樣當成連線字串。既有資料同步與設定切換不能在新機建置時自動重跑，須另行授權。
+
+v004 已同步 726 筆 projection 與既有向量，並完成「長照法」「長照法第二條」的本機瀏覽器
+文字問答、引用及安全提醒驗收。這不是完整 relevance／ranking 評估，也不是真機語音或外部部署
+驗收；獨立 read-only principal 與 production 核准仍未完成，不能靠開啟旗標解除 production gate。
 
 ## 14. 驗證命令
 
@@ -490,12 +558,21 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-Integration tests 會 migration roundtrip 並重建 `kinsun_test`，不要把 `TEST_DATABASE_URL` 指向
-`kinsun`、Supabase、共享或 production database。建議使用帶安全確認的 script：
+Integration tests 會 migration roundtrip 與資料清理，只可用另行確認的 disposable
+`TEST_DATABASE_URL`；不能指向開發庫、共享或 production database，沒有獨立測試庫就略過。
+從 `services/core-api` 執行，先跑 migration process，成功後才跑其餘 integration：
 
 ```powershell
-.\scripts\verify_core.ps1 -ConfirmTestDatabaseMigrations
+uv run pytest tests/integration/test_migrations.py
+# 僅在上一支成功後執行；不能合併為同一個 pytest process
+uv run pytest tests/integration --ignore=tests/integration/test_migrations.py
 ```
+
+CI 的 `core-db` 使用自己的 disposable PostgreSQL，並採上述兩個 process。
+若已明確選用第 6 節的 localhost 隔離環境，可在新的 PowerShell process、repository 根目錄
+使用 `.\scripts\verify_core.ps1 -ConfirmTestDatabaseMigrations`（非預設 port 加 `-PostgresPort`）。
+此 script 固定 localhost `kinsun`／`kinsun_test`、覆寫該 process 的 DB 環境值並檢查 Compose，
+不是 Supabase 開發驗證入口；它不會替你建立或啟動 PostgreSQL。
 
 ### Agent Runtime
 
@@ -528,7 +605,6 @@ uv run ruff format --check .
 
 ```powershell
 uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts
-docker compose config --quiet
 git diff --check
 git status --short
 ```
@@ -551,35 +627,16 @@ provider 或環境。
 
 ## 15. 日常啟停
 
-啟動：
-
-```powershell
-docker compose up -d postgres
-```
-
-再分別啟動 Agent、Core、Frontend；需要語音時才啟動 Speech Gateway。
-
-停止 application service 時，在各 terminal 按 `Ctrl+C`。停止 PostgreSQL 並保留資料：
-
-```powershell
-docker compose down
-```
-
-選用 Adminer：
-
-```powershell
-docker compose --profile tools up -d
-```
-
-開啟 `http://localhost:8080`，Server 填 `postgres`，帳密與 database 取自 root `.env`。
-
-不要例行執行 `docker compose down -v`；它會刪除本機 PostgreSQL volume。
+依第 7 節分別啟動 Agent、Core、Frontend；需要語音時才啟動 Speech Gateway。
+預設直接使用 Supabase 開發 DB，不執行 Docker、migration 或 seed。
+停止 application service 時，在各 terminal 按 `Ctrl+C`，不要停止或重建共享資料庫。
+只有明確選用 Docker 隔離模式時，才依第 6 節管理該環境。
 
 ## 16. 常見問題
 
-### PostgreSQL 5432 已被占用
+### 選用 Docker 隔離環境：PostgreSQL 5432 已被占用
 
-修改 root `.env`：
+只修改該隔離 checkout 的 `.env`，不要覆寫 Supabase 開發連線：
 
 ```dotenv
 POSTGRES_PORT=15432
@@ -593,12 +650,14 @@ TEST_DATABASE_URL=postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:15432/k
 
 - 直接 API 本機開發：確認 `APP_ENV=development`、`FAKE_AUTH_ENABLED=true` 與三個
   `FAKE_AUTH_*` synthetic 值存在。
-- 完整瀏覽器登入：確認 App Session 與 OIDC 三個 gates、shared handoff secret 和 callback。
+- 完整瀏覽器登入：依第 8 節確認 App Session、Core／BFF 的 Kinsun gates 與 shared handoff secret；
+  選用 OIDC 時另檢查其 gates、provider 設定與 callback。
 - 不要在 `APP_ENV=production` 啟用 fake auth；它不會生效。
 
 ### Frontend 顯示未登入，但 Core fake auth 可用
 
-這是預期行為。Fake auth 不會建立 HttpOnly App Session Cookie。請設定 Google／LINE OIDC，或只以
+這是預期行為。Fake auth 不會建立 HttpOnly App Session Cookie。請設定 Kinsun Email／Password
+或選用 Google／LINE OIDC；否則只以
 direct Core API 進行 fake-auth 測試。
 
 ### Consent 不能開啟
