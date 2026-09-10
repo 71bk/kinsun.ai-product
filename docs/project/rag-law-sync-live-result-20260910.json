@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "status": "STAGING_SYNC_AND_BFF_QUESTION_ANSWER_VERIFIED",
+  "authorization_path": "docs/project/rag-law-sync-authorization-20260910.json",
+  "authorization_sha256": "03fa69919b05d872e0885977f576d69f5ca8d4e6f88d6cf6188f5e54a526df0d",
+  "source_release_id": "rag-v2-v002-bab68588963b",
+  "target_release_id": "rag-v2-v004-f3339ceae77c",
+  "candidate_sha256": "f3339ceae77c380f42b3c2823b28216827ef48d057129a9c5f5edd40c9e808dd",
+  "preflight_sha256": "0929e2cc430183ec51876bd3e95bf5231818ae10dd1b84b7eabfd2149d19b8e1",
+  "target_identity_sha256": "54bc4a7341d1a5d816cdfdccd020583419fa67315e4ff3883126d559df03aeff",
+  "inserted_chunk_count": 726,
+  "inserted_embedding_count": 726,
+  "governance_changed_count": 71,
+  "remaining_governance_unchanged_count": 655,
+  "projection_run_id": "06912c45-5d4b-4e97-bdeb-832c33f5d1eb",
+  "embedding_run_id": "30b3405a-9f6a-4375-b84e-e0353b3ca9e1",
+  "independent_readback": "VERIFIED_726_PROJECTIONS_AND_VECTORS",
+  "embedding_profile_id": "ep-google-00a12ec45096fa9d97d9e9b6",
+  "vector_evidence_origin": "CURRENT_DATABASE_EXPORT_NOT_LOST_ORIGINAL_ARTIFACT",
+  "source_export_sha256": "fa784d67810031feee103552873b2b142a96794ecc3d832a3f363edb93b5794b",
+  "target_export_sha256": "cfb6450a4fc9f747ec1eb05c626383186bebace8765f8821fbd4c6e753066584",
+  "original_embedding_artifact_available": false,
+  "document_embeddings_generated": 0,
+  "old_release_deleted": false,
+  "local_configuration_changed": [
+    "RAG_POSTGRES_RELEASE_ID",
+    "RAG_SOURCE_FAMILY_POLICY_PATH",
+    "RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256"
+  ],
+  "runtime_policy_sha256": "a7d8dd163e54bb5cb11f1ea4004e3a6b75b9faff98290067e745125cc6ac5758",
+  "local_agent_started_with_correct_dotenv_interpolation": true,
+  "direct_retrieval": [
+    {"query": "長照法", "audience": "elder", "status": "SUCCESS", "result_count": 5},
+    {"query": "長照法第二條", "audience": "elder", "status": "SUCCESS", "result_count": 5, "article_2_present": true},
+    {"query": "長照法第2條", "audience": "family_caregiver", "status": "SUCCESS", "result_count": 5, "article_2_present": true},
+    {"query": "長照法第二條", "audience": "care_professional", "status": "SUCCESS", "result_count": 5, "article_2_present": true},
+    {"query": "長照法第二條", "audience": "elder", "purpose": "disallowed_purpose", "status": "NO_DATA", "result_count": 0}
+  ],
+  "bff_core_agent_acceptance": {
+    "account_kind": "EXISTING_SYNTHETIC_ELDER_DEMO",
+    "transport": "HTTP_CLIENT_TO_LOOPBACK_BFF_NOT_BROWSER_UI",
+    "queries": [
+      {"query": "長照法", "http_status": 200, "result_status": "SUCCESS", "safety_decision": "ALLOW", "official_citations_present": true, "assessment_advisory_present": true},
+      {"query": "長照法第二條", "http_status": 200, "result_status": "SUCCESS", "safety_decision": "ALLOW", "official_citations_present": true, "assessment_advisory_present": true, "answer_matches_article_2_authorities": true}
+    ],
+    "model_route": "gemini-3.6-flash",
+    "test_session_logout_http_status": 200
+  },
+  "browser_ui": "NOT_EXECUTED_NO_BROWSER_AVAILABLE",
+  "official_law_currency_rechecked": false,
+  "least_privilege_principal_provisioned": false,
+  "production_approved": false
+}

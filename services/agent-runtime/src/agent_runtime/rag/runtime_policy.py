@@ -260,7 +260,36 @@ class RuntimePolicyDocumentV3(_StrictModel):
     gates: _Gates
 
 
-RuntimePolicyDocument = RuntimePolicyDocumentV1 | RuntimePolicyDocumentV2 | RuntimePolicyDocumentV3
+class _RepairProjectionBinding(_StrictModel):
+    release_id: str = Field(pattern=r"^rag-v2-v004-[a-f0-9]{12}$")
+    candidate_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    embedding_profile_id: Literal["ep-google-00a12ec45096fa9d97d9e9b6"]
+    crosswalk_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    prior_release_id: Literal["rag-v2-v002-bab68588963b"]
+    id_mapping: Literal["PRESERVE_SOURCE_AND_INDEX_V002_TO_V004"]
+    production_approved: Literal[False]
+
+
+class RuntimePolicyDocumentV4(_StrictModel):
+    """Projection-only successor: the complete v003 response policy stays byte-pinned."""
+
+    schema_version: Literal["4.0.0"]
+    runtime_policy_version: Literal["v004"]
+    base_policy_sha256: Literal["99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd"]
+    base_policy: RuntimePolicyDocumentV3
+    projection_binding: _RepairProjectionBinding
+
+    @property
+    def chunks(self) -> tuple[RuntimePolicyChunkV2, ...]:
+        return self.base_policy.chunks
+
+
+RuntimePolicyDocument = (
+    RuntimePolicyDocumentV1
+    | RuntimePolicyDocumentV2
+    | RuntimePolicyDocumentV3
+    | RuntimePolicyDocumentV4
+)
 RuntimePolicyCandidate = RuntimePolicyChunk | RuntimePolicyChunkV2
 
 
@@ -275,6 +304,19 @@ class SourceFamilyRuntimePolicy:
     @property
     def candidate_chunk_ids(self) -> tuple[str, ...]:
         return tuple(self._by_prior_chunk_id)
+
+    def validate_search_binding(
+        self, *, backend: str, release_id: str | None, embedding_profile_id: str | None
+    ) -> None:
+        if not isinstance(self.document, RuntimePolicyDocumentV4):
+            return
+        binding = self.document.projection_binding
+        if (
+            backend != "postgresql"
+            or release_id != binding.release_id
+            or embedding_profile_id != binding.embedding_profile_id
+        ):
+            raise RuntimePolicyError("repair runtime policy search binding mismatch")
 
     def response_candidate(
         self,
@@ -355,12 +397,21 @@ def load_source_family_runtime_policy(
             document = RuntimePolicyDocumentV2.model_validate_json(raw)
         elif version == "v003":
             document = RuntimePolicyDocumentV3.model_validate_json(raw)
+        elif version == "v004":
+            document = RuntimePolicyDocumentV4.model_validate_json(raw)
         else:
             raise RuntimePolicyError("source-family runtime policy version is unsupported")
     except ValidationError as exc:
         raise RuntimePolicyError("source-family runtime policy contract is invalid") from exc
     _validate_semantics(document)
-    by_prior_chunk_id = {candidate.prior_chunk_id: candidate for candidate in document.chunks}
+    by_prior_chunk_id = {
+        (
+            candidate.prior_chunk_id.replace("_rag_v2_v002_", "_rag_v2_v004_")
+            if isinstance(document, RuntimePolicyDocumentV4)
+            else candidate.prior_chunk_id
+        ): candidate
+        for candidate in document.chunks
+    }
     return SourceFamilyRuntimePolicy(
         document=document,
         sha256=actual_sha256,
@@ -369,6 +420,27 @@ def load_source_family_runtime_policy(
 
 
 def _validate_semantics(document: RuntimePolicyDocument) -> None:
+    if isinstance(document, RuntimePolicyDocumentV4):
+        base_bytes = (
+            json.dumps(
+                document.base_policy.model_dump(mode="json"),
+                ensure_ascii=False,
+                sort_keys=True,
+                indent=2,
+            )
+            + "\n"
+        ).encode("utf-8")
+        if hashlib.sha256(base_bytes).hexdigest() != document.base_policy_sha256:
+            raise RuntimePolicyError("repair runtime policy changed its pinned base")
+        binding = document.projection_binding
+        if binding.release_id != f"rag-v2-v004-{binding.candidate_sha256[:12]}":
+            raise RuntimePolicyError("repair release digest mismatch")
+        if any(
+            candidate.prior_chunk_id.count("_rag_v2_v002_") != 1 for candidate in document.chunks
+        ):
+            raise RuntimePolicyError("repair policy cannot map a prior chunk ID")
+        _validate_semantics(document.base_policy)
+        return
     if document.global_policy.retrieval_audiences != PUBLIC_AUDIENCES:
         raise RuntimePolicyError("runtime policy public audiences diverged")
     if document.global_policy.ordinary_retrieval_risk_levels != ("low", "medium"):

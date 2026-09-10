@@ -1,0 +1,2198 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "READ_ONLY_PREVIEW_NOT_AN_APPLY_MANIFEST",
+  "captured_at": "2026-09-09T08:42:59.763490+00:00",
+  "transaction_read_only": "on",
+  "release": {
+    "release_id": "rag-v2-v002-bab68588963b",
+    "candidate_sha256": "bab68588963be5b47c7058f9cb9b5c0fd87181087316c262c9faefea6d5bedec",
+    "chunk_count": 726,
+    "source_count": 17,
+    "review_status": "needs_review",
+    "production_approved": false,
+    "release_status": "STAGING_CANDIDATE"
+  },
+  "runtime_policy_sha256": "99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd",
+  "assessment_authority": {
+    "path": "data/rag-v3/review/acceptance/v004/owner-assessment-response-policy-acceptance.json",
+    "sha256": "dcc923a3910e556c535a26856644fabc097a78b36e2a2492409ee987ce106c69",
+    "external_sync": "NOT_AUTHORIZED",
+    "production_approved": false
+  },
+  "checks": {
+    "policy_sha256_matches_config": true,
+    "assessment_acceptance_sha256": true,
+    "candidate_inventory_sha256": true,
+    "crosswalk_sha256": true,
+    "source_release_matches": true,
+    "embedding_profile_matches": true,
+    "v002_inventory": {
+      "files_checked": 29,
+      "mismatches": 0
+    },
+    "v003_inventory": {
+      "files_checked": 24,
+      "mismatches": 0
+    },
+    "v002_release_inventory_sha256": true
+  },
+  "summary": {
+    "source_rows": 72,
+    "scoped_candidates": 71,
+    "hypothetically_live_eligible": 71,
+    "out_of_scope_preserved": 1,
+    "db_rows_written": 0
+  },
+  "rows": [
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0001",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0001",
+      "locator": "第 1 頁／第一章 總則／第 1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0002",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0002",
+      "locator": "第 1 頁／第一章 總則／第 2 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0003",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0003",
+      "locator": "第 1 頁／第一章 總則／第 3 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0004",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0004",
+      "locator": "第 1-2 頁／第一章 總則／第 4 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0005",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0005",
+      "locator": "第 2 頁／第一章 總則／第 5 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0006",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0006",
+      "locator": "第 2 頁／第一章 總則／第 6 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0007",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0007",
+      "locator": "第 2-3 頁／第一章 總則／第 7 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0008",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0008",
+      "locator": "第 3 頁／第二章 長照服務及長照體系／第 8 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0009",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0009",
+      "locator": "第 3 頁／第二章 長照服務及長照體系／第 8-1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0010",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0010",
+      "locator": "第 3-4 頁／第二章 長照服務及長照體系／第 9 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0011",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0011",
+      "locator": "第 4 頁／第二章 長照服務及長照體系／第 10 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0012",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0012",
+      "locator": "第 4 頁／第二章 長照服務及長照體系／第 11 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0013",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0013",
+      "locator": "第 4-5 頁／第二章 長照服務及長照體系／第 12 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0014",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0014",
+      "locator": "第 5 頁／第二章 長照服務及長照體系／第 13 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0015",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0015",
+      "locator": "第 5 頁／第二章 長照服務及長照體系／第 14 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0016",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0016",
+      "locator": "第 5-6 頁／第二章 長照服務及長照體系／第 15 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0017",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0017",
+      "locator": "第 6 頁／第二章 長照服務及長照體系／第 16 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0018",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0018",
+      "locator": "第 6 頁／第二章 長照服務及長照體系／第 17 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0019",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0019",
+      "locator": "第 6 頁／第三章 長照人員之管理／第 18 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0020",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0020",
+      "locator": "第 6 頁／第三章 長照人員之管理／第 19 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0021",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0021",
+      "locator": "第 7 頁／第三章 長照人員之管理／第 20 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0022",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0022",
+      "locator": "第 7 頁／第四章 長照機構之管理／第 21 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0023",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0023",
+      "locator": "第 7 頁／第四章 長照機構之管理／第 22 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0024",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0024",
+      "locator": "第 7 頁／第四章 長照機構之管理／第 23 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0025",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0025",
+      "locator": "第 7 頁／第四章 長照機構之管理／第 24 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0026",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0026",
+      "locator": "第 7 頁／第四章 長照機構之管理／第 25 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0027",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0027",
+      "locator": "第 7-8 頁／第四章 長照機構之管理／第 26 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0028",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0028",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 27 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0029",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0029",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 28 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0030",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0030",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 29 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0031",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0031",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 30 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0032",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0032",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 31 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0033",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0033",
+      "locator": "第 8 頁／第四章 長照機構之管理／第 32 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0034",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0034",
+      "locator": "第 8-9 頁／第四章 長照機構之管理／第 32-1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0035",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0035",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 32-2 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0036",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0036",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 33 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0037",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0037",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 34 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0038",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0038",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 35 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0039",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0039",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 36 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0040",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0040",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 37 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0041",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0041",
+      "locator": "第 9 頁／第四章 長照機構之管理／第 38 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0042",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0042",
+      "locator": "第 9-10 頁／第四章 長照機構之管理／第 39 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0043",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0043",
+      "locator": "第 10 頁／第四章 長照機構之管理／第 39-1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0044",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0044",
+      "locator": "第 10 頁／第四章 長照機構之管理／第 40 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0045",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0045",
+      "locator": "第 10 頁／第四章 長照機構之管理／第 41 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0046",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0046",
+      "locator": "第 10 頁／第五章 接受長照服務者之權益保障／第 42 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0047",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0047",
+      "locator": "第 10 頁／第五章 接受長照服務者之權益保障／第 43 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0049",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0049",
+      "locator": "第 11 頁／第五章 接受長照服務者之權益保障／第 45 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0050",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0050",
+      "locator": "第 11 頁／第五章 接受長照服務者之權益保障／第 46 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0051",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0051",
+      "locator": "第 11 頁／第六章 罰則／第 47 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0052",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0052",
+      "locator": "第 11 頁／第六章 罰則／第 47-1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0053",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0053",
+      "locator": "第 11-12 頁／第六章 罰則／第 48 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0054",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0054",
+      "locator": "第 12 頁／第六章 罰則／第 48-1 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0055",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0055",
+      "locator": "第 12 頁／第六章 罰則／第 49 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0056",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0056",
+      "locator": "第 12 頁／第六章 罰則／第 50 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0057",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0057",
+      "locator": "第 12 頁／第六章 罰則／第 51 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0058",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0058",
+      "locator": "第 12 頁／第六章 罰則／第 52 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0059",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0059",
+      "locator": "第 12-13 頁／第六章 罰則／第 53 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0060",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0060",
+      "locator": "第 13 頁／第六章 罰則／第 54 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0061",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0061",
+      "locator": "第 13 頁／第六章 罰則／第 55 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0062",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0062",
+      "locator": "第 13 頁／第六章 罰則／第 56 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0063",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0063",
+      "locator": "第 13 頁／第六章 罰則／第 57 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0064",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0064",
+      "locator": "第 13 頁／第六章 罰則／第 58 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0065",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0065",
+      "locator": "第 14 頁／第六章 罰則／第 59 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0066",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0066",
+      "locator": "第 14 頁／第六章 罰則／第 60 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0067",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0067",
+      "locator": "第 14 頁／第七章 附則／第 61 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0068",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0068",
+      "locator": "第 14 頁／第七章 附則／第 62 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0069",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0069",
+      "locator": "第 14 頁／第七章 附則／第 63 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0070",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0070",
+      "locator": "第 14 頁／第七章 附則／第 64 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0071",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0071",
+      "locator": "第 14 頁／第七章 附則／第 65 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    },
+    {
+      "prior_chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0072",
+      "policy_chunk_id": "moj_long_term_care_services_act_20210609_rag_v3_v003_0072",
+      "locator": "第 15 頁／第七章 附則／第 66 條",
+      "integrity": {
+        "stored_text_sha256": true,
+        "embedding_text_sha256": true,
+        "v002_record_sha256": true,
+        "policy_and_column_agree": true
+      },
+      "before": {
+        "professional_assessment_column": null,
+        "professional_assessment_json": null,
+        "retrieval_eligible_column": false,
+        "retrieval_eligible_json": false,
+        "block_reasons": [
+          "requires_professional_assessment_missing"
+        ]
+      },
+      "proposed": {
+        "professional_assessment_column": true,
+        "professional_assessment_json": true,
+        "remaining_block_reasons": [],
+        "live_gate_eligible_if_authorized": true,
+        "retrieval_eligible_column_if_authorized": true,
+        "retrieval_eligible_json_if_authorized": true
+      },
+      "review_status_preserved": "needs_review",
+      "production_approved_preserved": false
+    }
+  ],
+  "excluded": [
+    {
+      "chunk_id": "moj_long_term_care_services_act_20210609_rag_v2_v002_0048",
+      "locator": "第 10 頁／第五章 接受長照服務者之權益保障／第 44 條",
+      "stop_normal_rag": true,
+      "risk_level": "high_red_line",
+      "block_reasons": [
+        "stop_normal_rag",
+        "risk_level_not_allowed",
+        "requires_professional_assessment_missing"
+      ],
+      "action": "KEEP_UNCHANGED"
+    }
+  ],
+  "limitations": [
+    "Snapshot only; not an executable apply manifest or external-sync approval.",
+    "Embedding reuse checks compare stored embedding-text SHA-256 and profile linkage; vector values/fingerprints and all 726 rows were not revalidated.",
+    "No model generation, post-sync retrieval, browser E2E, or current legal-version verification performed.",
+    "Hypothetical live eligibility does not guarantee query relevance, sufficient citation count, or answer quality."
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json",
+    "sha256": "99aa1dd6ccf90970c798664fedaff9ae3dd2f769437ebebc4a54c07478a1b5bd",
+    "size_bytes": 1156781
+  },
+  {
+    "path": "data/rag-v2/candidates/v004/SHA256SUMS.txt",
+    "sha256": "f3339ceae77c380f42b3c2823b28216827ef48d057129a9c5f5edd40c9e808dd",
+    "size_bytes": 3244
+  }
+]

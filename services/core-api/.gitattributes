@@ -1,0 +1,4 @@
+# Byte-hashed law repair inputs; keep the historically pinned root attributes unchanged.
+app/rag*.py text eol=lf
+tests/unit/test_law*.py text eol=lf
+tests/unit/test_rag*.py text eol=lf

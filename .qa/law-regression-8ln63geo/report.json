@@ -1,0 +1,82 @@
+{
+  "browser_e2e": "NOT_EXECUTED_NO_BROWSER_AVAILABLE",
+  "input_inventory_sha256": "293f46e9d0e111b8e9f68d62edb64d638c3df25ddb685d16d811f627151a579d",
+  "output_path": "D:\\Hackthon\\kinsun.ai\\.qa\\law-regression-8ln63geo",
+  "status": "PASS",
+  "suites": [
+    {
+      "collected": 99,
+      "collected_node_sha256": "3cc4c961dcea6e126e24dc6ba5e5a9a042501a80f12daf9db1d363ba30a74e60",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "--project",
+        "services/core-api",
+        "pytest",
+        "services/core-api/tests/unit/test_law_governance_preview.py",
+        "services/core-api/tests/unit/test_law_repair_candidate.py",
+        "services/core-api/tests/unit/test_rag_projection_importer.py",
+        "services/core-api/tests/unit/test_rag_embedding_importer.py",
+        "services/core-api/tests/unit/test_rag_embedding_reuse_preflight.py",
+        "services/core-api/tests/unit/test_law_repair_sync.py",
+        "-q",
+        "--junitxml=D:\\Hackthon\\kinsun.ai\\.qa\\law-regression-8ln63geo\\core-api.xml"
+      ],
+      "elapsed_seconds": 40.109,
+      "errors": 0,
+      "exit_code": 0,
+      "failed": 0,
+      "log_sha256": "1c03394d42b88ffe2c24ea07a947cfbecdf2a266818855980fafefcd4b8f4e97",
+      "passed": 99,
+      "project": "core-api",
+      "skipped": 0
+    },
+    {
+      "collected": 533,
+      "collected_node_sha256": "61a475e5ceee982aa07501157e0c82d1f2f61fa2b097fa37a42c252e0509c13c",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "--project",
+        "services/agent-runtime",
+        "pytest",
+        "services/agent-runtime/tests",
+        "-q",
+        "--junitxml=D:\\Hackthon\\kinsun.ai\\.qa\\law-regression-8ln63geo\\agent-runtime.xml"
+      ],
+      "elapsed_seconds": 13.953,
+      "errors": 0,
+      "exit_code": 0,
+      "failed": 0,
+      "log_sha256": "cbbcc9011a124de0a52c219792e94c9307734dccf6c68d452ee8b6c24b4fa3d1",
+      "passed": 533,
+      "project": "agent-runtime",
+      "skipped": 0
+    },
+    {
+      "collected": 328,
+      "collected_node_sha256": "60b1b784a0815ea4b97b593870ffd64fc38e8a585774717e8949eec76e28f46e",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "--project",
+        "services/rag-ingestion",
+        "pytest",
+        "services/rag-ingestion/tests",
+        "-q",
+        "--junitxml=D:\\Hackthon\\kinsun.ai\\.qa\\law-regression-8ln63geo\\rag-ingestion.xml"
+      ],
+      "elapsed_seconds": 260.875,
+      "errors": 0,
+      "exit_code": 0,
+      "failed": 0,
+      "log_sha256": "ed9f9e1b3040b8b87d7145f8b15e299059394ee0d9d03d7f80ddf6732e3c7729",
+      "passed": 328,
+      "project": "rag-ingestion",
+      "skipped": 0
+    }
+  ]
+}

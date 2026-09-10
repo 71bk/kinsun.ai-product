@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "recorded_at": "2026-09-10T01:23:52Z",
+  "authorization_basis": "interactive_user_reply",
+  "user_statement": "好",
+  "confirmed_request": "驗證後同步至 Supabase 開發資料庫、切換本機 Agent 並做實機測試；保留舊資料，不啟用 production",
+  "source_release_id": "rag-v2-v002-bab68588963b",
+  "target_release_id": "rag-v2-v004-f3339ceae77c",
+  "target_candidate_sha256": "f3339ceae77c380f42b3c2823b28216827ef48d057129a9c5f5edd40c9e808dd",
+  "runtime_policy_sha256": "a7d8dd163e54bb5cb11f1ea4004e3a6b75b9faff98290067e745125cc6ac5758",
+  "embedding_profile_id": "ep-google-00a12ec45096fa9d97d9e9b6",
+  "governance_change_count": 71,
+  "external_sync": "AUTHORIZED_AFTER_VALIDATION",
+  "local_runtime_activation": "AUTHORIZED_AFTER_VALIDATION",
+  "delete_old_release": false,
+  "generate_document_embeddings": false,
+  "production_approved": false
+}
