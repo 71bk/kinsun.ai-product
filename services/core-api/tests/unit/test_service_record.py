@@ -79,6 +79,11 @@ async def test_non_home_roles_fail_closed_without_query(role):
                 headers={"Idempotency-Key": "synthetic"},
                 json={"expected_assignment_version": 2, "content": "Synthetic note"},
             ),
+            await client.post(
+                path + "/complete",
+                headers={"Idempotency-Key": "synthetic-completion"},
+                json={"expected_assignment_version": 2, "content": "Synthetic note"},
+            ),
         ]:
             assert response.status_code == 404
             assert response.json()["error"]["code"] == "not_found"
@@ -250,3 +255,177 @@ async def test_success_uses_server_scope_and_minimal_outbox(timezone, monkeypatc
     assert outbox.await_args.kwargs["classification"] == "RESTRICTED"
     idem.complete.assert_awaited_once()
     session.commit.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "scope", ["assignment:read", "service_record:write", "assignment:complete"]
+)
+async def test_combined_command_requires_every_scope_on_exact_assignment(scope, monkeypatch):
+    actor, assignment = fixture_values()
+    assignment.service_scope.append("assignment:complete")
+    assignment.service_scope.remove(scope)
+    session = AsyncMock()
+    session.scalar.return_value = assignment
+    idem = MagicMock()
+    monkeypatch.setattr("app.services.service_record_service.IdempotencyRepository", idem)
+    with pytest.raises(NotFoundError):
+        await ServiceRecordService(session, actor).create_and_complete(
+            assignment.id,
+            CreateServiceRecordRequest(expected_assignment_version=2, content="Synthetic"),
+            "key",
+            "trace",
+        )
+    idem.assert_not_called()
+    session.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "failure", [None, "record_outbox", "assignment_outbox", "final_gate", "receipt"]
+)
+async def test_combined_command_shares_transaction_and_never_returns_note(failure, monkeypatch):
+    import json
+    from pathlib import Path
+
+    from jsonschema import Draft202012Validator
+
+    actor, assignment = fixture_values()
+    assignment.service_scope.append("assignment:complete")
+    session = MagicMock()
+    session.scalar = AsyncMock(side_effect=[None, assignment])
+
+    async def flush():
+        record = session.add.call_args.args[0]
+        if record.service_record_id is None:
+            record.service_record_id = uuid4()
+
+    session.flush = AsyncMock(side_effect=flush)
+    service = ServiceRecordService(session, actor)
+    service._authorize = AsyncMock(
+        side_effect=[
+            (assignment, "UTC"),
+            (assignment, "UTC"),
+            NotFoundError("Resource not found") if failure == "final_gate" else (assignment, "UTC"),
+        ]
+    )
+    idem = SimpleNamespace(
+        begin=AsyncMock(return_value=SimpleNamespace(replayed=False)),
+        complete=AsyncMock(side_effect=RuntimeError("synthetic") if failure == "receipt" else None),
+    )
+    monkeypatch.setattr(
+        "app.services.service_record_service.IdempotencyRepository", lambda *a: idem
+    )
+    record_outbox = AsyncMock(
+        side_effect=RuntimeError("synthetic") if failure == "record_outbox" else None
+    )
+    assignment_outbox = AsyncMock(
+        side_effect=RuntimeError("synthetic") if failure == "assignment_outbox" else None
+    )
+    monkeypatch.setattr("app.services.service_record_service.write_outbox_entry", record_outbox)
+    monkeypatch.setattr("app.services.assignment_service.write_outbox_entry", assignment_outbox)
+    command = service.create_and_complete(
+        assignment.id,
+        CreateServiceRecordRequest(expected_assignment_version=2, content="Synthetic note"),
+        "combined-key",
+        "synthetic-trace",
+    )
+    if failure:
+        with pytest.raises(NotFoundError if failure == "final_gate" else RuntimeError):
+            await command
+        if failure != "receipt":
+            idem.complete.assert_not_awaited()
+    else:
+        body = await command
+        assert set(body) == {"service_record_id", "assignment_id", "assignment_version", "status"}
+        assert body["assignment_version"] == 3
+        assert assignment.status == "COMPLETED" and assignment.version == 3
+        assert session.add.call_args.args[0].assignment_version == 2
+        assert idem.complete.await_args.kwargs["response_body"] == body
+        assert idem.begin.await_args.kwargs["operation"] == "create_service_record_and_complete"
+        assert service._authorize.await_count == 3
+        for outbox in [record_outbox, assignment_outbox]:
+            assert outbox.await_args.args[0] is session
+            assert "content" not in outbox.await_args.kwargs["payload"]
+            assert outbox.await_args.kwargs["idempotency_key"] == "combined-key"
+        schema_path = (
+            Path(__file__).resolve().parents[4]
+            / "contracts/schemas/domain/ServiceRecordCompletionV1.json"
+        )
+        Draft202012Validator(json.loads(schema_path.read_text())).validate(body)
+    # Failure propagation lets the request boundary roll back. Real rollback is
+    # independently exercised by the disposable PostgreSQL integration suite.
+    session.commit.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_combined_completed_assignment_rejects_replay_before_claim(monkeypatch):
+    actor, assignment = fixture_values()
+    assignment.status = "COMPLETED"
+    assignment.service_scope.append("assignment:complete")
+    session = AsyncMock()
+    session.scalar.return_value = assignment
+    idem = MagicMock()
+    monkeypatch.setattr("app.services.service_record_service.IdempotencyRepository", idem)
+    with pytest.raises(NotFoundError):
+        await ServiceRecordService(session, actor).create_and_complete(
+            assignment.id,
+            CreateServiceRecordRequest(expected_assignment_version=2, content="Synthetic"),
+            "same-successful-key",
+            "trace",
+        )
+    idem.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_assignment_transition_rechecks_locked_version():
+    from app.services.assignment_service import AssignmentService
+
+    actor, old = fixture_values()
+    _, committed = fixture_values()
+    committed.version = old.version + 1
+    committed.status = "COMPLETED"
+    session = AsyncMock()
+    session.scalar.return_value = committed
+    with pytest.raises(ConflictError):
+        await AssignmentService(session, actor.tenant_id).transition(
+            assignment=old,
+            target="COMPLETED",
+            actor_id=actor.actor_id,
+            expected_version=old.version,
+            trace_id="synthetic",
+            idempotency_key="same-visit",
+        )
+    session.flush.assert_not_awaited()
+    sql = str(session.scalar.await_args.args[0].compile(dialect=postgresql.dialect()))
+    assert "FOR UPDATE" in sql and "tenant_id" in sql
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "target,scope", [("IN_PROGRESS", "assignment:start"), ("COMPLETED", "assignment:complete")]
+)
+async def test_existing_assignment_commands_use_schema_defined_scopes(target, scope, monkeypatch):
+    from typing import get_args
+
+    from app.api import assignments
+    from app.schemas.assignment import AssignmentCommandRequest, AssignmentScope
+
+    actor, assignment = fixture_values()
+    service = SimpleNamespace(get=AsyncMock(return_value=assignment))
+    monkeypatch.setattr(assignments, "AssignmentService", lambda *args: service)
+    authorize = AsyncMock(side_effect=NotFoundError("Resource not found"))
+    monkeypatch.setattr(
+        assignments, "AssignmentAccessService", lambda *args: SimpleNamespace(authorize=authorize)
+    )
+    with pytest.raises(NotFoundError):
+        await assignments._assignment_command(
+            assignment_id=assignment.id,
+            target=target,
+            request=AssignmentCommandRequest(expected_version=2, reason_code="SYNTHETIC"),
+            idempotency_key="key",
+            actor_context=actor,
+            session=AsyncMock(),
+        )
+    assert authorize.await_args.kwargs["required_scopes"] == frozenset({scope})
+    assert scope in get_args(AssignmentScope)

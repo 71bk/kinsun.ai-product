@@ -26,6 +26,7 @@ export interface AssignmentCardProps {
   onCommand: (assignment: AssignmentView, command: 'start' | 'complete') => Promise<void>;
   config: ApiConfig;
   onAccessCheck: () => void;
+  onRecordCompleted?: () => void;
 }
 
 export function AssignmentCard({
@@ -33,11 +34,13 @@ export function AssignmentCard({
   onCommand,
   config,
   onAccessCheck,
+  onRecordCompleted,
 }: AssignmentCardProps) {
   const { t, formatDateTime } = useLocale();
   const [confirming, setConfirming] = useState<'start' | 'complete' | null>(null);
   const [busy, setBusy] = useState(false);
   const [showRecord, setShowRecord] = useState(false);
+  const [recordPending, setRecordPending] = useState(false);
   const Icon = STATUS_ICON[assignment.status];
   const availableCommand =
     assignment.status === 'CONFIRMED'
@@ -95,7 +98,7 @@ export function AssignmentCard({
         {availableCommand && (
           <button
             className={styles.command}
-            disabled={busy}
+            disabled={busy || recordPending}
             onClick={() => setConfirming(availableCommand)}
             type="button"
           >
@@ -110,12 +113,15 @@ export function AssignmentCard({
               className={`${styles.elderLink} ${styles.recordToggle}`}
               type="button"
               aria-expanded={showRecord}
+              disabled={busy || recordPending}
               onClick={() => setShowRecord((current) => !current)}
             >
               {t(showRecord ? 'serviceRecord.close' : 'serviceRecord.open')}
             </button>
             {showRecord && (
               <ServiceRecordPanel
+                onCompleted={onRecordCompleted}
+                onPendingChange={setRecordPending}
                 key={`${assignment.assignmentId}:${assignment.version}`}
                 assignment={assignment}
                 config={config}

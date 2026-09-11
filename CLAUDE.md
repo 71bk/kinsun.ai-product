@@ -411,6 +411,10 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
   不覆寫根目錄或歷史核准紀錄。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
+- 派案 `IN_PROGRESS`／`COMPLETED` 的授權分別使用 schema 既定的 `assignment:start`／
+  `assignment:complete`，不可直接由 target.lower() 拼成 scope。派案命令與紀錄整合命令
+  都先鎖 assignment 再 claim idempotency，等鎖後重讀狀態／版本，避免舊 snapshot 覆寫。
+  指定派案 gate 共用 `AssignmentAccessService`，不得借同長者另一派案的 scope。
 - 手動 DB 檢查沿用 `to_psycopg_database_url`（包含 ssl→sslmode），不要只替換 driver；
   Alembic 版本表依 `alembic/env.py` 位於 `public.alembic_version`，不得猜測或輸出連線密碼。
 - 無 ORM 的功能可能已有 baseline SQL 表；`service_record` 就是 JSONB、worker_actor_id 的

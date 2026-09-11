@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ServiceRecordCompletionV1.json",
+  "title": "ServiceRecordCompletionV1",
+  "description": "Receipt for an atomic record submission and assignment completion. Contains no note or post-completion reading authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["service_record_id", "assignment_id", "assignment_version", "status"],
+  "properties": {
+    "service_record_id": {"type": "string", "format": "uuid"},
+    "assignment_id": {"type": "string", "format": "uuid"},
+    "assignment_version": {"type": "integer", "minimum": 2},
+    "status": {"type": "string", "const": "COMPLETED"}
+  }
+}

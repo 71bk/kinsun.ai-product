@@ -8,10 +8,16 @@
 
 ## 已在本次收斂
 
+- 2026-09-11 新增 service-record/complete 單一交易命令與最小 completion receipt；
+  同一有效本人派案需 read／record write／assignment complete scopes，完成後包含 replay 均結束紀錄存取。
+  開始／完成派案 command 依正式 scope 名稱授權，並與紀錄整合命令共用指定派案 gate／鎖定順序。
+  本機契約與單元驗證通過，9 個新增 DB cases 待執行。詳見
+  [整合交付紀錄](../docs/project/service-record-completion-20260911.md)。
+
 - 2026-09-09 派案服務紀錄第一切片：新增指定 assignment 的 service-record GET／POST、
   獨立 service_record:read/write scopes、正式人工 SERVICE_NOTE 與最小 completed event。
   只允許本人有效 IN_PROGRESS 派案；不支援已完成派案補登、草稿、覆寫、歷史摘要或家屬分享。
-  沿用 baseline JSONB 表，nullable version 區隔 legacy，新版 immutable；未套用 development DB。
+  沿用 baseline JSONB 表，nullable version 區隔 legacy，新版 immutable；後續已 additive 套用 development DB 至 `e3a5c7d9f102`，無 backfill／scope grant。
   詳見 [交付紀錄](../docs/project/assignment-service-record-20260909.md)。
 
 - 所有業務 API 成功回應都使用 `SuccessEnvelope`，並帶 `meta.schema_version = "1.0"`；`/health`、`/ready` 保持運維探針格式。

@@ -23,6 +23,7 @@ from app.schemas.assignment import (
     AssignmentResponse,
     CreateAssignmentRequest,
 )
+from app.services.assignment_access_service import AssignmentAccessService
 from app.services.assignment_service import AssignmentService
 from app.services.authorization_service import authorize_elder
 
@@ -126,6 +127,22 @@ async def get_assignment(
     return success(_response(assignment).model_dump(mode="json"))
 
 
+async def _authorize_assignment_command(session, actor, service, assignment_id, target):
+    scope = {"IN_PROGRESS": "assignment:start", "COMPLETED": "assignment:complete"}.get(target)
+    if scope is not None:
+        assignment, _ = await AssignmentAccessService(session, actor).authorize(
+            assignment_id,
+            required_scopes=frozenset({scope}),
+            allowed_statuses=frozenset({"CONFIRMED", "IN_PROGRESS"}),
+        )
+        return assignment
+    assignment = await service.get(assignment_id, for_update=True)
+    if assignment is None:
+        raise NotFoundError("Resource not found")
+    await authorize_elder(session, actor, assignment.elder_id, f"assignment:{target.lower()}")
+    return assignment
+
+
 async def _assignment_command(
     *,
     assignment_id: UUID,
@@ -136,20 +153,18 @@ async def _assignment_command(
     session: AsyncSession,
 ) -> dict:
     service = AssignmentService(session, actor_context.tenant_id)
-    assignment = await service.get(assignment_id)
-    if assignment is None:
-        raise NotFoundError("Resource not found")
-    await authorize_elder(
-        session,
-        actor_context,
-        assignment.elder_id,
-        f"assignment:{target.lower()}",
+    # Use the same assignment -> idempotency lock order as record+completion.
+    assignment = await _authorize_assignment_command(
+        session, actor_context, service, assignment_id, target
     )
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
     replay = await idem.begin(
         key=idempotency_key,
         operation=f"assignment_{target.lower()}",
         payload={"assignment_id": assignment_id, **request.model_dump(mode="json")},
+    )
+    assignment = await _authorize_assignment_command(
+        session, actor_context, service, assignment_id, target
     )
     if replay.replayed and replay.response_body is not None:
         return success(replay.response_body)

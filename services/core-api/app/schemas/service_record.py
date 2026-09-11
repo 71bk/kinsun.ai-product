@@ -29,3 +29,13 @@ class ServiceRecordResponse(BaseModel):
     assignment_version: int
     created_at: datetime
     completed_at: datetime
+
+
+class ServiceRecordCompletionResponse(BaseModel):
+    """Command receipt only: completion ends access to the professional note."""
+
+    model_config = ConfigDict(extra="forbid")
+    service_record_id: UUID
+    assignment_id: UUID
+    assignment_version: int = Field(ge=2)
+    status: Literal["COMPLETED"]

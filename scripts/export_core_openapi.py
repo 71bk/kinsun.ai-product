@@ -89,6 +89,7 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "create_service_record_and_complete_api_v1_home_care_assignments__assignment_id__service_record_complete_post": "ServiceRecordCompletionEnvelopeV1",
     "create_service_record_api_v1_home_care_assignments__assignment_id__service_record_post": "ServiceRecordEnvelopeV1",
     "get_service_record_api_v1_home_care_assignments__assignment_id__service_record_get": "ServiceRecordEnvelopeV1",
     "home_care_schedule_api_v1_me_home_care_schedule_get": "HomeCareScheduleEnvelopeV1",
