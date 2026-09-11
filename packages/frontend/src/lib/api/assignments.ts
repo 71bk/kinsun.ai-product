@@ -30,6 +30,7 @@ export interface AssignmentView {
   scopeCount: number;
   canReadServiceRecord?: boolean;
   canWriteServiceRecord?: boolean;
+  canCompleteWithServiceRecord?: boolean;
   version: number;
   expiresAt: string;
 }
@@ -48,6 +49,10 @@ function toAssignmentView(assignment: CoreAssignment): AssignmentView {
     canWriteServiceRecord:
       assignment.allowed_data_scopes.includes('assignment:read') &&
       assignment.allowed_data_scopes.includes('service_record:write'),
+    canCompleteWithServiceRecord:
+      assignment.allowed_data_scopes.includes('assignment:read') &&
+      assignment.allowed_data_scopes.includes('service_record:write') &&
+      assignment.allowed_data_scopes.includes('assignment:complete'),
     version: assignment.version,
     expiresAt: assignment.expires_at,
   };

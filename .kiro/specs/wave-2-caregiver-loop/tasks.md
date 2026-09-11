@@ -25,3 +25,15 @@
     - [x] 3.1c 真實 Agent-to-database 全鏈路：2026-09-08 real-auth BFF → Core → Gemini Runtime → NEEDS_REVIEW Event → 人工 VERIFY → Candidate → UI 採用 → OPEN self-assigned action 全部完成。修正 datetime JSONB 與 VERIFY updated_at 兩個 500；同 key 重送 200、短期 membership 失效後重送 404，來源版本/hash 一致。Core unit 1176 passed；新 DB regression 已隨 PR #32 通過 run `34183906570`，合併後 main run `34184219797` 亦通過。見 `docs/project/wave2-agent-chain-qa-20260908.md`
   - [x] 3.2 更新 traceability 與 Story Map 狀態；C04/F02 第一切片已結案，其他 Wave 2 backlog 與 production readiness 分開追蹤
   - _Requirements: R1, R2_
+
+## US-C01 居服服務紀錄增量（2026-09-11）
+
+- [x] 可選「提交紀錄並完成服務」單一交易 API、最小 receipt 與 exact-assignment gate
+- [x] 中英文勾選／二次確認、重試鎖定與完成／拒絕後清除內容
+- [x] 本機 unit、static/live contracts、production build 與七組尺寸 synthetic Browser QA
+- [ ] Disposable PostgreSQL：新增 9 個 rollback／concurrency／exact-scope integration cases
+- [ ] PR／CI 與 real-auth Browser → Core → DB write E2E
+- [ ] 上次服務摘要的跨次派案／跨 worker 授權與呈現規則定案及實作
+
+此增量不代表完整 US-C01 或 Wave 2 完成；證據與下一切片提案見
+[Service record completion report](../../../docs/project/service-record-completion-20260911.md)。

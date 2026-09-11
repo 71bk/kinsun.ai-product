@@ -410,6 +410,188 @@ async def test_service_record_transaction_and_live_replay(
             ).status_code == 404
 
 
+async def _prepare_record_completion(committed_session, ids):
+    assignment = await committed_session.scalar(
+        select(CareAssignment).where(
+            CareAssignment.elder_id == ids["elder_2_id"],
+            CareAssignment.status == "CONFIRMED",
+        )
+    )
+    now = datetime.now(UTC)
+    assignment.status = "IN_PROGRESS"
+    assignment.service_start = now - timedelta(minutes=10)
+    assignment.service_end = now + timedelta(hours=1)
+    assignment.service_scope = [
+        "assignment:read",
+        "assignment:complete",
+        "service_record:read",
+        "service_record:write",
+    ]
+    await committed_session.commit()
+    return assignment
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["record_outbox", "assignment_outbox", "receipt"])
+async def test_record_completion_rolls_back_entire_transaction(
+    test_engine, seed_api_data, committed_session, monkeypatch, failure
+):
+    from app.models.idempotency import IdempotencyRecord
+    from app.repositories.idempotency_repo import IdempotencyRepository
+    from app.services import assignment_service, service_record_service
+
+    ids = seed_api_data
+    assignment = await _prepare_record_completion(committed_session, ids)
+    version = assignment.version
+    path = f"/api/v1/home-care/assignments/{assignment.id}/service-record/complete"
+    body = {"expected_assignment_version": version, "content": "Synthetic combined visit note"}
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    async with AsyncClient(
+        transport=ASGITransport(app=app, raise_app_exceptions=False), base_url="http://test"
+    ) as client:
+        target, attr = {
+            "record_outbox": (service_record_service, "write_outbox_entry"),
+            "assignment_outbox": (assignment_service, "write_outbox_entry"),
+            "receipt": (IdempotencyRepository, "complete"),
+        }[failure]
+        original = getattr(target, attr)
+
+        async def fail_after_write(*args, **kwargs):
+            await original(*args, **kwargs)
+            raise RuntimeError("Synthetic rollback probe")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(target, attr, fail_after_write)
+            assert (
+                await client.post(path, json=body, headers={"Idempotency-Key": "combined"})
+            ).status_code == 500
+        await committed_session.refresh(assignment)
+        assert assignment.status == "IN_PROGRESS" and assignment.version == version
+        assert await committed_session.scalar(select(func.count()).select_from(ServiceRecord)) == 0
+        assert await committed_session.scalar(select(func.count()).select_from(OutboxEvent)) == 0
+        assert (
+            await committed_session.scalar(select(func.count()).select_from(IdempotencyRecord)) == 0
+        )
+        await committed_session.commit()
+        response = await client.post(path, json=body, headers={"Idempotency-Key": "combined"})
+        assert response.status_code == 201
+        receipt = response.json()["data"]
+        assert set(receipt) == {
+            "service_record_id",
+            "assignment_id",
+            "assignment_version",
+            "status",
+        }
+        assert receipt["assignment_version"] == version + 1
+        await committed_session.refresh(assignment)
+        assert assignment.status == "COMPLETED" and assignment.version == version + 1
+        note = await committed_session.scalar(select(ServiceRecord))
+        assert note.assignment_version == version and note.content["note"] == body["content"]
+        events = (await committed_session.execute(select(OutboxEvent))).scalars().all()
+        assert {event.event_type for event in events} == {
+            "care.service_record.completed.v1",
+            "care.assignment.completed.v1",
+        }
+        assert len(events) == 2
+        assert all("content" not in event.payload for event in events)
+        claim = await committed_session.scalar(select(IdempotencyRecord))
+        assert claim.response_body == receipt and claim.status == "COMPLETED"
+        await committed_session.commit()
+        # Completion revokes record access, even when the caller kept the old key.
+        assert (await client.get(path.removesuffix("/complete"))).status_code == 404
+        assert (
+            await client.post(path, json=body, headers={"Idempotency-Key": "combined"})
+        ).status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("competitor", ["same_key", "other_key", "separate_complete"])
+async def test_record_completion_serializes_concurrent_visit_commands(
+    test_engine, seed_api_data, committed_session, competitor
+):
+    ids = seed_api_data
+    assignment = await _prepare_record_completion(committed_session, ids)
+    version = assignment.version
+    root = f"/api/v1/home-care/assignments/{assignment.id}"
+    path = root + "/service-record/complete"
+    body = {"expected_assignment_version": version, "content": "Synthetic concurrent note"}
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        other_path = root + "/complete" if competitor == "separate_complete" else path
+        other_body = (
+            {"expected_version": version, "reason_code": "WORKER_COMPLETED_VISIT"}
+            if competitor == "separate_complete"
+            else body
+        )
+        responses = await asyncio.wait_for(
+            asyncio.gather(
+                client.post(path, json=body, headers={"Idempotency-Key": "combined"}),
+                client.post(
+                    other_path,
+                    json=other_body,
+                    headers={
+                        "Idempotency-Key": "combined" if competitor == "same_key" else "other"
+                    },
+                ),
+            ),
+            timeout=15,
+        )
+        assert sum(r.status_code in {200, 201} for r in responses) == 1
+        assert sum(r.status_code == 404 for r in responses) == 1
+        await committed_session.refresh(assignment)
+        assert assignment.status == "COMPLETED" and assignment.version == version + 1
+        record_count = await committed_session.scalar(
+            select(func.count()).select_from(ServiceRecord)
+        )
+        assert record_count == (
+            1 if responses[0].status_code == 201 or responses[1].status_code == 201 else 0
+        )
+        assert (
+            await committed_session.scalar(select(func.count()).select_from(OutboxEvent))
+            == 1 + record_count
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "missing_scope", ["assignment:read", "service_record:write", "assignment:complete"]
+)
+async def test_record_completion_cannot_borrow_scope_from_another_visit(
+    test_engine, seed_api_data, committed_session, missing_scope
+):
+    ids = seed_api_data
+    assignment = await _prepare_record_completion(committed_session, ids)
+    all_scopes = list(assignment.service_scope)
+    assignment.service_scope = [scope for scope in all_scopes if scope != missing_scope]
+    committed_session.add(
+        CareAssignment(
+            tenant_id=assignment.tenant_id,
+            care_unit_id=assignment.care_unit_id,
+            elder_id=assignment.elder_id,
+            worker_id=assignment.worker_id,
+            service_start=assignment.service_start,
+            service_end=assignment.service_end,
+            status="IN_PROGRESS",
+            service_scope=all_scopes,
+            version=1,
+        )
+    )
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            f"/api/v1/home-care/assignments/{assignment.id}/service-record/complete",
+            json={
+                "expected_assignment_version": assignment.version,
+                "content": "Synthetic scope probe",
+            },
+            headers={"Idempotency-Key": "scope-probe"},
+        )
+        assert response.status_code == 404
+    assert await committed_session.scalar(select(func.count()).select_from(ServiceRecord)) == 0
+    assert await committed_session.scalar(select(func.count()).select_from(OutboxEvent)) == 0
+
+
 def _build_client_app(test_engine, actor_id: uuid.UUID, actor_role: str, tenant_id: uuid.UUID):
     """Build a FastAPI app with dependency overrides for a given actor context."""
     app = create_app()

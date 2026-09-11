@@ -16,6 +16,48 @@ export interface ServiceRecordSubmission {
   content: string;
 }
 
+export interface ServiceRecordCompletion {
+  service_record_id: string;
+  assignment_id: string;
+  assignment_version: number;
+  status: 'COMPLETED';
+}
+
+export async function submitServiceRecordAndComplete(
+  config: ApiConfig,
+  assignmentId: string,
+  submission: ServiceRecordSubmission,
+  key: string,
+): Promise<ServiceRecordCompletion> {
+  const value = await apiFetch<ServiceRecordCompletion>(
+    config,
+    `/api/v1/home-care/assignments/${encodeURIComponent(assignmentId)}/service-record/complete`,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': key },
+      body: JSON.stringify({
+        expected_assignment_version: submission.expected_assignment_version,
+        content: submission.content,
+        record_type: 'SERVICE_NOTE',
+      }),
+    },
+  );
+  if (
+    !value ||
+    Object.keys(value).some(
+      (field) =>
+        !['service_record_id', 'assignment_id', 'assignment_version', 'status'].includes(field),
+    ) ||
+    value.assignment_id !== assignmentId ||
+    typeof value.service_record_id !== 'string' ||
+    !value.service_record_id ||
+    value.status !== 'COMPLETED' ||
+    value.assignment_version !== submission.expected_assignment_version + 1
+  )
+    throw new ApiRequestError(502, 'Invalid service completion response');
+  return value;
+}
+
 function toView(value: ServiceRecordView, assignmentId: string): ServiceRecordView {
   if (
     !value ||

@@ -1,0 +1,9 @@
+{
+  "data": {
+    "service_record_id": "00000000-0000-4000-8000-000000000001",
+    "assignment_id": "00000000-0000-4000-8000-000000000002",
+    "assignment_version": 3,
+    "status": "COMPLETED"
+  },
+  "meta": {"correlation_id": "synthetic-completion", "timestamp": "2026-09-11T00:00:00Z", "schema_version": "1.0"}
+}
