@@ -34,7 +34,18 @@
 - [x] Disposable PostgreSQL：新增 9 個 rollback／concurrency／exact-scope integration cases 已在 PR #42 CI 通過；完整 DB gate 為 20 migration／177 integration
 - [x] PR／CI：PR #42 已於 2026-09-14 合併（`4c56035`）；PR run `34564617822` 與 main run `34796372613` 全部 10 jobs 成功
 - [ ] real-auth Browser → Core → DB write E2E
-- [ ] 上次服務摘要的跨次派案／跨 worker 授權與呈現規則定案及實作
+- [x] 上次服務紀錄：Owner 核准同 tenant／care unit／elder 跨 worker 交接、獨立 history scope、人工原文；Core／UI／contract 已實作
 
 此增量不代表完整 US-C01 或 Wave 2 完成；證據與下一切片提案見
 [Service record completion report](../../../docs/project/service-record-completion-20260911.md)。
+
+## US-C01 上次服務紀錄增量（2026-09-14）
+
+- [x] 更新 Spec 02／05／07，限定服務開始後的本次派案授權，不回填既有 scope
+- [x] Core 有界來源查詢、live reauthorization、刪除 gate、strict contract 與本機 unit
+- [x] 雙語按需展開、空／失敗／重試、30 秒重驗、隱藏／到期／拒絕清除與延遲回應隔離
+- [x] Production build synthetic Browser QA：14 組 viewport／state，七組雙語尺寸與空／錯誤／載入／拒絕／無 scope／鍵盤／reduced motion
+- [x] PR #44／CI run `34811244713` 全部 10 jobs 成功：20 migration／204 integration，含 27 個新增正常交接、來源隔離、scope、排序及退場案例；程式基準 `f4b2847`，尚未合併
+- [ ] real-auth 跨 worker 交接 E2E／development scope grant／production activation
+
+證據與限制見 [Previous service record report](../../../docs/project/previous-service-record-20260914.md)。

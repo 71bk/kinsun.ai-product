@@ -461,6 +461,60 @@
         ]
       }
     },
+    "/api/v1/home-care/assignments/{assignment_id}/previous-service-record": {
+      "get": {
+        "tags": [
+          "service-records"
+        ],
+        "summary": "Get Previous Service Record",
+        "description": "Read one human note through this exact current assignment, without caching.\n\nRequires assignment:read and service_record:history:read on the caller's live\nIN_PROGRESS assignment. Source visits must be completed, non-overlapping and\nin the same tenant, elder and care unit; another worker's note is permitted.\nDeletion requests or tombstones suppress history. An authorized empty result\nis record=null; unavailable assignments return the same 404 as missing ones.",
+        "operationId": "get_previous_service_record_api_v1_home_care_assignments__assignment_id__previous_service_record_get",
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/PreviousServiceRecordEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/home-care/assignments/{assignment_id}/service-record/complete": {
       "post": {
         "tags": [

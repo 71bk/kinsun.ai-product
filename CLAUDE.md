@@ -186,6 +186,9 @@
 
 ### Contract 與 deployment
 
+- OpenAPI 仍有人工補充的 route description／response；全量 exporter 可能覆蓋它們。
+  新增 endpoint 時檢查 semantic diff，保留既有內容，只納入本次 operation，不直接接受全量重排。
+
 - JSON Schema 的跨檔 `$ref` 用絕對 `$id`；OpenAPI 外部 response schema 則沿用
   exporter／validator 的 `../schemas/...` 文件相對路徑，不要混用兩套解析慣例。
 - Core `AuthorizationDeniedError` 經 HTTP error handler 回傳 404（隱藏資源存在），
@@ -222,6 +225,10 @@
   先跑該服務的 `ruff check`／`ruff format --check`，不要靠目測。
 
 ## 驗證矩陣
+
+Membership 過期 fixture 必須同時設定過去的 effective_from／effective_to，維持
+effective_from < effective_to < now；只把新建 membership 的結束時間減一秒會先違反
+`ck_membership_period`，並非授權測試結果，不可用 sleep 或放寬 constraint 處理。
 
 Async fixture 的預設 session loop 不會改變 test body 的 function loop。`committed_session`、
 `db_session` 及相依 async seed fixture 必須顯式 `loop_scope="function"`；SELECT 也會開啟交易，

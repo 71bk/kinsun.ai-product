@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assignment_id": {
+      "format": "uuid",
+      "title": "Assignment Id",
+      "type": "string"
+    },
+    "record": {
+      "anyOf": [
+        {
+          "$ref": "https://kinsun.ai/contracts/schemas/domain/PreviousServiceRecordV1.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "assignment_id",
+    "record"
+  ],
+  "title": "PreviousServiceRecordResultV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/PreviousServiceRecordResultV1.json"
+}

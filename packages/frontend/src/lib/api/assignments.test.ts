@@ -49,6 +49,7 @@ const assignment: AssignmentView = {
   canReadServiceRecord: false,
   canWriteServiceRecord: false,
   canCompleteWithServiceRecord: false,
+  canReadPreviousServiceRecord: false,
   version: 3,
   expiresAt: '2026-08-13T02:00:00Z',
 };
@@ -59,6 +60,14 @@ afterEach(() => {
 });
 
 describe('assignment API boundary', () => {
+  it.each([
+    [['assignment:read', 'service_record:history:read'], true],
+    [['assignment:read', 'service_record:read', 'summary:read'], false],
+    [['service_record:history:read'], false],
+  ] as const)('requires the dedicated history scope: %s', async (scopes, allowed) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(success({ items: [{ ...coreAssignment(), allowed_data_scopes: scopes }] })));
+    expect((await listAssignments(config, '2026-09-14'))[0].canReadPreviousServiceRecord).toBe(allowed);
+  });
   it.each([
     [['assignment:read', 'service_record:write', 'assignment:complete'], true],
     [['assignment:read', 'service_record:write'], false],

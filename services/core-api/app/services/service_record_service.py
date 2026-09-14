@@ -13,8 +13,11 @@ from app.events.outbox_writer import write_outbox_entry
 from app.models.care_assignment import CareAssignment
 from app.models.service_record import ServiceRecord
 from app.repositories.idempotency_repo import IdempotencyRepository
+from app.repositories.service_record_repo import ServiceRecordRepository
 from app.schemas.service_record import (
     CreateServiceRecordRequest,
+    PreviousServiceRecordResponse,
+    PreviousServiceRecordResult,
     ServiceRecordCompletionResponse,
     ServiceRecordResponse,
 )
@@ -58,6 +61,28 @@ class ServiceRecordService:
         if record is None:
             raise NotFoundError("Resource not found")
         return self._response(record)
+
+    async def previous(self, assignment_id: UUID) -> dict:
+        assignment, _ = await self._authorize(assignment_id, "service_record:history:read")
+        record = await ServiceRecordRepository(self.session, self.actor.tenant_id).previous(
+            assignment
+        )
+        # Recheck live membership/time after the read, including empty results.
+        await self._authorize(assignment_id, "service_record:history:read")
+        value = None
+        if record is not None:
+            value = PreviousServiceRecordResponse(
+                service_record_id=record.service_record_id,
+                source_assignment_id=record.assignment_id,
+                service_date=record.service_date,
+                service_timezone=record.service_timezone,
+                completed_at=record.completed_at,
+                version=record.version,
+                content=record.content["note"],
+            )
+        return PreviousServiceRecordResult(assignment_id=assignment_id, record=value).model_dump(
+            mode="json"
+        )
 
     @staticmethod
     def _response(record: ServiceRecord) -> dict:

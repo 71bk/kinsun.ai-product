@@ -459,6 +459,10 @@ Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；Core app 實際有 80 paths
 
 若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
 
+OpenAPI 目前仍有人工補充的 route description／response；全量執行 `export_core_openapi.py`
+可能覆蓋這些內容並重排無關 paths。新增 endpoint 時檢查 semantic diff，保留既有描述與回應，
+只納入本次實作的 operation；不要把 exporter 的全量輸出直接當成無差異更新。
+
 ### 目錄與檔名
 
 ```
@@ -764,6 +768,10 @@ kinsun.ai/
 | Portable runtime images／deployment smoke | `scripts/build_runtime_images.ps1`、`scripts/build_runtime_images.sh`、`scripts/smoke_test_deployment.py` |
 
 ## 10. 驗證與完成條件
+
+Membership 過期測試須建立合法的過去期間（effective_from < effective_to < now）。
+新 fixture 的 effective_from 預設為 now，只把 effective_to 改為 now−1 秒會違反
+`ck_membership_period`，測不到授權拒絕；不要以 sleep 等待或移除 DB constraint 掩蓋。
 
 CI 命令耗時與 bounded 測試報告由 `scripts/ci/telemetry.py` 收集，說明見
 `docs/project/ci-pipeline-optimization.md`。輸出一律放 runner 暫存目錄，不能讓報告污染

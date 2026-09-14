@@ -16,6 +16,68 @@ export interface ServiceRecordSubmission {
   content: string;
 }
 
+export interface PreviousServiceRecord {
+  service_record_id: string;
+  source_assignment_id: string;
+  service_date: string;
+  service_timezone: string;
+  completed_at: string;
+  version: 1;
+  content: string;
+}
+
+export async function getPreviousServiceRecord(
+  config: ApiConfig,
+  assignmentId: string,
+  signal?: AbortSignal,
+): Promise<PreviousServiceRecord | null> {
+  const value = await apiFetch<{ assignment_id: string; record: PreviousServiceRecord | null }>(
+    config,
+    `/api/v1/home-care/assignments/${encodeURIComponent(assignmentId)}/previous-service-record`,
+    { cache: 'no-store', signal },
+  );
+  if (
+    !value ||
+    value.assignment_id !== assignmentId ||
+    Object.keys(value).some((key) => !['assignment_id', 'record'].includes(key))
+  )
+    throw new ApiRequestError(502, 'Invalid previous service record response');
+  if (value.record === null) return null;
+  const record = value.record;
+  if (
+    !record ||
+    record.version !== 1 ||
+    typeof record.service_record_id !== 'string' ||
+    !record.service_record_id ||
+    typeof record.source_assignment_id !== 'string' ||
+    !record.source_assignment_id ||
+    record.source_assignment_id === assignmentId ||
+    typeof record.content !== 'string' ||
+    !record.content.trim() ||
+    Array.from(record.content).length > 4000 ||
+    typeof record.service_date !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(record.service_date) ||
+    typeof record.service_timezone !== 'string' ||
+    !record.service_timezone ||
+    typeof record.completed_at !== 'string' ||
+    !Number.isFinite(Date.parse(record.completed_at)) ||
+    Object.keys(record).some(
+      (key) =>
+        ![
+          'service_record_id',
+          'source_assignment_id',
+          'service_date',
+          'service_timezone',
+          'completed_at',
+          'version',
+          'content',
+        ].includes(key),
+    )
+  )
+    throw new ApiRequestError(502, 'Invalid previous service record response');
+  return record;
+}
+
 export interface ServiceRecordCompletion {
   service_record_id: string;
   assignment_id: string;
