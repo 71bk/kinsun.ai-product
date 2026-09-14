@@ -200,6 +200,19 @@ RBAC 決定角色可執行的功能；ABAC 再依 tenant_id、elder_id、care_un
 長者詳情、摘要或事件的服務時段授權。取消／到期／撤權於下一次請求排除；本機 UI 採
 30 秒輪詢及回到前景重查，不宣稱即時推播撤銷。詳見[範圍與驗證紀錄](../project/home-care-schedule-preview-20260909.md)。
 
+2026-09-14 Owner 核准的人工紀錄交接：以本次本人 IN_PROGRESS 派案的
+`assignment:read`＋`service_record:history:read` 授權，Core 每次重驗 active Actor／Tenant／
+Elder／CareUnit、live HOME_CARE_WORKER membership、時窗及指定派案；不可借用其他派案、
+舊來源派案或既有 `service_record:read`／`summary:read` scope。來源紀錄與派案須同 tenant／
+elder、來源派案須同 care unit 且 COMPLETED，允許跨 worker，但紀錄作者須對應來源派案。
+只取一筆符合正式版本及非重疊時段條件的人工紀錄，不傳至 Agent、Memory、家屬或通知。
+完整人工紀錄 retention／刪除流程仍待定案；第一版對該長者任何非 CANCELLED deletion request
+或 tombstone 均不提供歷史內容，包括已完成刪除與 legal hold，不因保留 row 或 marker 到期
+就恢復交接，也不藉此次讀取延長保存期限。回空不透露排除原因，無權與不存在同回 404。
+前端僅保留元件記憶體、HTTP／BFF no-store；展開時每 30 秒及返回前景重新取用，先清除舊內容。
+關閉、分頁隱藏、到期、登出或派案移除時清除；沒有撤權推播，不宣稱伺服器變更即時反映。
+詳見[交付紀錄與限制](../project/previous-service-record-20260914.md)。
+
 # 五、Session、Token 與裝置安全
 
 • Access Token 短效，Refresh Token 可撤銷並綁定裝置或 Session。

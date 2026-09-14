@@ -459,6 +459,10 @@ Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；Core app 實際有 80 paths
 
 若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
 
+OpenAPI 目前仍有人工補充的 route description／response；全量執行 `export_core_openapi.py`
+可能覆蓋這些內容並重排無關 paths。新增 endpoint 時檢查 semantic diff，保留既有描述與回應，
+只納入本次實作的 operation；不要把 exporter 的全量輸出直接當成無差異更新。
+
 ### 目錄與檔名
 
 ```

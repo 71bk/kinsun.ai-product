@@ -39,3 +39,22 @@ class ServiceRecordCompletionResponse(BaseModel):
     assignment_id: UUID
     assignment_version: int = Field(ge=2)
     status: Literal["COMPLETED"]
+
+
+class PreviousServiceRecordResponse(BaseModel):
+    """Human source content only; no author identity or source authorization."""
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+    service_record_id: UUID
+    source_assignment_id: UUID
+    service_date: date
+    service_timezone: str = Field(min_length=1, max_length=64)
+    completed_at: datetime
+    version: Literal[1]
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class PreviousServiceRecordResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    assignment_id: UUID
+    record: PreviousServiceRecordResponse | None

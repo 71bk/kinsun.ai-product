@@ -41,11 +41,12 @@
           "care_action:update",
           "summary:read",
           "service_record:read",
-          "service_record:write"
+          "service_record:write",
+          "service_record:history:read"
         ],
         "type": "string"
       },
-      "maxItems": 14,
+      "maxItems": 15,
       "minItems": 1,
       "title": "Allowed Data Scopes",
       "type": "array"

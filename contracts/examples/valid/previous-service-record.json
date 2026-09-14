@@ -1,0 +1,19 @@
+{
+  "data": {
+    "assignment_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+    "record": {
+      "service_record_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a41",
+      "source_assignment_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a42",
+      "service_date": "2026-09-13",
+      "service_timezone": "Asia/Taipei",
+      "completed_at": "2026-09-13T01:00:00Z",
+      "version": 1,
+      "content": "Synthetic human handover note."
+    }
+  },
+  "meta": {
+    "correlation_id": "synthetic-history",
+    "timestamp": "2026-09-14T01:00:00Z",
+    "schema_version": "1.0"
+  }
+}

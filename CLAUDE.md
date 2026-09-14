@@ -186,6 +186,9 @@
 
 ### Contract 與 deployment
 
+- OpenAPI 仍有人工補充的 route description／response；全量 exporter 可能覆蓋它們。
+  新增 endpoint 時檢查 semantic diff，保留既有內容，只納入本次 operation，不直接接受全量重排。
+
 - JSON Schema 的跨檔 `$ref` 用絕對 `$id`；OpenAPI 外部 response schema 則沿用
   exporter／validator 的 `../schemas/...` 文件相對路徑，不要混用兩套解析慣例。
 - Core `AuthorizationDeniedError` 經 HTTP error handler 回傳 404（隱藏資源存在），

@@ -9,6 +9,7 @@ import type { ApiConfig } from '@/lib/api/client';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './AssignmentCard.module.css';
+import { PreviousServiceRecordPanel } from './PreviousServiceRecordPanel';
 import { ServiceRecordPanel } from './ServiceRecordPanel';
 
 const STATUS_ICON = {
@@ -130,6 +131,14 @@ export function AssignmentCard({
             )}
           </>
         )}
+      {!busy && !recordPending && assignment.canReadPreviousServiceRecord && (
+        <PreviousServiceRecordPanel
+          key={`${assignment.assignmentId}:${assignment.version}`}
+          assignment={assignment}
+          config={config}
+          onAccessCheck={onAccessCheck}
+        />
+      )}
       <ConfirmationDialog
         busy={busy}
         confirmLabel={

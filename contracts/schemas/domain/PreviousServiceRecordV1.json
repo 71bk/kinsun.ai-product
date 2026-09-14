@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "description": "Human source content only; no author identity or source authorization.",
+  "properties": {
+    "service_record_id": {
+      "format": "uuid",
+      "title": "Service Record Id",
+      "type": "string"
+    },
+    "source_assignment_id": {
+      "format": "uuid",
+      "title": "Source Assignment Id",
+      "type": "string"
+    },
+    "service_date": {
+      "format": "date",
+      "title": "Service Date",
+      "type": "string"
+    },
+    "service_timezone": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Service Timezone",
+      "type": "string"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "version": {
+      "const": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "content": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Content",
+      "type": "string"
+    }
+  },
+  "required": [
+    "service_record_id",
+    "source_assignment_id",
+    "service_date",
+    "service_timezone",
+    "completed_at",
+    "version",
+    "content"
+  ],
+  "title": "PreviousServiceRecordV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/PreviousServiceRecordV1.json"
+}

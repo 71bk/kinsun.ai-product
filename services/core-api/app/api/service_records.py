@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
@@ -13,6 +13,26 @@ from app.schemas.service_record import CreateServiceRecordRequest
 from app.services.service_record_service import ServiceRecordService
 
 router = APIRouter(prefix="/api/v1/home-care/assignments", tags=["service-records"])
+
+
+@router.get("/{assignment_id}/previous-service-record")
+async def get_previous_service_record(
+    assignment_id: UUID,
+    response: Response,
+    actor: ActorContext = Depends(require_active_actor),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """Read one human note through this exact current assignment, without caching.
+
+    Requires assignment:read and service_record:history:read on the caller's live
+    IN_PROGRESS assignment. Source visits must be completed, non-overlapping and
+    in the same tenant, elder and care unit; another worker's note is permitted.
+    Deletion requests or tombstones suppress history. An authorized empty result
+    is record=null; unavailable assignments return the same 404 as missing ones.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+    return success(await ServiceRecordService(session, actor).previous(assignment_id))
 
 
 @router.post("/{assignment_id}/service-record/complete", status_code=201)

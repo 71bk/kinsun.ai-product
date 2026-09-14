@@ -8,6 +8,14 @@
 
 ## 已在本次收斂
 
+- 2026-09-14 新增 `GET /api/v1/home-care/assignments/{assignment_id}/previous-service-record`：
+  本次本人有效 IN_PROGRESS 派案須有獨立 `service_record:history:read` 及 `assignment:read`。
+  來源限同 tenant／care unit／elder、已完成且不重疊的正式 v1 人工紀錄，允許跨 worker 交接；
+  不以舊派案授權，刪除請求／tombstone 保守排除，空結果為 `record: null`。
+  strict 最小回應不含作者／tenant，HTTP no-store；不新增資料表、事件或自動授權。
+  靜態與 Core live contract 已通過（93 operations）；完整證據見
+  [交付紀錄](../docs/project/previous-service-record-20260914.md)。
+
 - 2026-09-11 新增 service-record/complete 單一交易命令與最小 completion receipt；
   同一有效本人派案需 read／record write／assignment complete scopes，完成後包含 replay 均結束紀錄存取。
   開始／完成派案 command 依正式 scope 名稱授權，並與紀錄整合命令共用指定派案 gate／鎖定順序。
