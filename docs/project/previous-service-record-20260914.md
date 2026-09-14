@@ -2,7 +2,7 @@
 
 日期：2026-09-14。基準：`main` `b20297b`，分支 `feat/previous-service-record`。
 Owner 已核准[決策範圍](previous-service-record-proposal-20260914.md)。
-狀態：程式、本機測試、synthetic Browser QA 與 PR CI 已通過；PR #44 待審查／合併，未部署。
+狀態：PR #44 已合併為 `4556e57`，main CI `34813366993` 成功；本機 real-auth 驗收已補齊，未部署。
 程式驗證基準：`f4b2847`，CI run `34811244713`；後續文件收尾不改動此程式基準。
 
 ## 行為與授權
@@ -90,7 +90,10 @@ Contract exporter 曾重排既有 paths 並移除人工描述；最終僅加入�
 
 ## 尚未驗證與啟用邊界
 
-沒有新增 development scope grant、real-auth 跨 worker Browser → BFF → Core → DB 交接證據，
-也沒有 production activation、真機測試或效能保證。完整 retention／note deletion 與 runtime
+同日已在全新隔離 synthetic campaign 授予最長四小時 scope，完成 real-auth 跨 worker
+Browser → BFF → Core → DB 交接、UI 提交並完成與撤權清除；測試授權及憑證已全部撤銷。
+詳見 [real-auth 驗收](previous-service-record-real-auth-20260914.md)。沒有 production activation、
+真機測試或效能保證。完整 retention／note deletion 與 runtime
 least-privilege activation 仍須後續工作；本切片不等於完整 US-C01 或 Wave 2 完成。
-本次保留其他既有工作樹變更與 .qa artifacts；沒有 reset、資料回填或外部資料寫入。
+本次保留其他既有工作樹變更與 .qa artifacts；沒有 reset 或既有資料回填。
+原切片的 synthetic QA 沒有外部寫入；後續 real-auth campaign 的 development 寫入另按上述報告核對。

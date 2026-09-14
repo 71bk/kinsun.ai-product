@@ -77,7 +77,15 @@ Browser 腳本；`service-completion-{form|confirm|success}-{locale}-{width}.png
 全頁截圖沿用既有 QA 的回頂重拍方式，避免離屏 SkipLink 的截圖繪製差異。
 沒有聲稱真機、完整 screen reader、永久循環 focus trap 或 real-auth Browser → Core → DB write E2E。
 
-## 上次服務摘要：下一切片的待定規則
+## 後續 real-auth 驗收（2026-09-14）
+
+已在 PR #44 合併後，以新 synthetic reader 經真實表單登入、人工輸入、勾選完成及二次確認，
+POST 回 201。Supabase 讀回正式紀錄 v1、派案 COMPLETED v3 與兩筆對應 outbox；完成後該
+reader 再讀本次 history 為 404。全部測試憑證／membership 已撤銷，詳見
+[real-auth report](previous-service-record-real-auth-20260914.md)。這取代上方「無 real-auth write」
+的階段限制；未部署，沒有即時成功 toast 截圖。下段提案已由 PR #44 的人工原文交接切片定案。
+
+## 上次服務摘要：當時的下一切片提案
 
 目前 DailySummary 是不同資料來源，不能代替上次人工服務紀錄。以下為提案，尚未變成授權或 API：
 
