@@ -2,7 +2,9 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { notifyAssignmentUpdated, watchAssignmentUpdates } from './assignment-updates';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 it('invalidates local listeners once, ignores its own broadcast, and accepts other tabs', () => {
   const channels: {
     onmessage?: (event: { data: unknown }) => void;

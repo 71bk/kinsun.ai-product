@@ -8,6 +8,8 @@
 居服工作台的跨分頁更新只傳 invalidation，不傳派案或長者資料。BroadcastChannel 的發送者若與
 訂閱者是同頁的不同 instance，仍會收到自己發出的訊息；要以文件生命週期的 source ID 排除自己，
 避免開始服務後重載、清掉尚未提交的表單。同層交班／待辦元件的 React key 要包含元件用途。
+Vitest lifecycle hook 要用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的
+VitestUtils；單跑 Vitest 不會抓到這個型別錯誤，新增測試後須再跑 frontend typecheck。
 
 所有代理在分析、設計、實作、測試與文件更新時，都必須遵守本文件及 `docs/` 中的產品規格。描述進度時以可執行程式、contract、migration、測試與部署證據為準，不以 README、舊 handover 或 commit 標題單獨判定完成。
 
