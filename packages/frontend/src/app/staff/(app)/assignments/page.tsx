@@ -15,6 +15,7 @@ import {
   type AssignmentView,
 } from '@/lib/api/assignments';
 import { ApiRequestError } from '@/lib/api/client';
+import { notifyAssignmentUpdated } from '@/lib/assignment-updates';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
@@ -111,6 +112,7 @@ export default function AssignmentsPage() {
         command === 'start'
           ? await startAssignment(apiConfig, assignment)
           : await completeAssignment(apiConfig, assignment);
+      notifyAssignmentUpdated();
       if (request !== sequence.current || document.hidden) return;
       setAssignments(
         (current) =>
@@ -167,6 +169,7 @@ export default function AssignmentsPage() {
               config={apiConfig}
               onAccessCheck={onAccessCheck}
               onRecordCompleted={() => {
+                notifyAssignmentUpdated();
                 setToastKey('serviceRecord.visitCompleted');
                 load();
               }}

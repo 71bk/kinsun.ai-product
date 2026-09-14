@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Annotated, cast
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Path, Query, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
@@ -23,6 +23,7 @@ from app.schemas.care_action import (
     CreateCareActionRequest,
     UpdateCareActionRequest,
 )
+from app.services.assignment_access_service import AssignmentAccessService
 from app.services.authorization_service import authorize_elder
 from app.services.care_action_service import CareActionService
 
@@ -65,6 +66,8 @@ def _response(action) -> CareActionResponse:
 
 @router.get("/elders/{elder_id}/care-actions")
 async def list_care_actions(
+    response: Response,
+    assignment_id: Annotated[UUID | None, Query()] = None,
     elder_id: UUID = Path(...),
     action_status: list[CareActionStatus] | None = Query(default=None, alias="status"),
     cursor: str | None = Query(default=None),
@@ -72,7 +75,23 @@ async def list_care_actions(
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    await authorize_elder(session, actor_context, elder_id, "care_action:read")
+    """Read tasks, optionally bounded to an exact active home-care assignment.
+
+    assignment_id requires the caller's live IN_PROGRESS visit with both
+    assignment:read and care_action:read for this elder. Never falls back to
+    another assignment. Omitted assignment_id preserves elder-level access.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    if assignment_id is not None:
+        assignment, _ = await AssignmentAccessService(session, actor_context).authorize(
+            assignment_id,
+            required_scopes=frozenset({"assignment:read", "care_action:read"}),
+            allowed_statuses=frozenset({"IN_PROGRESS"}),
+        )
+        if assignment.elder_id != elder_id:
+            raise NotFoundError("Resource not found")
+    else:
+        await authorize_elder(session, actor_context, elder_id, "care_action:read")
     service = CareActionService(session, actor_context.tenant_id)
     service.require_professional(actor_context)
     actions = await service.list_for_elder(
@@ -81,6 +100,12 @@ async def list_care_actions(
         limit=limit,
         cursor=decode_cursor(cursor) if cursor else None,
     )
+    if assignment_id is not None:
+        await AssignmentAccessService(session, actor_context).authorize(
+            assignment_id,
+            required_scopes=frozenset({"assignment:read", "care_action:read"}),
+            allowed_statuses=frozenset({"IN_PROGRESS"}),
+        )
     has_more = len(actions) > limit
     page = actions[:limit]
     next_cursor = encode_cursor(page[-1].created_at, page[-1].id) if has_more and page else None

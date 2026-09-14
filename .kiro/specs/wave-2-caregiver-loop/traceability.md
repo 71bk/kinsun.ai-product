@@ -78,6 +78,11 @@ Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB r
 
 ## Remaining product gaps
 
+2026-09-14 US-C01 工作台整合的 Persona／AC／Domain／Security／Test 對照及本機證據見
+[工作台交付紀錄](../../../docs/project/home-care-workbench-20260914.md)。入口、交班／待辦、
+提交完成與行程 invalidation 已整合；Core 1,408／Frontend 594 與 Browser 14 組驗證通過，
+新增 8 個 DB cases 等待 PR CI，這次無新的 real-auth 或 production deployment 證據。
+
 PR #32 修正 commit `e94f0f8` 的 [CI run 34183906570](https://github.com/71bk/kinsun.ai-product/actions/runs/34183906570)
 全部 10 jobs 成功（含 core-db／aggregate）；合併 commit `84ef958` 的
 [main run 34184219797](https://github.com/71bk/kinsun.ai-product/actions/runs/34184219797) 亦成功。

@@ -141,6 +141,8 @@ export interface CareActionCandidateListView {
 }
 
 export interface ListCareActionsOptions {
+  assignmentId?: string;
+  signal?: AbortSignal;
   statuses?: CareActionStatus[];
   cursor?: string;
 }
@@ -244,10 +246,13 @@ export async function listCareActions(
   const params = new URLSearchParams({ limit: '100' });
   for (const status of options.statuses ?? []) params.append('status', status);
   if (options.cursor) params.set('cursor', options.cursor);
+  if (options.assignmentId) params.set('assignment_id', options.assignmentId);
   const result = await apiFetch<CoreCareActionList>(
     config,
     `/api/v1/elders/${elderId}/care-actions?${params.toString()}`,
+    { signal: options.signal },
   );
+  if (result.items.some((item) => item.elder_id !== elderId)) throw new Error('Elder mismatch');
   return {
     items: result.items.map(toCareActionView),
     nextCursor: result.next_cursor,

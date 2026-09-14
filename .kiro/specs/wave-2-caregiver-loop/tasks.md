@@ -52,3 +52,15 @@
 證據與限制見 [Previous service record report](../../../docs/project/previous-service-record-20260914.md)。
 真實讀寫與撤權證據見 [Real-auth report](../../../docs/project/previous-service-record-real-auth-20260914.md)。
 QA 環境診斷造成的 development 驗證設定輪替仍另列待辦，不隨功能驗收勾選完成。
+
+## US-C01 居服工作台整合（2026-09-14）
+
+- [x] 今日行程直接開啟指定派案；單筆 GET 改為 exact-assignment live gate
+- [x] 開始後同頁按需交班及有界、同派案授權的唯讀待辦
+- [x] 提交紀錄並完成後清除內容、重新取得行程；同頁／跨分頁 invalidation
+- [x] Core unit 1,408／Frontend 594／lint／typecheck／build／static＋live contracts
+- [x] 7 組尺寸完整 synthetic Browser 流程＋7 種 en 390 狀態與像素檢查
+- [ ] PR CI 與 8 個 disposable DB regression
+- [ ] 新工作台的 real-auth E2E／production activation
+
+詳見 [工作台整合紀錄](../../../docs/project/home-care-workbench-20260914.md)。
