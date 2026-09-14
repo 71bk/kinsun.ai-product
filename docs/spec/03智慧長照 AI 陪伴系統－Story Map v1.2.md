@@ -35,8 +35,9 @@ least-privilege activation 仍未完成。見 [API report](../project/assignment
 與 [UI report](../project/service-record-entry-ui-20260909.md)。
 
 2026-09-11 可選「提交紀錄並完成服務」原子整合已完成本機 API／UI、unit／contract 與
-production-build synthetic Browser QA；新增 9 個 DB rollback／concurrency／scope cases
-交由本切片 PR 的 disposable PostgreSQL CI 執行，尚未部署，不宣稱 real-auth write E2E 完成。
+production-build synthetic Browser QA；2026-09-14 已隨 PR #42 合併（`4c56035`）。PR CI
+`34564617822`／main CI `34796372613` 全部 10 jobs 成功，包含新增 9 個 DB rollback／
+concurrency／scope cases（完整 DB gate：20 migration／177 integration）。尚未部署，不宣稱 real-auth write E2E 完成。
 上次服務摘要只完成下一切片規則提案，尚未授予跨次派案或跨 worker 讀取權限。
 見 [Completion report](../project/service-record-completion-20260911.md)。
 
