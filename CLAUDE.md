@@ -226,6 +226,10 @@
 
 ## 驗證矩陣
 
+Membership 過期 fixture 必須同時設定過去的 effective_from／effective_to，維持
+effective_from < effective_to < now；只把新建 membership 的結束時間減一秒會先違反
+`ck_membership_period`，並非授權測試結果，不可用 sleep 或放寬 constraint 處理。
+
 Async fixture 的預設 session loop 不會改變 test body 的 function loop。`committed_session`、
 `db_session` 及相依 async seed fixture 必須顯式 `loop_scope="function"`；SELECT 也會開啟交易，
 須在同一 loop rollback／close 後才清理 disposable DB。NullPool 不能修復持有中的跨 loop session；

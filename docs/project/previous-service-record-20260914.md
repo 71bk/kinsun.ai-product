@@ -56,7 +56,7 @@ AbortController 丟棄。沒有撤權推播：伺服器撤權後下一請求拒�
 | Frontend production build／Browser QA | 通過；14 組 viewport／state，截圖與 DOM 檢查完成 |
 | CI impact／instrumentation | 26 passed |
 | 新增 DB cases | 27 個；本機無獨立 TEST_DATABASE_URL，不對 Supabase rebuild，待 PR CI |
-| PR CI | 尚未執行 |
+| PR CI | [PR #44](https://github.com/71bk/kinsun.ai-product/pull/44)；首輪 run 34810612170 為 203 passed／1 fixture failure，修正後待重跑 |
 
 Core 單元涵蓋角色、scope、時窗、無權時零查詢、讀取後再授權、最小／空回應及 HTTP gate。
 DB integration 驗證真正 join、同／跨 worker、固定排序、local day、跨 tenant／elder／unit、
@@ -79,6 +79,11 @@ DB integration 驗證真正 join、同／跨 worker、固定排序、local day�
 Contract exporter 曾重排既有 paths 並移除人工描述；最終僅加入新 operation（54 行），
 程式化比較確認原有 contract 語意與文字保留，重新 static validation 通過。
 此專案地雷已同步 AGENTS.md／CLAUDE.md。
+
+首輪 DB CI 的 membership 過期案例只把新 fixture 的 effective_to 設成 now−1 秒，
+早於預設 effective_from，先被 `ck_membership_period` 擋下，尚未走到 HTTP 授權。
+已改為明確的合法過去期間，保留原本的 404／不可借用其他派案 scope 斷言；沒有修改產品邏輯
+或資料庫約束。此 fixture 地雷亦補入 AGENTS.md／CLAUDE.md，失敗 run 保留供追溯。
 
 ## 尚未驗證與啟用邊界
 

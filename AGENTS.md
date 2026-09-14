@@ -769,6 +769,10 @@ kinsun.ai/
 
 ## 10. 驗證與完成條件
 
+Membership 過期測試須建立合法的過去期間（effective_from < effective_to < now）。
+新 fixture 的 effective_from 預設為 now，只把 effective_to 改為 now−1 秒會違反
+`ck_membership_period`，測不到授權拒絕；不要以 sleep 等待或移除 DB constraint 掩蓋。
+
 CI 命令耗時與 bounded 測試報告由 `scripts/ci/telemetry.py` 收集，說明見
 `docs/project/ci-pipeline-optimization.md`。輸出一律放 runner 暫存目錄，不能讓報告污染
 synthetic evidence 的 working-tree 狀態。Wrapper 必須保留原始 exit code；上傳報告成功

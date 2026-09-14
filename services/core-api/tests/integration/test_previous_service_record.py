@@ -254,7 +254,9 @@ async def test_history_live_denial_and_scope_cannot_be_borrowed(
         membership = await committed_session.scalar(
             select(ActorTenantMembership).where(ActorTenantMembership.actor_id == actor_id)
         )
-        membership.effective_to = datetime.now(UTC) - timedelta(seconds=1)
+        expired_at = datetime.now(UTC) - timedelta(seconds=1)
+        membership.effective_from = expired_at - timedelta(days=1)
+        membership.effective_to = expired_at
     elif denial == "worker":
         actor_id = ids["daycare_worker_id"]
     elif denial == "tenant":
