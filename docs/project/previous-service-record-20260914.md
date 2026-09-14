@@ -2,7 +2,8 @@
 
 日期：2026-09-14。基準：`main` `b20297b`，分支 `feat/previous-service-record`。
 Owner 已核准[決策範圍](previous-service-record-proposal-20260914.md)。
-狀態：程式、本機測試及 synthetic Browser QA 完成，待 PR CI；未部署。
+狀態：程式、本機測試、synthetic Browser QA 與 PR CI 已通過；PR #44 待審查／合併，未部署。
+程式驗證基準：`f4b2847`，CI run `34811244713`；後續文件收尾不改動此程式基準。
 
 ## 行為與授權
 
@@ -49,14 +50,15 @@ AbortController 丟棄。沒有撤權推播：伺服器撤權後下一請求拒�
 | --- | --- |
 | Core unit | 1,375 passed |
 | Core Ruff check／format | 通過，415 files already formatted |
-| Frontend 全套 | 571 passed；最後新增 timestamp 型別負向案例後，相關 38 tests passed |
+| Frontend 全套 | 本機 571 passed＋最後相關 38 passed；修正後 CI 全套 572 passed |
 | Frontend lint／typecheck | 通過（測試 cleanup 回傳型別修正後） |
 | Static contracts | all contract checks passed |
 | Core live contract | all live contract checks passed，93 operations；Supabase readiness 僅 SELECT 1 |
 | Frontend production build／Browser QA | 通過；14 組 viewport／state，截圖與 DOM 檢查完成 |
 | CI impact／instrumentation | 26 passed |
-| 新增 DB cases | 27 個；本機無獨立 TEST_DATABASE_URL，不對 Supabase rebuild，待 PR CI |
-| PR CI | [PR #44](https://github.com/71bk/kinsun.ai-product/pull/44)；首輪 run 34810612170 為 203 passed／1 fixture failure，修正後待重跑 |
+| DB gate | CI 20 migration／204 integration passed，包含新增 27 cases；本機不對 Supabase rebuild |
+| PR CI | [PR #44](https://github.com/71bk/kinsun.ai-product/pull/44)；[run 34811244713](https://github.com/71bk/kinsun.ai-product/actions/runs/34811244713) 全部 10 jobs success |
+| 其他 CI workers | Agent 538、Speech 91、RAG 328 passed；三支契約 verifier 與五輪 synthetic cross-service 通過 |
 
 Core 單元涵蓋角色、scope、時窗、無權時零查詢、讀取後再授權、最小／空回應及 HTTP gate。
 DB integration 驗證真正 join、同／跨 worker、固定排序、local day、跨 tenant／elder／unit、
@@ -83,7 +85,8 @@ Contract exporter 曾重排既有 paths 並移除人工描述；最終僅加入�
 首輪 DB CI 的 membership 過期案例只把新 fixture 的 effective_to 設成 now−1 秒，
 早於預設 effective_from，先被 `ck_membership_period` 擋下，尚未走到 HTTP 授權。
 已改為明確的合法過去期間，保留原本的 404／不可借用其他派案 scope 斷言；沒有修改產品邏輯
-或資料庫約束。此 fixture 地雷亦補入 AGENTS.md／CLAUDE.md，失敗 run 保留供追溯。
+或資料庫約束。此 fixture 地雷亦補入 AGENTS.md／CLAUDE.md，失敗 run 34810612170 保留供追溯；
+修正後 run 34811244713 的 204 integration 與完整 aggregate 已全部通過。
 
 ## 尚未驗證與啟用邊界
 

@@ -45,7 +45,7 @@
 - [x] Core 有界來源查詢、live reauthorization、刪除 gate、strict contract 與本機 unit
 - [x] 雙語按需展開、空／失敗／重試、30 秒重驗、隱藏／到期／拒絕清除與延遲回應隔離
 - [x] Production build synthetic Browser QA：14 組 viewport／state，七組雙語尺寸與空／錯誤／載入／拒絕／無 scope／鍵盤／reduced motion
-- [ ] PR／CI disposable PostgreSQL：27 個新增正常交接、來源隔離、scope、排序及退場案例
+- [x] PR #44／CI run `34811244713` 全部 10 jobs 成功：20 migration／204 integration，含 27 個新增正常交接、來源隔離、scope、排序及退場案例；程式基準 `f4b2847`，尚未合併
 - [ ] real-auth 跨 worker 交接 E2E／development scope grant／production activation
 
 證據與限制見 [Previous service record report](../../../docs/project/previous-service-record-20260914.md)。
