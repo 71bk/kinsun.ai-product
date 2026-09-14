@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError, ValidationError
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.domain.state_machine import require_assignment_transition
 from app.events.outbox_writer import write_outbox_entry
 from app.models.actor import Actor
@@ -26,7 +26,16 @@ class AssignmentService:
         self._tenant_id = tenant_id
         self._assignments = CareAssignmentRepository(session, tenant_id)
 
-    async def get(self, assignment_id: UUID) -> CareAssignment | None:
+    async def get(self, assignment_id: UUID, *, for_update: bool = False) -> CareAssignment | None:
+        if for_update:
+            return await self._session.scalar(
+                select(CareAssignment)
+                .where(
+                    CareAssignment.id == assignment_id, CareAssignment.tenant_id == self._tenant_id
+                )
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
         return await self._assignments.get_by_id(assignment_id)
 
     async def list_for_worker(
@@ -125,6 +134,19 @@ class AssignmentService:
         trace_id: str,
         idempotency_key: str,
     ) -> CareAssignment:
+        # Serialize against record+completion and other visit commands. A model
+        # loaded before a lock wait must not overwrite the committed version.
+        assignment = await self._session.scalar(
+            select(CareAssignment)
+            .where(
+                CareAssignment.id == assignment.id,
+                CareAssignment.tenant_id == self._tenant_id,
+            )
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if assignment is None:
+            raise NotFoundError("Resource not found")
         if assignment.version != expected_version:
             raise ConflictError("Care assignment version conflict")
         require_assignment_transition(assignment.status, target)

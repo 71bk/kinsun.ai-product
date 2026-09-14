@@ -33,6 +33,8 @@ DATA_SCHEMA_FOR = {
     "authorized-elders.json": "domain/AuthorizedElderListV1.json",
     "home-care-schedule.json": "domain/HomeCareScheduleV1.json",
     "service-record.json": "domain/ServiceRecordV1.json",
+    "service-record-completion.json": "domain/ServiceRecordCompletionV1.json",
+    "service-record-completion-content.json": "domain/ServiceRecordCompletionV1.json",
     "service-record-event.json": "events/ServiceRecordCompletedV1.json",
     "service-record-event-content.json": "events/ServiceRecordCompletedV1.json",
     "service-record-client-scope.json": "domain/CreateServiceRecordRequestV1.json",

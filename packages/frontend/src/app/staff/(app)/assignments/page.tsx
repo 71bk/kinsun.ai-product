@@ -166,6 +166,10 @@ export default function AssignmentsPage() {
               onCommand={handleCommand}
               config={apiConfig}
               onAccessCheck={onAccessCheck}
+              onRecordCompleted={() => {
+                setToastKey('serviceRecord.visitCompleted');
+                load();
+              }}
             />
           ))}
         </div>

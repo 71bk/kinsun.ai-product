@@ -48,6 +48,7 @@ const assignment: AssignmentView = {
   scopeCount: 2,
   canReadServiceRecord: false,
   canWriteServiceRecord: false,
+  canCompleteWithServiceRecord: false,
   version: 3,
   expiresAt: '2026-08-13T02:00:00Z',
 };
@@ -58,6 +59,27 @@ afterEach(() => {
 });
 
 describe('assignment API boundary', () => {
+  it.each([
+    [['assignment:read', 'service_record:write', 'assignment:complete'], true],
+    [['assignment:read', 'service_record:write'], false],
+    [['assignment:read', 'assignment:complete'], false],
+    [['service_record:write', 'assignment:complete'], false],
+  ] as const)(
+    'requires all same-assignment scopes for combined completion: %s',
+    async (scopes, allowed) => {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue(
+            success({ items: [{ ...coreAssignment(), allowed_data_scopes: scopes }] }),
+          ),
+      );
+      expect((await listAssignments(config, '2026-09-11'))[0].canCompleteWithServiceRecord).toBe(
+        allowed,
+      );
+    },
+  );
   it.each([
     [['assignment:read', 'service_record:read'], true, false],
     [['assignment:read', 'service_record:write'], false, true],

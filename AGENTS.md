@@ -665,6 +665,11 @@ kinsun.ai/
 - Endpoint 或 envelope 改變時同步 contract、examples、live verification 與 divergence 文件。
 - Domain state 改變時同步 migration、tests、traceability 與必要文件。
 - 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威來源。
+- 派案 command 的 target state 不等於 scope 名稱：`IN_PROGRESS` 對應 `assignment:start`，
+  `COMPLETED` 對應 `assignment:complete`，以 `app/schemas/assignment.py` 的 `AssignmentScope`
+  為準。不得用 target.lower() 產生這兩項授權。紀錄與完成命令共用 assignment→idempotency
+  鎖定順序，等鎖後重讀版本；不得用舊 ORM snapshot 覆寫已完成派案。指定派案本人、
+  即時 membership／時窗與 scopes 共用 `AssignmentAccessService`，不能借同長者其他派案授權。
 - 目前開發資料庫以 repository 根目錄 `.env` 的 `DATABASE_URL` 直接連 Supabase PostgreSQL：
   - 一般工作不得自行啟動 `docker-compose.yml`、本機 PostgreSQL 或 Adminer。
   - `docker-compose.yml` 與 `docker/postgres/init/` 只保留為可重建參考與使用者明確要求時的隔離工具，

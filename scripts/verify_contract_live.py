@@ -190,6 +190,19 @@ async def main() -> int:
         )
 
         response = await client.post(
+            "/api/v1/home-care/assignments/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40/service-record/complete",
+            headers={"Idempotency-Key": "synthetic-service-record-complete"},
+            json={"expected_assignment_version": 2, "content": "Synthetic visit note"},
+        )
+        if response.status_code != 401:
+            failures.append(f"service record completion returned {response.status_code}, expected 401")
+        check(
+            "POST service record/complete 401 vs ErrorEnvelopeV1",
+            response.json(),
+            load("common/ErrorEnvelopeV1.json"),
+        )
+
+        response = await client.post(
             "/api/v1/voice-sessions/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40/companion-turns",
             headers={"Idempotency-Key": "live-contract-companion-turn"},
             json={"input_text": "這是合成的契約驗證文字。"},

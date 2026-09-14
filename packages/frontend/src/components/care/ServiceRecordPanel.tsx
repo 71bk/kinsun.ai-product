@@ -10,6 +10,7 @@ import { ApiRequestError, createIdempotencyKey, type ApiConfig } from '@/lib/api
 import {
   getServiceRecord,
   submitServiceRecord,
+  submitServiceRecordAndComplete,
   type ServiceRecordSubmission,
   type ServiceRecordView,
 } from '@/lib/api/service-records';
@@ -21,10 +22,14 @@ export function ServiceRecordPanel({
   assignment,
   config,
   onAccessCheck,
+  onCompleted,
+  onPendingChange,
 }: {
   assignment: AssignmentView;
   config: ApiConfig;
   onAccessCheck: () => void;
+  onCompleted?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const { t, formatDateTime } = useLocale();
   const [record, setRecord] = useState<ServiceRecordView | null>(null);
@@ -35,9 +40,13 @@ export function ServiceRecordPanel({
   const [error, setError] = useState<MessageKey | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [retry, setRetry] = useState(false);
+  const [completeVisit, setCompleteVisit] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const sequence = useRef(0);
   const submitting = useRef(false);
-  const attempt = useRef<{ body: ServiceRecordSubmission; key: string } | null>(null);
+  const attempt = useRef<{ body: ServiceRecordSubmission; key: string; complete: boolean } | null>(
+    null,
+  );
   const validNow = useCallback(
     () =>
       assignment.status === 'IN_PROGRESS' &&
@@ -54,6 +63,11 @@ export function ServiceRecordPanel({
     setRetry(false);
     attempt.current = null;
   }, []);
+
+  useEffect(() => {
+    onPendingChange?.(busy || retry || confirming);
+    return () => onPendingChange?.(false);
+  }, [busy, retry, confirming, onPendingChange]);
 
   const load = useCallback(async () => {
     clear();
@@ -130,24 +144,45 @@ export function ServiceRecordPanel({
       !content.trim() ||
       content.length > 4000 ||
       !validNow() ||
-      !assignment.canWriteServiceRecord
+      !assignment.canWriteServiceRecord ||
+      (completeVisit && !assignment.canCompleteWithServiceRecord)
     )
       return;
     setConfirming(true);
   }
 
   async function submit() {
-    if (submitting.current || !validNow() || !assignment.canWriteServiceRecord) return;
+    if (
+      submitting.current ||
+      !validNow() ||
+      !assignment.canWriteServiceRecord ||
+      (completeVisit && !assignment.canCompleteWithServiceRecord)
+    )
+      return;
     const request = sequence.current;
     attempt.current ??= {
       body: { content: content.trim(), expected_assignment_version: assignment.version },
       key: createIdempotencyKey('service-record'),
+      complete: completeVisit,
     };
     submitting.current = true;
     setBusy(true);
     setError(null);
     setConfirming(false);
     try {
+      if (attempt.current.complete) {
+        await submitServiceRecordAndComplete(
+          config,
+          assignment.assignmentId,
+          attempt.current.body,
+          attempt.current.key,
+        );
+        if (request !== sequence.current || document.hidden || !validNow()) return;
+        clear();
+        setCompleted(true);
+        onCompleted?.();
+        return;
+      }
       const result = await submitServiceRecord(
         config,
         assignment.assignmentId,
@@ -194,7 +229,12 @@ export function ServiceRecordPanel({
         ) : (
           <ErrorState description={t(error)} />
         ))}
-      {loading ? (
+      {completed ? (
+        <p className={styles.status} role="status">
+          <CheckCircle aria-hidden="true" size={20} weight="bold" />
+          {t('serviceRecord.visitCompleted')}
+        </p>
+      ) : loading ? (
         <Skeleton rows={2} />
       ) : unavailable ? (
         <>
@@ -232,6 +272,17 @@ export function ServiceRecordPanel({
             />
           </label>
           <p className={styles.hint}>{t('serviceRecord.localOnly')}</p>
+          {assignment.canCompleteWithServiceRecord && (
+            <label className={styles.completionChoice}>
+              <input
+                type="checkbox"
+                checked={completeVisit}
+                disabled={busy || retry}
+                onChange={(event) => setCompleteVisit(event.target.checked)}
+              />
+              <span>{t('serviceRecord.completeVisit')}</span>
+            </label>
+          )}
           {retry ? (
             <button
               className={styles.primary}
@@ -253,9 +304,11 @@ export function ServiceRecordPanel({
       <ConfirmationDialog
         open={confirming}
         busy={busy}
-        title={t('serviceRecord.confirmTitle')}
-        description={t('serviceRecord.confirmDescription')}
-        confirmLabel={t('serviceRecord.submit')}
+        title={t(completeVisit ? 'serviceRecord.completeTitle' : 'serviceRecord.confirmTitle')}
+        description={t(
+          completeVisit ? 'serviceRecord.completeDescription' : 'serviceRecord.confirmDescription',
+        )}
+        confirmLabel={t(completeVisit ? 'serviceRecord.submitAndComplete' : 'serviceRecord.submit')}
         onCancel={() => setConfirming(false)}
         onConfirm={() => void submit()}
       />

@@ -30,10 +30,15 @@ PR #34 合併，PR／main CI 均成功（[Pending review report](../project/dash
 
 2026-09-09 上次服務摘要之前置：派案服務紀錄 Core API 已隨 PR #38 合併，PR／main CI
 全過，Supabase development 已 additive 升級至 `e3a5c7d9f102`，無 backfill／新 scope grant。
-UI 入口、二次確認、same-key retry 與權限失效清除已完成本機 527 frontend tests／production
-build／synthetic Browser QA，提交獨立 PR 審查；完成派案原子整合、上次服務摘要與 runtime
+UI 入口、二次確認、same-key retry 與權限失效清除已隨 PR #39 合併；上次服務摘要與 runtime
 least-privilege activation 仍未完成。見 [API report](../project/assignment-service-record-20260909.md)
 與 [UI report](../project/service-record-entry-ui-20260909.md)。
+
+2026-09-11 可選「提交紀錄並完成服務」原子整合已完成本機 API／UI、unit／contract 與
+production-build synthetic Browser QA；新增 9 個 DB rollback／concurrency／scope cases
+交由本切片 PR 的 disposable PostgreSQL CI 執行，尚未部署，不宣稱 real-auth write E2E 完成。
+上次服務摘要只完成下一切片規則提案，尚未授予跨次派案或跨 worker 讀取權限。
+見 [Completion report](../project/service-record-completion-20260911.md)。
 
 ## 工作表：00_總覽
 

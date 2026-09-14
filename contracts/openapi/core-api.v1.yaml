@@ -461,6 +461,84 @@
         ]
       }
     },
+    "/api/v1/home-care/assignments/{assignment_id}/service-record/complete": {
+      "post": {
+        "tags": [
+          "service-records"
+        ],
+        "summary": "Create Service Record And Complete",
+        "description": "Atomically submit a note and complete its visit; return a content-free receipt.\n\nRequires assignment:read, service_record:write and assignment:complete on\nthis exact live IN_PROGRESS assignment. Completion ends access: subsequent\nrequests, including retries of a successful command, return the same 404 as\nunavailable assignments. No post-service grace period is granted.",
+        "operationId": "create_service_record_and_complete_api_v1_home_care_assignments__assignment_id__service_record_complete_post",
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/CreateServiceRecordRequestV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/ServiceRecordCompletionEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/home-care/assignments/{assignment_id}/service-record": {
       "parameters": [{"name":"assignment_id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],
       "get": {

@@ -4,21 +4,22 @@ from datetime import UTC, datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from sqlalchemy import exists, or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import ActorContext
 from app.core.exceptions import ConflictError, NotFoundError
 from app.events.outbox_writer import write_outbox_entry
-from app.models.actor import Actor
 from app.models.care_assignment import CareAssignment
-from app.models.care_unit import CareUnit
-from app.models.elder import Elder
-from app.models.membership import ActorTenantMembership
 from app.models.service_record import ServiceRecord
-from app.models.tenant import Tenant
 from app.repositories.idempotency_repo import IdempotencyRepository
-from app.schemas.service_record import CreateServiceRecordRequest, ServiceRecordResponse
+from app.schemas.service_record import (
+    CreateServiceRecordRequest,
+    ServiceRecordCompletionResponse,
+    ServiceRecordResponse,
+)
+from app.services.assignment_access_service import AssignmentAccessService
+from app.services.assignment_service import AssignmentService
 
 
 class ServiceRecordService:
@@ -26,74 +27,17 @@ class ServiceRecordService:
         self.session = session
         self.actor = actor
 
-    async def _authorize(self, assignment_id: UUID, action: str) -> tuple[CareAssignment, str]:
-        actor = self.actor
-        if actor.status != "ACTIVE" or actor.actor_role != "HOME_CARE_WORKER":
-            raise NotFoundError("Resource not found")
-        # Serializes submissions for the exact assignment, not another visit for this elder.
-        assignment = await self.session.scalar(
-            select(CareAssignment)
-            .where(
-                CareAssignment.id == assignment_id,
-                CareAssignment.tenant_id == actor.tenant_id,
-                CareAssignment.worker_id == actor.actor_id,
-            )
-            .with_for_update()
-            .execution_options(populate_existing=True)
+    async def _authorize(
+        self, assignment_id: UUID, action: str, *, complete_assignment: bool = False
+    ) -> tuple[CareAssignment, str]:
+        scopes = {"assignment:read", action}
+        if complete_assignment:
+            scopes.add("assignment:complete")
+        return await AssignmentAccessService(self.session, self.actor).authorize(
+            assignment_id,
+            required_scopes=frozenset(scopes),
+            allowed_statuses=frozenset({"IN_PROGRESS"}),
         )
-        now = datetime.now(UTC)  # After any lock wait, never client-controlled.
-        if (
-            assignment is None
-            or assignment.status != "IN_PROGRESS"
-            or not (assignment.service_start <= now < assignment.service_end)
-            or not {"assignment:read", action}.issubset(assignment.service_scope or [])
-        ):
-            raise NotFoundError("Resource not found")
-        membership = exists(
-            select(ActorTenantMembership.id).where(
-                ActorTenantMembership.actor_id == actor.actor_id,
-                ActorTenantMembership.tenant_id == actor.tenant_id,
-                ActorTenantMembership.role_code == "HOME_CARE_WORKER",
-                ActorTenantMembership.status == "ACTIVE",
-                ActorTenantMembership.effective_from <= now,
-                or_(
-                    ActorTenantMembership.effective_to.is_(None),
-                    ActorTenantMembership.effective_to > now,
-                ),
-                or_(
-                    ActorTenantMembership.care_unit_id.is_(None),
-                    ActorTenantMembership.care_unit_id == assignment.care_unit_id,
-                ),
-            )
-        )
-        timezone = await self.session.scalar(
-            select(Elder.timezone).where(
-                Elder.id == assignment.elder_id,
-                Elder.tenant_id == actor.tenant_id,
-                Elder.status == "ACTIVE",
-                exists(
-                    select(Tenant.id).where(Tenant.id == actor.tenant_id, Tenant.status == "ACTIVE")
-                ),
-                exists(
-                    select(Actor.id).where(
-                        Actor.id == actor.actor_id,
-                        Actor.status == "ACTIVE",
-                        Actor.actor_type == "HOME_CARE_WORKER",
-                    )
-                ),
-                exists(
-                    select(CareUnit.id).where(
-                        CareUnit.id == assignment.care_unit_id,
-                        CareUnit.tenant_id == actor.tenant_id,
-                        CareUnit.status == "ACTIVE",
-                    )
-                ),
-                membership,
-            )
-        )
-        if timezone is None:
-            raise NotFoundError("Resource not found")
-        return assignment, timezone
 
     async def _find(self, assignment: CareAssignment) -> ServiceRecord | None:
         return await self.session.scalar(
@@ -124,21 +68,49 @@ class ServiceRecordService:
     async def create(
         self, assignment_id: UUID, request: CreateServiceRecordRequest, key: str, trace_id: str
     ) -> dict:
-        assignment, timezone = await self._authorize(assignment_id, "service_record:write")
+        return await self._submit(assignment_id, request, key, trace_id, complete_assignment=False)
+
+    async def create_and_complete(
+        self, assignment_id: UUID, request: CreateServiceRecordRequest, key: str, trace_id: str
+    ) -> dict:
+        return await self._submit(assignment_id, request, key, trace_id, complete_assignment=True)
+
+    async def _submit(
+        self,
+        assignment_id: UUID,
+        request: CreateServiceRecordRequest,
+        key: str,
+        trace_id: str,
+        *,
+        complete_assignment: bool,
+    ) -> dict:
+        assignment, timezone = await self._authorize(
+            assignment_id, "service_record:write", complete_assignment=complete_assignment
+        )
         # Authorization precedes replay. An expired/completed/revoked assignment cannot
         # retrieve the old success snapshot, even with its original idempotency key.
         idem = IdempotencyRepository(self.session, self.actor.tenant_id, self.actor.actor_id)
         replay = await idem.begin(
             key=key,
-            operation="create_service_record",
+            operation=(
+                "create_service_record_and_complete"
+                if complete_assignment
+                else "create_service_record"
+            ),
             payload={
                 "assignment_id": str(assignment_id),
                 **request.model_dump(mode="json"),
             },
         )
         # The idempotency claim can wait independently; recheck live state after it.
-        assignment, timezone = await self._authorize(assignment_id, "service_record:write")
+        assignment, timezone = await self._authorize(
+            assignment_id, "service_record:write", complete_assignment=complete_assignment
+        )
         if replay.replayed:
+            # A committed combined command must have ended this assignment. Never
+            # return a stale receipt against an unexpectedly reopened assignment.
+            if complete_assignment:
+                raise ConflictError("Assignment completion receipt does not match live state")
             if replay.response_body is None or await self._find(assignment) is None:
                 raise NotFoundError("Resource not found")
             return replay.response_body
@@ -199,7 +171,28 @@ class ServiceRecordService:
                 "status": "COMPLETED",
             },
         )
-        response = self._response(record)
+        if complete_assignment:
+            # The record, both outbox events, assignment transition and idempotency
+            # receipt share the request transaction. Recheck after all preceding waits.
+            assignment, _ = await self._authorize(
+                assignment_id, "service_record:write", complete_assignment=True
+            )
+            await AssignmentService(self.session, self.actor.tenant_id).transition(
+                assignment=assignment,
+                target="COMPLETED",
+                actor_id=self.actor.actor_id,
+                expected_version=request.expected_assignment_version,
+                trace_id=trace_id,
+                idempotency_key=key,
+            )
+            response = ServiceRecordCompletionResponse(
+                service_record_id=record.service_record_id,
+                assignment_id=assignment.id,
+                assignment_version=assignment.version,
+                status="COMPLETED",
+            ).model_dump(mode="json")
+        else:
+            response = self._response(record)
         await idem.complete(
             key=key,
             resource_type="service_record",

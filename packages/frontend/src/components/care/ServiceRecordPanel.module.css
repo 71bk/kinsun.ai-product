@@ -19,6 +19,20 @@
   gap: var(--space-2);
   font-weight: 700;
 }
+.completionChoice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-min);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.completionChoice input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary-strong);
+}
 .field textarea {
   width: 100%;
   min-width: 0;
