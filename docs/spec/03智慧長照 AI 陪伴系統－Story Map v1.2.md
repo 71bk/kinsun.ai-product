@@ -37,7 +37,7 @@ least-privilege activation 仍未完成。見 [API report](../project/assignment
 2026-09-11 可選「提交紀錄並完成服務」原子整合已完成本機 API／UI、unit／contract 與
 production-build synthetic Browser QA；2026-09-14 已隨 PR #42 合併（`4c56035`）。PR CI
 `34564617822`／main CI `34796372613` 全部 10 jobs 成功，包含新增 9 個 DB rollback／
-concurrency／scope cases（完整 DB gate：20 migration／177 integration）。尚未部署，不宣稱 real-auth write E2E 完成。
+concurrency／scope cases（完整 DB gate：20 migration／177 integration）。同日 real-auth write E2E 已補齊，見下段；尚未部署。
 當時上次服務摘要僅有下一切片提案，後續決策與實作見下段。
 見 [Completion report](../project/service-record-completion-20260911.md)。
 
@@ -45,7 +45,10 @@ concurrency／scope cases（完整 DB gate：20 migration／177 integration）�
 本次本人有效 IN_PROGRESS 派案須有獨立 history scope，按需提供一筆符合條件的人工原文。
 Core／UI／contract 已實作；完整驗證與 CI 狀態見
 [交付紀錄](../project/previous-service-record-20260914.md)。不自動授予既有派案 scope，
-未部署／未驗 real-auth 交接；不等於完整 overview 或 US-C01 完成。
+PR #44 已合併為 `4556e57`，main CI `34813366993` 成功；同日以兩個新 synthetic 帳號完成
+real-auth 交接讀取、UI 提交並完成及最後撤權清除，測試授權／憑證已撤銷
+（[real-auth report](../project/previous-service-record-real-auth-20260914.md)）。
+未部署；正式 retention／least privilege 與完整 overview／US-C01 仍未完成。
 
 ## 工作表：00_總覽
 

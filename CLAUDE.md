@@ -444,6 +444,14 @@ legal hold／offboarding、production API／event client、voice／agent／TTS p
 
 ## 回報格式
 
+Real-auth fixture 登入需要有界的 tenant-level membership（`care_unit_id IS NULL`、
+role 與 Actor type 相同）；據點 row 不能取代它。派案 gate 可接受 tenant-level 或相符
+據點 membership，測撤權時所有可授權路徑都要到期。應修 fixture，不得放寬產品 gate。
+
+環境檢查地雷：不要用只匹配 `NAME=` 前綴的 `rg --replace` 遮罩 `.env`；未匹配的
+value 仍會原樣輸出。以 dotenv parser 在程序內讀取，只回報 allowlist 設定名稱、存在與否
+或相等布林值，不輸出原始行與 secret。
+
 完成工作時用精簡四段：
 
 1. 結果：實際完成什麼。

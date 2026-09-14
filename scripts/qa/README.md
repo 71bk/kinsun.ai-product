@@ -98,3 +98,37 @@ Expire locks and validates membership/actor/tenant/unit/role ownership and can
 only shorten validity. Imports do not load settings or connect. Target validation
 is the same development Supabase URL-shape check as the inspector, not independent
 proof of environment identity. No assignment/Consent/credential or schema changes.
+
+## Previous service record real-auth campaign (2026-09-14)
+
+`previous_record_fixture.py` is fixed to `previous-record-real-auth-20260914`.
+This campaign is already prepared and retired. **Do not renew or prepare it again.**
+Default `inspect` is a read-only transaction; target validation requires the development
+Supabase URL shape, not independent proof of environment identity.
+
+```powershell
+uv run --project services/core-api python scripts/qa/previous_record_fixture.py inspect
+```
+
+The reviewed prepare path creates two isolated workers with Argon2id passwords and
+KINSUN identities, four memberships capped at four hours, two synthetic tenant/unit/elder
+sets, six assignments, and one explicitly seeded historical note. It refuses existing
+campaign IDs or the private bootstrap file. The file `.qa/.env.previous-record-real-auth`
+is git-ignored; never print or commit its credentials. Retirement scrubs its accounts.
+
+`prepare`, `add-login-memberships`, `expire-reader`, and `retire` require
+`--allow-synthetic-write`. The additive login helper only fills missing campaign tenant
+memberships, bounded by existing unit expiry; it never extends validity or replaces rows.
+Session issuance requires tenant-level membership, and assignment access may also use
+that row, so expiry must shorten both tenant and unit memberships. Retirement additionally
+disables only the two campaign actors and revokes their identities, credentials and sessions.
+It preserves synthetic records and outbox evidence; it does not reset any schema/data.
+
+Inspection hashes every column in campaign service records/outbox, plus the original
+source record separately. It reports no note content, credential hash, token or DSN.
+Unchanged digests only cover this bounded set; auth/session changes are excluded.
+Offline safety tests are `tests/unit/test_previous_record_fixture_safety.py` in Core.
+
+Actual acceptance, failed QA assumptions, screenshot scope, final revocation and the
+separate development auth rotation follow-up are recorded in
+`docs/project/previous-service-record-real-auth-20260914.md`.

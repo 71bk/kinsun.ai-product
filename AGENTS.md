@@ -309,6 +309,9 @@ Wave 順序：
 - Cross-elder 或 Cross-tenant 資料暴露。
 - 未授權讀寫、Tool 執行或 Consent bypass。
 - Secret、Token、完整 Prompt、完整 Transcript／Audio 出現在一般 Log。
+- 檢查 `.env` 不得使用只匹配 `NAME=` 前綴的 `rg --replace` 當遮罩：未匹配的 value
+  仍會接在替代字串後輸出。需以 dotenv parser 在程序內讀取，只輸出明確 allowlist 的
+  設定名稱、存在與否或相等布林值；不得把原始行或 secret 值送到 tool output。
 - SQLAlchemy development `echo` 也不得輸出 bind parameter；engine 必須維持
   `hide_parameters=True`，避免 Email、credential hash、token digest 或其他 Restricted Data
   因本機 SQL diagnostics 寫入 log。
@@ -342,6 +345,10 @@ Wave 順序：
   - resource state
   - time／purpose
 - 不信任 Client 或模型傳入的 Actor、Tenant、Elder、Assignment 或 Permission Scope。
+- Real-auth synthetic fixture 的登入 session 需要 tenant-level membership
+  （`care_unit_id IS NULL`，role 與 Actor type 一致）；據點 row 不能取代它。
+  派案 gate 可接受 tenant-level 或相符據點 row，因此測撤權要讓所有可授權路徑都到期，
+  不能只撤據點 row 卻保留 tenant-level。勿修改產品 gate 來遷就 fixture。
 - 單一資源的「未授權」與「不存在」必須回一致的回應，避免以回應差異探測資源是否存在。
 - 失敗的授權不得產生資料修改、Outbox Event 或其他副作用。
 - Consent Purpose 必須分離，不得以單一總開關代替：
