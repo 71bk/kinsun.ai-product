@@ -1,7 +1,7 @@
 # Service record submission and visit completion
 
 日期：2026-09-11。分支 `feat/service-record-complete`，基於 `origin/main` `79c2a5a`。
-狀態：本機實作、單元／契約與 synthetic Browser QA 完成；本切片提交 PR 審查，新增 DB 整合測試交由 PR 的 disposable PostgreSQL CI 執行，尚未部署。
+結案更新：2026-09-14。狀態：本機實作、單元／契約與 synthetic Browser QA 完成；PR #42 已合併，PR 與合併後 main CI 全數通過（含 disposable PostgreSQL 整合測試）。尚未部署，real-auth Browser → Core → DB write E2E 仍未執行。
 
 ## 交付範圍
 
@@ -33,13 +33,24 @@ assignment 再 claim idempotency；transition 等鎖後 refresh 版本，避免�
 | Frontend | 全套 544 passed；最後 scope 修正後直接相關 3 files／41 tests 通過；typecheck、ESLint、production build 通過 |
 | Contracts | static validator、Core live verifier（92 operations）、Agent live verifier 均通過；Agent schema consistency 260 passed |
 | CI instrumentation | 26 passed |
-| 新增 DB integration | 9 cases 已收集，尚未執行：3 rollback、3 concurrency、3 exact-scope denial |
+| 新增 DB integration | 9 cases 已在 PR CI 通過：3 rollback、3 concurrency、3 exact-scope denial；完整 DB gate 為 20 migration＋177 request integration passed |
 | Browser | production build + Playwright MCP，BFF 全部 mock、僅合成資料；詳見下表 |
 
 DB rollback cases 在真實寫入 record outbox、assignment outbox、receipt 後分別注入失敗，斷言
 record／outbox／claim 全無、派案不變，再以同 key 成功。Concurrency cases 包含同 key、不同 key、
 獨立 complete 競爭，要求只一個成功且無部分紀錄。另有同長者另一派案具完整 scope 仍不得借權的案例。
-這些案例必須在 disposable PostgreSQL 執行，不能將單元 mock 當成交易隔離的實證。
+這些案例已在 CI 的 disposable PostgreSQL 執行，不能將單元 mock 當成交易隔離的實證。
+
+### PR 與 main 結案證據（2026-09-14）
+
+- [PR #42](https://github.com/71bk/kinsun.ai-product/pull/42) 的 code commit 為 `b3bde80`；
+  [PR CI 34564617822](https://github.com/71bk/kinsun.ai-product/actions/runs/34564617822)
+  全部 10 jobs 成功。已核對 core-db log：20 migration、177 request integration 與 Core live contract 全通過，無略過的 DB cases。
+- 2026-09-14 合併至 `main`，merge commit `4c56035`；
+  [main CI 34796372613](https://github.com/71bk/kinsun.ai-product/actions/runs/34796372613)
+  全部 10 jobs 成功（含 core-db、frontend-quality 與 synthetic-gate1）。
+- 上述取代本切片先前「DB cases 僅收集／待 PR CI」狀態；僅完成此功能的合併與 CI 結案，
+  不代表完整 US-C01／Wave 2、真實登入的 Browser 寫入 E2E 或 production deployment 完成。
 
 本機沒有 5432 listener，Docker daemon 未運行；依 AGENTS 不自行啟動本機 PostgreSQL／compose，
 未將 `TEST_DATABASE_URL` 指向 Supabase development。Core live verifier 的 `/ready` 只做 SELECT 1；

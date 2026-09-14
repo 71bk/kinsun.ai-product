@@ -31,8 +31,9 @@
 - [x] 可選「提交紀錄並完成服務」單一交易 API、最小 receipt 與 exact-assignment gate
 - [x] 中英文勾選／二次確認、重試鎖定與完成／拒絕後清除內容
 - [x] 本機 unit、static/live contracts、production build 與七組尺寸 synthetic Browser QA
-- [ ] Disposable PostgreSQL：新增 9 個 rollback／concurrency／exact-scope integration cases
-- [ ] PR／CI 與 real-auth Browser → Core → DB write E2E
+- [x] Disposable PostgreSQL：新增 9 個 rollback／concurrency／exact-scope integration cases 已在 PR #42 CI 通過；完整 DB gate 為 20 migration／177 integration
+- [x] PR／CI：PR #42 已於 2026-09-14 合併（`4c56035`）；PR run `34564617822` 與 main run `34796372613` 全部 10 jobs 成功
+- [ ] real-auth Browser → Core → DB write E2E
 - [ ] 上次服務摘要的跨次派案／跨 worker 授權與呈現規則定案及實作
 
 此增量不代表完整 US-C01 或 Wave 2 完成；證據與下一切片提案見
