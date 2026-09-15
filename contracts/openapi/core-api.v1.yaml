@@ -2557,6 +2557,23 @@
             }
           },
           {
+            "name": "assignment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignment Id"
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
@@ -2645,7 +2662,8 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "description": "Read tasks, optionally bounded to an exact active home-care assignment.\n\nassignment_id requires the caller's live IN_PROGRESS visit with both\nassignment:read and care_action:read for this elder. Never falls back to\nanother assignment. Omitted assignment_id preserves elder-level access."
       },
       "post": {
         "tags": [
@@ -5316,7 +5334,8 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "description": "Read the caller's exact live CONFIRMED/IN_PROGRESS visit with assignment:read.\n\nAnother visit's scopes never authorize this ID. Future, completed, revoked\nor unavailable assignments all return the same 404; schedule preview is separate."
       }
     },
     "/api/v1/internal/home-care/assignments/{assignment_id}/confirm": {

@@ -2,6 +2,14 @@
 
 ## 文件資訊
 
+2026-09-14 US-C01 工作台增量：單筆派案 GET 改用 `AssignmentAccessService`，只允許目前
+居服員自己的有效 CONFIRMED／IN_PROGRESS 派案及該筆 `assignment:read`。Care Action list
+新增可選 `assignment_id`：提供時只允許同 elder 的本人有效 IN_PROGRESS 派案，同時具
+`assignment:read`、`care_action:read`，查詢前後皆重驗，任何拒絕都不得退回長者層級授權。
+兩個 GET 回應皆 `Cache-Control: no-store`；缺席、他人、跨 tenant、未開始、完成、失效或
+scope 不足均維持 non-disclosing 404。未提供此參數的既有長者待辦入口不變；沒有新增 scope
+或回填既有派案。跨分頁只傳 invalidation 與來源識別，不傳長者、派案、紀錄、待辦或憑證。
+
 版本：v0.1
 
 狀態：Draft｜安全、隱私、非功能需求與威脅模型基準，待 AWS 架構、技術 Spike、法務與場域驗證

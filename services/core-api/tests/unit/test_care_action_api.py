@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import Response
 
 from app.api import care_actions
 from app.core.auth import ActorContext
@@ -38,6 +39,7 @@ async def test_list_reauthorizes_elder_scope_and_uses_opaque_cursor(
     monkeypatch.setattr(care_actions, "CareActionService", MagicMock(return_value=service))
 
     response = await care_actions.list_care_actions(
+        response=Response(),
         elder_id=elder_id,
         action_status=["OPEN", "IN_PROGRESS"],
         cursor=None,

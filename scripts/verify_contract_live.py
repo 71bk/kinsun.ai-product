@@ -192,8 +192,26 @@ async def main() -> int:
         response = await client.get(
             "/api/v1/home-care/assignments/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40/previous-service-record"
         )
+
+        for path in (
+            "/api/v1/home-care/assignments/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+            "/api/v1/elders/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40/care-actions"
+            "?assignment_id=2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40&status=OPEN",
+        ):
+            response = await client.get(path)
+            if response.status_code != 401:
+                failures.append(
+                    f"assignment workbench route returned {response.status_code}"
+                )
+            check(
+                "GET assignment workbench 401 vs ErrorEnvelopeV1",
+                response.json(),
+                load("common/ErrorEnvelopeV1.json"),
+            )
         if response.status_code != 401:
-            failures.append(f"previous service record returned {response.status_code}, expected 401")
+            failures.append(
+                f"previous service record returned {response.status_code}, expected 401"
+            )
         check(
             "GET previous-service-record 401 vs ErrorEnvelopeV1",
             response.json(),
@@ -206,7 +224,9 @@ async def main() -> int:
             json={"expected_assignment_version": 2, "content": "Synthetic visit note"},
         )
         if response.status_code != 401:
-            failures.append(f"service record completion returned {response.status_code}, expected 401")
+            failures.append(
+                f"service record completion returned {response.status_code}, expected 401"
+            )
         check(
             "POST service record/complete 401 vs ErrorEnvelopeV1",
             response.json(),

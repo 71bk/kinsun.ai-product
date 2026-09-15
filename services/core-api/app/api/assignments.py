@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Path, Query, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.responses import get_correlation_id, success
@@ -115,15 +115,22 @@ async def list_assignments(
 
 @router.get("/home-care/assignments/{assignment_id}")
 async def get_assignment(
+    response: Response,
     assignment_id: UUID = Path(...),
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    service = AssignmentService(session, actor_context.tenant_id)
-    assignment = await service.get(assignment_id)
-    if assignment is None:
-        raise NotFoundError("Resource not found")
-    await authorize_elder(session, actor_context, assignment.elder_id, "assignment:read")
+    """Read the caller's exact live CONFIRMED/IN_PROGRESS visit with assignment:read.
+
+    Another visit's scopes never authorize this ID. Future, completed, revoked
+    or unavailable assignments all return the same 404; schedule preview is separate.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    assignment, _ = await AssignmentAccessService(session, actor_context).authorize(
+        assignment_id,
+        required_scopes=frozenset({"assignment:read"}),
+        allowed_statuses=frozenset({"CONFIRMED", "IN_PROGRESS"}),
+    )
     return success(_response(assignment).model_dump(mode="json"))
 
 

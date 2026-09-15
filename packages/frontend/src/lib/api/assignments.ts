@@ -32,6 +32,7 @@ export interface AssignmentView {
   canWriteServiceRecord?: boolean;
   canCompleteWithServiceRecord?: boolean;
   canReadPreviousServiceRecord?: boolean;
+  canReadCareActions?: boolean;
   version: number;
   expiresAt: string;
 }
@@ -57,6 +58,9 @@ function toAssignmentView(assignment: CoreAssignment): AssignmentView {
     canReadPreviousServiceRecord:
       assignment.allowed_data_scopes.includes('assignment:read') &&
       assignment.allowed_data_scopes.includes('service_record:history:read'),
+    canReadCareActions:
+      assignment.allowed_data_scopes.includes('assignment:read') &&
+      assignment.allowed_data_scopes.includes('care_action:read'),
     version: assignment.version,
     expiresAt: assignment.expires_at,
   };
@@ -68,6 +72,18 @@ export async function listAssignments(config: ApiConfig, date: string): Promise<
     `/api/v1/home-care/assignments?date=${encodeURIComponent(date)}`,
   );
   return result.items.map(toAssignmentView);
+}
+
+export async function getAssignment(
+  config: ApiConfig,
+  assignmentId: string,
+): Promise<AssignmentView> {
+  const result = await apiFetch<CoreAssignment>(
+    config,
+    `/api/v1/home-care/assignments/${encodeURIComponent(assignmentId)}`,
+  );
+  if (result.assignment_id !== assignmentId) throw new Error('Assignment mismatch');
+  return toAssignmentView(result);
 }
 
 async function commandAssignment(

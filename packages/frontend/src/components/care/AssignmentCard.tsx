@@ -10,6 +10,7 @@ import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './AssignmentCard.module.css';
 import { PreviousServiceRecordPanel } from './PreviousServiceRecordPanel';
+import { AssignmentFollowUps } from './AssignmentFollowUps';
 import { ServiceRecordPanel } from './ServiceRecordPanel';
 
 const STATUS_ICON = {
@@ -107,6 +108,22 @@ export function AssignmentCard({
           </button>
         )}
       </div>
+      {!busy && !recordPending && assignment.canReadPreviousServiceRecord && (
+        <PreviousServiceRecordPanel
+          key={`history:${assignment.assignmentId}:${assignment.version}`}
+          assignment={assignment}
+          config={config}
+          onAccessCheck={onAccessCheck}
+        />
+      )}
+      {!busy && !recordPending && assignment.canReadCareActions && (
+        <AssignmentFollowUps
+          key={`tasks:${assignment.assignmentId}:${assignment.version}`}
+          assignment={assignment}
+          config={config}
+          onAccessCheck={onAccessCheck}
+        />
+      )}
       {assignment.status === 'IN_PROGRESS' &&
         (assignment.canReadServiceRecord || assignment.canWriteServiceRecord) && (
           <>
@@ -131,14 +148,6 @@ export function AssignmentCard({
             )}
           </>
         )}
-      {!busy && !recordPending && assignment.canReadPreviousServiceRecord && (
-        <PreviousServiceRecordPanel
-          key={`${assignment.assignmentId}:${assignment.version}`}
-          assignment={assignment}
-          config={config}
-          onAccessCheck={onAccessCheck}
-        />
-      )}
       <ConfirmationDialog
         busy={busy}
         confirmLabel={

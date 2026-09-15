@@ -1,5 +1,13 @@
 # 03智慧長照 AI 陪伴系統－Story Map v1.2.xlsx
 
+## 2026-09-14 US-C01 工作台整合
+
+今日行程 → 指定派案 → 開始服務 → 上次人工紀錄／待辦 → 提交並完成，已完成本機實作與
+驗證；Core 1,408、Frontend 594、production build、contract、14 組 Browser 尺寸／狀態通過。
+PR #46 的程式版本 `44d87ca` 已通過 CI `34830767622` 全部 10 jobs，20 migration／212
+integration（含新增 8）；這次未執行新的 real-auth 或 production deployment。
+詳見[交付紀錄](../project/home-care-workbench-20260914.md)。
+
 > **2026-08-14 Target Domain Overlay**：後續 backlog 必須依 [ADR 0013](../adr/0013-separate-account-elder-enrollment-entitlement.md) 與 [Spec 17](17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md) 執行。新增的優先 Enablers 為 Account／Elder decoupling、Organization／Household context、Elder Enrollment、Service Entitlement、Staff-assisted Elder Session、single-Elder offboarding 與 Household continuation。這些工作不得被誤列為既有 Gate 1 已完成項目；Gate 1 的 Agent、ASR／TTS 與 CI 暫緩決策不因此改變。
 
 ## 2026-09-08 Wave 2 驗收進度

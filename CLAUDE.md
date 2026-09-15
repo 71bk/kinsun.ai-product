@@ -4,6 +4,12 @@
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository
 
+居服跨分頁 invalidation：同頁不同 BroadcastChannel instance 也會收到自己的訊息，須用
+文件生命週期 source ID 排除自己，避免開始服務後重載並丟失表單；訊息不得帶長者／派案資料。
+同層交班與待辦元件的 React key 要加用途前綴，不要只用相同的 assignment ID＋version。
+Vitest hook 使用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的 VitestUtils；
+新增測試後重跑 frontend typecheck，不能只以 Vitest 執行成功取代型別驗證。
+
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
 資料庫與測試規則以根目錄 [`AGENTS.md`](AGENTS.md) 為準；進入
 `services/agent-runtime/` 時還要讀取該目錄的 [`AGENTS.md`](services/agent-runtime/AGENTS.md)。
