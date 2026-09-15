@@ -60,7 +60,7 @@ QA 環境診斷造成的 development 驗證設定輪替仍另列待辦，不隨�
 - [x] 提交紀錄並完成後清除內容、重新取得行程；同頁／跨分頁 invalidation
 - [x] Core unit 1,408／Frontend 594／lint／typecheck／build／static＋live contracts
 - [x] 7 組尺寸完整 synthetic Browser 流程＋7 種 en 390 狀態與像素檢查
-- [ ] PR CI 與 8 個 disposable DB regression
+- [x] PR #46 程式版本 `44d87ca` 通過 CI `34830767622` 全部 10 jobs；20 migration／212 integration，含新增 8 個 DB cases
 - [ ] 新工作台的 real-auth E2E／production activation
 
 詳見 [工作台整合紀錄](../../../docs/project/home-care-workbench-20260914.md)。

@@ -41,7 +41,7 @@ BroadcastChannel 訊息，避免開始後重新載入並丟失表單。
 | Frontend | ESLint、typecheck、production build 通過 |
 | Contract | static validator、Core live verifier（93 operations）通過 |
 | CI 工具 | 26 tests passed |
-| Disposable DB | 新增 8 個 integration cases，待 PR CI 執行；本機沒有獨立 TEST_DATABASE_URL |
+| Disposable DB | PR CI：20 migration／212 integration passed，包含新增 8 個隔離案例；本機未執行重建 |
 
 Browser 使用 production build 與 route-intercepted synthetic responses，沒有新增帳號／派案、
 沒有實際 Core 寫入，不能稱為這次功能的 real-auth E2E。
@@ -57,8 +57,16 @@ viewport 截圖與 DOM 量測確認非 focus 時 bottom=-8，正常在畫面外�
 `.qa/workbench-{schedule,handover,confirm,completed}-*.png`、`.qa/workbench-state-*.png`、
 `.qa/workbench-viewport-en-390.png`。已檢視中英文手機、桌面、確認與撤權畫面。
 
+## PR / CI
+
+[PR #46](https://github.com/71bk/kinsun.ai-product/pull/46) 的程式／測試版本 `44d87ca` 已通過
+[CI 34830767622](https://github.com/71bk/kinsun.ai-product/actions/runs/34830767622) 全部 10 jobs，
+涵蓋八個 worker 與 aggregate。第一輪 run `34830019424` 的 DB gate 也已通過
+20 migration／212 integration；唯一失敗是新增 Vitest cleanup hook 的回傳型別，修成 block
+body／void 後，本機 typecheck、對應測試與上述完整 CI 皆成功。此後只回填驗證文件。
+
 ## 尚未驗證
 
-PR CI／disposable database 結果待回填。本次未重跑 real-auth Browser→Core→Supabase 全鏈路；
+本次未重跑 real-auth Browser→Core→Supabase 全鏈路；
 上一切片已撤銷的 QA 帳號沒有恢復。未做 production activation、真機與現場使用者測試。
 development 驗證設定輪替由 Owner 接受風險後暫緩，維持獨立待辦。
