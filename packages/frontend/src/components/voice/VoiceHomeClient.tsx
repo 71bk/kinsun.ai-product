@@ -116,14 +116,14 @@ export function VoiceHomeClient() {
         )}
         {!consentError && consentGranted === null && (
           <p aria-live="polite" className={styles.statusMessage}>
-            正在向 Core API 確認陪伴同意…
+            正在確認您的陪伴同意…
           </p>
         )}
         {!consentError && consentGranted === false && (
           <section className={styles.blockedCard}>
             <ShieldCheck aria-hidden="true" size={40} weight="fill" />
             <h2>請先決定是否開啟陪伴</h2>
-            <p>在您明確同意前，小暖不會開啟麥克風或建立陪伴 Session。</p>
+            <p>在您明確同意前，小暖不會開啟麥克風，也不會開始陪伴。</p>
             <Link className={styles.consentLink} href="/elder/consent">
               前往同意設定
             </Link>

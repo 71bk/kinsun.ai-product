@@ -129,7 +129,7 @@ export default function ElderMemoriesPage() {
       {consent === null && !error && (
         <section className={styles.consentRequired}>
           <h2>長期記憶尚未開啟</h2>
-          <p>在您開啟 LONG_TERM_MEMORY 同意前，Core 不會回傳候選或正式記憶。</p>
+          <p>請先在同意設定開啟「長期記憶」，才會顯示候選與已確認的記憶。</p>
           <Link href="/elder/consent">前往同意設定</Link>
         </section>
       )}
@@ -165,7 +165,7 @@ export default function ElderMemoriesPage() {
               </div>
             )}
             {memories.candidateHasMore && (
-              <p className={styles.pageNotice}>Core 還有下一頁，因此上方數字不是完整總數。</p>
+              <p className={styles.pageNotice}>還有更多筆尚未載入，上方數字不是完整總數。</p>
             )}
           </section>
 
@@ -173,7 +173,7 @@ export default function ElderMemoriesPage() {
             <div className={styles.sectionHeader}>
               <div>
                 <h2 id="memory-active-title">已確認的記憶</h2>
-                <p>只有 ACTIVE 狀態會在安全條件成立時提供給陪伴服務。</p>
+                <p>只有已確認的記憶，會在安全條件成立時提供給小暖使用。</p>
               </div>
               <span>{memories.confirmed.length} 筆目前載入</span>
             </div>
@@ -192,7 +192,7 @@ export default function ElderMemoriesPage() {
               </div>
             )}
             {memories.confirmedHasMore && (
-              <p className={styles.pageNotice}>Core 還有下一頁，因此上方數字不是完整總數。</p>
+              <p className={styles.pageNotice}>還有更多筆尚未載入，上方數字不是完整總數。</p>
             )}
           </section>
         </>

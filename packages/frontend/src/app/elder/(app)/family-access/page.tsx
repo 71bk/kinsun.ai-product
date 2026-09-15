@@ -178,7 +178,7 @@ export default function ElderFamilyAccessPage() {
       {familyConsent === false && !error && (
         <section className={styles.consentRequired}>
           <h2>家屬分享尚未開啟</h2>
-          <p>您必須先明確開啟 FAMILY_SHARING 同意，Core 才會建立邀請碼。</p>
+          <p>請先在同意設定開啟「家屬分享」，才能建立邀請碼。</p>
           <Link href="/elder/consent">前往同意設定</Link>
         </section>
       )}
@@ -246,7 +246,7 @@ export default function ElderFamilyAccessPage() {
       <ConfirmationDialog
         busy={busy}
         confirmLabel="建立邀請碼"
-        description="Core 會再次確認 FAMILY_SHARING 同意，並建立只能使用一次、24 小時失效的邀請碼。"
+        description="系統會再次確認「家屬分享」同意，然後建立只能使用一次、24 小時後失效的邀請碼。"
         onCancel={() => setPendingCreate(false)}
         onConfirm={() => void confirmCreate()}
         open={pendingCreate}

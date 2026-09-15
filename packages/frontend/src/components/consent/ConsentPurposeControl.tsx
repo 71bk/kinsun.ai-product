@@ -101,7 +101,7 @@ export function ConsentPurposeControl({
           <li key={detail}>{detail}</li>
         ))}
       </ul>
-      {active && <p className={styles.version}>Core 同意版本 {consent.consent_version}</p>}
+      {active && <p className={styles.version}>同意版本 {consent.consent_version}</p>}
       {!active && !policyVersion && (
         <p className={styles.error} role="alert">
           尚未設定同意政策版本，目前不能開啟這項用途。

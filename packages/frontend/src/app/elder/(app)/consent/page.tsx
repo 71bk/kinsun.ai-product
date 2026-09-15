@@ -72,12 +72,12 @@ export default function ConsentPage() {
     return <NotLoggedIn reason="尚未設定本機 Demo 身分，請先完成登入設定" />;
   }
   if (loadError) {
-    return <NotLoggedIn reason="無法向 Core API 讀取同意狀態；系統已停止，不會推測結果" />;
+    return <NotLoggedIn reason="目前讀不到您的同意設定。系統已停止，不會猜測結果。" />;
   }
   if (consent === undefined || memoryConsent === undefined || familyConsent === undefined)
     return (
       <main aria-live="polite" className={styles.loading}>
-        正在向 Core API 查詢同意狀態…
+        正在讀取您的同意設定…
       </main>
     );
 
@@ -85,7 +85,7 @@ export default function ConsentPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <h1>同意設定</h1>
-        <p>每一項用途都能分別開啟或撤回。這裡只列出目前有正式功能與 Core workflow 支援的選項。</p>
+        <p>每一項用途都能分別開啟或撤回。這裡只列出目前已經可以使用的選項。</p>
       </header>
 
       <ConsentSummary family={familyConsent} memory={memoryConsent} voice={consent} />
@@ -115,8 +115,7 @@ export default function ConsentPage() {
       </section>
 
       <aside className={styles.boundaryNote}>
-        此頁不提供健康風險分數、情緒告警、主動陪伴時段或緊急救護設定；這些功能目前沒有完整產品與 API
-        workflow。
+        此頁不提供健康風險分數、情緒告警、主動陪伴時段或緊急救護設定；這些功能目前尚未提供。
       </aside>
 
       <nav aria-label="同意設定相關連結" className={styles.actions}>
