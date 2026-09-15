@@ -48,7 +48,6 @@ export function Landing() {
 
       <section className={styles.closing} aria-labelledby="landing-closing-title">
         <div>
-          <p className={styles.closingEyebrow}>{t('landing.proof.review')}</p>
           <h2 id="landing-closing-title">{t('landing.closing.title')}</h2>
           <p>{t('landing.closing.body')}</p>
         </div>
