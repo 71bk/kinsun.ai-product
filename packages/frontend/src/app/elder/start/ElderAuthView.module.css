@@ -11,6 +11,8 @@
   background: color-mix(in srgb, var(--color-surface) 94%, transparent);
 }
 
+/* Back sits next to the brand on the left: where a return control is expected,
+   with its label visible at every width (MASTER.md 8.4 icon + text). */
 .topbarInner {
   display: flex;
   width: min(100%, 1180px);
@@ -18,7 +20,7 @@
   margin-inline: auto;
   padding: var(--space-3) var(--space-6);
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-4);
 }
 
@@ -399,35 +401,42 @@
   }
 
   .brandMark,
-  .brand small,
-  .backLink span {
+  .brand small {
     display: none;
-  }
-
-  .backLink {
-    min-width: var(--touch-min);
-    justify-content: center;
-    padding: 0;
   }
 
   .main {
     width: 100%;
-    padding: var(--space-6) var(--space-4) var(--space-10);
+    padding: var(--space-4) var(--space-4) var(--space-10);
   }
 
+  /* A small mascot beside the title instead of a stacked hero, so the
+     sign-in card starts within the first screen of a phone. */
   .welcome {
-    display: flex;
+    grid-template-columns: 96px minmax(0, 1fr);
+    grid-template-areas:
+      'mascot title'
+      'copy copy'
+      'assurances assurances';
     align-items: center;
-    text-align: center;
+    gap: var(--space-3) var(--space-4);
   }
 
   .mascotFrame {
-    width: 132px;
-    margin-block-end: var(--space-4);
+    width: 96px;
+    margin: 0;
+  }
+
+  .welcome h1 {
+    font-size: var(--text-2xl);
   }
 
   .welcomeCopy {
-    margin-block-start: var(--space-3);
+    margin-block-start: 0;
+  }
+
+  .assurances {
+    margin-block-start: 0;
   }
 
   .assurances {
