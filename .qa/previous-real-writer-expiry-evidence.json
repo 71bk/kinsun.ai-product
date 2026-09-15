@@ -1,0 +1,43 @@
+{
+  "mode": "writer-expiry",
+  "checks": [
+    {
+      "name": "writer-real-principal",
+      "actor": "ab167e46-dc84-5170-8309-16eeb383974d"
+    },
+    {
+      "name": "completed-visit-remains-inaccessible-after-reload",
+      "status": 404
+    },
+    {
+      "name": "membership-expiry-poll-clears-history-and-cards",
+      "status": 401
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "previous-real-completed-reload.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "filename": "previous-real-before-expiry.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "filename": "previous-real-after-expiry.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      }
+    }
+  ]
+}

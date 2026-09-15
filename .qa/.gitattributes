@@ -1,2 +1,7 @@
 law-regression-*/** text eol=lf
 run_law_regression.py text eol=lf
+law-sync-audit-v010-failed-lint-20260910/** -text
+# Preserve original archived bytes, including mixed newline/traceback whitespace.
+law-regression-9p0n2nya/** -text -whitespace
+law-regression-qnwozkow/** -text -whitespace
+auth-rotation-impact.json -text whitespace=cr-at-eol
