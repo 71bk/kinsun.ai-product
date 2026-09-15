@@ -505,7 +505,7 @@ const zhHant = {
 
   // ---- family home ----
   'family.homeTitle': '家屬首頁',
-  'family.meta': '長者：{elderId}｜最後更新：{updated}',
+  'family.meta': '最後更新：{updated}',
   'family.noData': '尚無資料',
   'family.todayTitle': '今日報表',
   'family.todayNone': '今日尚無已發布的家屬報表。',
@@ -1344,7 +1344,7 @@ const en: Record<MessageKey, string> = {
   'assignmentStatus.NO_SHOW': 'No show',
 
   'family.homeTitle': 'Family home',
-  'family.meta': 'Elder: {elderId} | Last updated: {updated}',
+  'family.meta': 'Last updated: {updated}',
   'family.noData': 'No data yet',
   'family.todayTitle': 'Today’s report',
   'family.todayNone': 'No published family report for today yet.',

@@ -129,7 +129,6 @@ export default function FamilyHomePage() {
     <main className={styles.page}>
       <PageHeader
         meta={t('family.meta', {
-          elderId,
           updated: lastUpdated ? formatDateTime(lastUpdated) : t('family.noData'),
         })}
         title={t('family.homeTitle')}
