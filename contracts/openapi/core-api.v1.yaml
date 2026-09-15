@@ -3421,6 +3421,7 @@
           "care-events"
         ],
         "summary": "Review Care Event",
+        "description": "Review a pending event with live authorization and expected_version. CORRECT requires corrected_payload and optionally corrects event type/time. Omitted metadata stays unchanged; explicit null clears time; type cannot be null and times require a timezone. Correction preserves before/after metadata in the review audit and invalidates affected summaries. Formal events cannot be reviewed again. The response shape and minimal outbox payload are unchanged.",
         "operationId": "review_care_event_api_v1_elders__elder_id__care_events__event_id__review_post",
         "parameters": [
           {

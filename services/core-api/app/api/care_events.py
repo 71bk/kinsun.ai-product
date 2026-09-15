@@ -264,13 +264,16 @@ async def review_care_event(
         payload={
             "elder_id": elder_id,
             "event_id": event_id,
-            **request.model_dump(mode="json"),
+            **request.model_dump(
+                mode="json",
+                exclude={"corrected_event_type", "corrected_event_time"} - request.model_fields_set,
+            ),
         },
     )
     if replay.replayed and replay.response_body is not None:
         return success(replay.response_body)
     service = CareEventService(session, actor_context.tenant_id)
-    event = await service.get(elder_id, event_id)
+    event = await service.get(elder_id, event_id, for_update=True)
     if event is None:
         raise NotFoundError("Resource not found")
     rebuild_required: list[str] = []
@@ -279,6 +282,8 @@ async def review_care_event(
         if review is None:
             raise NotFoundError("Resource not found")
     else:
+        # A different reviewer may have held the event lock; recheck live scope after waiting.
+        await authorize_elder(session, actor_context, elder_id, "care_event:review")
         review, rebuild_required = await service.review(
             event=event,
             actor_context=actor_context,

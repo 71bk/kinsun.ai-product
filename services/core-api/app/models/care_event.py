@@ -135,6 +135,11 @@ class ReviewDecision(Base):
     before_version: Mapped[int | None] = mapped_column(Integer)
     after_version: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
+    # Nullable for legacy and non-correction decisions; never backfill guessed history.
+    before_event_type: Mapped[str | None] = mapped_column(String(64))
+    before_event_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    after_event_type: Mapped[str | None] = mapped_column(String(64))
+    after_event_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reviewed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=sa.func.now(),

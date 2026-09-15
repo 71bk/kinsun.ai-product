@@ -1,0 +1,9 @@
+{
+  "data": {
+    "decision": "VERIFY",
+    "reason_code": "SYNTHETIC_CORRECTION",
+    "expected_version": 1,
+    "corrected_payload": null,
+    "corrected_event_time": null
+  }
+}

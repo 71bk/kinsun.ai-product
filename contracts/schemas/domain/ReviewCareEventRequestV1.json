@@ -1,4 +1,22 @@
 {
+  "$defs": {
+    "CareEventType": {
+      "enum": [
+        "MEAL",
+        "ACTIVITY",
+        "SLEEP",
+        "MEDICATION_STATEMENT",
+        "EMOTION_EXPRESSION",
+        "SOCIAL_CONTACT",
+        "EXPECTED_CONTACT_MISSED",
+        "ACTIVITY_PARTICIPATION",
+        "ACTIVITY_CANCELLED",
+        "COMPANIONSHIP_NEED"
+      ],
+      "title": "CareEventType",
+      "type": "string"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "decision": {
@@ -45,6 +63,33 @@
       "default": null,
       "title": "Corrected Payload"
     },
+    "corrected_event_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CareEventType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "CORRECT only. Omit to preserve the type; null is rejected."
+    },
+    "corrected_event_time": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string",
+          "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "CORRECT only. Omit to preserve; null clears time; otherwise include timezone.",
+      "title": "Corrected Event Time"
+    },
     "expected_version": {
       "minimum": 1,
       "title": "Expected Version",
@@ -79,6 +124,9 @@
         "properties": {
           "corrected_payload": {
             "type": "object"
+          },
+          "corrected_event_type": {
+            "type": "string"
           }
         }
       }
@@ -103,6 +151,20 @@
           "corrected_payload": {
             "type": "null"
           }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "corrected_event_type"
+              ]
+            },
+            {
+              "required": [
+                "corrected_event_time"
+              ]
+            }
+          ]
         }
       }
     }

@@ -30,6 +30,46 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from alembic import command
 from alembic.config import Config
 
+
+@pytest.mark.asyncio
+async def test_event_correction_metadata_migration_roundtrip(test_engine):
+    """Add nullable audit fields without guessing legacy values; reversible DDL."""
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "e3a5c7d9f102")
+    names = {f"{side}_event_{field}" for side in ("before", "after") for field in ("type", "time")}
+    async with test_engine.begin() as conn:
+        assert names.isdisjoint(await conn.run_sync(_get_columns, "review_decision"))
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "f4b6d8e0a213")
+    async with test_engine.begin() as conn:
+        assert names <= set(await conn.run_sync(_get_columns, "review_decision"))
+        assert "ck_review_event_metadata_pair" in await conn.run_sync(
+            _get_check_constraints, "review_decision"
+        )
+        nullable = (
+            (
+                await conn.execute(
+                    text(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_schema='eldercare_ai' "
+                        "AND table_name='review_decision' AND is_nullable='YES'"
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert names <= set(nullable)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_downgrade, "e3a5c7d9f102")
+    async with test_engine.begin() as conn:
+        assert names.isdisjoint(await conn.run_sync(_get_columns, "review_decision"))
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 #
 # `test_engine` here is conftest.py's session-scoped fixture — it uses
@@ -67,7 +107,7 @@ _TOTAL_HEAD_TABLE_COUNT = 67
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "e3a5c7d9f102"
+_HEAD_REVISION = "f4b6d8e0a213"
 
 
 def _get_alembic_config() -> Config:

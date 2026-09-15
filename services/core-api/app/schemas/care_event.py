@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from app.core.restricted_keys import contains_restricted_key
 
@@ -86,10 +86,22 @@ class ReviewCareEventRequest(BaseModel):
     decision: Literal["VERIFY", "CORRECT", "REJECT", "EXCLUDE"]
     reason_code: str = Field(min_length=1, max_length=120)
     corrected_payload: dict[str, Any] | None = None
+    corrected_event_type: CareEventType | None = Field(
+        default=None, description="CORRECT only. Omit to preserve the type; null is rejected."
+    )
+    corrected_event_time: AwareDatetime | None = Field(
+        default=None,
+        description="CORRECT only. Omit to preserve; null clears time; otherwise include timezone.",
+    )
     expected_version: int = Field(ge=1)
 
     @model_validator(mode="after")
     def validate_correction(self) -> ReviewCareEventRequest:
+        metadata_fields = self.model_fields_set & {"corrected_event_type", "corrected_event_time"}
+        if metadata_fields and self.decision != "CORRECT":
+            raise ValueError("event metadata corrections are only allowed for CORRECT")
+        if "corrected_event_type" in metadata_fields and self.corrected_event_type is None:
+            raise ValueError("corrected_event_type cannot be null")
         if self.decision == "CORRECT" and self.corrected_payload is None:
             raise ValueError("corrected_payload is required for CORRECT")
         if self.decision != "CORRECT" and self.corrected_payload is not None:

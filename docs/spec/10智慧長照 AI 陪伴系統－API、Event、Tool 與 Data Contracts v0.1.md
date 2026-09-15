@@ -480,6 +480,16 @@ expected_version
 
 Response：event_id、status、version、review_record_id、rebuild_required[]。
 
+2026-09-15 B03 Core 增量（canonical JSON 使用大寫 decision）：CORRECT 仍必須提供
+`corrected_payload`，另可提供 `corrected_event_type` 與 `corrected_event_time`。
+省略保留原值；type 不接受 null，time 接受 null 表示清除，非 null 必須含時區。
+VERIFY／REJECT／EXCLUDE 不接受這兩個欄位。只允許 CANDIDATE／NEEDS_REVIEW 覆核，
+以 row lock、live scope 與 expected_version 防止並行覆寫；成功重送仍須通過目前授權。
+CORRECT 同交易保存前後 payload version、ReviewDecision 的 before/after event type/time、
+reviewer／reviewed_at，標記引用摘要 STALE 並寫入 minimal outbox。
+歷史 audit 不回填猜測值；部署先套用 migration `f4b6d8e0a213` 再啟動新版 Core。
+前端接線與完整 B03 AC 狀態見 [B03 backend report](../project/b03-event-metadata-correction-20260915.md)。
+
 ## 8.3 Care Event Contract
 
 事件正式欄位：

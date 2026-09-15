@@ -53,6 +53,15 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
 
 ### Core API 與資料庫
 
+- 新增 migration 須同步 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`，
+  `alembic heads` 與 collect-only 無法取代實際 lifecycle assertions。
+
+- 無 `.env` 的 worktree 跑 Core unit 仍可能在 collection 要求 `DATABASE_URL`，提供合成 localhost
+  DSN 即可，不複製 Supabase 憑證。JSON Schema `date-time` 的 format checker 是 optional，
+  correction 的 timezone pattern 須與 Pydantic `AwareDatetime` 同步。
+- 可清除欄位的 idempotency fingerprint 必須區分省略／null；保留舊 default 欄位，
+  不以全域 `exclude_unset=True` 改掉既有請求 fingerprint。
+
 - `services/core-api` 是 Domain authority。Route 只處理傳輸；authorization、Consent、state transition
   與 business rule 放 service；資料存取經 repository；跨系統通知先寫 transactional outbox。
 - 以解析後的 `Identity`／`Actor` 為權限依據，不信任 Client 傳入的 tenant、elder、role、assignment

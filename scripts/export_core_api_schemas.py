@@ -521,6 +521,9 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
             ]
         )
     elif title == "ReviewCareEventRequestV1":
+        properties["corrected_event_time"]["anyOf"][0]["pattern"] = (
+            r"(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        )
         corrected = properties["corrected_payload"]
         object_schema = corrected["anyOf"][0]
         object_schema["propertyNames"] = {"not": {"enum": RESTRICTED_KEYS}}
@@ -535,6 +538,7 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                         "required": ["corrected_payload"],
                         "properties": {
                             "corrected_payload": {"type": "object"},
+                            "corrected_event_type": {"type": "string"},
                         },
                     },
                 },
@@ -550,7 +554,13 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
                     "then": {
                         "properties": {
                             "corrected_payload": {"type": "null"},
-                        }
+                        },
+                        "not": {
+                            "anyOf": [
+                                {"required": ["corrected_event_type"]},
+                                {"required": ["corrected_event_time"]},
+                            ]
+                        },
                     },
                 },
             ]
