@@ -1,0 +1,52 @@
+{
+  "campaign": "workbench-real-auth-20260915",
+  "startedAt": "2026-09-15T02:06:27.519Z",
+  "checks": [
+    {
+      "name": "real-login-reader",
+      "actorId": "946c23cc-967d-5b64-ac94-248697b7719c"
+    },
+    {
+      "name": "pre-start-and-cross-scope-denied",
+      "denied": [
+        {
+          "key": "source",
+          "status": 404
+        },
+        {
+          "key": "writer_current",
+          "status": 404
+        },
+        {
+          "key": "foreign_assignment",
+          "status": 404
+        }
+      ],
+      "historyAndTaskDenials": 8
+    },
+    {
+      "name": "missing-scopes-hide-panels"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "workbench-real-no-scope.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    }
+  ],
+  "errors": [],
+  "status": "FAIL",
+  "failure": {
+    "stage": "schedule-to-start",
+    "errorType": "TimeoutError"
+  },
+  "finishedAt": "2026-09-15T02:07:16.744Z"
+}

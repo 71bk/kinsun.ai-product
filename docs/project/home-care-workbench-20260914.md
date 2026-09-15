@@ -67,6 +67,9 @@ body／void 後，本機 typecheck、對應測試與上述完整 CI 皆成功。
 
 ## 尚未驗證
 
+2026-09-15 更新：[新工作台真實登入驗收](home-care-workbench-real-auth-20260915.md) 已完成，
+包含重疊派案 500 修正、跨分頁更新、DB／outbox 與撤權；以下保留原切片的驗證邊界。
+
 本次未重跑 real-auth Browser→Core→Supabase 全鏈路；
 上一切片已撤銷的 QA 帳號沒有恢復。未做 production activation、真機與現場使用者測試。
 development 驗證設定輪替由 Owner 接受風險後暫緩，維持獨立待辦。

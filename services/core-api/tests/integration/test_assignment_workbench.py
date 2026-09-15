@@ -20,6 +20,46 @@ workbench_data = _seed_api_data
 
 
 @pytest.mark.asyncio
+async def test_overlapping_visits_keep_dashboard_available_and_exact_scope_isolation(
+    test_engine, workbench_data, committed_session
+):
+    ids = workbench_data
+    current = await _prepare_record_completion(committed_session, ids)
+    current.service_scope = ["assignment:read", "care_action:read"]
+    restricted = CareAssignment(
+        tenant_id=current.tenant_id,
+        elder_id=current.elder_id,
+        care_unit_id=current.care_unit_id,
+        worker_id=current.worker_id,
+        service_start=current.service_start,
+        service_end=current.service_end,
+        status="IN_PROGRESS",
+        service_scope=["assignment:read"],
+        version=1,
+    )
+    committed_session.add(restricted)
+    await committed_session.commit()
+    app = _build_client_app(test_engine, ids["worker_id"], "HOME_CARE_WORKER", ids["tenant_id"])
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        dashboard = await client.get("/api/v1/me/authorized-elders?mode=home-care")
+        assert dashboard.status_code == 200
+        row = next(
+            item
+            for item in dashboard.json()["data"]["items"]
+            if item["elder_id"] == str(current.elder_id)
+        )
+        assert row["open_care_action_count"] is None
+        path = f"/api/v1/elders/{current.elder_id}/care-actions"
+        assert (await client.get(path)).status_code == 404
+        assert (
+            await client.get(path, params={"assignment_id": str(current.id)})
+        ).status_code == 200
+        assert (
+            await client.get(path, params={"assignment_id": str(restricted.id)})
+        ).status_code == 404
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "denial",
     [None, "scope", "task_scope", "worker", "tenant", "expired", "completed", "membership"],

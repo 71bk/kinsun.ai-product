@@ -61,6 +61,8 @@ QA 環境診斷造成的 development 驗證設定輪替仍另列待辦，不隨�
 - [x] Core unit 1,408／Frontend 594／lint／typecheck／build／static＋live contracts
 - [x] 7 組尺寸完整 synthetic Browser 流程＋7 種 en 390 狀態與像素檢查
 - [x] PR #46 程式版本 `44d87ca` 通過 CI `34830767622` 全部 10 jobs；20 migration／212 integration，含新增 8 個 DB cases
-- [ ] 新工作台的 real-auth E2E／production activation
+- [x] 新工作台 real-auth E2E：2026-09-15 真實開始／交班／待辦／提交完成／跨分頁更新及撤權清除通過；修正重疊派案導致 Dashboard 500，見下方報告
+- [ ] production activation
 
 詳見 [工作台整合紀錄](../../../docs/project/home-care-workbench-20260914.md)。
+真實登入增量見 [2026-09-15 驗收報告](../../../docs/project/home-care-workbench-real-auth-20260915.md)。

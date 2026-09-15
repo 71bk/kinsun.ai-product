@@ -1,0 +1,343 @@
+{
+  "status": "REAL_AUTH_WORKBENCH_AND_RETIREMENT_VERIFIED",
+  "campaign": "workbench-real-auth-20260915",
+  "baseCommit": "ac9f2c90a6cebe7f43a726abbe385a3a44572e58",
+  "includesLocalAmbiguousAssignmentFix": true,
+  "browser": {
+    "campaign": "workbench-real-auth-20260915",
+    "startedAt": "2026-09-15T02:18:13.302Z",
+    "checks": [
+      {
+        "name": "real-login-reader",
+        "actorId": "946c23cc-967d-5b64-ac94-248697b7719c"
+      },
+      {
+        "name": "pre-start-and-cross-scope-denied",
+        "denied": [
+          {
+            "key": "source",
+            "status": 404
+          },
+          {
+            "key": "writer_current",
+            "status": 404
+          },
+          {
+            "key": "foreign_assignment",
+            "status": 404
+          }
+        ],
+        "historyAndTaskDenials": 8
+      },
+      {
+        "name": "missing-scopes-hide-panels"
+      },
+      {
+        "name": "start-real-200-and-cross-tab-refresh",
+        "version": 2,
+        "scheduleStates": [
+          "CONFIRMED",
+          "IN_PROGRESS"
+        ]
+      },
+      {
+        "name": "real-cross-worker-history-and-three-task-states",
+        "historyStatus": 200,
+        "tasksStatus": 200,
+        "sourceId": "e879f48b-8b04-556e-94a3-2625f4d2cb3d",
+        "noStore": true
+      },
+      {
+        "name": "seven-real-data-viewport-checks-and-task-binding",
+        "count": 7
+      },
+      {
+        "name": "real-ui-submit-and-complete",
+        "status": 201,
+        "receipt": {
+          "service_record_id": "34aa98c1-dee6-425a-93af-57f8a918f322",
+          "assignment_id": "a233ae48-950f-5925-8f76-00cee35afcbb",
+          "assignment_version": 3,
+          "status": "COMPLETED"
+        }
+      },
+      {
+        "name": "completion-clears-both-tabs-and-refreshes-schedule",
+        "scheduleStates": [
+          "CONFIRMED",
+          "IN_PROGRESS",
+          "IN_PROGRESS",
+          "IN_PROGRESS",
+          "ABSENT"
+        ]
+      },
+      {
+        "name": "real-login-writer",
+        "actorId": "1d08f78d-33db-51c6-a1dd-fc449f842249"
+      },
+      {
+        "name": "ready-to-retire"
+      },
+      {
+        "name": "real-retirement-401-clears-handover-tasks-and-unsent-form"
+      }
+    ],
+    "screenshots": [
+      {
+        "filename": "workbench-real-no-scope.png",
+        "geometry": {
+          "inner": 1440,
+          "client": 1440,
+          "scroll": 1440
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      {
+        "filename": "workbench-real-schedule-en-1440.png",
+        "geometry": {
+          "inner": 1440,
+          "client": 1440,
+          "scroll": 1440
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      {
+        "filename": "workbench-real-handover-en-1440.png",
+        "geometry": {
+          "inner": 1440,
+          "client": 1440,
+          "scroll": 1440
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      {
+        "filename": "workbench-real-handover-en-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "filename": "workbench-real-handover-en-768.png",
+        "geometry": {
+          "inner": 768,
+          "client": 768,
+          "scroll": 768
+        },
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        }
+      },
+      {
+        "filename": "workbench-real-handover-zh-Hant-375.png",
+        "geometry": {
+          "inner": 375,
+          "client": 375,
+          "scroll": 375
+        },
+        "viewport": {
+          "width": 375,
+          "height": 812
+        }
+      },
+      {
+        "filename": "workbench-real-handover-zh-Hant-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "filename": "workbench-real-handover-zh-Hant-430.png",
+        "geometry": {
+          "inner": 430,
+          "client": 430,
+          "scroll": 430
+        },
+        "viewport": {
+          "width": 430,
+          "height": 932
+        }
+      },
+      {
+        "filename": "workbench-real-handover-zh-Hant-768.png",
+        "geometry": {
+          "inner": 768,
+          "client": 768,
+          "scroll": 768
+        },
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        }
+      },
+      {
+        "filename": "workbench-real-confirm-en-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "filename": "workbench-real-completed-en-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "filename": "workbench-real-before-retirement-en-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "filename": "workbench-real-after-retirement-en-390.png",
+        "geometry": {
+          "inner": 390,
+          "client": 390,
+          "scroll": 390
+        },
+        "viewport": {
+          "width": 390,
+          "height": 844
+        }
+      }
+    ],
+    "errors": [],
+    "status": "PASS",
+    "finishedAt": "2026-09-15T02:20:47.850Z"
+  },
+  "readback": {
+    "campaign": "workbench-real-auth-20260915",
+    "revision": "e3a5c7d9f102",
+    "prepared": true,
+    "notes": 2,
+    "outbox": 3,
+    "outbox_events": [
+      {
+        "id": "a1344dac-baba-4b56-b066-6bb8e3c521dd",
+        "type": "care.assignment.completed.v1",
+        "aggregate": "a233ae48-950f-5925-8f76-00cee35afcbb"
+      },
+      {
+        "id": "a491f8c4-b6ea-4a98-b974-dd2c19214b76",
+        "type": "care.service_record.completed.v1",
+        "aggregate": "34aa98c1-dee6-425a-93af-57f8a918f322"
+      },
+      {
+        "id": "b8a0d2ad-2b37-4564-8b05-18ac46fbc0f4",
+        "type": "care.assignment.started.v1",
+        "aggregate": "a233ae48-950f-5925-8f76-00cee35afcbb"
+      }
+    ],
+    "source_note_sha256": "c4cc756678fd2c9364be2bd53fc6c1490a330b50a251d5ab74ef66ea60f031cb",
+    "records": [
+      {
+        "id": "34aa98c1-dee6-425a-93af-57f8a918f322",
+        "assignment": "a233ae48-950f-5925-8f76-00cee35afcbb",
+        "worker": "946c23cc-967d-5b64-ac94-248697b7719c",
+        "version": 1
+      },
+      {
+        "id": "e879f48b-8b04-556e-94a3-2625f4d2cb3d",
+        "assignment": "c7e8c77f-3af6-57d3-a0c9-5d5f45bc7fb1",
+        "worker": "1d08f78d-33db-51c6-a1dd-fc449f842249",
+        "version": 1
+      }
+    ],
+    "assignments": [
+      {
+        "id": "3aa311d7-f6ad-5f63-a337-2ef519196201",
+        "status": "IN_PROGRESS",
+        "version": 2
+      },
+      {
+        "id": "6a44fbd6-1c32-5f6d-ae0b-cc8643fe003b",
+        "status": "IN_PROGRESS",
+        "version": 2
+      },
+      {
+        "id": "a185fbb2-09d1-5f02-90ac-e82d7b4237f0",
+        "status": "IN_PROGRESS",
+        "version": 2
+      },
+      {
+        "id": "a233ae48-950f-5925-8f76-00cee35afcbb",
+        "status": "COMPLETED",
+        "version": 3
+      },
+      {
+        "id": "b7f879cf-20c6-545c-a8ba-35572f019120",
+        "status": "IN_PROGRESS",
+        "version": 2
+      },
+      {
+        "id": "c7e8c77f-3af6-57d3-a0c9-5d5f45bc7fb1",
+        "status": "COMPLETED",
+        "version": 3
+      }
+    ],
+    "live_memberships": 0,
+    "active_credentials": 0,
+    "active_sessions": 0,
+    "record_outbox_sha256": "24e23dc26e31717aa6633afe548045771185d24e6fe1387f70026b1828bb76a6",
+    "tasks": [
+      {
+        "id": "0f8d685c-fcd4-5d2a-a894-46a0c8bdc3a1",
+        "status": "IN_PROGRESS",
+        "version": 1
+      },
+      {
+        "id": "3ebd4823-2f98-500c-9b94-60e3dce4e512",
+        "status": "POSTPONED",
+        "version": 1
+      },
+      {
+        "id": "9a5d3a81-fe3e-55a6-b3b7-71f91fbda00a",
+        "status": "OPEN",
+        "version": 1
+      }
+    ],
+    "task_sha256": "3669f6fd1f053e7e928b97281081e4a47384a00c945cc47e7440861a516d4732"
+  },
+  "sourceAndTasksUnchanged": true,
+  "retirementPreservedRecordOutboxDigest": true,
+  "productionApproved": false
+}

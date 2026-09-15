@@ -78,6 +78,12 @@ Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB r
 
 ## Remaining product gaps
 
+2026-09-15 新工作台 real-auth E2E 已完成本機驗收：開始 200、提交完成 201、跨 worker
+交班／三種待辦、跨分頁更新、完成與撤權清除；DB／outbox 核對且全部 campaign 憑證撤銷。
+實測修正重疊派案引發 Dashboard 500，Core 1,416 passed；新 DB regression 由本次 PR CI 追蹤。
+見 [驗收報告](../../../docs/project/home-care-workbench-real-auth-20260915.md)。這取代下方
+2026-09-14「無新工作台 real-auth」的階段狀態，production activation 仍未完成。
+
 2026-09-14 US-C01 工作台整合的 Persona／AC／Domain／Security／Test 對照及本機證據見
 [工作台交付紀錄](../../../docs/project/home-care-workbench-20260914.md)。入口、交班／待辦、
 提交完成與行程 invalidation 已整合；Core 1,408／Frontend 594 與 Browser 14 組驗證通過，

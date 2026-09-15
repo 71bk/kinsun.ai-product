@@ -11,6 +11,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import and_, select
+from sqlalchemy.exc import MultipleResultsFound
 
 from app.models.care_assignment import CareAssignment
 from app.models.care_unit import CareUnit
@@ -58,8 +59,14 @@ class CareAssignmentRepository(BaseRepository):
                 current_time < CareAssignment.service_end,
             )
         )
-        result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        result = await self._session.execute(stmt.limit(2))
+        try:
+            return result.scalar_one_or_none()
+        except MultipleResultsFound:
+            # Elder-level callers did not select a visit. Never pick an arbitrary
+            # assignment or combine its scopes with another overlapping visit.
+            # Exact-assignment workbench access has its own live authorization.
+            return None
 
     async def get_by_id(self, assignment_id: UUID) -> CareAssignment | None:
         result = await self._session.execute(
