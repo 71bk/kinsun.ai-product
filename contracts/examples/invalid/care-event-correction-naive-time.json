@@ -1,0 +1,11 @@
+{
+  "data": {
+    "decision": "CORRECT",
+    "reason_code": "SYNTHETIC_CORRECTION",
+    "expected_version": 1,
+    "corrected_payload": {
+      "text": "Synthetic corrected fact"
+    },
+    "corrected_event_time": "2026-09-15T08:00:00"
+  }
+}

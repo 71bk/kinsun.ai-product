@@ -55,8 +55,10 @@ class CareEventService:
         elder_id: UUID,
         event_id: UUID,
         statuses: list[str] | None = None,
+        *,
+        for_update: bool = False,
     ) -> CareEvent | None:
-        return await self._events.get(elder_id, event_id, statuses)
+        return await self._events.get(elder_id, event_id, statuses, for_update=for_update)
 
     async def get_version(self, event: CareEvent) -> CareEventVersion:
         return await self._events.get_current_version(event)
@@ -245,7 +247,19 @@ class CareEventService:
         actor_id = actor_context.actor_id
         before_version = event.current_version
         current = await self._events.get_current_version(event)
+        metadata_audit = {}
         if request.decision == "CORRECT":
+            metadata_audit = {
+                "before_event_type": event.event_type,
+                "before_event_time": event.event_time,
+            }
+            if "corrected_event_type" in request.model_fields_set:
+                event.event_type = request.corrected_event_type.value
+            if "corrected_event_time" in request.model_fields_set:
+                event.event_time = request.corrected_event_time
+            metadata_audit.update(
+                after_event_type=event.event_type, after_event_time=event.event_time
+            )
             event.current_version += 1
             self._events.add_version(
                 CareEventVersion(
@@ -275,6 +289,7 @@ class CareEventService:
             reason_code=request.reason_code,
             before_version=before_version,
             after_version=event.current_version,
+            **metadata_audit,
         )
         self._events.add_review(review)
 

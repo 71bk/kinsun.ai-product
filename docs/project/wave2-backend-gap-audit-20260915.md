@@ -2,6 +2,9 @@
 
 ## 基準與工作隔離
 
+本文件保留實作前的核對快照；後續 B03 程式、契約與驗證進度見
+[事件類型／時間修正報告](b03-event-metadata-correction-20260915.md)。
+
 - Worktree：`D:/Hackthon/kinsun-backend`；分支：`feat/wave2-backend`。
 - 基準：fetch 後的 `origin/main`，commit `b01c2a9`，已包含 PR #47 的重疊派案修正。
 - 原前端目錄 `D:/Hackthon/kinsun.ai` 保留既有分支與工作檔案。本次只在後端 worktree 新增此文件。

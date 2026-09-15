@@ -28,6 +28,11 @@ EXAMPLES = CONTRACTS / "examples"
 
 # example file -> schema that its "data" member must satisfy
 DATA_SCHEMA_FOR = {
+    "care-event-correction-metadata.json": "domain/ReviewCareEventRequestV1.json",
+    "care-event-correction-clear-time.json": "domain/ReviewCareEventRequestV1.json",
+    "care-event-correction-null-type.json": "domain/ReviewCareEventRequestV1.json",
+    "care-event-correction-naive-time.json": "domain/ReviewCareEventRequestV1.json",
+    "care-event-verify-metadata.json": "domain/ReviewCareEventRequestV1.json",
     "elder-summary.json": "domain/ElderSummaryV1.json",
     "elder-access-context.json": "domain/ElderAccessContextV1.json",
     "authorized-elders.json": "domain/AuthorizedElderListV1.json",

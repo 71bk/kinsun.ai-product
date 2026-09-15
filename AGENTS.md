@@ -786,6 +786,13 @@ kinsun.ai/
 
 ## 10. 驗證與完成條件
 
+獨立 worktree 的 Core 單元測試仍可能在 collection 匯入 Settings 而要求 `DATABASE_URL`；
+使用測試用 localhost DSN 即可，不為單元測試複製共用 Supabase 的 `.env`。
+JSON Schema 的 `format: date-time` 依賴 validator 的 optional format 套件，不能單靠它驗證時區；
+Review correction 的 timezone pattern 與 Pydantic `AwareDatetime` 必須一起維護。
+新增可清除欄位時，idempotency fingerprint 必須區分省略與 explicit null，並保留舊請求的
+default 欄位；全域改成 `exclude_unset=True` 可能讓已存成功回應無法重送。
+
 Membership 過期測試須建立合法的過去期間（effective_from < effective_to < now）。
 新 fixture 的 effective_from 預設為 now，只把 effective_to 改為 now−1 秒會違反
 `ck_membership_period`，測不到授權拒絕；不要以 sleep 等待或移除 DB constraint 掩蓋。

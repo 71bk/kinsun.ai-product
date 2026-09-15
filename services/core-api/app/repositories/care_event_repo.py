@@ -52,6 +52,8 @@ class CareEventRepository(BaseRepository):
         elder_id: UUID,
         event_id: UUID,
         statuses: list[str] | None = None,
+        *,
+        for_update: bool = False,
     ) -> CareEvent | None:
         stmt = select(CareEvent).where(
             CareEvent.id == event_id,
@@ -60,6 +62,8 @@ class CareEventRepository(BaseRepository):
         )
         if statuses is not None:
             stmt = stmt.where(CareEvent.status.in_(statuses))
+        if for_update:
+            stmt = stmt.with_for_update().execution_options(populate_existing=True)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
