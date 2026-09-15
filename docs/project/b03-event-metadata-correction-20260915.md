@@ -55,6 +55,10 @@ CORRECT 保留舊 payload version、新 version 的 supersedes 關係，另在�
 | Alembic graph | 單一 head f4b6d8e0a213 |
 | PostgreSQL／migration lifecycle | 本機未執行；使用 PR CI disposable PostgreSQL 驗證，結果待補 |
 
+第一輪 [CI 34941061567](https://github.com/71bk/kinsun.ai-product/actions/runs/34941061567)
+的新增 metadata migration roundtrip 通過；另兩個既有 lifecycle assertion 因 `_HEAD_REVISION`
+未同步而失敗（19 passed／2 failed），已修正預期 head。HTTP integration 當輪未執行。
+
 新增 DB regression 包含修正／清除／省略時間的 audit 保存、同 key replay／payload conflict、
 已正式事件拒絕、assignment expiry、跨 elder／tenant、非授權角色、不同 key 並行只有一位成功、
 outbox 插入後故障全部回滾與 retry。Migration regression 覆蓋前一版→新 head→前一版→head、

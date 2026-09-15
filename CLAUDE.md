@@ -53,6 +53,9 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
 
 ### Core API 與資料庫
 
+- 新增 migration 須同步 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`，
+  `alembic heads` 與 collect-only 無法取代實際 lifecycle assertions。
+
 - 無 `.env` 的 worktree 跑 Core unit 仍可能在 collection 要求 `DATABASE_URL`，提供合成 localhost
   DSN 即可，不複製 Supabase 憑證。JSON Schema `date-time` 的 format checker 是 optional，
   correction 的 timezone pattern 須與 Pydantic `AwareDatetime` 同步。

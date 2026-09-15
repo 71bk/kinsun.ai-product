@@ -786,6 +786,9 @@ kinsun.ai/
 
 ## 10. 驗證與完成條件
 
+新增 migration 時同步更新 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`；
+只跑 `alembic heads` 或 collection 不會發現固定預期版本已過期。
+
 獨立 worktree 的 Core 單元測試仍可能在 collection 匯入 Settings 而要求 `DATABASE_URL`；
 使用測試用 localhost DSN 即可，不為單元測試複製共用 Supabase 的 `.env`。
 JSON Schema 的 `format: date-time` 依賴 validator 的 optional format 套件，不能單靠它驗證時區；
