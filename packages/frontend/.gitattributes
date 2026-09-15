@@ -1,0 +1,6 @@
+# Font files
+
+# WOFF2/TTF are binary: keep git from touching line endings (this repo runs with autocrlf).
+*.woff2 binary
+*.ttf binary
+*.otf binary

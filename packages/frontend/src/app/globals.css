@@ -1,14 +1,17 @@
 @import './tokens.css';
+@import './fonts/noto-sans-tc.css';
 
 /* Font stack per §5: Figtree first (Latin + digits only), Chinese falls
-   through to Noto Sans TC. NOTE: §5 requires self-hosting these two faces on
-   our own domain (offline availability + no user IP leak to a CDN). The
-   @font-face declarations are NOT in place yet — until the font files are
-   added under /public/fonts, rendering falls back to the system faces below.
-   Do not add a Google Fonts CDN link to "fix" this. */
+   through to Noto Sans TC. Both faces are self-hosted (§5: offline
+   availability + no user IP leak to a CDN): Figtree through next/font/local in
+   layout.tsx, which exposes it as --font-figtree with a metric-matched
+   fallback; Noto Sans TC through the generated unicode-range slices imported
+   above (scripts/fonts/build_noto_sans_tc_slices.py). Do not add a Google
+   Fonts CDN link. */
 :root {
   --font-sans:
-    'Figtree', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+    var(--font-figtree), 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui,
+    sans-serif;
 }
 
 * {

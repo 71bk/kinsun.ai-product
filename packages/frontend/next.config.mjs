@@ -22,6 +22,14 @@ const nextConfig = {
   ],
   headers: async () => [
     {
+      /* Font slices live under a versioned directory (fonts/noto-sans-tc/v1),
+         so a new build of the slices changes the path and the old files can be
+         cached for good. Without this, public/ assets are served max-age=0 and
+         every visit re-validates a hundred small font requests. */
+      source: '/fonts/:path*',
+      headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+    },
+    {
       source: '/sw.js',
       headers: [
         { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
