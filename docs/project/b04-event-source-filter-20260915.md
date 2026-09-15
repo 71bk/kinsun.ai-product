@@ -29,10 +29,11 @@ DELETED 不回傳，每頁都重新授權。查詢不 join 內容版本，不因
 - Worktree `D:/Hackthon/kinsun-backend`，分支 `feat/b04-event-source-filter`。
 - 由最新 origin/main `b01c2a9` 建立分支後，以 fast-forward 納入已通過 CI 的 B03
   `d4102b7`，讓來源 migration 接續同一條 revision chain。
-- CI 只接受以 main 為 base 的 PR，因此本次 draft PR 先以 main 為 base，明確標示依賴
-  PR #48；[B04 專屬差異](https://github.com/71bk/kinsun.ai-product/compare/feat/wave2-backend...feat/b04-event-source-filter)
-  以 B03 分支比較。先合併 B03 PR #48，再將 B04 整理至最新 main 並重驗單一 head／CI；
-  不可跳過 dependency 直接套 source migration。
+- 2026-09-15 Owner 授權合併後，B03 PR #48 已合併為 main `d8108f3`。B04 的兩個提交
+  已 rebase 到此 main，檔案內容與 rebase 前 `89a70f1` 完全相同；migration 仍為單一
+  head `a5c7e9f1b324`。本段文件更新另行提交，PR #49 重新通過 CI 後才合併。
+- [B04 專屬差異](https://github.com/71bk/kinsun.ai-product/pull/49/files) 現在只包含 B04，
+  不再混有 B03 的提交。部署仍必須保留 B03→B04 的 migration 順序。
 - Additive migration `a5c7e9f1b324`（down_revision `f4b6d8e0a213`）新增 nullable
   `care_event.source_type` 與來源一致性 check。未知只以 NULL 保存；MANUAL 不可有 session，
   CONVERSATION_SESSION 必須有 session，其他非 NULL 值拒絕。
