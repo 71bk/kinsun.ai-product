@@ -18,6 +18,8 @@ migration `a5c7e9f1b324` 接續 B03 的 `f4b6d8e0a213`。
 本切片涵蓋 US-B04 來源篩選及重建不重複的 Core 驗證；前端篩選 UI、來源片段導覽、
 修正歷史與匯出未交付，B04／Wave 2 不標為完整完成。
 測試與 PR／合併順序見 [B04 report](../../../docs/project/b04-event-source-filter-20260915.md)。
+程式版本 `7a6c8b1`／PR #49 的 CI `34950421197` 全部 10 jobs 成功；
+Core unit 1,437、PostgreSQL integration 238、migration 22 與 Core live contracts 通過。
 
 ### B03 後端增量（2026-09-15）
 

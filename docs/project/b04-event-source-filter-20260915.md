@@ -50,7 +50,13 @@ DELETED 不回傳，每頁都重新授權。查詢不 join 內容版本，不因
 | 完整 Core unit | 1,437 passed |
 | Core Ruff lint／format | 通過 |
 | Static contracts／CI rules | 通過；CI rules 26 passed |
-| PostgreSQL／migration lifecycle | 本機 collect-only，待 PR disposable PostgreSQL CI |
+| PostgreSQL／migration lifecycle | CI：238 integration／22 migration tests passed；Core live contracts 通過。本機只執行 collection |
+
+[Draft PR #49](https://github.com/71bk/kinsun.ai-product/pull/49) 的程式版本 `7a6c8b1`
+已通過 [CI 34950421197](https://github.com/71bk/kinsun.ai-product/actions/runs/34950421197)
+全部 10 jobs，包含八個 worker 與 aggregate。新增 17 個來源 HTTP／DB cases 與
+1 個 migration lifecycle case 均包含於上述總數。Frontend、Agent、Speech、RAG、contracts
+與五輪 synthetic Core-to-Agent gate 也成功；此結果不代表已部署至共用 Supabase。
 
 新增 17 個 DB cases：混合來源、日期／類型／status 交集、同 timestamp 的 UUID 分頁、
 跨 elder／tenant／角色拒絕、review scope 失效、派案過期 cursor 拒絕、未知 filter 422、
