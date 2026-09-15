@@ -11,6 +11,10 @@
 Vitest lifecycle hook 要用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的
 VitestUtils；單跑 Vitest 不會抓到這個型別錯誤，新增測試後須再跑 frontend typecheck。
 
+同一居服員／長者可能同時存在多筆有效派案；elder-level lookup 不得以
+`scalar_one_or_none()` 的多筆例外讓 Dashboard 回 500。未指定派案且來源有歧義時應拒絕
+授權，不能任選第一筆或聯集 scopes；工作台仍經 `AssignmentAccessService` 核對指定派案。
+
 所有代理在分析、設計、實作、測試與文件更新時，都必須遵守本文件及 `docs/` 中的產品規格。描述進度時以可執行程式、contract、migration、測試與部署證據為準，不以 README、舊 handover 或 commit 標題單獨判定完成。
 
 ## 1. 專案狀態

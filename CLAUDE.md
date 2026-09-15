@@ -10,6 +10,10 @@
 Vitest hook 使用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的 VitestUtils；
 新增測試後重跑 frontend typecheck，不能只以 Vitest 執行成功取代型別驗證。
 
+同一居服員／長者的多筆有效派案會使單筆 elder-level lookup 有歧義；此時 fail closed，
+Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／聯集 scopes。
+指定工作台派案仍由 `AssignmentAccessService` 個別驗權。
+
 本檔定義 Claude 在本專案中的工作流程、檢查順序與交付格式。完整架構、安全、Contract、
 資料庫與測試規則以根目錄 [`AGENTS.md`](AGENTS.md) 為準；進入
 `services/agent-runtime/` 時還要讀取該目錄的 [`AGENTS.md`](services/agent-runtime/AGENTS.md)。

@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 
 from app.repositories.care_assignment_repo import (
     AuthorizedElderRow,
@@ -20,6 +21,25 @@ from app.repositories.care_assignment_repo import (
 
 class TestFindValidForWorker:
     """Tests for CareAssignmentRepository.find_valid_for_worker method."""
+
+    @pytest.mark.asyncio
+    async def test_overlapping_assignments_fail_closed_without_selecting_scopes(self):
+        session = AsyncMock()
+        result = MagicMock()
+        result.scalar_one_or_none.side_effect = MultipleResultsFound()
+        session.execute.return_value = result
+        repo = CareAssignmentRepository(session, uuid.uuid4())
+        assert (
+            await repo.find_valid_for_worker(uuid.uuid4(), uuid.uuid4(), datetime.now(UTC)) is None
+        )
+
+    @pytest.mark.asyncio
+    async def test_operational_errors_are_not_treated_as_missing_access(self):
+        session = AsyncMock()
+        session.execute.side_effect = SQLAlchemyError()
+        repo = CareAssignmentRepository(session, uuid.uuid4())
+        with pytest.raises(SQLAlchemyError):
+            await repo.find_valid_for_worker(uuid.uuid4(), uuid.uuid4(), datetime.now(UTC))
 
     @pytest.mark.asyncio
     async def test_returns_assignment_when_found(self) -> None:
