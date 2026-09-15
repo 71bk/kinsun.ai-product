@@ -53,7 +53,13 @@ CORRECT 保留舊 payload version、新 version 的 supersedes 關係，另在�
 | static contracts | all contract checks passed；新增 2 valid／3 invalid examples |
 | CI impact／gate／telemetry tests | 26 passed |
 | Alembic graph | 單一 head f4b6d8e0a213 |
-| PostgreSQL／migration lifecycle | 本機未執行；使用 PR CI disposable PostgreSQL 驗證，結果待補 |
+| PostgreSQL／migration lifecycle | CI：221 request integration／21 migration tests passed；Core live contracts 通過；本機未執行 |
+
+[Draft PR #48](https://github.com/71bk/kinsun.ai-product/pull/48) 的程式版本 `d2094f9`
+已通過 [CI 34942097314](https://github.com/71bk/kinsun.ai-product/actions/runs/34942097314)
+全部 10 jobs，含八個 worker 與 aggregate。新增 8 個 metadata HTTP regression 與
+1 個 migration lifecycle case 均包含於上述總數。Frontend、Agent、Speech、RAG、contracts
+與五輪 synthetic Core-to-Agent gate 也成功；這仍不是部署／真實登入驗收。
 
 第一輪 [CI 34941061567](https://github.com/71bk/kinsun.ai-product/actions/runs/34941061567)
 的新增 metadata migration roundtrip 通過；另兩個既有 lifecycle assertion 因 `_HEAD_REVISION`

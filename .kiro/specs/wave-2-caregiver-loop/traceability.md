@@ -15,7 +15,8 @@
 CORRECT 新增選填事件類型／時間修正、前後 metadata audit 與同事件 row lock；
 保留 payload versions、live authorization、摘要 STALE、transactional outbox 及舊請求重送。
 新增 migration `f4b6d8e0a213`。Core unit 1,430、CI 規則 26、static contracts、Core lint／format
-本機通過；DB integration／migration 執行結果另記於
+本機通過；PR #48 的程式版本 `d2094f9` 通過 CI `34942097314` 全部 10 jobs，
+包含 221 DB integration／21 migration tests 與 Core live contracts，詳見
 [B03 backend report](../../../docs/project/b03-event-metadata-correction-20260915.md)。
 這是 US-B03 第一／三條 AC 的 Core 增量；前端輸入與歷史瀏覽、陪伴需求訊號重算、
 離線評估用途授權及正式事件重新編輯均未在本切片交付，不將 B03 或 Wave 2 整體標為完成。
