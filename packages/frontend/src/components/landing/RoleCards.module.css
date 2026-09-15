@@ -2,7 +2,11 @@
    the 3:1 UI-component bar rather than --color-border's 1.25:1 (MASTER.md
    §4.1, same reasoning as the /sign-in role chooser). Tokens only (§14). */
 
+/* `width: 100%` matters: this section is a direct child of the `.landing` grid,
+   and a grid item with `margin: 0 auto` otherwise shrinks to fit-content, which
+   collapsed the auto-fit grid below to a single 516px column on desktop. */
 .section {
+  width: 100%;
   max-width: 1080px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-4);

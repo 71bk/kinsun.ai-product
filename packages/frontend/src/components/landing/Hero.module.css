@@ -34,6 +34,7 @@
   font-size: var(--text-3xl);
   font-weight: 700;
   color: var(--color-foreground);
+  text-wrap: balance;
 }
 
 .subtitle {
