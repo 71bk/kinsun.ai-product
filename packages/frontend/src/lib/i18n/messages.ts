@@ -125,7 +125,7 @@ const zhHant = {
 
   // ---- caregiver dashboard ----
   'dashboard.title': '授權長者總覽',
-  'dashboard.subtitle': '清單由 Core API 依目前登入身分與正式授權關係產生。',
+  'dashboard.subtitle': '只顯示你目前有權限查看的長者。',
   'dashboard.empty': '目前沒有已授權的長者資料。',
   'dashboard.emptyTitle': '沒有可查看的長者',
   'dashboard.actorMeta': '目前工作身分：{name}',
@@ -481,14 +481,12 @@ const zhHant = {
   'serviceRecord.validationError': '內容未通過檢查，尚未提交。請修改後重新確認。',
   'serviceRecord.conflict': '派案版本已變更，或本次服務已有紀錄。請重新讀取紀錄；若仍無法操作，重新載入派案。',
   'serviceRecord.completeWarning': '完成派案後將無法讀寫本次服務紀錄，未提交文字也不會保存。請先確認已提交所需紀錄。',
-  'assignments.description':
-    '僅顯示 Core API 正式派案的排程、狀態、資料範圍數量與版本，不包含地址、用藥或電話資訊。',
+  'assignments.description': '只顯示你的正式派案與目前狀態，不包含地址、用藥或電話資訊。',
   'assignments.date': '派案日期',
   'assignments.emptyTitle': '當日沒有派案',
   'assignments.empty': '目前身分在所選日期沒有可查看的居家派案。',
   'assignments.scheduledStart': '預定開始',
   'assignments.scheduledEnd': '預定結束',
-  'assignments.scopeCount': '允許資料範圍數量',
   'assignments.expiresAt': '授權到期',
   'assignments.openElder': '開啟授權長者資料',
   'assignments.start': '開始服務',
@@ -519,7 +517,7 @@ const zhHant = {
 
   // ---- family report centre ----
   'reports.title': '家屬報表中心',
-  'reports.subtitle': '僅顯示 Core API 依關係授權與發布狀態篩選後的正式內容。',
+  'reports.subtitle': '只顯示已發布給你的正式報表。',
   'reports.filterLabel': '依報表類型篩選',
   'reports.allTypes': '全部類型',
   'reports.empty': '目前沒有可查看的已發布報表。',
@@ -593,6 +591,8 @@ const zhHant = {
   'staffSignIn.notActivated': '尚未啟用帳號？請聯絡所屬服務單位。',
   'staffSignIn.lineButton': '使用已連結的 LINE 登入',
   'staffSignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
+  'staffSignIn.emailLabel': '工作 Email',
+  'staffSignIn.provisioned': '工作人員帳號由機構建立，不開放自行註冊。',
 
   // ---- shared sign-in layout (elder/start split screen + family/staff card) ----
   'authLayout.welcomeBack': '歡迎回來',
@@ -637,13 +637,13 @@ const zhHant = {
   'landing.modules.status.available': '可以體驗',
   'landing.modules.status.partial': '部分可體驗',
   'landing.modules.status.planned': '規劃中',
-  'landing.modules.a.title': 'Module A · 語音互動陪伴',
+  'landing.modules.a.title': '和小暖說話',
   'landing.modules.a.body':
     '文字陪伴與展示用語音流程已可體驗；真實語音供應商、低信心處理與品質門檻仍須在部署環境完成驗證。',
-  'landing.modules.b.title': 'Module B · 生活記錄與智慧摘要',
+  'landing.modules.b.title': '生活紀錄與每日摘要',
   'landing.modules.b.body':
     '對話可產生待覆核的事件與記憶候選；經明確確認或人工覆核後才成為正式資料，摘要也會保留來源證據。',
-  'landing.modules.c.title': 'Module C · 照護者資訊介面',
+  'landing.modules.c.title': '照護者工作台',
   'landing.modules.c.body':
     '長者總覽、長者詳情、事件時間軸、覆核作業與家屬報表中心皆已可用，並依登入身分與正式授權顯示對應範圍的資料。',
 
@@ -960,8 +960,7 @@ const en: Record<MessageKey, string> = {
   'familyNav.reports': 'Reports',
 
   'dashboard.title': 'Authorized elders',
-  'dashboard.subtitle':
-    'The Core API builds this list from the signed-in identity and its recorded authorizations.',
+  'dashboard.subtitle': 'Only the elders you are currently authorized to see.',
   'dashboard.empty': 'No authorized elders yet.',
   'dashboard.emptyTitle': 'No elders available',
   'dashboard.actorMeta': 'Current work identity: {name}',
@@ -1321,13 +1320,12 @@ const en: Record<MessageKey, string> = {
   'serviceRecord.conflict': 'The assignment version changed, or a record already exists. Reload the record; if needed, reload the assignment.',
   'serviceRecord.completeWarning': 'Completing the assignment ends access to its service record. Unsent text will not be saved. Submit any required record first.',
   'assignments.description':
-    'Shows only formal Core API schedule, workflow status, data-scope count, and version. It does not include addresses, medication instructions, or phone details.',
+    'Your formal assignments and their current status. Addresses, medication instructions and phone details are not shown here.',
   'assignments.date': 'Assignment date',
   'assignments.emptyTitle': 'No assignments that day',
   'assignments.empty': 'This account has no home-care assignments for the selected date.',
   'assignments.scheduledStart': 'Scheduled start',
   'assignments.scheduledEnd': 'Scheduled end',
-  'assignments.scopeCount': 'Allowed data-scope count',
   'assignments.expiresAt': 'Authorization expires',
   'assignments.openElder': 'Open authorized elder record',
   'assignments.start': 'Start service',
@@ -1357,8 +1355,7 @@ const en: Record<MessageKey, string> = {
   'family.viewAll': 'View all reports →',
 
   'reports.title': 'Family report centre',
-  'reports.subtitle':
-    'Shows only the formal content the Core API has filtered by relationship authorization and publication state.',
+  'reports.subtitle': 'Only the reports that have been published to you.',
   'reports.filterLabel': 'Filter by report type',
   'reports.allTypes': 'All types',
   'reports.empty': 'No published reports available to view.',
@@ -1440,6 +1437,8 @@ const en: Record<MessageKey, string> = {
   'staffSignIn.notActivated': 'Account not activated yet? Please contact your service provider.',
   'staffSignIn.lineButton': 'Sign in with linked LINE',
   'staffSignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
+  'staffSignIn.emailLabel': 'Work email',
+  'staffSignIn.provisioned': 'Staff accounts are created by your organization; self-registration is not available.',
 
   // ---- shared sign-in layout ----
   'authLayout.welcomeBack': 'Welcome back',
@@ -1484,13 +1483,13 @@ const en: Record<MessageKey, string> = {
   'landing.modules.status.available': 'Available now',
   'landing.modules.status.partial': 'Partially available',
   'landing.modules.status.planned': 'Planned',
-  'landing.modules.a.title': 'Module A · Voice companionship',
+  'landing.modules.a.title': 'Talking with Xiao Nuan',
   'landing.modules.a.body':
     'Text companionship and a demo voice flow are available. A real speech provider, low-confidence handling, and quality thresholds still require deployment-environment validation.',
-  'landing.modules.b.title': 'Module B · Life records & smart summaries',
+  'landing.modules.b.title': 'Life records and daily summaries',
   'landing.modules.b.body':
     'Conversations can produce candidate events and memories. They become official only after explicit confirmation or human review, and summaries retain their source evidence.',
-  'landing.modules.c.title': 'Module C · Caregiver information interface',
+  'landing.modules.c.title': 'Care workspace',
   'landing.modules.c.body':
     'Elder overview, elder detail, event timeline, review workflow, and the family report centre are all available today, scoped to the signed-in identity’s formal authorization.',
 

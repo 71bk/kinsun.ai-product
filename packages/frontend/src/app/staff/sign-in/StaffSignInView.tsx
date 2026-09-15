@@ -2,16 +2,8 @@
 
 import { type FormEvent, useState } from 'react';
 import { AuthSubmitButton } from '@/components/AuthSubmitButton';
-import { PasswordInput } from '@/components/auth/PasswordInput';
+import { AuthField } from '@/components/auth/AuthField';
 import { useLocale } from '@/lib/i18n/locale-context';
-
-const inputStyle = {
-  boxSizing: 'border-box' as const,
-  fontSize: 18,
-  marginBottom: 16,
-  padding: 12,
-  width: '100%',
-};
 
 export function StaffSignInView({
   nativeEnabled,
@@ -53,35 +45,36 @@ export function StaffSignInView({
         {!nativeEnabled && <input name="provider" type="hidden" value="GOOGLE" />}
         <input name="returnTo" type="hidden" value="/onboarding/resolve" />
         {nativeEnabled && (
-          <>
-            <input
-              aria-label="工作 Email"
+          /* Visible labels, not placeholder-only ones: a placeholder disappears
+             as soon as the worker starts typing. Same AuthField as /elder/start. */
+          <div style={{ marginBottom: 'var(--space-4)', textAlign: 'left' }}>
+            <AuthField
               autoComplete="email"
+              label={t('staffSignIn.emailLabel')}
               maxLength={254}
               name="email"
-              placeholder="工作 Email / Work email"
               required
-              style={inputStyle}
               type="email"
             />
-            <PasswordInput
-              ariaLabel="密碼"
+            <AuthField
               autoComplete="current-password"
+              hidePasswordLabel={t('authLayout.hidePassword')}
+              label={t('common.password')}
               maxLength={128}
               minLength={12}
               name="password"
-              placeholder="密碼 / Password"
               required
-              style={inputStyle}
+              showPasswordLabel={t('authLayout.showPassword')}
+              type="password"
             />
-          </>
+          </div>
         )}
         <AuthSubmitButton
           disabled={isSubmitting}
           pending={pendingProvider === (nativeEnabled ? 'password' : 'google')}
           pendingLabel={nativeEnabled ? t('common.signingIn') : t('common.redirecting')}
         >
-          {nativeEnabled ? '登入 / Sign in' : t('common.continueWithGoogle')}
+          {nativeEnabled ? t('authLayout.signIn') : t('common.continueWithGoogle')}
         </AuthSubmitButton>
       </form>
       {showLine && (
@@ -125,7 +118,7 @@ export function StaffSignInView({
         {t('staffSignIn.notActivated')}
       </p>
       <p style={{ color: 'var(--color-foreground)', marginTop: 12 }}>
-        工作人員帳號由機構建立，不開放自行註冊。Staff accounts are organization-provisioned.
+        {t('staffSignIn.provisioned')}
       </p>
     </main>
   );

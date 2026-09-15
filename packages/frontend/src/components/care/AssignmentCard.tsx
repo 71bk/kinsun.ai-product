@@ -73,9 +73,6 @@ export function AssignmentCard({
           <Icon size={22} weight="bold" aria-hidden="true" />
           <span>{t(`assignmentStatus.${assignment.status}` as MessageKey)}</span>
         </div>
-        <span className={styles.version}>
-          {t('common.version', { version: assignment.version })}
-        </span>
       </div>
       <dl className={styles.details}>
         <div>
@@ -85,10 +82,6 @@ export function AssignmentCard({
         <div>
           <dt>{t('assignments.scheduledEnd')}</dt>
           <dd>{formatDateTime(assignment.scheduledEnd)}</dd>
-        </div>
-        <div>
-          <dt>{t('assignments.scopeCount')}</dt>
-          <dd>{assignment.scopeCount}</dd>
         </div>
         <div>
           <dt>{t('assignments.expiresAt')}</dt>

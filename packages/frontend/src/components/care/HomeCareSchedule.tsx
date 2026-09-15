@@ -100,11 +100,9 @@ export function HomeCareSchedule({
             {t('schedule.asOf', {
               at: new Intl.DateTimeFormat(locale, {
                 dateStyle: 'short',
-                timeStyle: 'medium',
-                timeZone: 'UTC',
+                timeStyle: 'short',
               }).format(new Date(page.as_of)),
-            })}{' '}
-            UTC
+            })}
           </p>
           {page.items.length === 0 && <p>{t('schedule.empty')}</p>}
           <div className={styles.list}>
