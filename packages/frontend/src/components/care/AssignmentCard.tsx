@@ -56,10 +56,12 @@ export function AssignmentCard({
     setBusy(true);
     try {
       await onCommand(assignment, confirming);
-      setConfirming(null);
     } catch {
       // The page owns the visible command error. Do not leak an unhandled rejection.
     } finally {
+      // Close on failure too: the page renders the error above this card, and a
+      // modal left open would sit on top of it. Focus returns to the trigger.
+      setConfirming(null);
       setBusy(false);
     }
   }

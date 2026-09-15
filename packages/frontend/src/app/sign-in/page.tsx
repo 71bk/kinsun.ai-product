@@ -23,6 +23,15 @@ const cardStyle = {
   textDecoration: 'none',
 };
 
+/* Without a cue the cards read as descriptions, not choices. Same "action →"
+   line as the landing role cards, so the two entry points feel like one. */
+const ctaStyle = {
+  color: 'var(--color-primary-text)',
+  display: 'block',
+  fontWeight: 700,
+  marginTop: 'var(--space-3)',
+};
+
 export default async function SignInPage({
   searchParams,
 }: {
@@ -65,14 +74,17 @@ export default async function SignInPage({
         <Link href="/elder/start" style={cardStyle}>
           <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.elder')}</strong>
           <p style={{ marginBottom: 0 }}>{t('signInChooser.elderDescription')}</p>
+          <span style={ctaStyle}>{t('landing.roles.elder.cta')} →</span>
         </Link>
         <Link href="/family/join" style={cardStyle}>
           <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.family')}</strong>
           <p style={{ marginBottom: 0 }}>{t('signInChooser.familyDescription')}</p>
+          <span style={ctaStyle}>{t('landing.roles.family.cta')} →</span>
         </Link>
         <Link href="/staff/sign-in" style={cardStyle}>
           <strong style={{ fontSize: 'var(--text-lg)' }}>{t('signInChooser.staff')}</strong>
           <p style={{ marginBottom: 0 }}>{t('signInChooser.staffDescription')}</p>
+          <span style={ctaStyle}>{t('landing.roles.staff.cta')} →</span>
         </Link>
       </div>
     </main>
