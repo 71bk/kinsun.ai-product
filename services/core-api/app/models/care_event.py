@@ -41,6 +41,8 @@ class CareEvent(BaseModel, TenantScopedMixin):
         UUID(as_uuid=True),
         ForeignKey(f"{SCHEMA_NAME}.conversation_session.session_id"),
     )
+    # NULL preserves unknown legacy provenance; a missing session is not proof of MANUAL.
+    source_type: Mapped[str | None] = mapped_column(String(32))
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     event_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(

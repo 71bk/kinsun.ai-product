@@ -464,6 +464,15 @@ extractor_version
 
 GET /api/v1/elders/{elder_id}/care-events?status=needs_review
 
+2026-09-15 B04 Core 增量：查詢可選 `source_type=MANUAL|CONVERSATION_SESSION|UNKNOWN`，
+省略則包含所有來源，canonical status 仍使用大寫。MANUAL 必須有明確保存的人工來源；
+CONVERSATION_SESSION 由既有 source_session_id 判定；兩者皆無紀錄時為 UNKNOWN。
+不得把沒有 session 的歷史事件推論為人工建立。來源與日期／事件類型／status 一起在
+cursor 分頁前套用，仍依 created_at＋event_id 排序。改篩選條件時 client 應清除 cursor。
+新增來源不放寬 tenant／elder／review scope；回應、outbox 與建立命令形狀不變。
+部署先套用 migration `a5c7e9f1b324`，再啟動新版 Core；
+[B04 backend report](../project/b04-event-source-filter-20260915.md) 記錄來源相容性與驗證範圍。
+
 GET /api/v1/elders/{elder_id}/care-events/{event_id}
 
 POST /api/v1/elders/{elder_id}/care-events/{event_id}/review

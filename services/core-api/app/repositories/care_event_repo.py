@@ -125,6 +125,7 @@ class CareEventRepository(BaseRepository):
         event_time_to: datetime | None,
         limit: int,
         cursor: tuple[datetime, UUID] | None,
+        source_type: str | None = None,
     ) -> list[CareEvent]:
         stmt = select(CareEvent).where(
             CareEvent.elder_id == elder_id,
@@ -134,6 +135,17 @@ class CareEventRepository(BaseRepository):
             stmt = stmt.where(CareEvent.status.in_(statuses))
         if event_type is not None:
             stmt = stmt.where(CareEvent.event_type == event_type)
+        if source_type == "MANUAL":
+            stmt = stmt.where(CareEvent.source_type == "MANUAL")
+        elif source_type == "CONVERSATION_SESSION":
+            # Existing session provenance remains usable, including pre-migration writers.
+            stmt = stmt.where(CareEvent.source_session_id.is_not(None))
+        elif source_type == "UNKNOWN":
+            stmt = stmt.where(
+                CareEvent.source_type.is_(None), CareEvent.source_session_id.is_(None)
+            )
+        elif source_type is not None:
+            raise ValueError("Unsupported care-event source filter")
         effective_event_time = func.coalesce(CareEvent.event_time, CareEvent.created_at)
         if event_time_from is not None:
             stmt = stmt.where(effective_event_time >= event_time_from)

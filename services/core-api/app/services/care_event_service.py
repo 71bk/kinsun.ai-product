@@ -172,6 +172,7 @@ class CareEventService:
         event = CareEvent(
             elder_id=elder_id,
             tenant_id=self._tenant_id,
+            source_type=request.source_type,
             source_session_id=request.source_id
             if request.source_type == "CONVERSATION_SESSION"
             else None,

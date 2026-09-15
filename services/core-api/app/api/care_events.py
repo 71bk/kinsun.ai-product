@@ -6,7 +6,7 @@ import json
 import re
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Path, Query, status
@@ -158,6 +158,16 @@ async def list_care_events(
         default=None,
         description="Exact event type filter applied before cursor pagination.",
     ),
+    source_type: Annotated[
+        Literal["MANUAL", "CONVERSATION_SESSION", "UNKNOWN"] | None,
+        Query(
+            description=(
+                "Source filter applied before cursor pagination. MANUAL requires recorded "
+                "manual provenance; CONVERSATION_SESSION requires a source session. "
+                "UNKNOWN means neither is recorded. Omit to include all sources."
+            )
+        ),
+    ] = None,
     date_from: date | None = Query(
         default=None,
         description=(
@@ -198,6 +208,7 @@ async def list_care_events(
         elder_id=elder_id,
         statuses=requested_statuses,
         event_type=event_type.value if event_type is not None else None,
+        source_type=source_type,
         event_time_from=(
             datetime.combine(date_from, time.min, tzinfo=UTC) if date_from is not None else None
         ),
