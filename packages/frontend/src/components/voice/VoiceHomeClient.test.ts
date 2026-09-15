@@ -88,7 +88,7 @@ describe('VoiceHomeClient startup state', () => {
     render(createElement(VoiceHomeClient));
 
     await screen.findByText('無法確認登入憑證狀態；系統已停止，不會略過認證');
-    expect(screen.getByRole('link', { name: '前往登入 →' }).getAttribute('href')).toBe('/sign-in');
+    expect(screen.getByRole('link', { name: '前往登入' }).getAttribute('href')).toBe('/sign-in');
     expect(mocks.listConsents).not.toHaveBeenCalled();
     expect(mocks.companionPanel).not.toHaveBeenCalled();
     expect(mocks.voicePanel).not.toHaveBeenCalled();
@@ -100,7 +100,7 @@ describe('VoiceHomeClient startup state', () => {
     render(createElement(VoiceHomeClient));
 
     await screen.findByText('無法確認登入憑證狀態；系統已停止，不會略過認證');
-    expect(screen.getByRole('link', { name: '前往登入 →' }).getAttribute('href')).toBe('/sign-in');
+    expect(screen.getByRole('link', { name: '前往登入' }).getAttribute('href')).toBe('/sign-in');
     expect(mocks.listConsents).not.toHaveBeenCalled();
     expect(mocks.companionPanel).not.toHaveBeenCalled();
     expect(mocks.voicePanel).not.toHaveBeenCalled();

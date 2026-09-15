@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FirstAidKit, User, UsersThree, type Icon } from '@phosphor-icons/react';
+import { ArrowRight, FirstAidKit, User, UsersThree, type Icon } from '@phosphor-icons/react';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './RoleCards.module.css';
@@ -59,7 +59,10 @@ export function RoleCards() {
               <RoleIcon size={32} weight="fill" aria-hidden="true" className={styles.icon} />
               <h3 className={styles.cardTitle}>{t(role.titleKey)}</h3>
               <p className={styles.cardBody}>{t(role.bodyKey)}</p>
-              <span className={styles.cta}>{t(role.ctaKey)} →</span>
+              <span className={styles.cta}>
+                {t(role.ctaKey)}
+                <ArrowRight aria-hidden="true" size={18} weight="bold" />
+              </span>
             </Link>
           );
         })}

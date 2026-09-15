@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowCounterClockwise, Eye, LockKey, ShieldCheck, type Icon } from '@phosphor-icons/react';
+import {
+  ArrowCounterClockwise,
+  ArrowRight,
+  Eye,
+  LockKey,
+  ShieldCheck,
+  type Icon,
+} from '@phosphor-icons/react';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './PrivacyStrip.module.css';
@@ -37,6 +44,7 @@ export function PrivacyStrip() {
 
       <Link href="/privacy" className={styles.cta}>
         {t('landing.privacy.cta')}
+        <ArrowRight aria-hidden="true" size={22} weight="bold" />
       </Link>
     </section>
   );

@@ -39,7 +39,7 @@ const zhHant = {
 
   // ---- shared ----
   'common.loading': '載入中…',
-  'common.signIn': '前往登入 →',
+  'common.signIn': '前往登入',
   'common.signOut': '登出',
   'common.continueWithGoogle': '使用 Google 繼續',
   'common.signingIn': '登入中…',
@@ -513,7 +513,7 @@ const zhHant = {
     '本週有 {reports} 份正式報表，包含 {meals} 筆飲食與 {activities} 筆活動項目。',
   'family.importantTitle': '最新重要事件',
   'family.importantNone': '本週沒有可分享的重要事件。',
-  'family.viewAll': '查看完整報表 →',
+  'family.viewAll': '查看完整報表',
 
   // ---- family report centre ----
   'reports.title': '家屬報表中心',
@@ -667,7 +667,7 @@ const zhHant = {
   'landing.privacy.point3': '家屬只看得到已正式發布的報表；草稿與待覆核內容不會出現在家屬畫面。',
   'landing.privacy.point4':
     '長者說「不要記」或「停止」、或撤回同意時，系統立即優先處理，不受重試或排程影響。',
-  'landing.privacy.cta': '閱讀完整隱私權政策 →',
+  'landing.privacy.cta': '閱讀完整隱私權政策',
 
   'landing.boundaries.title': '我們明確不做的事',
   'landing.boundaries.subtitle': '這些是產品規則，不是選配。',
@@ -879,7 +879,7 @@ const en: Record<MessageKey, string> = {
   'lang.en': 'English',
 
   'common.loading': 'Loading…',
-  'common.signIn': 'Go to sign-in →',
+  'common.signIn': 'Go to sign-in',
   'common.signOut': 'Sign out',
   'common.continueWithGoogle': 'Continue with Google',
   'common.signingIn': 'Signing in…',
@@ -1352,7 +1352,7 @@ const en: Record<MessageKey, string> = {
     'This week has {reports} published report(s), covering {meals} meal and {activities} activity item(s).',
   'family.importantTitle': 'Recent important events',
   'family.importantNone': 'No shareable important events this week.',
-  'family.viewAll': 'View all reports →',
+  'family.viewAll': 'View all reports',
 
   'reports.title': 'Family report centre',
   'reports.subtitle': 'Only the reports that have been published to you.',
@@ -1519,7 +1519,7 @@ const en: Record<MessageKey, string> = {
     'Family members only see formally published reports; drafts and unreviewed content never reach the family screen.',
   'landing.privacy.point4':
     'When an elder says "don’t remember this" or "stop", or revokes consent, the system honors it immediately — ahead of any retry or scheduled job.',
-  'landing.privacy.cta': 'Read the full privacy policy →',
+  'landing.privacy.cta': 'Read the full privacy policy',
 
   'landing.boundaries.title': 'What we deliberately do not do',
   'landing.boundaries.subtitle': 'These are product rules, not optional extras.',

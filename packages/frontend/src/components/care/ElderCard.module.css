@@ -47,7 +47,7 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
-  border-inline-start: 4px solid var(--color-primary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-subtle);
   font-size: var(--text-sm);

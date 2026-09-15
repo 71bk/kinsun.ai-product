@@ -30,10 +30,9 @@
   flex-direction: column;
   gap: var(--space-4);
   list-style: none;
-  border-left: 4px solid var(--color-primary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-1);
+  background: var(--color-surface-subtle);
 }
 
 .item {
@@ -54,6 +53,7 @@
 .cta {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-height: var(--touch-min);
   color: var(--color-primary-text);
   font-size: var(--text-base);
