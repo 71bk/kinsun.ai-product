@@ -21,6 +21,7 @@ Validates: Requirements 17.1, 17.2, 17.3, 17.4
 from __future__ import annotations
 
 import os
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -29,6 +30,71 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from alembic import command
 from alembic.config import Config
+
+
+@pytest.mark.asyncio
+async def test_event_source_migration_preserves_unknown_legacy_rows(test_engine):
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "f4b6d8e0a213")
+    ids = {key: uuid4() for key in ("tenant", "elder", "event")}
+    async with test_engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.tenant (tenant_id, name, tenant_type) "
+                "VALUES (:tenant, 'Synthetic source tenant', 'DEMO')"
+            ),
+            ids,
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.elder "
+                "(elder_id, tenant_id, display_name, primary_care_setting) "
+                "VALUES (:elder, :tenant, 'Synthetic source elder', 'HOME_CARE')"
+            ),
+            ids,
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.care_event "
+                "(event_id, elder_id, tenant_id, event_type, consent_version) "
+                "VALUES (:event, :elder, :tenant, 'MEAL', 1)"
+            ),
+            ids,
+        )
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "a5c7e9f1b324")
+    async with test_engine.begin() as conn:
+        assert "source_type" in await conn.run_sync(_get_columns, "care_event")
+        assert "ck_care_event_source_type" in await conn.run_sync(
+            _get_check_constraints, "care_event"
+        )
+        assert (
+            await conn.execute(
+                text("SELECT source_type FROM eldercare_ai.care_event WHERE event_id=:event"), ids
+            )
+        ).scalar_one() is None
+        for source in ("UNKNOWN", "INVALID", "CONVERSATION_SESSION"):
+            with pytest.raises(IntegrityError):
+                async with conn.begin_nested():
+                    await conn.execute(
+                        text(
+                            "UPDATE eldercare_ai.care_event SET source_type=:source "
+                            "WHERE event_id=:event"
+                        ),
+                        {**ids, "source": source},
+                    )
+        await conn.execute(
+            text("UPDATE eldercare_ai.care_event SET source_type='MANUAL' WHERE event_id=:event"),
+            ids,
+        )
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_downgrade, "f4b6d8e0a213")
+    async with test_engine.begin() as conn:
+        assert "source_type" not in await conn.run_sync(_get_columns, "care_event")
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
 
 
 @pytest.mark.asyncio
@@ -107,7 +173,7 @@ _TOTAL_HEAD_TABLE_COUNT = 67
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "f4b6d8e0a213"
+_HEAD_REVISION = "a5c7e9f1b324"
 
 
 def _get_alembic_config() -> Config:

@@ -3188,6 +3188,28 @@
         "operationId": "list_care_events_api_v1_elders__elder_id__care_events_get",
         "parameters": [
           {
+            "name": "source_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "MANUAL",
+                    "CONVERSATION_SESSION",
+                    "UNKNOWN"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Type"
+            },
+            "description": "Source filter applied before cursor pagination. MANUAL requires recorded manual provenance; CONVERSATION_SESSION requires a source session. UNKNOWN means neither is recorded. Omit to include all sources."
+          },
+          {
             "name": "elder_id",
             "in": "path",
             "required": true,

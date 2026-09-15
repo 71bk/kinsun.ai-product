@@ -837,6 +837,7 @@ async def main() -> int:
             elif path == "/api/v1/elders/{elder_id}/care-events":
                 params = {
                     "event_type": "MEAL",
+                    "source_type": "MANUAL",
                     "date_from": "2026-08-01",
                     "date_to": "2026-08-02",
                 }

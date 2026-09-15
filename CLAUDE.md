@@ -53,6 +53,9 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
 
 ### Core API 與資料庫
 
+- Gate 1 只觸發 base=main 的 PR；有未合併依賴時，以 main draft PR 加依賴／增量比較連結
+  執行 CI，待前案合併後再整理及重驗；不要把 feature-base PR 說成已觸發 CI。
+
 - 新增 migration 須同步 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`，
   `alembic heads` 與 collect-only 無法取代實際 lifecycle assertions。
 

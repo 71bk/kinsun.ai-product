@@ -786,6 +786,10 @@ kinsun.ai/
 
 ## 10. 驗證與完成條件
 
+目前 Gate 1 的 pull_request trigger 只接受 main。依賴尚未合併 PR 時，不能假設以 feature
+branch 為 base 的 stacked PR 會跑 CI；可先建立以 main 為 base 的 draft PR，清楚標依賴與
+增量比較連結，待前案合併後整理 branch／重驗，不為單次任務硬編碼 feature branch trigger。
+
 新增 migration 時同步更新 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`；
 只跑 `alembic heads` 或 collection 不會發現固定預期版本已過期。
 
