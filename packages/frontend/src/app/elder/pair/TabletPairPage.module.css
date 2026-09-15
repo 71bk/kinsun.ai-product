@@ -35,12 +35,6 @@
   padding: var(--space-3);
 }
 
-.eyebrow {
-  color: var(--color-primary-text);
-  font-size: var(--text-sm);
-  font-weight: 800;
-}
-
 .form {
   display: grid;
   gap: var(--space-3);

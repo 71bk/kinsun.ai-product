@@ -101,7 +101,6 @@ export function VoiceHomeClient() {
     <ElderShell>
       <main className={styles.page}>
         <header className={styles.header}>
-          <span className={styles.eyebrow}>語音與文字陪伴</span>
           <h1 className={styles.title}>想和小暖聊什麼？</h1>
           <p className={styles.description}>
             只有在您按下開始後才會使用麥克風。聽不清楚時，小暖一定會先請您確認。

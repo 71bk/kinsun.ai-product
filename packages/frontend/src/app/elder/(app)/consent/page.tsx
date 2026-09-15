@@ -84,7 +84,6 @@ export default function ConsentPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <span className={styles.eyebrow}>用途分開決定</span>
         <h1>同意設定</h1>
         <p>每一項用途都能分別開啟或撤回。這裡只列出目前有正式功能與 Core workflow 支援的選項。</p>
       </header>

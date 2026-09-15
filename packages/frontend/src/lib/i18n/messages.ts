@@ -682,7 +682,6 @@ const zhHant = {
   'landing.closing.cta': '前往登入',
 
   // ---- public legal / compliance information ----
-  'legal.common.kicker': '公開法遵資訊',
   'legal.common.updated': '最後更新：2026 年 8 月 2 日',
   'legal.common.noticeTitle': '目前狀態',
 
@@ -1540,7 +1539,6 @@ const en: Record<MessageKey, string> = {
   'landing.closing.cta': 'Go to sign-in',
 
   // ---- public legal / compliance information ----
-  'legal.common.kicker': 'Public legal and compliance information',
   'legal.common.updated': 'Last updated: August 2, 2026',
   'legal.common.noticeTitle': 'Current status',
 

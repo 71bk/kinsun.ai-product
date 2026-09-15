@@ -108,14 +108,6 @@
   object-fit: cover;
 }
 
-.eyebrow,
-.cardEyebrow {
-  margin: 0 0 var(--space-2);
-  color: var(--color-primary-text);
-  font-size: var(--text-sm);
-  font-weight: 800;
-}
-
 .welcome h1 {
   margin: 0;
   font-size: var(--text-3xl);
@@ -373,7 +365,6 @@
     display: grid;
     grid-template-columns: 150px minmax(0, 1fr);
     grid-template-areas:
-      'mascot eyebrow'
       'mascot title'
       'mascot copy'
       'assurances assurances';
@@ -385,11 +376,6 @@
     width: 140px;
     margin: 0;
     align-self: center;
-  }
-
-  .eyebrow {
-    grid-area: eyebrow;
-    align-self: end;
   }
 
   .welcome h1 {

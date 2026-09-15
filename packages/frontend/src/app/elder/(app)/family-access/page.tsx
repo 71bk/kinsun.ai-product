@@ -159,9 +159,8 @@ export default function ElderFamilyAccessPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <span className={styles.eyebrow}>只分享正式報表</span>
         <h1>家屬分享</h1>
-        <p>一次性邀請碼只建立家屬關係，不會讓家屬看到逐字稿、記憶、草稿或照護內部資料。</p>
+        <p>只分享正式報表。一次性邀請碼只建立家屬關係，不會讓家屬看到逐字稿、記憶、草稿或照護內部資料。</p>
       </header>
 
       {error && (

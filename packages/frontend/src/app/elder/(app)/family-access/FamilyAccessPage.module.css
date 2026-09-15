@@ -30,16 +30,6 @@
   color: var(--color-muted-foreground);
 }
 
-.eyebrow {
-  display: inline-flex;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  background: var(--color-primary-weak);
-  color: var(--color-primary-text);
-  font-size: var(--text-xs);
-  font-weight: 700;
-}
-
 .loading,
 .error {
   margin: 0;

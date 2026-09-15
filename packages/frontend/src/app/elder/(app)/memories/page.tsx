@@ -105,7 +105,6 @@ export default function ElderMemoriesPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <span className={styles.eyebrow}>候選不是事實</span>
         <h1>我的記憶</h1>
         <p>小暖只能在您明確按下確認後，才把候選內容變成正式長期記憶。</p>
       </header>

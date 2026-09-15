@@ -146,7 +146,7 @@ export default function ElderSessionPage() {
       <main className={styles.noticePage} data-surface="voice">
         <header className={styles.header}>
           <div>
-            <p className={styles.eyebrow}>小暖陪伴 · 長者模式</p>
+            <p className={styles.eyebrow}>長者模式</p>
             <h1>{elderName}，開始前先說明</h1>
           </div>
         </header>
@@ -200,7 +200,7 @@ export default function ElderSessionPage() {
     <main className={styles.page} data-surface="voice">
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>小暖陪伴 · 長者模式</p>
+          <p className={styles.eyebrow}>長者模式</p>
           <h1>{elderName}，您好</h1>
         </div>
         <button className={styles.endButton} disabled={busy} onClick={() => void end()} type="button">

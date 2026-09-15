@@ -213,7 +213,6 @@ export function LegalPage({ page }: { page: LegalPageId }) {
   return (
     <article className={styles.article} aria-labelledby={headingId} data-legal-document={page}>
       <header className={styles.header}>
-        <p className={styles.kicker}>{t('legal.common.kicker')}</p>
         <h1 id={headingId} className={styles.title}>
           {t(definition.titleKey)}
         </h1>

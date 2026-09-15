@@ -53,7 +53,6 @@ export default function TabletPairPage() {
         <span className={styles.icon}>
           <DeviceTablet aria-hidden="true" size={46} weight="fill" />
         </span>
-        <p className={styles.eyebrow}>長者平板設定</p>
         <h1>開啟小暖陪伴</h1>
         <p>請貼上照顧員提供的一次性平板連結。啟用後，這台平板不會保留照顧員帳號。</p>
         <form className={styles.form} onSubmit={(event) => void activate(event)}>

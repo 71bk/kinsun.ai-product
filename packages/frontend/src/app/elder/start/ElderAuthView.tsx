@@ -79,7 +79,6 @@ export function ElderAuthView({ nativeEnabled, showGoogle, showLine }: ElderAuth
           <div className={styles.mascotFrame} aria-hidden="true">
             <img className={styles.mascot} src="/mascot.png" alt="" />
           </div>
-          <p className={styles.eyebrow}>陪伴、同意與記憶都由您決定</p>
           <h1 id="elder-welcome-title">歡迎回來，小暖在這裡</h1>
           <p className={styles.welcomeCopy}>
             登入後可以繼續語音陪伴，也能自己確認同意設定與生活記憶。
@@ -98,7 +97,6 @@ export function ElderAuthView({ nativeEnabled, showGoogle, showLine }: ElderAuth
 
         <section className={styles.authCard} aria-labelledby="elder-auth-title">
           <div className={styles.cardHeading}>
-            <p className={styles.cardEyebrow}>長者帳號</p>
             <h2 id="elder-auth-title">開始使用 Kinsun</h2>
             <p>請選擇登入，或建立新的自行使用帳號。</p>
           </div>
