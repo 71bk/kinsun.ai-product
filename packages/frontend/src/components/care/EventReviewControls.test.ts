@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { EventCorrection, EventView } from '@/lib/api/events';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
-import { EventReviewControls } from './EventReviewControls';
+import { EventReviewControls, type EventReviewControlsProps } from './EventReviewControls';
 
 /* US-B03: a CORRECT review can change the event's content, type and time.
    The controls turn what the reviewer did into the client's omit / set /
@@ -29,7 +29,9 @@ function event(overrides: Partial<EventView> = {}): EventView {
 }
 
 function mount(view: EventView) {
-  const onReview = vi.fn(async () => undefined);
+  const onReview = vi.fn<Parameters<EventReviewControlsProps['onReview']>, Promise<void>>(
+    async () => undefined,
+  );
   render(
     createElement(LocaleProvider, {
       initialLocale: 'en',

@@ -11,6 +11,11 @@
 Vitest lifecycle hook 要用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的
 VitestUtils；單跑 Vitest 不會抓到這個型別錯誤，新增測試後須再跑 frontend typecheck。
 
+Vitest 的 `vi.fn(async () => ...)` 會把 `mock.calls` 推論成零參數 tuple；需要檢查 callback／
+fetch 的呼叫參數時，本專案 Vitest 1 使用 `vi.fn<Parameters<F>, ReturnType<F>>(...)`，
+避免測試執行通過但 typecheck／build 因 tuple 越界失敗。此版本不接受新版的單一函式型別
+generic；不要以多重型別斷言掩蓋 mock 簽名不符。
+
 同一居服員／長者可能同時存在多筆有效派案；elder-level lookup 不得以
 `scalar_one_or_none()` 的多筆例外讓 Dashboard 回 500。未指定派案且來源有歧義時應拒絕
 授權，不能任選第一筆或聯集 scopes；工作台仍經 `AssignmentAccessService` 核對指定派案。

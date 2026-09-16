@@ -77,7 +77,9 @@ describe('listEvents', () => {
   /* B04: the source filter is a Core query parameter, never a browser-side
      narrowing of a page, and it is simply absent when "all sources" is chosen. */
   it('sends the recorded-source filter to Core and omits it for all sources', async () => {
-    const fetchMock = vi.fn(async () => success({ items: [], next_cursor: null, has_more: false }));
+    const fetchMock = vi.fn<Parameters<typeof fetch>, Promise<Response>>(async () =>
+      success({ items: [], next_cursor: null, has_more: false }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await listEvents(config, 'elder-1', { sourceType: 'CONVERSATION_SESSION' });
