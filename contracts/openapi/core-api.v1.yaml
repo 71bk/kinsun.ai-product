@@ -4418,7 +4418,7 @@
           "summaries"
         ],
         "summary": "Generate Summary",
-        "description": "Human-triggered deterministic draft; it never publishes a family report.",
+        "description": "Human-triggered deterministic draft; it never publishes a family report.\n\nUses the Asia/Taipei day and current VERIFIED/CORRECTED event versions.\nMore than 32 events returns 422 with SUMMARY_EVENT_LIMIT_EXCEEDED; no partial\ndraft, summary version or outbox event is written.",
         "operationId": "generate_summary_api_v1_elders__elder_id__summaries_generate_post",
         "parameters": [
           {

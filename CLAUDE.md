@@ -1,5 +1,15 @@
 # CLAUDE.md
 
+- Care Event 證據識別（含 synthetic fixture）使用 `evidence:<UUID>`；
+  不合法字串會被過濾，修 fixture，不放寬 API 的證據格式規則。
+
+- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
+- Consent 檢查須先於資料查詢與超限判斷，避免提前錯誤透露資料量；前端只以經驗證的
+  固定錯誤代碼映射提示，不直接顯示伺服器細節。
+- AsyncSession.execute 的 AsyncMock 要回傳同步 MagicMock Result；`all()` 不需 await。
+  摘要／事件更新後須在 async flush 載入 server-generated `updated_at`，避免回應序列化
+  觸發隱式 IO，並以實際 ORM 更新測試驗證。
+
 - 更新日期：2026-09-02
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository

@@ -60,6 +60,11 @@ const TAB_LABEL: Record<Tab, MessageKey> = {
 const REVIEWABLE_SUMMARY_STATUSES = ['DRAFT', 'NEEDS_REVIEW'] as const;
 
 function describeError(error: unknown, fallback: MessageKey): MessageKey {
+  if (fallback === 'error.generateSummaryFailed' && error instanceof ApiRequestError &&
+      error.status === 422 && error.details.some((detail) =>
+        detail.field === 'summary_date' && detail.reason === 'SUMMARY_EVENT_LIMIT_EXCEEDED')) {
+    return 'error.summaryEventLimitExceeded';
+  }
   if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404)) {
     return 'error.noElderDataPermission';
   }

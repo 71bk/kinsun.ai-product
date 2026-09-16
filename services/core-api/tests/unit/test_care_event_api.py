@@ -46,6 +46,7 @@ async def test_care_event_response_filters_non_opaque_evidence_references() -> N
         evidence_text_ref=json.dumps(
             [
                 valid_reference,
+                "synthetic:evidence",
                 "raw transcript must not be returned from evidence storage",
             ]
         ),

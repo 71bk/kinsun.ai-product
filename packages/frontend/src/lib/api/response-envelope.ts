@@ -12,6 +12,12 @@ interface ErrorFields {
   message: string;
   reason_code: string | null;
   retryable: boolean;
+  details?: ValidationDetail[] | null;
+}
+
+export interface ValidationDetail {
+  field: string;
+  reason: string;
 }
 
 const CORE_ERROR_CODES = new Set([

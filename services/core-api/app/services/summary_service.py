@@ -23,6 +23,8 @@ from app.services.care_event_rendering import (
 )
 from app.services.consent_service import ConsentService
 
+MAX_DAILY_SUMMARY_EVENTS = 32
+
 
 class SummaryService:
     def __init__(self, session: AsyncSession, tenant_id: UUID) -> None:
@@ -58,6 +60,12 @@ class SummaryService:
     ) -> DailySummary:
         """Create a non-inferential draft from current reviewed event versions."""
 
+        # Check the purpose before inspecting source data or reporting its volume.
+        # create_draft also rechecks consent at the write boundary.
+        await ConsentService(self._session, self._tenant_id).require_active(
+            elder_id=elder_id,
+            purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
+        )
         taipei = ZoneInfo("Asia/Taipei")
         starts_at = datetime.combine(summary_date, time.min, taipei).astimezone(UTC)
         ends_at = datetime.combine(summary_date, time.max, taipei).astimezone(UTC)
@@ -78,9 +86,19 @@ class SummaryService:
                     effective_time <= ends_at,
                 )
                 .order_by(effective_time, CareEvent.id)
-                .limit(32)
+                .limit(MAX_DAILY_SUMMARY_EVENTS + 1)
             )
         ).all()
+        if len(rows) > MAX_DAILY_SUMMARY_EVENTS:
+            raise ValidationError(
+                message="Daily summary exceeds the supported event limit",
+                details=[
+                    {
+                        "field": "summary_date",
+                        "reason": "SUMMARY_EVENT_LIMIT_EXCEEDED",
+                    }
+                ],
+            )
         items = [
             SummaryItem(
                 category=SUMMARY_CATEGORY_BY_EVENT_TYPE.get(
