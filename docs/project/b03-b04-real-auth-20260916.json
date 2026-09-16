@@ -1,0 +1,442 @@
+{
+  "browser": {
+    "campaign": "b03-b04-real-auth-20260916",
+    "checks": [
+      {
+        "name": "real-form-login",
+        "status": 200
+      },
+      {
+        "name": "four-real-manual-candidates",
+        "ids": {
+          "Changed": "ec377568-81a2-4e83-8d48-5db871786636",
+          "Clear": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+          "Keep": "61231375-f72a-44c1-ad31-f86c194388ff",
+          "Expire": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b"
+        }
+      },
+      {
+        "name": "unassigned-and-missing-elder-denied"
+      },
+      {
+        "name": "live-form-four-viewports",
+        "widths": [
+          375,
+          390,
+          430,
+          1440
+        ]
+      },
+      {
+        "name": "ui-correction-and-same-key-replay",
+        "version": 2,
+        "time": "2026-09-16T13:30:00Z"
+      },
+      {
+        "name": "real-stale-tab-409-draft-retained",
+        "status": 409
+      },
+      {
+        "name": "ui-clear-and-omit-preserve-seconds",
+        "cleared": null,
+        "kept": "2026-09-16T01:10:45Z"
+      },
+      {
+        "name": "real-source-MANUAL",
+        "count": 3
+      },
+      {
+        "name": "real-source-CONVERSATION_SESSION",
+        "count": 1
+      },
+      {
+        "name": "real-source-UNKNOWN",
+        "count": 1
+      },
+      {
+        "name": "real-filter-reset-cursor-and-intersection"
+      },
+      {
+        "name": "ready-to-expire"
+      },
+      {
+        "name": "expired-ui-submit-and-replay-denied",
+        "status": 404
+      }
+    ],
+    "screenshots": [
+      {
+        "filename": "b03-real-form-375.png",
+        "geometry": {
+          "width": 375,
+          "client": 375,
+          "scroll": 375
+        }
+      },
+      {
+        "filename": "b03-real-form-390.png",
+        "geometry": {
+          "width": 390,
+          "client": 390,
+          "scroll": 390
+        }
+      },
+      {
+        "filename": "b03-real-form-430.png",
+        "geometry": {
+          "width": 430,
+          "client": 430,
+          "scroll": 430
+        }
+      },
+      {
+        "filename": "b03-real-form-1440.png",
+        "geometry": {
+          "width": 1440,
+          "client": 1440,
+          "scroll": 1440
+        }
+      },
+      {
+        "filename": "b03-real-before-expiry.png",
+        "geometry": {
+          "width": 390,
+          "client": 390,
+          "scroll": 390
+        }
+      },
+      {
+        "filename": "b03-real-after-expiry.png",
+        "geometry": {
+          "width": 390,
+          "client": 390,
+          "scroll": 390
+        }
+      }
+    ],
+    "startedAt": "2026-09-16T03:36:09.644Z",
+    "ids": {
+      "Changed": "ec377568-81a2-4e83-8d48-5db871786636",
+      "Clear": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+      "Keep": "61231375-f72a-44c1-ad31-f86c194388ff",
+      "Expire": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b"
+    },
+    "changed": {
+      "status": 200,
+      "body": {
+        "data": {
+          "event_id": "ec377568-81a2-4e83-8d48-5db871786636",
+          "elder_id": "2ddbd17f-4936-5a5d-aa5a-11618c851c3f",
+          "event_type": "SLEEP",
+          "event_time": "2026-09-16T13:30:00Z",
+          "status": "CORRECTED",
+          "structured_payload": {
+            "summary": "Synthetic B03 Changed corrected"
+          },
+          "evidence_refs": [],
+          "confidence_band": "LOW",
+          "version": 2,
+          "consent_version": 1,
+          "created_at": "2026-09-16T03:36:19.109957Z",
+          "updated_at": "2026-09-16T03:37:23.261682Z",
+          "review_record_id": "daba5da8-c3cc-4df8-bd0d-50292389ca13",
+          "rebuild_required": [
+            "DAILY_SUMMARY"
+          ]
+        },
+        "meta": {
+          "correlation_id": "bc597976-ab65-4c86-83a0-8ac2bb150044",
+          "timestamp": "2026-09-16T03:37:24.610071Z",
+          "schema_version": "1.0"
+        }
+      },
+      "request": {
+        "decision": "CORRECT",
+        "reason_code": "CAREGIVER_UI_REVIEW",
+        "corrected_payload": {
+          "summary": "Synthetic B03 Changed corrected"
+        },
+        "expected_version": 1,
+        "corrected_event_type": "SLEEP",
+        "corrected_event_time": "2026-09-16T13:30:00.000Z"
+      },
+      "key": "care-event-review-ec77211c-4a30-4c6a-ab9b-82f6c696d878"
+    },
+    "status": "PASS",
+    "finishedAt": "2026-09-16T03:40:36.214Z"
+  },
+  "before_expiry": {
+    "campaign": "b03-b04-real-auth-20260916",
+    "revision": "a5c7e9f1b324",
+    "prepared": true,
+    "events": [
+      {
+        "id": "010f6992-8789-5ff3-8097-101c9f45e5a8",
+        "type": "ACTIVITY",
+        "time": "2026-09-16 02:33:06.786595+00:00",
+        "status": "VERIFIED",
+        "version": 1,
+        "source_type": null,
+        "has_session": true
+      },
+      {
+        "id": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "type": "MEAL",
+        "time": "2026-09-16 01:10:45+00:00",
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "type": "MEAL",
+        "time": null,
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b",
+        "type": "MEAL",
+        "time": "2026-09-16 01:10:45+00:00",
+        "status": "NEEDS_REVIEW",
+        "version": 1,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "ec377568-81a2-4e83-8d48-5db871786636",
+        "type": "SLEEP",
+        "time": "2026-09-16 13:30:00+00:00",
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "ecba3083-ce19-5a8c-98a5-49c71c39b0e1",
+        "type": "ACTIVITY",
+        "time": "2026-09-16 02:33:06.786595+00:00",
+        "status": "VERIFIED",
+        "version": 1,
+        "source_type": null,
+        "has_session": false
+      }
+    ],
+    "versions": 9,
+    "reviews": [
+      {
+        "event_id": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "MEAL",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": null
+      },
+      {
+        "event_id": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "MEAL",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": "2026-09-16 01:10:45+00:00"
+      },
+      {
+        "event_id": "ec377568-81a2-4e83-8d48-5db871786636",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "SLEEP",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": "2026-09-16 13:30:00+00:00"
+      }
+    ],
+    "outbox": [
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "ec377568-81a2-4e83-8d48-5db871786636",
+        "version": 1
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b",
+        "version": 1
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "version": 2
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "version": 1
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "ec377568-81a2-4e83-8d48-5db871786636",
+        "version": 2
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "version": 2
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "version": 1
+      }
+    ],
+    "event_history_outbox_sha256": "6fdde68cde212546ecd29ee4466db55577f437ae9560a2f5fa30880ed67f2f63",
+    "v1_sha256": "b8f854207edd8a5ffa746c292b292446b157cf990c69f2690605016604f52f47",
+    "live_memberships": 2,
+    "live_relationship": true,
+    "active_credential": true,
+    "active_sessions": 1
+  },
+  "after_retirement": {
+    "campaign": "b03-b04-real-auth-20260916",
+    "revision": "a5c7e9f1b324",
+    "prepared": true,
+    "events": [
+      {
+        "id": "010f6992-8789-5ff3-8097-101c9f45e5a8",
+        "type": "ACTIVITY",
+        "time": "2026-09-16 02:33:06.786595+00:00",
+        "status": "VERIFIED",
+        "version": 1,
+        "source_type": null,
+        "has_session": true
+      },
+      {
+        "id": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "type": "MEAL",
+        "time": "2026-09-16 01:10:45+00:00",
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "type": "MEAL",
+        "time": null,
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b",
+        "type": "MEAL",
+        "time": "2026-09-16 01:10:45+00:00",
+        "status": "NEEDS_REVIEW",
+        "version": 1,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "ec377568-81a2-4e83-8d48-5db871786636",
+        "type": "SLEEP",
+        "time": "2026-09-16 13:30:00+00:00",
+        "status": "CORRECTED",
+        "version": 2,
+        "source_type": "MANUAL",
+        "has_session": false
+      },
+      {
+        "id": "ecba3083-ce19-5a8c-98a5-49c71c39b0e1",
+        "type": "ACTIVITY",
+        "time": "2026-09-16 02:33:06.786595+00:00",
+        "status": "VERIFIED",
+        "version": 1,
+        "source_type": null,
+        "has_session": false
+      }
+    ],
+    "versions": 9,
+    "reviews": [
+      {
+        "event_id": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "MEAL",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": null
+      },
+      {
+        "event_id": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "MEAL",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": "2026-09-16 01:10:45+00:00"
+      },
+      {
+        "event_id": "ec377568-81a2-4e83-8d48-5db871786636",
+        "decision": "CORRECT",
+        "before_version": 1,
+        "after_version": 2,
+        "before_type": "MEAL",
+        "after_type": "SLEEP",
+        "before_time": "2026-09-16 01:10:45+00:00",
+        "after_time": "2026-09-16 13:30:00+00:00"
+      }
+    ],
+    "outbox": [
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "ec377568-81a2-4e83-8d48-5db871786636",
+        "version": 1
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "d3d6ca14-1f57-466e-b8b2-4d1dd8ca7f4b",
+        "version": 1
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "version": 2
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "version": 1
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "ec377568-81a2-4e83-8d48-5db871786636",
+        "version": 2
+      },
+      {
+        "type": "care.event.corrected.v1",
+        "aggregate": "61231375-f72a-44c1-ad31-f86c194388ff",
+        "version": 2
+      },
+      {
+        "type": "care.event.candidate-created.v1",
+        "aggregate": "86b98d73-137f-4dbb-b2a4-7d90f8b9bbcd",
+        "version": 1
+      }
+    ],
+    "event_history_outbox_sha256": "6fdde68cde212546ecd29ee4466db55577f437ae9560a2f5fa30880ed67f2f63",
+    "v1_sha256": "b8f854207edd8a5ffa746c292b292446b157cf990c69f2690605016604f52f47",
+    "live_memberships": 0,
+    "live_relationship": false,
+    "active_credential": false,
+    "active_sessions": 0
+  }
+}

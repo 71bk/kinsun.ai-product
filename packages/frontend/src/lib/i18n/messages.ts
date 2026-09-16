@@ -565,6 +565,8 @@ const zhHant = {
   'familySignIn.heroPoint2': '草稿與待覆核內容不會出現在您的畫面',
   'familySignIn.lineButton': '使用已連結的 LINE 登入',
   'familySignIn.lineHint': 'LINE 登入不會建立或合併新帳號。',
+  'familySignIn.noAccount': '尚未建立帳號？請使用家屬邀請碼',
+  'familySignIn.join': '建立家屬帳號',
   'googleComplete.elderTitle': '建立長者帳號',
   'googleComplete.elderBody': 'Google 已確認您的身分。請確認顯示名稱後，明確建立您的個人家庭帳號。',
   'googleComplete.familyTitle': '完成家屬加入',
@@ -1413,6 +1415,8 @@ const en: Record<MessageKey, string> = {
   'familySignIn.heroPoint2': 'Drafts and unreviewed items never reach your screen',
   'familySignIn.lineButton': 'Sign in with linked LINE',
   'familySignIn.lineHint': 'LINE sign-in does not create or merge a new account.',
+  'familySignIn.noAccount': 'No account yet? Use your family invitation code to',
+  'familySignIn.join': 'create a family account',
   'googleComplete.elderTitle': 'Create your elder account',
   'googleComplete.elderBody':
     'Google has confirmed your identity. Confirm your display name to explicitly create your personal household account.',

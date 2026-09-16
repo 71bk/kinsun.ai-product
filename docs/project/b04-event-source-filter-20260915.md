@@ -1,5 +1,9 @@
 # B04 事件來源篩選 — 2026-09-15
 
+2026-09-16 更新：Supabase development 已升級至 `a5c7e9f1b324`，新版 Core readiness
+通過。見 [開發升級紀錄](b03-b04-development-migration-20260916.md)；
+以下保留原切片交付時的驗證範圍。
+
 ## 交付範圍
 
 來源篩選接入既有事件清單，不增加來源內容讀取權限。HTTP 範例：
