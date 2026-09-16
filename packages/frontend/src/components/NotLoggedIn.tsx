@@ -1,3 +1,5 @@
+import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
+
 interface NotLoggedInProps {
   reason: string;
   /** Care/family callers pass a translated label; the Chinese-only voice
@@ -41,12 +43,14 @@ export function NotLoggedIn({ reason, linkLabel }: NotLoggedInProps) {
           color: 'var(--color-primary-text)',
           display: 'inline-flex',
           fontSize: 'var(--text-base)',
+          gap: 'var(--space-2)',
           justifyContent: 'center',
           minHeight: 'var(--touch-min)',
           padding: '0 var(--space-4)',
         }}
       >
-        {linkLabel ?? '前往登入 →'}
+        {linkLabel ?? '前往登入'}
+        <ArrowRight aria-hidden="true" size={20} weight="bold" />
       </a>
     </main>
   );

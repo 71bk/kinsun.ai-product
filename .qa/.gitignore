@@ -1,0 +1,30 @@
+# Local execution output. Keep reviewed scripts and evidence explicitly versioned.
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.bmp
+*.tif
+*.tiff
+*.avif
+/local/
+
+# Retired one-off source/contract patching tools; do not rerun on current code.
+/extract_assignment_access.py
+/minimize_previous_record_contract.cjs
+/prepare_previous_record_contract.py
+/prepare_service_record_completion_contract.py
+/prepare_workbench_contract.py
+
+# Historical PR composition scratchpads.
+/previous-real-auth-pr.md
+/previous-record-pr.md
+/service-record-closeout-pr-body.md
+/service-record-completion-pr.md
+/workbench-pr-body-20260915.md
+/workbench-pr.md
+
+# Process coordination markers, not retirement evidence.
+/workbench-ready-to-retire.json
+/workbench-retired.json

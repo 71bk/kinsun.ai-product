@@ -1,0 +1,27 @@
+{
+  "active_kinsun_identities": 5,
+  "actor_email_present": 5,
+  "active_key_versions": 1,
+  "bff_local_settings": [
+    {
+      "name": "KINSUN_IDENTITY_HMAC_SECRET",
+      "present": false,
+      "matches_root": false
+    },
+    {
+      "name": "KINSUN_EMAIL_CHALLENGE_HMAC_SECRET",
+      "present": false,
+      "matches_root": false
+    },
+    {
+      "name": "KINSUN_AUTH_HANDOFF_SECRET",
+      "present": true,
+      "matches_root": true
+    },
+    {
+      "name": "KINSUN_SYNTHETIC_EMAIL_CODE_SECRET",
+      "present": false,
+      "matches_root": false
+    }
+  ]
+}

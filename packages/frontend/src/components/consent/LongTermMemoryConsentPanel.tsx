@@ -27,10 +27,10 @@ export function LongTermMemoryConsentPanel({
       description="允許小暖提出想記住的偏好、習慣與重要關係，但每一筆都要由您在畫面上確認。"
       details={[
         '候選內容不是事實，也不會直接成為正式記憶。',
-        '只有長者本人按下確認，Core 才能把該筆候選變成 ACTIVE。',
+        '只有您本人按下確認，那筆內容才會成為已確認的記憶。',
         '目前不支援用語音、照護者或家屬代替您確認。',
       ]}
-      grantConfirmation="Core 會建立 LONG_TERM_MEMORY 同意。之後每一筆候選記憶仍需要您另外確認。"
+      grantConfirmation="系統會記錄您同意「長期記憶」。之後每一筆想記住的內容，仍需要您另外確認。"
       grantLabel="開啟長期記憶"
       icon={<Brain size={34} weight="fill" />}
       initialConsent={initialConsent}
@@ -38,7 +38,7 @@ export function LongTermMemoryConsentPanel({
       onGrant={() => grantLongTermMemoryConsent(apiConfig, elderId, policyVersion)}
       onRevoke={(consent) => revokeLongTermMemoryConsent(apiConfig, elderId, consent.consent_id)}
       policyVersion={policyVersion}
-      revokeConfirmation="撤回後，Core 會拒絕新的記憶讀取與確認。這次操作不會自動要求刪除既有記憶。"
+      revokeConfirmation="撤回後，小暖不會再讀取或新增記憶。已經確認的記憶不會因此自動刪除。"
       revokeLabel="停止長期記憶"
       title="長期記憶"
     />

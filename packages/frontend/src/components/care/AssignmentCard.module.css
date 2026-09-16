@@ -38,11 +38,6 @@
   color: var(--color-destructive);
 }
 
-.version {
-  color: var(--color-muted-foreground);
-  font-size: var(--text-xs);
-}
-
 .details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

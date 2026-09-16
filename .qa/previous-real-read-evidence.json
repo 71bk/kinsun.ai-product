@@ -1,0 +1,71 @@
+{
+  "mode": "read",
+  "checks": [
+    {
+      "name": "writer-real-principal",
+      "actor": "ab167e46-dc84-5170-8309-16eeb383974d"
+    },
+    {
+      "name": "writer-current-allowed-historical-direct-denied"
+    },
+    {
+      "name": "reader-real-principal",
+      "actor": "a3c9dbf3-6b38-5831-9494-7b828423395b"
+    },
+    {
+      "name": "four-denials-match-missing-resource",
+      "statuses": [
+        {
+          "key": "source",
+          "status": 404
+        },
+        {
+          "key": "no_history",
+          "status": 404
+        },
+        {
+          "key": "writer_current",
+          "status": 404
+        },
+        {
+          "key": "foreign_assignment",
+          "status": 404
+        }
+      ]
+    },
+    {
+      "name": "cross-worker-history",
+      "source": "596398e1-c1be-57bb-a612-194f309c9e3a",
+      "cache": "no-store"
+    },
+    {
+      "name": "real-history-ui-and-close-no-scope-hidden"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "previous-real-writer.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "filename": "previous-real-reader-desktop.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      }
+    },
+    {
+      "filename": "previous-real-reader-mobile.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      }
+    }
+  ]
+}

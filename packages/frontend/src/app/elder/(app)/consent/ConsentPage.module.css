@@ -34,16 +34,6 @@
   line-height: var(--leading-body);
 }
 
-.eyebrow {
-  display: inline-flex;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  background: var(--color-primary-weak);
-  color: var(--color-primary-text);
-  font-size: var(--text-xs);
-  font-weight: 700;
-}
-
 .controls {
   display: grid;
   gap: var(--space-5);

@@ -295,7 +295,7 @@ describe('care command authorization recovery', () => {
     mocks.workspace.mockRejectedValueOnce(new ApiRequestError(401, 'Authentication required'));
     mocks.create.mockRejectedValueOnce(new ApiRequestError(401, 'Authentication required'));
     await submit('create');
-    await screen.findByRole('link', { name: '前往登入 →' });
+    await screen.findByRole('link', { name: '前往登入' });
     expectHidden();
   });
 

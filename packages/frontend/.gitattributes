@@ -1,0 +1,10 @@
+# Font files
+
+# WOFF2/TTF are binary: keep git from touching line endings (this repo runs with autocrlf).
+*.woff2 binary
+*.ttf binary
+*.otf binary
+
+# Keep upstream license text intact, including its original trailing spaces.
+public/fonts/LICENSE-Figtree.txt -whitespace
+public/fonts/LICENSE-NotoSansTC.txt -whitespace

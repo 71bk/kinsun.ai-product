@@ -22,9 +22,7 @@
   object-fit: cover;
   border-radius: var(--radius-full);
   background: var(--color-primary-weak);
-  box-shadow:
-    0 0 0 var(--space-4) var(--color-primary-weak),
-    var(--shadow-2);
+  box-shadow: 0 0 0 var(--space-4) var(--color-primary-weak);
 }
 
 .title {
@@ -34,6 +32,7 @@
   font-size: var(--text-3xl);
   font-weight: 700;
   color: var(--color-foreground);
+  text-wrap: balance;
 }
 
 .subtitle {

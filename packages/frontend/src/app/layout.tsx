@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import './globals.css';
+
+/* MASTER.md §5: Figtree for Latin and digits, self-hosted. The variable file
+   covers the 400–700 weights in use; next/font/local serves it from our own
+   origin with a metric-matched fallback so text does not shift on load.
+   Chinese falls through to the Noto Sans TC slices declared in globals.css. */
+const figtree = localFont({
+  src: './fonts/figtree-variable.woff2',
+  weight: '300 900',
+  display: 'swap',
+  variable: '--font-figtree',
+  fallback: ['Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'system-ui', 'sans-serif'],
+});
 
 export const metadata: Metadata = {
   title: '智慧長照 AI 陪伴系統',
@@ -32,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
        calls 22px a floor, not a preference, so the safe failure mode is the
        elder scale. The care and family surfaces override this explicitly in
        SurfaceShell; nothing renders at the elder scale by accident. */
-    <html lang="zh-Hant-TW">
+    <html className={figtree.variable} lang="zh-Hant-TW">
       <body data-surface="voice">
         {children}
         <ServiceWorkerRegistration />

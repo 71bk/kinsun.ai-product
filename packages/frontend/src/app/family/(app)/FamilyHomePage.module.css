@@ -33,7 +33,19 @@
 }
 
 .viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   justify-self: start;
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
   color: var(--color-primary-text);
   font-weight: 700;
+  text-decoration: none;
+}
+
+.viewAll:hover {
+  background: var(--color-primary-weak);
 }

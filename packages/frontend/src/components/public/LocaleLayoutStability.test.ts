@@ -53,7 +53,7 @@ describe('public locale layout stability', () => {
     );
 
     expect(headerCss).toMatch(/max-width:\s*1200px/);
-    expect(headerCss).toMatch(/grid-template-columns:\s*4\.5rem 7rem 11\.25rem/);
+    expect(headerCss).toMatch(/\.nav\s*{[^}]*width:\s*24\.25rem/s);
     expect(headerCss).toMatch(/\.menuToggle\s*{[^}]*width:\s*9\.25rem/s);
     expect(headerCss).toMatch(/@media \(min-width:\s*768px\) and \(max-width:\s*1199px\)/);
     expect(headerCss).toMatch(/@media \(max-width:\s*767px\)/);

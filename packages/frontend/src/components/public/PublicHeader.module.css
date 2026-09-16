@@ -71,9 +71,14 @@
   min-width: 0;
 }
 
+/* Total width is fixed (locale-independent geometry, see
+   LocaleLayoutStability.test.ts); inside it the links hug their text and the
+   slack is shared evenly, so the three items read as evenly spaced in both
+   locales rather than centred in unequal fixed columns. */
 .nav {
-  display: grid;
-  grid-template-columns: 4.5rem 7rem 11.25rem;
+  display: flex;
+  justify-content: space-between;
+  width: 24.25rem;
   gap: var(--space-3);
 }
 
@@ -183,6 +188,7 @@
   .nav {
     display: flex;
     flex-direction: column;
+    width: auto;
     gap: var(--space-2);
   }
 

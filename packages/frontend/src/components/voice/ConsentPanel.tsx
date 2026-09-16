@@ -26,13 +26,13 @@ export function ConsentPanel({
 }: ConsentPanelProps) {
   return (
     <ConsentPurposeControl
-      description="讓小暖在您主動按下按鈕後建立受控的語音或文字陪伴 Session。"
+      description="讓小暖在您主動按下按鈕後，開始一段語音或文字陪伴。"
       details={[
         '不按開始就不會開啟麥克風。',
-        '聽不清楚時必須由您確認，未確認內容不會送入 Agent。',
+        '聽不清楚時必須由您確認，未確認的內容小暖不會採用。',
         '這項同意不等於逐字稿保存、長期記憶或照護事件建立。',
       ]}
-      grantConfirmation="Core 會建立 BASIC_VOICE 同意。每次互動仍會重新檢查身分、長者範圍與同意版本。"
+      grantConfirmation="系統會記錄您同意「語音與文字陪伴」。每次互動仍會重新確認是您本人，以及這項同意仍然有效。"
       grantLabel="開啟陪伴"
       icon={<ChatCircleDots size={34} weight="fill" />}
       initialConsent={initialConsent}
@@ -40,7 +40,7 @@ export function ConsentPanel({
       onGrant={() => grantBasicVoiceConsent(apiConfig, elderId, policyVersion)}
       onRevoke={(consent) => revokeBasicVoiceConsent(apiConfig, elderId, consent.consent_id)}
       policyVersion={policyVersion}
-      revokeConfirmation="撤回後，Core 會拒絕新的陪伴 Session，正在進行的語音 Session 也會失效。"
+      revokeConfirmation="撤回後，小暖不會再開始新的陪伴，正在進行的語音陪伴也會立即停止。"
       revokeLabel="停止陪伴"
       title="語音與文字陪伴"
     />

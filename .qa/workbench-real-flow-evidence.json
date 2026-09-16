@@ -1,0 +1,241 @@
+{
+  "campaign": "workbench-real-auth-20260915",
+  "startedAt": "2026-09-15T02:18:13.302Z",
+  "checks": [
+    {
+      "name": "real-login-reader",
+      "actorId": "946c23cc-967d-5b64-ac94-248697b7719c"
+    },
+    {
+      "name": "pre-start-and-cross-scope-denied",
+      "denied": [
+        {
+          "key": "source",
+          "status": 404
+        },
+        {
+          "key": "writer_current",
+          "status": 404
+        },
+        {
+          "key": "foreign_assignment",
+          "status": 404
+        }
+      ],
+      "historyAndTaskDenials": 8
+    },
+    {
+      "name": "missing-scopes-hide-panels"
+    },
+    {
+      "name": "start-real-200-and-cross-tab-refresh",
+      "version": 2,
+      "scheduleStates": [
+        "CONFIRMED",
+        "IN_PROGRESS"
+      ]
+    },
+    {
+      "name": "real-cross-worker-history-and-three-task-states",
+      "historyStatus": 200,
+      "tasksStatus": 200,
+      "sourceId": "e879f48b-8b04-556e-94a3-2625f4d2cb3d",
+      "noStore": true
+    },
+    {
+      "name": "seven-real-data-viewport-checks-and-task-binding",
+      "count": 7
+    },
+    {
+      "name": "real-ui-submit-and-complete",
+      "status": 201,
+      "receipt": {
+        "service_record_id": "34aa98c1-dee6-425a-93af-57f8a918f322",
+        "assignment_id": "a233ae48-950f-5925-8f76-00cee35afcbb",
+        "assignment_version": 3,
+        "status": "COMPLETED"
+      }
+    },
+    {
+      "name": "completion-clears-both-tabs-and-refreshes-schedule",
+      "scheduleStates": [
+        "CONFIRMED",
+        "IN_PROGRESS",
+        "IN_PROGRESS",
+        "IN_PROGRESS",
+        "ABSENT"
+      ]
+    },
+    {
+      "name": "real-login-writer",
+      "actorId": "1d08f78d-33db-51c6-a1dd-fc449f842249"
+    },
+    {
+      "name": "ready-to-retire"
+    },
+    {
+      "name": "real-retirement-401-clears-handover-tasks-and-unsent-form"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "workbench-real-no-scope.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "filename": "workbench-real-schedule-en-1440.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "filename": "workbench-real-handover-en-1440.png",
+      "geometry": {
+        "inner": 1440,
+        "client": 1440,
+        "scroll": 1440
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "filename": "workbench-real-handover-en-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "filename": "workbench-real-handover-en-768.png",
+      "geometry": {
+        "inner": 768,
+        "client": 768,
+        "scroll": 768
+      },
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    {
+      "filename": "workbench-real-handover-zh-Hant-375.png",
+      "geometry": {
+        "inner": 375,
+        "client": 375,
+        "scroll": 375
+      },
+      "viewport": {
+        "width": 375,
+        "height": 812
+      }
+    },
+    {
+      "filename": "workbench-real-handover-zh-Hant-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "filename": "workbench-real-handover-zh-Hant-430.png",
+      "geometry": {
+        "inner": 430,
+        "client": 430,
+        "scroll": 430
+      },
+      "viewport": {
+        "width": 430,
+        "height": 932
+      }
+    },
+    {
+      "filename": "workbench-real-handover-zh-Hant-768.png",
+      "geometry": {
+        "inner": 768,
+        "client": 768,
+        "scroll": 768
+      },
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    {
+      "filename": "workbench-real-confirm-en-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "filename": "workbench-real-completed-en-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "filename": "workbench-real-before-retirement-en-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "filename": "workbench-real-after-retirement-en-390.png",
+      "geometry": {
+        "inner": 390,
+        "client": 390,
+        "scroll": 390
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    }
+  ],
+  "errors": [],
+  "status": "PASS",
+  "finishedAt": "2026-09-15T02:20:47.850Z"
+}

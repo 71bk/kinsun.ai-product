@@ -25,7 +25,7 @@ const COMMAND_COPY: Record<
   confirm: {
     label: '是，請記住',
     title: '確認要記住這件事？',
-    description: '只有這一筆候選內容會成為 ACTIVE 長期記憶。這不是健康診斷或醫療事實。',
+    description: '只有這一筆內容會成為已確認的長期記憶。這不是健康診斷或醫療事實。',
   },
   defer: {
     label: '稍後再問',
@@ -35,12 +35,12 @@ const COMMAND_COPY: Record<
   reject: {
     label: '不是這樣',
     title: '確認拒絕這筆候選？',
-    description: 'Core 會把這筆候選標示為 REJECTED，不會成為長期記憶。',
+    description: '這筆內容會被拒絕，不會成為長期記憶。',
   },
   delete: {
     label: '刪除這筆記憶',
     title: '確認刪除這筆記憶？',
-    description: 'Core 會把這筆正式記憶標示為 DELETED。這項操作需要重新驗證目前版本。',
+    description: '這筆記憶會被刪除，小暖之後不會再使用它。如果這筆記憶剛剛有變動，會請您重新整理後再試。',
   },
 };
 

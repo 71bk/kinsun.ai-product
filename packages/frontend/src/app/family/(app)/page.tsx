@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FamilySummaryCard } from '@/components/family/FamilySummaryCard';
 import { ReportCard } from '@/components/family/ReportCard';
@@ -129,7 +130,6 @@ export default function FamilyHomePage() {
     <main className={styles.page}>
       <PageHeader
         meta={t('family.meta', {
-          elderId,
           updated: lastUpdated ? formatDateTime(lastUpdated) : t('family.noData'),
         })}
         title={t('family.homeTitle')}
@@ -157,6 +157,7 @@ export default function FamilyHomePage() {
         )}
         <Link className={styles.viewAll} href="/family/reports">
           {t('family.viewAll')}
+          <ArrowRight aria-hidden="true" size={20} weight="bold" />
         </Link>
       </FamilySummaryCard>
 
