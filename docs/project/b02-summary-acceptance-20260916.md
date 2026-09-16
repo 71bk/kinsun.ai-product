@@ -102,3 +102,16 @@ Follow-up verification:
   `git diff --check` and CI rules (26 tests): passed.
 - PostgreSQL acceptance: **11 cases collected**, not executed locally. No shared
   development database, real credentials, browser or live provider used.
+
+## First PR CI and fixture correction
+
+Run [35062360218](https://github.com/71bk/kinsun.ai-product/actions/runs/35062360218)
+on `1b1d833` passed frontend quality and all other workers except `core-db` (and
+its aggregate gate). PostgreSQL integration: **248 passed, 1 failed**. Ten of
+the eleven new B02 cases passed. The boundary/source test reached source lookup,
+then failed because the fixture used `synthetic:evidence`, which the production
+API correctly filters out: the contract requires `evidence:<UUID>`.
+
+The fixture and expected response now share a canonical synthetic evidence UUID.
+The API filter is unchanged. The corrected commit still requires a fresh CI run;
+this initial failure is not reported as complete B02 database acceptance.

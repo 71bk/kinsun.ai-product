@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+- Care Event 證據識別（含 synthetic fixture）使用 `evidence:<UUID>`；
+  不合法字串會被過濾，修 fixture，不放寬 API 的證據格式規則。
+
 - PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
 - Consent 檢查須先於資料查詢與超限判斷，避免提前錯誤透露資料量；前端只以經驗證的
   固定錯誤代碼映射提示，不直接顯示伺服器細節。

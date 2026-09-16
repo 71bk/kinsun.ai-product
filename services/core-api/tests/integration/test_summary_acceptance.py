@@ -4,6 +4,7 @@ Actor identity is injected; SQL, authorization, transactions and outbox are real
 This is not browser, login or evidence-snippet acceptance.
 """
 
+import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -26,6 +27,7 @@ pytestmark = pytest.mark.asyncio
 DAY = "2026-08-14"
 START = datetime(2026, 8, 13, 16, tzinfo=UTC)
 END = START + timedelta(days=1)
+EVIDENCE_REF = "evidence:0c38e068-56e9-4902-91c4-4befcbad1e45"
 
 
 @pytest_asyncio.fixture(loop_scope="function")
@@ -63,7 +65,7 @@ async def _event(
             event_id=event.id,
             version=1,
             structured_payload={"text": "Synthetic meal"},
-            evidence_text_ref='["synthetic:evidence"]',
+            evidence_text_ref=json.dumps([EVIDENCE_REF]),
         )
     )
     await db.flush()
@@ -142,7 +144,7 @@ async def test_taipei_boundaries_fallback_and_source_lookup(test_engine, summary
             source = await client.get(f"/api/v1/elders/{ids['elder']}/care-events/{event_id}")
             assert source.status_code == 200, source.text
             assert source.json()["data"]["structured_payload"] == {"text": "Synthetic meal"}
-            assert source.json()["data"]["evidence_refs"] == ["synthetic:evidence"]
+            assert source.json()["data"]["evidence_refs"] == [EVIDENCE_REF]
             wrong_elder = await client.get(
                 f"/api/v1/elders/{ids['other_elder']}/care-events/{event_id}"
             )
