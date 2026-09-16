@@ -109,6 +109,12 @@ Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB r
 
 ## Remaining product gaps
 
+2026-09-16 B03 類型／時間修正與 B04 來源篩選已完成本機真實登入 → UI → BFF → Core →
+Supabase 驗收，含 409 舊分頁、same-key replay、撤權後 404 與資料清除。六筆隔離事件、
+九個版本、三筆 review、七筆 outbox 核對一致，帳號／憑證／session／授權已全數退場。
+這取代下方「真實登入 DB 寫入仍待驗收」的階段狀態；完整 Wave 2 與 production 仍未結案。
+見 [真實登入驗收紀錄](../../../docs/project/b03-b04-real-auth-20260916.md)。
+
 2026-09-16 UI `63f1a9d` 已接上 B03 類型／時間修正與 B04 來源篩選。獨立核對發現並修正
 新增測試 mock 的 TypeScript 型別錯誤；typecheck、production build、lint 與相關測試通過。
 四種寬度及修正／清除／來源分頁／409／403 的 synthetic Browser 驗證通過，真實登入 DB

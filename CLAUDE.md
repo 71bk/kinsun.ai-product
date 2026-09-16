@@ -13,6 +13,7 @@
 - 更新日期：2026-09-02
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository
+- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
 
 居服跨分頁 invalidation：同頁不同 BroadcastChannel instance 也會收到自己的訊息，須用
 文件生命週期 source ID 排除自己，避免開始服務後重載並丟失表單；訊息不得帶長者／派案資料。

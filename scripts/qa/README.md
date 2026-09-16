@@ -1,5 +1,32 @@
 # Wave 2 real-auth browser acceptance fixture
 
+## B03/B04 real-auth campaign (2026-09-16)
+
+`event_review_fixture.py` is fixed to `b03-b04-real-auth-20260916`, which is already
+retired. **Do not prepare again or renew it.** Default `inspect` uses a read-only
+transaction; `prepare`, `expire`, and `retire` require `--allow-synthetic-write`.
+Pass the existing development configuration with `--env-file /path/to/.env`.
+Target checks require the development Supabase URL shape, current B03/B04 revision,
+native login and App Session authentication, with fake authentication disabled.
+
+The campaign creates an isolated tenant/unit, one worker, two elders, two-hour
+memberships and a relationship, and synthetic consent/policy/conversation/legacy
+events. Prepare refuses an existing campaign or private bootstrap. Expire only
+shortens the exact relationship after ownership checks. Retire also disables its
+actor, credentials and sessions, expires the remaining grants and removes the
+private bootstrap account fields. Business evidence remains for audit.
+
+`.qa/event-review-real-auth.cjs <frontend-checkout-path>` uses real form login and
+the installed Playwright dependency from that checkout. It never injects cookies
+for authentication or mocks responses. Its locale cookie is presentation only.
+The historical flow pauses at `.qa/local/b03-ready-to-expire.json`; the operator
+expires the relationship with the guarded fixture before writing the matching
+`b03-expired.json` marker. Failed runs also require retirement; do not leave active
+credentials. Neither script may be rerun against the retired campaign.
+
+Offline safety tests: `tests/unit/test_event_review_fixture_safety.py` in Core.
+Evidence and limitations: [acceptance report](../../docs/project/b03-b04-real-auth-20260916.md).
+
 This is an **opt-in manual development tool**, not a CI database fixture and not
 evidence that browser acceptance has passed. Run from the repository root using
 the Core environment. No Docker or disposable database rebuild is involved.

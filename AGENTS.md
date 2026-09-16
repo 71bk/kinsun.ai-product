@@ -14,6 +14,7 @@
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
 - 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
+- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
 
 居服工作台的跨分頁更新只傳 invalidation，不傳派案或長者資料。BroadcastChannel 的發送者若與
 訂閱者是同頁的不同 instance，仍會收到自己發出的訊息；要以文件生命週期的 source ID 排除自己，
