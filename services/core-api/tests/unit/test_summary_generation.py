@@ -11,10 +11,45 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ValidationError
+from app.core.exceptions import NotFoundError, ValidationError
+from app.domain.consent import ConsentPurpose
 from app.models.summary import DailySummary
 from app.services.care_event_rendering import render_reviewed_event
 from app.services.summary_service import SummaryService
+
+
+@pytest.fixture(autouse=True)
+def active_consent(monkeypatch):
+    check = AsyncMock(return_value=SimpleNamespace(version=1))
+    monkeypatch.setattr("app.services.summary_service.ConsentService.require_active", check)
+    return check
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("count", [0, 32, 33])
+async def test_inactive_consent_denies_before_source_query(active_consent, count):
+    active_consent.side_effect = NotFoundError("Required consent is not active")
+    session = MagicMock()
+    result = MagicMock()
+    result.all.return_value = [object()] * count
+    session.execute = AsyncMock(return_value=result)
+    service = SummaryService(session, uuid4())
+    service.create_draft = AsyncMock()
+    elder_id = uuid4()
+    with pytest.raises(NotFoundError):
+        await service.generate_from_verified_events(
+            elder_id=elder_id,
+            actor_id=uuid4(),
+            summary_date=date(2026, 8, 14),
+            trace_id="synthetic-consent",
+            idempotency_key="synthetic-consent",
+        )
+    active_consent.assert_awaited_once_with(
+        elder_id=elder_id,
+        purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
+    )
+    session.execute.assert_not_awaited()
+    service.create_draft.assert_not_awaited()
 
 
 def test_summary_update_keeps_response_timestamp_loaded() -> None:

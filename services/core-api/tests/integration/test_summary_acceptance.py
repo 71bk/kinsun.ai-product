@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.models.care_assignment import CareAssignment
 from app.models.care_event import CareEvent, CareEventVersion
+from app.models.consent import ConsentGrant
 from app.models.outbox import OutboxEvent
 from app.models.summary import DailySummary, SummaryVersion
 from tests.integration import test_event_metadata_correction as correction_fixtures
@@ -175,6 +176,29 @@ async def test_overflow_preserves_existing_summary_and_outbox(test_engine, summa
             ]
         async with async_sessionmaker(test_engine)() as db:
             assert await _snapshot(db, summary_id) == before
+
+
+@pytest.mark.parametrize("count", [32, 33])
+async def test_revoked_consent_denies_generation_regardless_of_volume(
+    test_engine, summary_data, count
+):
+    ids = summary_data
+    async with async_sessionmaker(test_engine)() as db:
+        for _ in range(count):
+            await _event(db, ids, START)
+        consent = await db.scalar(
+            select(ConsentGrant).where(
+                ConsentGrant.elder_id == ids["elder"],
+                ConsentGrant.purpose_code == "CARE_EVENT_EXTRACTION",
+            )
+        )
+        consent.status = "REVOKED"
+        consent.revoked_at = datetime.now(UTC)
+        await db.commit()
+    async with _client(test_engine, ids) as client:
+        denied = await _generate(client, ids)
+        assert denied.status_code == 404, denied.text
+        assert "SUMMARY_EVENT_LIMIT_EXCEEDED" not in denied.text
 
 
 async def test_correction_then_explicit_regeneration_uses_current_version(

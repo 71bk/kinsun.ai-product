@@ -14,6 +14,7 @@
 
 超過 32 筆已覆核事件時明確回 422，避免產生未告知截斷的摘要；補上摘要更新後
 `updated_at` 的 eager loading。台北日界、31／32／33 筆與 ORM 更新有本機單元驗證；
+後續 review 修正已將 Consent 檢查移至來源查詢前，並補上前端中英文超限提示。
 PostgreSQL 來源、修正後重新產生、重建／重送與權限案例待 CI。
 來源片段導覽及 frontend rebuild 尚未完成，B02 不標為完整驗收。
 詳見 [B02 report](../../../docs/project/b02-summary-acceptance-20260916.md)。

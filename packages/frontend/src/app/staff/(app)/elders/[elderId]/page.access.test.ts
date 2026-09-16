@@ -128,6 +128,28 @@ const daily = { summaryId: 'summary', elderId: 'synthetic-elder', date: '2026-09
   generatedAt: null, updatedAt: '2026-09-08T16:00:00Z' };
 
 describe('dashboard daily summary entry', () => {
+  it.each([
+    ['summary_date', 'SUMMARY_EVENT_LIMIT_EXCEEDED', true],
+    ['summary_date', 'OTHER_VALIDATION', false],
+    ['other_field', 'SUMMARY_EVENT_LIMIT_EXCEEDED', false],
+  ] as const)('handles generation error %s / %s without automatic retries', async (field, reason, overflow) => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read', 'summary:review'] });
+    mocks.summaries.mockResolvedValue({ items: [daily] });
+    mocks.generateSummary.mockRejectedValue(new ApiRequestError(
+      422, 'Synthetic failure', 'SCHEMA_OR_SEMANTIC_VALIDATION_FAILED', false, [{ field, reason }],
+    ));
+    await openSummaryQuery({ tab: 'summaries' });
+    await screen.findByText('2026-09-09');
+    fireEvent.click(await screen.findByRole('button', { name: "Generate today's summary" }));
+    await screen.findByText(overflow
+      ? 'This day has more than the supported 32 reviewed events. No new summary was generated. View the care-event timeline; reloading or retrying will not resolve this limit.'
+      : 'The daily summary could not be generated. Reload and try again.');
+    expect(mocks.generateSummary).toHaveBeenCalledTimes(1);
+    expect(mocks.summaries).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('2026-09-09')).toBeTruthy();
+    expect(screen.queryByText("Today's review draft was generated.")).toBeNull();
+  });
+
   it('opens the exact snapshot date after authorization and permits clearing the filter', async () => {
     mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read'] });
     mocks.summaries.mockResolvedValue({ items: [daily] });

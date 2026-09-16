@@ -1,6 +1,8 @@
 # AGENTS.md
 
 - PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
+- 資料用途的 Consent 必須在查詢／超限判斷前檢查；不能讓提前回傳的筆數錯誤跳過
+  授權邊界。前端應依驗證過的固定錯誤代碼顯示提示，不直接呈現伺服器細節。
 - AsyncSession.execute 的 mock 應使用 AsyncMock 回傳同步 MagicMock Result，
   `Result.all()` 不是 coroutine。摘要／事件更新後若立即序列化 server-generated
   `updated_at`，必須在 async flush 載入該值，避免隱式 IO；以實際 ORM 更新驗證。

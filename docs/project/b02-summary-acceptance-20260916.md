@@ -3,8 +3,9 @@
 ## Scope and result
 
 Base: `origin/main` at `6bf89a8`; independent backend worktree, branch
-`fix/b02-summary-boundaries`. No frontend edits, migration, shared development DB
-writes or service restart. B03/B04 QA commits remain on
+`fix/b02-summary-boundaries`. The review follow-up also adds frontend overflow
+error handling. No migration, shared development DB writes or service restart.
+B03/B04 QA commits remain on
 `qa/b03-b04-real-auth-20260916` and are not included in this branch.
 
 **B02 is not fully accepted.** This increment fixes silent event truncation and
@@ -42,6 +43,9 @@ frontend rebuild handling and real-auth browser acceptance remain outstanding.
 
 ## Verification
 
+The following results are the initial `91929e1` baseline; follow-up results are
+recorded in the review section below.
+
 - Focused summary unit/API tests: **14 passed** (includes a real SQLite ORM update).
 - PostgreSQL acceptance: **9 cases added, collection only**. Requires disposable
   `TEST_DATABASE_URL`; not executed against shared Supabase.
@@ -57,8 +61,9 @@ frontend rebuild handling and real-auth browser acceptance remain outstanding.
 2. Define a bounded source-snippet lookup contract and review its authorization,
    provenance and version behavior. Opaque refs must not become public transcript
    or audio URLs; current event text is not proof of original evidence text.
-3. Connect summary source navigation, explicit rebuild/regenerate and actionable
-   overflow messages in the frontend, then run real-auth and viewport acceptance.
+3. Connect summary source navigation and explicit rebuild/regenerate in the
+   frontend, then run real-auth and viewport acceptance. Overflow messages are
+   implemented in the review follow-up below.
 4. Resolve full-day aggregation beyond 32 events if the product needs it. Merely
    increasing the SQL limit cannot bypass the existing bounded item contract.
 
@@ -68,3 +73,32 @@ References:
 - [Unit cases](../../services/core-api/tests/unit/test_summary_generation.py)
 - [PostgreSQL cases](../../services/core-api/tests/integration/test_summary_acceptance.py)
 - [Wave 2 gap audit](wave2-backend-gap-audit-20260915.md)
+
+## Review follow-up: consent and overflow feedback
+
+- Generation checks active CARE_EVENT_EXTRACTION consent before querying source
+  events, including the overflow path. `create_draft` retains its write-boundary
+  recheck. Tests assert inactive consent rejects before any source query for
+  0/32/33 rows; PostgreSQL cases add revoked consent with both 32 and 33 events.
+- The frontend API error keeps contract-validated `details`; malformed errors
+  never expose those details and BFF errors default to an empty list. Summary
+  generation recognizes only HTTP 422 plus the exact summary-date overflow reason.
+  English and Traditional Chinese messages explain the limit, no new summary,
+  and that retrying does not resolve it. Other failures retain their existing
+  handling. The page tests cover precise matching, preserved existing summaries,
+  no false success and no automatic retry.
+- This does not implement source-snippet navigation, automatic rebuilding or
+  retroactive consent checks on already-completed idempotency replay paths.
+
+Follow-up verification:
+
+- Core unit suite: **1,447 passed**; focused summary tests: **17 passed**.
+- Frontend full suite: **609 passed, 1 timeout** in the existing late-denial
+  unmounted-panel case while Core tests and typecheck also ran. A subsequent run
+  of the entire page test file plus API client tests passed **113/113**, including
+  that case, without changing its timeout or implementation. The initial full run
+  was not clean and is not reported as a full-suite pass.
+- Frontend typecheck, production build, ESLint, changed Python Ruff lint/format,
+  `git diff --check` and CI rules (26 tests): passed.
+- PostgreSQL acceptance: **11 cases collected**, not executed locally. No shared
+  development database, real credentials, browser or live provider used.

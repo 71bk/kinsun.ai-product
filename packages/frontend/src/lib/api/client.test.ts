@@ -60,7 +60,7 @@ describe('current Core and BFF protocol compatibility', () => {
   ] as const)('accepts the real BFF producer for HTTP %s', async (status, code, reason, retryable) => {
     vi.stubGlobal('fetch', vi.fn(async () => bffError(status, code, 'Synthetic BFF failure', reason, retryable)));
     await expect(caughtRequest()).resolves.toMatchObject({
-      status, message: 'Synthetic BFF failure', reasonCode: reason, retryable,
+      status, message: 'Synthetic BFF failure', reasonCode: reason, retryable, details: [],
     });
   });
 
@@ -88,7 +88,7 @@ describe('current Core and BFF protocol compatibility', () => {
     { extra: true },
   ])('rejects invalid Core error fields %#', async (overrides) => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(coreError(overrides), 422)));
-    await expect(caughtRequest()).resolves.toMatchObject({ status: 422, reasonCode: 'MALFORMED_API_RESPONSE' });
+    await expect(caughtRequest()).resolves.toMatchObject({ status: 422, reasonCode: 'MALFORMED_API_RESPONSE', details: [] });
   });
 
   it.each(coreSchema.$defs.ErrorBody.required as string[])(
@@ -104,7 +104,10 @@ describe('current Core and BFF protocol compatibility', () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(coreError({
       code: 'validation_error', details: [{ field: 'title', reason: 'Required' }],
     }), 422)));
-    await expect(caughtRequest()).resolves.toMatchObject({ status: 422, reasonCode: undefined, retryable: false });
+    await expect(caughtRequest()).resolves.toMatchObject({
+      status: 422, reasonCode: undefined, retryable: false,
+      details: [{ field: 'title', reason: 'Required' }],
+    });
   });
 
   it.each([

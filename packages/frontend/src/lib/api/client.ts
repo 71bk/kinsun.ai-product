@@ -1,4 +1,4 @@
-import { isErrorEnvelope, isSuccessEnvelope } from './response-envelope';
+import { isErrorEnvelope, isSuccessEnvelope, type ValidationDetail } from './response-envelope';
 
 export interface ApiConfig {
   apiBaseUrl: string;
@@ -10,6 +10,7 @@ export class ApiRequestError extends Error {
     message: string,
     public readonly reasonCode?: string,
     public readonly retryable: boolean = false,
+    public readonly details: readonly ValidationDetail[] = [],
   ) {
     super(message);
     this.name = 'ApiRequestError';
@@ -63,6 +64,7 @@ export async function apiFetch<T>(
       body.error.message,
       body.error.reason_code ?? undefined,
       body.error.retryable,
+      body.error.details ?? [],
     );
   }
 
