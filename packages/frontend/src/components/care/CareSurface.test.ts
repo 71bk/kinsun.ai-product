@@ -22,6 +22,7 @@ function event(status: EventView['status']): EventView {
     elderId: 'synthetic-elder',
     eventType: 'MEAL',
     eventDate: '2026-08-13',
+    eventTime: '2026-08-13T08:00:00Z',
     content: 'Synthetic source-backed event',
     status,
     confidenceBand: 'LOW',

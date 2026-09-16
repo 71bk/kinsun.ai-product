@@ -5,7 +5,7 @@ import { EventReviewControls } from '@/components/care/EventReviewControls';
 import { ReviewCard } from '@/components/care/ReviewCard';
 import { careEventState, StateBadge } from '@/components/StateCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import type { CareEventDecision, EventView } from '@/lib/api/events';
+import type { CareEventDecision, EventCorrection, EventView } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './EventTable.module.css';
@@ -15,7 +15,7 @@ export interface EventTableProps {
   onReview: (
     event: EventView,
     decision: CareEventDecision,
-    correctedContent?: string,
+    correction?: EventCorrection,
   ) => Promise<void>;
 }
 

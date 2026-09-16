@@ -68,6 +68,7 @@ function sourceEvent(id: string, status: EventView['status']): EventView {
     elderId: 'synthetic-elder',
     eventType: 'MEAL',
     eventDate: '2026-09-04',
+    eventTime: '2026-09-04T08:00:00Z',
     content: `Synthetic event ${id}`,
     status,
     confidenceBand: 'HIGH',

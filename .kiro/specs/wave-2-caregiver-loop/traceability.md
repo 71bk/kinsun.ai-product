@@ -100,6 +100,11 @@ Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB r
 
 ## Remaining product gaps
 
+2026-09-16 UI `63f1a9d` 已接上 B03 類型／時間修正與 B04 來源篩選。獨立核對發現並修正
+新增測試 mock 的 TypeScript 型別錯誤；typecheck、production build、lint 與相關測試通過。
+四種寬度及修正／清除／來源分頁／409／403 的 synthetic Browser 驗證通過，真實登入 DB
+寫入仍待驗收。見 [前端核對紀錄](../../../docs/project/b03-b04-frontend-verification-20260916.md)。
+
 2026-09-15 新工作台 real-auth E2E 已完成本機驗收：開始 200、提交完成 201、跨 worker
 交班／三種待辦、跨分頁更新、完成與撤權清除；DB／outbox 核對且全部 campaign 憑證撤銷。
 實測修正重疊派案引發 Dashboard 500，Core 1,416 passed；新 DB regression 由本次 PR CI 追蹤。

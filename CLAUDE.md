@@ -10,6 +10,10 @@
 Vitest hook 使用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的 VitestUtils；
 新增測試後重跑 frontend typecheck，不能只以 Vitest 執行成功取代型別驗證。
 
+檢查 `mock.calls` 參數的 Vitest 1 mock 應用 `vi.fn<Parameters<F>, ReturnType<F>>(...)`，
+不是新版的單一函式型別 generic；零參數的
+`vi.fn(async () => ...)` 會推論空 tuple，造成 typecheck／build 失敗，不能靠型別斷言掩蓋。
+
 同一居服員／長者的多筆有效派案會使單筆 elder-level lookup 有歧義；此時 fail closed，
 Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／聯集 scopes。
 指定工作台派案仍由 `AssignmentAccessService` 個別驗權。

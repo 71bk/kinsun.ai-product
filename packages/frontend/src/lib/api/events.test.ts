@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from './client';
-import { listEvents, summariseNeedsReview } from './events';
+import { listEvents, reviewEvent, summariseNeedsReview, type EventView } from './events';
 
 const config: ApiConfig = { apiBaseUrl: '/backend/core/' };
 
@@ -72,6 +72,85 @@ describe('listEvents', () => {
     expect(parsed.searchParams.get('event_type')).toBe('MEAL');
     expect(parsed.searchParams.get('status')).toBe('VERIFIED');
     expect(parsed.searchParams.get('cursor')).toBe('opaque-cursor');
+  });
+
+  /* B04: the source filter is a Core query parameter, never a browser-side
+     narrowing of a page, and it is simply absent when "all sources" is chosen. */
+  it('sends the recorded-source filter to Core and omits it for all sources', async () => {
+    const fetchMock = vi.fn<Parameters<typeof fetch>, Promise<Response>>(async () =>
+      success({ items: [], next_cursor: null, has_more: false }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await listEvents(config, 'elder-1', { sourceType: 'CONVERSATION_SESSION' });
+    await listEvents(config, 'elder-1', {});
+
+    const first = new URL(String(fetchMock.mock.calls[0][0]), 'http://frontend.test');
+    const second = new URL(String(fetchMock.mock.calls[1][0]), 'http://frontend.test');
+    expect(first.searchParams.get('source_type')).toBe('CONVERSATION_SESSION');
+    expect(second.searchParams.has('source_type')).toBe(false);
+  });
+});
+
+/* B03: the review request's omit / set / clear semantics are the contract's,
+   so the client must not echo unchanged values or send null for the type. */
+describe('reviewEvent', () => {
+  const view: EventView = {
+    eventId: 'event-1',
+    elderId: 'elder-1',
+    eventType: 'MEAL',
+    eventDate: '2026-08-01',
+    eventTime: '2026-08-01T08:00:00Z',
+    content: '早餐吃了粥',
+    status: 'NEEDS_REVIEW',
+    confidenceBand: 'LOW',
+    evidenceRefs: ['utterance-1'],
+    version: 1,
+    consentVersion: 1,
+    structuredPayload: { summary: '早餐吃了粥' },
+  };
+
+  async function bodyOf(
+    decision: Parameters<typeof reviewEvent>[3],
+    correction?: Parameters<typeof reviewEvent>[4],
+  ) {
+    const fetchMock = vi.fn(async () => success(event({ status: 'CORRECTED', version: 2 })));
+    vi.stubGlobal('fetch', fetchMock);
+    await reviewEvent(config, 'elder-1', view, decision, correction);
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    return JSON.parse(String(init.body)) as Record<string, unknown>;
+  }
+
+  it('omits type and time when a correction leaves them unchanged', async () => {
+    const body = await bodyOf('CORRECT', { content: '早餐吃了稀飯', eventType: 'MEAL' });
+    expect(body.corrected_payload).toEqual({ summary: '早餐吃了稀飯' });
+    expect(body).not.toHaveProperty('corrected_event_type');
+    expect(body).not.toHaveProperty('corrected_event_time');
+  });
+
+  it('sends a changed type and a timezone-qualified new time', async () => {
+    const body = await bodyOf('CORRECT', {
+      content: '午睡了一小時',
+      eventType: 'SLEEP',
+      eventTime: '2026-08-01T13:00:00.000Z',
+    });
+    expect(body.corrected_event_type).toBe('SLEEP');
+    expect(body.corrected_event_time).toBe('2026-08-01T13:00:00.000Z');
+    expect(String(body.corrected_event_time)).toMatch(/(?:Z|[+-]\d{2}:\d{2})$/);
+  });
+
+  it('sends null to clear the time, and never sends null for the type', async () => {
+    const body = await bodyOf('CORRECT', { content: '早餐吃了粥', eventTime: null });
+    expect(body.corrected_event_time).toBeNull();
+    expect(body).not.toHaveProperty('corrected_event_type');
+  });
+
+  it('never attaches correction fields to a non-CORRECT decision', async () => {
+    const body = await bodyOf('VERIFY', { content: 'ignored', eventType: 'SLEEP', eventTime: null });
+    expect(body.corrected_payload).toBeNull();
+    expect(body).not.toHaveProperty('corrected_event_type');
+    expect(body).not.toHaveProperty('corrected_event_time');
+    expect(body.expected_version).toBe(1);
   });
 });
 

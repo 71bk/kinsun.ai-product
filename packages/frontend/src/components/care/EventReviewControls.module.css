@@ -15,6 +15,7 @@
 }
 
 .select,
+.input,
 .textarea {
   width: 100%;
   min-width: 0;
@@ -22,11 +23,34 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-foreground);
+  font: inherit;
 }
 
-.select {
+.select,
+.input {
   min-height: var(--touch-min);
   padding: var(--space-2);
+}
+
+.input:disabled {
+  opacity: 0.55;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  color: var(--color-foreground);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.checkRow input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--color-primary-strong);
 }
 
 .textarea {
