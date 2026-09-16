@@ -17,6 +17,8 @@ export type CoreCareEventStatus =
 
 export type CareEventDecision = 'VERIFY' | 'CORRECT' | 'REJECT' | 'EXCLUDE';
 export type ConfidenceBand = 'LOW' | 'MEDIUM' | 'HIGH';
+/** B04: how Core recorded the event. UNKNOWN is a real answer, not a guess of MANUAL. */
+export type CareEventSourceType = 'MANUAL' | 'CONVERSATION_SESSION' | 'UNKNOWN';
 
 interface CoreCareEvent {
   event_id: string;
@@ -44,6 +46,8 @@ export interface EventView {
   elderId: string;
   eventType: CoreCareEventType;
   eventDate: string;
+  /** Full timestamp when Core has one; null when the event carries no time. */
+  eventTime: string | null;
   content: string;
   status: CoreCareEventStatus;
   confidenceBand: ConfidenceBand;
@@ -58,7 +62,21 @@ export interface ListEventsFilters {
   dateTo?: string;
   eventType?: CoreCareEventType;
   status?: CoreCareEventStatus | 'PENDING_REVIEW';
+  sourceType?: CareEventSourceType;
   cursor?: string;
+}
+
+/**
+ * B03 correction fields for a CORRECT decision. Each maps onto the request
+ * contract's omit / set / clear semantics:
+ * - `eventType`: omitted keeps the type (Core rejects an explicit null).
+ * - `eventTime`: `undefined` keeps it, `null` clears it, a string sets it and
+ *   must carry a timezone (the client sends UTC "Z").
+ */
+export interface EventCorrection {
+  content: string;
+  eventType?: CoreCareEventType;
+  eventTime?: string | null;
 }
 
 export interface ListEventsResult {
@@ -83,6 +101,7 @@ function toEventView(event: CoreCareEvent): EventView {
     elderId: event.elder_id,
     eventType: event.event_type,
     eventDate: (event.event_time ?? event.created_at).slice(0, 10),
+    eventTime: event.event_time,
     content: displayContent(event.structured_payload),
     status: event.status,
     confidenceBand: event.confidence_band,
@@ -107,6 +126,7 @@ export async function listEvents(
   if (filters.eventType) params.set('event_type', filters.eventType);
   if (filters.dateFrom) params.set('date_from', filters.dateFrom);
   if (filters.dateTo) params.set('date_to', filters.dateTo);
+  if (filters.sourceType) params.set('source_type', filters.sourceType);
   if (filters.cursor) params.set('cursor', filters.cursor);
   params.set('limit', '100');
 
@@ -164,12 +184,39 @@ function correctedPayload(event: EventView, content: string): Record<string, unk
   return payload;
 }
 
+/**
+ * Only a CORRECT decision carries correction fields; Core rejects them (even
+ * as explicit null) on VERIFY / REJECT / EXCLUDE. Unchanged type and time are
+ * omitted rather than echoed so the request stays identical on a retry.
+ */
+function reviewBody(
+  event: EventView,
+  decision: CareEventDecision,
+  correction?: EventCorrection,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    decision,
+    reason_code: 'CAREGIVER_UI_REVIEW',
+    corrected_payload: null,
+    expected_version: event.version,
+  };
+  if (decision !== 'CORRECT') return body;
+  body.corrected_payload = correctedPayload(event, correction?.content ?? event.content);
+  if (correction?.eventType && correction.eventType !== event.eventType) {
+    body.corrected_event_type = correction.eventType;
+  }
+  if (correction && correction.eventTime !== undefined && correction.eventTime !== event.eventTime) {
+    body.corrected_event_time = correction.eventTime;
+  }
+  return body;
+}
+
 export async function reviewEvent(
   config: ApiConfig,
   elderId: string,
   event: EventView,
   decision: CareEventDecision,
-  correctedContent?: string,
+  correction?: EventCorrection,
 ): Promise<EventView> {
   const result = await apiFetch<CoreCareEvent>(
     config,
@@ -177,15 +224,7 @@ export async function reviewEvent(
     {
       method: 'POST',
       headers: { 'Idempotency-Key': createIdempotencyKey('care-event-review') },
-      body: JSON.stringify({
-        decision,
-        reason_code: 'CAREGIVER_UI_REVIEW',
-        corrected_payload:
-          decision === 'CORRECT'
-            ? correctedPayload(event, correctedContent ?? event.content)
-            : null,
-        expected_version: event.version,
-      }),
+      body: JSON.stringify(reviewBody(event, decision, correction)),
     },
   );
   return toEventView(result);

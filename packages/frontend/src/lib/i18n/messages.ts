@@ -328,6 +328,11 @@ const zhHant = {
   'eventFilter.allTypes': '全部',
   'eventFilter.officialEvents': '正式事件',
   'eventFilter.reset': '清除篩選',
+  'eventFilter.source': '來源',
+  'eventFilter.allSources': '全部來源',
+  'eventSource.MANUAL': '人工登錄',
+  'eventSource.CONVERSATION_SESSION': '對話擷取',
+  'eventSource.UNKNOWN': '來源不明',
 
   // ---- event table ----
   'eventTable.empty': '沒有符合條件的事件紀錄。',
@@ -346,9 +351,12 @@ const zhHant = {
   'eventTable.cancel': '取消',
   'eventTable.decision': '覆核決定',
   'eventTable.correctedContent': '修正後內容',
+  'eventTable.correctedType': '修正後事件類型',
+  'eventTable.correctedTime': '修正後事件時間',
+  'eventTable.clearTime': '這個事件不記錄時間',
   'eventTable.confirmTitle': '確認送出覆核？',
   'eventTable.confirmDescription':
-    'Core 會再次檢查授權、同意狀態與資料版本；修正、拒絕或排除可能使相關摘要需要重建。',
+    '系統會再次檢查授權、同意狀態與資料版本；修正、拒絕或排除可能使相關摘要需要重建。',
 
   // ---- evidence metadata ----
   'evidence.sources': '來源筆數',
@@ -1173,6 +1181,11 @@ const en: Record<MessageKey, string> = {
   'eventFilter.allTypes': 'All',
   'eventFilter.officialEvents': 'Official events',
   'eventFilter.reset': 'Clear filters',
+  'eventFilter.source': 'Source',
+  'eventFilter.allSources': 'All sources',
+  'eventSource.MANUAL': 'Entered by staff',
+  'eventSource.CONVERSATION_SESSION': 'From a conversation',
+  'eventSource.UNKNOWN': 'Unknown source',
 
   'eventTable.empty': 'No care events match these filters.',
   'eventTable.emptyTitle': 'No matching events',
@@ -1190,9 +1203,12 @@ const en: Record<MessageKey, string> = {
   'eventTable.cancel': 'Cancel',
   'eventTable.decision': 'Review decision',
   'eventTable.correctedContent': 'Corrected content',
+  'eventTable.correctedType': 'Corrected event type',
+  'eventTable.correctedTime': 'Corrected event time',
+  'eventTable.clearTime': 'This event has no recorded time',
   'eventTable.confirmTitle': 'Submit this review?',
   'eventTable.confirmDescription':
-    'Core will re-check authorization, consent, and the record version. Correcting, rejecting, or excluding an event may require related summaries to be rebuilt.',
+    'The system will re-check authorization, consent, and the record version. Correcting, rejecting, or excluding an event may require related summaries to be rebuilt.',
 
   'evidence.sources': 'Source count',
   'evidence.version': 'Data version',

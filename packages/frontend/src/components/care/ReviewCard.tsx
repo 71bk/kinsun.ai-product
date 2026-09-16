@@ -3,7 +3,7 @@
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
 import { EventReviewControls } from '@/components/care/EventReviewControls';
 import { careEventState, StateCard } from '@/components/StateCard';
-import type { CareEventDecision, EventView } from '@/lib/api/events';
+import type { CareEventDecision, EventCorrection, EventView } from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './ReviewCard.module.css';
@@ -13,7 +13,7 @@ export interface ReviewCardProps {
   onReview: (
     event: EventView,
     decision: CareEventDecision,
-    correctedContent?: string,
+    correction?: EventCorrection,
   ) => Promise<void>;
 }
 

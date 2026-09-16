@@ -23,6 +23,7 @@ import {
   reviewEvent,
   summariseNeedsReview,
   type CareEventDecision,
+  type EventCorrection,
   type EventView,
   type ListEventsFilters,
   type NeedsReviewSummary,
@@ -308,10 +309,10 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   async function handleReviewEvent(
     event: EventView,
     decision: CareEventDecision,
-    correctedContent?: string,
+    correction?: EventCorrection,
   ) {
     try {
-      await reviewEvent(apiConfig, elderId, event, decision, correctedContent);
+      await reviewEvent(apiConfig, elderId, event, decision, correction);
       loadEvents();
       loadNeedsReview();
       setToastKey('toast.eventReviewed');

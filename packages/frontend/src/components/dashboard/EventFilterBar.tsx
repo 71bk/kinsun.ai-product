@@ -1,6 +1,11 @@
 'use client';
 
-import type { CoreCareEventStatus, CoreCareEventType, ListEventsFilters } from '@/lib/api/events';
+import type {
+  CareEventSourceType,
+  CoreCareEventStatus,
+  CoreCareEventType,
+  ListEventsFilters,
+} from '@/lib/api/events';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './EventFilterBar.module.css';
@@ -30,6 +35,7 @@ const EVENT_STATUSES: CoreCareEventStatus[] = [
   'REJECTED',
   'EXCLUDED',
 ];
+const EVENT_SOURCES: CareEventSourceType[] = ['MANUAL', 'CONVERSATION_SESSION', 'UNKNOWN'];
 
 export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
   const { t } = useLocale();
@@ -69,6 +75,25 @@ export function EventFilterBar({ filters, onChange }: EventFilterBarProps) {
           {EVENT_TYPES.map((type) => (
             <option key={type} value={type}>
               {t(`eventType.${type}` as MessageKey)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.field}>
+        <span>{t('eventFilter.source')}</span>
+        <select
+          value={filters.sourceType ?? ''}
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              sourceType: (event.target.value || undefined) as CareEventSourceType | undefined,
+            })
+          }
+        >
+          <option value="">{t('eventFilter.allSources')}</option>
+          {EVENT_SOURCES.map((source) => (
+            <option key={source} value={source}>
+              {t(`eventSource.${source}` as MessageKey)}
             </option>
           ))}
         </select>
