@@ -23,6 +23,8 @@ from app.services.care_event_rendering import (
 )
 from app.services.consent_service import ConsentService
 
+MAX_DAILY_SUMMARY_EVENTS = 32
+
 
 class SummaryService:
     def __init__(self, session: AsyncSession, tenant_id: UUID) -> None:
@@ -78,9 +80,19 @@ class SummaryService:
                     effective_time <= ends_at,
                 )
                 .order_by(effective_time, CareEvent.id)
-                .limit(32)
+                .limit(MAX_DAILY_SUMMARY_EVENTS + 1)
             )
         ).all()
+        if len(rows) > MAX_DAILY_SUMMARY_EVENTS:
+            raise ValidationError(
+                message="Daily summary exceeds the supported event limit",
+                details=[
+                    {
+                        "field": "summary_date",
+                        "reason": "SUMMARY_EVENT_LIMIT_EXCEEDED",
+                    }
+                ],
+            )
         items = [
             SummaryItem(
                 category=SUMMARY_CATEGORY_BY_EVENT_TYPE.get(

@@ -1,5 +1,10 @@
 # AGENTS.md
 
+- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
+- AsyncSession.execute 的 mock 應使用 AsyncMock 回傳同步 MagicMock Result，
+  `Result.all()` 不是 coroutine。摘要／事件更新後若立即序列化 server-generated
+  `updated_at`，必須在 async flush 載入該值，避免隱式 IO；以實際 ORM 更新驗證。
+
 - 更新日期：2026-09-02
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。

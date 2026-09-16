@@ -120,7 +120,12 @@ async def generate_summary(
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
-    """Human-triggered deterministic draft; it never publishes a family report."""
+    """Human-triggered deterministic draft; it never publishes a family report.
+
+    Uses the Asia/Taipei day and current VERIFIED/CORRECTED event versions.
+    More than 32 events returns 422 with SUMMARY_EVENT_LIMIT_EXCEEDED; no partial
+    draft, summary version or outbox event is written.
+    """
 
     await authorize_elder(session, actor_context, elder_id, "summary:review")
     idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)

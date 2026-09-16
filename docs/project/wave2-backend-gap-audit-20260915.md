@@ -36,6 +36,10 @@ C01 已有 dashboard 指標、今日行程、指定派案工作台、跨 worker 
 
 ### B02：現有行為與待驗證限制
 
+2026-09-16 增量：已修正超過 32 筆時靜默截斷，改為 422；台北日界保持不變。
+本機驗證與尚待 CI／UI 驗收的範圍見 [B02 report](b02-summary-acceptance-20260916.md)。
+以下保留原始稽核背景。
+
 [`SummaryService.generate_from_verified_events`](../../services/core-api/app/services/summary_service.py)
 使用 `Asia/Taipei` 的日界並限制最多 32 筆事件；分類涵蓋飲食、活動、睡眠、用藥陳述、社交與重要事件。
 [`care_event_rendering.py`](../../services/core-api/app/services/care_event_rendering.py)

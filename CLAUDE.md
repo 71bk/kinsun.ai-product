@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
+- AsyncSession.execute 的 AsyncMock 要回傳同步 MagicMock Result；`all()` 不需 await。
+  摘要／事件更新後須在 async flush 載入 server-generated `updated_at`，避免回應序列化
+  觸發隱式 IO，並以實際 ORM 更新測試驗證。
+
 - 更新日期：2026-09-02
 - 校準基準：`main` at `03cd170`
 - 適用範圍：整個 `kinsun.ai` repository

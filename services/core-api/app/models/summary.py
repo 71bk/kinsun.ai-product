@@ -16,6 +16,8 @@ from app.db.base import SCHEMA_NAME, Base, BaseModel, TenantScopedMixin
 class DailySummary(BaseModel, TenantScopedMixin):
     __tablename__ = "daily_summary"
     __pk_name__ = "summary_id"
+    # Responses serialize updated_at immediately after an async update/flush.
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
