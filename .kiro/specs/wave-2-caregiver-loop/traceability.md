@@ -114,6 +114,11 @@ Core unit 1176 passed；新增 native proposal → VERIFY HTTP → adoption DB r
 四種寬度及修正／清除／來源分頁／409／403 的 synthetic Browser 驗證通過，真實登入 DB
 寫入仍待驗收。見 [前端核對紀錄](../../../docs/project/b03-b04-frontend-verification-20260916.md)。
 
+2026-09-16 B03／B04 已在 Supabase development 依序套用 `f4b6d8e0a213`、`a5c7e9f1b324`；
+五個新增欄位、兩個約束與既有資料指紋比對通過，新版 Core `/ready` 200。
+這解除前端接線的開發 schema 前置條件，尚非 UI／真實登入寫入或 production 驗收。
+見 [開發升級紀錄](../../../docs/project/b03-b04-development-migration-20260916.md)。
+
 2026-09-15 新工作台 real-auth E2E 已完成本機驗收：開始 200、提交完成 201、跨 worker
 交班／三種待辦、跨分頁更新、完成與撤權清除；DB／outbox 核對且全部 campaign 憑證撤銷。
 實測修正重疊派案引發 Dashboard 500，Core 1,416 passed；新 DB regression 由本次 PR CI 追蹤。

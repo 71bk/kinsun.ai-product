@@ -1,5 +1,9 @@
 # B03 事件類型／時間修正 — 2026-09-15
 
+2026-09-16 更新：本 migration 已連同 B04 套用至 Supabase development，新版 Core
+readiness 通過。見 [開發升級紀錄](b03-b04-development-migration-20260916.md)；
+以下保留原切片交付時的驗證範圍。
+
 ## 範圍與交付
 
 US-B03 原先 CORRECT 僅版本化 payload，event_type／event_time 無法修正。
