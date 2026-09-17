@@ -197,6 +197,7 @@ async def list_family_reports(
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
+    """List published reports allowed by each recipient's current report-type share scope."""
     await authorize_elder(session, actor_context, elder_id, "family_report:read")
     service = ReportService(session, actor_context.tenant_id)
     reports = await service.list_for_family(
@@ -214,6 +215,7 @@ async def get_family_report(
     actor_context: ActorContext = Depends(require_active_actor),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
+    """Recheck current recipient share scope; narrowed access returns a non-disclosing 404."""
     service = ReportService(session, actor_context.tenant_id)
     report = await service.get_for_family(
         report_id=report_id,

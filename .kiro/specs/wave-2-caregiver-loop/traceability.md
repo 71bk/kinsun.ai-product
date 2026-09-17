@@ -1,6 +1,6 @@
 # Wave 2 Caregiver Loop Traceability
 
-- 更新日期：2026-09-08
+- 更新日期：2026-09-17
 - 狀態：C04／F02 第一切片已完成本機驗收、PR #32 CI／合併與 main CI；非 production 或整個 Wave 2 完成。下表保留各階段本機基線，最新結案證據見下方。
 
 | Requirement | Product linkage | Domain authority | Security gate | Executable evidence | Status |
@@ -9,6 +9,17 @@
 | R2 candidate action | US-F02；Story Map Wave 2 | Runtime proposal → private `CareEventVersion` proposal → VERIFY promotion → Core `CareActionCandidate`；只有 ADOPT 呼叫 R1 formal command | `care_action:*` elder scope、professional role、allowlisted source/action、medical text deny gate、future ≤30-day due、optimistic candidate/source version、immutable provenance | Agent 515 tests；Core 1103 unit tests；frontend 299 tests；82-path contract validator；production build；8 組 RWD/locale visual QA | `VERIFIED_LOCAL` |
 
 ## Evidence boundary
+
+### 家屬報表讀取與 B02 摘要前端增量（2026-09-17）
+
+家屬報表 list/detail 每次依目前 relationship share scope 重驗報表類型，縮限後
+不再讀到原先可見報表。摘要可按需展開目前已覆核來源事件，依選定日期重新產生
+待覆核版本；重試保留 idempotency key，授權失效清除工作區。
+本機 Core 相關單元 36 項、前端相關 74 項、正式建置及契約靜態／live 驗證通過；
+合成資料瀏覽器檢查涵蓋中英文、手機至桌面、確認／錯誤／空白／撤權狀態。
+新增 PostgreSQL 縮限回歸已收集但未執行，尚無本切片真實登入或部署驗收。
+來源導覽不是原始逐字片段或生成時快照，因此 B02 仍不標為整體完成。
+詳見 [交付紀錄](../../../docs/project/report-scope-summary-workflow-20260917.md)。
 
 ### B02 摘要驗收與後端修正（2026-09-16）
 

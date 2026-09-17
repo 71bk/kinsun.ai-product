@@ -1,4 +1,4 @@
-import { apiFetch, createIdempotencyKey, type ApiConfig } from './client';
+import { ApiRequestError, apiFetch, createIdempotencyKey, type ApiConfig } from './client';
 
 export type CoreCareEventType =
   | 'MEAL'
@@ -138,6 +138,20 @@ export async function listEvents(
     items: result.items.map(toEventView),
     nextCursor: result.next_cursor,
   };
+}
+
+/** Fetch on demand through Core's live scope gate; never treat an unreviewed source as fact. */
+export async function getSummarySourceEvent(
+  config: ApiConfig, elderId: string, eventId: string,
+): Promise<EventView> {
+  const result = await apiFetch<CoreCareEvent>(
+    config, `/api/v1/elders/${encodeURIComponent(elderId)}/care-events/${encodeURIComponent(eventId)}`,
+  );
+  if (result.elder_id !== elderId || result.event_id !== eventId ||
+      !['VERIFIED', 'CORRECTED'].includes(result.status)) {
+    throw new ApiRequestError(404, 'Source unavailable');
+  }
+  return toEventView(result);
 }
 
 export interface NeedsReviewSummary {

@@ -9,7 +9,7 @@ import ElderDetailPage from './page';
 const mocks = vi.hoisted(() => ({
   workspace: vi.fn(), actions: vi.fn(), candidates: vi.fn(), events: vi.fn(),
   create: vi.fn(), update: vi.fn(), adopt: vi.fn(), dismiss: vi.fn(), needsReview: vi.fn(), review: vi.fn(),
-  summaries: vi.fn(), generateSummary: vi.fn(), reviewSummary: vi.fn(),
+  summaries: vi.fn(), generateSummary: vi.fn(), reviewSummary: vi.fn(), source: vi.fn(),
 }));
 vi.mock('@/lib/runtime-config', () => ({ getRuntimeConfig: async () => ({ credentialStatus: 'present', apiBaseUrl: '/backend/core' }) }));
 vi.mock('@/lib/api/elders', () => ({ getElderWorkspace: mocks.workspace }));
@@ -18,7 +18,7 @@ vi.mock('@/lib/api/care-actions', () => ({
   createCareAction: mocks.create, updateCareAction: mocks.update,
   adoptCareActionCandidate: mocks.adopt, dismissCareActionCandidate: mocks.dismiss,
 }));
-vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: mocks.review }));
+vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: mocks.review, getSummarySourceEvent: mocks.source }));
 vi.mock('@/lib/api/summaries', () => ({ listSummaries: mocks.summaries, generateSummary: mocks.generateSummary, reviewSummary: mocks.reviewSummary }));
 
 const workspace = {
@@ -141,13 +141,14 @@ describe('dashboard daily summary entry', () => {
     await openSummaryQuery({ tab: 'summaries' });
     await screen.findByText('2026-09-09');
     fireEvent.click(await screen.findByRole('button', { name: "Generate today's summary" }));
-    await screen.findByText(overflow
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm generation' }));
+    await screen.findAllByText(overflow
       ? 'This day has more than the supported 32 reviewed events. No new summary was generated. View the care-event timeline; reloading or retrying will not resolve this limit.'
       : 'The daily summary could not be generated. Reload and try again.');
     expect(mocks.generateSummary).toHaveBeenCalledTimes(1);
     expect(mocks.summaries).toHaveBeenCalledTimes(1);
     expect(screen.getByText('2026-09-09')).toBeTruthy();
-    expect(screen.queryByText("Today's review draft was generated.")).toBeNull();
+    expect(screen.queryByText('The review draft was generated.')).toBeNull();
   });
 
   it('opens the exact snapshot date after authorization and permits clearing the filter', async () => {
@@ -213,6 +214,99 @@ describe('dashboard daily summary entry', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Daily summaries' }));
     await waitFor(() => expect(mocks.summaries).toHaveBeenCalledTimes(2));
     expect(screen.queryByText('2026-09-09')).toBeNull();
+  });
+});
+
+describe('summary source and regeneration workflow', () => {
+  const summary = {
+    summaryId: 'summary', elderId: 'synthetic-elder', date: '2026-09-09', status: 'STALE',
+    version: 2, items: [{ category: 'MEAL', text: 'Synthetic old summary', sourceEventIds: ['source'], dataStatus: 'PRESENT' }],
+    missingFields: [], conflictFlags: [], generatedAt: '2026-09-09T00:00:00Z', updatedAt: '2026-09-09T00:00:00Z',
+  };
+  beforeEach(() => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read', 'summary:review', 'care_event:read'] });
+    mocks.summaries.mockResolvedValue({ items: [summary] });
+    mocks.source.mockResolvedValue({ ...source, eventTime: '2026-09-09T00:00:00Z' });
+  });
+
+  it('loads sources only on expansion and fetches again after reopening', async () => {
+    await openSummaryQuery();
+    expect(mocks.source).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'View source event source' }));
+    await screen.findByText(source.content);
+    expect(mocks.source).toHaveBeenLastCalledWith(expect.anything(), 'synthetic-elder', 'source');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide source event source' }));
+    expect(screen.queryByText(source.content)).toBeNull();
+    mocks.source.mockResolvedValueOnce({ ...source, version: 3, content: 'Synthetic current correction' });
+    fireEvent.click(screen.getByRole('button', { name: 'View source event source' }));
+    await screen.findByText('Synthetic current correction');
+    expect(mocks.source).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores a late source response after closing the source', async () => {
+    const pending = deferred<typeof source>();
+    mocks.source.mockReturnValueOnce(pending.promise);
+    await openSummaryQuery();
+    fireEvent.click(await screen.findByRole('button', { name: 'View source event source' }));
+    await screen.findByRole('status', { busy: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Hide source event source' }));
+    await act(async () => pending.resolve(source));
+    expect(screen.queryByText(source.content)).toBeNull();
+  });
+
+  it('only offers source reads and mutations with the corresponding workspace permissions', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['summary:read'] });
+    await openSummaryQuery();
+    await screen.findByText('Synthetic old summary');
+    expect(screen.queryByRole('button', { name: /source event|Regenerate|Generate summary/ })).toBeNull();
+    expect(mocks.source).not.toHaveBeenCalled();
+  });
+
+  it('confirms the historical date, prevents duplicate commands and displays the new review version', async () => {
+    const pending = deferred<unknown>();
+    mocks.generateSummary.mockReturnValueOnce(pending.promise);
+    await openSummaryQuery();
+    fireEvent.click(await screen.findByRole('button', { name: 'Regenerate summary' }));
+    expect(mocks.generateSummary).not.toHaveBeenCalled();
+    await screen.findByText(/current reviewed events for 2026-09-09 in Taipei time/);
+    const confirm = screen.getByRole('button', { name: 'Confirm generation' });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    expect(mocks.generateSummary).toHaveBeenCalledTimes(1);
+    expect(mocks.generateSummary).toHaveBeenCalledWith(expect.anything(), 'synthetic-elder', '2026-09-09', expect.stringMatching(/^summary-generate-/));
+    mocks.summaries.mockResolvedValueOnce({ items: [{ ...summary, status: 'NEEDS_REVIEW', version: 3, items: [] }] });
+    await act(async () => pending.resolve({}));
+    await screen.findByRole('button', { name: 'Verify summary' });
+    expect(screen.queryByText('Synthetic old summary')).toBeNull();
+    expect(mocks.reviewSummary).not.toHaveBeenCalled();
+  });
+
+  it('reuses the command key when retrying an uncertain generation failure', async () => {
+    mocks.generateSummary.mockRejectedValueOnce(new Error('Synthetic network failure')).mockResolvedValueOnce({});
+    await openSummaryQuery();
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate summary for 2026-09-09' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm generation' }));
+    await screen.findAllByText('The daily summary could not be generated. Reload and try again.');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm generation' }));
+    await waitFor(() => expect(mocks.generateSummary).toHaveBeenCalledTimes(2));
+    expect(mocks.generateSummary.mock.calls[1]).toEqual(mocks.generateSummary.mock.calls[0]);
+  });
+
+  it.each(['source', 'generate'] as const)('clears all elder data when %s access is revoked', async (command) => {
+    await openSummaryQuery();
+    mocks.workspace.mockRejectedValueOnce(new ApiRequestError(404, 'Synthetic denial'));
+    if (command === 'source') {
+      mocks.source.mockRejectedValueOnce(new ApiRequestError(404, 'Synthetic denial'));
+      fireEvent.click(await screen.findByRole('button', { name: 'View source event source' }));
+    } else {
+      mocks.generateSummary.mockRejectedValueOnce(new ApiRequestError(404, 'Synthetic denial'));
+      fireEvent.click(await screen.findByRole('button', { name: 'Regenerate summary' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Confirm generation' }));
+    }
+    await waitFor(() => expect(mocks.workspace).toHaveBeenCalledTimes(2));
+    await screen.findByRole('heading', { name: 'No access' });
+    expectHidden();
+    expect(screen.queryByText('Synthetic old summary')).toBeNull();
   });
 });
 

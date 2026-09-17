@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
+import { SummarySource } from '@/components/care/SummarySource';
 import { CareActionPanel } from '@/components/care/CareActionPanel';
 import { EventFilterBar } from '@/components/dashboard/EventFilterBar';
 import { EventTable } from '@/components/dashboard/EventTable';
@@ -15,7 +16,7 @@ import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Toast } from '@/components/ui/Toast';
-import { ApiRequestError } from '@/lib/api/client';
+import { ApiRequestError, createIdempotencyKey } from '@/lib/api/client';
 import { calendarDate } from '@/lib/api/daily-summary-snapshot';
 import { getElderWorkspace, type ElderWorkspaceView } from '@/lib/api/elders';
 import {
@@ -58,6 +59,13 @@ const TAB_LABEL: Record<Tab, MessageKey> = {
 };
 
 const REVIEWABLE_SUMMARY_STATUSES = ['DRAFT', 'NEEDS_REVIEW'] as const;
+
+function todayInTaipei(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  return ['year', 'month', 'day'].map((type) => parts.find((part) => part.type === type)?.value).join('-');
+}
 
 function describeError(error: unknown, fallback: MessageKey): MessageKey {
   if (fallback === 'error.generateSummaryFailed' && error instanceof ApiRequestError &&
@@ -126,6 +134,8 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
     decision: ReviewSummaryDecision;
   } | null>(null);
   const [summaryBusy, setSummaryBusy] = useState(false);
+  const summaryCommand = useRef(false);
+  const [pendingGeneration, setPendingGeneration] = useState<{ date: string; key: string } | null>(null);
   const [toastKey, setToastKey] = useState<MessageKey | null>(null);
 
   const recheckAccess = useCallback(() => {
@@ -143,6 +153,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
     summaryRequest.current += 1;
     setNeedsReview(null);
     setPendingSummary(null);
+    setPendingGeneration(null);
     setToastKey(null);
     // A successful workspace read followed by another denied list must not
     // create an automatic unmount/refetch loop. Explicit Retry starts a new check.
@@ -254,6 +265,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
 
   const canReviewSummaries = workspace?.allowedActions.includes('summary:review') ?? false;
   const canReadSummaries = workspace?.allowedActions.includes('summary:read') ?? false;
+  const canReadSourceEvents = workspace?.allowedActions.includes('care_event:read') ?? false;
   const canReadCareActions = workspace?.allowedActions.includes('care_action:read') ?? false;
   const canCreateCareActions = workspace?.allowedActions.includes('care_action:create') ?? false;
   const canUpdateCareActions = workspace?.allowedActions.includes('care_action:update') ?? false;
@@ -296,7 +308,12 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
     if (tab === 'events') loadEvents();
     if (tab === 'memories') loadMemories();
     if (tab === 'summaries') loadSummaries();
-    return () => { eventRequest.current += 1; summaryRequest.current += 1; };
+    return () => {
+      eventRequest.current += 1;
+      summaryRequest.current += 1;
+      setPendingGeneration(null);
+      setPendingSummary(null);
+    };
   }, [loadEvents, loadMemories, loadSummaries, tab, workspace]);
 
   useEffect(() => {
@@ -350,38 +367,46 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   }
 
   async function handleSummaryReview() {
-    if (!pendingSummary) return;
+    if (!pendingSummary || summaryCommand.current) return;
+    summaryCommand.current = true;
+    const request = summaryRequest.current;
     setSummaryBusy(true);
+    setErrorKey(null);
     try {
       await reviewSummary(apiConfig, elderId, pendingSummary.summary, pendingSummary.decision);
+      if (request !== summaryRequest.current) return;
       setPendingSummary(null);
       loadSummaries();
       setToastKey('toast.summaryReviewed');
     } catch (error) {
-      setErrorKey(describeError(error, 'error.reviewSummaryFailed'));
+      if (request !== summaryRequest.current) return;
+      setPendingSummary(null);
+      if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) recheckAccess();
+      else setErrorKey(describeError(error, 'error.reviewSummaryFailed'));
     } finally {
+      summaryCommand.current = false;
       setSummaryBusy(false);
     }
   }
 
   async function handleGenerateSummary() {
+    if (!pendingGeneration || summaryCommand.current) return;
+    summaryCommand.current = true;
+    const request = summaryRequest.current;
     setSummaryBusy(true);
+    setErrorKey(null);
     try {
-      const dateParts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Taipei',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).formatToParts(new Date());
-      const part = (type: 'year' | 'month' | 'day') =>
-        dateParts.find((item) => item.type === type)?.value ?? '';
-      const summaryDate = `${part('year')}-${part('month')}-${part('day')}`;
-      await generateSummary(apiConfig, elderId, summaryDate);
+      await generateSummary(apiConfig, elderId, pendingGeneration.date, pendingGeneration.key);
+      if (request !== summaryRequest.current) return;
+      setPendingGeneration(null);
       loadSummaries();
       setToastKey('toast.summaryGenerated');
     } catch (error) {
-      setErrorKey(describeError(error, 'error.generateSummaryFailed'));
+      if (request !== summaryRequest.current) return;
+      if (error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) recheckAccess();
+      else setErrorKey(describeError(error, 'error.generateSummaryFailed'));
     } finally {
+      summaryCommand.current = false;
       setSummaryBusy(false);
     }
   }
@@ -573,14 +598,17 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
                 </button>
               </div>}
               <p className={styles.notice}>{t('elderDetail.summaryNotice')}</p>
-              {canReviewSummaries && !summaryDate && (
+              {canReviewSummaries && (
                 <button
                   className={styles.primaryButton}
                   disabled={summaryBusy}
-                  onClick={() => void handleGenerateSummary()}
+                  onClick={() => {
+                    setErrorKey(null);
+                    setPendingGeneration({ date: summaryDate ?? todayInTaipei(), key: createIdempotencyKey('summary-generate') });
+                  }}
                   type="button"
                 >
-                  {t('summaryReview.generateToday')}
+                  {summaryDate ? t('summaryReview.generateDate', { date: summaryDate }) : t('summaryReview.generateToday')}
                 </button>
               )}
               {!errorKey && summaries.length === 0 && (
@@ -600,10 +628,19 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
                 return (
                   <StateCard
                     actions={
-                      reviewable ? (
+                      canReviewSummaries ? (
                         <>
+                          {summary.status !== 'WITHDRAWN' && <button
+                            className={styles.secondaryButton} disabled={summaryBusy} type="button"
+                            onClick={() => {
+                              setErrorKey(null);
+                              setPendingGeneration({ date: summary.date, key: createIdempotencyKey('summary-generate') });
+                            }}
+                          >{t('summaryReview.regenerate')}</button>}
+                          {reviewable && <>
                           <button
                             className={styles.secondaryButton}
+                            disabled={summaryBusy}
                             onClick={() => setPendingSummary({ summary, decision: 'REJECT' })}
                             type="button"
                           >
@@ -611,20 +648,23 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
                           </button>
                           <button
                             className={styles.primaryButton}
+                            disabled={summaryBusy}
                             onClick={() => setPendingSummary({ summary, decision: 'VERIFY' })}
                             type="button"
                           >
                             {t('summaryReview.verify')}
                           </button>
+                          </>}
                         </>
                       ) : undefined
                     }
-                    key={summary.summaryId}
+                    key={`${summary.summaryId}:${summary.version}`}
                     meta={<EvidenceBlock sourceCount={sourceCount} version={summary.version} />}
                     state={summaryState(summary.status)}
                     stateLabel={t(`summaryStatus.${summary.status}` as MessageKey)}
                     title={summary.date}
                   >
+                    {summary.status === 'STALE' && <p className={styles.notice} role="status">{t('summaryReview.staleNotice')}</p>}
                     {summary.items.length === 0 ? (
                       <p className={styles.notice}>{t('elderDetail.summaryNoItems')}</p>
                     ) : (
@@ -636,13 +676,10 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
                             <span className={styles.dataStatus}>
                               {t(`dataStatus.${item.dataStatus}` as MessageKey)}
                             </span>
-                            <span className={styles.dataStatus}>
-                              {t('summaryReview.sourceRefs', {
-                                refs: item.sourceEventIds
-                                  .map((sourceId) => sourceId.slice(0, 8))
-                                  .join(listSeparator),
-                              })}
-                            </span>
+                            {canReadSourceEvents ? item.sourceEventIds.map((sourceId) => (
+                              <SummarySource key={sourceId} config={apiConfig} elderId={elderId}
+                                eventId={sourceId} onAccessDenied={recheckAccess} />
+                            )) : <span className={styles.dataStatus}>{t('summarySource.noPermission')}</span>}
                           </li>
                         ))}
                       </ul>
@@ -667,6 +704,18 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
         </section>
       )}
 
+      <ConfirmationDialog
+        busy={summaryBusy}
+        confirmLabel={t('summaryReview.generateConfirm')}
+        description={<>
+          <p>{t('summaryReview.generateDescription', { date: pendingGeneration?.date ?? '' })}</p>
+          {errorKey && <p role="alert">{t(errorKey)}</p>}
+        </>}
+        onCancel={() => setPendingGeneration(null)}
+        onConfirm={() => void handleGenerateSummary()}
+        open={pendingGeneration !== null}
+        title={t('summaryReview.generateTitle')}
+      />
       <ConfirmationDialog
         busy={summaryBusy}
         confirmLabel={

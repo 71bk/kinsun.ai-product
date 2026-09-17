@@ -27,6 +27,13 @@ REPORT_SCOPE = {
 }
 
 
+def _allows_report_type(report_type: str, share_scope: list[str]) -> bool:
+    required_scope = REPORT_SCOPE.get(report_type)
+    return required_scope is not None and (
+        required_scope in share_scope or "REPORT_ALL" in share_scope
+    )
+
+
 class ReportService:
     def __init__(self, session: AsyncSession, tenant_id: UUID) -> None:
         self._session = session
@@ -211,7 +218,11 @@ class ReportService:
                     actor_id=actor_id,
                     current_time=now,
                 )
-                if relationship is not None and relationship.consent_id == consent.id:
+                if (
+                    relationship is not None
+                    and relationship.consent_id == consent.id
+                    and _allows_report_type(report.report_type, relationship.share_scope)
+                ):
                     allowed.append(report)
                     break
         return allowed
@@ -243,7 +254,6 @@ class ReportService:
         consent_id: UUID,
     ) -> list[UUID]:
         now = datetime.now(UTC)
-        required_scope = REPORT_SCOPE[report_type]
         validated: list[UUID] = []
         for relationship_id in relationship_ids:
             relationship = await self._reports.get_family_relationship(
@@ -255,10 +265,7 @@ class ReportService:
             if (
                 relationship is None
                 or relationship.consent_id != consent_id
-                or (
-                    required_scope not in relationship.share_scope
-                    and "REPORT_ALL" not in relationship.share_scope
-                )
+                or not _allows_report_type(report_type, relationship.share_scope)
             ):
                 raise ValidationError(
                     details=[
