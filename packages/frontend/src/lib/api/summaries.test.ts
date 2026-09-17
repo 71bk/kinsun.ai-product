@@ -69,7 +69,7 @@ describe('reviewSummary', () => {
 });
 
 describe('generateSummary', () => {
-  it('posts only the selected date with an idempotency key', async () => {
+  it.each([undefined, 'summary-generate-stable-retry'])('posts only the selected date with key %s', async (key) => {
     const fetchMock = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) =>
       new Response(
         JSON.stringify({
@@ -98,11 +98,12 @@ describe('generateSummary', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    await generateSummary(config, 'synthetic-elder', '2026-08-14');
+    await generateSummary(config, 'synthetic-elder', '2026-08-14', key);
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain('/summaries/generate');
     expect(new Headers(init?.headers).get('Idempotency-Key')).toMatch('summary-generate-');
+    if (key) expect(new Headers(init?.headers).get('Idempotency-Key')).toBe(key);
     expect(JSON.parse(String(init?.body))).toEqual({ summary_date: '2026-08-14' });
   });
 });

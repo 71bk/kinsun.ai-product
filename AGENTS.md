@@ -1,5 +1,11 @@
 # AGENTS.md
 
+- 家屬報表讀取須重驗目前 `family_relationship.share_scope` 與報表類型；
+  `care_relationship.scope`、有效 Consent 或發布時 snapshot 都不能單獨替代此檢查。
+  摘要來源事件單筆 API 只提供目前版本，不可標示為生成當時快照或原始逐字稿。
+- Browser QA 的 Core 錯誤 fixture 必須符合完整 ErrorEnvelopeV1（含 correlation_id、
+  reason_code、retryable、details），否則會測到 malformed response，而非目標錯誤提示。
+
 - Care Event 的 evidence ref 必須使用 `evidence:<UUID>`；測試資料也須遵守契約。
   `synthetic:evidence` 會被 API 安全過濾，不能為了測試通過而放寬來源格式。
 

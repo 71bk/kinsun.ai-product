@@ -8,6 +8,17 @@
 
 ## 已在本次收斂
 
+### 2026-09-17 家屬報表讀取與摘要操作
+
+家屬報表清單與單筆讀取每次重驗 `family_relationship.share_scope` 是否允許目前
+`report_type`（或 `REPORT_ALL`），與發布使用同一規則；縮限後清單排除，單筆回 404。
+不改 response schema。新增 HTTP 隔離回歸與 disposable DB 回歸，實際執行狀態見
+`docs/project/report-scope-summary-workflow-20260917.md`。
+
+照護端摘要使用既有事件單筆讀取與 `summaries/generate`，來源為目前已覆核事件內容，
+不是原始逐字片段或歷史版本快照。可選摘要日期重新產生待覆核版本；既有 `rebuild`
+仍只標記 STALE，不應顯示為已完成重算。未新增 executable endpoint 或放寬來源授權。
+
 - 2026-09-14 新增 `GET /api/v1/home-care/assignments/{assignment_id}/previous-service-record`：
   本次本人有效 IN_PROGRESS 派案須有獨立 `service_record:history:read` 及 `assignment:read`。
   來源限同 tenant／care unit／elder、已完成且不重疊的正式 v1 人工紀錄，允許跨 worker 交接；

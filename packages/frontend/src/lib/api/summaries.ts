@@ -119,13 +119,14 @@ export async function generateSummary(
   config: ApiConfig,
   elderId: string,
   summaryDate: string,
+  idempotencyKey = createIdempotencyKey('summary-generate'),
 ): Promise<SummaryView> {
   const result = await apiFetch<CoreSummary>(
     config,
     `/api/v1/elders/${elderId}/summaries/generate`,
     {
       method: 'POST',
-      headers: { 'Idempotency-Key': createIdempotencyKey('summary-generate') },
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify({ summary_date: summaryDate }),
     },
   );

@@ -5061,6 +5061,7 @@
           "family-reports"
         ],
         "summary": "List Family Reports",
+        "description": "List published reports allowed by each recipient's current report-type share scope.",
         "operationId": "list_family_reports_api_v1_family_elders__elder_id__reports_get",
         "parameters": [
           {
@@ -5133,6 +5134,7 @@
           "family-reports"
         ],
         "summary": "Get Family Report",
+        "description": "Recheck current recipient share scope; narrowed access returns a non-disclosing 404.",
         "operationId": "get_family_report_api_v1_family_reports__report_id__get",
         "parameters": [
           {

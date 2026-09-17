@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+- 家屬報表每次讀取都須以目前 `family_relationship.share_scope` 驗證報表類型；
+  一般 read scope、Consent 或發布 snapshot 不等於目前分享範圍。摘要來源事件讀取是
+  目前已覆核版本，不是生成時的歷史快照或原始逐字稿。
+- Core 錯誤 Browser QA fixture 須完整符合 ErrorEnvelopeV1，包含 correlation_id、
+  reason_code、retryable、details；不完整 envelope 只會驗到 malformed response。
+
 - Care Event 證據識別（含 synthetic fixture）使用 `evidence:<UUID>`；
   不合法字串會被過濾，修 fixture，不放寬 API 的證據格式規則。
 

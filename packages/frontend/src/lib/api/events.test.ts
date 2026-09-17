@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from './client';
-import { listEvents, reviewEvent, summariseNeedsReview, type EventView } from './events';
+import { getSummarySourceEvent, listEvents, reviewEvent, summariseNeedsReview, type EventView } from './events';
 
 const config: ApiConfig = { apiBaseUrl: '/backend/core/' };
 
@@ -39,6 +39,25 @@ function event(overrides: Record<string, unknown> = {}) {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+describe('summary source reads', () => {
+  it('fetches the exact source on demand and exposes its current reviewed version', async () => {
+    const fetchMock = vi.fn<Parameters<typeof fetch>, ReturnType<typeof fetch>>(async () =>
+      success(event({ status: 'CORRECTED', version: 3 })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await getSummarySourceEvent(config, 'elder-1', 'event-1')).toMatchObject({ status: 'CORRECTED', version: 3 });
+    expect(fetchMock.mock.calls[0][0]).toBe('/backend/core/api/v1/elders/elder-1/care-events/event-1');
+  });
+
+  it.each([
+    { status: 'EXCLUDED' }, { status: 'DELETED' }, { status: 'NEEDS_REVIEW' },
+    { elder_id: 'another-elder' }, { event_id: 'another-event' },
+  ])('does not render unsafe or mismatched source %j', async (override) => {
+    vi.stubGlobal('fetch', vi.fn(async () => success(event({ status: 'VERIFIED', ...override }))));
+    await expect(getSummarySourceEvent(config, 'elder-1', 'event-1')).rejects.toMatchObject({ status: 404 });
+  });
 });
 
 describe('listEvents', () => {
