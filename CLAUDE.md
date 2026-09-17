@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+- Migration 測試的 Alembic 使用獨立連線；schema reset、UPDATE 及 constraint 驗證的
+  transaction context 都必須先結束，再執行 upgrade／downgrade，避免 CI 等鎖。
+
 - 2026-09-17：本人文字偏好新增獨立自動記憶分支，見 ADR 0022 與
   `docs/project/personal-memory-demo.md`。需新同意 scope `personal_memory_auto_save=true`、
   STANDARD profile、`EVIDENCE_AWARE_MEMORY=true` 與 `PERSONAL_MEMORY_ENABLED=true`；

@@ -1,5 +1,9 @@
 # AGENTS.md
 
+- Migration 測試呼叫 Alembic 前須結束其他連線的 schema reset、DML 及查詢交易；
+  不只 DROP，UPDATE 後直接 downgrade 或驗證 constraint 後直接 upgrade 也可能互相等鎖。
+  Alembic 使用獨立連線，測試必須在兩次操作間 commit／離開 transaction context。
+
 - 2026-09-17 個人自述記憶新增獨立分支（ADR 0022）：只有本人文字回合、明確
   `personal_memory_auto_save=true` 的 LONG_TERM_MEMORY 同意、STANDARD profile 與兩項
   `EVIDENCE_AWARE_MEMORY`／`PERSONAL_MEMORY_ENABLED` flags 全部符合才自動保存。

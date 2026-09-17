@@ -36,6 +36,7 @@ from alembic.config import Config
 async def test_personal_food_kind_migration_is_additive_and_downgrade_guarded(test_engine):
     async with test_engine.begin() as conn:
         await conn.run_sync(_drop_all_tables)
+    async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, "a5c7e9f1b324")
     ids = {name: uuid4() for name in ("tenant", "elder", "memory")}
     change = text("UPDATE eldercare_ai.memory SET memory_kind=:kind WHERE memory_id=:memory")
@@ -82,10 +83,13 @@ async def test_personal_food_kind_migration_is_additive_and_downgrade_guarded(te
             await conn.run_sync(_run_downgrade, "a5c7e9f1b324")
     async with test_engine.begin() as conn:
         await conn.execute(change, {**ids, "kind": "MUSIC_PREFERENCE"})
+    async with test_engine.begin() as conn:
         await conn.run_sync(_run_downgrade, "a5c7e9f1b324")
+    async with test_engine.begin() as conn:
         with pytest.raises(IntegrityError):
             async with conn.begin_nested():
                 await conn.execute(change, {**ids, "kind": "FOOD_PREFERENCE"})
+    async with test_engine.begin() as conn:
         await conn.run_sync(_run_upgrade, "head")
 
 
