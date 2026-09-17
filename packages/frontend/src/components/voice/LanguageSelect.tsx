@@ -6,15 +6,13 @@ import styles from './LanguageSelect.module.css';
 export interface LanguageOption {
   language: SpeechLanguage;
   label: string;
-  /** Stated plainly when the reply cannot be spoken back in this language. */
-  replyIsTextOnly: boolean;
 }
 
+// Keep Taiwanese and Hakka out of the elder-facing selector until their speech
+// providers have been deployed and validated. Backend language routes remain intact.
 export const LANGUAGE_OPTIONS: readonly LanguageOption[] = [
-  { language: 'zh-TW', label: '國語', replyIsTextOnly: false },
-  { language: 'nan-TW', label: '台語', replyIsTextOnly: true },
-  { language: 'hak-TW', label: '客語', replyIsTextOnly: true },
-  { language: 'en-US', label: 'English', replyIsTextOnly: false },
+  { language: 'zh-TW', label: '國語' },
+  { language: 'en-US', label: 'English' },
 ];
 
 export interface LanguageSelectProps {
@@ -30,13 +28,8 @@ export interface LanguageSelectProps {
  * The language is chosen rather than detected because getting it wrong is not a
  * neutral error: transcribing Taiwanese with a Mandarin model returns fluent text
  * the elder never said, and that text would then be treated as what they said.
- *
- * Where the reply cannot be spoken back, the option says so up front instead of
- * letting the elder discover the silence after speaking.
  */
 export function LanguageSelect({ language, onChange, disabled }: LanguageSelectProps) {
-  const selected = LANGUAGE_OPTIONS.find((option) => option.language === language);
-
   return (
     <div className={styles.wrapper}>
       <div aria-label="選擇您要說的語言" className={styles.group} role="radiogroup">
@@ -58,12 +51,6 @@ export function LanguageSelect({ language, onChange, disabled }: LanguageSelectP
           );
         })}
       </div>
-
-      {selected?.replyIsTextOnly === true && (
-        <p className={styles.hint}>
-          {selected.label}目前可以聽懂您說的話，回答會用文字顯示，還沒辦法唸出來。
-        </p>
-      )}
     </div>
   );
 }

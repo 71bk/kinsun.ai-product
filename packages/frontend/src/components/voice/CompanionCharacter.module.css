@@ -12,23 +12,6 @@
   padding: var(--space-4);
 }
 
-@media (max-width: 31rem) {
-  .characterWrapper {
-    width: 230px;
-    height: 230px;
-  }
-
-  .glow {
-    width: 200px;
-    height: 200px;
-  }
-
-  .characterImage {
-    width: 220px;
-    height: 220px;
-  }
-}
-
 .characterWrapper {
   position: relative;
   display: flex;
@@ -68,6 +51,23 @@
   max-width: 100%;
   height: auto;
   box-shadow: var(--shadow-1);
+}
+
+@media (max-width: 31rem) {
+  .characterWrapper {
+    width: 230px;
+    height: 230px;
+  }
+
+  .glow {
+    width: 200px;
+    height: 200px;
+  }
+
+  .characterImage {
+    width: 220px;
+    height: 220px;
+  }
 }
 
 /* ---- the single idle animation: a slow breathe, transform/opacity only ----

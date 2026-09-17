@@ -32,6 +32,12 @@
 
 ## 本機啟動
 
+若使用 IDE 的一般 3000／8000／8001 開發環境，`scripts/ide/run-local.ps1` 不會自動
+開啟個人記憶。需在本機、不提交的根目錄 `.env` 設定 `EVIDENCE_AWARE_MEMORY=true`
+與 `PERSONAL_MEMORY_ENABLED=true`，再重啟 Core；帳號仍需新版 LONG_TERM_MEMORY 同意。
+先前功能關閉時送出的句子不會回填，開啟後需重新送出並確認「已記住」receipt。
+以下專用錄影 launcher 則會對自己的程序開啟這兩個 flags。
+
 先備妥既有 `.env` 的開發資料庫、真實模型與登入設定，並在 `services/core-api` 執行
 `alembic upgrade head`（增量 revision `b6d8f0a2c435`）。不改 baseline、不清空資料庫。
 前端需已設定 `NEXT_PUBLIC_CONSENT_POLICY_VERSION` 為有效政策版本。

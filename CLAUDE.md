@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+- 個人記憶專用 Demo 與一般 IDE 服務的 flags 分開；未保存時先核對實際服務開關及新版
+  Consent scope。句型通過不等於保存成功，且不得代替真實使用者授予記憶同意。
+
+- Core 成功回應的 Browser QA fixture 必須提供完整 meta（correlation_id、合法 timestamp、
+  schema_version="1.0"）；空 meta 會造成前端拒絕回應，無法進入預期畫面。
+
 - Migration 測試的 Alembic 使用獨立連線；schema reset、UPDATE 及 constraint 驗證的
   transaction context 都必須先結束，再執行 upgrade／downgrade，避免 CI 等鎖。
 

@@ -1,5 +1,12 @@
 # AGENTS.md
 
+- 個人記憶 Demo 的 3110／8010 launcher flags 不會套用到 IDE 3000／8000 服務。
+  排查未保存時先確認實際服務的 EVIDENCE_AWARE_MEMORY／PERSONAL_MEMORY_ENABLED 與
+  新同意 scope；不能只因句型通過就宣稱該次已保存。不得代替真實使用者授予 Consent。
+
+- Browser QA 的 Core 成功回應 fixture 也必須有完整 meta：correlation_id、合法 timestamp、
+  schema_version="1.0"；空 meta 會被前端拒絕，不能用來驗證已登入／已同意畫面。
+
 - Migration 測試呼叫 Alembic 前須結束其他連線的 schema reset、DML 及查詢交易；
   不只 DROP，UPDATE 後直接 downgrade 或驗證 constraint 後直接 upgrade 也可能互相等鎖。
   Alembic 使用獨立連線，測試必須在兩次操作間 commit／離開 transaction context。
