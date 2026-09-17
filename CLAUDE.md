@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+- Migration 測試的 Alembic 使用獨立連線；schema reset、UPDATE 及 constraint 驗證的
+  transaction context 都必須先結束，再執行 upgrade／downgrade，避免 CI 等鎖。
+
+- 2026-09-17：本人文字偏好新增獨立自動記憶分支，見 ADR 0022 與
+  `docs/project/personal-memory-demo.md`。需新同意 scope `personal_memory_auto_save=true`、
+  STANDARD profile、`EVIDENCE_AWARE_MEMORY=true` 與 `PERSONAL_MEMORY_ENABLED=true`；
+  `AUTO_LOW_RISK_MEMORY` 不需開啟。此分支從 SQL 重新驗證來源與授權，沒有偽造 Graph SYNCED
+  或 Care Event VERIFIED。舊同意、任意語句、日期事件回想與語音自動保存不在本次範圍。
+
 - 家屬報表每次讀取都須以目前 `family_relationship.share_scope` 驗證報表類型；
   一般 read scope、Consent 或發布 snapshot 不等於目前分享範圍。摘要來源事件讀取是
   目前已覆核版本，不是生成時的歷史快照或原始逐字稿。

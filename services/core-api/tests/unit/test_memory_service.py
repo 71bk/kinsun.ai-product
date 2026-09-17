@@ -714,6 +714,7 @@ async def test_trusted_context_passes_low_rollout_state_to_final_gate() -> None:
         active_consent_version=2,
         limit=5,
         allow_auto_low_risk_memory=False,
+        allow_personal_memory=False,
     )
 
 

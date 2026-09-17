@@ -71,12 +71,27 @@
       "minLength": 1,
       "title": "Policy Version",
       "type": "string"
+    },
+    "personal_memory_auto_save": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
     "purposes",
     "actor_confirmation",
     "policy_version"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {"personal_memory_auto_save": {"const": true}},
+        "required": ["personal_memory_auto_save"]
+      },
+      "then": {
+        "properties": {"purposes": {"const": ["LONG_TERM_MEMORY"]}}
+      }
+    }
   ],
   "title": "CreateConsentRequestV1",
   "type": "object",

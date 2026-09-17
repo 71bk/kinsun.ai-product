@@ -23,6 +23,17 @@ from app.schemas.tool import ToolRequest
 from app.services.tool_service import ToolExecutionService
 
 
+def test_auto_save_consent_is_separate_and_not_implied_by_old_requests() -> None:
+    data = dict(purposes=["LONG_TERM_MEMORY"], actor_confirmation=True, policy_version="v1")
+    assert CreateConsentRequest(**data).personal_memory_auto_save is False
+    assert CreateConsentRequest(**data, personal_memory_auto_save=True).personal_memory_auto_save
+    with pytest.raises(ValidationError):
+        CreateConsentRequest(
+            **{**data, "purposes": ["BASIC_VOICE", "LONG_TERM_MEMORY"]},
+            personal_memory_auto_save=True,
+        )
+
+
 def test_voice_ticket_request_rejects_text_only_and_extra_scope() -> None:
     with pytest.raises(ValidationError):
         CreateVoiceTicketRequest(

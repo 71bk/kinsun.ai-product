@@ -24,13 +24,16 @@ export function LongTermMemoryConsentPanel({
 }) {
   return (
     <ConsentPurposeControl
-      description="允許小暖提出想記住的偏好、習慣與重要關係，但每一筆都要由您在畫面上確認。"
+      description="允許小暖記住您明確說出的偏好與一般生活習慣，在以後聊天時使用。"
       details={[
-        '候選內容不是事實，也不會直接成為正式記憶。',
-        '只有您本人按下確認，那筆內容才會成為已確認的記憶。',
-        '目前不支援用語音、照護者或家屬代替您確認。',
+        ...(initialConsent && !initialConsent.scope?.personal_memory_auto_save
+          ? ['目前的舊同意維持逐筆確認模式。如需自動記住偏好，請先停止，再閱讀新說明並重新開啟。']
+          : []),
+        '目前文字聊天支援部分音樂、嗜好、稱呼、飲食偏好及早餐習慣；符合條件時自動保存，不必逐筆確認。',
+        '自動保存會顯示提示，您可撤銷，或在「我的記憶」修改、刪除。同類偏好以最新陳述更新。',
+        '有歧義的內容不自動保存；重要關係等候選仍需本人確認。個人自述不代表照護者已核實。',
       ]}
-      grantConfirmation="系統會記錄您同意「長期記憶」。之後每一筆想記住的內容，仍需要您另外確認。"
+      grantConfirmation="開啟後，支援的本人偏好可以自動記住並用於以後聊天；您隨時可以修改、刪除或停止。其他候選仍需另外確認。"
       grantLabel="開啟長期記憶"
       icon={<Brain size={34} weight="fill" />}
       initialConsent={initialConsent}

@@ -33,6 +33,67 @@ from alembic.config import Config
 
 
 @pytest.mark.asyncio
+async def test_personal_food_kind_migration_is_additive_and_downgrade_guarded(test_engine):
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_drop_all_tables)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "a5c7e9f1b324")
+    ids = {name: uuid4() for name in ("tenant", "elder", "memory")}
+    change = text("UPDATE eldercare_ai.memory SET memory_kind=:kind WHERE memory_id=:memory")
+    async with test_engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.tenant (tenant_id,name,tenant_type) "
+                "VALUES (:tenant,'Synthetic memory migration','DEMO')"
+            ),
+            ids,
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.elder "
+                "(elder_id,tenant_id,display_name,primary_care_setting) "
+                "VALUES (:elder,:tenant,'Synthetic memory migration','HOME_CARE')"
+            ),
+            ids,
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO eldercare_ai.memory "
+                "(memory_id,tenant_id,elder_id,memory_type,memory_kind,consent_version) "
+                "VALUES (:memory,:tenant,:elder,'PREFERENCE','MUSIC_PREFERENCE',1)"
+            ),
+            ids,
+        )
+        with pytest.raises(IntegrityError):
+            async with conn.begin_nested():
+                await conn.execute(change, {**ids, "kind": "FOOD_PREFERENCE"})
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+        assert (
+            await conn.execute(
+                text("SELECT memory_kind FROM eldercare_ai.memory WHERE memory_id=:memory"), ids
+            )
+        ).scalar_one() == "MUSIC_PREFERENCE"
+        await conn.execute(change, {**ids, "kind": "FOOD_PREFERENCE"})
+        with pytest.raises(IntegrityError):
+            async with conn.begin_nested():
+                await conn.execute(change, {**ids, "kind": "UNSUPPORTED"})
+    with pytest.raises(DBAPIError):
+        async with test_engine.begin() as conn:
+            await conn.run_sync(_run_downgrade, "a5c7e9f1b324")
+    async with test_engine.begin() as conn:
+        await conn.execute(change, {**ids, "kind": "MUSIC_PREFERENCE"})
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_downgrade, "a5c7e9f1b324")
+    async with test_engine.begin() as conn:
+        with pytest.raises(IntegrityError):
+            async with conn.begin_nested():
+                await conn.execute(change, {**ids, "kind": "FOOD_PREFERENCE"})
+    async with test_engine.begin() as conn:
+        await conn.run_sync(_run_upgrade, "head")
+
+
+@pytest.mark.asyncio
 async def test_event_source_migration_preserves_unknown_legacy_rows(test_engine):
     async with test_engine.begin() as conn:
         await conn.run_sync(_drop_all_tables)
@@ -173,7 +234,7 @@ _TOTAL_HEAD_TABLE_COUNT = 67
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "a5c7e9f1b324"
+_HEAD_REVISION = "b6d8f0a2c435"
 
 
 def _get_alembic_config() -> Config:

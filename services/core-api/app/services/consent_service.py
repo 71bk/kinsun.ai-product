@@ -88,6 +88,12 @@ class ConsentService:
         idempotency_key: str,
     ) -> list[ConsentGrant]:
         now = datetime.now(UTC)
+        if request.personal_memory_auto_save:
+            from app.repositories.elder_repo import ElderRepository
+
+            elder = await ElderRepository(self._session, self._tenant_id).get_by_id(elder_id)
+            if elder is None or elder.actor_id != actor_id:
+                raise NotFoundError("Resource not found")
         policy = await self._policies.find_active_consent_policy(
             version=request.policy_version,
             current_time=now,
@@ -136,7 +142,14 @@ class ConsentService:
                 purpose_code=purpose.value,
                 status="GRANTED",
                 version=version,
-                scope={"share_scopes": request.share_scopes},
+                scope={
+                    "share_scopes": request.share_scopes,
+                    **(
+                        {"personal_memory_auto_save": True}
+                        if request.personal_memory_auto_save
+                        else {}
+                    ),
+                },
                 granted_by_actor_id=actor_id,
                 confirmation_method="ACTOR_CONFIRMATION",
                 recorded_by_actor_id=actor_id,

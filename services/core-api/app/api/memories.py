@@ -18,6 +18,7 @@ from app.middleware.speech_service_auth import require_speech_service
 from app.models.actor import Actor
 from app.models.conversation import ConversationSession
 from app.policies.memory_retrieval import memory_content_digest
+from app.policies.personal_memory import PERSONAL_MEMORY_POLICY
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.consent import ConsentPurpose
 from app.schemas.memory import (
@@ -34,6 +35,7 @@ from app.schemas.memory import (
 from app.services.authorization_service import authorize_elder
 from app.services.consent_service import ConsentService
 from app.services.memory_service import MemoryService
+from app.services.personal_memory_service import PersonalMemoryService
 
 router = APIRouter(prefix="/api/v1", tags=["memories"])
 
@@ -45,6 +47,9 @@ async def _response(service: MemoryService, memory) -> MemoryResponse:
         elder_id=memory.elder_id,
         memory_type=memory.memory_type,
         content=version.content,
+        source_kind="SELF_STATED"
+        if memory.policy_version == PERSONAL_MEMORY_POLICY
+        else "REVIEWED_EVENT",
         status=memory.status,
         source_event_ids=version.source_event_ids,
         confirmed_by=memory.confirmed_by_actor_id,
@@ -421,6 +426,25 @@ async def update_memory(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     await authorize_elder(session, actor_context, elder_id, "memory:update")
+    service = MemoryService(session, actor_context.tenant_id)
+    memory = await service.get(elder_id, memory_id)
+    if memory is None:
+        raise NotFoundError("Resource not found")
+    if memory.policy_version == PERSONAL_MEMORY_POLICY:
+        await PersonalMemoryService(session, actor_context.tenant_id)._owner(
+            elder_id, actor_context
+        )
+        await session.refresh(memory, with_for_update=True)
+        consent = await ConsentService(session, actor_context.tenant_id).require_active(
+            elder_id=elder_id, purpose=ConsentPurpose.LONG_TERM_MEMORY
+        )
+        if (
+            consent.scope.get("personal_memory_auto_save") is not True
+            or memory.status != "ACTIVE"
+            or memory.consent_id != consent.id
+            or memory.consent_version != consent.version
+        ):
+            raise NotFoundError("Resource not found")
     idem, replay = await _begin(
         session=session,
         actor_context=actor_context,
@@ -434,18 +458,24 @@ async def update_memory(
     )
     if replay.replayed and replay.response_body is not None:
         return success(replay.response_body)
-    service = MemoryService(session, actor_context.tenant_id)
-    memory = await service.get(elder_id, memory_id)
-    if memory is None:
-        raise NotFoundError("Resource not found")
     if not replay.replayed:
-        memory = await service.update(
-            memory=memory,
-            actor_id=actor_context.actor_id,
-            request=request,
-            trace_id=get_correlation_id(),
-            idempotency_key=idempotency_key,
-        )
+        if memory.policy_version == PERSONAL_MEMORY_POLICY:
+            memory = await PersonalMemoryService(session, actor_context.tenant_id).edit(
+                memory=memory,
+                actor=actor_context,
+                content=request.content,
+                expected_version=request.expected_version,
+                trace_id=get_correlation_id(),
+                idempotency_key=idempotency_key,
+            )
+        else:
+            memory = await service.update(
+                memory=memory,
+                actor_id=actor_context.actor_id,
+                request=request,
+                trace_id=get_correlation_id(),
+                idempotency_key=idempotency_key,
+            )
         response_body = (await _response(service, memory)).model_dump(mode="json")
         await idem.complete(
             key=idempotency_key,
@@ -485,6 +515,11 @@ async def delete_memory(
     if memory is None:
         raise NotFoundError("Resource not found")
     if not replay.replayed:
+        if memory.policy_version == PERSONAL_MEMORY_POLICY:
+            await PersonalMemoryService(session, actor_context.tenant_id)._owner(
+                elder_id, actor_context
+            )
+            await session.refresh(memory, with_for_update=True)
         memory = await service.delete(
             memory=memory,
             actor_id=actor_context.actor_id,

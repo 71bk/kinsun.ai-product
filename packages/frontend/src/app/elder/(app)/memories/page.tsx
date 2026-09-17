@@ -14,6 +14,7 @@ import {
   deleteMemoryAsElder,
   listMemories,
   rejectMemoryAsElder,
+  updatePersonalMemory,
   type MemoryListView,
   type MemoryView,
 } from '@/lib/api/memories';
@@ -67,6 +68,7 @@ export default function ElderMemoriesPage() {
       if (!longTermMemory) return;
       setMemories(await listMemories(apiConfig, elderId));
     } catch (caught) {
+      setMemories(null);
       setError(memoryError(caught));
     }
   }, [apiConfig, elderId]);
@@ -83,6 +85,19 @@ export default function ElderMemoriesPage() {
       if (command === 'delete') await deleteMemoryAsElder(apiConfig, elderId, memory);
       await load();
     } catch (caught) {
+      setMemories(null);
+      setError(memoryError(caught));
+      throw caught;
+    }
+  }
+
+  async function handleEdit(memory: MemoryView, content: string) {
+    try {
+      await updatePersonalMemory(apiConfig, elderId, memory, content);
+      await load();
+    } catch (caught) {
+      if (caught instanceof ApiRequestError && [401, 403, 404].includes(caught.status))
+        setMemories(null);
       setError(memoryError(caught));
       throw caught;
     }
@@ -106,7 +121,7 @@ export default function ElderMemoriesPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <h1>我的記憶</h1>
-        <p>小暖只能在您明確按下確認後，才把候選內容變成正式長期記憶。</p>
+        <p>查看小暖記住的本人偏好與已確認內容。您可以修改、刪除，或在同意設定停止記憶。</p>
       </header>
 
       {error && (
@@ -156,7 +171,7 @@ export default function ElderMemoriesPage() {
               <div className={styles.list}>
                 {memories.candidates.map((memory) => (
                   <MemoryCard
-                    key={memory.memoryId}
+                    key={`${memory.memoryId}:${memory.version}`}
                     memory={memory}
                     mode="candidate"
                     onCommand={handleCommand}
@@ -172,21 +187,22 @@ export default function ElderMemoriesPage() {
           <section aria-labelledby="memory-active-title" className={styles.section}>
             <div className={styles.sectionHeader}>
               <div>
-                <h2 id="memory-active-title">已確認的記憶</h2>
-                <p>只有已確認的記憶，會在安全條件成立時提供給小暖使用。</p>
+                <h2 id="memory-active-title">小暖已記住</h2>
+                <p>包括自動保存的本人偏好與您確認過的內容；每次使用仍檢查同意與有效狀態。</p>
               </div>
               <span>{memories.confirmed.length} 筆目前載入</span>
             </div>
             {memories.confirmed.length === 0 ? (
-              <EmptyState description="目前還沒有您確認過的長期記憶。" title="尚無正式記憶" />
+              <EmptyState description="目前沒有可使用的長期記憶。" title="尚無記憶" />
             ) : (
               <div className={styles.list}>
                 {memories.confirmed.map((memory) => (
                   <MemoryCard
-                    key={memory.memoryId}
+                    key={`${memory.memoryId}:${memory.version}`}
                     memory={memory}
                     mode="active"
                     onCommand={handleCommand}
+                    onEdit={handleEdit}
                   />
                 ))}
               </div>

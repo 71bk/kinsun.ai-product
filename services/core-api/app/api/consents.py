@@ -77,10 +77,13 @@ async def create_consents(
         actor_context.tenant_id,
         actor_context.actor_id,
     )
+    payload = request.model_dump(mode="json")
+    if not request.personal_memory_auto_save:
+        payload.pop("personal_memory_auto_save", None)
     replay = await idem.begin(
         key=idempotency_key,
         operation="create_consents",
-        payload={"elder_id": elder_id, **request.model_dump(mode="json")},
+        payload={"elder_id": elder_id, **payload},
     )
     if replay.replayed and replay.response_body is not None:
         return success(replay.response_body)

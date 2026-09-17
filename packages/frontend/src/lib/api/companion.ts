@@ -35,6 +35,7 @@ export interface AsrGateDecision {
 }
 
 export interface CompanionTurn {
+  memory_updates?: { memory_id: string; version: number; content: string }[];
   session_id: string;
   agent_run_id: string;
   trace_id: string;

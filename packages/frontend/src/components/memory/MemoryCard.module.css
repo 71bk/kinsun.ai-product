@@ -101,3 +101,15 @@
     grid-template-columns: 1fr;
   }
 }
+.editInput {
+  display: block;
+  width: 100%;
+  min-height: 6rem;
+  padding: var(--space-3);
+  margin-block: var(--space-3);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+}

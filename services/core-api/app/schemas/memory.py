@@ -164,6 +164,7 @@ class MemoryResponse(BaseModel):
     elder_id: UUID
     memory_type: MemoryType
     content: str
+    source_kind: Literal["SELF_STATED", "REVIEWED_EVENT"] = "REVIEWED_EVENT"
     status: Literal[
         "CANDIDATE",
         "PENDING_CONFIRMATION",

@@ -11,6 +11,7 @@ from app.policies.memory_policy import (
     LOW_MEMORY_KINDS,
     TRUSTED_SPEAKER_LEVELS,
 )
+from app.policies.personal_memory import PERSONAL_MEMORY_POLICY, extract_personal_statement
 
 _CONFIRMATION_METHODS = {"ELDER_UI", "ELDER_VOICE", "WITNESSED_VOICE"}
 CURRENT_MEMORY_EVIDENCE_STATE = "CURRENT"
@@ -59,6 +60,7 @@ def evaluate_memory_trust(
     *,
     current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
     allow_auto_low_risk_memory: bool = False,
+    allow_personal_memory: bool = False,
 ) -> MemoryTrustDecision:
     """Apply the Spec 18 evidence gate without consulting model output."""
     if evidence.evidence_state != CURRENT_MEMORY_EVIDENCE_STATE:
@@ -75,7 +77,8 @@ def evaluate_memory_trust(
     )
     if not evidence.consent_id_present or any(value is None for value in required_values):
         return MemoryTrustDecision(False, "LEGACY_EVIDENCE_MISSING")
-    if evidence.policy_version != current_policy_version:
+    personal = evidence.policy_version == PERSONAL_MEMORY_POLICY
+    if evidence.policy_version != current_policy_version and not personal:
         return MemoryTrustDecision(False, "POLICY_VERSION_STALE")
     if evidence.content_digest != memory_content_digest(evidence.content):
         return MemoryTrustDecision(False, "CONTENT_DIGEST_MISMATCH")
@@ -92,6 +95,22 @@ def evaluate_memory_trust(
         return MemoryTrustDecision(False, "DECISION_SUPPORT_PROFILE_INVALID")
 
     if evidence.actual_risk_level == "LOW":
+        if personal:
+            statement = extract_personal_statement(evidence.content)
+            valid = (
+                allow_personal_memory
+                and statement is not None
+                and statement.content == evidence.content
+                and statement.kind == evidence.memory_kind
+                and evidence.speaker_verification_level == "VERIFIED_ELDER"
+                and evidence.policy_decision == "AUTO_ACTIVATED_LOW"
+                and evidence.verification_level == "POLICY_VERIFIED"
+                and evidence.required_verification == "NONE"
+                and evidence.decision_support_mode == "STANDARD"
+            )
+            return MemoryTrustDecision(
+                bool(valid), "TRUSTED_SELF_STATED" if valid else "PERSONAL_MEMORY_UNTRUSTED"
+            )
         if (
             evidence.memory_kind in LOW_MEMORY_KINDS
             and evidence.policy_decision == "AUTO_ACTIVATED_LOW"
@@ -113,6 +132,8 @@ def evaluate_memory_trust(
         return MemoryTrustDecision(False, "LOW_POLICY_EVIDENCE_INVALID")
 
     if evidence.actual_risk_level == "MEDIUM":
+        if personal:
+            return MemoryTrustDecision(False, "PERSONAL_MEMORY_UNTRUSTED")
         standard_confirmation = (
             evidence.memory_kind not in CONFIRMABLE_MEMORY_KINDS
             or evidence.policy_decision != "ELDER_CONFIRMED_MEDIUM"

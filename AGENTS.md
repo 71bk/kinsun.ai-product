@@ -1,5 +1,18 @@
 # AGENTS.md
 
+- Migration 測試呼叫 Alembic 前須結束其他連線的 schema reset、DML 及查詢交易；
+  不只 DROP，UPDATE 後直接 downgrade 或驗證 constraint 後直接 upgrade 也可能互相等鎖。
+  Alembic 使用獨立連線，測試必須在兩次操作間 commit／離開 transaction context。
+
+- 2026-09-17 個人自述記憶新增獨立分支（ADR 0022）：只有本人文字回合、明確
+  `personal_memory_auto_save=true` 的 LONG_TERM_MEMORY 同意、STANDARD profile 與兩項
+  `EVIDENCE_AWARE_MEMORY`／`PERSONAL_MEMORY_ENABLED` flags 全部符合才自動保存。
+  Core 有界語法擷取音樂、嗜好、稱呼、飲食偏好及早餐習慣；不是任意語句或語音擷取。
+  本分支可直接從 SQL 取用，不需 Care Event VERIFY／Graph SYNCED；來源明示為本人自述，
+  不得改成已核實照護紀錄。既有記憶仍走原本 evidence gate；舊同意不默認升級。
+  同類新陳述更新版本；receipt 撤銷與記憶頁修正／刪除都必須檢查當前版本。
+  詳見 `docs/project/personal-memory-demo.md`。原始 baseline SQL 不變；新 head `b6d8f0a2c435`。
+
 - 家屬報表讀取須重驗目前 `family_relationship.share_scope` 與報表類型；
   `care_relationship.scope`、有效 Consent 或發布時 snapshot 都不能單獨替代此檢查。
   摘要來源事件單筆 API 只提供目前版本，不可標示為生成當時快照或原始逐字稿。

@@ -133,6 +133,34 @@
       "minLength": 1,
       "title": "Model Route",
       "type": "string"
+    },
+    "memory_updates": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "memory_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "memory_id",
+          "version",
+          "content"
+        ]
+      }
     }
   },
   "required": [

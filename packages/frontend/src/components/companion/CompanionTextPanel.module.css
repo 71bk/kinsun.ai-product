@@ -6,6 +6,19 @@
   gap: var(--space-5);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+}
+
 .modeNotice {
   text-align: center;
 }
