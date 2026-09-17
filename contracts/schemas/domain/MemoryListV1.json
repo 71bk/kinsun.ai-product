@@ -113,6 +113,14 @@
           "format": "date-time",
           "title": "Updated At",
           "type": "string"
+        },
+        "source_kind": {
+          "type": "string",
+          "enum": [
+            "SELF_STATED",
+            "REVIEWED_EVENT"
+          ],
+          "default": "REVIEWED_EVENT"
         }
       },
       "required": [

@@ -97,6 +97,10 @@ class MemoryService:
             active_consent_version=consent.version,
             limit=limit,
             allow_auto_low_risk_memory=self._auto_low_risk_memory,
+            allow_personal_memory=(
+                get_settings().personal_memory_enabled
+                and getattr(consent, "scope", {}).get("personal_memory_auto_save") is True
+            ),
         )
 
     async def create_candidate(

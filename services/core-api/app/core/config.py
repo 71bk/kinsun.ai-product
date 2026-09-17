@@ -239,6 +239,7 @@ class Settings(BaseSettings):
     # memories merely because the expanded schema already exists.
     evidence_aware_memory: bool = False
     auto_low_risk_memory: bool = False
+    personal_memory_enabled: bool = False
 
     # ─── Validators ──────────────────────────────────────────────────────────────
 
@@ -575,6 +576,8 @@ class Settings(BaseSettings):
                 )
         if self.auto_low_risk_memory and not self.evidence_aware_memory:
             raise ValueError("EVIDENCE_AWARE_MEMORY must be true when AUTO_LOW_RISK_MEMORY=true")
+        if self.personal_memory_enabled and not self.evidence_aware_memory:
+            raise ValueError("EVIDENCE_AWARE_MEMORY must be true when PERSONAL_MEMORY_ENABLED=true")
         return self
 
     # ─── Secret redaction ────────────────────────────────────────────────────────

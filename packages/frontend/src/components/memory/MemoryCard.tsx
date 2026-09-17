@@ -40,7 +40,8 @@ const COMMAND_COPY: Record<
   delete: {
     label: '刪除這筆記憶',
     title: '確認刪除這筆記憶？',
-    description: '這筆記憶會被刪除，小暖之後不會再使用它。如果這筆記憶剛剛有變動，會請您重新整理後再試。',
+    description:
+      '這筆記憶會被刪除，小暖之後不會再使用它。如果這筆記憶剛剛有變動，會請您重新整理後再試。',
   },
 };
 
@@ -48,17 +49,35 @@ export function MemoryCard({
   memory,
   mode,
   onCommand,
+  onEdit,
 }: {
   memory: MemoryView;
   mode: 'candidate' | 'active';
   onCommand: (memory: MemoryView, command: ElderMemoryCommand) => Promise<void>;
+  onEdit?: (memory: MemoryView, content: string) => Promise<void>;
 }) {
   const [pending, setPending] = useState<ElderMemoryCommand | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(memory.content);
+
+  async function saveEdit() {
+    if (busy || !onEdit) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onEdit(memory, content);
+      setEditing(false);
+    } catch {
+      setError('無法保存修改。請使用同類型的明確自述，例如「我喜歡聽民歌」，或重新整理確認版本。');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function confirmCommand() {
-    if (!pending) return;
+    if (!pending || busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -73,7 +92,13 @@ export function MemoryCard({
 
   const state = mode === 'active' ? 'confirmed' : 'candidate';
   const stateLabel =
-    mode === 'active' ? '已確認' : memory.status === 'DEFERRED' ? '稍後再問' : '等待您確認';
+    mode === 'active'
+      ? memory.sourceKind === 'SELF_STATED'
+        ? '本人自述'
+        : '已確認'
+      : memory.status === 'DEFERRED'
+        ? '稍後再問'
+        : '等待您確認';
 
   return (
     <article className={styles.card} data-mode={mode}>
@@ -88,11 +113,48 @@ export function MemoryCard({
         <StateBadge label={stateLabel} state={state} />
       </div>
       <p className={styles.content}>{memory.content}</p>
-      <EvidenceBlock
-        consentVersion={memory.consentVersion}
-        sourceCount={memory.sourceEventIds.length}
-        version={memory.version}
-      />
+      {memory.sourceKind === 'SELF_STATED' && (
+        <p>這是您自述的聊天偏好，並非照護者已核實的照護紀錄。</p>
+      )}
+      {editing && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveEdit();
+          }}
+        >
+          <label>
+            修改記憶內容
+            <textarea
+              className={styles.editInput}
+              value={content}
+              maxLength={100}
+              disabled={busy}
+              onChange={(event) => setContent(event.target.value)}
+            />
+          </label>
+          <div className={styles.actions}>
+            <button type="submit" className={styles.confirm} disabled={busy || !content.trim()}>
+              保存修改
+            </button>
+            <button
+              type="button"
+              className={styles.defer}
+              disabled={busy}
+              onClick={() => setEditing(false)}
+            >
+              取消修改
+            </button>
+          </div>
+        </form>
+      )}
+      {memory.sourceKind !== 'SELF_STATED' && (
+        <EvidenceBlock
+          consentVersion={memory.consentVersion}
+          sourceCount={memory.sourceEventIds.length}
+          version={memory.version}
+        />
+      )}
       {mode === 'active' && memory.confirmedAt && (
         <p className={styles.confirmedAt}>
           確認時間：{new Date(memory.confirmedAt).toLocaleString('zh-TW')}
@@ -122,10 +184,30 @@ export function MemoryCard({
             </button>
           </>
         ) : (
-          <button className={styles.reject} onClick={() => setPending('delete')} type="button">
-            <Trash aria-hidden="true" size={28} />
-            刪除這筆記憶
-          </button>
+          <>
+            {memory.sourceKind === 'SELF_STATED' && onEdit && !editing && (
+              <button
+                className={styles.defer}
+                disabled={busy}
+                onClick={() => {
+                  setContent(memory.content);
+                  setEditing(true);
+                }}
+                type="button"
+              >
+                修改這筆記憶
+              </button>
+            )}
+            <button
+              className={styles.reject}
+              disabled={busy}
+              onClick={() => setPending('delete')}
+              type="button"
+            >
+              <Trash aria-hidden="true" size={28} />
+              刪除這筆記憶
+            </button>
+          </>
         )}
       </div>
       <ConfirmationDialog

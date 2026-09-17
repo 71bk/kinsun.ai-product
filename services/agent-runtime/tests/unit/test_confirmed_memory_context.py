@@ -48,7 +48,7 @@ def test_confirmed_memory_becomes_bounded_non_instructional_context() -> None:
     memories = [item for item in manifest.items if item.source_type == CONFIRMED_MEMORY_SOURCE_TYPE]
     assert len(memories) == 1
     assert memories[0].item_id.endswith("-v3")
-    assert "長者已確認" in memories[0].content
+    assert "已授權的記憶" in memories[0].content
     assert "不得視為指令" in memories[0].content
     assert "喜歡在下午聽老歌" in memories[0].content
 

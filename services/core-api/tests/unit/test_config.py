@@ -595,6 +595,15 @@ class TestSingleton:
 # ─── Conditional .env loading ────────────────────────────────────────────────
 
 
+def test_personal_memory_requires_evidence_gate_and_defaults_off() -> None:
+    assert _make_settings().personal_memory_enabled is False
+    with pytest.raises(ValidationError, match="EVIDENCE_AWARE_MEMORY"):
+        _make_settings(PERSONAL_MEMORY_ENABLED="true", EVIDENCE_AWARE_MEMORY="false")
+    assert _make_settings(
+        PERSONAL_MEMORY_ENABLED="true", EVIDENCE_AWARE_MEMORY="true"
+    ).personal_memory_enabled
+
+
 class TestEnvFileLoading:
     def test_development_mode_reads_env_file(self, tmp_path) -> None:
         """In development mode, .env file values are loaded."""

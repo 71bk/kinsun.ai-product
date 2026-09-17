@@ -88,6 +88,14 @@ class CompanionTurnRequest(BaseModel):
         return value
 
 
+class PersonalMemoryReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: UUID
+    version: int = Field(ge=1)
+    content: str = Field(min_length=1, max_length=500)
+
+
 class CompanionTurnResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -107,6 +115,7 @@ class CompanionTurnResponse(BaseModel):
     speech_synthesis_expires_at: datetime | None = None
     speech_synthesis_text: str | None = Field(default=None, min_length=1, max_length=3000)
     model_route: str = Field(min_length=1, max_length=200)
+    memory_updates: list[PersonalMemoryReceipt] = Field(default_factory=list, max_length=1)
 
     @model_validator(mode="after")
     def validate_synthesis_transport(self) -> CompanionTurnResponse:

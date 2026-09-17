@@ -10,6 +10,7 @@ export type ConsentPurpose =
   | 'FAMILY_SHARING';
 
 export interface ConsentRecord {
+  scope?: { personal_memory_auto_save?: boolean; [key: string]: unknown };
   consent_id: string;
   purpose_code: ConsentPurpose;
   consent_version: number;
@@ -67,6 +68,7 @@ async function grantConsentPurpose(
       share_scopes: shareScopes,
       actor_confirmation: true,
       policy_version: policyVersion,
+      ...(purpose === 'LONG_TERM_MEMORY' ? { personal_memory_auto_save: true } : {}),
     }),
   });
   const consent = activeConsentForPurpose(result.items, purpose);

@@ -43,6 +43,7 @@ from app.services.companion_request import build_companion_runtime_request
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
 from app.services.knowledge_intent import resolve_turn_purpose
+from app.services.personal_memory_service import PersonalMemoryService
 
 _MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS = 5
 _MAX_VERIFIED_EVENT_CONTEXT_ITEMS = 5
@@ -127,13 +128,19 @@ class CompanionService:
             active_consent_version=consent.version,
             limit=_MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS,
             allow_auto_low_risk_memory=settings.auto_low_risk_memory,
+            allow_personal_memory=(
+                getattr(settings, "personal_memory_enabled", False)
+                and getattr(consent, "scope", {}).get("personal_memory_auto_save") is True
+            ),
         )
         return [
             {
                 "memory_id": str(record.memory_id),
                 "version": record.version,
                 "memory_type": record.memory_type,
-                "content": record.content,
+                "content": ("本人自述的聊天偏好（不是已核實照護紀錄）：" + record.content)
+                if record.self_stated
+                else record.content,
                 "consent_version": record.consent_version,
             }
             for record in records
@@ -474,7 +481,22 @@ class CompanionService:
         )
 
         proposal = runtime_result.event_candidate_proposal
+        memory_updates = []
+        if (
+            turn_purpose == "BASIC_VOICE"
+            and runtime_result.result_status == "SUCCESS"
+            and runtime_result.safety_result.decision == "ALLOW"
+        ):
+            memory_updates = await PersonalMemoryService(self._session, self._tenant_id).capture(
+                conversation=conversation,
+                actor=actor_context,
+                text=input_text,
+                turn_id=agent_run_id,
+                trace_id=correlation_id,
+            )
         memory_proposal = runtime_result.memory_candidate_proposal
+        if memory_updates:
+            memory_proposal = None
         care_action_proposal = runtime_result.care_action_candidate_proposal
         if (
             proposal is not None
@@ -537,4 +559,5 @@ class CompanionService:
             risk_level=runtime_result.safety_result.risk_level,
             reason_codes=runtime_result.reason_codes,
             model_route=self._model_route,
+            memory_updates=memory_updates,
         )

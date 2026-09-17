@@ -182,6 +182,7 @@ describe('Core API integration clients', () => {
     expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
       purposes: ['LONG_TERM_MEMORY'],
       share_scopes: [],
+      personal_memory_auto_save: true,
       actor_confirmation: true,
       policy_version: 'demo-consent-v1',
     });

@@ -9,6 +9,8 @@ from uuid import UUID
 from sqlalchemy import and_, func, or_, select
 
 from app.models.care_event import CareEvent, CareEventVersion
+from app.models.conversation import ConversationSession
+from app.models.elder import Elder
 from app.models.graph_projection import GraphProjectionRecord
 from app.models.memory import Memory, MemoryConfirmation, MemoryVersion
 from app.policies.decision_support import profile_binding_is_current
@@ -18,6 +20,7 @@ from app.policies.memory_retrieval import (
     MemoryTrustEvidence,
     evaluate_memory_trust,
 )
+from app.policies.personal_memory import PERSONAL_MEMORY_EXTRACTOR, PERSONAL_MEMORY_POLICY
 from app.repositories.base import BaseRepository
 from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 
@@ -31,6 +34,7 @@ class ConfirmedMemoryContextRecord:
     memory_type: str
     content: str
     consent_version: int
+    self_stated: bool = False
 
 
 @dataclass(frozen=True)
@@ -182,6 +186,7 @@ class MemoryRepository(BaseRepository):
         limit: int,
         current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
         allow_auto_low_risk_memory: bool = False,
+        allow_personal_memory: bool = False,
     ) -> list[ConfirmedMemoryContextRecord]:
         """Return only bounded records that pass the Spec 18 final gate."""
         candidate_limit = min(max(limit * 4, limit), 64)
@@ -251,7 +256,7 @@ class MemoryRepository(BaseRepository):
                     MemoryVersion.version == Memory.current_version,
                 ),
             )
-            .join(
+            .outerjoin(
                 GraphProjectionRecord,
                 and_(
                     GraphProjectionRecord.source_type == "memory",
@@ -269,7 +274,34 @@ class MemoryRepository(BaseRepository):
                 Memory.deleted_at.is_(None),
                 Memory.consent_id == active_consent_id,
                 Memory.consent_version == active_consent_version,
-                Memory.policy_version == current_policy_version,
+                or_(
+                    Memory.policy_version == current_policy_version,
+                    and_(allow_personal_memory, Memory.policy_version == PERSONAL_MEMORY_POLICY),
+                ),
+                or_(
+                    and_(
+                        Memory.policy_version != PERSONAL_MEMORY_POLICY,
+                        GraphProjectionRecord.graph_key.is_not(None),
+                    ),
+                    and_(
+                        allow_personal_memory,
+                        Memory.policy_version == PERSONAL_MEMORY_POLICY,
+                        MemoryVersion.extractor_version == PERSONAL_MEMORY_EXTRACTOR,
+                        select(ConversationSession.id)
+                        .join(Elder, Elder.id == ConversationSession.elder_id)
+                        .where(
+                            ConversationSession.id == MemoryVersion.source_session_id,
+                            ConversationSession.elder_id == elder_id,
+                            ConversationSession.tenant_id == self._tenant_id,
+                            ConversationSession.state == "COMPLETED",
+                            ConversationSession.input_mode == "text",
+                            Elder.tenant_id == self._tenant_id,
+                            Elder.actor_id == ConversationSession.initiator_actor_id,
+                            Elder.actor_id == MemoryVersion.created_by_actor_id,
+                        )
+                        .exists(),
+                    ),
+                ),
                 MemoryVersion.version_status == "ACTIVE",
                 MemoryVersion.valid_from <= func.now(),
                 or_(MemoryVersion.valid_to.is_(None), MemoryVersion.valid_to > func.now()),
@@ -322,6 +354,7 @@ class MemoryRepository(BaseRepository):
                 ),
                 current_policy_version=current_policy_version,
                 allow_auto_low_risk_memory=allow_auto_low_risk_memory,
+                allow_personal_memory=allow_personal_memory,
             )
             if not decision.allowed:
                 continue
@@ -332,6 +365,7 @@ class MemoryRepository(BaseRepository):
                     memory_type=row[2],
                     content=row[3],
                     consent_version=row[4],
+                    self_stated=row[8] == PERSONAL_MEMORY_POLICY,
                 )
             )
             if len(trusted) == limit:

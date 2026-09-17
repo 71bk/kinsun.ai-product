@@ -11,6 +11,7 @@ export type CoreMemoryStatus =
   'CANDIDATE' | 'PENDING_CONFIRMATION' | 'CONFIRMED' | 'ACTIVE' | 'DEFERRED' | 'REJECTED' | 'INACTIVE' | 'DELETED';
 
 interface CoreMemory {
+  source_kind?: 'SELF_STATED' | 'REVIEWED_EVENT';
   memory_id: string;
   elder_id: string;
   memory_type: CoreMemoryType;
@@ -34,6 +35,7 @@ interface CoreMemoryList {
 }
 
 export interface MemoryView {
+  sourceKind?: 'SELF_STATED' | 'REVIEWED_EVENT';
   memoryId: string;
   elderId: string;
   memoryType: CoreMemoryType;
@@ -57,6 +59,7 @@ export interface MemoryListView {
 
 function toMemoryView(memory: CoreMemory): MemoryView {
   return {
+    sourceKind: memory.source_kind ?? 'REVIEWED_EVENT',
     memoryId: memory.memory_id,
     elderId: memory.elder_id,
     memoryType: memory.memory_type,
@@ -180,7 +183,7 @@ export function deleteMemory(
 export function deleteMemoryAsElder(
   config: ApiConfig,
   elderId: string,
-  memory: MemoryView,
+  memory: Pick<MemoryView, 'memoryId' | 'version'>,
 ): Promise<{ memory_id: string; status: 'DELETED' }> {
   return apiFetch(config, `/api/v1/elders/${elderId}/memories/${memory.memoryId}`, {
     method: 'DELETE',
@@ -190,4 +193,12 @@ export function deleteMemoryAsElder(
       expected_version: memory.version,
     }),
   });
+}
+
+export async function updatePersonalMemory(config: ApiConfig, elderId: string, memory: MemoryView, content: string): Promise<MemoryView> {
+  const result = await apiFetch<CoreMemory>(config, `/api/v1/elders/${elderId}/memories/${memory.memoryId}`, {
+    method: 'PATCH', headers: { 'Idempotency-Key': createIdempotencyKey('elder-memory-edit') },
+    body: JSON.stringify({ content, expected_version: memory.version, reason_code: 'ELDER_UPDATED_PERSONAL_MEMORY' }),
+  });
+  return toMemoryView(result);
 }
