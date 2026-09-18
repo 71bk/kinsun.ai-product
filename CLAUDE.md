@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+- pytest 參數化測試的參數不設預設值；缺少獨立測試 DB 時仍先用合成設定跑 collection，
+  並把 SQL 執行留給 disposable DB。Consent request 欄位變更須同步前端完整 payload 測試。
+
 - 語音個人記憶依 ADR 0023：新增 `personal_memory_voice_auto_save` 明確 opt-in，
   不擴張舊同意。保留 Core ASR evidence 與 voice extractor，UI 修正不能冒充文字來源；
   已保存記憶不因 ASR TTL 到期被排除。TTS 失敗仍須顯示 Core 保存 receipt。

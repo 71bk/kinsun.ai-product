@@ -1,5 +1,9 @@
 # AGENTS.md
 
+- pytest `parametrize` 管理的測試參數不可另設 Python 預設值，否則整個 suite 在 collection
+  就失敗；integration 無獨立 DB 時仍可用合成設定執行 `--collect-only`，但不代表 SQL 已驗證。
+  Consent request 新增欄位時，同步 `core-integration.test.ts` 的完整 payload assertion。
+
 - 2026-09-18 語音個人記憶依 ADR 0023：除文字保存 scope，還須明確
   `personal_memory_voice_auto_save=true`。只能使用 Core 授權的本人 ASR evidence，
   保存與讀取均保留 voice extractor／ASR reference；UI 修正不可轉成 text extractor。

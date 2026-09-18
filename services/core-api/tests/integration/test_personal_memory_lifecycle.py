@@ -26,7 +26,7 @@ from app.services.personal_memory_service import PersonalMemoryService
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("voice_status", [None, "ALLOWED", "CONFIRMED"])
-async def test_personal_lifecycle_real_sql(db_session, monkeypatch, voice_status=None):
+async def test_personal_lifecycle_real_sql(db_session, monkeypatch, voice_status):
     settings = get_settings()
     monkeypatch.setattr(settings, "personal_memory_enabled", True)
     monkeypatch.setattr(settings, "evidence_aware_memory", True)
