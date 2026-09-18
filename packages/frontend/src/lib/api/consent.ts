@@ -68,7 +68,9 @@ async function grantConsentPurpose(
       share_scopes: shareScopes,
       actor_confirmation: true,
       policy_version: policyVersion,
-      ...(purpose === 'LONG_TERM_MEMORY' ? { personal_memory_auto_save: true } : {}),
+      ...(purpose === 'LONG_TERM_MEMORY'
+        ? { personal_memory_auto_save: true, personal_memory_voice_auto_save: true }
+        : {}),
     }),
   });
   const consent = activeConsentForPurpose(result.items, purpose);

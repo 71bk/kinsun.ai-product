@@ -1,5 +1,11 @@
 # AGENTS.md
 
+- 2026-09-18 語音個人記憶依 ADR 0023：除文字保存 scope，還須明確
+  `personal_memory_voice_auto_save=true`。只能使用 Core 授權的本人 ASR evidence，
+  保存與讀取均保留 voice extractor／ASR reference；UI 修正不可轉成 text extractor。
+  ASR TTL 限制新回合，不限制已保存記憶壽命。TTS／播放失敗不得宣稱記憶未保存。
+  舊同意不自動升級；不得代替真實使用者授予 consent。
+
 - 個人記憶 Demo 的 3110／8010 launcher flags 不會套用到 IDE 3000／8000 服務。
   排查未保存時先確認實際服務的 EVIDENCE_AWARE_MEMORY／PERSONAL_MEMORY_ENABLED 與
   新同意 scope；不能只因句型通過就宣稱該次已保存。不得代替真實使用者授予 Consent。

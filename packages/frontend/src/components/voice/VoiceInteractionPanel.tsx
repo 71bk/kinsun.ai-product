@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiConfig } from '@/lib/api/client';
 import { confirmAsrGate } from '@/lib/api/companion';
+import type { CompanionTurn } from '@/lib/api/companion';
+import { translate } from '@/lib/i18n/messages';
 import { BrowserVoiceRecorder } from '@/lib/voice/recorder';
 import { speakTurn, transcribeTurn, VoiceTurnError } from '@/lib/voice/canonical-voice-turn';
 import type { SpeechLanguage } from '@/lib/voice/speech-gateway-client';
@@ -12,6 +14,7 @@ import { readDevPreviewState } from './dev-preview';
 import { LowConfidenceCard } from './LowConfidenceCard';
 import { MicPermissionGuide } from './MicPermissionGuide';
 import { RecordButton } from './RecordButton';
+import { VoiceMemoryReceipt } from './VoiceMemoryReceipt';
 import { STATE_COPY, type VoicePageState } from './voice-page-state';
 import styles from './VoiceInteractionPanel.module.css';
 
@@ -73,6 +76,10 @@ export function VoiceInteractionPanel({
   const [errorText, setErrorText] = useState('');
   const [noticeText, setNoticeText] = useState('');
   const [language, setLanguage] = useState<SpeechLanguage>('zh-TW');
+  const [memoryUpdates, setMemoryUpdates] = useState<NonNullable<CompanionTurn['memory_updates']>>(
+    [],
+  );
+  const generation = useRef(0);
 
   const recorderRef = useRef<BrowserVoiceRecorder | null>(null);
   const audioUrlRef = useRef<string | null>(null);
@@ -119,17 +126,25 @@ export function VoiceInteractionPanel({
     // Preview renders states only — no microphone, no recording.
     if (isPreview) return;
     recorderRef.current = new BrowserVoiceRecorder();
-  }, [consentGranted, isPreview]);
+  }, [consentGranted, isPreview, apiConfig, elderId]);
 
-  // Object URLs from synthesized audio are revoked on unmount so a long session
-  // does not accumulate audio blobs in memory.
-  useEffect(
-    () => () => {
+  // Drop scoped receipts and late responses when the account/consent changes.
+  useEffect(() => {
+    setMemoryUpdates([]);
+    setDisplayText('');
+    setTranscript('');
+    setPendingTranscript('');
+    setPendingSessionId(null);
+    setErrorText('');
+    setNoticeText('');
+    setState('idle');
+    return () => {
+      generation.current += 1;
       asrAbortRef.current?.abort();
+      recorderRef.current?.dispose();
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-    },
-    [],
-  );
+    };
+  }, [apiConfig, elderId, consentGranted]);
 
   /**
    * Sends confirmed text to Core and plays the spoken reply.
@@ -139,10 +154,16 @@ export function VoiceInteractionPanel({
    */
   const runCompanion = useCallback(
     async (sessionId: string, confirmedText: string) => {
+      const currentGeneration = generation.current;
       setState('generating');
       try {
         const reply = await speakTurn(apiConfig, sessionId, confirmedText, language);
+        if (currentGeneration !== generation.current) {
+          if (reply.audioUrl) URL.revokeObjectURL(reply.audioUrl);
+          return;
+        }
         setDisplayText(reply.replyText);
+        setMemoryUpdates(reply.memoryUpdates ?? []);
 
         if (reply.textOnlyByLanguage) {
           // Said explicitly rather than leaving the elder waiting for a voice
@@ -154,15 +175,21 @@ export function VoiceInteractionPanel({
           if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
           audioUrlRef.current = reply.audioUrl;
           setState('playing');
-          await recorderRef.current?.playAudioFromUrl(reply.audioUrl);
+          try {
+            await recorderRef.current?.playAudioFromUrl(reply.audioUrl);
+          } catch {
+            // Core may already have saved memory: playback cannot undo that fact.
+            if (currentGeneration === generation.current) {
+              setNoticeText(translate('zh-Hant', 'companionAudio.unavailable'));
+            }
+          }
         }
-        setState('idle');
+        if (currentGeneration === generation.current) setState('idle');
       } catch (cause) {
-        // The reply is not shown as something the elder got wrong: a companion
-        // failure is a service problem, and the utterance was not stored.
+        if (currentGeneration !== generation.current) return;
         setErrorText(
           cause instanceof VoiceTurnError && cause.stage === 'companion'
-            ? '陪伴服務暫時沒有回應，請稍後再試。'
+            ? translate('zh-Hant', 'voiceMemory.turnUnavailable')
             : '目前無法開始這次對話，請稍後再試。',
         );
         setState('idle');
@@ -181,6 +208,7 @@ export function VoiceInteractionPanel({
       return;
     }
     setDisplayText('');
+    setMemoryUpdates([]);
     setTranscript('');
     setPendingTranscript('');
     setPendingSessionId(null);
@@ -247,6 +275,7 @@ export function VoiceInteractionPanel({
   // The three handlers also drop any preview override, so the full-screen card
   // stays dismissible when a reviewer opened it via ?previewState=lowConfidence.
   const handleConfirmTranscript = useCallback(async () => {
+    const currentGeneration = generation.current;
     setPreviewState(null);
     const confirmed = pendingTranscript;
     const sessionId = pendingSessionId;
@@ -256,12 +285,14 @@ export function VoiceInteractionPanel({
     }
     try {
       const decision = await confirmAsrGate(apiConfig, sessionId, 'CONFIRM');
+      if (currentGeneration !== generation.current) return;
       if (decision.decision !== 'CAN_SEND_TO_AGENT') {
         setErrorText('確認已逾時，請再說一次。');
         setState('idle');
         return;
       }
     } catch {
+      if (currentGeneration !== generation.current) return;
       setErrorText('目前無法確認這段語音，請再說一次。');
       setState('idle');
       return;
@@ -357,6 +388,14 @@ export function VoiceInteractionPanel({
         )}
 
         {transcript && <p className={styles.transcript}>您說：「{transcript}」</p>}
+        {memoryUpdates.map((memory) => (
+          <VoiceMemoryReceipt
+            key={`${elderId}:${memory.memory_id}:${memory.version}`}
+            apiConfig={apiConfig}
+            elderId={elderId}
+            memory={memory}
+          />
+        ))}
       </div>
 
       {effectiveState === 'lowConfidence' && cardTranscript !== '' && (

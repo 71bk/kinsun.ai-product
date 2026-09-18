@@ -83,6 +83,13 @@ export class BrowserVoiceRecorder {
     this.currentAudio?.pause();
     this.currentAudio = null;
   }
+
+  dispose(): void {
+    this.stopPlayback();
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') this.mediaRecorder.stop();
+    this.stream?.getTracks().forEach((track) => track.stop());
+    this.stream = null;
+  }
 }
 
 export function blobToBase64(blob: Blob): Promise<string> {

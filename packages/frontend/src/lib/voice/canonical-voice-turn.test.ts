@@ -66,6 +66,25 @@ beforeEach(() => {
 });
 
 describe('canonical voice turn', () => {
+  it('returns Core memory receipts even when synthesis fails', async () => {
+    const receipt = { memory_id: 'synthetic-memory', version: 1, content: '請叫我王大爺。' };
+    mocks.runCompanionTurn.mockResolvedValue({
+      reply_text: '好的。',
+      reply_language: 'zh-TW',
+      session_id: 'session-1',
+      agent_run_id: 'run-1',
+      result_status: 'SUCCESS',
+      safety_decision: 'ALLOW',
+      transport_status: 'SYNTHESIS_CAPABILITY_ISSUED',
+      speech_synthesis_capability: 'synthetic',
+      speech_synthesis_text: '好的。',
+      memory_updates: [receipt],
+    });
+    mocks.synthesizeSpeech.mockRejectedValue(new Error('synthetic provider unavailable'));
+    const reply = await speakTurn(config, 'session-1', '請叫我王大爺', 'zh-TW');
+    expect(reply.memoryUpdates).toEqual([receipt]);
+    expect(reply.audioUrl).toBeNull();
+  });
   it('binds browser audio to a Core-issued ticket and trusted gate decision', async () => {
     const result = await transcribeTurn(config, 'elder-1', new Blob(['audio']), 'en-US');
 

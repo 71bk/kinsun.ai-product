@@ -132,6 +132,10 @@ class CompanionService:
                 getattr(settings, "personal_memory_enabled", False)
                 and getattr(consent, "scope", {}).get("personal_memory_auto_save") is True
             ),
+            allow_personal_voice_memory=(
+                getattr(settings, "personal_memory_enabled", False)
+                and getattr(consent, "scope", {}).get("personal_memory_voice_auto_save") is True
+            ),
         )
         return [
             {
@@ -493,6 +497,7 @@ class CompanionService:
                 text=input_text,
                 turn_id=agent_run_id,
                 trace_id=correlation_id,
+                asr_evidence=asr_evidence,
             )
         memory_proposal = runtime_result.memory_candidate_proposal
         if memory_updates:

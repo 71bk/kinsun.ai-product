@@ -120,6 +120,19 @@ def check(label: str, payload: dict, schema: dict) -> None:
 async def main() -> int:
     app = create_app()
     runtime_openapi = app.openapi()
+    # Optional voice auto-save remains opt-in in both executable and published schemas.
+    from app.schemas.consent import CreateConsentRequest
+
+    voice_grant = {
+        "purposes": ["LONG_TERM_MEMORY"], "actor_confirmation": True,
+        "policy_version": "synthetic-v1", "personal_memory_auto_save": True,
+        "personal_memory_voice_auto_save": True,
+    }
+    check("voice memory consent vs contract", voice_grant,
+          load("domain/CreateConsentRequestV1.json"))
+    assert CreateConsentRequest.model_validate(voice_grant).personal_memory_voice_auto_save
+    legacy_grant = {k: v for k, v in voice_grant.items() if k != "personal_memory_voice_auto_save"}
+    assert not CreateConsentRequest.model_validate(legacy_grant).personal_memory_voice_auto_save
     methods = {"get", "post", "patch", "delete"}
     runtime_operations = {
         (path, method)

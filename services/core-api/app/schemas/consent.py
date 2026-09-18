@@ -37,6 +37,7 @@ class CreateConsentRequest(BaseModel):
     expires_at: datetime | None = None
     actor_confirmation: bool
     personal_memory_auto_save: bool = False
+    personal_memory_voice_auto_save: bool = False
     policy_version: str = Field(min_length=1, max_length=40)
 
     @model_validator(mode="after")
@@ -45,6 +46,8 @@ class CreateConsentRequest(BaseModel):
             raise ValueError("actor_confirmation must be true to create a grant")
         if self.personal_memory_auto_save and self.purposes != [ConsentPurpose.LONG_TERM_MEMORY]:
             raise ValueError("personal_memory_auto_save requires a separate LONG_TERM_MEMORY grant")
+        if self.personal_memory_voice_auto_save and not self.personal_memory_auto_save:
+            raise ValueError("voice auto-save requires personal_memory_auto_save")
         if (
             self.effective_at is not None
             and self.expires_at is not None

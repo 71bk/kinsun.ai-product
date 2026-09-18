@@ -106,9 +106,11 @@ export async function synthesizeSpeech(
   agentRunId: string,
   capability: string,
   speakingSpeed: 'slow' | 'normal' | 'fast' = 'normal',
+  signal?: AbortSignal,
 ): Promise<SynthesisResult> {
   const response = await fetch(`${gatewayBaseUrl()}/api/v1/speech/syntheses`, {
     method: 'POST',
+    signal,
     headers: {
       Authorization: `Bearer ${capability}`,
       'Content-Type': 'application/json',

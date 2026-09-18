@@ -1,5 +1,8 @@
 """Self-statement grammar and command boundaries, using synthetic data only."""
 
+import hashlib
+import hmac
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -93,7 +96,12 @@ def case(monkeypatch):
         refresh=AsyncMock(),
         add=MagicMock(side_effect=add),
     )
-    settings = SimpleNamespace(personal_memory_enabled=True, evidence_aware_memory=True)
+    settings = SimpleNamespace(
+        personal_memory_enabled=True,
+        evidence_aware_memory=True,
+        asr_gate_enabled=True,
+        asr_gate_hmac_secret="synthetic-voice-memory-secret-32-bytes",
+    )
     consent = SimpleNamespace(id=uuid4(), version=1, scope={"personal_memory_auto_save": True})
     require = AsyncMock(return_value=consent)
     profile = AsyncMock(side_effect=lambda **kw: default_standard_resolution(kw["data_class"]))
@@ -126,13 +134,14 @@ def case(monkeypatch):
     )
 
 
-async def capture(case, text="我喜歡聽老歌"):
+async def capture(case, text="我喜歡聽老歌", evidence=None):
     return await case.service.capture(
         conversation=case.conversation,
         actor=case.actor,
         text=text,
         turn_id=uuid4(),
         trace_id="synthetic-personal",
+        asr_evidence=evidence,
     )
 
 
@@ -230,3 +239,150 @@ async def test_edit_rechecks_owner_version_and_content(case):
     await case.service.edit(**args, content="我喜歡聽民歌", expected_version=1)
     assert memory.current_version == 2 and memory.status == "ACTIVE"
     assert case.added[-1].source_session_id == case.conversation.id
+
+
+def voice_evidence(case, status="ALLOWED", text="請叫我王大爺"):
+    case.conversation.input_mode = "voice"
+    case.consent.scope["personal_memory_voice_auto_save"] = True
+    return SimpleNamespace(
+        id=uuid4(),
+        session_id=case.conversation.id,
+        tenant_id=case.conversation.tenant_id,
+        elder_id=case.conversation.elder_id,
+        gate_status=status,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        transcript_digest=hmac.new(
+            case.settings.asr_gate_hmac_secret.encode(), text.encode(), hashlib.sha256
+        ).hexdigest(),
+        confirmation_action="CONFIRM" if status == "CONFIRMED" else None,
+        confirmed_by_actor_id=case.actor.actor_id if status == "CONFIRMED" else None,
+        confirmed_at=datetime.now(UTC) if status == "CONFIRMED" else None,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mode,status",
+    [("voice", "ALLOWED"), ("voice", "CONFIRMED"), ("voice_with_text_fallback", "ALLOWED")],
+)
+async def test_voice_save_retains_asr_source_and_edit_retains_voice_provenance(case, mode, status):
+    from app.policies.personal_memory import PERSONAL_VOICE_MEMORY_EXTRACTOR
+
+    evidence = voice_evidence(case, status)
+    case.conversation.input_mode = mode
+    receipt = (await capture(case, "請叫我王大爺", evidence))[0]
+    memory, version = case.added
+    assert receipt.content == "請叫我王大爺。"
+    assert version.extractor_version == PERSONAL_VOICE_MEMORY_EXTRACTOR
+    assert version.source_turn_reference == f"asr-gate:{evidence.id}"
+    assert "authenticated-text" not in memory.speaker_evidence_reference
+    assert str(evidence.id) in memory.speaker_evidence_reference
+    case.session.execute.side_effect = None
+    case.session.execute.return_value = case.owner_result
+    case.service.repo.get_current_version = AsyncMock(return_value=version)
+    await case.service.edit(
+        memory=memory,
+        actor=case.actor,
+        content="請叫我阿明",
+        expected_version=1,
+        trace_id="synthetic-edit",
+        idempotency_key="edit",
+    )
+    assert case.added[-1].extractor_version == PERSONAL_VOICE_MEMORY_EXTRACTOR
+    assert case.added[-1].source_turn_reference == version.source_turn_reference
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "missing",
+        "old_scope",
+        "pending",
+        "rejected",
+        "expired",
+        "tampered_text",
+        "other_session",
+        "other_elder",
+        "other_tenant",
+        "wrong_confirmer",
+        "no_confirmation",
+        "rejected_confirmation",
+        "different_initiator",
+        "no_gate",
+        "no_secret",
+        "no_memory_consent",
+        "memory_disabled",
+        "not_owner",
+        "staff",
+    ],
+)
+async def test_voice_refusal_never_writes(case, reason):
+    evidence = voice_evidence(case, "CONFIRMED")
+    if reason == "missing":
+        evidence = None
+    elif reason == "old_scope":
+        case.consent.scope.pop("personal_memory_voice_auto_save")
+    elif reason == "pending":
+        evidence.gate_status = "AWAITING_CONFIRMATION"
+    elif reason == "rejected":
+        evidence.gate_status = "REJECTED"
+    elif reason == "expired":
+        evidence.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    elif reason == "tampered_text":
+        evidence.transcript_digest = "0" * 64
+    elif reason == "other_session":
+        evidence.session_id = uuid4()
+    elif reason == "other_elder":
+        evidence.elder_id = uuid4()
+    elif reason == "other_tenant":
+        evidence.tenant_id = uuid4()
+    elif reason == "wrong_confirmer":
+        evidence.confirmed_by_actor_id = uuid4()
+    elif reason == "no_confirmation":
+        evidence.confirmed_at = None
+    elif reason == "rejected_confirmation":
+        evidence.confirmation_action = "REJECT"
+    elif reason == "different_initiator":
+        case.conversation.initiator_actor_id = uuid4()
+    elif reason == "no_gate":
+        case.settings.asr_gate_enabled = False
+    elif reason == "no_secret":
+        case.settings.asr_gate_hmac_secret = ""
+    elif reason == "no_memory_consent":
+        case.require.side_effect = NotFoundError("Unavailable")
+    elif reason == "memory_disabled":
+        case.settings.personal_memory_enabled = False
+    elif reason == "not_owner":
+        case.owner_result.scalar_one_or_none.return_value = None
+    elif reason == "staff":
+        case.actor = ActorContext(
+            actor_id=case.actor.actor_id,
+            tenant_id=case.actor.tenant_id,
+            actor_role="CARE_PROFESSIONAL",
+        )
+    assert await capture(case, "請叫我王大爺", evidence) == []
+    assert case.added == []
+    case.outbox.assert_not_awaited()
+
+
+def test_voice_consent_is_opt_in_and_requires_personal_memory_purpose():
+    from pydantic import ValidationError as SchemaError
+
+    from app.schemas.consent import CreateConsentRequest
+
+    base = dict(purposes=["LONG_TERM_MEMORY"], actor_confirmation=True, policy_version="v1")
+    assert not CreateConsentRequest(
+        **base, personal_memory_auto_save=True
+    ).personal_memory_voice_auto_save
+    with pytest.raises(SchemaError):
+        CreateConsentRequest(**base, personal_memory_voice_auto_save=True)
+    with pytest.raises(SchemaError):
+        CreateConsentRequest(
+            **{**base, "purposes": ["BASIC_VOICE"]},
+            personal_memory_auto_save=True,
+            personal_memory_voice_auto_save=True,
+        )
+    assert CreateConsentRequest(
+        **base, personal_memory_auto_save=True, personal_memory_voice_auto_save=True
+    ).personal_memory_voice_auto_save

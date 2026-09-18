@@ -149,6 +149,11 @@ class ConsentService:
                         if request.personal_memory_auto_save
                         else {}
                     ),
+                    **(
+                        {"personal_memory_voice_auto_save": True}
+                        if request.personal_memory_voice_auto_save
+                        else {}
+                    ),
                 },
                 granted_by_actor_id=actor_id,
                 confirmation_method="ACTOR_CONFIRMATION",
