@@ -109,6 +109,7 @@ class Settings(BaseSettings):
     # development-only; production remains unavailable until real email
     # delivery is implemented and selected explicitly.
     kinsun_native_auth_enabled: bool = False
+    staff_invitations_enabled: bool = False
     kinsun_identity_hmac_secret: str = ""
     kinsun_identity_hmac_key_version: int = Field(default=1, ge=1, le=2_147_483_647)
     kinsun_email_challenge_hmac_secret: str = ""
@@ -288,6 +289,10 @@ class Settings(BaseSettings):
                 "GOOGLE_IDENTITY_HMAC_KEY_VERSION must remain 1; "
                 "rotation requires an explicit identity rekey migration"
             )
+        if self.staff_invitations_enabled and (
+            self.app_env == AppEnv.PRODUCTION or not self.kinsun_native_auth_enabled
+        ):
+            raise ValueError("Staff invitations require development Kinsun authentication")
         if self.kinsun_identity_hmac_key_version != 1:
             raise ValueError(
                 "KINSUN_IDENTITY_HMAC_KEY_VERSION must remain 1; "

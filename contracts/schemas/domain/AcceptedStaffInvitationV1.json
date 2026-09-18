@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "const": "ACTIVATED",
+      "default": "ACTIVATED",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "title": "AcceptedStaffInvitationV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AcceptedStaffInvitationV1.json"
+}

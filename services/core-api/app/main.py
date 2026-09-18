@@ -47,6 +47,7 @@ from app.api.notifications import router as notifications_router
 from app.api.ready import router as ready_router
 from app.api.reports import router as reports_router
 from app.api.service_records import router as service_records_router
+from app.api.staff_invitations import router as staff_invitations_router
 from app.api.summaries import router as summaries_router
 from app.api.tools import router as tools_router
 from app.api.voice_sessions import router as voice_sessions_router
@@ -222,6 +223,7 @@ def create_app() -> FastAPI:
     app.include_router(elders_router)
     app.include_router(assisted_elders_router)
     app.include_router(family_invitations_router)
+    app.include_router(staff_invitations_router)
     app.include_router(consents_router)
     app.include_router(deletions_router)
     app.include_router(voice_sessions_router)

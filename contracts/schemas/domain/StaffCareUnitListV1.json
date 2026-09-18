@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "StaffCareUnitView": {
+      "additionalProperties": false,
+      "properties": {
+        "care_unit_id": {
+          "format": "uuid",
+          "title": "Care Unit Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "unit_type": {
+          "enum": [
+            "DAYCARE_CENTER",
+            "COMMUNITY_SITE",
+            "HOME_CARE_AGENCY"
+          ],
+          "title": "Unit Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "care_unit_id",
+        "name",
+        "unit_type"
+      ],
+      "title": "StaffCareUnitView",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/StaffCareUnitView"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Cursor"
+    }
+  },
+  "required": [
+    "items",
+    "next_cursor"
+  ],
+  "title": "StaffCareUnitListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/StaffCareUnitListV1.json"
+}

@@ -85,6 +85,7 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "outbox_event": _APPEND_ONLY,
     "password_credential": _APPEND_ONLY,
     "pending_external_identity": _APPEND_ONLY,
+    "staff_invitation": _APPEND_ONLY,
     "tenant": _APPEND_ONLY,
     # Expired idempotency snapshots are the sole runtime-owned physical deletion.
     "idempotency_record": _READ_APPEND_DELETE,
@@ -164,6 +165,14 @@ RUNTIME_COLUMN_UPDATE_PRIVILEGES: dict[str, tuple[str, ...]] = {
         "attempt_count",
         "redeemed_by_actor_id",
         "redeemed_at",
+        "revoked_at",
+        "version",
+        "updated_at",
+    ),
+    "staff_invitation": (
+        "status",
+        "accepted_by_actor_id",
+        "accepted_at",
         "revoked_at",
         "version",
         "updated_at",
@@ -262,6 +271,17 @@ PROTECTED_TABLE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
 }
 
 PROTECTED_COLUMN_UPDATE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
+    "staff_invitation": (
+        "tenant_id",
+        "issued_by_actor_id",
+        "care_unit_id",
+        "role_code",
+        "display_name",
+        "email_digest",
+        "digest_key_version",
+        "token_digest",
+        "expires_at",
+    ),
     "actor": ("actor_type", "display_name", "email", "phone"),
     "actor_tenant_membership": ("actor_id", "tenant_id", "care_unit_id", "role_code"),
     "app_session": ("token_digest", "actor_id", "external_identity_id"),

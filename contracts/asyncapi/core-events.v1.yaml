@@ -35,6 +35,11 @@ operations:
       $ref: "#/components/schemas/EventDeliveryFailureV1"
 components:
   messages:
+    StaffInvitationChangedV1:
+      name: StaffInvitationChangedV1
+      title: Development workforce invitation issued, accepted or revoked
+      payload:
+        $ref: "../schemas/events/StaffInvitationChangedV1.json"
     ServiceRecordCompletedV1:
       name: ServiceRecordCompletedV1
       title: Formal professional service record completed (not assignment completion)

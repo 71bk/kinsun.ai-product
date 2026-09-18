@@ -8,6 +8,14 @@
 
 ## 已在本次收斂
 
+### 2026-09-18 Demo workforce invitations（ADR 0024）
+
+- 新增 tenant-scoped ADMIN 單位清單、邀請清單／建立／撤銷與 private-BFF 啟用 API。
+- `STAFF_INVITATIONS_ENABLED` 預設 false，只允許 development；角色是既有 `ADMIN`。
+- 啟用原子建立身份、密碼、機構及單位會員；token 僅回傳一次、DB 僅存 hash。
+- 不提供公開 STAFF／ADMIN 註冊、寄信或 production 支援；前端管理頁及 BFF 需另行串接。
+- 串接規格：[staff-invitations-demo.md](../docs/project/staff-invitations-demo.md)。
+
 ### 2026-09-17 家屬報表讀取與摘要操作
 
 家屬報表清單與單筆讀取每次重驗 `family_relationship.share_scope` 是否允許目前

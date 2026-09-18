@@ -28,6 +28,12 @@ EXAMPLES = CONTRACTS / "examples"
 
 # example file -> schema that its "data" member must satisfy
 DATA_SCHEMA_FOR = {
+    "staff-invitation-create.json": "domain/CreateStaffInvitationRequestV1.json",
+    "staff-invitation-accept.json": "domain/AcceptStaffInvitationRequestV1.json",
+    "staff-invitation-revoke.json": "domain/RevokeStaffInvitationRequestV1.json",
+    "staff-invitation-list.json": "domain/StaffInvitationListV1.json",
+    "staff-invitation-admin-role.json": "domain/CreateStaffInvitationRequestV1.json",
+    "staff-invitation-short-password.json": "domain/AcceptStaffInvitationRequestV1.json",
     "care-event-correction-metadata.json": "domain/ReviewCareEventRequestV1.json",
     "care-event-correction-clear-time.json": "domain/ReviewCareEventRequestV1.json",
     "care-event-correction-null-type.json": "domain/ReviewCareEventRequestV1.json",

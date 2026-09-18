@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+- Kinsun native-auth integration tests must supply all four independent synthetic secrets,
+  including `FAMILY_INVITATION_HMAC_SECRET`, and disable Settings dotenv loading. Local `.env`
+  values must not hide missing CI setup; validate Settings before database writes.
+
 - pytest 參數化測試的參數不設預設值；缺少獨立測試 DB 時仍先用合成設定跑 collection，
   並把 SQL 執行留給 disposable DB。Consent request 欄位變更須同步前端完整 payload 測試。
 

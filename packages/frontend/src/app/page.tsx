@@ -1,22 +1,27 @@
 import { cookies } from 'next/headers';
 import { Landing } from '@/components/landing/Landing';
 import { PublicShell } from '@/components/public/PublicShell';
-import { VoiceHomeClient } from '@/components/voice/VoiceHomeClient';
+import { SignedInHome } from '@/components/SignedInHome';
 import { LOCALE_COOKIE, parseLocaleCookie } from '@/lib/i18n/locale-cookie';
 import { browserAuthCookieNames } from '@/lib/server/app-session-cookie';
 
 /**
  * Forks on session-cookie presence only — never an authorization signal, Core
  * re-authorizes every read regardless (AGENTS.md §5; same contract as
- * `SurfaceShell`'s `signedIn` prop). A signed-in visitor goes straight into
- * the canonical voice companion; everyone else gets the public landing page.
+ * `SurfaceShell`'s `signedIn` prop). A signed-out visitor gets the public
+ * landing page.
+ *
+ * A signed-in visitor gets `SignedInHome`, which renders the canonical voice
+ * companion and sends the roles that do not belong here to their own surface.
+ * The role cannot be read here: this runs before the browser has talked to
+ * Core, and the cookie carries no claims to read it from.
  */
 export default async function HomePage() {
   const cookieStore = await cookies();
   const signedIn = browserAuthCookieNames().some((name) => Boolean(cookieStore.get(name)?.value));
 
   if (signedIn) {
-    return <VoiceHomeClient />;
+    return <SignedInHome />;
   }
 
   const locale = parseLocaleCookie(cookieStore.get(LOCALE_COOKIE)?.value);

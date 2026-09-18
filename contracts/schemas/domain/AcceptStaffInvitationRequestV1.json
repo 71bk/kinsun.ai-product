@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "email": {
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Email",
+      "type": "string"
+    },
+    "password": {
+      "format": "password",
+      "maxLength": 128,
+      "minLength": 12,
+      "title": "Password",
+      "type": "string",
+      "writeOnly": true
+    },
+    "invitation_token": {
+      "format": "password",
+      "pattern": "^wi1_[A-Za-z0-9_-]{43}$",
+      "title": "Invitation Token",
+      "type": "string",
+      "writeOnly": true
+    }
+  },
+  "required": [
+    "email",
+    "password",
+    "invitation_token"
+  ],
+  "title": "AcceptStaffInvitationRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AcceptStaffInvitationRequestV1.json"
+}
