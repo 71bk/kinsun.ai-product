@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.adapters.auth.app_session import _extract_bearer_token
 from app.bootstrap.dependencies import get_kinsun_identity_codec, get_password_hasher
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.db.session import get_db_session
 from app.main import create_app
 from app.middleware.auth import get_authenticator
@@ -171,6 +171,8 @@ async def exercise_http_workflow(session, email, password, unit_id):
 
 @pytest.mark.asyncio
 async def test_staff_invitation_http_workflow(db_session, monkeypatch):
+    # The workflow must also work in CI without a developer .env filling missing secrets.
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
     for key, value in {
         "STAFF_INVITATIONS_ENABLED": "true",
         "KINSUN_NATIVE_AUTH_ENABLED": "true",
@@ -180,12 +182,14 @@ async def test_staff_invitation_http_workflow(db_session, monkeypatch):
         "KINSUN_IDENTITY_HMAC_SECRET": "synthetic-workforce-identity-secret-32-bytes",
         "KINSUN_EMAIL_CHALLENGE_HMAC_SECRET": "synthetic-workforce-challenge-secret-32-bytes",
         "KINSUN_AUTH_HANDOFF_SECRET": "synthetic-workforce-handoff-secret-32-bytes",
+        "FAMILY_INVITATION_HMAC_SECRET": "synthetic-workforce-family-secret-32-bytes",
         "KINSUN_EMAIL_DELIVERY_MODE": "synthetic",
         "KINSUN_SYNTHETIC_EMAIL_CODE_SECRET": "246810",
     }.items():
         monkeypatch.setenv(key, value)
     get_settings.cache_clear()
     try:
+        settings = get_settings()
         tenant_id, actor_id, unit_id = uuid4(), uuid4(), uuid4()
         email = f"synthetic-admin-{uuid4().hex}@example.test"
         password = "synthetic-admin-password"
@@ -229,7 +233,6 @@ async def test_staff_invitation_http_workflow(db_session, monkeypatch):
                 ),
             ]
         )
-        settings = get_settings()
         await PasswordAuthService(
             db_session,
             identity_codec=get_kinsun_identity_codec(),
