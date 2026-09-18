@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import String, and_, cast, func, or_, select
 
+from app.models.asr_gate import AsrGateEvidence
 from app.models.care_event import CareEvent, CareEventVersion
 from app.models.conversation import ConversationSession
 from app.models.elder import Elder
@@ -20,7 +21,11 @@ from app.policies.memory_retrieval import (
     MemoryTrustEvidence,
     evaluate_memory_trust,
 )
-from app.policies.personal_memory import PERSONAL_MEMORY_EXTRACTOR, PERSONAL_MEMORY_POLICY
+from app.policies.personal_memory import (
+    PERSONAL_MEMORY_EXTRACTOR,
+    PERSONAL_MEMORY_POLICY,
+    PERSONAL_VOICE_MEMORY_EXTRACTOR,
+)
 from app.repositories.base import BaseRepository
 from app.repositories.decision_support_repo import DecisionSupportProfileRepository
 
@@ -187,6 +192,7 @@ class MemoryRepository(BaseRepository):
         current_policy_version: str = CURRENT_MEMORY_POLICY_VERSION,
         allow_auto_low_risk_memory: bool = False,
         allow_personal_memory: bool = False,
+        allow_personal_voice_memory: bool = False,
     ) -> list[ConfirmedMemoryContextRecord]:
         """Return only bounded records that pass the Spec 18 final gate."""
         candidate_limit = min(max(limit * 4, limit), 64)
@@ -286,7 +292,6 @@ class MemoryRepository(BaseRepository):
                     and_(
                         allow_personal_memory,
                         Memory.policy_version == PERSONAL_MEMORY_POLICY,
-                        MemoryVersion.extractor_version == PERSONAL_MEMORY_EXTRACTOR,
                         select(ConversationSession.id)
                         .join(Elder, Elder.id == ConversationSession.elder_id)
                         .where(
@@ -294,7 +299,40 @@ class MemoryRepository(BaseRepository):
                             ConversationSession.elder_id == elder_id,
                             ConversationSession.tenant_id == self._tenant_id,
                             ConversationSession.state == "COMPLETED",
-                            ConversationSession.input_mode == "text",
+                            or_(
+                                and_(
+                                    ConversationSession.input_mode == "text",
+                                    MemoryVersion.extractor_version == PERSONAL_MEMORY_EXTRACTOR,
+                                ),
+                                and_(
+                                    allow_personal_voice_memory,
+                                    ConversationSession.input_mode.in_(
+                                        ["voice", "voice_with_text_fallback"]
+                                    ),
+                                    MemoryVersion.extractor_version
+                                    == PERSONAL_VOICE_MEMORY_EXTRACTOR,
+                                    select(AsrGateEvidence.id)
+                                    .where(
+                                        AsrGateEvidence.session_id == ConversationSession.id,
+                                        AsrGateEvidence.elder_id == elder_id,
+                                        AsrGateEvidence.tenant_id == self._tenant_id,
+                                        MemoryVersion.source_turn_reference
+                                        == "asr-gate:" + cast(AsrGateEvidence.id, String),
+                                        or_(
+                                            AsrGateEvidence.gate_status == "ALLOWED",
+                                            and_(
+                                                AsrGateEvidence.gate_status == "CONFIRMED",
+                                                AsrGateEvidence.confirmation_action == "CONFIRM",
+                                                AsrGateEvidence.confirmed_by_actor_id
+                                                == Elder.actor_id,
+                                                AsrGateEvidence.confirmed_at.is_not(None),
+                                            ),
+                                        ),
+                                    )
+                                    .correlate(ConversationSession, MemoryVersion, Elder)
+                                    .exists(),
+                                ),
+                            ),
                             Elder.tenant_id == self._tenant_id,
                             Elder.actor_id == ConversationSession.initiator_actor_id,
                             Elder.actor_id == MemoryVersion.created_by_actor_id,

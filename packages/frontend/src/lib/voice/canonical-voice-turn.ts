@@ -1,5 +1,10 @@
 import type { ApiConfig } from '@/lib/api/client';
-import { cancelVoiceSession, issueVoiceTicket, runCompanionTurn } from '@/lib/api/companion';
+import {
+  cancelVoiceSession,
+  issueVoiceTicket,
+  runCompanionTurn,
+  type CompanionTurn,
+} from '@/lib/api/companion';
 import { blobToPcm16Base64 } from './recorder';
 import {
   canSynthesize,
@@ -23,6 +28,7 @@ export interface VoiceTurnReply {
   textOnlyByLanguage: boolean;
   resultStatus: string;
   safetyDecision: string;
+  memoryUpdates: NonNullable<CompanionTurn['memory_updates']>;
 }
 
 export class VoiceTurnError extends Error {
@@ -145,6 +151,7 @@ export async function speakTurn(
     textOnlyByLanguage: !synthesizable || turn.transport_status === 'TEXT_ONLY',
     resultStatus: turn.result_status,
     safetyDecision: turn.safety_decision,
+    memoryUpdates: turn.memory_updates ?? [],
   };
 }
 

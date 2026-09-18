@@ -1,5 +1,7 @@
 """Real SQL self-stated lifecycle; no graph projection or event-review fixture."""
 
+import hashlib
+import hmac
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -10,6 +12,7 @@ from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.actor import Actor
+from app.models.asr_gate import AsrGateEvidence
 from app.models.consent import ConsentGrant
 from app.models.conversation import ConversationSession
 from app.models.elder import Elder
@@ -22,11 +25,14 @@ from app.services.personal_memory_service import PersonalMemoryService
 
 
 @pytest.mark.asyncio
-async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
+@pytest.mark.parametrize("voice_status", [None, "ALLOWED", "CONFIRMED"])
+async def test_personal_lifecycle_real_sql(db_session, monkeypatch, voice_status):
     settings = get_settings()
     monkeypatch.setattr(settings, "personal_memory_enabled", True)
     monkeypatch.setattr(settings, "evidence_aware_memory", True)
     monkeypatch.setattr(settings, "auto_low_risk_memory", False)
+    monkeypatch.setattr(settings, "asr_gate_enabled", True)
+    monkeypatch.setattr(settings, "asr_gate_hmac_secret", "synthetic-voice-memory-secret-32-bytes")
     s = db_session
     tenant, actor_id, elder_id, policy_id = [uuid4() for _ in range(4)]
     now = datetime.now(UTC) - timedelta(minutes=1)
@@ -62,7 +68,9 @@ async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
             purpose_code=purpose,
             status="GRANTED",
             version=1,
-            scope={"personal_memory_auto_save": True} if purpose == "LONG_TERM_MEMORY" else {},
+            scope={"personal_memory_auto_save": True, "personal_memory_voice_auto_save": True}
+            if purpose == "LONG_TERM_MEMORY"
+            else {},
             granted_by_actor_id=actor_id,
             confirmation_method="ACTOR_CONFIRMATION",
             recorded_by_actor_id=actor_id,
@@ -80,7 +88,7 @@ async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
         initiator_actor_id=actor_id,
         initiator_type="ELDER",
         language_route="ZH_TW",
-        input_mode="text",
+        input_mode="voice" if voice_status else "text",
         state="COMPLETED",
         trace_id=f"synthetic-{uuid4()}",
         consent_id=grants["BASIC_VOICE"].id,
@@ -89,6 +97,26 @@ async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
     )
     s.add(conversation)
     await s.flush()
+    evidence = None
+    if voice_status:
+        evidence = AsrGateEvidence(
+            session_id=conversation.id,
+            tenant_id=tenant,
+            elder_id=elder_id,
+            language_route="ZH_TW",
+            asr_model_version="synthetic-asr-v1",
+            confidence="0.9500",
+            gate_status=voice_status,
+            transcript_digest=hmac.new(
+                settings.asr_gate_hmac_secret.encode(), "我每天早餐喝豆漿".encode(), hashlib.sha256
+            ).hexdigest(),
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            confirmation_action="CONFIRM" if voice_status == "CONFIRMED" else None,
+            confirmed_by_actor_id=actor_id if voice_status == "CONFIRMED" else None,
+            confirmed_at=now if voice_status == "CONFIRMED" else None,
+        )
+        s.add(evidence)
+        await s.flush()
     personal = PersonalMemoryService(s, tenant)
     memories = MemoryService(s, tenant)
 
@@ -99,6 +127,7 @@ async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
             text=content,
             turn_id=uuid4(),
             trace_id="synthetic-personal",
+            asr_evidence=evidence,
         )
 
     assert await capture("我爸爸每天早餐喝豆漿") == []
@@ -127,16 +156,49 @@ async def test_personal_lifecycle_real_sql(db_session, monkeypatch):
     )
     memory = await memories.get(elder_id, saved.memory_id)
     # The original speaker/session must remain bound, even with a valid digest.
-    conversation.input_mode = "voice"
+    original_mode = conversation.input_mode
+    conversation.input_mode = "text" if voice_status else "voice"
     await s.flush()
     assert await memories.list_trusted_context(elder_id=elder_id, limit=8) == []
-    conversation.input_mode = "text"
+    conversation.input_mode = original_mode
+    if voice_status:
+        # Expiry limits admission of a new turn, not lifetime of saved memory.
+        evidence.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+        await s.flush()
+        assert len(await memories.list_trusted_context(elder_id=elder_id, limit=8)) == 1
+        original = (
+            evidence.gate_status,
+            evidence.confirmation_action,
+            evidence.confirmed_by_actor_id,
+            evidence.confirmed_at,
+        )
+        evidence.gate_status = "REJECTED"
+        evidence.confirmation_action = "REJECT"
+        evidence.confirmed_by_actor_id = actor_id
+        evidence.confirmed_at = datetime.now(UTC)
+        await s.flush()
+        assert await memories.list_trusted_context(elder_id=elder_id, limit=8) == []
+        (
+            evidence.gate_status,
+            evidence.confirmation_action,
+            evidence.confirmed_by_actor_id,
+            evidence.confirmed_at,
+        ) = original
+        version = await personal.repo.get_current_version(memory)
+        reference = version.source_turn_reference
+        version.source_turn_reference = f"asr-gate:{uuid4()}"
+        await s.flush()
+        assert await memories.list_trusted_context(elder_id=elder_id, limit=8) == []
+        version.source_turn_reference = reference
+        grants["LONG_TERM_MEMORY"].scope = {"personal_memory_auto_save": True}
+        await s.flush()
+        assert await memories.list_trusted_context(elder_id=elder_id, limit=8) == []
     grant = grants["LONG_TERM_MEMORY"]
     grant.scope = {}
     await s.flush()
     assert await capture("我喜歡聽老歌") == []
     assert await memories.list_trusted_context(elder_id=elder_id, limit=8) == []
-    grant.scope = {"personal_memory_auto_save": True}
+    grant.scope = {"personal_memory_auto_save": True, "personal_memory_voice_auto_save": True}
     await s.flush()
     await personal.edit(
         memory=memory,

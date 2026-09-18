@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 PERSONAL_MEMORY_POLICY = "personal-memory-2026-09-17.v1"
 PERSONAL_MEMORY_EXTRACTOR = "core-self-statement-v1"
+PERSONAL_VOICE_MEMORY_EXTRACTOR = "core-self-statement-voice-v1"
 PERSONAL_MEMORY_KINDS = frozenset(
     {"MUSIC_PREFERENCE", "HOBBY", "PREFERRED_ADDRESS", "FOOD_PREFERENCE", "DAILY_ROUTINE"}
 )

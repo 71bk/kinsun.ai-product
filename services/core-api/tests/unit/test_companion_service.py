@@ -131,6 +131,64 @@ def _session() -> MagicMock:
     return session
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status,decision,saved",
+    [("SUCCESS", "ALLOW", True), ("FAILED", "ALLOW", False), ("BLOCKED", "BLOCK", False)],
+)
+async def test_voice_capture_receives_only_core_gated_evidence_after_success(
+    monkeypatch, status, decision, saved
+):
+    from app.schemas.conversation import PersonalMemoryReceipt
+
+    tenant = uuid4()
+    actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant)
+    conversation = _conversation(state="PROCESSING", input_mode="voice")
+    _install_conversation_service(monkeypatch, conversation)
+    evidence = SimpleNamespace(id=uuid4())
+    receipt = PersonalMemoryReceipt(memory_id=uuid4(), version=1, content="請叫我王大爺。")
+    capture = AsyncMock(return_value=[receipt])
+    monkeypatch.setattr(
+        companion_service, "PersonalMemoryService", lambda *args: SimpleNamespace(capture=capture)
+    )
+
+    async def run(*, request_payload, **kwargs):
+        return _runtime_result(
+            request_id=request_payload["request_id"],
+            trace_id=conversation.trace_id,
+            agent_run_id=request_payload["agent_run_id"],
+            result_status=status,
+            decision=decision,
+        )
+
+    service = CompanionService(_session(), tenant, SimpleNamespace(run=run), "mock")
+    service._authorize_asr_input = AsyncMock(return_value=evidence)
+    service._speaker_evidence = AsyncMock()
+    service._requested_outputs = AsyncMock(return_value=[])
+    service._confirmed_memory_context = AsyncMock(return_value=[])
+    service._verified_event_context = AsyncMock(return_value=[])
+    service._trusted_care_profile_context = AsyncMock(return_value=[])
+    service._trusted_profile = AsyncMock(return_value=(None, "STANDARD"))
+    result = await service.run_turn(
+        conversation=conversation,
+        actor_context=actor,
+        input_text="請叫我王大爺",
+        correlation_id="synthetic-voice",
+        idempotency_key="synthetic-voice",
+        latency_budget_ms=3000,
+    )
+    service._authorize_asr_input.assert_awaited_once_with(
+        conversation=conversation, input_text="請叫我王大爺"
+    )
+    if saved:
+        assert capture.await_args.kwargs["asr_evidence"] is evidence
+        assert capture.await_args.kwargs["conversation"].state == "COMPLETED"
+        assert result.memory_updates == [receipt]
+    else:
+        capture.assert_not_awaited()
+        assert result.memory_updates == []
+
+
 def _install_conversation_service(
     monkeypatch: pytest.MonkeyPatch,
     conversation: SimpleNamespace,
@@ -599,6 +657,7 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
         limit=5,
         allow_auto_low_risk_memory=True,
         allow_personal_memory=False,
+        allow_personal_voice_memory=False,
     )
 
 

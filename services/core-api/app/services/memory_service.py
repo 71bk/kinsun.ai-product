@@ -101,6 +101,10 @@ class MemoryService:
                 get_settings().personal_memory_enabled
                 and getattr(consent, "scope", {}).get("personal_memory_auto_save") is True
             ),
+            allow_personal_voice_memory=(
+                get_settings().personal_memory_enabled
+                and getattr(consent, "scope", {}).get("personal_memory_voice_auto_save") is True
+            ),
         )
 
     async def create_candidate(

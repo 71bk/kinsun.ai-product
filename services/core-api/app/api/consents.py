@@ -80,6 +80,8 @@ async def create_consents(
     payload = request.model_dump(mode="json")
     if not request.personal_memory_auto_save:
         payload.pop("personal_memory_auto_save", None)
+    if not request.personal_memory_voice_auto_save:
+        payload.pop("personal_memory_voice_auto_save", None)
     replay = await idem.begin(
         key=idempotency_key,
         operation="create_consents",

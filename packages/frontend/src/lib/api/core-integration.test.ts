@@ -183,6 +183,7 @@ describe('Core API integration clients', () => {
       purposes: ['LONG_TERM_MEMORY'],
       share_scopes: [],
       personal_memory_auto_save: true,
+      personal_memory_voice_auto_save: true,
       actor_confirmation: true,
       policy_version: 'demo-consent-v1',
     });

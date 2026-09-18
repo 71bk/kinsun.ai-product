@@ -1,5 +1,7 @@
 """Core command for low-risk personal statements, separate from care records."""
 
+import hashlib
+import hmac
 from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -11,6 +13,7 @@ from app.core.auth import ActorContext
 from app.core.config import get_settings
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.domain.consent import ConsentPurpose
+from app.models.asr_gate import AsrGateEvidence
 from app.models.conversation import ConversationSession
 from app.models.elder import Elder
 from app.models.memory import Memory, MemoryVersion
@@ -18,6 +21,7 @@ from app.policies.memory_retrieval import memory_content_digest
 from app.policies.personal_memory import (
     PERSONAL_MEMORY_EXTRACTOR,
     PERSONAL_MEMORY_POLICY,
+    PERSONAL_VOICE_MEMORY_EXTRACTOR,
     PersonalStatement,
     extract_personal_statement,
 )
@@ -73,6 +77,7 @@ class PersonalMemoryService:
         text: str,
         turn_id: UUID,
         trace_id: str,
+        asr_evidence: AsrGateEvidence | None = None,
     ) -> list[PersonalMemoryReceipt]:
         settings = get_settings()
         statement = extract_personal_statement(text)
@@ -83,7 +88,7 @@ class PersonalMemoryService:
         ):
             return []
         if (
-            conversation.input_mode != "text"
+            conversation.input_mode not in {"text", "voice", "voice_with_text_fallback"}
             or conversation.state != "COMPLETED"
             or conversation.tenant_id != self.tenant_id
             or conversation.initiator_actor_id != actor.actor_id
@@ -103,6 +108,38 @@ class PersonalMemoryService:
             return []
         if consent.scope.get("personal_memory_auto_save") is not True:
             return []
+        is_voice = conversation.input_mode != "text"
+        if is_voice:
+            # Only the evidence already authorized by Core for this exact turn is
+            # accepted. An authenticated account alone does not verify ASR input.
+            if (
+                consent.scope.get("personal_memory_voice_auto_save") is not True
+                or not settings.asr_gate_enabled
+                or not settings.asr_gate_hmac_secret
+                or asr_evidence is None
+                or asr_evidence.session_id != conversation.id
+                or asr_evidence.tenant_id != self.tenant_id
+                or asr_evidence.elder_id != conversation.elder_id
+                or asr_evidence.gate_status not in {"ALLOWED", "CONFIRMED"}
+                or asr_evidence.expires_at <= datetime.now(UTC)
+                or (
+                    asr_evidence.gate_status == "CONFIRMED"
+                    and (
+                        asr_evidence.confirmation_action != "CONFIRM"
+                        or asr_evidence.confirmed_by_actor_id != actor.actor_id
+                        or asr_evidence.confirmed_at is None
+                    )
+                )
+                or not hmac.compare_digest(
+                    asr_evidence.transcript_digest,
+                    hmac.new(
+                        settings.asr_gate_hmac_secret.encode("utf-8"),
+                        text.encode("utf-8"),
+                        hashlib.sha256,
+                    ).hexdigest(),
+                )
+            ):
+                return []
         profile = await self._profile(conversation.elder_id, statement)
         if profile is None:
             return []
@@ -156,8 +193,9 @@ class PersonalMemoryService:
             previous.version_status = "INACTIVE"
             previous.valid_to = now
             memory.current_version += 1
+        source = f"asr-gate:{asr_evidence.id}" if is_voice else "authenticated-text"
         memory.speaker_evidence_reference = (
-            f"conversation-session:{conversation.id}:turn:{turn_id}:authenticated-text"
+            f"conversation-session:{conversation.id}:turn:{turn_id}:{source}"
         )
         memory.decision_support_profile_id = profile.profile_id
         memory.decision_support_profile_version = profile.profile_version
@@ -169,11 +207,13 @@ class PersonalMemoryService:
                 version=memory.current_version,
                 content=statement.content,
                 content_digest=memory_content_digest(statement.content),
-                extractor_version=PERSONAL_MEMORY_EXTRACTOR,
+                extractor_version=(
+                    PERSONAL_VOICE_MEMORY_EXTRACTOR if is_voice else PERSONAL_MEMORY_EXTRACTOR
+                ),
                 extraction_confidence=Decimal("1.0000"),
                 source_event_ids=[],
                 source_session_id=conversation.id,
-                source_turn_reference=str(turn_id),
+                source_turn_reference=source if is_voice else str(turn_id),
                 proposal_risk_hint="LOW",
                 version_status="ACTIVE",
                 created_by_actor_id=actor.actor_id,
@@ -253,7 +293,7 @@ class PersonalMemoryService:
                 source_event_ids=[],
                 source_session_id=current.source_session_id,
                 source_turn_reference=current.source_turn_reference,
-                extractor_version=PERSONAL_MEMORY_EXTRACTOR,
+                extractor_version=current.extractor_version,
                 extraction_confidence=Decimal("1.0000"),
                 proposal_risk_hint="LOW",
                 version_status="ACTIVE",

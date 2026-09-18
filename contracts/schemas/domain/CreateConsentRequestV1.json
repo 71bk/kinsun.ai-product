@@ -75,6 +75,10 @@
     "personal_memory_auto_save": {
       "type": "boolean",
       "default": false
+    },
+    "personal_memory_voice_auto_save": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
@@ -90,6 +94,16 @@
       },
       "then": {
         "properties": {"purposes": {"const": ["LONG_TERM_MEMORY"]}}
+      }
+    },
+    {
+      "if": {
+        "properties": {"personal_memory_voice_auto_save": {"const": true}},
+        "required": ["personal_memory_voice_auto_save"]
+      },
+      "then": {
+        "properties": {"personal_memory_auto_save": {"const": true}},
+        "required": ["personal_memory_auto_save"]
       }
     }
   ],

@@ -6,6 +6,7 @@ import { ApiRequestError, type ApiConfig } from '@/lib/api/client';
 import { createTextSession, runCompanionTurn, type CompanionTurn } from '@/lib/api/companion';
 import { CompanionCharacter } from '@/components/voice/CompanionCharacter';
 import { deleteMemoryAsElder } from '@/lib/api/memories';
+import { CompanionReplyAudio } from './CompanionReplyAudio';
 import styles from './CompanionTextPanel.module.css';
 
 interface CompanionTextPanelProps {
@@ -124,6 +125,10 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
         state={busy ? 'processing' : turn ? 'speaking' : 'idle'}
         message={message}
       />
+
+      {turn && (
+        <CompanionReplyAudio key={`${elderId}:${turn.agent_run_id}`} turn={turn} />
+      )}
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.label} id="companion-title" htmlFor="companion-input">
