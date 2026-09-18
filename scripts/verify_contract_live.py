@@ -50,6 +50,7 @@ os.environ["FAMILY_INVITATION_HMAC_SECRET"] = (
     "live-contract-family-invitation-secret-material-32-bytes"
 )
 os.environ["KINSUN_NATIVE_AUTH_ENABLED"] = "true"
+os.environ["STAFF_INVITATIONS_ENABLED"] = "true"
 os.environ["KINSUN_IDENTITY_HMAC_SECRET"] = (
     "live-contract-kinsun-identity-secret-material-32-bytes"
 )
@@ -179,6 +180,25 @@ async def main() -> int:
         )
 
         # No credentials configured -> must fail closed as a contract-shaped 401.
+        for method, path, body in [
+            ("GET", "/api/v1/admin/care-units", None),
+            ("GET", "/api/v1/admin/staff-invitations", None),
+            ("POST", "/api/v1/admin/staff-invitations", {
+                "email": "synthetic@example.test", "display_name": "Synthetic",
+                "role_code": "DAYCARE_CARE_WORKER",
+                "care_unit_id": "30000000-0000-4000-8000-000000000001",
+            }),
+            ("POST", "/api/v1/admin/staff-invitations/30000000-0000-4000-8000-000000000001/revoke", {"expected_version": 1}),
+            ("POST", "/api/v1/internal/auth/staff-invitations/accept", {
+                "email": "synthetic@example.test", "password": "synthetic-password",
+                "invitation_token": "wi1_" + "a" * 43,
+            }),
+        ]:
+            response = await client.request(method, path, json=body, headers={"Idempotency-Key": "synthetic-contract"})
+            if response.status_code != 401:
+                failures.append(f"{method} {path}: expected 401, got {response.status_code}")
+            check(f"{method} {path} authentication error", response.json(), load("common/ErrorEnvelopeV1.json"))
+
         response = await client.get(
             "/api/v1/elders/2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
         )

@@ -39,6 +39,9 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "CreateStaffInvitationRequest": "domain/CreateStaffInvitationRequestV1.json",
+    "AcceptStaffInvitationRequest": "domain/AcceptStaffInvitationRequestV1.json",
+    "RevokeStaffInvitationRequest": "domain/RevokeStaffInvitationRequestV1.json",
     "CreateServiceRecordRequest": "domain/CreateServiceRecordRequestV1.json",
     "RegisterAgentRunRequest": "domain/RegisterAgentRunRequestV1.json",
     "CompleteAgentRunRequest": "domain/CompleteAgentRunRequestV1.json",
@@ -89,6 +92,11 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "list_care_units_api_v1_admin_care_units_get": "StaffCareUnitListEnvelopeV1",
+    "list_staff_invitations_api_v1_admin_staff_invitations_get": "StaffInvitationListEnvelopeV1",
+    "create_staff_invitation_api_v1_admin_staff_invitations_post": "CreatedStaffInvitationEnvelopeV1",
+    "revoke_staff_invitation_api_v1_admin_staff_invitations__invitation_id__revoke_post": "StaffInvitationEnvelopeV1",
+    "accept_staff_invitation_api_v1_internal_auth_staff_invitations_accept_post": "AcceptedStaffInvitationEnvelopeV1",
     "get_previous_service_record_api_v1_home_care_assignments__assignment_id__previous_service_record_get": "PreviousServiceRecordEnvelopeV1",
     "create_service_record_and_complete_api_v1_home_care_assignments__assignment_id__service_record_complete_post": "ServiceRecordCompletionEnvelopeV1",
     "create_service_record_api_v1_home_care_assignments__assignment_id__service_record_post": "ServiceRecordEnvelopeV1",
@@ -547,7 +555,7 @@ def main() -> None:
             if path not in {"/health", "/ready"}:
                 if path == LINE_WEBHOOK_PATH:
                     operation["security"] = [{"lineSignature": []}]
-                elif path.startswith(KINSUN_AUTH_PATH_PREFIX):
+                elif path.startswith(KINSUN_AUTH_PATH_PREFIX) or path == "/api/v1/internal/auth/staff-invitations/accept":
                     operation["security"] = [{"kinsunBffAuth": []}]
                 elif path == ASSISTED_SESSION_EXCHANGE_PATH:
                     operation["security"] = []

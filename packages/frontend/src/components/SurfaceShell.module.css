@@ -37,6 +37,35 @@
   font-weight: 700;
 }
 
+/* The admin surface's label doubles as the link home, so it needs a real target
+   size and a focus ring the plain label never required. */
+.surfaceHome {
+  align-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-primary-text);
+  display: inline-flex;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  min-height: var(--touch-min);
+  padding-inline: var(--space-2);
+  margin-inline-start: calc(var(--space-2) * -1);
+  text-decoration: none;
+}
+
+.surfaceHome:hover {
+  text-decoration: underline;
+}
+
+.surfaceHome:focus-visible {
+  outline: 3px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Already on the ledger: still a link, but not advertised as somewhere to go. */
+.surfaceHome[aria-current='page'] {
+  color: var(--color-foreground);
+}
+
 .utilities {
   display: flex;
   align-items: center;

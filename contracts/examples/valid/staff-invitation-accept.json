@@ -1,0 +1,7 @@
+{
+  "data": {
+    "email": "worker@example.test",
+    "password": "synthetic-password",
+    "invitation_token": "wi1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

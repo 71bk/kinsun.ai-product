@@ -11,6 +11,30 @@ interface ActorProfile {
   care_unit_ids: string[];
 }
 
+/**
+ * The authenticated actor, with no elder data attached.
+ *
+ * Chrome that varies by role needs the role and nothing else, and paying for
+ * `authorized-elders` to learn it would be wasteful — and wrong on surfaces
+ * whose actor has no authorized elders at all. Core still derives the actor
+ * from authentication; this is never an authorization decision, only a hint
+ * about which links are worth offering.
+ */
+export async function getActorProfile(config: ApiConfig): Promise<{
+  role: ActorRole;
+  displayName: string;
+  tenantId: string;
+  careUnitIds: string[];
+}> {
+  const profile = await apiFetch<ActorProfile>(config, '/api/v1/me');
+  return {
+    role: profile.role,
+    displayName: profile.display_name,
+    tenantId: profile.tenant_id,
+    careUnitIds: profile.care_unit_ids,
+  };
+}
+
 interface AuthorizedElderItem {
   elder_id: string;
   display_name: string;

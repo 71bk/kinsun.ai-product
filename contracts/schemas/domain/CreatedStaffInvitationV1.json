@@ -1,0 +1,66 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "invitation_id": {
+      "format": "uuid",
+      "title": "Invitation Id",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "role_code": {
+      "enum": [
+        "DAYCARE_CARE_WORKER",
+        "HOME_CARE_WORKER"
+      ],
+      "title": "Role Code",
+      "type": "string"
+    },
+    "care_unit_id": {
+      "format": "uuid",
+      "title": "Care Unit Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ISSUED",
+        "ACCEPTED",
+        "REVOKED",
+        "EXPIRED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "invitation_token": {
+      "pattern": "^wi1_[A-Za-z0-9_-]{43}$",
+      "title": "Invitation Token",
+      "type": "string"
+    }
+  },
+  "required": [
+    "invitation_id",
+    "display_name",
+    "role_code",
+    "care_unit_id",
+    "status",
+    "expires_at",
+    "version",
+    "invitation_token"
+  ],
+  "title": "CreatedStaffInvitationV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreatedStaffInvitationV1.json"
+}

@@ -4,6 +4,7 @@ import { resolveCoreApiBaseUrl } from './core-api-url';
 const START_PATH = '/api/v1/internal/auth/kinsun/email/start';
 const COMPLETE_PATH = '/api/v1/internal/auth/kinsun/email/complete';
 const PASSWORD_LOGIN_PATH = '/api/v1/internal/auth/kinsun/password/login';
+const ACCEPT_INVITATION_PATH = '/api/v1/internal/auth/staff-invitations/accept';
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 64 * 1024;
 const CHALLENGE_PATTERN = /^ke1_[A-Za-z0-9_-]{43}$/;
@@ -41,7 +42,13 @@ export function normalizeKinsunEmail(value: unknown): string | null {
     : null;
 }
 
-type CoreAuthPath = typeof START_PATH | typeof COMPLETE_PATH | typeof PASSWORD_LOGIN_PATH;
+type CoreAuthPath =
+  | typeof START_PATH
+  | typeof COMPLETE_PATH
+  | typeof PASSWORD_LOGIN_PATH
+  | typeof ACCEPT_INVITATION_PATH;
+
+export const INVITATION_TOKEN_PATTERN = /^wi1_[A-Za-z0-9_-]{43}$/;
 
 function coreTarget(path: CoreAuthPath): URL {
   const base = resolveCoreApiBaseUrl();
@@ -209,4 +216,38 @@ export async function loginWithKinsunPassword(input: {
     throw new KinsunCoreAuthError(502);
   }
   return { sessionToken: data.session_token, idleExpiresAt, absoluteExpiresAt };
+}
+
+/**
+ * Redeems a workforce invitation (ADR 0024) into a real account.
+ *
+ * This shares `postCore` with the email/password flows on purpose: the private
+ * BFF credential, its forbidden-reuse checks, the request timeout and the
+ * response size cap are security machinery that must not be reimplemented per
+ * endpoint. Core answers every rejection — bad credential, wrong email, spent,
+ * expired, revoked, feature off — with the same 401/404, so nothing here can or
+ * should tell the caller which one it was.
+ *
+ * Deliberately returns no session. Core activates the account and stops; the
+ * recipient then signs in through the existing password flow, which is the only
+ * path that mints an App Session.
+ */
+export async function acceptStaffInvitation(input: {
+  email: string;
+  password: string;
+  invitationToken: string;
+}): Promise<void> {
+  if (!INVITATION_TOKEN_PATTERN.test(input.invitationToken)) {
+    throw new KinsunCoreAuthError(400);
+  }
+  const data = dataRecord(
+    await postCore(ACCEPT_INVITATION_PATH, {
+      email: input.email,
+      password: input.password,
+      invitation_token: input.invitationToken,
+    }),
+  );
+  if (!hasOnlyKeys(data, ['status']) || data?.status !== 'ACTIVATED') {
+    throw new KinsunCoreAuthError(502);
+  }
 }

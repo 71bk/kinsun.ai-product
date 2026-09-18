@@ -21,6 +21,11 @@
   --forest-950: #0b3b35;
   --forest-900: #114f46;
   --forest-800: #17665a;
+  /* Separator weight for the admin surface. The forest family had only deep
+     values because the public surface uses them as fills; a ledger needs a
+     hairline in the same hue, and borrowing --blue-100 would drag the care
+     surface's hue into a screen that is deliberately not the care workbench. */
+  --forest-100: #d5e5e0;
   --green-600: #059669;
   --green-700: #047857;
   --green-50: #ecfdf5;
@@ -238,4 +243,57 @@
   --block-gap: var(--space-10);
   --page-gutter: var(--space-6);
   --content-max: 1200px;
+}
+
+/* ---- surface: admin (機構管理者). Provisioning an account is a different act
+       from recording care: it hands someone access rather than describing what
+       happened to an elder, so it must not look like the care workbench at a
+       glance. The forest family already exists for the public surface, so this
+       separates the two consoles without minting a fourth hue. Density matches
+       care — an administrator reads a short ledger, not a long shift. ---- */
+[data-surface='admin'] {
+  --color-primary: var(--forest-800);
+  --color-primary-strong: var(--forest-900);
+  --color-primary-text: var(--forest-900);
+  --color-primary-weak: var(--mint-50);
+  --color-foreground: var(--forest-950);
+  --color-muted-foreground: var(--blue-slate-500);
+  --color-background: var(--mint-25);
+  --color-border: var(--forest-100);
+  --color-border-strong: var(--forest-800);
+  --color-ring: var(--forest-800);
+  --color-surface-subtle: var(--mint-50);
+  --color-interactive-border: var(--forest-900);
+  /* White on --forest-800 is 6.8:1, so unlike the cyan default this surface can
+     fill a button with --color-primary and still clear the 4.5:1 body bar. */
+  --color-on-primary: var(--white);
+  /* The one-time invitation credential. It is the only thing on this surface
+     that cannot be recovered after the screen closes, so it is the only thing
+     that inverts. Gold appears here and nowhere else in the console — it is a
+     "you will not see this again" marker, not decoration. White on forest-950
+     is 12.4:1 and gold on forest-950 is 6.8:1. Gold never carries text on a
+     light background, where it would fall under 2:1. */
+  --color-credential-surface: var(--forest-950);
+  --color-credential-edge: var(--gold-400);
+  --color-on-credential: var(--white);
+  --color-on-credential-muted: var(--mint-50);
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(11, 59, 53, 0.08);
+  --shadow-2: 0 6px 18px rgba(11, 59, 53, 0.1);
+  --shadow-3: 0 16px 40px rgba(11, 59, 53, 0.16);
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+  --text-3xl: 32px;
+  --leading-body: 1.55;
+  --touch-min: 48px;
+  --touch-rec: 56px;
+  --card-pad: var(--space-5);
+  --block-gap: var(--space-6);
+  --page-gutter: var(--space-6);
+  --content-max: 1040px;
 }

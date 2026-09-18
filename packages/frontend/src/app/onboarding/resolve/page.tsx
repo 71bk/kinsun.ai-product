@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignOutButton } from '@/components/SignOutButton';
 import { ApiRequestError, apiFetch } from '@/lib/api/client';
+import { destinationFor } from '@/lib/role-destination';
 
 interface ActorProfile {
   actor_type?: string;
@@ -16,14 +17,6 @@ interface AuthorizedElderList {
 }
 
 const ELDER_STORAGE_KEY = 'elderly_care_elder_id';
-
-function destinationFor(profile: ActorProfile): string | null {
-  const role = profile.role ?? profile.actor_type;
-  if (role === 'ELDER') return '/';
-  if (role === 'FAMILY_MEMBER') return '/family';
-  if (role === 'DAYCARE_CARE_WORKER' || role === 'HOME_CARE_WORKER') return '/staff';
-  return null;
-}
 
 export default function ResolveOnboardingPage() {
   const router = useRouter();

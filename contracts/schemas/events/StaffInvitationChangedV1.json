@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/StaffInvitationChangedV1.json",
+  "title": "StaffInvitationChangedV1",
+  "allOf": [
+    {"$ref": "https://kinsun.ai/contracts/schemas/events/DomainEventEnvelopeV1.json"},
+    {"type": "object", "properties": {
+      "event_type": {"enum": ["staff.invitation.issued.v1", "staff.invitation.accepted.v1", "staff.invitation.revoked.v1"]},
+      "classification": {"const": "RESTRICTED"},
+      "purpose": {"const": "ACCOUNT_PROVISIONING"},
+      "payload": {"type": "object", "additionalProperties": false,
+        "required": ["invitation_id", "care_unit_id", "role_code", "status"],
+        "properties": {
+          "invitation_id": {"type": "string", "format": "uuid"},
+          "care_unit_id": {"type": "string", "format": "uuid"},
+          "role_code": {"enum": ["DAYCARE_CARE_WORKER", "HOME_CARE_WORKER"]},
+          "status": {"enum": ["ISSUED", "ACCEPTED", "REVOKED"]}
+        }
+      }
+    }}
+  ]
+}
