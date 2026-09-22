@@ -332,6 +332,32 @@ async def main() -> int:
 
         sample_uuid = "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
 
+        # Staff report routes must reject anonymous callers before any data access.
+        for method, suffix, body in [
+            ("GET", "family-report-workspace", None),
+            ("POST", "family-reports/from-summary", {
+                "summary_id": sample_uuid, "expected_summary_version": 1,
+                "recipient_scope_ids": [sample_uuid],
+            }),
+            ("POST", f"family-reports/{sample_uuid}/publish", {
+                "expected_version": 1, "safety_review_passed": True,
+                "reason_code": "STAFF_REVIEW_CONFIRMED",
+            }),
+            ("POST", f"family-reports/{sample_uuid}/withdraw", {
+                "expected_version": 1, "reason_code": "STAFF_WITHDRAWAL",
+            }),
+        ]:
+            path = f"/api/v1/elders/{sample_uuid}/{suffix}"
+            response = await client.request(
+                method, path, json=body,
+                headers={"Idempotency-Key": "live-contract-staff-report"},
+            )
+            if response.status_code != 401:
+                failures.append(f"{method} {path}: expected 401, got {response.status_code}")
+            check(f"{method} {suffix} 401 vs ErrorEnvelopeV1",
+                  response.json(), load("common/ErrorEnvelopeV1.json"))
+
+
         response = await client.post(
             f"/api/v1/elders/{sample_uuid}/voice-tickets",
             headers={"Idempotency-Key": "live-contract-voice-ticket-issue"},

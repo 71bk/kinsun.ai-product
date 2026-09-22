@@ -39,6 +39,7 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "CreateReportFromSummaryRequest": "domain/CreateReportFromSummaryRequestV1.json",
     "CreateStaffInvitationRequest": "domain/CreateStaffInvitationRequestV1.json",
     "AcceptStaffInvitationRequest": "domain/AcceptStaffInvitationRequestV1.json",
     "RevokeStaffInvitationRequest": "domain/RevokeStaffInvitationRequestV1.json",
@@ -92,6 +93,10 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "report_workspace_api_v1_elders__elder_id__family_report_workspace_get": "StaffReportWorkspaceEnvelopeV1",
+    "create_report_from_summary_api_v1_elders__elder_id__family_reports_from_summary_post": "FamilyReportEnvelopeV1",
+    "publish_staff_report_api_v1_elders__elder_id__family_reports__report_id__publish_post": "FamilyReportEnvelopeV1",
+    "withdraw_staff_report_api_v1_elders__elder_id__family_reports__report_id__withdraw_post": "FamilyReportEnvelopeV1",
     "list_care_units_api_v1_admin_care_units_get": "StaffCareUnitListEnvelopeV1",
     "list_staff_invitations_api_v1_admin_staff_invitations_get": "StaffInvitationListEnvelopeV1",
     "create_staff_invitation_api_v1_admin_staff_invitations_post": "CreatedStaffInvitationEnvelopeV1",

@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "summary_id": {
+      "format": "uuid",
+      "title": "Summary Id",
+      "type": "string"
+    },
+    "expected_summary_version": {
+      "minimum": 1,
+      "title": "Expected Summary Version",
+      "type": "integer"
+    },
+    "recipient_scope_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Recipient Scope Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "summary_id",
+    "expected_summary_version",
+    "recipient_scope_ids"
+  ],
+  "title": "CreateReportFromSummaryRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateReportFromSummaryRequestV1.json"
+}

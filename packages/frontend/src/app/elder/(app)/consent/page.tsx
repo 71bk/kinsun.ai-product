@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { CareEventExtractionConsentPanel } from '@/components/consent/CareEventExtractionConsentPanel';
 import { ConsentSummary } from '@/components/consent/ConsentSummary';
 import { LongTermMemoryConsentPanel } from '@/components/consent/LongTermMemoryConsentPanel';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
@@ -9,6 +10,7 @@ import { FamilySharingConsentPanel } from '@/components/FamilySharingConsentPane
 import { ConsentPanel } from '@/components/voice/ConsentPanel';
 import {
   activeBasicVoiceConsent,
+  activeCareEventExtractionConsent,
   activeFamilySharingConsent,
   activeLongTermMemoryConsent,
   listConsents,
@@ -21,6 +23,7 @@ export default function ConsentPage() {
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
   const [configFailed, setConfigFailed] = useState(false);
   const [consent, setConsent] = useState<ConsentRecord | null | undefined>(undefined);
+  const [careEventConsent, setCareEventConsent] = useState<ConsentRecord | null | undefined>(undefined);
   const [memoryConsent, setMemoryConsent] = useState<ConsentRecord | null | undefined>(undefined);
   const [familyConsent, setFamilyConsent] = useState<ConsentRecord | null | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
@@ -46,6 +49,7 @@ export default function ConsentPage() {
       .then((items) => {
         if (!cancelled) {
           setConsent(activeBasicVoiceConsent(items));
+          setCareEventConsent(activeCareEventExtractionConsent(items));
           setMemoryConsent(activeLongTermMemoryConsent(items));
           setFamilyConsent(activeFamilySharingConsent(items));
         }
@@ -74,7 +78,7 @@ export default function ConsentPage() {
   if (loadError) {
     return <NotLoggedIn reason="目前讀不到您的同意設定。系統已停止，不會猜測結果。" />;
   }
-  if (consent === undefined || memoryConsent === undefined || familyConsent === undefined)
+  if (consent === undefined || careEventConsent === undefined || memoryConsent === undefined || familyConsent === undefined)
     return (
       <main aria-live="polite" className={styles.loading}>
         正在讀取您的同意設定…
@@ -88,7 +92,7 @@ export default function ConsentPage() {
         <p>每一項用途都能分別開啟或撤回。這裡只列出目前已經可以使用的選項。</p>
       </header>
 
-      <ConsentSummary family={familyConsent} memory={memoryConsent} voice={consent} />
+      <ConsentSummary careEvent={careEventConsent} family={familyConsent} memory={memoryConsent} voice={consent} />
 
       <section aria-label="同意用途" className={styles.controls}>
         <ConsentPanel
@@ -96,6 +100,13 @@ export default function ConsentPage() {
           elderId={config.elderId}
           initialConsent={consent}
           onChange={setConsent}
+          policyVersion={config.consentPolicyVersion}
+        />
+        <CareEventExtractionConsentPanel
+          apiConfig={config}
+          elderId={config.elderId}
+          initialConsent={careEventConsent}
+          onChange={setCareEventConsent}
           policyVersion={config.consentPolicyVersion}
         />
         <LongTermMemoryConsentPanel

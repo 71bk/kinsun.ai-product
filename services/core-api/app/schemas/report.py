@@ -85,3 +85,26 @@ class FamilyReportListResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     items: list[FamilyReportResponse]
+
+
+class CreateReportFromSummaryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    summary_id: UUID
+    expected_summary_version: int = Field(ge=1)
+    recipient_scope_ids: list[UUID] = Field(min_length=1, max_length=32)
+
+
+class ReportRecipientResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    relationship_id: UUID
+    display_name: str
+    share_scope: list[str]
+
+
+class StaffReportWorkspaceResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    recipients: list[ReportRecipientResponse]
+    reports: list[FamilyReportResponse]

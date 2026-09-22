@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
+import { StaffReportPanel } from '@/components/care/StaffReportPanel';
 import { SummarySource } from '@/components/care/SummarySource';
 import { CareActionPanel } from '@/components/care/CareActionPanel';
 import { EventFilterBar } from '@/components/dashboard/EventFilterBar';
@@ -49,13 +50,14 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import styles from './ElderDetailPage.module.css';
 
-type Tab = 'events' | 'actions' | 'memories' | 'summaries';
+type Tab = 'events' | 'actions' | 'memories' | 'summaries' | 'reports';
 
 const TAB_LABEL: Record<Tab, MessageKey> = {
   events: 'elderDetail.tabEvents',
   actions: 'elderDetail.tabActions',
   memories: 'elderDetail.tabMemories',
   summaries: 'elderDetail.tabSummaries',
+  reports: 'staffReport.title',
 };
 
 const REVIEWABLE_SUMMARY_STATUSES = ['DRAFT', 'NEEDS_REVIEW'] as const;
@@ -265,6 +267,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
 
   const canReviewSummaries = workspace?.allowedActions.includes('summary:review') ?? false;
   const canReadSummaries = workspace?.allowedActions.includes('summary:read') ?? false;
+  const canDraftReports = canReadSummaries && (workspace?.allowedActions.includes('family_report:draft:create') ?? false);
   const canReadSourceEvents = workspace?.allowedActions.includes('care_event:read') ?? false;
   const canReadCareActions = workspace?.allowedActions.includes('care_action:read') ?? false;
   const canCreateCareActions = workspace?.allowedActions.includes('care_action:create') ?? false;
@@ -452,6 +455,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   const visibleTabs: Tab[] = canReadCareActions
     ? ['events', 'actions', 'memories', 'summaries']
     : ['events', 'memories', 'summaries'];
+  if (canDraftReports) visibleTabs.push('reports');
 
   return (
     <main className={styles.page}>
@@ -577,6 +581,15 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
               onReject={handleRejectMemory}
             />
           )}
+        </section>
+      )}
+
+      {tab === 'reports' && canDraftReports && (
+        <section aria-labelledby="elder-tab-reports" id="elder-panel-reports" role="tabpanel" tabIndex={0}>
+          <StaffReportPanel key={elderId} apiConfig={apiConfig} elderId={elderId}
+            canPublish={workspace.allowedActions.includes('family_report:publish')}
+            canWithdraw={workspace.allowedActions.includes('family_report:withdraw')}
+            onAccessCheck={recheckAccess} />
         </section>
       )}
 

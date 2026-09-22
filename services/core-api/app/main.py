@@ -48,6 +48,7 @@ from app.api.ready import router as ready_router
 from app.api.reports import router as reports_router
 from app.api.service_records import router as service_records_router
 from app.api.staff_invitations import router as staff_invitations_router
+from app.api.staff_reports import router as staff_reports_router
 from app.api.summaries import router as summaries_router
 from app.api.tools import router as tools_router
 from app.api.voice_sessions import router as voice_sessions_router
@@ -234,6 +235,7 @@ def create_app() -> FastAPI:
     app.include_router(notifications_router)
     app.include_router(summaries_router)
     app.include_router(reports_router)
+    app.include_router(staff_reports_router)
     app.include_router(assignments_router)
     app.include_router(service_records_router)
     app.include_router(agent_runs_router)

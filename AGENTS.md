@@ -1,5 +1,13 @@
 # AGENTS.md
 
+- `report_version` 是資料庫強制不可變的版本表；來源摘要版本等 provenance 必須在
+  首次 INSERT 時一併保存，不可先建立草稿再 UPDATE 補 metadata。發布前重讀當前
+  摘要版本／狀態，舊草稿不能自動沿用新摘要覆核。
+
+- 獨立埠號的 frontend production QA server 必須為該程序設定相符的 `FRONTEND_ORIGIN`。
+  沿用 3000 origin 啟動 3104 會讓登入／寫入被 CSRF 拒絕；修正 launcher 設定，
+  不可放寬來源檢查。既有 `.env.local` 不需因此改寫。
+
 - Kinsun native-auth integration tests must supply all four independent synthetic secrets,
   including `FAMILY_INVITATION_HMAC_SECRET`, and disable Settings dotenv loading. Local `.env`
   values must not hide missing CI setup; validate Settings before database writes.

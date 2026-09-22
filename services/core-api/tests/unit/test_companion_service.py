@@ -17,6 +17,7 @@ from app.core.agent_runtime import (
     AgentSafetyResult,
 )
 from app.core.exceptions import ConflictError, NotFoundError, ServiceUnavailableError
+from app.domain.consent import ConsentPurpose
 from app.middleware.auth import ActorContext
 from app.models.agent import AgentRun
 from app.models.safety import SafetyEvaluation
@@ -468,14 +469,26 @@ async def test_gated_elder_only_voice_turn_requests_memory_proposal(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("missing_guard", ["authorization", "extraction_consent"])
 async def test_missing_candidate_scope_requests_no_output_and_ignores_unsolicited_proposal(
     monkeypatch: pytest.MonkeyPatch,
+    missing_guard: str,
 ) -> None:
     tenant_id = uuid4()
     actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
     conversation = _conversation()
     _install_conversation_service(monkeypatch, conversation)
-    _install_candidate_capability(monkeypatch, granted=False)
+    _, require_active = _install_candidate_capability(
+        monkeypatch, granted=missing_guard != "authorization"
+    )
+    if missing_guard == "extraction_consent":
+        # Keep actor permission and other purposes active: only extraction was revoked.
+        async def current_consent(*, elder_id, purpose):
+            if purpose == ConsentPurpose.CARE_EVENT_EXTRACTION:
+                raise NotFoundError("Required consent is not active")
+            return SimpleNamespace(id=uuid4(), version=4)
+
+        require_active.side_effect = current_consent
     create_candidate = _install_care_event_service(monkeypatch)
     session = _session()
 

@@ -45,6 +45,10 @@ export function activeBasicVoiceConsent(items: ConsentRecord[]): ConsentRecord |
   return activeConsentForPurpose(items, 'BASIC_VOICE');
 }
 
+export function activeCareEventExtractionConsent(items: ConsentRecord[]): ConsentRecord | null {
+  return activeConsentForPurpose(items, 'CARE_EVENT_EXTRACTION');
+}
+
 export function activeLongTermMemoryConsent(items: ConsentRecord[]): ConsentRecord | null {
   return activeConsentForPurpose(items, 'LONG_TERM_MEMORY');
 }
@@ -148,6 +152,30 @@ export function revokeFamilySharingConsent(
     headers: { 'Idempotency-Key': createIdempotencyKey('family-sharing-revoke') },
     body: JSON.stringify({
       reason_code: 'ELDER_REQUESTED_FAMILY_SHARING_STOP',
+      revoke_scope: [],
+      request_deletion: false,
+    }),
+  });
+}
+
+export function grantCareEventExtractionConsent(
+  config: ConsentApiConfig,
+  elderId: string,
+  policyVersion: string,
+): Promise<ConsentRecord> {
+  return grantConsentPurpose(config, elderId, policyVersion, 'CARE_EVENT_EXTRACTION');
+}
+
+export function revokeCareEventExtractionConsent(
+  config: ConsentApiConfig,
+  elderId: string,
+  consentId: string,
+): Promise<ConsentRecord> {
+  return apiFetch<ConsentRecord>(config, `/api/v1/elders/${elderId}/consents/${consentId}/revoke`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': createIdempotencyKey('care-event-extraction-revoke') },
+    body: JSON.stringify({
+      reason_code: 'ELDER_REQUESTED_CARE_EVENT_EXTRACTION_STOP',
       revoke_scope: [],
       request_deletion: false,
     }),
