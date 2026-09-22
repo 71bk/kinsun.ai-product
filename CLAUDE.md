@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+- 跨角色 UI 合成 fixture 的照護關係除 `elder:basic:read`，還須明列
+  `elder:access_context:read`；長者總覽可見不代表詳情頁 access-context 可讀。
+  測試缺 scope 時只補正該 campaign，不放寬產品授權或既有帳號。
+
 - `report_version` 是資料庫強制不可變的版本表；來源摘要版本等 provenance 必須在
   首次 INSERT 時一併保存，不可先建立草稿再 UPDATE 補 metadata。發布前重讀當前
   摘要版本／狀態，舊草稿不能自動沿用新摘要覆核。

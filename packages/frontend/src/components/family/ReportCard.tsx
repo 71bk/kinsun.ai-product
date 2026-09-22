@@ -86,6 +86,7 @@ export function ReportCard({ report, linkToDetail = true }: ReportCardProps) {
           </li>
         ))}
       </ul>
+      {report.dataGapNotice && <p className={styles.gapNotice}>{report.dataGapNotice}</p>}
     </StateCard>
   );
 }

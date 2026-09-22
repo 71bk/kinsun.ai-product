@@ -63,6 +63,23 @@ describe('Family Surface safety semantics', () => {
     expect(markup).toMatch(/withdrawn/i);
   });
 
+  it.each(['zh-Hant', 'en'] as const)('preserves partial-data notice beside published items in %s', (locale) => {
+    const notice = 'Some activities have insufficient information.';
+    const markup = renderWithLocale(createElement(ReportCard, {
+      report: report({ dataGapNotice: notice }),
+    }), locale);
+    expect(markup).toContain('Synthetic published item');
+    expect(markup).toContain(notice);
+    expect(markup).toContain('data-state="published"');
+  });
+
+  it('hides the data gap notice along with content after withdrawal', () => {
+    const markup = renderWithLocale(createElement(ReportCard, {
+      report: report({ status: 'WITHDRAWN', dataGapNotice: 'Synthetic private gap notice' }),
+    }));
+    expect(markup).not.toContain('Synthetic private gap notice');
+  });
+
   it('shows a first-class Data Insufficient shape instead of an empty published card', () => {
     const markup = renderWithLocale(createElement(ReportCard, { report: report({ items: [] }) }));
 
