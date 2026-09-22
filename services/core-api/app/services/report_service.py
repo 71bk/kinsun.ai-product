@@ -57,6 +57,7 @@ class ReportService:
         request: CreateFamilyReportDraftRequest,
         trace_id: str,
         idempotency_key: str,
+        source_summary_versions: dict[str, int] | None = None,
     ) -> FamilyReport:
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
@@ -95,6 +96,11 @@ class ReportService:
                     "items": [item.model_dump(mode="json") for item in request.items],
                     "data_gap_notice": request.data_gap_notice,
                     "sensitive_review_required": request.sensitive_review_required,
+                    **(
+                        {"source_summary_versions": source_summary_versions}
+                        if source_summary_versions
+                        else {}
+                    ),
                 },
                 source_summary_ids=request.source_summary_ids,
                 source_event_ids=request.source_event_ids,
@@ -121,6 +127,7 @@ class ReportService:
         expected_version: int,
         trace_id: str,
         idempotency_key: str,
+        reason_code: str | None = None,
     ) -> FamilyReport:
         if report.current_version != expected_version:
             raise ConflictError("Family report version conflict")
@@ -148,12 +155,37 @@ class ReportService:
             source_event_ids=version.source_event_ids,
             source_summary_ids=version.source_summary_ids,
         )
+        snapshots = version.content.get("source_summary_versions", {})
+        if snapshots:
+            await ConsentService(self._session, self._tenant_id).require_active(
+                elder_id=report.elder_id,
+                purpose=ConsentPurpose.CARE_EVENT_EXTRACTION,
+            )
+            for summary_id, expected in sorted(snapshots.items()):
+                result = await self._session.execute(
+                    select(DailySummary)
+                    .where(
+                        DailySummary.id == UUID(summary_id),
+                        DailySummary.elder_id == report.elder_id,
+                        DailySummary.tenant_id == self._tenant_id,
+                    )
+                    .with_for_update()
+                    .execution_options(populate_existing=True)
+                )
+                current = result.scalar_one_or_none()
+                if (
+                    current is None
+                    or current.current_version != expected
+                    or current.status not in {"READY", "PUBLISHED"}
+                ):
+                    raise ConflictError("Report source summary changed; create a new draft")
         require_report_transition(report.status, "PUBLISHED")
         report.status = "PUBLISHED"
         report.published_at = datetime.now(UTC)
         await self._session.flush()
         await self._write_event(
             event_type="family.report.published.v1",
+            extra_payload={"safety_review_passed": True, "reason_code": reason_code},
             report=report,
             actor_id=actor_id,
             consent_version=consent.version,

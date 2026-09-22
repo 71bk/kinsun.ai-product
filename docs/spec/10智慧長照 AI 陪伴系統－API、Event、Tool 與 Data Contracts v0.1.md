@@ -822,6 +822,23 @@ updated_at
 
 只有 PUBLISHED 且 relationship、share_scope、consent 仍有效時可回傳。WITHDRAWN 回 410 或一般無法存取頁，不暴露內容。
 
+## 12.1a 照護端日報工作流（2026-09-22 本機實作）
+
+新增以下一般 App Session 路由，角色限 DAYCARE_CARE_WORKER／HOME_CARE_WORKER，並逐次驗證當前 tenant、elder 與 exact scope：
+
+| 路由（前綴 /api/v1/elders/{elder_id}） | Scope |
+| --- | --- |
+| GET /family-report-workspace | family_report:draft:create |
+| POST /family-reports/from-summary | family_report:draft:create ＋ summary:read |
+| POST /family-reports/{report_id}/publish | family_report:publish |
+| POST /family-reports/{report_id}/withdraw | family_report:withdraw |
+
+建立請求只接受 summary_id、expected_summary_version、recipient_scope_ids；Core 從 READY／PUBLISHED 且無衝突的正式摘要建立 DAILY 草稿，不接受瀏覽器自訂內容或身分。收件人必須具有當前 FAMILY_SHARING 同意綁定、未過期且涵蓋 DAILY 的家屬關係。建立與發布同時重驗 CARE_EVENT_EXTRACTION 同意。
+
+發布須 expected_version 與明確 safety_review_passed=true。來源摘要版本在不可變 report_version 首次 INSERT 保存，發布前鎖定並重讀版本／狀態，並沿用來源事件、收件範圍與同意檢查；過期草稿不可沿用新摘要覆核。撤回使用 expected_version 與 reason_code。三個寫入路由均使用 Idempotency-Key。
+
+家屬仍只讀取 PUBLISHED 報表；本機實作對草稿、撤回或無權限報表回不揭露存在性的 404。內部服務路由與現有週／月報讀取不變；本切片不提供週／月報建立，也不直接呼叫通知寄送。契約見 CreateReportFromSummaryRequestV1、StaffReportWorkspaceV1 與既有 FamilyReportEnvelopeV1。驗收範圍見 [照護端家屬日報工作流](../project/staff-family-report-workflow-20260922.md)。
+
 ## 12.2 通知設定
 
 GET /api/v1/family/notification-preferences

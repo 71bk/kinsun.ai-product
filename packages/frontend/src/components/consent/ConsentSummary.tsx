@@ -1,18 +1,22 @@
-import { Brain, ChatCircleDots, ShieldCheck, UsersThree } from '@phosphor-icons/react';
+import { Brain, ChatCircleDots, ClipboardText, ShieldCheck, UsersThree } from '@phosphor-icons/react';
 import type { ConsentRecord } from '@/lib/api/consent';
+import { translate } from '@/lib/i18n/messages';
 import styles from './ConsentSummary.module.css';
 
 export function ConsentSummary({
   voice,
+  careEvent,
   memory,
   family,
 }: {
   voice: ConsentRecord | null;
+  careEvent: ConsentRecord | null;
   memory: ConsentRecord | null;
   family: ConsentRecord | null;
 }) {
   const items = [
     { label: '陪伴', enabled: voice !== null, icon: ChatCircleDots },
+    { label: translate('zh-Hant', 'careEventConsent.title'), enabled: careEvent !== null, icon: ClipboardText },
     { label: '長期記憶', enabled: memory !== null, icon: Brain },
     { label: '家屬分享', enabled: family !== null, icon: UsersThree },
   ];

@@ -61,6 +61,7 @@ class FamilyRelationship(BaseModel):
 class FamilyReport(BaseModel, TenantScopedMixin):
     __tablename__ = "family_report"
     __pk_name__ = "report_id"
+    __mapper_args__ = {"eager_defaults": True}
 
     elder_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

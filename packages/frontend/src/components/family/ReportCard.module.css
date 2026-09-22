@@ -21,3 +21,8 @@
 .detailLink:hover {
   background: var(--color-primary-weak);
 }
+
+.gapNotice {
+  margin: var(--space-3) 0 0;
+  overflow-wrap: anywhere;
+}
