@@ -1,5 +1,10 @@
 # AGENTS.md
 
+- Native Email 註冊以 `PendingExternalIdentity.provider="KINSUN"` 進入共用 onboarding／
+  invitation redemption；名稱含 Google／External 不代表只支援 OIDC。新增或調整登入路徑時，
+  須穿過實際下游 service 驗證 provider allowlist 與 invitation／consent gates，不能只 mock
+  redemption 就宣稱家屬註冊已通過。
+
 - 跨角色 UI 合成 fixture 的照護關係除 `elder:basic:read`，還須明列
   `elder:access_context:read`；長者總覽可見不代表詳情頁 access-context 可讀。
   測試缺 scope 時只補正該 campaign，不放寬產品授權或既有帳號。

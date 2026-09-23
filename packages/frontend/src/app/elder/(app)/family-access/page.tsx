@@ -187,7 +187,7 @@ export default function ElderFamilyAccessPage() {
         <>
           <form className={styles.form} onSubmit={submit}>
             <label htmlFor="invitee-email">家屬 Email（建議填寫）</label>
-            <p id="invitee-email-hint">填寫後，只有該 Google 帳號能使用邀請碼。</p>
+            <p id="invitee-email-hint">填寫後，只有使用這個 Email 完成驗證的家屬能使用邀請碼。</p>
             <input
               aria-describedby="invitee-email-hint"
               autoComplete="email"
