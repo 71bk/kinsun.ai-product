@@ -248,3 +248,126 @@ async def test_create_rejects_scope_outside_active_consent(
             trace_id="trace-scope-exceeds",
             idempotency_key="idem-scope-exceeds",
         )
+
+
+def _pending_family(**overrides):
+    return SimpleNamespace(
+        **{
+            "provider": "KINSUN",
+            "intent": "FAMILY",
+            "status": "PENDING",
+            "expires_at": NOW + timedelta(minutes=5),
+            "verified_email": "family@example.com",
+            "display_name": "Synthetic family",
+            "external_subject_digest": "a" * 64,
+            "digest_key_version": 1,
+            **overrides,
+        }
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["KINSUN", "GOOGLE", "LINE"])
+async def test_verified_family_provider_redeems_with_same_consent_and_relationship_gates(
+    monkeypatch: pytest.MonkeyPatch,
+    provider: str,
+) -> None:
+    from app.models.actor import Actor
+    from app.models.line_identity import ExternalIdentity
+    from app.models.report import FamilyRelationship
+
+    invitation = _invitation()
+    invitation.invitee_email_hmac = FamilyInvitationTokenCodec(SECRET).hash_email(
+        "family@example.com"
+    )
+    elder = SimpleNamespace(id=invitation.elder_id, actor_id=invitation.issued_by_actor_id)
+    session = _FakeSession(scalar_results=[elder, None, None, None, None])
+    consent = SimpleNamespace(
+        id=invitation.consent_id, version=1, scope={"share_scopes": invitation.share_scope}
+    )
+    _patch_consent(monkeypatch, consent)
+    outbox = AsyncMock()
+    monkeypatch.setattr("app.services.family_invitation_service.write_outbox_entry", outbox)
+    service = _service(session)
+    service._invitations.get_by_token_hash_for_update = AsyncMock(return_value=invitation)
+
+    redeemed, identity = await service.redeem_pending_external_identity(
+        pending=_pending_family(provider=provider),
+        invitation_code=VALID_CODE,
+        trace_id="synthetic-redeem",
+        idempotency_key="synthetic-redeem",
+    )
+
+    actor = next(row for row in session.added if isinstance(row, Actor))
+    relationship = next(row for row in session.added if isinstance(row, FamilyRelationship))
+    assert actor.actor_type == "FAMILY_MEMBER"
+    assert isinstance(identity, ExternalIdentity) and identity.provider == provider
+    assert redeemed.actor_id == actor.id == invitation.redeemed_by_actor_id
+    assert redeemed.tenant_id == invitation.tenant_id
+    assert relationship.consent_id == consent.id
+    assert relationship.share_scope == invitation.share_scope
+    assert invitation.status == "REDEEMED"
+    assert outbox.await_count == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"provider": "UNKNOWN"},
+        {"intent": "ELDER"},
+        {"intent": "STAFF"},
+        {"status": "CONSUMED"},
+        {"status": "REVOKED"},
+        {"expires_at": NOW},
+    ],
+)
+async def test_unverified_or_ineligible_pending_identity_is_rejected_before_invitation_lookup(
+    overrides,
+):
+    from app.core.exceptions import AuthenticationError
+
+    session = _FakeSession()
+    service = _service(session)
+    lookup = AsyncMock()
+    service._invitations.get_by_token_hash_for_update = lookup
+    with pytest.raises(AuthenticationError):
+        await service.redeem_pending_external_identity(
+            pending=_pending_family(**overrides),
+            invitation_code=VALID_CODE,
+            trace_id="synthetic-denied",
+            idempotency_key="synthetic-denied",
+        )
+    lookup.assert_not_awaited()
+    assert session.added == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", ["missing", "replayed", "revoked", "expired", "wrong-email"])
+async def test_native_family_invitation_negative_cases_create_no_actor(case):
+    from app.core.exceptions import ValidationError
+
+    session = _FakeSession()
+    service = _service(session)
+    invitation = _invitation()
+    if case == "replayed":
+        invitation.status = "REDEEMED"
+    if case == "revoked":
+        invitation.status = "REVOKED"
+    if case == "expired":
+        invitation.expires_at = NOW
+    if case == "wrong-email":
+        invitation.invitee_email_hmac = FamilyInvitationTokenCodec(SECRET).hash_email(
+            "other@example.com"
+        )
+    service._invitations.get_by_token_hash_for_update = AsyncMock(
+        return_value=None if case == "missing" else invitation
+    )
+    with pytest.raises(ValidationError):
+        await service.redeem_pending_external_identity(
+            pending=_pending_family(),
+            invitation_code=VALID_CODE,
+            trace_id="synthetic-denied",
+            idempotency_key="synthetic-denied",
+        )
+    assert session.added == []

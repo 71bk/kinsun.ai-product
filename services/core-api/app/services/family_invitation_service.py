@@ -144,7 +144,7 @@ class FamilyInvitationService:
         trace_id: str,
         idempotency_key: str,
     ) -> tuple[FamilyInvitationRedeemedResponse, ExternalIdentity]:
-        """Redeem an invitation for a verified, not-yet-linked external identity.
+        """Redeem for a verified, not-yet-linked native or direct-OIDC identity.
 
         Pending identity consumption remains the caller's responsibility so
         account creation, invitation redemption, and App Session issuance can
@@ -152,7 +152,7 @@ class FamilyInvitationService:
         """
         now = self._now()
         if (
-            pending.provider not in {"GOOGLE", "LINE"}
+            pending.provider not in {"KINSUN", "GOOGLE", "LINE"}
             or pending.intent != "FAMILY"
             or pending.status != "PENDING"
             or pending.expires_at <= now

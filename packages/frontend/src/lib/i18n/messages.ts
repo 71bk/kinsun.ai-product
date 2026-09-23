@@ -693,14 +693,14 @@ const zhHant = {
   // ---- family onboarding / sign-in ----
   'join.title': '家屬服務',
   'join.intro':
-    '請輸入服務單位提供的邀請碼。系統會先用 Google 確認您的身分，再確認您可查看的報表範圍。',
-  'join.note': '邀請碼不會直接提供資料存取權；邀請核銷會在受保護的伺服器流程中完成。',
+    '請輸入收到的家屬邀請碼，依下方步驟完成身分驗證。系統會確認邀請與長者同意的報表分享範圍。',
+  'join.note': '加入後，只能查看長者同意分享且已正式發布的報表。',
   'join.codeLabel': '家屬邀請碼',
   'join.alreadyBound': '已完成綁定？',
   'join.toFamilySignIn': '前往家屬登入',
   'join.backToChooser': '返回選擇服務',
   'join.lineButton': '已有帳號：使用已連結的 LINE 登入',
-  'join.lineHint': '此按鈕不會使用上方邀請碼；首次加入家屬服務仍須使用 Google。',
+  'join.lineHint': '此按鈕僅供已連結 LINE 的家屬登入；首次加入請使用上方邀請流程。',
   'familySignIn.title': '家屬登入',
   'familySignIn.body': '登入後只會顯示長者已同意分享、且仍在您授權範圍內的正式報表。',
   'familySignIn.subtitle': '繼續查看長者的日常與正式報表',
@@ -1684,16 +1684,16 @@ const en: Record<MessageKey, string> = {
 
   'join.title': 'Family access',
   'join.intro':
-    'Enter the invitation code your care provider gave you. We confirm your identity with Google first, then determine which reports you may see.',
+    'Enter the family invitation code you received and follow the steps below to verify your identity. We will check the invitation and the report sharing allowed by the elder.',
   'join.note':
-    'The invitation code does not grant data access by itself; redemption happens in a protected server-side flow.',
+    'After joining, you can only view published reports the elder has consented to share.',
   'join.codeLabel': 'Family invitation code',
   'join.alreadyBound': 'Already linked?',
   'join.toFamilySignIn': 'Go to family sign-in',
   'join.backToChooser': 'Back to service selection',
   'join.lineButton': 'Already have an account? Sign in with linked LINE',
   'join.lineHint':
-    "This button doesn't use the invitation code above; first-time family access still requires Google.",
+    'This button is only for family members with a linked LINE account. To join for the first time, use the invitation form above.',
   'familySignIn.title': 'Family sign-in',
   'familySignIn.body':
     'After signing in you will only see formal reports the elder has consented to share and that remain within your authorization.',
