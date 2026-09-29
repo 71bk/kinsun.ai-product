@@ -198,6 +198,7 @@ class ConsentService:
         policy_version: str,
         trace_id: str,
         idempotency_key: str,
+        staff_recorded_verbal: bool = False,
     ) -> ConsentGrant:
         now = datetime.now(UTC)
         active = await self._consents.get_active(
@@ -224,7 +225,10 @@ class ConsentService:
             purpose_code=ConsentPurpose.BASIC_VOICE.value,
             status="GRANTED",
             version=version,
-            scope={"share_scopes": []},
+            scope={
+                "share_scopes": [],
+                **({"assistance_method": "STAFF_RECORDED_VERBAL"} if staff_recorded_verbal else {}),
+            },
             granted_by_actor_id=None,
             confirmation_method="ASSISTED_TABLET_ACKNOWLEDGEMENT",
             recorded_by_actor_id=recorded_by_actor_id,

@@ -1,4 +1,5 @@
 import { apiFetch, createIdempotencyKey, type ApiConfig } from './client';
+import type { CompanionTurn, VoiceTicketIssued } from './companion';
 
 export type CareProfileCategory =
   | 'HEALTH_CONDITION'
@@ -89,6 +90,37 @@ export function issueAssistedSession(
   return apiFetch(config, `/api/v1/elders/${elderId}/assisted-sessions`, {
     method: 'POST',
     body: JSON.stringify({ client_timezone: 'Asia/Taipei' }),
+  });
+}
+
+export function recordAssistedVerbalAcknowledgement(
+  config: ApiConfig, elderId: string, assistedSessionId: string,
+): Promise<TabletFirstUseAcknowledgement> {
+  return apiFetch(config, `/api/v1/elders/${elderId}/assisted-sessions/${assistedSessionId}/acknowledgement`, {
+    method: 'POST', headers: { 'Idempotency-Key': createIdempotencyKey('staff-verbal-ack') },
+    body: JSON.stringify({ explanation_given: true, elder_agreed: true }),
+  });
+}
+
+export function issueTabletVoiceTicket(language: 'zh-TW' | 'en-US', signal?: AbortSignal): Promise<VoiceTicketIssued> {
+  return apiFetch({ apiBaseUrl: '/backend/elder-session' }, '/voice/tickets', {
+    method: 'POST', signal,
+    headers: { 'Idempotency-Key': createIdempotencyKey('tablet-voice') },
+    body: JSON.stringify({ language_preference: language === 'en-US' ? 'EN_US' : 'ZH_TW' }),
+  });
+}
+
+export function runTabletVoiceTurn(sessionId: string, text: string, signal?: AbortSignal): Promise<CompanionTurn> {
+  return apiFetch({ apiBaseUrl: '/backend/elder-session' }, `/voice/${sessionId}/turns`, {
+    method: 'POST', signal,
+    headers: { 'Idempotency-Key': createIdempotencyKey('tablet-turn') },
+    body: JSON.stringify({ input_text: text }),
+  });
+}
+
+export async function cancelTabletVoiceTurn(sessionId: string): Promise<void> {
+  await apiFetch({ apiBaseUrl: '/backend/elder-session' }, `/voice/${sessionId}/cancel`, {
+    method: 'POST', headers: { 'Idempotency-Key': createIdempotencyKey('tablet-cancel') },
   });
 }
 

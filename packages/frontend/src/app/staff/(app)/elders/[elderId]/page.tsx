@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
+import { AssistedSessionPanel } from '@/components/care/AssistedSessionPanel';
 import { StaffReportPanel } from '@/components/care/StaffReportPanel';
 import { SummarySource } from '@/components/care/SummarySource';
 import { CareActionPanel } from '@/components/care/CareActionPanel';
@@ -308,8 +309,8 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
 
   useEffect(() => {
     if (!workspace) return;
-    if (tab === 'events') loadEvents();
-    if (tab === 'memories') loadMemories();
+    if (tab === 'events' && workspace.allowedActions.includes('care_event:read')) loadEvents();
+    if (tab === 'memories' && workspace.allowedActions.includes('memory:read')) loadMemories();
     if (tab === 'summaries') loadSummaries();
     return () => {
       eventRequest.current += 1;
@@ -320,7 +321,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   }, [loadEvents, loadMemories, loadSummaries, tab, workspace]);
 
   useEffect(() => {
-    if (workspace) loadNeedsReview();
+    if (workspace?.allowedActions.includes('care_event:review')) loadNeedsReview();
   }, [loadNeedsReview, workspace]);
 
   if (!runtimeConfig) return null;
@@ -452,6 +453,13 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   }
 
   const listSeparator = locale === 'en' ? ', ' : '、';
+  if (workspace.allowedActions.includes('assisted_session:create') &&
+      !workspace.allowedActions.some((action) => ['care_event:read', 'care_action:read', 'memory:read', 'summary:read'].includes(action))) {
+    return <main className={styles.page}>
+      <PageHeader title={workspace.displayName} description={workspace.sourceSummary} />
+      <AssistedSessionPanel key={elderId} config={apiConfig} elderId={elderId} elderName={workspace.displayName} />
+    </main>;
+  }
   const visibleTabs: Tab[] = canReadCareActions
     ? ['events', 'actions', 'memories', 'summaries']
     : ['events', 'memories', 'summaries'];
@@ -471,6 +479,9 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
         }
         title={workspace.displayName}
       />
+
+      {workspace.allowedActions.includes('assisted_session:create') &&
+        <AssistedSessionPanel key={elderId} config={apiConfig} elderId={elderId} elderName={workspace.displayName} />}
 
       {needsReview && needsReview.count > 0 && (
         <div className={styles.reviewSummary}>

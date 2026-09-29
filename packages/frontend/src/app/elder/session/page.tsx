@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
+import { AssistedVoiceCompanion } from '@/components/voice/AssistedVoiceCompanion';
 import {
   acknowledgeTabletFirstUse,
   endTabletSession,
@@ -38,6 +39,7 @@ export default function ElderSessionPage() {
   const [turnError, setTurnError] = useState(false);
   const [acknowledgementError, setAcknowledgementError] = useState(false);
   const [confirmingStop, setConfirmingStop] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +76,7 @@ export default function ElderSessionPage() {
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if (!text || busy || voiceActive) return;
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'elder', text }]);
     setInput('');
     setBusy(true);
@@ -156,7 +158,7 @@ export default function ElderSessionPage() {
           <h2 id="first-use-title">使用 AI 陪伴前，請先了解</h2>
           <ul>
             <li>小暖是 AI 陪伴，不是醫師，也不會診斷、改藥或停藥。</li>
-            <li>您輸入的對話會交給 AI 處理，讓小暖回覆您。</li>
+            <li>您說的話或輸入的對話會交給 AI 處理，讓小暖回覆您。</li>
             <li>登記的疾病、用藥與注意事項目前不會送給 AI，也不會自動成為記憶。</li>
             <li>您可以隨時停止 AI 陪伴；停止後就不能再繼續對話。</li>
           </ul>
@@ -209,12 +211,16 @@ export default function ElderSessionPage() {
         </button>
       </header>
 
+      {!confirmingStop && !busy && <AssistedVoiceCompanion key={session.assisted_session_id}
+        assistedSessionId={session.assisted_session_id} onEnd={end} onActiveChange={setVoiceActive}
+        onReply={(text) => setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'assistant', text }])} />}
+
       <section aria-label="對話內容" className={styles.chat}>
         {messages.length === 0 && (
           <div className={styles.welcome}>
             <ChatCircleDots aria-hidden="true" size={48} weight="fill" />
             <h2>今天想聊些什麼？</h2>
-            <p>您可以打字告訴小暖。疾病與用藥資料目前不會送給 AI。</p>
+            <p>{voiceActive ? '語音陪伴已開啟，請依照上方提示慢慢說。' : '請照服員協助開啟語音，也可以使用下方文字輸入。'}</p>
           </div>
         )}
         {messages.map((message) => (
@@ -272,13 +278,14 @@ export default function ElderSessionPage() {
           <div>
             <textarea
               id="elder-message"
+              disabled={voiceActive}
               maxLength={4000}
               onChange={(event) => setInput(event.target.value)}
               placeholder="在這裡打字…"
               rows={3}
               value={input}
             />
-            <button disabled={busy || !input.trim()} type="submit">
+            <button disabled={busy || voiceActive || !input.trim()} type="submit">
               <PaperPlaneTilt aria-hidden="true" size={28} weight="fill" />
               送出
             </button>

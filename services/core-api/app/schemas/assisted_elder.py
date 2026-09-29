@@ -140,6 +140,19 @@ class AcknowledgeFirstUseRequest(BaseModel):
     acknowledged: Literal[True]
 
 
+class StaffAssistedAcknowledgementRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    explanation_given: Literal[True]
+    elder_agreed: Literal[True]
+
+
+class AssistedVoiceTicketRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    language_preference: Literal["ZH_TW", "EN_US"] = "ZH_TW"
+
+
 class FirstUseAcknowledgementResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

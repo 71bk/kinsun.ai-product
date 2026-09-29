@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+- 2026-09-29 無帳號長者語音切片：照服員記錄長者明確口頭意願，語音對話綁定當次
+  handoff；development migration head `d8f0a2b4c657`。Azure 語音合成憑證目前被拒絕，
+  合成 SQL／HTTP 與 browser fixture 不等於真人語音驗收。
+  詳見 `docs/project/staff-assisted-voice-20260929.md`。
+- Core `Settings.model_dump()` 遮蔽 DSN／secret，不能用來重建運作設定。重驗設定時
+  僅在程序內取 `{name: getattr(settings, name) for name in Settings.model_fields}`；
+  禁止輸出該資料或 ValidationError 的原始 input。
+
 - 2026-09-10 RAG 已完成外部同步，2026-09-29 唯讀複驗與原紀錄一致：Supabase development 現行 release 是
   `rag-v2-v004-f3339ceae77c`，runtime policy v004，長照法 71 筆可檢索。查 RAG 現況要以
   `scripts/rag/sync_law_repair.py verify` 的當次輸出為準，不要沿用本檔 08-2x 的舊敘述。

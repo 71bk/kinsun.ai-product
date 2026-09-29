@@ -1,0 +1,7 @@
+.panel { display: grid; gap: var(--space-4); padding: var(--space-6); background: var(--color-surface); border: 2px solid var(--color-border); border-radius: var(--radius-lg); margin-block: var(--space-4); }
+.panel p { margin: 0; line-height: 1.6; }
+.status { font-size: 1.5rem; font-weight: 700; }
+.panel select { font: inherit; padding: var(--space-3); max-width: 100%; }
+.panel button { min-height: 64px; padding: var(--space-4); border: 0; border-radius: var(--radius-lg); color: var(--color-on-primary); font: inherit; font-size: 1.25rem; font-weight: 700; cursor: pointer; }
+.start { background: var(--color-primary-strong); }
+.stop { background: var(--color-destructive); }

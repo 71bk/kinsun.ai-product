@@ -9,7 +9,7 @@ import ElderDetailPage from './page';
 const mocks = vi.hoisted(() => ({
   workspace: vi.fn(), actions: vi.fn(), candidates: vi.fn(), events: vi.fn(),
   create: vi.fn(), update: vi.fn(), adopt: vi.fn(), dismiss: vi.fn(), needsReview: vi.fn(), review: vi.fn(),
-  summaries: vi.fn(), generateSummary: vi.fn(), reviewSummary: vi.fn(), source: vi.fn(),
+  summaries: vi.fn(), generateSummary: vi.fn(), reviewSummary: vi.fn(), source: vi.fn(), memories: vi.fn(),
 }));
 vi.mock('@/lib/runtime-config', () => ({ getRuntimeConfig: async () => ({ credentialStatus: 'present', apiBaseUrl: '/backend/core' }) }));
 vi.mock('@/lib/api/elders', () => ({ getElderWorkspace: mocks.workspace }));
@@ -20,11 +20,12 @@ vi.mock('@/lib/api/care-actions', () => ({
 }));
 vi.mock('@/lib/api/events', () => ({ listEvents: mocks.events, summariseNeedsReview: mocks.needsReview, reviewEvent: mocks.review, getSummarySourceEvent: mocks.source }));
 vi.mock('@/lib/api/summaries', () => ({ listSummaries: mocks.summaries, generateSummary: mocks.generateSummary, reviewSummary: mocks.reviewSummary }));
+vi.mock('@/lib/api/memories', () => ({ listMemories: mocks.memories }));
 
 const workspace = {
   elderId: 'synthetic-elder', displayName: 'Synthetic private elder',
   primaryCareSetting: 'DAYCARE', status: 'ACTIVE', purpose: 'care',
-  allowedActions: ['care_action:read', 'care_action:create', 'care_action:update'],
+  allowedActions: ['care_action:read', 'care_action:create', 'care_action:update', 'care_event:read'],
   sourceType: 'relationship', sourceSummary: 'Synthetic private assignment', expiresAt: null,
 };
 const source = { eventId: 'source', elderId: 'synthetic-elder', eventType: 'MEAL',
@@ -126,6 +127,32 @@ async function openSummaryQuery(query: { tab?: string; date?: string | string[] 
 const daily = { summaryId: 'summary', elderId: 'synthetic-elder', date: '2026-09-09',
   status: 'READY', items: [], missingFields: [], conflictFlags: [], version: 1,
   generatedAt: null, updatedAt: '2026-09-08T16:00:00Z' };
+
+describe('accountless elder workspace', () => {
+  it('preserves care actions when a worker also has a tablet handoff scope', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: [
+      'assisted_session:create', 'care_action:read', 'care_action:create', 'care_action:update',
+    ] });
+    await openActions();
+    expect(screen.getByRole('button', { name: '準備陪伴平板' })).toBeTruthy();
+  });
+
+  it('offers a tablet handoff without querying ungranted care data', async () => {
+    mocks.workspace.mockResolvedValue({ ...workspace, allowedActions: ['assisted_session:create'] });
+    await act(async () => {
+      render(createElement(LocaleProvider, { initialLocale: 'zh-Hant', children:
+        createElement(Suspense, { fallback: 'Loading' }, createElement(ElderDetailPage, {
+          params: Promise.resolve({ elderId: 'synthetic-elder' }),
+        })),
+      }));
+    });
+    await screen.findByRole('button', { name: '準備陪伴平板' });
+    expect(screen.queryByRole('tab')).toBeNull();
+    for (const query of [mocks.events, mocks.memories, mocks.summaries, mocks.actions, mocks.candidates]) {
+      expect(query).not.toHaveBeenCalled();
+    }
+  });
+});
 
 describe('dashboard daily summary entry', () => {
   it.each([

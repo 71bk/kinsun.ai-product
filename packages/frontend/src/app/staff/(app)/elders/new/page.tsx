@@ -1,15 +1,15 @@
 'use client';
 
-import { ClipboardText, DeviceTablet, ShieldCheck, UserPlus } from '@phosphor-icons/react';
+import { DeviceTablet, ShieldCheck, UserPlus } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { AssistedSessionPanel } from '@/components/care/AssistedSessionPanel';
 import { NotLoggedIn } from '@/components/NotLoggedIn';
 import { Skeleton } from '@/components/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import {
   createAccountlessElder,
-  issueAssistedSession,
   type CareProfileCategory,
 } from '@/lib/api/assisted-elders';
 import { getCaregiverDashboard, type CaregiverDashboard } from '@/lib/api/dashboard';
@@ -38,7 +38,7 @@ function profileEntries(profile: ProfileText) {
 }
 
 export default function CreateAccountlessElderPage() {
-  const { t, formatDateTime } = useLocale();
+  const { t } = useLocale();
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
   const [dashboard, setDashboard] = useState<CaregiverDashboard | null>(null);
   const [displayName, setDisplayName] = useState('');
@@ -51,11 +51,9 @@ export default function CreateAccountlessElderPage() {
   const [profile, setProfile] = useState<ProfileText>(EMPTY_PROFILE);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [handoff, setHandoff] = useState<{
     displayName: string;
-    url: string;
-    expiresAt: string;
+    elderId: string;
   } | null>(null);
   const successCardRef = useRef<HTMLElement>(null);
 
@@ -105,7 +103,6 @@ export default function CreateAccountlessElderPage() {
     event.preventDefault();
     setSubmitting(true);
     setError(false);
-    setCopied(false);
     try {
       const elder = await createAccountlessElder(apiConfig, {
         organizationId: activeDashboard.tenantId,
@@ -116,11 +113,9 @@ export default function CreateAccountlessElderPage() {
         primaryCareSetting,
         careProfile: profileEntries(profile),
       });
-      const issued = await issueAssistedSession(apiConfig, elder.elder_id);
       setHandoff({
         displayName: elder.display_name,
-        url: `${window.location.origin}/elder/pair#${issued.pairing_token}`,
-        expiresAt: issued.pairing_expires_at,
+        elderId: elder.elder_id,
       });
     } catch {
       setError(true);
@@ -146,28 +141,7 @@ export default function CreateAccountlessElderPage() {
             <DeviceTablet aria-hidden="true" size={32} weight="fill" />
           </span>
           <h2>{handoff.displayName}</h2>
-          <label className={styles.label} htmlFor="tablet-handoff-link">
-            {t('elderCreate.tabletLink')}
-          </label>
-          <div className={styles.copyRow}>
-            <input id="tablet-handoff-link" readOnly value={handoff.url} />
-            <button
-              className={styles.secondaryButton}
-              onClick={() => {
-                void navigator.clipboard.writeText(handoff.url).then(() => setCopied(true));
-              }}
-              type="button"
-            >
-              <ClipboardText aria-hidden="true" size={20} />
-              {t('elderCreate.copy')}
-            </button>
-          </div>
-          {copied && <p className={styles.successText}>{t('elderCreate.copied')}</p>}
-          <p className={styles.meta}>{t('elderCreate.expiry', { at: formatDateTime(handoff.expiresAt) })}</p>
-          <p className={styles.securityNotice}>
-            <ShieldCheck aria-hidden="true" size={22} weight="fill" />
-            {t('elderCreate.securityNotice')}
-          </p>
+          <AssistedSessionPanel config={apiConfig} elderId={handoff.elderId} elderName={handoff.displayName} />
           <Link className={styles.backLink} href="/staff">
             {t('elderCreate.back')}
           </Link>

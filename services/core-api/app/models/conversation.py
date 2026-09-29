@@ -40,6 +40,11 @@ class ConversationSession(BaseModel, TenantScopedMixin):
         nullable=True,
     )
     initiator_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    assisted_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(f"{SCHEMA_NAME}.assisted_elder_session.assisted_session_id"),
+        nullable=True,
+    )
     language_route: Mapped[str] = mapped_column(LANGUAGE_CODE_ENUM, nullable=False)
     input_mode: Mapped[str] = mapped_column(
         String(32),

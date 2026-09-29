@@ -13,6 +13,7 @@ from app.core.auth import ActorContext
 from app.core.config import Settings
 from app.core.exceptions import AuthenticationError, NotFoundError, ServiceUnavailableError
 from app.models.assisted_elder_session import AssistedElderSession
+from app.models.conversation import ConversationSession
 from app.models.elder import Elder
 from app.repositories.actor_repo import ActorRepository
 from app.repositories.assisted_elder_session_repo import AssistedElderSessionRepository
@@ -261,6 +262,58 @@ class AssistedElderSessionService:
         assisted_session.ended_at = self._clock()
         assisted_session.version += 1
         await self._repository.flush()
+
+    async def require_bound_conversation(self, conversation: ConversationSession) -> None:
+        """Recheck a server-bound handoff at every Speech/Agent boundary.
+
+        Service calls do not refresh the tablet's idle deadline. No client can
+        change the session binding, even if it knows another conversation ID.
+        """
+        self._require_enabled()
+        row = await self._repository.get_by_id(conversation.assisted_session_id)
+        now = self._clock()
+        if (
+            row is None
+            or row.status != "ACTIVE"
+            or row.idle_expires_at is None
+            or row.idle_expires_at <= now
+            or row.absolute_expires_at <= now
+            or row.tenant_id != conversation.tenant_id
+            or row.elder_id != conversation.elder_id
+            or row.initiated_by_actor_id != conversation.initiator_actor_id
+        ):
+            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
+        await self._require_live_scope(row, requested_action="voice_session:create", now=now)
+        elder = await ElderRepository(self._session, row.tenant_id).get_by_id(row.elder_id)
+        if elder is None or elder.status != "ACTIVE":
+            raise AuthenticationError(_AUTHENTICATION_REQUIRED)
+
+    async def require_staff_handoff(
+        self,
+        *,
+        assisted_session_id: UUID,
+        elder_id: UUID,
+        actor_context: ActorContext,
+    ) -> AssistedElderSession:
+        self._require_enabled()
+        row = await self._repository.get_by_id(assisted_session_id)
+        now = self._clock()
+        if (
+            row is None
+            or row.tenant_id != actor_context.tenant_id
+            or row.elder_id != elder_id
+            or row.initiated_by_actor_id != actor_context.actor_id
+            or row.status not in {"PAIRING", "ACTIVE"}
+            or row.absolute_expires_at <= now
+            or (row.status == "PAIRING" and row.pairing_expires_at <= now)
+            or (
+                row.status == "ACTIVE"
+                and (row.idle_expires_at is None or row.idle_expires_at <= now)
+            )
+        ):
+            raise NotFoundError("Resource not found")
+        await self._require_live_scope(row, requested_action="assisted_session:create", now=now)
+        return row
 
     async def _require_live_scope(
         self,
