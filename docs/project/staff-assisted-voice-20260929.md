@@ -66,8 +66,10 @@ reduced-motion。每個狀態均檢查水平 overflow；暫停後合成 track �
 新截圖為 `voice-final-{width}.png`，390 reduced-motion 亦通過。真機操作手感、實際音訊、
 Lighthouse 與 production 部署均不在此證據範圍內。
 
-未完成的外部驗收：現有 Azure Speech TTS adapter 的真實請求回 `authentication` failure
-（provider 401／403 分類）。需在 `services/speech-gateway/.env` 設定有效 key 與 region，
-再驗真實麥克風 → ASR → Agent → 播放與停止。合成資料成功不代表這項通過。
+後續 Azure 實測：先前請求回 `authentication` failure（provider 401／403 分類）；本機原
+區域 `eastasia` 與資源頁不符，改成 `japanwest` 後仍被拒絕。更新使用者提供的金鑰後，
+現有 Azure Speech TTS adapter 成功把固定測試句合成 `audio/mpeg`（30,960 bytes）。
+金鑰僅寫入 ignored 的 `services/speech-gateway/.env`，音檔置於 `.qa/local/`，均未提交。
+這只驗證真實 Azure 合成；真人麥克風 → ASR → Agent → 播放與停止的完整流程仍待驗收。
 沒有 disposable `TEST_DATABASE_URL`，未執行會 reset schema 的完整 integration／migration
 升降版測試；development DB 未被 reset、truncate 或 downgrade。
