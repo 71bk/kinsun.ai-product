@@ -1,0 +1,44 @@
+{
+  "date": "2026-09-29",
+  "environment": "local services with shared development PostgreSQL",
+  "browser_build": "production",
+  "authentication": "real native email/password",
+  "audio_input": "synthetic MediaStream; no human microphone acceptance",
+  "http_mocks": false,
+  "providers": {
+    "asr": "deepgram nova-3:2026-04-01.30000",
+    "agent": "gemini-3.6-flash",
+    "tts": "azure-speech-tts japanwest"
+  },
+  "checks": {
+    "staff_ui_create_accountless_elder": "PASS",
+    "staff_verbal_acknowledgement_provenance": "PASS",
+    "ui_pairing": "PASS",
+    "two_consecutive_cloud_voice_turns": "PASS",
+    "automatic_listening_after_playback": "PASS",
+    "pause_releases_tracks": "PASS",
+    "two_silent_segments_pause_without_asr": "PASS",
+    "empty_asr_pauses_without_agent": "PASS",
+    "low_confidence_blocks_agent": "PASS",
+    "local_retry_prompt_plays_and_resumes_listening": "PASS",
+    "second_low_confidence_pauses_and_releases_tracks": "PASS",
+    "delayed_voice_list_regression_tests": "PASS",
+    "spoken_stop_ends_tablet_and_releases_tracks": "PASS",
+    "reissued_handoff_rejects_old_session_and_agent": "PASS",
+    "reissued_handoff_rejects_old_asr_ticket": "PASS",
+    "reissued_handoff_rejects_unexpired_tts_capability": "PASS",
+    "no_elder_actor_created": "PASS",
+    "only_basic_voice_consent": "PASS",
+    "no_fabricated_asr_human_confirmation": "PASS",
+    "no_memory_rows": "PASS"
+  },
+  "observed_low_confidence": 0.0762,
+  "old_tts_capability_remaining_ms_at_check": 33919,
+  "human_microphone_and_speaker_acceptance": "PENDING",
+  "production_acceptance": "NOT_EXECUTED",
+  "limitations": [
+    "Synthetic audio does not establish real microphone or speaker quality.",
+    "Retry prompting was verified with native browser events; human listening remains pending.",
+    "No speech interruption during reply playback; the visible pause control is available."
+  ]
+}

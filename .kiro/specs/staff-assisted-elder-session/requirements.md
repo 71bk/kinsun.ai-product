@@ -127,3 +127,25 @@ tablet (no worker credential)
   -> text companion turn -> optional immediate stop/revoke
   -> end or expire -> credential rejected
 ```
+
+## 5. Assisted voice follow-up (2026-09-29)
+
+The original text slice above remains the baseline. For an elder who cannot operate a device:
+
+1. A worker may reopen an existing authorized Elder and prepare a new one-time tablet handoff,
+   without creating another Elder or an elder login account.
+2. The initiating worker may record that the explanation was given and the elder personally
+   expressed willingness to use AI. Both assertions must be explicit. This records BASIC_VOICE
+   provenance, not legal-representative authority or additional data-use consent.
+3. The worker starts microphone access on the paired tablet. The elder can speak without
+   repeatedly pressing record/send; a bounded silence detector segments audio for the existing
+   Speech Gateway ASR, Core gate, Agent and reply-bound TTS pipeline.
+4. Every voice conversation is bound to the initiating assisted session. Reissue, end, expiry,
+   revoked consent or lost service scope blocks further Speech/Core use, including old tickets.
+5. Low confidence is re-recorded without an ELDER confirmation claim. Two consecutive empty or
+   uncertain segments pause capture. Provider failure, playback failure or missing local retry
+   prompt also pauses capture. Each recording lasts at most 15 seconds; each run at most 12 turns.
+6. A recognized standalone stop request during listening ends the tablet session; the visible
+   pause and end controls remain available. Pause/unmount abort work and release microphone tracks.
+7. Real microphone/provider acceptance must be recorded separately from synthetic browser and
+   SQL/HTTP checks; production blockers in R7 still apply.

@@ -20,6 +20,12 @@ class AssistedElderSessionRepository:
     async def flush(self) -> None:
         await self._session.flush()
 
+    async def get_by_id(self, session_id: UUID) -> AssistedElderSession | None:
+        result = await self._session.execute(
+            select(AssistedElderSession).where(AssistedElderSession.id == session_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_pairing_digest(
         self,
         digest: str,

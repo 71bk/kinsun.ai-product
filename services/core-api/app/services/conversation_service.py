@@ -40,6 +40,7 @@ class ConversationService:
         command: ConversationStartCommand,
         trace_id: str,
         idempotency_key: str,
+        assisted_session_id: UUID | None = None,
     ) -> ConversationSession:
         consent = await ConsentService(self._session, self._tenant_id).require_active(
             elder_id=elder_id,
@@ -56,6 +57,7 @@ class ConversationService:
             tenant_id=self._tenant_id,
             initiator_actor_id=actor_id,
             initiator_type=initiator_type,
+            assisted_session_id=assisted_session_id,
             language_route=command.language_route.value,
             input_mode=command.input_mode,
             state="CREATED",
@@ -98,6 +100,7 @@ class ConversationService:
         trace_id: str,
         idempotency_key: str,
         codec: VoiceTicketCodec,
+        assisted_session_id: UUID | None = None,
     ) -> tuple[ConversationSession, IssuedVoiceTicket]:
         conversation = await self.create(
             elder_id=elder_id,
@@ -106,6 +109,7 @@ class ConversationService:
             command=command,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            assisted_session_id=assisted_session_id,
         )
         return conversation, codec.issue(conversation)
 

@@ -113,6 +113,10 @@ DATA_SCHEMA_FOR = {
         "domain/FirstUseAcknowledgementV1.json"
     ),
     "assisted-companion-turn-request.json": "domain/AssistedCompanionTurnRequestV1.json",
+    "assisted-voice-ticket-request.json": "domain/AssistedVoiceTicketRequestV1.json",
+    "assisted-voice-ticket-client-scope.json": "domain/AssistedVoiceTicketRequestV1.json",
+    "staff-assisted-acknowledgement.json": "domain/StaffAssistedAcknowledgementRequestV1.json",
+    "staff-assisted-acknowledgement-without-agreement.json": "domain/StaffAssistedAcknowledgementRequestV1.json",
     "assisted-session-ended.json": "domain/EndAssistedSessionV1.json",
     "care-action-create.json": "domain/CreateCareActionRequestV1.json",
     "care-action-update.json": "domain/UpdateCareActionRequestV1.json",

@@ -1,0 +1,23 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "explanation_given": {
+      "const": true,
+      "title": "Explanation Given",
+      "type": "boolean"
+    },
+    "elder_agreed": {
+      "const": true,
+      "title": "Elder Agreed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "explanation_given",
+    "elder_agreed"
+  ],
+  "title": "StaffAssistedAcknowledgementRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/StaffAssistedAcknowledgementRequestV1.json"
+}

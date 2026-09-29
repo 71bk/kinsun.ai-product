@@ -332,6 +332,26 @@ async def main() -> int:
 
         sample_uuid = "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
 
+        # Accountless voice still requires its own authenticated handoff; a
+        # staff-recorded acknowledgement additionally requires the real worker.
+        for path, body in [
+            (f"/api/v1/elders/{sample_uuid}/assisted-sessions/{sample_uuid}/acknowledgement",
+             {"explanation_given": True, "elder_agreed": True}),
+            ("/api/v1/assisted-elder-sessions/current/voice-tickets",
+             {"language_preference": "ZH_TW"}),
+            (f"/api/v1/assisted-elder-sessions/current/voice-sessions/{sample_uuid}/companion-turns",
+             {"input_text": "Synthetic voice contract probe"}),
+            (f"/api/v1/assisted-elder-sessions/current/voice-sessions/{sample_uuid}/cancel", None),
+        ]:
+            response = await client.post(
+                path, json=body,
+                headers={"Idempotency-Key": "live-contract-assisted-voice"},
+            )
+            if response.status_code != 401:
+                failures.append(f"POST {path}: expected 401, got {response.status_code}")
+            check(f"POST {path} 401 vs ErrorEnvelopeV1",
+                  response.json(), load("common/ErrorEnvelopeV1.json"))
+
         # Staff report routes must reject anonymous callers before any data access.
         for method, suffix, body in [
             ("GET", "family-report-workspace", None),

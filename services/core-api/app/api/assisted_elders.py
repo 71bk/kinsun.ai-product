@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.agent_runtime import get_agent_runtime_client
 from app.api.responses import get_correlation_id, success
+from app.api.voice_sessions import (
+    _ticket_response,
+    cancel_voice_session,
+    create_companion_turn,
+)
 from app.core.agent_runtime import AgentRuntimePort
 from app.core.auth import ActorContext
 from app.core.config import get_settings
@@ -22,6 +27,7 @@ from app.db.session import get_db_session
 from app.domain.consent import ConsentPurpose
 from app.domain.conversation import ConversationStartCommand, LanguageRoute
 from app.middleware.actor_guard import require_active_actor
+from app.models.conversation import ConversationSession
 from app.models.policy import PolicyRegistry
 from app.repositories.idempotency_repo import IdempotencyRepository
 from app.schemas.assisted_elder import (
@@ -29,6 +35,7 @@ from app.schemas.assisted_elder import (
     AcknowledgeFirstUseRequest,
     ActivatedAssistedSessionResponse,
     AssistedCompanionTurnRequest,
+    AssistedVoiceTicketRequest,
     CareProfileEntryResponse,
     CreateAccountlessElderRequest,
     CurrentAssistedSessionResponse,
@@ -37,10 +44,13 @@ from app.schemas.assisted_elder import (
     FirstUseAcknowledgementResponse,
     IssueAssistedSessionRequest,
     IssuedAssistedSessionResponse,
+    StaffAssistedAcknowledgementRequest,
 )
+from app.schemas.conversation import CompanionTurnRequest
 from app.services.assisted_elder_session_service import (
     AssistedElderSessionPolicy,
     AssistedElderSessionService,
+    ResolvedAssistedSession,
 )
 from app.services.assisted_session_tokens import AssistedSessionTokenCodec
 from app.services.companion_service import CompanionService
@@ -50,6 +60,7 @@ from app.services.elder_onboarding_service import (
     AccountlessElderBundle,
     ElderOnboardingService,
 )
+from app.services.voice_ticket_codec import VoiceTicketCodec, get_voice_ticket_codec
 
 router = APIRouter(prefix="/api/v1", tags=["assisted-elder-sessions"])
 _AUTHENTICATION_REQUIRED = "Assisted Elder Session is unavailable"
@@ -437,6 +448,7 @@ async def create_assisted_companion_turn(
         ),
         trace_id=get_correlation_id(),
         idempotency_key=idempotency_key,
+        assisted_session_id=resolved.assisted_session.id,
     )
     settings = get_settings()
     turn = await CompanionService(
@@ -464,6 +476,174 @@ async def create_assisted_companion_turn(
     )
     _no_store(response)
     return success(turn.model_dump(mode="json"))
+
+
+@router.post("/elders/{elder_id}/assisted-sessions/{assisted_session_id}/acknowledgement")
+async def record_assisted_verbal_acknowledgement(
+    request: StaffAssistedAcknowledgementRequest,
+    response: Response,
+    elder_id: UUID = Path(...),
+    assisted_session_id: UUID = Path(...),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    actor_context: ActorContext = Depends(require_active_actor),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    await _assisted_service(session).require_staff_handoff(
+        assisted_session_id=assisted_session_id,
+        elder_id=elder_id,
+        actor_context=actor_context,
+    )
+    idem = IdempotencyRepository(session, actor_context.tenant_id, actor_context.actor_id)
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="record_assisted_verbal_acknowledgement",
+        payload={"assisted_session_id": assisted_session_id, **request.model_dump(mode="json")},
+    )
+    if not replay.replayed:
+        consent = await ConsentService(
+            session, actor_context.tenant_id
+        ).acknowledge_assisted_basic_voice(
+            elder_id=elder_id,
+            recorded_by_actor_id=actor_context.actor_id,
+            assisted_session_id=assisted_session_id,
+            policy_version=get_settings().assisted_elder_acknowledgement_policy_version,
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+            staff_recorded_verbal=True,
+        )
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="consent_grant",
+            resource_id=consent.id,
+            response_status=200,
+            response_body={"consent_id": str(consent.id)},
+        )
+    # Re-read current state even on replay: a revoked grant is never resurrected.
+    acknowledgement = await _first_use_acknowledgement(
+        session,
+        tenant_id=actor_context.tenant_id,
+        elder_id=elder_id,
+    )
+    _no_store(response)
+    return success(acknowledgement.model_dump(mode="json"))
+
+
+@router.post("/assisted-elder-sessions/current/voice-tickets", status_code=201)
+async def issue_assisted_voice_ticket(
+    request: AssistedVoiceTicketRequest,
+    response: Response,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    token: str = Depends(assisted_session_bearer),
+    session: AsyncSession = Depends(get_db_session),
+    codec: VoiceTicketCodec = Depends(get_voice_ticket_codec),
+) -> dict:
+    settings = get_settings()
+    if not settings.asr_gate_enabled or not settings.speech_synthesis_capability_enabled:
+        raise ServiceUnavailableError("Assisted voice is unavailable")
+    resolved = await _assisted_service(session).resolve_current(
+        token, requested_action="voice_session:create"
+    )
+    actor = resolved.actor_context
+    idem = IdempotencyRepository(session, actor.tenant_id, actor.actor_id)
+    replay = await idem.begin(
+        key=idempotency_key,
+        operation="issue_assisted_voice_ticket",
+        payload={
+            "assisted_session_id": resolved.assisted_session.id,
+            **request.model_dump(mode="json"),
+        },
+    )
+    service = ConversationService(session, actor.tenant_id)
+    if replay.replayed:
+        if replay.resource_id is None:
+            raise NotFoundError("Resource not found")
+        await _bound_conversation(service, replay.resource_id, resolved)
+        conversation, issued = await service.replay_ticket(replay.resource_id, codec)
+    else:
+        conversation, issued = await service.issue_ticket(
+            elder_id=resolved.elder.id,
+            actor_id=actor.actor_id,
+            actor_role=actor.actor_role,
+            command=ConversationStartCommand(
+                language_route=LanguageRoute(request.language_preference),
+                input_mode="voice",
+            ),
+            trace_id=get_correlation_id(),
+            idempotency_key=idempotency_key,
+            codec=codec,
+            assisted_session_id=resolved.assisted_session.id,
+        )
+        await idem.complete(
+            key=idempotency_key,
+            resource_type="conversation_session",
+            resource_id=conversation.id,
+            response_status=201,
+            response_body={"session_id": str(conversation.id)},
+        )
+    _no_store(response)
+    return success(_ticket_response(conversation, issued))
+
+
+async def _bound_conversation(
+    service: ConversationService, session_id: UUID, resolved: ResolvedAssistedSession
+) -> ConversationSession:
+    conversation = await service.get(session_id)
+    if (
+        conversation is None
+        or conversation.assisted_session_id != resolved.assisted_session.id
+        or conversation.elder_id != resolved.elder.id
+        or conversation.initiator_actor_id != resolved.actor_context.actor_id
+        or conversation.tenant_id != resolved.actor_context.tenant_id
+    ):
+        raise NotFoundError("Resource not found")
+    return conversation
+
+
+@router.post("/assisted-elder-sessions/current/voice-sessions/{session_id}/companion-turns")
+async def create_assisted_voice_turn(
+    request: CompanionTurnRequest,
+    response: Response,
+    session_id: UUID = Path(...),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    token: str = Depends(assisted_session_bearer),
+    session: AsyncSession = Depends(get_db_session),
+    runtime_client: AgentRuntimePort = Depends(get_agent_runtime_client),
+) -> dict:
+    resolved = await _assisted_service(session).resolve_current(
+        token, requested_action="voice_session:control"
+    )
+    conversation = await _bound_conversation(
+        ConversationService(session, resolved.actor_context.tenant_id), session_id, resolved
+    )
+    if conversation.input_mode != "voice":
+        raise NotFoundError("Resource not found")
+    _no_store(response)
+    return await create_companion_turn(
+        request,
+        session_id,
+        idempotency_key,
+        resolved.actor_context,
+        session,
+        runtime_client,
+    )
+
+
+@router.post("/assisted-elder-sessions/current/voice-sessions/{session_id}/cancel")
+async def cancel_assisted_voice_turn(
+    response: Response,
+    session_id: UUID = Path(...),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    token: str = Depends(assisted_session_bearer),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    resolved = await _assisted_service(session).resolve_current(
+        token, requested_action="voice_session:control"
+    )
+    await _bound_conversation(
+        ConversationService(session, resolved.actor_context.tenant_id), session_id, resolved
+    )
+    _no_store(response)
+    return await cancel_voice_session(session_id, idempotency_key, resolved.actor_context, session)
 
 
 @router.post("/assisted-elder-sessions/current/end")

@@ -36,6 +36,7 @@ from app.repositories.memory_repo import MemoryRepository
 from app.schemas.care_event import CreateCareEventCandidateRequest
 from app.schemas.conversation import CompanionTurnResponse
 from app.services.asr_gate_service import AsrGateService
+from app.services.assisted_voice_authorization import require_live_assisted_conversation
 from app.services.authorization_service import authorize_elder
 from app.services.care_event_rendering import render_reviewed_event
 from app.services.care_event_service import CareEventService
@@ -326,6 +327,7 @@ class CompanionService:
         conversation = await self._conversations.get_for_update(conversation.id)
         if conversation is None or conversation.elder_id != supplied_elder_id:
             raise NotFoundError("Resource not found")
+        await require_live_assisted_conversation(self._session, conversation)
 
         is_text_turn = conversation.input_mode == "text" and conversation.state == "CREATED"
         is_gated_voice_turn = (

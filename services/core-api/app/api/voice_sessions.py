@@ -41,6 +41,7 @@ from app.schemas.conversation import (
     VoiceTicketIssuedResponse,
 )
 from app.services.asr_gate_service import AsrGateService
+from app.services.assisted_voice_authorization import require_live_assisted_conversation
 from app.services.authorization_service import authorize_elder
 from app.services.companion_service import CompanionService
 from app.services.conversation_service import ConversationService
@@ -101,6 +102,7 @@ async def _trusted_speech_conversation(
     conversation = await session.get(ConversationSession, session_id)
     if conversation is None or conversation.initiator_actor_id is None:
         raise AuthenticationError("Voice session is unavailable")
+    await require_live_assisted_conversation(session, conversation)
     return conversation
 
 

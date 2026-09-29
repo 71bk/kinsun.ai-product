@@ -320,10 +320,10 @@ const zhHant = {
   'elderCreate.onePerLine': '每行一項；內容會標記為照顧員登錄，並保留來源。',
   'elderCreate.recordedNotice':
     '疾病、用藥與注意事項屬於 Care Profile，不是 AI Memory，也不代表系統已完成醫療驗證；目前不會送給 AI。',
-  'elderCreate.submit': '建立並產生平板交付連結',
+  'elderCreate.submit': '建立長者資料',
   'elderCreate.submitting': '正在建立…',
   'elderCreate.successTitle': '長者資料已建立',
-  'elderCreate.successDescription': '請在到期前把一次性連結交給長者平板開啟。',
+  'elderCreate.successDescription': '接著準備陪伴平板，向長者說明並記錄使用意願。',
   'elderCreate.tabletLink': '一次性平板連結',
   'elderCreate.copy': '複製連結',
   'elderCreate.copied': '已複製連結。',
@@ -332,7 +332,7 @@ const zhHant = {
     '平板啟用後只會取得短效長者模式，不會取得或保留你的照顧員登入憑證。',
   'elderCreate.back': '返回長者總覽',
   'elderCreate.noCareUnit': '目前帳號沒有可用的照護單位，無法建立長者。',
-  'elderCreate.failed': '建立或產生平板交付連結失敗，請確認權限後再試。',
+  'elderCreate.failed': '建立長者資料失敗，請確認權限後再試。',
 
   // ---- elder detail ----
   'elderDetail.title': '長者詳情',
@@ -1311,10 +1311,10 @@ const en: Record<MessageKey, string> = {
   'elderCreate.onePerLine': 'Enter one item per line. Each item keeps its staff-recorded source.',
   'elderCreate.recordedNotice':
     'Conditions, medications, and precautions are Care Profile data, not AI Memory or clinical verification, and are not currently sent to AI.',
-  'elderCreate.submit': 'Create and issue tablet handoff',
+  'elderCreate.submit': 'Create elder profile',
   'elderCreate.submitting': 'Creating…',
   'elderCreate.successTitle': 'Elder profile created',
-  'elderCreate.successDescription': 'Open the one-time link on the elder tablet before it expires.',
+  'elderCreate.successDescription': 'Next, prepare the tablet, explain the service, and record the elder’s willingness to use it.',
   'elderCreate.tabletLink': 'One-time tablet link',
   'elderCreate.copy': 'Copy link',
   'elderCreate.copied': 'Link copied.',
@@ -1324,7 +1324,7 @@ const en: Record<MessageKey, string> = {
   'elderCreate.back': 'Back to elders',
   'elderCreate.noCareUnit':
     'Your account has no available care unit, so an elder cannot be created.',
-  'elderCreate.failed': 'Creation or tablet handoff failed. Check your access and try again.',
+  'elderCreate.failed': 'Profile creation failed. Check your access and try again.',
 
   'elderDetail.title': 'Elder detail',
   'elderDetail.tabEvents': 'Care events',

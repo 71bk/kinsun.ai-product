@@ -1,0 +1,18 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "language_preference": {
+      "default": "ZH_TW",
+      "enum": [
+        "ZH_TW",
+        "EN_US"
+      ],
+      "title": "Language Preference",
+      "type": "string"
+    }
+  },
+  "title": "AssistedVoiceTicketRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/AssistedVoiceTicketRequestV1.json"
+}

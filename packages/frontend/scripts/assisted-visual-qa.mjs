@@ -162,14 +162,18 @@ async function installSyntheticRoutes(page, sessionState) {
           assisted_session_id: '79000000-0000-4000-8000-000000000001',
           elder_id: '75000000-0000-4000-8000-000000000001',
           pairing_token: TOKEN,
-          pairing_expires_at: '2026-09-01T04:15:00Z',
-          absolute_expires_at: '2026-09-01T12:00:00Z',
+          pairing_expires_at: new Date(Date.now() + 600_000).toISOString(),
+          absolute_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
         }),
         201,
       );
       return;
     }
 
+    if (/\/assisted-sessions\/[^/]+\/acknowledgement$/.test(pathname)) {
+      await fulfillJson(route, envelope(ACKNOWLEDGED));
+      return;
+    }
     await route.continue();
   });
 }
@@ -272,7 +276,7 @@ const STATES = [
     path: '/elder/session',
     sessionState: 'active',
     surface: 'voice',
-    expectText: ['林奶奶，您好', '今天想聊些什麼？', '停止 AI 陪伴'],
+    expectText: ['林奶奶，您好', '開啟語音陪伴', '停止 AI 陪伴'],
   },
   {
     name: 'session-conversation',
@@ -301,20 +305,22 @@ const STATES = [
     name: 'staff-create',
     path: '/staff/elders/new',
     surface: 'care',
-    expectText: ['建立無帳號長者', 'Care Profile', '建立並產生平板交付連結'],
+    expectText: ['建立無帳號長者', 'Care Profile', '建立長者資料'],
   },
   {
     name: 'staff-handoff',
     path: '/staff/elders/new',
     surface: 'care',
-    expectText: ['長者資料已建立', '一次性平板連結', '平板啟用後只會取得短效長者模式'],
-    expectFocusedLiveRegion: true,
-    expectScrollTop: true,
+    expectText: ['長者資料已建立', '一次性平板連結', '已完成使用確認，可以交付平板。'],
     action: async (page) => {
       await page.getByLabel('長者姓名／顯示名稱').fill('林奶奶');
       await page.getByLabel('希望小暖怎麼稱呼').fill('林奶奶');
-      await page.getByRole('button', { name: '建立並產生平板交付連結' }).click();
+      await page.getByRole('button', { name: '建立長者資料', exact: true }).click();
       await page.getByRole('heading', { name: '長者資料已建立' }).waitFor();
+      await page.getByRole('button', { name: '準備陪伴平板' }).click();
+      await page.getByRole('checkbox').check();
+      await page.getByRole('button', { name: '記錄長者口頭確認' }).click();
+      await page.getByText('已完成使用確認，可以交付平板。').waitFor();
     },
   },
 ];

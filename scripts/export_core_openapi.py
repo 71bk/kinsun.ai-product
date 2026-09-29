@@ -69,6 +69,8 @@ MODEL_FILES = {
     "ExchangeAssistedSessionRequest": "domain/ExchangeAssistedSessionRequestV1.json",
     "AcknowledgeFirstUseRequest": "domain/AcknowledgeFirstUseRequestV1.json",
     "AssistedCompanionTurnRequest": "domain/AssistedCompanionTurnRequestV1.json",
+    "AssistedVoiceTicketRequest": "domain/AssistedVoiceTicketRequestV1.json",
+    "StaffAssistedAcknowledgementRequest": "domain/StaffAssistedAcknowledgementRequestV1.json",
     "CreateCareActionRequest": "domain/CreateCareActionRequestV1.json",
     "UpdateCareActionRequest": "domain/UpdateCareActionRequestV1.json",
     "AdoptCareActionCandidateRequest": "domain/AdoptCareActionCandidateRequestV1.json",
@@ -93,6 +95,10 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "record_assisted_verbal_acknowledgement_api_v1_elders__elder_id__assisted_sessions__assisted_session_id__acknowledgement_post": "FirstUseAcknowledgementEnvelopeV1",
+    "issue_assisted_voice_ticket_api_v1_assisted_elder_sessions_current_voice_tickets_post": "VoiceTicketIssuedEnvelopeV1",
+    "create_assisted_voice_turn_api_v1_assisted_elder_sessions_current_voice_sessions__session_id__companion_turns_post": "CompanionTurnEnvelopeV1",
+    "cancel_assisted_voice_turn_api_v1_assisted_elder_sessions_current_voice_sessions__session_id__cancel_post": "VoiceSessionEnvelopeV1",
     "report_workspace_api_v1_elders__elder_id__family_report_workspace_get": "StaffReportWorkspaceEnvelopeV1",
     "create_report_from_summary_api_v1_elders__elder_id__family_reports_from_summary_post": "FamilyReportEnvelopeV1",
     "publish_staff_report_api_v1_elders__elder_id__family_reports__report_id__publish_post": "FamilyReportEnvelopeV1",

@@ -8,6 +8,22 @@
 
 ## 已在本次收斂
 
+### 2026-09-29 照服員協助無帳號長者使用語音
+
+- 新增 staff handoff acknowledgement、assisted voice ticket、companion turn、cancel
+  四個 POST operation。沿用既有 Success／Error envelope、VoiceTicketIssued 與
+  CompanionTurn response；新增兩個 strict request schema 與正反例。
+- 照服員 `ks1_` 只可記錄自己發出的有效 handoff；`explanation_given` 與 `elder_agreed`
+  必須同為 true。Consent 仍只有 BASIC_VOICE，granted_by_actor_id 為 NULL，
+  scope 記錄 `assistance_method=STAFF_RECORDED_VERBAL`，不建立代理人授權。
+- 平板 `es1_` 只能操作當次 handoff 綁定的對話；Speech ticket consume、ASR、Agent、
+  TTS capability consume 均重驗有效 handoff／服務關係／BASIC_VOICE 版本。
+- 低信心語音只允許重錄，沒有以照服員操作假造本人 Speaker／ASR confirmation。
+  Memory、event extraction、family sharing 與 Production 限制維持原規格。
+- Core live verifier 已比對 106 operations 並驗證新增入口的 401；SQL／HTTP 合成旅程
+  以 rollback-only fixture 通過。真實 provider／麥克風驗收仍未完成，詳見
+  [交付紀錄](../docs/project/staff-assisted-voice-20260929.md)。
+
 ### 2026-09-18 Demo workforce invitations（ADR 0024）
 
 - 新增 tenant-scoped ADMIN 單位清單、邀請清單／建立／撤銷與 private-BFF 啟用 API。

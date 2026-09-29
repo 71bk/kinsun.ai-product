@@ -1,5 +1,16 @@
 # AGENTS.md
 
+- 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
+  `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
+  migration head `d8f0a2b4c657` 已 additive 套用 development。更新本機金鑰並將區域改為
+  `japanwest` 後，已以真實登入／Supabase／Deepgram／Gemini／Azure 完成合成音訊兩輪
+  對話、續聽、暫停、無聲／低信心阻擋、停止與換發後舊票券／TTS 拒絕。只有收音來源
+  是合成 MediaStream；真人麥克風與聽感仍未驗收，不能將此標為真人通過。
+  狀態與操作見 `docs/project/staff-assisted-voice-20260929.md`。
+- Core `Settings.model_dump()` 會遮蔽 DSN／secret，不能拿 dump 重建可用設定。
+  測試需要重驗目前設定時，在程序內以 `{name: getattr(settings, name) for name in
+  Settings.model_fields}` 傳給 `Settings.model_validate`；不得列印該資料或例外內 input。
+
 - 2026-09-10 RAG 已完成外部同步，2026-09-29 唯讀複驗與原紀錄一致：Supabase development 現行 release 是
   `rag-v2-v004-f3339ceae77c`，runtime policy v004，長照法 71 筆可檢索。查 RAG 現況要以
   `scripts/rag/sync_law_repair.py verify` 的當次輸出為準，不要沿用本檔 08-2x 的舊敘述。

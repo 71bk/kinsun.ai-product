@@ -1,0 +1,10 @@
+.panel { padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); display: grid; gap: var(--space-3); margin-block: var(--space-4); min-width: 0; }
+.panel h2, .panel h3, .panel p { margin: 0; }
+.panel button, .panel a { min-height: 48px; border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); background: var(--color-primary-strong); color: var(--color-on-primary); cursor: pointer; font: inherit; }
+.panel button:disabled { opacity: .5; cursor: not-allowed; }
+.note { color: var(--color-muted-foreground); font-size: .9rem; }
+.check { display: flex; gap: var(--space-3); align-items: flex-start; line-height: 1.7; }
+.check input { flex: 0 0 auto; width: 24px; height: 24px; }
+.linkLabel { display: grid; gap: var(--space-2); min-width: 0; }
+.linkLabel input { width: 100%; min-width: 0; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }

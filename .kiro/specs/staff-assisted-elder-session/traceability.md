@@ -22,6 +22,14 @@ Updated: 2026-09-01
 
 ## Explicit release blockers
 
+The 2026-09-29 assisted voice follow-up adds staff verbal-acknowledgement recording, reopening an
+existing Elder, session-bound voice tickets/turns and hands-free capture. Core unit and rollback-only
+SQL/HTTP checks pass. The real Azure synthesis probe passed after updating the local key and region
+to `japanwest`; full microphone-to-ASR-to-Agent-to-playback acceptance is still **NOT VERIFIED**.
+The original VERIFIED rows describe the original text/handoff slice,
+not an end-to-end voice deployment. Evidence and UI checks:
+`docs/project/staff-assisted-voice-20260929.md`.
+
 - formal service entitlement and billing authority;
 - reviewed production lawful-basis, capacity and legal-representative evidence model where required;
 - durable managed-device enrollment and remote revocation;
