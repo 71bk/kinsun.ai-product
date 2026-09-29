@@ -3,8 +3,9 @@
 - 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
   `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
   migration head `d8f0a2b4c657` 已 additive 套用 development。更新本機金鑰並將區域改為
-  `japanwest` 後，Azure 固定測試句已成功合成 MP3；完整真人語音流程仍未驗收，不能把
-  合成 SQL／HTTP 或 browser fixture 測試當作真人語音驗收。
+  `japanwest` 後，已以真實登入／Supabase／Deepgram／Gemini／Azure 完成合成音訊兩輪
+  對話、續聽、暫停、無聲／低信心阻擋、停止與換發後舊票券／TTS 拒絕。只有收音來源
+  是合成 MediaStream；真人麥克風與聽感仍未驗收，不能將此標為真人通過。
   狀態與操作見 `docs/project/staff-assisted-voice-20260929.md`。
 - Core `Settings.model_dump()` 會遮蔽 DSN／secret，不能拿 dump 重建可用設定。
   測試需要重驗目前設定時，在程序內以 `{name: getattr(settings, name) for name in

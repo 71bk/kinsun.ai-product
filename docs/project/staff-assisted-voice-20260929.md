@@ -70,6 +70,41 @@ Lighthouse 與 production 部署均不在此證據範圍內。
 區域 `eastasia` 與資源頁不符，改成 `japanwest` 後仍被拒絕。更新使用者提供的金鑰後，
 現有 Azure Speech TTS adapter 成功把固定測試句合成 `audio/mpeg`（30,960 bytes）。
 金鑰僅寫入 ignored 的 `services/speech-gateway/.env`，音檔置於 `.qa/local/`，均未提交。
-這只驗證真實 Azure 合成；真人麥克風 → ASR → Agent → 播放與停止的完整流程仍待驗收。
+此探測之後，已完成下列真實服務驗證；真人麥克風與主觀聽感仍待使用者確認。
 沒有 disposable `TEST_DATABASE_URL`，未執行會 reset schema 的完整 integration／migration
 升降版測試；development DB 未被 reset、truncate 或 downgrade。
+
+### 真實服務串接（同日追加）
+
+正式前端 build 連線 Core 8000、Agent 8001、Speech 8002。以獨立合成照服員真實 Email／
+密碼登入，從 UI 建立一位無帳號長者、記錄合成情境下的口頭確認，再以一次性連結配對
+新瀏覽器 context。沒有攔截或 mock HTTP、身分驗證、資料庫或雲端供應商；只有收音來源
+使用固定合成音訊的 MediaStream。新增 fixture 有獨立 tenant／worker／policy，工作身分
+與政策有效至 2026-09-29 20:19（Asia/Taipei）；保留稽核紀錄，不 reset 共用資料庫。
+
+- 兩輪華語對話經 Deepgram `nova-3:2026-04-01.30000`、Core gate、Gemini
+  `gemini-3.6-flash`、Azure `japanwest` 合成並進入瀏覽器播放；第一輪播放完成會自動續聽。
+  第二輪播放中按暫停後，所有合成收音 track 均為 `ended`。
+- 連續兩段無聲自動暫停，沒有發出 ASR 請求。噪音造成空辨識時，Speech 回 422、Core
+  將該輪標為失敗，前端停止收音；後續 best-effort cancel 的 409 是已終止狀態的拒絕。
+- 另一段噪音得到真實 ASR confidence `0.0762`，Core 回 `CONFIRMATION_REQUIRED`，
+  前端取消該輪；SQL 確認沒有 AgentRun、沒有偽造長者確認。驗收發現 `getVoices()` 首次
+  回空陣列，稍後 `voiceschanged` 才提供 6 個聲音（含 3 個本機華語聲音）；已改為最多
+  等待 2 秒載入，只接受同語言本機聲音，取消或逾時會移除 listeners。仍不使用雲端
+  瀏覽器語音或替代語言，真正無可用聲音時依設計暫停。
+  修正後 production build 重測：固定本機提示收到原生 `start`／`end` 事件並恢復聆聽；
+  第二次真實低信心會暫停，沒有 Agent 請求，track 為 `ended`，390 px 無水平溢出。
+  延遲語音清單、已載入聲音、取消、逾時、遠端聲音及錯誤語言拒絕的回歸與相關語音
+  測試共 19 passed；ESLint、正式 build 與 TypeScript 檢查通過。
+- 合成語音「停止」經真實 ASR 辨識後取消該輪、結束平板時段並回到配對頁；全部 track
+  釋放，沒有將停止命令送至 Agent。
+- 重新準備平板後，舊 current／取票／Agent 請求回 401、舊 ASR 票券回 403、舊 TTS
+  capability 回 401。TTS 檢查當時距原定到期仍有 33 秒，確認拒絕來自換發失效。
+- SQL 讀回一位 Elder 的 `actor_id=NULL`、同意只有 BASIC_VOICE、實際照服員為 recorder、
+  所有語音 session 綁定 handoff；Memory 新增數為 0。
+
+機器可讀摘要見 [live verification](staff-assisted-voice-live-20260929.json)。原始安全摘要、
+測試音檔與截圖放在 ignored `.qa/local/assisted-voice/`。本機 launcher 只在服務程序內
+啟用所需語音 gates 與獨立服務驗證 secrets，沒有改變 committed defaults；真人測試頁
+使用全新、未替換 `getUserMedia` 的 context。以上不構成真人收音、真機喇叭聽感或
+Production 驗收。PR #62 在 `b7d34af` 的 10 項 GitHub checks 全數通過。
