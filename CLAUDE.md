@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+- 2026-09-10 RAG 已完成外部同步，2026-09-29 唯讀複驗與原紀錄一致：Supabase development 現行 release 是
+  `rag-v2-v004-f3339ceae77c`，runtime policy v004，長照法 71 筆可檢索。查 RAG 現況要以
+  `scripts/rag/sync_law_repair.py verify` 的當次輸出為準，不要沿用本檔 08-2x 的舊敘述。
+  `data/rag-v3/candidates/v003/` **不是** v004 的後繼，而是同樣分支自 v002 的平行候選：直接同步它
+  會新開放 224 筆但關掉那 71 筆長照法。要採用 v003 的覆核狀態，必須另建以 v004 為基底的 successor。
+  全庫仍 `review_status=needs_review`、`production_approved=false`，Production 與外部 activation 仍封鎖。
+  複驗證據：[2026-09-29 唯讀報告](docs/project/rag-law-sync-verification-20260929.json)。
+
 - Native Email 註冊以 `PendingExternalIdentity.provider="KINSUN"` 進入共用 onboarding／
   invitation redemption；名稱含 Google／External 不代表只支援 OIDC。新增或調整登入路徑時，
   須穿過實際下游 service 驗證 provider allowlist 與 invitation／consent gates，不能只 mock
@@ -187,16 +195,26 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
   vector fingerprint 全部 `VERIFIED`。2026-08-25 已新增全參數化、固定模板的 PostgreSQL
   FTS／trigram＋pgvector hybrid `SearchBackend`，可由 `RAG_SEARCH_BACKEND=postgresql` 精確綁定
   release／profile；Supabase data-plane smoke 與 Google `RETRIEVAL_QUERY` → Supabase → V2 citation
-  smoke 均回傳 5 筆 staging chunks。現行只有 14 筆 official/public chunks 通過普通 RAG filter，
-  metadata 都只允許 `care_professional`；2026-08-25 經 owner 明確要求，本機 development 以
-  `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時開放有明確 audience 的 Elder／Family／Staff，且 Elder
-  全鏈路 smoke 回傳 5 筆，Production 仍禁止此 override。這不代表 production deployment：獨立 read-only
-  principal、live relevance Golden Query／quality gate、v003 Supabase sync、activation／rollback 尚未完成，
-  外部 runtime activation 與 Production 仍封鎖；legacy OpenSearch adapter 保留。
+  smoke 均回傳 5 筆 staging chunks。2026-08-25 的 `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` legacy
+  override 已不在使用中（目前 `.env` 為 `false`），Production 本來就禁止此 override。
+  **2026-09-10 已依獨立授權 `docs/project/rag-law-sync-authorization-20260910.json` 對 Supabase
+  development database 完成外部同步**：`scripts/rag/sync_law_repair.py` 以單一交易匯入新 immutable
+  release `rag-v2-v004-f3339ceae77c`（726 projections ＋ 726 既有向量，未重新產生 embeddings），
+  只改 71 筆長照法治理欄位，其餘 655 筆與 `_0048` 的 stop／high-red-line 封鎖不變，舊 release 保留，
+  獨立唯讀讀回 `VERIFIED`；runtime policy 同步升 v004 並改綁新 release。2026-09-29 以
+  `sync_law_repair.py verify` 唯讀複驗：`VERIFIED`、726／726、export SHA-256 與 09-10 紀錄相符；
+  證據見 [唯讀複驗報告](docs/project/rag-law-sync-verification-20260929.json)。
+  這仍不代表 production deployment：全庫 `review_status=needs_review`、`production_approved=false`、
+  `retrieval_activation_status=NOT_AUTHORIZED`；獨立 read-only principal、live relevance／ranking
+  Golden Query／quality gate、activation／rollback 尚未完成，外部 runtime activation 與 Production
+  仍封鎖；legacy OpenSearch adapter 保留。
   2026-08-26 已依 Owner 明確人工確認，在 repository 內產生 immutable successor
   `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
-  embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
-  本機 staging candidate，Supabase 目前仍維持上述 v002／`needs_review=726`。
+  embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查。**v003 至今未同步，
+  且與上述 v004 同為 `rag-v2-v002` 的平行分支，不是 v004 的後繼**（726 筆 `prior_chunk_id` 相同）；
+  它早於 09-09 法規修復，72 筆長照法全數仍被 `requires_professional_assessment_missing` 封鎖。
+  逐筆比對：同步 v003 會新開放 224 筆、關閉 71 筆長照法。要用它的覆核狀態必須另建以 v004 為基底的
+  successor，不可直接同步。
   2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
   staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
   5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
@@ -209,7 +227,7 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
   assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases已通過；
   2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
   chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
-  Query suite 仍為 `NOT_EXECUTED`，外部同步與 Production 仍未授權。
+  Query suite 當時為 `NOT_EXECUTED`，外部同步與 Production 當時未授權；後續同步現況見上述 09-10／09-29 紀錄。
   2026-08-27 已在其上建立 successor runtime policy v003，不改寫 v002 bytes：staging-only purpose
   overlay 分類原本空白的 32 筆 A 單位手冊 chunks，554 筆全部具備 response metadata（v002 為 522），
   Core 自然語言知識提問才能通過 purpose gate；這 32 筆仍是 `needs_review` 的 AI-assisted staging

@@ -1,5 +1,13 @@
 # AGENTS.md
 
+- 2026-09-10 RAG 已完成外部同步，2026-09-29 唯讀複驗與原紀錄一致：Supabase development 現行 release 是
+  `rag-v2-v004-f3339ceae77c`，runtime policy v004，長照法 71 筆可檢索。查 RAG 現況要以
+  `scripts/rag/sync_law_repair.py verify` 的當次輸出為準，不要沿用本檔 08-2x 的舊敘述。
+  `data/rag-v3/candidates/v003/` **不是** v004 的後繼，而是同樣分支自 v002 的平行候選：直接同步它
+  會新開放 224 筆但關掉那 71 筆長照法。要採用 v003 的覆核狀態，必須另建以 v004 為基底的 successor。
+  全庫仍 `review_status=needs_review`、`production_approved=false`，Production 與外部 activation 仍封鎖。
+  複驗證據：[2026-09-29 唯讀報告](docs/project/rag-law-sync-verification-20260929.json)。
+
 - Native Email 註冊以 `PendingExternalIdentity.provider="KINSUN"` 進入共用 onboarding／
   invitation redemption；名稱含 Google／External 不代表只支援 OIDC。新增或調整登入路徑時，
   須穿過實際下游 service 驗證 provider allowlist 與 invitation／consent gates，不能只 mock
@@ -164,8 +172,11 @@ generic；不要以多重型別斷言掩蓋 mock 簽名不符。
     Google `RETRIEVAL_QUERY` → Supabase → V2 citation smoke 均回傳 5 筆合規 staging chunks。
     2026-08-26 已依 Owner 明確人工確認，在 repository 內產生 immutable successor
     `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
-    embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查；這是尚未同步的
-    本機 staging candidate，Supabase 目前仍維持上述 v002／`needs_review=726`。
+    embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查。**v003 至今未同步，
+    且它與下述 2026-09-10 上線的 v004 同為 `rag-v2-v002` 的平行分支，不是 v004 的後繼**：兩者 726 筆
+    `prior_chunk_id` 完全相同；v003 建於 08-26，早於 09-09 的法規修復，其 72 筆長照法全部仍是
+    `requires_professional_assessment_missing`。逐筆比對為新開放 224 筆、關閉 71 筆，關掉的正是線上
+    已驗收的長照法。要採用 v003 的覆核狀態必須另建以 v004 為基底的 successor，不可直接同步 v003。
     2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
     staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
     5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
@@ -184,23 +195,36 @@ generic；不要以多重型別斷言掩蓋 mock 簽名不符。
     enum 並讓來源層與 chunk 層都含 `general_information`，554 筆因此全部具備 response metadata
     （v002 為 522），Core 的自然語言知識提問才能通過 purpose gate。這 32 筆仍標記 `needs_review`，
     不等於人工確認或 Production 核准，v003 Chunk bytes 未修改。啟用必須同時提供
-    `RAG_SOURCE_FAMILY_POLICY_PATH`（`data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json`）
+    `RAG_SOURCE_FAMILY_POLICY_PATH`（2026-09-10 起為 `…/runtime/candidates/v004/source-family-runtime-policy.json`；
+    v003 路徑僅適用於當時綁定的舊 release）
     與 `RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256`；path／digest 缺一或不符、或仍開著
     `RAG_STAGING_ALLOW_ALL_AUDIENCES`，Agent Runtime 就不建立 Retriever 並 fail closed。Runtime
     image 不內建任何 `data/rag*`，container staging 必須以唯讀 config mount 注入。
     `config/rag/source-family-golden-queries-v003.json` 固定 10 個離線 case ＋ 2 個 exclusion case，
-    本機全部通過。完整啟用方式、限制與尚未解除的封鎖（Supabase／外部 backend 未同步、32 筆
+    本機全部通過。2026-08-27 當時的啟用方式、限制與封鎖（Supabase／外部 backend 未同步、32 筆
     purpose 待 Owner 逐筆確認、獨立 read-only principal 與 activation／rollback 未建立、Production
     不得使用 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true`）見
-    [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)。
-    遠端現行治理資料仍只有 14 筆 official/public chunks 通過普通 RAG filter，來源
-    metadata 全都只允許 `care_professional`。2026-08-25 經 owner 明確要求，本機 development `.env` 以
-    `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的 Elder／Family／Staff 共用仍通過
-    public／official／risk／purpose gate 的資料；Elder Google query → Supabase smoke 回傳 5 筆。
-    Production 仍不得放寬 audience；runtime policy 啟用時不得與這個 legacy override 併用。這不是
-    production deployment；本機暫時重用 Core DB URL，獨立 read-only DB principal、live relevance
-    Golden Query／quality gate、v003 Supabase sync／
-    activation／rollback 尚未完成，外部 runtime activation／Production 仍封鎖。legacy OpenSearch adapter 保留，
+    [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)；
+    後續同步現況以下方紀錄為準。
+    **2026-09-10 已對 Supabase development database 完成外部同步**，依獨立授權
+    `docs/project/rag-law-sync-authorization-20260910.json`（SHA-256 `03fa6991…`），工具為
+    `scripts/rag/sync_law_repair.py`：新 immutable release `rag-v2-v004-f3339ceae77c` 在**單一交易**
+    匯入 726 projections ＋ 726 既有向量（`document_embeddings_generated=0`，未重新付費產生），
+    只變更 71 筆長照法治理欄位，其餘 655 筆限制與 `_0048` 的 high-red-line／stop 封鎖不變，
+    **舊 release v002 未刪除**；獨立唯讀連線全量讀回 `VERIFIED`。runtime policy 同步升為 v004
+    （SHA-256 `a7d8dd16…`，包裝原 v003 policy、554 筆 pool 不擴大、改綁新 release），本機 `.env` 的
+    `RAG_POSTGRES_RELEASE_ID`／`RAG_SOURCE_FAMILY_POLICY_PATH`／`..._EXPECTED_SHA256` 三項已切換。
+    因此 `RAG_STAGING_ALLOW_ALL_AUDIENCES` 目前是 `false`，2026-08-25 的 legacy all-audience override
+    已不在使用中；runtime policy 啟用時本來就不得與它併用。逐筆結果見
+    `docs/project/rag-law-sync-live-result-20260910.json`。2026-09-29 以 `sync_law_repair.py verify`
+    重跑唯讀確認：`status=VERIFIED`、726 chunks／726 stored embeddings、profile
+    `ep-google-00a12ec45096fa9d97d9e9b6`，且 source／target／identity export SHA-256 與 09-10 紀錄
+    逐一相符，**本次快照與 09-10 紀錄一致**；證據見
+    [唯讀複驗報告](docs/project/rag-law-sync-verification-20260929.json)。
+    仍未解除：全庫 `review_status=needs_review`、`production_approved=false`、
+    `retrieval_activation_status=NOT_AUTHORIZED`、`runtime_activated=false`；本機暫時重用 Core DB URL，
+    獨立 read-only DB principal、live relevance／ranking Golden Query 與 quality gate、
+    activation／rollback 未完成，外部 runtime activation／Production 仍封鎖。legacy OpenSearch adapter 保留，
     不接 Neptune，不得描述成 production runtime
     （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
   - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
@@ -501,7 +525,9 @@ ADR 0019 退役。
 - RAG 必須保存來源、版本、有效日期、覆核狀態與 Metadata Filter；沒有可靠來源時明確回覆資料不足。
 - RAG `NO_DATA` 先核對 live projection 的 `retrieval_eligible`／block reasons，不得只憑本機
   runtime policy 已補 metadata 就判定為排序問題。2026-09-09 法規唯讀預覽發現本機 assessment
-  overlay 與遠端缺失封鎖並存；既有 acceptance 的 `external_sync=NOT_AUTHORIZED` 仍須尊重。
+  overlay 與遠端缺失封鎖並存。acceptance v004 的 `external_sync=NOT_AUTHORIZED` 只在 2026-09-10
+  由獨立授權 `docs/project/rag-law-sync-authorization-20260910.json` 就該次 71 筆法規範圍解除，
+  不是全面解除；其他範圍的外部寫入仍須另取授權。
   不可直接改 immutable release rows 卻沿用原 record／candidate hashes；同步前先產生差異、
   另取外部寫入授權並設計 successor／安全回復。見 `docs/project/rag-law-governance-sync-plan-20260909.md`。
 - LLM-as-Judge 不得覆蓋 Deterministic Security／Schema／Permission Gate。
