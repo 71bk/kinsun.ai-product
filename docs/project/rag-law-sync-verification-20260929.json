@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "verified_at": "2026-09-29T02:52:51+00:00",
+  "command": "services/core-api/.venv/Scripts/python.exe scripts/rag/sync_law_repair.py verify",
+  "database_transaction": "REPEATABLE_READ_READ_ONLY",
+  "baseline_evidence": "docs/project/rag-law-sync-live-result-20260910.json",
+  "baseline_matches": {
+    "source_release_id": true,
+    "target_release_id": true,
+    "authorization_sha256": true,
+    "preflight_sha256": true,
+    "target_identity_sha256": true,
+    "source_export_sha256": true,
+    "target_export_sha256": true
+  },
+  "runtime_policy_path": "data/rag-v3/governance/source-family-policy/runtime/candidates/v004/source-family-runtime-policy.json",
+  "runtime_policy_sha256": "a7d8dd163e54bb5cb11f1ea4004e3a6b75b9faff98290067e745125cc6ac5758",
+  "local_configuration_checks": {
+    "release_matches_verified_target": true,
+    "runtime_policy_path_matches_v004": true,
+    "runtime_policy_digest_matches_file": true,
+    "runtime_policy_digest_matches_20260910": true,
+    "legacy_all_audience_override_explicitly_false": true
+  },
+  "verification": {
+    "authorization_sha256": "03fa69919b05d872e0885977f576d69f5ca8d4e6f88d6cf6188f5e54a526df0d",
+    "chunk_count": 726,
+    "governance_changes": 71,
+    "preflight_sha256": "0929e2cc430183ec51876bd3e95bf5231818ae10dd1b84b7eabfd2149d19b8e1",
+    "production_approved": false,
+    "receipts": {
+      "verification": {
+        "candidate_sha256": "f3339ceae77c380f42b3c2823b28216827ef48d057129a9c5f5edd40c9e808dd",
+        "document_task_type": "RETRIEVAL_DOCUMENT",
+        "embedding_artifact_sha256": "cfb6450a4fc9f747ec1eb05c626383186bebace8765f8821fbd4c6e753066584",
+        "embedding_dimension": 1024,
+        "embedding_model_id": "gemini-embedding-001",
+        "embedding_profile_id": "ep-google-00a12ec45096fa9d97d9e9b6",
+        "embedding_provider": "google",
+        "production_approved": false,
+        "release_id": "rag-v2-v004-f3339ceae77c",
+        "retrieval_activation_status": "NOT_AUTHORIZED",
+        "review_status": "needs_review",
+        "schema_version": "1.0.0",
+        "status": "VERIFIED",
+        "stored_embedding_count": 726
+      }
+    },
+    "runtime_activated": false,
+    "source_export_sha256": "fa784d67810031feee103552873b2b142a96794ecc3d832a3f363edb93b5794b",
+    "source_release_id": "rag-v2-v002-bab68588963b",
+    "status": "VERIFIED",
+    "target_export_sha256": "cfb6450a4fc9f747ec1eb05c626383186bebace8765f8821fbd4c6e753066584",
+    "target_identity_sha256": "54bc4a7341d1a5d816cdfdccd020583419fa67315e4ff3883126d559df03aeff",
+    "target_release_id": "rag-v2-v004-f3339ceae77c",
+    "vector_evidence_origin": "CURRENT_DATABASE_EXPORT_NOT_LOST_ORIGINAL_ARTIFACT"
+  },
+  "local_parallel_candidate_comparison": {
+    "current_candidate": "data/rag-v2/candidates/v004",
+    "parallel_candidate": "data/rag-v3/candidates/v003",
+    "comparison_key": "identity.prior_chunk_id",
+    "common_prior_chunk_count": 726,
+    "v003_retrieval_eligible_false_to_true": 224,
+    "v003_retrieval_eligible_true_to_false": 71,
+    "disabled_source_counts": {
+      "moj_long_term_care_services_act_20210609": 71
+    },
+    "v003_law_chunks_missing_professional_assessment": 72,
+    "scope": "LOCAL_RETRIEVAL_ELIGIBILITY_METADATA_ONLY_NOT_LIVE_QUERY_RESULTS"
+  },
+  "not_verified": [
+    "2026-09-23 historical verification output",
+    "Live relevance and ranking",
+    "Fresh browser acceptance",
+    "Official law currency",
+    "External runtime activation",
+    "Production deployment"
+  ]
+}

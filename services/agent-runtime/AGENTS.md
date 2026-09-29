@@ -1,7 +1,7 @@
 # AGENTS.md — agent-runtime
 
-- 更新日期：2026-09-02
-- 校準基準：`main` at `03cd170`
+- 更新日期：2026-09-29（RAG 現況段落）；其餘段落仍校準於 2026-09-02
+- 校準基準：`main` at `03cd170`；RAG 同步狀態另見下方 2026-09-10／09-29 條目
 
 本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
 根目錄那份的規則一律適用；兩者衝突時以根目錄為準。
@@ -33,11 +33,30 @@ boundaries、Bedrock 與 opt-in Google query embedding adapters、legacy OpenSea
 以及固定模板、全參數化的 PostgreSQL FTS／trigram＋pgvector Hybrid adapter。2026-08-25 已將
 726 個 Google document embeddings 匯入 Supabase development database，並以
 `RAG_SEARCH_BACKEND=postgresql` 對固定 release／profile 完成 data-plane 與 Google query embedding
-全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。遠端現行只有 14 筆 official/public chunks
-通過 ordinary-RAG filter，metadata 全部只允許 `care_professional`。2026-08-25 經 owner 明確要求，
-本機 development 以 `RAG_STAGING_ALLOW_ALL_AUDIENCES=true` 暫時讓具明確 audience 的
-Elder／Family／Staff 共用仍通過 public／official／risk／purpose gate 的資料；Elder 全鏈路 smoke
-回傳 5 筆。Production 仍禁止此 override。2026-08-26 已把本機 source-family policy v002 投影為
+全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。2026-08-25 的
+`RAG_STAGING_ALLOW_ALL_AUDIENCES=true` legacy override 已不在使用中（目前 `.env` 為 `false`），
+Production 本來就禁止此 override。
+
+**2026-09-10 已對 Supabase development database 完成外部同步**（授權
+`docs/project/rag-law-sync-authorization-20260910.json`，工具 `scripts/rag/sync_law_repair.py`）：
+新 immutable release `rag-v2-v004-f3339ceae77c` 以單一交易匯入 726 projections ＋ 726 既有向量，
+只改 71 筆長照法治理欄位（`requires_professional_assessment` null→true、移除該筆 block reason），
+其餘 655 筆與 `_0048` 的 high-red-line／stop 封鎖不變，舊 release v002 保留，獨立唯讀讀回 `VERIFIED`。
+runtime policy 升為 v004（SHA-256 `a7d8dd16…`）包裝原 v003 policy、554 筆 pool 不擴大、改綁新 release。
+「長照法」「長照法第二條」經真實 BFF → Core → Agent 為 `SUCCESS / ALLOW`，並已補 Playwright
+瀏覽器驗收（[09-10 瀏覽器證據](../../.qa/rag-law-browser-verification-20260910.json)）。
+2026-09-29 以 `sync_law_repair.py verify` 唯讀複驗：`status=VERIFIED`、726／726、
+profile `ep-google-00a12ec45096fa9d97d9e9b6`、export SHA-256 與 09-10 紀錄逐一相符；
+證據見 [09-29 唯讀複驗報告](../../docs/project/rag-law-sync-verification-20260929.json)。
+
+**`data/rag-v3/candidates/v003/` 不是 v004 的後繼**，而是同樣分支自 `rag-v2-v002` 的平行候選
+（726 筆 `prior_chunk_id` 相同），且建於 09-09 法規修復之前——它的 72 筆長照法全數仍被
+`requires_professional_assessment_missing` 封鎖。逐筆比對：同步 v003 會新開放 224 筆、**關閉 71 筆
+長照法**。要採用 v003 的 `review_status=verified` 必須另建以 v004 為基底的 successor，不可直接同步。
+全庫仍 `review_status=needs_review`、`production_approved=false`、
+`retrieval_activation_status=NOT_AUTHORIZED`。
+
+2026-08-26 已把本機 source-family policy v002 投影為
 immutable、hash-pinned runtime policy v001 並接入 V2：search backend 先在固定 554 筆 v002 chunk IDs
 搜尋最多 50 筆，Retriever 再以 v003 text SHA-256、四角色、purpose 與 assessment metadata 決定
 3–5 筆回覆；遠端 live current／stop／retrieval／block reasons／review-production 狀態不可被 policy
