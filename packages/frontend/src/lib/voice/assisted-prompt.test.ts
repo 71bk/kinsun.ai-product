@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { playRetryPrompt } from './assisted-prompt';
 
 class Prompt {
@@ -12,9 +12,9 @@ class Prompt {
 
 let voices: SpeechSynthesisVoice[];
 let synth: EventTarget & {
-  getVoices: ReturnType<typeof vi.fn>;
-  speak: ReturnType<typeof vi.fn>;
-  cancel: ReturnType<typeof vi.fn>;
+  getVoices: Mock<[], SpeechSynthesisVoice[]>;
+  speak: Mock<[Prompt], void>;
+  cancel: Mock<[], void>;
 };
 const local = { localService: true, lang: 'zh_TW' } as SpeechSynthesisVoice;
 
@@ -24,7 +24,7 @@ beforeEach(() => {
   synth = Object.assign(new EventTarget(), {
     getVoices: vi.fn(() => voices),
     speak: vi.fn((prompt: Prompt) => { prompt.onend?.(); }),
-    cancel: vi.fn(),
+    cancel: vi.fn<[], void>(),
   });
   vi.stubGlobal('window', { speechSynthesis: synth });
   vi.stubGlobal('SpeechSynthesisUtterance', Prompt);
