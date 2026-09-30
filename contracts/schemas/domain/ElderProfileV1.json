@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "display_name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "preferred_name": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preferred Name"
+    },
+    "preferred_language": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "Preferred Language",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "profile_version": {
+      "minimum": 1,
+      "title": "Profile Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "display_name",
+    "preferred_name",
+    "preferred_language",
+    "elder_id",
+    "profile_version"
+  ],
+  "title": "ElderProfileV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ElderProfileV1.json"
+}

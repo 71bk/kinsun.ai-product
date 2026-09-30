@@ -35,6 +35,11 @@ operations:
       $ref: "#/components/schemas/EventDeliveryFailureV1"
 components:
   messages:
+    ElderProfileChangedV1:
+      name: ElderProfileChangedV1
+      title: Staff elder profile changed; identifiers and versions only
+      payload:
+        $ref: "../schemas/events/ElderProfileChangedV1.json"
     StaffInvitationChangedV1:
       name: StaffInvitationChangedV1
       title: Development workforce invitation issued, accepted or revoked

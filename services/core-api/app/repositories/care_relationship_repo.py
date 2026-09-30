@@ -70,6 +70,7 @@ class CareRelationshipRepository(BaseRepository):
                 ),
             )
             .limit(1)
+            .execution_options(populate_existing=True)
         )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()

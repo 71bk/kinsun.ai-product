@@ -230,11 +230,11 @@ _CORE_TABLES = sorted(
 )
 
 #: Total number of tables after upgrading through the current head revision.
-_TOTAL_HEAD_TABLE_COUNT = 68
+_TOTAL_HEAD_TABLE_COUNT = 69
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "d8f0a2b4c657"
+_HEAD_REVISION = "e9a1b3c5d768"
 
 
 def _get_alembic_config() -> Config:
@@ -1069,6 +1069,7 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
     assert {
         "elder_enrollment",
         "elder_care_profile_entry",
+        "elder_profile_change",
         "assisted_elder_session",
         "care_action_candidate",
         "care_action_candidate_event_provenance",

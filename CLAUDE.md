@@ -1,5 +1,17 @@
 # CLAUDE.md
 
+- 2026-09-30 長者資料維護完成，development head `e9a1b3c5d768`；七條 API 使用獨立
+  profile／care write scopes、版本／冪等與受限前後歷史。無帳號長者重驗有效收案；
+  舊建立人 scope 僅嚴格限定回填。詳見 `docs/project/staff-elder-profile-maintenance-20260930.md`。
+- Scope 重驗 query 要 `populate_existing=True`，避免 identity map 沿用鎖等待前資料。
+  PostgreSQL `now()` 是交易起點；migration 測試中的「既有」row 有效時間要早於起點。
+- 套件管理使用 npm workspaces；frontend 型別檢查為
+  `npm run typecheck --workspace=@elderly-care/frontend`，不要以 pnpm filter 觸發套件搬移。
+- 新增 migration 表時，同步 `test_migrations.py` 的 `_HEAD_REVISION`、
+  `_TOTAL_HEAD_TABLE_COUNT` 及預期表名集合；目前 head 為 69 張業務表。
+- Profile HTTP 整合測試自行以 scoped monkeypatch 啟用 `assisted_elder_sessions_enabled`，
+  不依賴本機 `.env`，也不改產品預設開關。
+
 - 2026-09-29 無帳號長者語音切片：照服員記錄長者明確口頭意願，語音對話綁定當次
   handoff；development migration head `d8f0a2b4c657`。更新本機金鑰與 `japanwest` 區域後，
   已用真實登入、Supabase、Deepgram、Gemini 與 Azure 完成合成音訊兩輪對話、續聽、

@@ -8,6 +8,15 @@
 
 ## 已在本次收斂
 
+### 2026-09-30 照服員維護長者資料
+
+- 新增七條 professional-only profile／care-profile／history operations；兩項獨立寫入 scope、
+  expected version、idempotency、no-store 與 opaque cursor。歷史只對有兩項讀取權的照服員提供。
+- 新增受限前後快照歷史；outbox `elder.profile_changed.v1` 只傳 IDs／類型／版本。
+  人工更正不是醫療驗證，不改登入、同意、Memory 或家屬分享。
+- 靜態與 Core runtime contracts 通過（113 operations），真實 SQL／HTTP 及 native BFF UI
+  驗證通過。詳見 [交付紀錄](../docs/project/staff-elder-profile-maintenance-20260930.md)。
+
 ### 2026-09-29 照服員協助無帳號長者使用語音
 
 - 新增 staff handoff acknowledgement、assisted voice ticket、companion turn、cancel

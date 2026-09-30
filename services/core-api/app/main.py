@@ -32,6 +32,7 @@ from app.api.care_actions import router as care_actions_router
 from app.api.care_events import router as care_events_router
 from app.api.consents import router as consents_router
 from app.api.deletions import router as deletions_router
+from app.api.elder_profiles import router as elder_profiles_router
 from app.api.elders import router as elders_router
 from app.api.error_handlers import register_exception_handlers
 from app.api.family_invitations import router as family_invitations_router
@@ -222,6 +223,7 @@ def create_app() -> FastAPI:
     app.include_router(line_links_router)
     app.include_router(identity_router)
     app.include_router(elders_router)
+    app.include_router(elder_profiles_router)
     app.include_router(assisted_elders_router)
     app.include_router(family_invitations_router)
     app.include_router(staff_invitations_router)

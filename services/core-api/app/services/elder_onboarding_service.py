@@ -23,6 +23,8 @@ from app.repositories.elder_repo import ElderRepository
 from app.schemas.assisted_elder import CreateAccountlessElderRequest
 
 _CREATOR_SCOPE = [
+    "elder:profile:update",
+    "care_profile:write",
     "elder:basic:read",
     "elder:access_context:read",
     "care_profile:read",

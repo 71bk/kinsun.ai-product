@@ -1,0 +1,14 @@
+{
+  "data": {
+    "category": "ALLERGY",
+    "content": "Synthetic staff record",
+    "reason": "Initial record",
+    "verification_status": "VERIFIED"
+  },
+  "meta": {
+    "correlation_id": "synthetic-profile-contract",
+    "timestamp": "2026-09-29T01:00:00Z",
+    "schema_version": "1.0"
+  },
+  "_why_invalid": "Staff maintenance cannot self-verify clinical data."
+}

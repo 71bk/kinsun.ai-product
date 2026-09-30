@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EvidenceBlock } from '@/components/care/EvidenceBlock';
 import { AssistedSessionPanel } from '@/components/care/AssistedSessionPanel';
+import { ElderProfilePanel } from '@/components/care/ElderProfilePanel';
 import { StaffReportPanel } from '@/components/care/StaffReportPanel';
 import { SummarySource } from '@/components/care/SummarySource';
 import { CareActionPanel } from '@/components/care/CareActionPanel';
@@ -51,9 +52,10 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import styles from './ElderDetailPage.module.css';
 
-type Tab = 'events' | 'actions' | 'memories' | 'summaries' | 'reports';
+type Tab = 'events' | 'actions' | 'memories' | 'summaries' | 'reports' | 'profile';
 
 const TAB_LABEL: Record<Tab, MessageKey> = {
+  profile: 'profile.title',
   events: 'elderDetail.tabEvents',
   actions: 'elderDetail.tabActions',
   memories: 'elderDetail.tabMemories',
@@ -453,10 +455,14 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   }
 
   const listSeparator = locale === 'en' ? ', ' : '、';
+  const profilePanel = <ElderProfilePanel key={elderId} config={apiConfig} elderId={elderId}
+    allowedActions={workspace.allowedActions} onAccessCheck={recheckAccess}
+    onNameChanged={(name) => setWorkspace((current) => current ? { ...current, displayName: name } : null)} />;
   if (workspace.allowedActions.includes('assisted_session:create') &&
       !workspace.allowedActions.some((action) => ['care_event:read', 'care_action:read', 'memory:read', 'summary:read'].includes(action))) {
     return <main className={styles.page}>
       <PageHeader title={workspace.displayName} description={workspace.sourceSummary} />
+      {workspace.allowedActions.includes('elder:basic:read') && profilePanel}
       <AssistedSessionPanel key={elderId} config={apiConfig} elderId={elderId} elderName={workspace.displayName} />
     </main>;
   }
@@ -464,6 +470,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
     ? ['events', 'actions', 'memories', 'summaries']
     : ['events', 'memories', 'summaries'];
   if (canDraftReports) visibleTabs.push('reports');
+  if (workspace.allowedActions.includes('elder:basic:read')) visibleTabs.unshift('profile');
 
   return (
     <main className={styles.page}>
@@ -592,6 +599,12 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
               onReject={handleRejectMemory}
             />
           )}
+        </section>
+      )}
+
+      {tab === 'profile' && workspace.allowedActions.includes('elder:basic:read') && (
+        <section aria-labelledby="elder-tab-profile" id="elder-panel-profile" role="tabpanel" tabIndex={0}>
+          {profilePanel}
         </section>
       )}
 

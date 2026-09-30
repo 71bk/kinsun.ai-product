@@ -59,7 +59,9 @@ class CareAssignmentRepository(BaseRepository):
                 current_time < CareAssignment.service_end,
             )
         )
-        result = await self._session.execute(stmt.limit(2))
+        result = await self._session.execute(
+            stmt.limit(2).execution_options(populate_existing=True)
+        )
         try:
             return result.scalar_one_or_none()
         except MultipleResultsFound:

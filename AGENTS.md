@@ -1,5 +1,19 @@
 # AGENTS.md
 
+- 2026-09-30 長者資料維護：profile／care-profile／history 共七條 API，寫入需獨立
+  `elder:profile:update`／`care_profile:write`，版本、冪等、受限前後歷史及同交易 outbox。
+  無帳號長者另驗有效收案，限定舊建立人預設 scope 回填；development head 為
+  `e9a1b3c5d768`。驗證與限制見 `docs/project/staff-elder-profile-maintenance-20260930.md`。
+- 重驗 scope 的 repository query 需 `populate_existing=True`；否則同一 AsyncSession
+  identity map 可能沿用鎖等待前的關係／派案內容。交易測試新增 row 後重跑 migration SQL 時，
+  注意 PostgreSQL `now()` 是交易起點，模擬既有資料的 effective_from 須早於該時間。
+- 此 repo 使用 npm workspaces；執行 `npm run typecheck --workspace=@elderly-care/frontend`。
+  不使用 `pnpm --filter frontend typecheck`，以免不同 package manager 搬移既有 node_modules。
+- 新增 migration 資料表時，除 `_HEAD_REVISION` 也須同步 `test_migrations.py` 的
+  `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 69 張業務表。
+- Profile HTTP 整合測試須自行啟用 `assisted_elder_sessions_enabled`，不可依賴本機
+  `.env` 開關；以 scoped monkeypatch 還原設定，保留產品預設關閉的行為。
+
 - 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
   `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
   migration head `d8f0a2b4c657` 已 additive 套用 development。更新本機金鑰並將區域改為

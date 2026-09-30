@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "display_name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "preferred_name": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preferred Name"
+    },
+    "preferred_language": {
+      "enum": [
+        "ZH_TW",
+        "NAN_TW",
+        "HAK_TW",
+        "EN_US",
+        "MIXED",
+        "UNKNOWN"
+      ],
+      "title": "Preferred Language",
+      "type": "string"
+    },
+    "expected_version": {
+      "minimum": 1,
+      "title": "Expected Version",
+      "type": "integer"
+    },
+    "reason": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "display_name",
+    "preferred_name",
+    "preferred_language",
+    "expected_version",
+    "reason"
+  ],
+  "title": "UpdateElderProfileRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/UpdateElderProfileRequestV1.json"
+}
