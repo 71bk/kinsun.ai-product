@@ -16,6 +16,7 @@ from app.models.care_relationship import CareRelationship
 from app.models.care_unit import CareUnit
 from app.models.elder import Elder
 from app.repositories.base import BaseRepository
+from app.repositories.enrollment_gate import enrollment_allows_service
 from app.repositories.types import AuthorizedElderRow
 
 
@@ -72,6 +73,8 @@ class CareRelationshipRepository(BaseRepository):
             .limit(1)
             .execution_options(populate_existing=True)
         )
+        if relationship_type in {"DAYCARE_ASSIGNMENT", "HOME_CARE_ASSIGNMENT"}:
+            stmt = stmt.where(enrollment_allows_service(self._tenant_id, elder_id, current_time))
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -127,6 +130,12 @@ class CareRelationshipRepository(BaseRepository):
                 CareRelationship.relationship_type.in_(relationship_types),
                 CareRelationship.status == "ACTIVE",
                 CareRelationship.effective_from <= current_time,
+                or_(
+                    CareRelationship.relationship_type.notin_(
+                        ["DAYCARE_ASSIGNMENT", "HOME_CARE_ASSIGNMENT"]
+                    ),
+                    enrollment_allows_service(self._tenant_id, Elder.id, current_time),
+                ),
                 or_(
                     CareRelationship.effective_to.is_(None),
                     current_time < CareRelationship.effective_to,

@@ -175,7 +175,15 @@ async def test_profile_http_lifecycle(db_session, monkeypatch):
             str(migration.op.execute.call_args.args[0]) + " AND r.tenant_id = :fixture_tenant"
         )
         old_defaults = [
-            s for s in scopes if s not in {"elder:profile:update", "care_profile:write"}
+            s
+            for s in scopes
+            if s
+            not in {
+                "elder:profile:update",
+                "care_profile:write",
+                "enrollment:read",
+                "enrollment:manage",
+            }
         ]
         # now() in migration SQL is the outer transaction's start time.
         # Model a pre-existing enrollment rather than one created later in it.
@@ -188,7 +196,7 @@ async def test_profile_http_lifecycle(db_session, monkeypatch):
         await db.flush()
         await db.execute(backfill, {"fixture_tenant": tenant.id})
         await db.refresh(rel)
-        assert set(rel.scope) == set(scopes)
+        assert set(rel.scope) == set(scopes) - {"enrollment:read", "enrollment:manage"}
         rel.scope = old_defaults[:-1]
         await db.flush()
         await db.execute(backfill, {"fixture_tenant": tenant.id})

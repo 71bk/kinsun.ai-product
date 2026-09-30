@@ -1,0 +1,11 @@
+{
+  "data": {
+    "expected_version": 1,
+    "reason": "Temporary absence"
+  },
+  "meta": {
+    "correlation_id": "synthetic-enrollment-contract",
+    "timestamp": "2026-09-30T01:00:00Z",
+    "schema_version": "1.0"
+  }
+}

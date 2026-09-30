@@ -48,6 +48,7 @@ import {
   type SummaryView,
 } from '@/lib/api/summaries';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { subscribeEnrollmentChange } from '@/lib/enrollment-invalidation';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import styles from './ElderDetailPage.module.css';
@@ -174,6 +175,10 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
   useEffect(() => {
     accessCheckAttempted.current = false;
   }, [elderId, apiConfig]);
+
+  useEffect(() => subscribeEnrollmentChange((changedId) => {
+    if (changedId === elderId) recheckAccess();
+  }), [elderId, recheckAccess]);
 
   useEffect(() => {
     let cancelled = false;
@@ -462,6 +467,7 @@ function ElderDetailWorkspace({ elderId, pendingReview, openSummaries, initialSu
       !workspace.allowedActions.some((action) => ['care_event:read', 'care_action:read', 'memory:read', 'summary:read'].includes(action))) {
     return <main className={styles.page}>
       <PageHeader title={workspace.displayName} description={workspace.sourceSummary} />
+      {workspace.allowedActions.includes('enrollment:read') && <Link href="/staff/enrollments">{t('enrollment.title')}</Link>}
       {workspace.allowedActions.includes('elder:basic:read') && profilePanel}
       <AssistedSessionPanel key={elderId} config={apiConfig} elderId={elderId} elderName={workspace.displayName} />
     </main>;

@@ -1,5 +1,16 @@
 # AGENTS.md
 
+- 2026-09-30 收案管理：`/staff/enrollments` 與四個 enrollment API operations，限原建立人的
+  無帳號機構長者，獨立 `enrollment:read`／`enrollment:manage`。暫停／結案原子停止平板、
+  未完成對話及派案；恢復不復活舊 token 或派案。Development head `f0b2c4d6e879`，70 張業務表。
+  詳見 `docs/project/staff-enrollment-lifecycle-20260930.md`，真人語音測試仍延後。
+- 收案管理授權不能依賴一般 ElderAccessPolicy，否則暫停後無法恢復；仍須 live Actor、tenant、
+  據點／機構會員、原建立人及同一筆 read＋manage grant。Enrollment 寫入先鎖 Elder 再鎖 Enrollment。
+  一般機構照護 query 使用 `enrollment_allows_service`；日期行程的收案 gate 用目前時間，
+  不用當日零時。新表同步 runtime principal allowlist；歷史僅 SELECT／INSERT，收案只允許狀態欄位 UPDATE。
+- JSONB receipt 的物件鍵順序可能與首次 HTTP 回應不同；冪等測試要比較物件內容，
+  不比較未排序的 JSON 字串。共享 development 上不得執行 `committed_session` 的 TRUNCATE teardown。
+
 - 2026-09-30 長者資料維護：profile／care-profile／history 共七條 API，寫入需獨立
   `elder:profile:update`／`care_profile:write`，版本、冪等、受限前後歷史及同交易 outbox。
   無帳號長者另驗有效收案，限定舊建立人預設 scope 回填；development head 為
@@ -10,7 +21,7 @@
 - 此 repo 使用 npm workspaces；執行 `npm run typecheck --workspace=@elderly-care/frontend`。
   不使用 `pnpm --filter frontend typecheck`，以免不同 package manager 搬移既有 node_modules。
 - 新增 migration 資料表時，除 `_HEAD_REVISION` 也須同步 `test_migrations.py` 的
-  `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 69 張業務表。
+  `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 70 張業務表。
 - Profile HTTP 整合測試須自行啟用 `assisted_elder_sessions_enabled`，不可依賴本機
   `.env` 開關；以 scoped monkeypatch 還原設定，保留產品預設關閉的行為。
 

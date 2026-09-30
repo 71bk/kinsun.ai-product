@@ -10,15 +10,16 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import SCHEMA_NAME, BaseModel, TenantScopedMixin
+from app.db.base import SCHEMA_NAME, BaseModel, TenantScopedMixin, VersionedMixin
 
 
-class ElderEnrollment(BaseModel, TenantScopedMixin):
+class ElderEnrollment(BaseModel, TenantScopedMixin, VersionedMixin):
     """A time-bounded Organization service relationship, independent of login."""
 
     __tablename__ = "elder_enrollment"
     __pk_name__ = "enrollment_id"
     __table_args__ = (
+        sa.CheckConstraint("version > 0", name="ck_elder_enrollment_version"),
         sa.CheckConstraint(
             "enrollment_type IN ('ORGANIZATION')",
             name="ck_elder_enrollment_type",

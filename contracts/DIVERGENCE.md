@@ -8,6 +8,15 @@
 
 ## 已在本次收斂
 
+### 2026-09-30 照服員收案生命週期
+
+- 新增四個 operations：清單、單筆、歷史、狀態命令；命令 action enum 為 suspend／resume／end。
+  獨立 `enrollment:read`／`enrollment:manage`，限原建立人的機構無帳號長者；暫停後仍可管理。
+- 嚴格 request、版本／冪等、opaque cursor、no-store；新 outbox `elder.enrollment_changed.v1`
+  只有識別碼、前後狀態與版本，原因只存受限歷史。API 不改家屬分享／同意。
+- 靜態及 Core runtime contract 驗證通過（117 operations）。詳見
+  [交付紀錄](../docs/project/staff-enrollment-lifecycle-20260930.md)。
+
 ### 2026-09-30 照服員維護長者資料
 
 - 新增七條 professional-only profile／care-profile／history operations；兩項獨立寫入 scope、

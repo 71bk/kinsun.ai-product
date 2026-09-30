@@ -39,6 +39,7 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "EnrollmentCommand": "domain/EnrollmentCommandV1.json",
     "UpdateElderProfileRequest": "domain/UpdateElderProfileRequestV1.json",
     "CreateCareProfileRequest": "domain/CreateCareProfileRequestV1.json",
     "UpdateCareProfileRequest": "domain/UpdateCareProfileRequestV1.json",
@@ -99,6 +100,10 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "list_enrollments_api_v1_elder_enrollments_get": "EnrollmentListEnvelopeV1",
+    "get_enrollment_api_v1_elder_enrollments__enrollment_id__get": "EnrollmentEnvelopeV1",
+    "enrollment_history_api_v1_elder_enrollments__enrollment_id__history_get": "EnrollmentHistoryEnvelopeV1",
+    "change_enrollment_api_v1_elder_enrollments__enrollment_id___action__post": "EnrollmentEnvelopeV1",
     "get_elder_profile_api_v1_elders__elder_id__profile_get": "ElderProfileEnvelopeV1",
     "update_elder_profile_api_v1_elders__elder_id__profile_patch": "ElderProfileEnvelopeV1",
     "list_care_profile_api_v1_elders__elder_id__care_profile_get": "CareProfileListEnvelopeV1",

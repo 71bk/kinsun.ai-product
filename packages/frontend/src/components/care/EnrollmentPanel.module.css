@@ -1,0 +1,19 @@
+.page, .panel, .section, .list, .field, .history { display: grid; min-width: 0; gap: var(--space-4); }
+.page { padding: var(--space-6); }
+.layout { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr); gap: var(--space-6); align-items: start; }
+.section { padding: var(--card-pad); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.section h2, .section h3, .section p { margin: 0; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.button, .item { font: inherit; min-height: var(--touch-min); border: 1px solid var(--color-interactive-border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); background: var(--color-surface); color: var(--color-foreground); cursor: pointer; overflow-wrap: anywhere; }
+.button:disabled { opacity: 0.6; cursor: default; }
+.button:focus-visible, .item:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--color-primary-strong); outline-offset: 3px; }
+.primary, .item[aria-pressed='true'] { background: var(--color-primary-strong); color: var(--color-on-primary); }
+.item { width: 100%; display: grid; gap: var(--space-2); text-align: start; }
+.field { font-weight: 500; gap: var(--space-2); }
+.field textarea { box-sizing: border-box; width: 100%; min-height: 108px; resize: vertical; padding: var(--space-3); font: inherit; color: var(--color-foreground); background: var(--color-surface); border: 1px solid var(--color-interactive-border); border-radius: var(--radius-md); }
+.meta { color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: 1.6; }
+.notice { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); line-height: 1.6; overflow-wrap: anywhere; }
+.history { list-style: none; padding: 0; margin: 0; }
+.history li { display: grid; gap: var(--space-2); padding-block: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.reason { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 767px) { .layout { grid-template-columns: minmax(0, 1fr); } .page { padding: var(--space-4); } }

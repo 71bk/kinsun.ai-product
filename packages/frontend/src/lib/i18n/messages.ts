@@ -10,6 +10,7 @@
  */
 
 import { profileEn, profileZh } from './profile-messages';
+import { enrollmentEn, enrollmentZh } from './enrollment-messages';
 
 export const LOCALES = ['zh-Hant', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -26,6 +27,7 @@ export function localeTag(locale: Locale): string {
 
 const zhHant = {
   ...profileZh,
+  ...enrollmentZh,
   'staffReport.gaps': '部分生活項目尚無足夠資料，報表會保留資料不足的說明。',
   'staffReport.title': "家屬報表",
   'staffReport.intro': "從已覆核的每日摘要建立草稿。確認內容及分享對象後，家屬才能看到正式發布的報表。",
@@ -1023,6 +1025,7 @@ export type MessageKey = keyof typeof zhHant;
      same state to read identically across all three surfaces. */
 const en: Record<MessageKey, string> = {
   ...profileEn,
+  ...enrollmentEn,
   'staffReport.gaps': 'Some daily activities have insufficient information. The report will retain a data-gap notice.',
   'staffReport.title': "Family reports",
   'staffReport.intro': "Create a draft from a reviewed daily summary. Family members can read it only after you review the content and recipients and publish it.",
