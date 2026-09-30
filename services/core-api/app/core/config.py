@@ -235,6 +235,9 @@ class Settings(BaseSettings):
     )
     speech_service_identity_ttl_seconds: int = Field(default=30, ge=1, le=60)
 
+    # Public routing is independent of memory consent; false restores the v1 router.
+    knowledge_router_v2_enabled: bool = False
+
     # Evidence-aware Memory is an explicit rollout. Both gates default off so a
     # new runtime revision cannot silently activate or retrieve long-term
     # memories merely because the expanded schema already exists.

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     RAG_SEARCH_BACKEND: str = "postgresql"
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
+    RAG_QUERY_NORMALIZATION_ENABLED: bool = False
     # Immutable runtime policy path and independently pinned digest must move together.
     RAG_SOURCE_FAMILY_POLICY_PATH: str | None = None
     RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256: str | None = None

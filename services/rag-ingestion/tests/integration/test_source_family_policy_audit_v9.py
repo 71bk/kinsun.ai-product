@@ -27,5 +27,7 @@ def test_audit_v9_build_validates_and_refuses_overwrite(tmp_path):
         build_source_family_policy_audit_v9(ROOT, output_path=destination)
 
 
-def test_committed_audit_v9_matches_current_law_repair():
-    assert validate_source_family_policy_audit_v9(ROOT)["status"] == "PASS"
+def test_committed_audit_v9_is_sealed_historical_evidence():
+    result = validate_source_family_policy_audit_v9(ROOT)
+    assert result["status"] == "PASS"
+    assert result["attestation_scope"] == "SEALED_HISTORICAL_INPUTS"

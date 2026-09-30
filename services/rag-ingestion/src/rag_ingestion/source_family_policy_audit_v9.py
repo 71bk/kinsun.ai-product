@@ -25,6 +25,7 @@ from rag_ingestion.source_family_policy_v2 import (
     _new_staging_directory,
     _read_json,
     _refuse_overwrite,
+    _validate_frozen_audit_inventory,
     _validate_package_checksums,
     _write_checksums,
     _write_json,
@@ -131,12 +132,20 @@ def validate_source_family_policy_audit_v9(
     )
     if lock != expected_lock:
         raise SourceFamilyPolicyAuditV9Error("source-family audit v009 candidate lock mismatch")
-    if inventory != expected_inventory:
+    if package == (root / POLICY_AUDIT_V9_ROOT).resolve():
+        # Historical v009 bytes remain sealed; v011 binds current runtime inputs.
+        _validate_frozen_audit_inventory(inventory, INVENTORY_KIND)
+    elif inventory != expected_inventory:
         raise SourceFamilyPolicyAuditV9Error(
             "current RAG runtime attestation is outdated; create a successor to audit v009"
         )
     return {
         "status": "PASS",
+        "attestation_scope": (
+            "SEALED_HISTORICAL_INPUTS"
+            if package == (root / POLICY_AUDIT_V9_ROOT).resolve()
+            else "CURRENT_IMPLEMENTATION_BYTES"
+        ),
         "source_count": SOURCE_COUNT,
         "chunk_count": CHUNK_COUNT,
         "candidate_artifact_entry_count": lock["entry_count"],

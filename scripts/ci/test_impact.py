@@ -111,6 +111,7 @@ class ImpactTests(unittest.TestCase):
             "config/rag/policy.json",
             "data/rag-v3/README.md",
             "scripts/rag/project_postgres.py",
+            "evals/rag/cases-v1.json",
             "docs/project/rag-v3-public-retrieval-plan.md",
         ):
             self.assertEqual(

@@ -1,5 +1,13 @@
 # AGENTS.md
 
+- 2026-09-30 RAG 路由／品質候選：`KNOWLEDGE_ROUTER_V2_ENABLED`、
+  `RAG_QUERY_NORMALIZATION_ENABLED` 均預設 false。新增 120 題合成路由與 40 組 live retrieval
+  比較；anchor 標記尚待獨立人工覆核，不是 production quality acceptance。
+  現行 Hybrid 排序、0.7 門檻、3–5 引用與 v004 release／policy 均保留；沒有新增 sparse model。
+  current code attestation 升為 audit v011（`scripts/rag/quality_audit.py validate`），v009/v010
+  保留歷史封存，不再代表 current source bytes。詳細結果與後續 admission 校準見
+  `docs/project/rag-routing-quality-20260930.md`；不得把本次局部品質評測描述成已上線。
+
 - 2026-09-30 收案管理：`/staff/enrollments` 與四個 enrollment API operations，限原建立人的
   無帳號機構長者，獨立 `enrollment:read`／`enrollment:manage`。暫停／結案原子停止平板、
   未完成對話及派案；恢復不復活舊 token 或派案。Development head `f0b2c4d6e879`，70 張業務表。

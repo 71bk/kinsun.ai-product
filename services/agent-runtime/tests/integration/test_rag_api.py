@@ -230,6 +230,7 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
         RAG_SEARCH_BACKEND = "opensearch"
         RAG_ALLOW_NEEDS_REVIEW_CITATIONS = True
         RAG_STAGING_ALLOW_ALL_AUDIENCES = True
+        RAG_QUERY_NORMALIZATION_ENABLED = True
         RAG_SOURCE_FAMILY_POLICY_PATH = None
         RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256 = None
         RAG_EMBEDDING_CONFIG_PATH = "config/rag/embedding.yaml"
@@ -307,6 +308,7 @@ def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypat
     assert "GEMINI_API_KEY" not in captured["environ"]
     assert captured["database_url"] is None
     assert captured_builder == {
+        "normalize_legal_queries": True,
         "google_api_key": "synthetic-google-embedding-key",
         "google_timeout_seconds": 30.0,
         "source_family_policy": None,

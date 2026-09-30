@@ -28,6 +28,7 @@ from agent_runtime.rag.models import (
 )
 from agent_runtime.rag.postgres_backend import build_postgres_search_backend
 from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
+from agent_runtime.rag.query_normalization import normalize_legal_query
 from agent_runtime.rag.runtime_policy import SourceFamilyRuntimePolicy
 from agent_runtime.rag.search_backend import SearchBackend, SearchHit
 
@@ -46,6 +47,7 @@ class Retriever:
         allow_needs_review_citations: bool = False,
         allow_all_audiences: bool = False,
         source_family_policy: SourceFamilyRuntimePolicy | None = None,
+        normalize_legal_queries: bool = False,
     ) -> None:
         self._embedding_provider = embedding_provider
         self._search_backend = search_backend
@@ -53,6 +55,7 @@ class Retriever:
         self._allow_needs_review_citations = allow_needs_review_citations
         self._allow_all_audiences = allow_all_audiences
         self._source_family_policy = source_family_policy
+        self._normalize_legal_queries = normalize_legal_queries
 
     async def aclose(self) -> None:
         try:
@@ -100,6 +103,8 @@ class Retriever:
         """Retrieve only complete governed citations and never expose a partial batch."""
 
         try:
+            if self._normalize_legal_queries and request.query_profile == "legal":
+                request = request.model_copy(update={"query": normalize_legal_query(request.query)})
             vector = await self._embedding_provider.embed_query(request.query)
             if len(vector) != self._embedding_provider.dimension:
                 raise ValueError("query embedding has an unexpected dimension")
@@ -158,6 +163,7 @@ def build_retriever(
     google_api_key: str | None = None,
     google_timeout_seconds: float = 30.0,
     source_family_policy: SourceFamilyRuntimePolicy | None = None,
+    normalize_legal_queries: bool = False,
 ) -> Retriever:
     """Compose explicitly configured embedding and search adapters."""
 
@@ -191,6 +197,7 @@ def build_retriever(
         allow_needs_review_citations=settings.allow_needs_review_citations,
         allow_all_audiences=settings.allow_all_audiences,
         source_family_policy=source_family_policy,
+        normalize_legal_queries=normalize_legal_queries,
     )
 
 
