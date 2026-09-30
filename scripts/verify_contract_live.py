@@ -333,6 +333,20 @@ async def main() -> int:
         sample_uuid = "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
 
         for method, suffix, body in [
+            ("GET", "", None),
+            ("GET", f"/{sample_uuid}", None),
+            ("GET", f"/{sample_uuid}/history", None),
+            *[("POST", f"/{sample_uuid}/{action}", {"expected_version": 1, "reason": "Synthetic"})
+              for action in ("suspend", "resume", "end")],
+        ]:
+            path = "/api/v1/elder-enrollments" + suffix
+            response = await client.request(method, path, json=body,
+                headers={"Idempotency-Key": "live-contract-enrollment"})
+            if response.status_code != 401:
+                failures.append(f"{method} {path}: expected 401, got {response.status_code}")
+            check(f"{method} {path} 401 vs ErrorEnvelopeV1", response.json(), load("common/ErrorEnvelopeV1.json"))
+
+        for method, suffix, body in [
             ("PATCH", "profile", {"display_name": "Synthetic", "preferred_name": None,
                 "preferred_language": "ZH_TW", "expected_version": 1, "reason": "Correction"}),
             ("POST", "care-profile", {"category": "ALLERGY", "content": "Synthetic", "reason": "New"}),

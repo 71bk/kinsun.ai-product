@@ -35,6 +35,11 @@ operations:
       $ref: "#/components/schemas/EventDeliveryFailureV1"
 components:
   messages:
+    ElderEnrollmentChangedV1:
+      name: ElderEnrollmentChangedV1
+      title: Enrollment lifecycle changed
+      payload:
+        $ref: "../schemas/events/ElderEnrollmentChangedV1.json"
     ElderProfileChangedV1:
       name: ElderProfileChangedV1
       title: Staff elder profile changed; identifiers and versions only

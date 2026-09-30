@@ -1,0 +1,88 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "enrollment_id": {
+      "format": "uuid",
+      "title": "Enrollment Id",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "care_unit_id": {
+      "format": "uuid",
+      "title": "Care Unit Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PENDING",
+        "ACTIVE",
+        "SUSPENDED",
+        "ENDED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "valid_from": {
+      "format": "date-time",
+      "title": "Valid From",
+      "type": "string"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid Until"
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Ended At"
+    },
+    "can_manage": {
+      "title": "Can Manage",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enrollment_id",
+    "elder_id",
+    "display_name",
+    "care_unit_id",
+    "status",
+    "version",
+    "valid_from",
+    "valid_until",
+    "ended_at",
+    "can_manage"
+  ],
+  "title": "EnrollmentV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/EnrollmentV1.json"
+}

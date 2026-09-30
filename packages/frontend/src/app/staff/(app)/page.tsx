@@ -12,6 +12,7 @@ import { SummaryMetricCard } from '@/components/ui/SummaryMetricCard';
 import { ApiRequestError } from '@/lib/api/client';
 import { getCaregiverDashboard, type CaregiverDashboard } from '@/lib/api/dashboard';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { subscribeEnrollmentChange } from '@/lib/enrollment-invalidation';
 import { getRuntimeConfig, type RuntimeConfig } from '@/lib/runtime-config';
 import type { MessageKey } from '@/lib/i18n/messages';
 import styles from './DashboardPage.module.css';
@@ -60,6 +61,8 @@ export default function CaregiverDashboardPage() {
     setErrorKey('error.noElderAccess');
   }, []);
 
+  useEffect(() => subscribeEnrollmentChange(() => load()), [load]);
+
   useEffect(() => {
     if (config?.credentialStatus === 'present') load();
     return () => { ++loadSequence.current; };
@@ -79,6 +82,11 @@ export default function CaregiverDashboardPage() {
         actions={
           dashboard ? (
             <div className={styles.headerActions}>
+              {dashboard.actorRole === 'DAYCARE_CARE_WORKER' && (
+                <Link className={styles.assignmentLink} href="/staff/enrollments">
+                  {t('enrollment.title')}
+                </Link>
+              )}
               {dashboard.actorRole === 'DAYCARE_CARE_WORKER' && (
                 <Link className={styles.assignmentLink} href="/staff/elders/new">
                   {t('dashboard.createElder')}

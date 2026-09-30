@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/ElderEnrollmentChangedV1.json",
+  "title": "ElderEnrollmentChangedV1",
+  "allOf": [
+    {
+      "$ref": "https://kinsun.ai/contracts/schemas/events/DomainEventEnvelopeV1.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "event_type": {
+          "const": "elder.enrollment_changed.v1"
+        },
+        "classification": {
+          "const": "RESTRICTED"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enrollment_id",
+            "elder_id",
+            "from_status",
+            "to_status",
+            "version"
+          ],
+          "properties": {
+            "enrollment_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "elder_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "from_status": {
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED"
+              ]
+            },
+            "to_status": {
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED",
+                "ENDED"
+              ]
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 2
+            }
+          }
+        }
+      }
+    }
+  ]
+}

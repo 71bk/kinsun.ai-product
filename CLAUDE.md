@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+- 2026-09-30 收案生命週期已串接 `/staff/enrollments`：ACTIVE／SUSPENDED／ENDED，原建立人需
+  獨立 read／manage scope。暫停與結案同交易結束平板連線、對話、未完成派案；恢復必須重新配對。
+  Development migration head `f0b2c4d6e879`（70 張業務表），交付與限制見
+  `docs/project/staff-enrollment-lifecycle-20260930.md`。真人語音驗收仍待下次。
+- 收案管理須繞開一般「服務中」資料 gate 才能恢復，但不得繞開即時 actor／會員／scope 檢查。
+  查詢關係用 EXISTS 避免重複授權讓 cursor 清單重複；鎖等待後用 populate_existing 重讀。
+  runtime principal 對新歷史表只能 SELECT／INSERT，對收案僅限狀態／版本／結案欄位 UPDATE。
+
 - 2026-09-30 長者資料維護完成，development head `e9a1b3c5d768`；七條 API 使用獨立
   profile／care write scopes、版本／冪等與受限前後歷史。無帳號長者重驗有效收案；
   舊建立人 scope 僅嚴格限定回填。詳見 `docs/project/staff-elder-profile-maintenance-20260930.md`。
@@ -8,7 +16,7 @@
 - 套件管理使用 npm workspaces；frontend 型別檢查為
   `npm run typecheck --workspace=@elderly-care/frontend`，不要以 pnpm filter 觸發套件搬移。
 - 新增 migration 表時，同步 `test_migrations.py` 的 `_HEAD_REVISION`、
-  `_TOTAL_HEAD_TABLE_COUNT` 及預期表名集合；目前 head 為 69 張業務表。
+  `_TOTAL_HEAD_TABLE_COUNT` 及預期表名集合；目前 head 為 70 張業務表。
 - Profile HTTP 整合測試自行以 scoped monkeypatch 啟用 `assisted_elder_sessions_enabled`，
   不依賴本機 `.env`，也不改產品預設開關。
 

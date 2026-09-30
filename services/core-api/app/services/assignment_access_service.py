@@ -14,6 +14,7 @@ from app.models.care_unit import CareUnit
 from app.models.elder import Elder
 from app.models.membership import ActorTenantMembership
 from app.models.tenant import Tenant
+from app.repositories.enrollment_gate import enrollment_allows_service
 
 
 class AssignmentAccessService:
@@ -72,6 +73,7 @@ class AssignmentAccessService:
                 Elder.id == assignment.elder_id,
                 Elder.tenant_id == actor.tenant_id,
                 Elder.status == "ACTIVE",
+                enrollment_allows_service(actor.tenant_id, Elder.id, now),
                 exists(
                     select(Tenant.id).where(Tenant.id == actor.tenant_id, Tenant.status == "ACTIVE")
                 ),

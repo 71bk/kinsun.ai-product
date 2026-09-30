@@ -7,7 +7,7 @@ via BaseRepository and time-bounded authorization checks.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -17,6 +17,7 @@ from app.models.care_assignment import CareAssignment
 from app.models.care_unit import CareUnit
 from app.models.elder import Elder
 from app.repositories.base import BaseRepository
+from app.repositories.enrollment_gate import enrollment_allows_service
 from app.repositories.types import AuthorizedElderRow
 
 
@@ -57,6 +58,7 @@ class CareAssignmentRepository(BaseRepository):
                 CareAssignment.status.in_(["CONFIRMED", "IN_PROGRESS"]),
                 CareAssignment.service_start <= current_time,
                 current_time < CareAssignment.service_end,
+                enrollment_allows_service(self._tenant_id, elder_id, current_time),
             )
         )
         result = await self._session.execute(
@@ -94,6 +96,9 @@ class CareAssignmentRepository(BaseRepository):
                 CareAssignment.service_start < window_end,
                 CareAssignment.service_end > window_start,
                 CareAssignment.status.notin_(["CANCELLED", "EXPIRED"]),
+                enrollment_allows_service(
+                    self._tenant_id, CareAssignment.elder_id, datetime.now(UTC)
+                ),
             )
             .order_by(CareAssignment.service_start, CareAssignment.id)
             .limit(100)
@@ -143,6 +148,7 @@ class CareAssignmentRepository(BaseRepository):
                     CareAssignment.status.in_(["CONFIRMED", "IN_PROGRESS"]),
                     CareAssignment.service_start <= current_time,
                     current_time < CareAssignment.service_end,
+                    enrollment_allows_service(self._tenant_id, Elder.id, current_time),
                 )
             )
             # PostgreSQL requires DISTINCT ON expressions to lead ORDER BY.

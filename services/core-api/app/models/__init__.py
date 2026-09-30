@@ -32,6 +32,7 @@ from app.models.deletion import (  # noqa: F401
 )
 from app.models.elder import Elder  # noqa: F401
 from app.models.elder_enrollment import ElderEnrollment  # noqa: F401
+from app.models.elder_enrollment_change import ElderEnrollmentChange  # noqa: F401
 from app.models.elder_profile_change import ElderProfileChange  # noqa: F401
 from app.models.family_invitation import FamilyInvitation  # noqa: F401
 from app.models.graph_projection import GraphProjectionRecord  # noqa: F401

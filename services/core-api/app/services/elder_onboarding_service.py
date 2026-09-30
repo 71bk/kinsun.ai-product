@@ -23,6 +23,8 @@ from app.repositories.elder_repo import ElderRepository
 from app.schemas.assisted_elder import CreateAccountlessElderRequest
 
 _CREATOR_SCOPE = [
+    "enrollment:read",
+    "enrollment:manage",
     "elder:profile:update",
     "care_profile:write",
     "elder:basic:read",
@@ -175,7 +177,14 @@ class ElderOnboardingService:
             .order_by(CareRelationship.created_at.desc())
             .limit(1)
         )
-        if enrollment is None or relationship is None:
+        now = datetime.now(UTC)
+        if (
+            enrollment is None
+            or relationship is None
+            or enrollment.status != "ACTIVE"
+            or enrollment.valid_from > now
+            or (enrollment.valid_until is not None and enrollment.valid_until <= now)
+        ):
             return None
         entries = await self._care_profile.list_for_elder(elder_id)
         return AccountlessElderBundle(elder, enrollment, relationship, entries)

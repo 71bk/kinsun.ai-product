@@ -45,6 +45,7 @@ RUNTIME_TABLE_PRIVILEGES: dict[str, tuple[str, ...]] = {
     "deletion_tombstone": _APPEND_ONLY,
     "elder_care_profile_entry": _APPEND_ONLY,
     "elder_enrollment": _APPEND_ONLY,
+    "elder_enrollment_change": _APPEND_ONLY,
     "memory_confirmation": _APPEND_ONLY,
     "memory_version": _APPEND_ONLY,
     "report_version": _APPEND_ONLY,
@@ -111,6 +112,7 @@ PROTECTED_SHARED_TABLE_DENY_MATRIX: dict[str, dict[str, tuple[str, ...]]] = {
 }
 
 RUNTIME_COLUMN_UPDATE_PRIVILEGES: dict[str, tuple[str, ...]] = {
+    "elder_enrollment": ("status", "version", "ended_at", "ended_reason", "updated_at"),
     "account_merge_request": (
         "status",
         "reason_code",
@@ -262,6 +264,7 @@ RUNTIME_COLUMN_UPDATE_PRIVILEGES: dict[str, tuple[str, ...]] = {
 # These assertions are part of the security contract and are also exercised against
 # PostgreSQL by the integration suite.
 PROTECTED_TABLE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
+    "elder_enrollment_change": ("UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"),
     "service_record": ("UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"),
     "audit_record": ("SELECT", "INSERT", "UPDATE", "DELETE"),
     "consent_grant": ("DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"),
@@ -271,6 +274,15 @@ PROTECTED_TABLE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
 }
 
 PROTECTED_COLUMN_UPDATE_DENY_MATRIX: dict[str, tuple[str, ...]] = {
+    "elder_enrollment": (
+        "elder_id",
+        "tenant_id",
+        "care_unit_id",
+        "created_by_actor_id",
+        "enrollment_type",
+        "valid_from",
+        "valid_until",
+    ),
     "staff_invitation": (
         "tenant_id",
         "issued_by_actor_id",

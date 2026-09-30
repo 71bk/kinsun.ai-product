@@ -39,6 +39,7 @@ class ElderEnrollmentRepository(BaseRepository):
             )
             .order_by(ElderEnrollment.valid_from.desc(), ElderEnrollment.id.desc())
             .limit(1)
+            .execution_options(populate_existing=True)
         )
         if for_update:
             stmt = stmt.with_for_update()

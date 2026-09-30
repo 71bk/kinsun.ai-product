@@ -22,7 +22,9 @@ class AssistedElderSessionRepository:
 
     async def get_by_id(self, session_id: UUID) -> AssistedElderSession | None:
         result = await self._session.execute(
-            select(AssistedElderSession).where(AssistedElderSession.id == session_id)
+            select(AssistedElderSession)
+            .where(AssistedElderSession.id == session_id)
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
 
@@ -37,7 +39,7 @@ class AssistedElderSessionRepository:
         )
         if for_update:
             stmt = stmt.with_for_update()
-        result = await self._session.execute(stmt)
+        result = await self._session.execute(stmt.execution_options(populate_existing=True))
         return result.scalar_one_or_none()
 
     async def get_by_session_digest(
@@ -51,7 +53,7 @@ class AssistedElderSessionRepository:
         )
         if for_update:
             stmt = stmt.with_for_update()
-        result = await self._session.execute(stmt)
+        result = await self._session.execute(stmt.execution_options(populate_existing=True))
         return result.scalar_one_or_none()
 
     async def list_live_for_elder(
@@ -68,5 +70,5 @@ class AssistedElderSessionRepository:
         )
         if for_update:
             stmt = stmt.with_for_update()
-        result = await self._session.execute(stmt)
+        result = await self._session.execute(stmt.execution_options(populate_existing=True))
         return list(result.scalars().all())
