@@ -7,6 +7,8 @@
   PostgreSQL `now()` 是交易起點；migration 測試中的「既有」row 有效時間要早於起點。
 - 套件管理使用 npm workspaces；frontend 型別檢查為
   `npm run typecheck --workspace=@elderly-care/frontend`，不要以 pnpm filter 觸發套件搬移。
+- 新增 migration 表時，同步 `test_migrations.py` 的 `_HEAD_REVISION`、
+  `_TOTAL_HEAD_TABLE_COUNT` 及預期表名集合；目前 head 為 69 張業務表。
 
 - 2026-09-29 無帳號長者語音切片：照服員記錄長者明確口頭意願，語音對話綁定當次
   handoff；development migration head `d8f0a2b4c657`。更新本機金鑰與 `japanwest` 區域後，

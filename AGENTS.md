@@ -9,6 +9,8 @@
   注意 PostgreSQL `now()` 是交易起點，模擬既有資料的 effective_from 須早於該時間。
 - 此 repo 使用 npm workspaces；執行 `npm run typecheck --workspace=@elderly-care/frontend`。
   不使用 `pnpm --filter frontend typecheck`，以免不同 package manager 搬移既有 node_modules。
+- 新增 migration 資料表時，除 `_HEAD_REVISION` 也須同步 `test_migrations.py` 的
+  `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 69 張業務表。
 
 - 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
   `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
