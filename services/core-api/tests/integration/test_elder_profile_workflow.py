@@ -11,6 +11,7 @@ import pytest
 from sqlalchemy import func, select, update
 
 from app.core.auth import ActorContext
+from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.main import create_app
 from app.middleware.actor_guard import require_active_actor
@@ -26,7 +27,9 @@ from app.models.tenant import Tenant
 
 
 @pytest.mark.asyncio(loop_scope="function")
-async def test_profile_http_lifecycle(db_session):
+async def test_profile_http_lifecycle(db_session, monkeypatch):
+    # Onboarding is opt-in; CI must not depend on a developer's .env flag.
+    monkeypatch.setattr(get_settings(), "assisted_elder_sessions_enabled", True)
     db = db_session
     now = datetime.now(UTC)
     tenant = Tenant(id=uuid4(), name="Synthetic profile workflow", tenant_type="CARE_ORGANIZATION")

@@ -11,6 +11,8 @@
   不使用 `pnpm --filter frontend typecheck`，以免不同 package manager 搬移既有 node_modules。
 - 新增 migration 資料表時，除 `_HEAD_REVISION` 也須同步 `test_migrations.py` 的
   `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 69 張業務表。
+- Profile HTTP 整合測試須自行啟用 `assisted_elder_sessions_enabled`，不可依賴本機
+  `.env` 開關；以 scoped monkeypatch 還原設定，保留產品預設關閉的行為。
 
 - 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
   `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
