@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/events/ElderProfileChangedV1.json",
+  "title": "ElderProfileChangedV1",
+  "allOf": [
+    {
+      "$ref": "https://kinsun.ai/contracts/schemas/events/DomainEventEnvelopeV1.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "event_type": {
+          "const": "elder.profile_changed.v1"
+        },
+        "classification": {
+          "const": "RESTRICTED"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile_change_id",
+            "elder_id",
+            "care_profile_entry_id",
+            "change_type",
+            "resource_version"
+          ],
+          "properties": {
+            "profile_change_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "elder_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "care_profile_entry_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "change_type": {
+              "enum": [
+                "BASIC_UPDATED",
+                "CARE_ENTRY_CREATED",
+                "CARE_ENTRY_UPDATED",
+                "CARE_ENTRY_RETIRED"
+              ]
+            },
+            "resource_version": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    }
+  ]
+}

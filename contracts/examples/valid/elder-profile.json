@@ -1,0 +1,14 @@
+{
+  "data": {
+    "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+    "display_name": "Synthetic elder",
+    "preferred_name": null,
+    "preferred_language": "ZH_TW",
+    "profile_version": 2
+  },
+  "meta": {
+    "correlation_id": "synthetic-profile-contract",
+    "timestamp": "2026-09-29T01:00:00Z",
+    "schema_version": "1.0"
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "$defs": {
+    "CareProfileResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "care_profile_entry_id": {
+          "format": "uuid",
+          "title": "Care Profile Entry Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "HEALTH_CONDITION",
+            "MEDICATION",
+            "ALLERGY",
+            "CARE_PRECAUTION"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "content": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "source_type": {
+          "enum": [
+            "STAFF_RECORDED",
+            "ELDER_REPORTED",
+            "LEGAL_REPRESENTATIVE_REPORTED",
+            "CLINICAL_DOCUMENT"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "source_actor_id": {
+          "format": "uuid",
+          "title": "Source Actor Id",
+          "type": "string"
+        },
+        "verification_status": {
+          "enum": [
+            "RECORDED",
+            "VERIFIED",
+            "DISPUTED",
+            "RETIRED"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "effective_from": {
+          "format": "date-time",
+          "title": "Effective From",
+          "type": "string"
+        },
+        "retired_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retired At"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "care_profile_entry_id",
+        "elder_id",
+        "category",
+        "content",
+        "source_type",
+        "source_actor_id",
+        "verification_status",
+        "effective_from",
+        "retired_at",
+        "version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "CareProfileResponse",
+      "type": "object"
+    },
+    "ElderProfileResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "preferred_name": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Preferred Name"
+        },
+        "preferred_language": {
+          "enum": [
+            "ZH_TW",
+            "NAN_TW",
+            "HAK_TW",
+            "EN_US",
+            "MIXED",
+            "UNKNOWN"
+          ],
+          "title": "Preferred Language",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "minimum": 1,
+          "title": "Profile Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "display_name",
+        "preferred_name",
+        "preferred_language",
+        "elder_id",
+        "profile_version"
+      ],
+      "title": "ElderProfileResponse",
+      "type": "object"
+    },
+    "ProfileChangeResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_change_id": {
+          "format": "uuid",
+          "title": "Profile Change Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "care_profile_entry_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Care Profile Entry Id"
+        },
+        "changed_by_actor_id": {
+          "format": "uuid",
+          "title": "Changed By Actor Id",
+          "type": "string"
+        },
+        "changed_by_name": {
+          "title": "Changed By Name",
+          "type": "string"
+        },
+        "change_type": {
+          "enum": [
+            "BASIC_UPDATED",
+            "CARE_ENTRY_CREATED",
+            "CARE_ENTRY_UPDATED",
+            "CARE_ENTRY_RETIRED"
+          ],
+          "title": "Change Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "minimum": 1,
+          "title": "Resource Version",
+          "type": "integer"
+        },
+        "reason": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "before_data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ElderProfileResponse"
+            },
+            {
+              "$ref": "#/$defs/CareProfileResponse"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Before Data"
+        },
+        "after_data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ElderProfileResponse"
+            },
+            {
+              "$ref": "#/$defs/CareProfileResponse"
+            }
+          ],
+          "title": "After Data"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_change_id",
+        "elder_id",
+        "care_profile_entry_id",
+        "changed_by_actor_id",
+        "changed_by_name",
+        "change_type",
+        "resource_version",
+        "reason",
+        "before_data",
+        "after_data",
+        "created_at"
+      ],
+      "title": "ProfileChangeResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ProfileChangeResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Cursor"
+    },
+    "has_more": {
+      "title": "Has More",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "next_cursor",
+    "has_more"
+  ],
+  "title": "ProfileHistoryV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/ProfileHistoryV1.json"
+}

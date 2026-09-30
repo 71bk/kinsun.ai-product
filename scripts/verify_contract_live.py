@@ -332,6 +332,21 @@ async def main() -> int:
 
         sample_uuid = "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
 
+        for method, suffix, body in [
+            ("PATCH", "profile", {"display_name": "Synthetic", "preferred_name": None,
+                "preferred_language": "ZH_TW", "expected_version": 1, "reason": "Correction"}),
+            ("POST", "care-profile", {"category": "ALLERGY", "content": "Synthetic", "reason": "New"}),
+            ("PATCH", f"care-profile/{sample_uuid}", {"category": "ALLERGY", "content": "Synthetic",
+                "expected_version": 1, "reason": "Correction"}),
+            ("POST", f"care-profile/{sample_uuid}/retire", {"expected_version": 1, "reason": "Retired"}),
+        ]:
+            path = f"/api/v1/elders/{sample_uuid}/{suffix}"
+            response = await client.request(method, path, json=body,
+                headers={"Idempotency-Key": "live-contract-profile"})
+            if response.status_code != 401:
+                failures.append(f"{method} {path}: expected 401, got {response.status_code}")
+            check(f"{method} {path} 401 vs ErrorEnvelopeV1", response.json(), load("common/ErrorEnvelopeV1.json"))
+
         # Accountless voice still requires its own authenticated handoff; a
         # staff-recorded acknowledgement additionally requires the real worker.
         for path, body in [

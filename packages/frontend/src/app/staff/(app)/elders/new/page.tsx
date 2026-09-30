@@ -142,6 +142,9 @@ export default function CreateAccountlessElderPage() {
           </span>
           <h2>{handoff.displayName}</h2>
           <AssistedSessionPanel config={apiConfig} elderId={handoff.elderId} elderName={handoff.displayName} />
+          <Link className={styles.backLink} href={`/staff/elders/${handoff.elderId}`}>
+            {t('profile.title')}
+          </Link>
           <Link className={styles.backLink} href="/staff">
             {t('elderCreate.back')}
           </Link>

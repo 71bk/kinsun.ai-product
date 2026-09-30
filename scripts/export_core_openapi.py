@@ -39,6 +39,10 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "UpdateElderProfileRequest": "domain/UpdateElderProfileRequestV1.json",
+    "CreateCareProfileRequest": "domain/CreateCareProfileRequestV1.json",
+    "UpdateCareProfileRequest": "domain/UpdateCareProfileRequestV1.json",
+    "RetireCareProfileRequest": "domain/RetireCareProfileRequestV1.json",
     "CreateReportFromSummaryRequest": "domain/CreateReportFromSummaryRequestV1.json",
     "CreateStaffInvitationRequest": "domain/CreateStaffInvitationRequestV1.json",
     "AcceptStaffInvitationRequest": "domain/AcceptStaffInvitationRequestV1.json",
@@ -95,6 +99,13 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "get_elder_profile_api_v1_elders__elder_id__profile_get": "ElderProfileEnvelopeV1",
+    "update_elder_profile_api_v1_elders__elder_id__profile_patch": "ElderProfileEnvelopeV1",
+    "list_care_profile_api_v1_elders__elder_id__care_profile_get": "CareProfileListEnvelopeV1",
+    "create_care_profile_api_v1_elders__elder_id__care_profile_post": "CareProfileEnvelopeV1",
+    "update_care_profile_api_v1_elders__elder_id__care_profile__entry_id__patch": "CareProfileEnvelopeV1",
+    "retire_care_profile_api_v1_elders__elder_id__care_profile__entry_id__retire_post": "CareProfileEnvelopeV1",
+    "list_profile_history_api_v1_elders__elder_id__profile_history_get": "ProfileHistoryEnvelopeV1",
     "record_assisted_verbal_acknowledgement_api_v1_elders__elder_id__assisted_sessions__assisted_session_id__acknowledgement_post": "FirstUseAcknowledgementEnvelopeV1",
     "issue_assisted_voice_ticket_api_v1_assisted_elder_sessions_current_voice_tickets_post": "VoiceTicketIssuedEnvelopeV1",
     "create_assisted_voice_turn_api_v1_assisted_elder_sessions_current_voice_sessions__session_id__companion_turns_post": "CompanionTurnEnvelopeV1",

@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "CareProfileResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "care_profile_entry_id": {
+          "format": "uuid",
+          "title": "Care Profile Entry Id",
+          "type": "string"
+        },
+        "elder_id": {
+          "format": "uuid",
+          "title": "Elder Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "HEALTH_CONDITION",
+            "MEDICATION",
+            "ALLERGY",
+            "CARE_PRECAUTION"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "content": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "source_type": {
+          "enum": [
+            "STAFF_RECORDED",
+            "ELDER_REPORTED",
+            "LEGAL_REPRESENTATIVE_REPORTED",
+            "CLINICAL_DOCUMENT"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "source_actor_id": {
+          "format": "uuid",
+          "title": "Source Actor Id",
+          "type": "string"
+        },
+        "verification_status": {
+          "enum": [
+            "RECORDED",
+            "VERIFIED",
+            "DISPUTED",
+            "RETIRED"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "effective_from": {
+          "format": "date-time",
+          "title": "Effective From",
+          "type": "string"
+        },
+        "retired_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retired At"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "care_profile_entry_id",
+        "elder_id",
+        "category",
+        "content",
+        "source_type",
+        "source_actor_id",
+        "verification_status",
+        "effective_from",
+        "retired_at",
+        "version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "CareProfileResponse",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CareProfileResponse"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Cursor"
+    },
+    "has_more": {
+      "title": "Has More",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "next_cursor",
+    "has_more"
+  ],
+  "title": "CareProfileListV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CareProfileListV1.json"
+}

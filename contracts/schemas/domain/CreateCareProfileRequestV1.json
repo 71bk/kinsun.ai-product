@@ -1,0 +1,36 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "enum": [
+        "HEALTH_CONDITION",
+        "MEDICATION",
+        "ALLERGY",
+        "CARE_PRECAUTION"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "content": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Content",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "category",
+    "content",
+    "reason"
+  ],
+  "title": "CreateCareProfileRequestV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/CreateCareProfileRequestV1.json"
+}

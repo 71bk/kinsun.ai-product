@@ -1,0 +1,37 @@
+{
+  "data": {
+    "event_id": "11111111-1111-4111-8111-111111111111",
+    "event_type": "elder.profile_changed.v1",
+    "event_version": 1,
+    "occurred_at": "2026-09-09T02:00:00Z",
+    "tenant_id": "11111111-1111-4111-8111-111111111111",
+    "elder_id": "11111111-1111-4111-8111-111111111111",
+    "actor_id": "11111111-1111-4111-8111-111111111111",
+    "purpose": null,
+    "consent_version": null,
+    "trace_id": "synthetic",
+    "correlation_id": "synthetic",
+    "causation_id": null,
+    "idempotency_key": "synthetic-record",
+    "classification": "RESTRICTED",
+    "aggregate": {
+      "type": "elder_profile_change",
+      "id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+      "version": 1
+    },
+    "payload": {
+      "profile_change_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+      "elder_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40",
+      "care_profile_entry_id": null,
+      "change_type": "BASIC_UPDATED",
+      "resource_version": 2,
+      "reason": "Restricted reason must not leave Core"
+    }
+  },
+  "meta": {
+    "correlation_id": "synthetic-profile-contract",
+    "timestamp": "2026-09-29T01:00:00Z",
+    "schema_version": "1.0"
+  },
+  "_why_invalid": "Restricted change reason is forbidden in the outbox event."
+}

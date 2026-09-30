@@ -1,0 +1,16 @@
+{
+  "data": {
+    "display_name": "Synthetic elder",
+    "preferred_name": null,
+    "preferred_language": "ZH_TW",
+    "expected_version": 1,
+    "reason": "Correction",
+    "actor_id": "2a6f9c31-8e47-4b52-9d10-3c8a7e5b1a40"
+  },
+  "meta": {
+    "correlation_id": "synthetic-profile-contract",
+    "timestamp": "2026-09-29T01:00:00Z",
+    "schema_version": "1.0"
+  },
+  "_why_invalid": "Actor is derived from the authenticated session."
+}

@@ -1,0 +1,136 @@
+.panel,
+.section,
+.form,
+.field,
+.list {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.panel {
+  gap: var(--space-6);
+}
+.section {
+  padding: var(--card-pad);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.section h2,
+.section h3,
+.section p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.grid,
+.snapshots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.field {
+  gap: var(--space-2);
+  font-weight: 500;
+}
+.field input,
+.field select,
+.field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch-min);
+  padding: var(--space-3);
+  border: 1px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+}
+.field textarea {
+  resize: vertical;
+  min-height: 108px;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.primary,
+.secondary,
+.history summary {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.primary {
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+.secondary {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.notice,
+.meta {
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+.entry {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-min);
+  cursor: pointer;
+}
+.checkbox input {
+  width: 22px;
+  height: 22px;
+}
+.feedback {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.history {
+  min-width: 0;
+}
+.history summary {
+  box-sizing: border-box;
+  margin-block: var(--space-3);
+}
+.snapshots > div {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+@media (max-width: 767px) {
+  .grid,
+  .snapshots {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
