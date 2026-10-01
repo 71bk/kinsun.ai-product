@@ -2,9 +2,28 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from agent_runtime.rag.hybrid_search import HybridSearch
+from agent_runtime.rag.models import HybridProfileSettings, HybridSearchSettings, RetrievalRequestV2
 from agent_runtime.rag.query_normalization import normalize_legal_query
 from agent_runtime.rag.retriever import Retriever
-from tests.unit.test_rag_citation_v2 import make_request, make_search
+
+
+@pytest.fixture
+def hybrid_search():
+    profiles = {
+        name: HybridProfileSettings(
+            profile=name,
+            search_pipeline=f"pipeline-{name}",
+            bm25_weight=weight,
+            vector_weight=1 - weight,
+            vector_min_score=0.7,
+            top_k=5,
+            agent_chunk_min=3,
+            agent_chunk_max=5,
+        )
+        for name, weight in (("natural_language", 0.4), ("legal", 0.65))
+    }
+    return HybridSearch(HybridSearchSettings(index_alias="rag-staging-current", **profiles))
 
 
 @pytest.mark.parametrize(
@@ -40,7 +59,9 @@ def test_expansion_never_exceeds_query_bound():
 @pytest.mark.parametrize(
     "enabled,profile", [(False, "legal"), (True, "legal"), (True, "natural_language")]
 )
-async def test_normalization_is_opt_in_and_shared_by_both_search_legs(enabled, profile):
+async def test_normalization_is_opt_in_and_shared_by_both_search_legs(
+    enabled, profile, hybrid_search
+):
     embedding = AsyncMock()
     embedding.dimension = 1024
     embedding.embed_query.return_value = [0.01] * 1024
@@ -49,10 +70,19 @@ async def test_normalization_is_opt_in_and_shared_by_both_search_legs(enabled, p
     retriever = Retriever(
         embedding_provider=embedding,
         search_backend=backend,
-        hybrid_search=make_search(),
+        hybrid_search=hybrid_search,
         normalize_legal_queries=enabled,
     )
-    request = make_request().model_copy(update={"query": "長照法第二條", "query_profile": profile})
+    request = RetrievalRequestV2(
+        schema_version="2.0.0",
+        request_id="request-normalization-synthetic",
+        query="長照法第二條",
+        query_profile=profile,
+        top_k=5,
+        audience="elder",
+        purpose="general_information",
+        language="zh-TW",
+    )
     response = await retriever.retrieve_v2(request)
     assert response.status == "NO_DATA"
     expected = "長期照顧服務法第 2 條" if enabled and profile == "legal" else request.query

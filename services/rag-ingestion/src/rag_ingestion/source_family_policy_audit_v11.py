@@ -1,4 +1,4 @@
-"""Current routing/retrieval attestation; preserve sealed audits through v010."""
+"""Sealed routing/retrieval attestation; v012 binds current implementation bytes."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ from rag_ingestion.source_family_policy_v2 import (
     _new_staging_directory,
     _read_json,
     _refuse_overwrite,
+    _validate_frozen_audit_inventory,
     _validate_package_checksums,
     _write_checksums,
     _write_json,
@@ -96,14 +97,21 @@ def validate(root: Path, package: Path | None = None):
     lock, inventory = documents(root)
     if _read_json(package / "candidate-artifact-lock.json") != lock:
         raise SourceFamilyPolicyV2Error("v011 historical lock mismatch")
-    if _read_json(package / "validation-input-inventory.json") != inventory:
+    recorded = _read_json(package / "validation-input-inventory.json")
+    if package == (root / AUDIT_ROOT).resolve():
+        _validate_frozen_audit_inventory(recorded, "quality_v011_current_inputs")
+    elif recorded != inventory:
         raise SourceFamilyPolicyV2Error("v011 current inputs changed; create a successor")
     return {
         "status": "PASS",
-        "attestation_scope": "CURRENT_IMPLEMENTATION_BYTES",
-        "inventory_sha256": inventory["inventory_sha256"],
+        "attestation_scope": (
+            "SEALED_HISTORICAL_INPUTS"
+            if package == (root / AUDIT_ROOT).resolve()
+            else "CURRENT_IMPLEMENTATION_BYTES"
+        ),
+        "inventory_sha256": recorded["inventory_sha256"],
         "candidate_lock_sha256": lock["inventory_sha256"],
-        "input_count": inventory["entry_count"],
+        "input_count": recorded["entry_count"],
         "production_approved": False,
         "external_activation": "NOT_AUTHORIZED",
         "quality_acceptance": "NOT_PROVEN_BY_BYTE_ATTESTATION",

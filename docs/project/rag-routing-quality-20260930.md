@@ -105,3 +105,12 @@ Sparse／reranker 只在 admission 修正後仍有召回或排序缺口時，再
 - 未執行：共享 development DB 的破壞性 integration teardown、回答生成品質評測、browser E2E、production activation。
 
 所有 release、policy 與歷史 acceptance／manifest 均保持不變；本紀錄不代表 production 批准。
+
+## PR 合併前 CI 修正（2026-10-01）
+
+PR #65 首輪 CI 發現 normalization 測試以 `tests.unit.*` 引用另一測試檔，
+從 repo root 執行時無法 collection。已改為測試內的合成 fixture，維持真實 HybridSearch
+及兩路查詢正規化 assertion。既有收案前端測試改為等待 dialog 關閉 effect 完成。
+
+current byte attestation 改為 audit v012，包含 149 個 inputs；v011 package 原封保存，
+改作封存歷史。此修正不改動產品檢索、路由或授權行為。
