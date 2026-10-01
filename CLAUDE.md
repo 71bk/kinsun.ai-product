@@ -1,10 +1,16 @@
 # CLAUDE.md
 
+- 2026-10-01 RAG admission 評測：44 題 × 四角色的唯讀候選快照，可離線重播
+  development 門檻比較；holdout 只跑 baseline。`evals/rag/ADMISSION.md` 說明覆核流程。
+  qrels／answerability／sufficient sets 均待獨立人工覆核，null 不能算無關或通過。
+  新合成改寫不是獨立盲測；新工具不改 runtime 排名、0.7 門檻、3–5 引用或功能開關。
+  current byte attestation 為 v013；v012 與更早 package bytes 保留封存。
+
 - 2026-09-30 RAG 路由／品質候選：`KNOWLEDGE_ROUTER_V2_ENABLED`、
   `RAG_QUERY_NORMALIZATION_ENABLED` 均預設 false。新增 120 題合成路由與 40 組 live retrieval
   比較；anchor 標記尚待獨立人工覆核，不是 production quality acceptance。
   現行 Hybrid 排序、0.7 門檻、3–5 引用與 v004 release／policy 均保留；沒有新增 sparse model。
-  current code attestation 升為 audit v012（`scripts/rag/quality_audit.py validate`），v009/v010/v011
+  current code attestation 已由後續 audit v013 接續（`scripts/rag/quality_audit.py validate`），v009–v012
   保留歷史封存，不再代表 current source bytes。詳細結果與後續 admission 校準見
   `docs/project/rag-routing-quality-20260930.md`；不得把本次局部品質評測描述成已上線。
 

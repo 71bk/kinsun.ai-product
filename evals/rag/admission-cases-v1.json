@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "admission-calibration-v1",
+  "data_classification": "SYNTHETIC_PUBLIC_ONLY",
+  "judgment_status": "DRAFT_REQUIRES_INDEPENDENT_HUMAN_REVIEW",
+  "independent_test_set": false,
+  "baseline": "All 24 knowledge groups from cases-v1, first variant only; retain original group splits.",
+  "split_rule": "Paraphrases inherit their existing semantic group's split. New negative groups have explicit splits. Holdout is never included in the calibration sweep.",
+  "additional_cases": [
+    {"id":"plain_home","group":"home_daily","query":"老人自己洗澡不方便，長照到家裡可以幫忙什麼？","law_articles":["10"]},
+    {"id":"plain_respite","group":"respite","query":"家人輪流照顧也需要休息，長照有什麼支持服務？","law_articles":["13"]},
+    {"id":"plain_daycare","group":"daycare","query":"家人白天無法陪伴，社區式照顧提供哪些項目？","law_articles":["11"]},
+    {"id":"plain_aids","group":"aids","query":"居家長照的服務項目有包含輔具嗎？","law_articles":["10"]},
+    {"id":"plain_assessment","group":"assessment","query":"申請長照的服務需求，依法要由哪個單位評估？","law_articles":["8"]},
+    {"id":"plain_support","group":"formal_caregiver","query":"照顧家人的人可以獲得哪些知識或情緒支持？","law_articles":["13"]},
+    {"id":"plain_fee_authority","group":"formal_level","query":"長照補助額度的標準由誰制定？","law_articles":["8-1"]},
+    {"id":"plain_legal_privacy","group":"article_20","query":"長照法對工作人員保守個案秘密有什麼要求？","law_articles":["20"]},
+    {"id":"negative_bed_now","group":"live_availability","split":"development","query":"今天哪一家住宿長照機構還有空床？","draft_no_answer_reason":"需要即時機構床位資料，固定官方語料不足。"},
+    {"id":"negative_daycare_now","group":"live_availability","split":"development","query":"附近哪一家日照中心明天還有名額？","draft_no_answer_reason":"需要地點與即時名額，固定官方語料不足。"},
+    {"id":"negative_staff_now","group":"live_availability","split":"development","query":"現在有哪一位居服員能立刻來家裡？","draft_no_answer_reason":"需要即時派班資料。"},
+    {"id":"negative_case_status","group":"individual_decision","split":"development","query":"合成測試個案甲的長照申請審核通過了嗎？","draft_no_answer_reason":"公開語料不包含個人申請結果。"},
+    {"id":"negative_personal_quota","group":"individual_decision","split":"development","query":"合成測試個案乙這個月還剩多少長照補助可以用？","draft_no_answer_reason":"公開語料不包含個人額度與使用紀錄。"},
+    {"id":"negative_personal_booking","group":"individual_decision","split":"development","query":"合成測試個案丙的喘息服務預約是哪一天？","draft_no_answer_reason":"公開語料不包含個人預約。"},
+    {"id":"negative_fictional_provider","group":"provider_details","split":"holdout","query":"虛構測試機構甲的夜間照顧每小時收多少錢？","draft_no_answer_reason":"固定語料沒有該虛構機構的定價。"},
+    {"id":"negative_fictional_phone","group":"provider_details","split":"holdout","query":"虛構測試日照中心乙的預約電話是多少？","draft_no_answer_reason":"固定語料沒有該虛構機構的電話。"},
+    {"id":"negative_fictional_route","group":"provider_details","split":"holdout","query":"虛構測試交通單位丙明天接送的確切時刻表是什麼？","draft_no_answer_reason":"固定語料没有該單位或即時班表。"},
+    {"id":"negative_article_999","group":"absent_legal_text","split":"development","purpose":"legal_reference","query":"請逐字列出長照法第999條。","draft_no_answer_reason":"固定版本長照法不存在第999條。"},
+    {"id":"negative_article_888","group":"absent_legal_text","split":"development","purpose":"legal_reference","query":"長期照顧服務法第888條有哪些規定？","draft_no_answer_reason":"固定版本長照法不存在第888條。"},
+    {"id":"negative_article_777","group":"absent_legal_text","split":"development","purpose":"legal_reference","query":"請提供長照法第777條的完整條文。","draft_no_answer_reason":"固定版本長照法不存在第777條。"}
+  ]
+}

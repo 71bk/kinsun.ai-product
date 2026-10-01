@@ -94,6 +94,9 @@ and generated-answer claim/citation checks. Report answer grounding and unsuppor
 claim rates only after those checks actually run; this suite does not estimate them.
 Browser E2E, isolated DB integration, and production approval remain separate gates.
 
-Current implementation byte attestation is `audits/v012/preflight`, validated by
-`scripts/rag/quality_audit.py validate`. Audits v009/v010/v011 are sealed historical
+The next evaluation slice adds four-audience admission snapshots, pending human
+review packets and a development-only raw-score comparison. See [ADMISSION.md](ADMISSION.md).
+
+Current implementation byte attestation is `audits/v013/preflight`, validated by
+`scripts/rag/quality_audit.py validate`. Audits v009/v010/v011/v012 are sealed historical
 evidence. None of these byte attestations constitutes relevance acceptance.
