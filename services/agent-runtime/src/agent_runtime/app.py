@@ -168,6 +168,7 @@ def build_configured_rag_retriever():
             )
         return build_retriever(
             rag_settings,
+            normalize_legal_queries=settings.RAG_QUERY_NORMALIZATION_ENABLED,
             google_api_key=google_api_key,
             google_timeout_seconds=settings.GEMINI_EMBEDDING_TIMEOUT_SECONDS,
             source_family_policy=source_family_policy,

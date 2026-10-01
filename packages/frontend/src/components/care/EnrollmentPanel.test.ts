@@ -93,7 +93,7 @@ it('removes the pending command and draft when manage permission is revoked', as
   fireEvent.focus(window);
   await screen.findByText('You can view this enrollment but cannot change it.');
   expect(screen.queryByRole('textbox')).toBeNull();
-  expect(screen.queryByRole('dialog')).toBeNull();
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   expect(api.changeEnrollment).not.toHaveBeenCalled();
 });
 

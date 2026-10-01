@@ -133,14 +133,21 @@ def _session() -> MagicMock:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("router_enabled", [False, True])
 @pytest.mark.parametrize(
     "status,decision,saved",
     [("SUCCESS", "ALLOW", True), ("FAILED", "ALLOW", False), ("BLOCKED", "BLOCK", False)],
 )
 async def test_voice_capture_receives_only_core_gated_evidence_after_success(
-    monkeypatch, status, decision, saved
+    monkeypatch, status, decision, saved, router_enabled
 ):
     from app.schemas.conversation import PersonalMemoryReceipt
+
+    monkeypatch.setattr(
+        companion_service,
+        "get_settings",
+        lambda: SimpleNamespace(knowledge_router_v2_enabled=router_enabled),
+    )
 
     tenant = uuid4()
     actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant)
@@ -675,9 +682,22 @@ async def test_run_turn_sends_only_bounded_active_confirmed_memory_context(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "query,router_enabled",
+    [("長照服務要怎麼申請？", False), ("我要怎麼找人到家裡幫忙照顧媽媽？", True)],
+)
 async def test_knowledge_turn_does_not_mix_personal_memory_into_rag_request(
     monkeypatch: pytest.MonkeyPatch,
+    query: str,
+    router_enabled: bool,
 ) -> None:
+    monkeypatch.setattr(
+        companion_service,
+        "get_settings",
+        lambda: SimpleNamespace(knowledge_router_v2_enabled=router_enabled),
+    )
+    personal_memory = MagicMock()
+    monkeypatch.setattr(companion_service, "PersonalMemoryService", personal_memory)
     tenant_id = uuid4()
     actor = ActorContext(actor_id=uuid4(), actor_role="ELDER", tenant_id=tenant_id)
     conversation = _conversation()
@@ -688,6 +708,8 @@ async def test_knowledge_turn_does_not_mix_personal_memory_into_rag_request(
     async def run_runtime(*, request_payload, **_kwargs):
         assert request_payload["purpose"] == "general_information"
         assert request_payload["confirmed_memories"] == []
+        assert request_payload["verified_care_events"] == []
+        assert request_payload["trusted_care_profile"] == []
         return _runtime_result(
             request_id=request_payload["request_id"],
             trace_id=conversation.trace_id,
@@ -702,7 +724,7 @@ async def test_knowledge_turn_does_not_mix_personal_memory_into_rag_request(
     ).run_turn(
         conversation=conversation,
         actor_context=actor,
-        input_text="長照服務要怎麼申請？",
+        input_text=query,
         correlation_id="correlation-rag-no-memory",
         idempotency_key="turn-rag-no-memory",
         latency_budget_ms=3000,
@@ -712,6 +734,7 @@ async def test_knowledge_turn_does_not_mix_personal_memory_into_rag_request(
         "care_event:candidate:create",
         "memory:candidate:create",
     ]
+    personal_memory.assert_not_called()
 
 
 @pytest.mark.asyncio

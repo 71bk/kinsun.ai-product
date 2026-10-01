@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from time import perf_counter
 from uuid import NAMESPACE_URL, UUID, uuid5
@@ -43,10 +44,11 @@ from app.services.care_event_service import CareEventService
 from app.services.companion_request import build_companion_runtime_request
 from app.services.consent_service import ConsentService
 from app.services.conversation_service import ConversationService
-from app.services.knowledge_intent import resolve_turn_purpose
+from app.services.knowledge_router import route_knowledge
 from app.services.personal_memory_service import PersonalMemoryService
 
 _MAX_CONFIRMED_MEMORY_CONTEXT_ITEMS = 5
+logger = logging.getLogger(__name__)
 _MAX_VERIFIED_EVENT_CONTEXT_ITEMS = 5
 
 _RESULT_STATUS_MAP = {
@@ -363,7 +365,19 @@ class CompanionService:
         # (rag_integration.RAG_PURPOSES) and does not infer intent itself, so an
         # information request has to be identified here or the knowledge base is
         # never consulted. Everyday conversation keeps BASIC_VOICE.
-        turn_purpose = resolve_turn_purpose(input_text)
+        route = route_knowledge(
+            input_text,
+            enabled=getattr(get_settings(), "knowledge_router_v2_enabled", False),
+        )
+        turn_purpose = route.purpose
+        logger.info(
+            "knowledge_route_decided",
+            extra={
+                "route_version": route.version,
+                "route_reason": route.reason_code,
+                "route_purpose": route.purpose,
+            },
+        )
         confirmed_memories = await self._confirmed_memory_context(
             conversation=conversation,
             actor_context=actor_context,

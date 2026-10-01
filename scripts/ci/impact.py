@@ -12,7 +12,7 @@ from pathlib import Path
 
 from telemetry import identity, write_json
 
-POLICY_VERSION = 2
+POLICY_VERSION = 3
 EXPECTED_JOBS = (
     "core-fast",
     "core-db",
@@ -51,6 +51,7 @@ RULES = (
             "data/rag/",
             "data/rag-",
             "scripts/rag/",
+            "evals/rag/",
         ),
         RAG,
     ),

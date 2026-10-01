@@ -1,5 +1,10 @@
 # AGENTS.md — agent-runtime
 
+- 2026-09-30 已新增 `RAG_QUERY_NORMALIZATION_ENABLED`（預設 false）與離線排名比較工具。
+  40 組真實檢索診斷已跑，屬 draft anchor 評測，不是正式 Golden Query acceptance；
+  現行 SQL／Hybrid 權重、0.7 門檻與 3–5 引用契約不變。完整結果見
+  `../../docs/project/rag-routing-quality-20260930.md`；current byte attestation 為 audit v012。
+
 - 更新日期：2026-09-29（RAG 現況段落）；其餘段落仍校準於 2026-09-02
 - 校準基準：`main` at `03cd170`；RAG 同步狀態另見下方 2026-09-10／09-29 條目
 

@@ -2,3 +2,10 @@
 app/rag*.py text eol=lf
 tests/unit/test_law*.py text eol=lf
 tests/unit/test_rag*.py text eol=lf
+.gitattributes text eol=lf
+app/core/config.py text eol=lf
+app/services/knowledge_intent.py text eol=lf
+app/services/knowledge_router.py text eol=lf
+app/services/companion_service.py text eol=lf
+tests/unit/test_knowledge_router.py text eol=lf
+tests/unit/test_companion_service.py text eol=lf

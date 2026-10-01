@@ -1,0 +1,2728 @@
+{
+  "schema_version": "1.0",
+  "mode": "OFFLINE_ROUTING_ONLY",
+  "manifest": {
+    "git_commit": "a75089015056bbb9634e332b94d4b5d1eb9fc4da",
+    "input_sha256": {
+      "evals/rag/cases-v1.json": "0bf630ee87bf429bf55def459ffb71c2d72b78ea756cfdf1e4ca2ad772a728f4",
+      "config/rag/embedding-google.yaml": "32833a59e0a8d1bbfee5ad8136fe06bec97409b85ce834e87972bb52b2de6d29",
+      "config/rag/hybrid-natural-language.json": "f04a616b02c8fcb3f4ec1f5faf3bdfccda0fb65fe4b99b64d7166fc0ed71742a",
+      "config/rag/hybrid-legal.json": "a621e8b439f7674f2b58a8a563123de4b79e82dd3effeb0b3a2b39aac7763c37",
+      "data/rag-v2/candidates/v004/SHA256SUMS.txt": "f3339ceae77c380f42b3c2823b28216827ef48d057129a9c5f5edd40c9e808dd",
+      "data/rag-v3/governance/source-family-policy/runtime/candidates/v004/source-family-runtime-policy.json": "a7d8dd163e54bb5cb11f1ea4004e3a6b75b9faff98290067e745125cc6ac5758"
+    },
+    "implementation_sha256": {
+      "services/core-api/app/services/knowledge_router.py": "545577d01a4a3b20a77b8b41f3db66770f80a7b045987ad61b2c6eb6c9f6db82",
+      "services/agent-runtime/src/agent_runtime/rag/query_normalization.py": "e2d6a3471b7d493f9ffaca45cbe7b2a186f91d11caa2deadf89e74494aa0bdb6",
+      "services/agent-runtime/src/agent_runtime/rag/postgres_backend.py": "1d25a607f95d5b59670760c8a66eb654d481d932d68c9034338e21fea11b19a7",
+      "services/agent-runtime/src/agent_runtime/rag/retriever.py": "fd489d86e88194ed8b74a1d05f62683c267ba12e4693c57749bc611075cdf301",
+      "scripts/rag/evaluate_quality.py": "43dffb11264933c385313f39fe87841ef4d48527af4be666527fe61e1a40738c",
+      "scripts/rag/evaluate_live_quality.py": "28e0ddb229b8bf760b70519c235389a56e447a2bf6599624c40890766ab8a20c",
+      "scripts/rag/quality_metrics.py": "986533876430ea8d43026584b84183dff370a7bc85e81e59df45b4e539fa2ae2",
+      "scripts/rag/quality_search.py": "467c2d5b05440168205e1895bf27765ac973e9feb8629d7a2c1c668579bccb32",
+      "services/core-api/uv.lock": "9bfc228443e240e061147b53076880b1586e18a205014a14d720cd9f2889b896",
+      "services/agent-runtime/uv.lock": "6639e85a4d8f9146c4cf08081d23360315dccc3de4ba7eab48456432f2fdc2be"
+    },
+    "python_version": "3.12.2",
+    "router_sha256": "545577d01a4a3b20a77b8b41f3db66770f80a7b045987ad61b2c6eb6c9f6db82",
+    "storage_release": "rag-v2-v004-f3339ceae77c",
+    "runtime_policy_version": "v004",
+    "embedding_profile": "ep-google-00a12ec45096fa9d97d9e9b6",
+    "judgments": "SOURCE_GROUNDED_DRAFT_REQUIRES_HUMAN_REVIEW",
+    "production_approved": false
+  },
+  "case_count": 120,
+  "group_count": 40,
+  "qrel_scope": "Listed evidence anchors, not exhaustive corpus-wide relevance judgments. Anchor recall must not be represented as exhaustive Recall@5.",
+  "routes": {
+    "baseline": {
+      "overall": {
+        "accuracy": {
+          "numerator": 84,
+          "denominator": 120,
+          "value": 0.7
+        },
+        "knowledge_recall": {
+          "numerator": 45,
+          "denominator": 72,
+          "value": 0.625
+        },
+        "nonknowledge_false_positive": {
+          "numerator": 9,
+          "denominator": 48,
+          "value": 0.1875
+        },
+        "confusion": {
+          "general_information -> BASIC_VOICE": 27,
+          "general_information -> general_information": 27,
+          "legal_reference -> legal_reference": 18,
+          "BASIC_VOICE -> BASIC_VOICE": 39,
+          "BASIC_VOICE -> general_information": 7,
+          "BASIC_VOICE -> legal_reference": 2
+        }
+      },
+      "by_split": {
+        "development": {
+          "accuracy": {
+            "numerator": 56,
+            "denominator": 81,
+            "value": 0.691358024691358
+          },
+          "knowledge_recall": {
+            "numerator": 30,
+            "denominator": 48,
+            "value": 0.625
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 7,
+            "denominator": 33,
+            "value": 0.21212121212121213
+          },
+          "confusion": {
+            "general_information -> BASIC_VOICE": 18,
+            "general_information -> general_information": 18,
+            "legal_reference -> legal_reference": 12,
+            "BASIC_VOICE -> BASIC_VOICE": 26,
+            "BASIC_VOICE -> general_information": 5,
+            "BASIC_VOICE -> legal_reference": 2
+          }
+        },
+        "holdout": {
+          "accuracy": {
+            "numerator": 28,
+            "denominator": 39,
+            "value": 0.717948717948718
+          },
+          "knowledge_recall": {
+            "numerator": 15,
+            "denominator": 24,
+            "value": 0.625
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 2,
+            "denominator": 15,
+            "value": 0.13333333333333333
+          },
+          "confusion": {
+            "general_information -> BASIC_VOICE": 9,
+            "general_information -> general_information": 9,
+            "legal_reference -> legal_reference": 6,
+            "BASIC_VOICE -> BASIC_VOICE": 13,
+            "BASIC_VOICE -> general_information": 2
+          }
+        }
+      },
+      "by_category": {
+        "ambiguous": {
+          "accuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 3,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 3
+          }
+        },
+        "colloquial": {
+          "accuracy": {
+            "numerator": 9,
+            "denominator": 36,
+            "value": 0.25
+          },
+          "knowledge_recall": {
+            "numerator": 9,
+            "denominator": 36,
+            "value": 0.25
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> BASIC_VOICE": 27,
+            "general_information -> general_information": 9
+          }
+        },
+        "companion": {
+          "accuracy": {
+            "numerator": 24,
+            "denominator": 27,
+            "value": 0.8888888888888888
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 3,
+            "denominator": 27,
+            "value": 0.1111111111111111
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 24,
+            "BASIC_VOICE -> general_information": 2,
+            "BASIC_VOICE -> legal_reference": 1
+          }
+        },
+        "formal": {
+          "accuracy": {
+            "numerator": 12,
+            "denominator": 12,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 12,
+            "denominator": 12,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> general_information": 12
+          }
+        },
+        "governance": {
+          "accuracy": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> general_information": 6
+          }
+        },
+        "legal": {
+          "accuracy": {
+            "numerator": 18,
+            "denominator": 18,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 18,
+            "denominator": 18,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "legal_reference -> legal_reference": 18
+          }
+        },
+        "off_domain": {
+          "accuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 3,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 3
+          }
+        },
+        "private": {
+          "accuracy": {
+            "numerator": 5,
+            "denominator": 6,
+            "value": 0.8333333333333334
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 1,
+            "denominator": 6,
+            "value": 0.16666666666666666
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 5,
+            "BASIC_VOICE -> general_information": 1
+          }
+        },
+        "safety": {
+          "accuracy": {
+            "numerator": 4,
+            "denominator": 9,
+            "value": 0.4444444444444444
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 5,
+            "denominator": 9,
+            "value": 0.5555555555555556
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 4,
+            "BASIC_VOICE -> general_information": 4,
+            "BASIC_VOICE -> legal_reference": 1
+          }
+        }
+      },
+      "cases": [
+        {
+          "case_id": "home_help-1",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_help-2",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_help-3",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "respite-1",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "respite-2",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "respite-3",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "caregiver_support-1",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "caregiver_support-2",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "caregiver_support-3",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_daily-1",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_daily-2",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_daily-3",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "daycare-1",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "daycare-2",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "daycare-3",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "assessment-1",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "assessment-2",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "assessment-3",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "aids-1",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "aids-2",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "aids-3",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_changes-1",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_changes-2",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "home_changes-3",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "residential-1",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "residential-2",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "residential-3",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_skills-1",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_skills-2",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_skills-3",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "social_support-1",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "social_support-2",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "social_support-3",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "transport-1",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "transport-2",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "transport-3",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_home-1",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_home-2",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_home-3",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_daycare-1",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_daycare-2",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_daycare-3",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_caregiver-1",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_caregiver-2",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_caregiver-3",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_level-1",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_level-2",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "formal_level-3",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "nutrition_blocked-1",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "nutrition_blocked-2",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "nutrition_blocked-3",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "application_blocked-1",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "application_blocked-2",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "application_blocked-3",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_2-1",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_2-2",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_2-3",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_3-1",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_3-2",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_3-3",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8-1",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8-2",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8-3",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8_1-1",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8_1-2",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_8_1-3",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_13-1",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_13-2",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_13-3",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_20-1",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_20-2",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "article_20-3",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "meal_chat-1",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "meal_chat-2",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "meal_chat-3",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "weather_chat-1",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "weather_chat-2",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "weather_chat-3",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "family_chat-1",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "family_chat-2",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "family_chat-3",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_story-1",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_story-2",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "care_story-3",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "fall_report-1",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "fall_report-2",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "fall_report-3",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "symptom_report-1",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "symptom_report-2",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "symptom_report-3",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "emotion_chat-1",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "emotion_chat-2",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "emotion_chat-3",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "memory_chat-1",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "memory_chat-2",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "memory_chat-3",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "private_history-1",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "private_history-2",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "private_history-3",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "declined_lookup-1",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "declined_lookup-2",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "declined_lookup-3",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "medication-1",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "medication-2",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "medication-3",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "diagnosis-1",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "diagnosis-2",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "diagnosis-3",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "injection-1",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "injection-2",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "legal_reference",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "injection-3",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "cross_scope-1",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "cross_scope-2",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "general_information",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "cross_scope-3",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "ambiguous-1",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "ambiguous-2",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "ambiguous-3",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "off_domain-1",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "off_domain-2",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        },
+        {
+          "case_id": "off_domain-3",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LEGACY_RULES"
+        }
+      ]
+    },
+    "candidate": {
+      "overall": {
+        "accuracy": {
+          "numerator": 120,
+          "denominator": 120,
+          "value": 1.0
+        },
+        "knowledge_recall": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0
+        },
+        "nonknowledge_false_positive": {
+          "numerator": 0,
+          "denominator": 48,
+          "value": 0.0
+        },
+        "confusion": {
+          "general_information -> general_information": 54,
+          "legal_reference -> legal_reference": 18,
+          "BASIC_VOICE -> BASIC_VOICE": 48
+        }
+      },
+      "by_split": {
+        "development": {
+          "accuracy": {
+            "numerator": 81,
+            "denominator": 81,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 48,
+            "denominator": 48,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 33,
+            "value": 0.0
+          },
+          "confusion": {
+            "general_information -> general_information": 36,
+            "legal_reference -> legal_reference": 12,
+            "BASIC_VOICE -> BASIC_VOICE": 33
+          }
+        },
+        "holdout": {
+          "accuracy": {
+            "numerator": 39,
+            "denominator": 39,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 24,
+            "denominator": 24,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 15,
+            "value": 0.0
+          },
+          "confusion": {
+            "general_information -> general_information": 18,
+            "legal_reference -> legal_reference": 6,
+            "BASIC_VOICE -> BASIC_VOICE": 15
+          }
+        }
+      },
+      "by_category": {
+        "ambiguous": {
+          "accuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 3,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 3
+          }
+        },
+        "colloquial": {
+          "accuracy": {
+            "numerator": 36,
+            "denominator": 36,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 36,
+            "denominator": 36,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> general_information": 36
+          }
+        },
+        "companion": {
+          "accuracy": {
+            "numerator": 27,
+            "denominator": 27,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 27,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 27
+          }
+        },
+        "formal": {
+          "accuracy": {
+            "numerator": 12,
+            "denominator": 12,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 12,
+            "denominator": 12,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> general_information": 12
+          }
+        },
+        "governance": {
+          "accuracy": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "general_information -> general_information": 6
+          }
+        },
+        "legal": {
+          "accuracy": {
+            "numerator": 18,
+            "denominator": 18,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 18,
+            "denominator": 18,
+            "value": 1.0
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "legal_reference -> legal_reference": 18
+          }
+        },
+        "off_domain": {
+          "accuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 3,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 3
+          }
+        },
+        "private": {
+          "accuracy": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 6,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 6
+          }
+        },
+        "safety": {
+          "accuracy": {
+            "numerator": 9,
+            "denominator": 9,
+            "value": 1.0
+          },
+          "knowledge_recall": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "nonknowledge_false_positive": {
+            "numerator": 0,
+            "denominator": 9,
+            "value": 0.0
+          },
+          "confusion": {
+            "BASIC_VOICE -> BASIC_VOICE": 9
+          }
+        }
+      },
+      "cases": [
+        {
+          "case_id": "home_help-1",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_help-2",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_help-3",
+          "group": "home_help",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "respite-1",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "respite-2",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "respite-3",
+          "group": "respite",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "caregiver_support-1",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "caregiver_support-2",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "caregiver_support-3",
+          "group": "caregiver_support",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_daily-1",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_daily-2",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_daily-3",
+          "group": "home_daily",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "daycare-1",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "daycare-2",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "daycare-3",
+          "group": "daycare",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "assessment-1",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "assessment-2",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "assessment-3",
+          "group": "assessment",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "aids-1",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "aids-2",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "aids-3",
+          "group": "aids",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_changes-1",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_changes-2",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "home_changes-3",
+          "group": "home_changes",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "residential-1",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "residential-2",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "residential-3",
+          "group": "residential",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "care_skills-1",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "care_skills-2",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "care_skills-3",
+          "group": "care_skills",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "social_support-1",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "social_support-2",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "social_support-3",
+          "group": "social_support",
+          "category": "colloquial",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "transport-1",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "transport-2",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "transport-3",
+          "group": "transport",
+          "category": "colloquial",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_home-1",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "formal_home-2",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "formal_home-3",
+          "group": "formal_home",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "formal_daycare-1",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_daycare-2",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_daycare-3",
+          "group": "formal_daycare",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_caregiver-1",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_caregiver-2",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_caregiver-3",
+          "group": "formal_caregiver",
+          "category": "formal",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "formal_level-1",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "formal_level-2",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "formal_level-3",
+          "group": "formal_level",
+          "category": "formal",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "nutrition_blocked-1",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "nutrition_blocked-2",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "CARE_RESOURCE_REQUEST"
+        },
+        {
+          "case_id": "nutrition_blocked-3",
+          "group": "nutrition_blocked",
+          "category": "governance",
+          "split": "development",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "application_blocked-1",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "application_blocked-2",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "application_blocked-3",
+          "group": "application_blocked",
+          "category": "governance",
+          "split": "holdout",
+          "expected": "general_information",
+          "actual": "general_information",
+          "reason_code": "EXPLICIT_KNOWLEDGE_REQUEST"
+        },
+        {
+          "case_id": "article_2-1",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_2-2",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_2-3",
+          "group": "article_2",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_3-1",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_3-2",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_3-3",
+          "group": "article_3",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8-1",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8-2",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8-3",
+          "group": "article_8",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8_1-1",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8_1-2",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_8_1-3",
+          "group": "article_8_1",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_13-1",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_13-2",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_13-3",
+          "group": "article_13",
+          "category": "legal",
+          "split": "development",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_20-1",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_20-2",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "article_20-3",
+          "group": "article_20",
+          "category": "legal",
+          "split": "holdout",
+          "expected": "legal_reference",
+          "actual": "legal_reference",
+          "reason_code": "LEGAL_INFORMATION"
+        },
+        {
+          "case_id": "meal_chat-1",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "meal_chat-2",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "meal_chat-3",
+          "group": "meal_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "weather_chat-1",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "weather_chat-2",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "weather_chat-3",
+          "group": "weather_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "family_chat-1",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "family_chat-2",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "family_chat-3",
+          "group": "family_chat",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "care_story-1",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "care_story-2",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "care_story-3",
+          "group": "care_story",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "fall_report-1",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "fall_report-2",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "fall_report-3",
+          "group": "fall_report",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "symptom_report-1",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "symptom_report-2",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "symptom_report-3",
+          "group": "symptom_report",
+          "category": "companion",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "emotion_chat-1",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "emotion_chat-2",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "emotion_chat-3",
+          "group": "emotion_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "memory_chat-1",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "memory_chat-2",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "memory_chat-3",
+          "group": "memory_chat",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "private_history-1",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "private_history-2",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "private_history-3",
+          "group": "private_history",
+          "category": "private",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "declined_lookup-1",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LOOKUP_DECLINED"
+        },
+        {
+          "case_id": "declined_lookup-2",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LOOKUP_DECLINED"
+        },
+        {
+          "case_id": "declined_lookup-3",
+          "group": "declined_lookup",
+          "category": "companion",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "LOOKUP_DECLINED"
+        },
+        {
+          "case_id": "medication-1",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "medication-2",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "medication-3",
+          "group": "medication",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "diagnosis-1",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "diagnosis-2",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "diagnosis-3",
+          "group": "diagnosis",
+          "category": "safety",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "injection-1",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "injection-2",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "injection-3",
+          "group": "injection",
+          "category": "safety",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "SAFETY_PATH"
+        },
+        {
+          "case_id": "cross_scope-1",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "cross_scope-2",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "cross_scope-3",
+          "group": "cross_scope",
+          "category": "private",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "PRIVATE_CONTEXT"
+        },
+        {
+          "case_id": "ambiguous-1",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "ambiguous-2",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "ambiguous-3",
+          "group": "ambiguous",
+          "category": "ambiguous",
+          "split": "holdout",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "off_domain-1",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "off_domain-2",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        },
+        {
+          "case_id": "off_domain-3",
+          "group": "off_domain",
+          "category": "off_domain",
+          "split": "development",
+          "expected": "BASIC_VOICE",
+          "actual": "BASIC_VOICE",
+          "reason_code": "NO_CLEAR_PUBLIC_INFORMATION_INTENT"
+        }
+      ]
+    }
+  },
+  "anchor_labeled_cases": 66,
+  "not_executed": [
+    "live_retrieval",
+    "answer_grounding",
+    "human_label_review",
+    "browser_e2e"
+  ]
+}

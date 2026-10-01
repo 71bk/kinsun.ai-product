@@ -16,5 +16,7 @@ def test_v10_build_validate_and_refuse_overwrite(tmp_path):
         build(ROOT, output)
 
 
-def test_committed_v10_matches_current_sync_inputs():
-    assert validate(ROOT)["status"] == "PASS"
+def test_committed_v10_is_sealed_historical_evidence():
+    result = validate(ROOT)
+    assert result["status"] == "PASS"
+    assert result["attestation_scope"] == "SEALED_HISTORICAL_INPUTS"

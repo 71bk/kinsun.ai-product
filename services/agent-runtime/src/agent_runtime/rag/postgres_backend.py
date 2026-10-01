@@ -299,8 +299,26 @@ class PostgresSearchBackend:
         self._embedding_settings = embedding_settings
 
     async def search(self, plan: HybridSearchPlan) -> list[SearchHit]:
+        parameters = self._parameters(plan)
+        try:
+            async with self._engine.connect() as connection:
+                result = cast(
+                    _ExecuteResult,
+                    await connection.execute(text(POSTGRES_HYBRID_SEARCH_SQL), parameters),
+                )
+                rows = result.mappings().all()
+        except Exception as exc:
+            # Driver messages may include endpoints or query text. Keep them behind
+            # the adapter boundary; Retriever returns a fixed public fallback.
+            raise PostgresSearchBackendError(
+                f"PostgreSQL search failed: {type(exc).__name__}"
+            ) from exc
+        return _to_search_hits(rows)
+
+    def _parameters(self, plan: HybridSearchPlan) -> dict[str, object]:
+        """One parameter binding for runtime search and offline quality diagnostics."""
         query_vector = _vector_literal(plan.query_vector, self._embedding_settings.dimension)
-        parameters: dict[str, object] = {
+        return {
             "query": plan.query,
             "query_vector": query_vector,
             "release_id": self._settings.release_id,
@@ -320,20 +338,6 @@ class PostgresSearchBackend:
             "bm25_weight": plan.bm25_weight,
             "vector_weight": plan.vector_weight,
         }
-        try:
-            async with self._engine.connect() as connection:
-                result = cast(
-                    _ExecuteResult,
-                    await connection.execute(text(POSTGRES_HYBRID_SEARCH_SQL), parameters),
-                )
-                rows = result.mappings().all()
-        except Exception as exc:
-            # Driver messages may include endpoints or query text. Keep them behind
-            # the adapter boundary; Retriever returns a fixed public fallback.
-            raise PostgresSearchBackendError(
-                f"PostgreSQL search failed: {type(exc).__name__}"
-            ) from exc
-        return _to_search_hits(rows)
 
     async def aclose(self) -> None:
         await self._engine.dispose()

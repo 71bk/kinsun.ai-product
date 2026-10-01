@@ -39,6 +39,7 @@ docker/postgres/data/
 infra/cdk.out/
 .rag-work/
 rag-embeddings-*.jsonl
+.qa/rag-quality-embeddings-v1.json
 
 # Speech evaluation outputs may contain generated audio or transcript evidence.
 # Keep them local; only synthetic fixtures and aggregate evidence are versioned.

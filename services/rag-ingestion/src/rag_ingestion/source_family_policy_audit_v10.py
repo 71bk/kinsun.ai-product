@@ -22,6 +22,7 @@ from rag_ingestion.source_family_policy_v2 import (
     _new_staging_directory,
     _read_json,
     _refuse_overwrite,
+    _validate_frozen_audit_inventory,
     _validate_package_checksums,
     _write_checksums,
     _write_json,
@@ -72,11 +73,20 @@ def validate(root: Path, package: Path | None = None):
     lock, inventory = documents(root)
     if _read_json(package / "candidate-artifact-lock.json") != lock:
         raise SourceFamilyPolicyV2Error("v010 prior lock mismatch")
-    if _read_json(package / "validation-input-inventory.json") != inventory:
+    recorded = _read_json(package / "validation-input-inventory.json")
+    if package == (root / AUDIT_ROOT).resolve():
+        # Historical v010 bytes remain sealed; v011 binds current runtime inputs.
+        _validate_frozen_audit_inventory(recorded, "law_sync_v010_input_inventory")
+    elif recorded != inventory:
         raise SourceFamilyPolicyV2Error("v010 inputs changed; create a successor")
     return {
         "status": "PASS",
-        "inventory_sha256": inventory["inventory_sha256"],
+        "attestation_scope": (
+            "SEALED_HISTORICAL_INPUTS"
+            if package == (root / AUDIT_ROOT).resolve()
+            else "CURRENT_IMPLEMENTATION_BYTES"
+        ),
+        "inventory_sha256": recorded["inventory_sha256"],
         "candidate_lock_sha256": lock["inventory_sha256"],
         "production_approved": False,
         "external_sync_authorization": "SEPARATELY_RECORDED_20260910",
