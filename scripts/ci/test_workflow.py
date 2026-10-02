@@ -136,6 +136,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("pytest services/rag-ingestion/tests", commands)
         self.assertIn("scripts/rag/admission_quality.py", commands)
         self.assertIn("scripts/rag/evaluate_admission.py", commands)
+        self.assertIn("scripts/rag/prepare_knowledge.py", commands)
 
     def test_worker_metrics_and_isolated_caches(self):
         for name in EXPECTED_JOBS:

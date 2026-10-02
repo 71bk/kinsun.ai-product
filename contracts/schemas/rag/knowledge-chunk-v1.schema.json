@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/knowledge-chunk-v1.schema.json",
+  "title": "Local public knowledge chunk",
+  "description": "Data preparation contract. Validity is not runtime activation or human verification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "chunk_id", "source", "content", "policy", "provenance"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "chunk_id": {"$ref": "#/$defs/text"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "url", "version", "section", "locator", "page_start", "page_end", "official", "published_at", "version_date"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text"},
+        "title": {"$ref": "#/$defs/text"},
+        "url": {"type": "string", "format": "uri"},
+        "version": {"$ref": "#/$defs/optionalText"},
+        "section": {"$ref": "#/$defs/optionalText"},
+        "locator": {"$ref": "#/$defs/text"},
+        "page_start": {"type": ["integer", "null"], "minimum": 1},
+        "page_end": {"type": ["integer", "null"], "minimum": 1},
+        "official": {"type": "boolean", "const": true},
+        "published_at": {"$ref": "#/$defs/optionalText"},
+        "version_date": {"$ref": "#/$defs/optionalText"}
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "embedding_text", "text_sha256", "embedding_text_sha256", "type", "language", "locale"],
+      "properties": {
+        "text": {"$ref": "#/$defs/text"},
+        "embedding_text": {"$ref": "#/$defs/text"},
+        "text_sha256": {"$ref": "#/$defs/hash"},
+        "embedding_text_sha256": {"$ref": "#/$defs/hash"},
+        "type": {"$ref": "#/$defs/text"},
+        "language": {"$ref": "#/$defs/text"},
+        "locale": {"$ref": "#/$defs/text"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audiences", "purposes", "current_status", "risk_level", "stop_normal_rag", "requires_official_assessment", "requires_professional_assessment", "retrieval_eligible", "block_reasons"],
+      "properties": {
+        "audiences": {"$ref": "#/$defs/textList"},
+        "purposes": {"$ref": "#/$defs/textList"},
+        "current_status": {"enum": ["current", "unknown", "superseded"]},
+        "risk_level": {"enum": ["low", "medium", "high", "high_red_line", "unknown", null]},
+        "stop_normal_rag": {"type": "boolean"},
+        "requires_official_assessment": {"type": ["boolean", "null"]},
+        "requires_professional_assessment": {"type": ["boolean", "null"]},
+        "retrieval_eligible": {"type": "boolean"},
+        "block_reasons": {"$ref": "#/$defs/textList"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_version", "prior_chunk_ids", "review_status", "human_source_review", "data_classification", "distribution_scope", "license_status"],
+      "properties": {
+        "artifact_version": {"$ref": "#/$defs/text"},
+        "prior_chunk_ids": {"$ref": "#/$defs/textList"},
+        "review_status": {"enum": ["needs_review", "verified"]},
+        "human_source_review": {"$ref": "#/$defs/text"},
+        "data_classification": {"$ref": "#/$defs/text"},
+        "distribution_scope": {"$ref": "#/$defs/text"},
+        "license_status": {"$ref": "#/$defs/text"}
+      }
+    }
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "optionalText": {"type": ["string", "null"], "minLength": 1, "pattern": "\\S"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "textList": {"type": "array", "items": {"$ref": "#/$defs/text"}, "uniqueItems": true}
+  }
+}

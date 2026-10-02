@@ -5,6 +5,11 @@
 
 ## 目前有什麼
 
+`schemas/rag/knowledge-chunk-v1.schema.json` 是第 2 批本機公開知識資料契約，
+由 `prepare_knowledge.py` 產生、Core `load_knowledge_batch` 讀取；不是新 HTTP endpoint。
+保留 source／content／policy／provenance，取消人工工作簿作為建置前提；
+通過 schema 不代表人工 verified、runtime 可檢索或 release 已啟用。
+
 ```
 contracts/
 ├── openapi/

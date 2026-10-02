@@ -1,5 +1,8 @@
 # AGENTS.md
 
+- 2026-10-02 RAG 簡化第 2 批：新本機入口 `scripts/rag/prepare_knowledge.py` 預設 dry-run；735 候選整理為 658 官方 chunks，排除 75 研究／量表、1 舊版流程、1 導覽文字，原始資料不變。輸出僅 chunks／report／embedding-plan；新 compiler／Core loader 不依賴人工工作簿、allowlist 或 acceptance。詳見 [`第 2 批`](docs/project/rag-simplification-phase2-20261002.md)。
+- 第 2 批只完成本機整理與讀取：631 筆 embedding 文字未變、27 筆已變，不等於已有可重用向量；須供應完整 cache profile snapshot 與有效向量才計為 REUSE。未知現行性／assessment、原 review 與 retrieval policy 保留；未改 runtime／SQL gate，未 import、呼叫 provider 或 activation。自然問句 Hybrid 與准入調整仍屬第 3 批。
+
 - 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
 - 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
 - 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。

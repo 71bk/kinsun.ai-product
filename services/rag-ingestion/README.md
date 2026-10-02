@@ -1,20 +1,49 @@
 # RAG Ingestion Service
 
-This README documents the **legacy OpenSearch staging CLI**. Its offline,
-staging-only ingestion operates on the approved kinsun.ai RAG chunk set. The
-service validates the complete allowlisted dataset before any external call,
-embeds documents with Bedrock Cohere Embed v4, creates documents with
-`chunk_id` as OpenSearch `_id`, bulk ingests into a fresh staging index, and
-verifies count, duplicate IDs, and every vector dimension before moving the
-staging alias.
-
 The current development retrieval path uses Supabase/PostgreSQL public RAG
 projections and Google document/query embeddings, with release/profile/policy
-configured in Agent Runtime. The Cohere/Bedrock and OpenSearch commands below
-remain legacy staging tooling; they do not describe the current primary path or
-authorize switching providers, importing data or activating a release.
+configured in Agent Runtime. New local data preparation uses the command below.
 
-## Current development workflow (2026-10-02, phase 1)
+## Local knowledge preparation (2026-10-02, phase 2)
+
+From the repository root, inspect the supplied 735-chunk corpus without writes:
+
+```powershell
+uv run --project services/rag-ingestion python scripts/rag/prepare_knowledge.py
+```
+
+To write the local dataset and embedding work plan:
+
+```powershell
+uv run --project services/rag-ingestion python scripts/rag/prepare_knowledge.py --write --output .rag-work/knowledge-v007
+```
+
+The command retains 658 official chunks and excludes 75 non-official research/scale
+references, one superseded flow and one navigation-only label. It preserves original
+inputs and checks content hashes, IDs, metadata types, official URLs and source
+locators. Short/long semantic units and unknown source currency produce warnings.
+They are not new manual forms or claims of online freshness verification.
+
+Output contains only `chunks.jsonl`, `report.json` and `embedding-plan.json`.
+Identical repeated runs are supported; different output bytes require a different
+explicit destination. This is a local preparation command, with no DB or provider
+calls. `app.rag_knowledge_importer.load_knowledge_batch` independently validates
+this dataset into a Core projection batch without importing or activating it.
+
+The 631 unchanged embedding inputs and 27 changed inputs are a comparison with
+v004, not proof that cached vectors are available. `--cache` accepts a local
+`knowledge-embedding-cache-v1` object containing `profiles` (full seven-field
+profile snapshots) and `entries` (embedding text, hash, profile ID and optional
+vector). Only exact content and full profile matches with a valid supplied vector
+count as `REUSE`. A metadata-only entry still needs embedding. No cache is supplied
+by default, so the plan reports 0 available reuse and 658 required embeddings;
+it does not execute them. The trusted registry is
+`config/rag/knowledge-embedding-profiles.json`. Changing normalization, titles,
+truncation or other preprocessing requires a new `config_version`/profile identity.
+
+See [phase 2 usage and findings](../../docs/project/rag-simplification-phase2-20261002.md).
+
+## Development workflow
 
 Code is versioned by Git. Keep real source provenance, source/data versions and
 text/embedding-text content hashes; do not fabricate human `verified` status.
@@ -23,19 +52,27 @@ packages are retired: do not create audit v021. The standalone answer-evidence
 review UI/workbook entry points are retired; users need not fill 1,055 qrels.
 Historical pinned packages remain unchanged as records of their capture time.
 
-This batch retires development workflow only. Existing runtime/SQL admission,
-production authorization and ingestion gates remain in force. Phase 2 simplifies
-the data pipeline/admission metadata, consolidates the 735
-candidates, reuses content hashes and adds automatic source/content validation.
+The new preparation/loader path has no manual review workbook, signed allowlist
+or owner acceptance dependency. Review provenance and existing retrieval policy
+remain truthful and unchanged. Existing runtime/SQL admission and production
+authorization remain in force; preparing 658 chunks does not make all 658 eligible.
 Phase 3 adjusts runtime and SQL together for natural-question Hybrid RAG, removing
 exact-question matching, manual support sets, fixed answers and the three-citation
 minimum. Phase 4 evaluates real questions; subsequent import/environment switching
-and rollback require authorization. All these changes remain to be implemented.
+and rollback require authorization. Phases 3 and 4 remain to be implemented.
 Legacy human review/owner acceptance validators remain only where existing staging embedding,
 verified-candidate or source-family tools depend on them; they are not mandatory
 assignments for new development. See [phase 1 record](../../docs/project/rag-simplification-phase1-20261002.md).
 
-## Safety boundaries
+## Legacy OpenSearch staging CLI
+
+The remaining sections describe legacy Cohere/Bedrock/OpenSearch staging tooling.
+Those tools validate the complete allowlisted dataset, embed it, ingest into a
+fresh staging index and verify vectors before moving the staging alias. Their
+compatibility gates below do not apply to the new local preparation command and
+do not authorize provider switches or release activation.
+
+## Legacy staging safety boundaries
 
 - Only direct `*.jsonl` children of the configured approved directory are read.
 - A path containing `pending-revalidation` is always rejected.
