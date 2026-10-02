@@ -12,7 +12,7 @@ from pathlib import Path
 
 from telemetry import identity, write_json
 
-POLICY_VERSION = 3
+POLICY_VERSION = 4
 EXPECTED_JOBS = (
     "core-fast",
     "core-db",
@@ -30,18 +30,8 @@ SPEECH = CORE | {"speech-quality", "agent-quality"}
 # Service prefixes include the trailing slash; RAG data additionally uses versioned names.
 RULES = (
     ("core", ("services/core-api/",), CORE | {"speech-quality"}),
-    # Law-repair governance audits also hash Core importers and their unit tests.
-    (
-        "core-rag",
-        (
-            "services/core-api/app/rag_",
-            "services/core-api/tests/unit/test_rag_",
-            "services/core-api/tests/unit/test_law_",
-        ),
-        RAG,
-    ),
-    # RAG governance hashes Agent implementation/tests as inputs, not just RAG files.
-    ("agent", ("services/agent-runtime/",), RAG),
+    # Runtime changes retain Core and contract coverage without archive hash coupling.
+    ("agent", ("services/agent-runtime/",), AGENT),
     ("speech", ("services/speech-gateway/", "evals/speech/"), SPEECH),
     (
         "rag",
@@ -57,6 +47,11 @@ RULES = (
     ),
     ("frontend", ("packages/frontend/", "packages/shared/"), {"frontend-quality"}),
 )
+# Admission tests import evaluate_quality, which imports both Core routing helpers.
+CORE_RAG_HELPER_FILES = {
+    "services/core-api/app/services/knowledge_router.py",
+    "services/core-api/app/services/knowledge_intent.py",
+}
 FRONTEND_FILES = {"package.json", "package-lock.json", ".npmrc"}
 DOC_FILES = {
     "CI_PIPELINE_OPTIMIZATION_REVIEW.md",
@@ -70,6 +65,7 @@ REASONS = {item[0] for item in RULES} | {
     "invalid-path",
     "not-affected",
     "governed-rag-document",
+    "core-rag-helper",
 }
 
 
@@ -108,6 +104,9 @@ def classify(paths: list[str], event: str) -> tuple[dict, dict]:
                 continue
             else:
                 matched = False
+                if path in CORE_RAG_HELPER_FILES:
+                    include(RAG, "core-rag-helper")
+                    matched = True
                 for reason, prefixes, jobs in RULES:
                     if path.startswith(prefixes):
                         include(jobs, reason)

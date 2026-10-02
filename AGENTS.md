@@ -1,18 +1,10 @@
 # AGENTS.md
 
-- 2026-10-01 RAG admission 評測：44 題 × 四角色的唯讀候選快照，可離線重播
-  development 門檻比較；holdout 只跑 baseline。`evals/rag/ADMISSION.md` 說明覆核流程。
-  qrels／answerability／sufficient sets 均待獨立人工覆核，null 不能算無關或通過。
-  新合成改寫不是獨立盲測；新工具不改 runtime 排名、0.7 門檻、3–5 引用或功能開關。
-  current byte attestation 為 v013；v012 與更早 package bytes 保留封存。
-
-- 2026-09-30 RAG 路由／品質候選：`KNOWLEDGE_ROUTER_V2_ENABLED`、
-  `RAG_QUERY_NORMALIZATION_ENABLED` 均預設 false。新增 120 題合成路由與 40 組 live retrieval
-  比較；anchor 標記尚待獨立人工覆核，不是 production quality acceptance。
-  現行 Hybrid 排序、0.7 門檻、3–5 引用與 v004 release／policy 均保留；沒有新增 sparse model。
-  current code attestation 已由後續 audit v013 接續（`scripts/rag/quality_audit.py validate`），v009–v012
-  保留歷史封存，不再代表 current source bytes。詳細結果與後續 admission 校準見
-  `docs/project/rag-routing-quality-20260930.md`；不得把本次局部品質評測描述成已上線。
+- 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
+- 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
+- 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。
+- v020 及以前 audit、舊人工覆核／acceptance／rechunk 報告與 pinned 資料僅為歷史紀錄，不代表今天的程式，也不構成新增 successor 的義務；保留其 bytes。先前 707 原記錄＋28 重切候選、41 facts 與本機 v005 未因此寫外部 DB 或切換 release。
+- 有效操作及後續批次見 [`RAG 簡化第 1 批`](docs/project/rag-simplification-phase1-20261002.md)。舊報告中的強制逐筆覆核、反覆 audit／封存要求已被使用者本次授權取代。真實來源、secret、Consent、身分及權限規則不變。
 
 - pytest 必須能從 repo root 以 `uv run --project services/agent-runtime pytest services/agent-runtime/tests`
   執行；測試不得以 `tests.unit.*` 匯入另一測試檔的 helper。Dialog 由 effect 關閉時，
@@ -588,10 +580,9 @@ ADR 0019 退役。
 - 本機啟動器不得用逐行 split 取代 dotenv：`RAG_DATABASE_URL=${DATABASE_URL}` 需要變數展開，
   否則 shell 環境中的字面值會蓋過正確設定，導致 `staging_rag_unavailable`。
   BFF 登入測試的 `returnTo` 必須取自 `strictRelativeReturnTo` allowlist；拒絕任意路徑不是密碼錯誤。
-- RAG 打包回歸會把 `.gitattributes` 納入輸入雜湊；最終驗證期間不可同時修改它或其他測試輸入。
-  提交前補 LF 規則也須在凍結／collection 之前完成，否則應保留失敗證據並重新完整驗證。
-  根目錄 `.gitattributes` 亦被歷史 acceptance v006 固定；新檔案的 LF 規則放在適用子目錄，
-  不改寫根目錄檔案或舊 acceptance 來通過測試。
+- 測試執行時維持輸入穩定，新文件使用適用子目錄 LF 規則。歷史 acceptance 的
+  `.gitattributes` hash 僅描述當時 bytes，不再要求當前程式重建封存鏈。保留根目錄
+  `.gitattributes` 與歷史 pinned 報告；不為正常程式改動建立新的 audit package。
 
 ## 8. API、Event 與版本規則
 
@@ -966,10 +957,10 @@ main push 仍全跑。`synthetic-gate1` 必須 `always()` 且 needs 包含 chang
 changes 與選定 worker 必須 success 並有 metrics；只有有效、同 run／commit 的計畫明確
 排除的 worker 才可 skipped。意外 skip／failure／cancelled／缺少結果或計畫皆不可放行。
 未知路徑／無法取得完整 diff 回退全跑；不得用 workflow-level paths filter 消除 aggregate。
-新增檔案或跨服務依賴時同步影響規則與測試。RAG governance 的 hash inputs 含 Agent 程式／
-測試與 `docs/project/rag-v3-public-retrieval-plan.md`，不能只按副檔名或單服務目錄略過。
-法規修復稽核亦包含 Core `app/rag_*`、`test_rag_*` 與 `test_law_*`；這些路徑須觸發 RAG／Agent
-驗證。開 PR 前另跑 `scripts/ci/test_*.py`，不能只靠各服務 pytest 通過推定影響規則完整。
+新增檔案或跨服務依賴時同步影響規則與測試。CI 按實際執行依賴選 workers，
+不再以歷史 audit code hash inventory 擴大 RAG 影響範圍；純 Markdown 或無關 Core
+變更不應僅因歷史 hash 強制選取 RAG／Agent。真正 retrieval／policy／ingestion／共用
+契約變更仍須對應驗證；開 PR 前跑 `scripts/ci/test_*.py` 檢查影響規則。
 PR 使用 merge-base→head 的 NUL-delimited Git diff，停用 rename detection 以納入新舊路徑；
 不能只比 HEAD~1 或用可能截斷的 PR files API。純文件白名單也必須過 CI 規則與 diff 檢查。
 只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready` 也依賴 DB，不可移到無 DB job。

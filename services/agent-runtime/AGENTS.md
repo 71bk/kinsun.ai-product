@@ -1,9 +1,10 @@
 # AGENTS.md — agent-runtime
 
-- 2026-09-30 已新增 `RAG_QUERY_NORMALIZATION_ENABLED`（預設 false）與離線排名比較工具。
-  40 組真實檢索診斷已跑，屬 draft anchor 評測，不是正式 Golden Query acceptance；
-  現行 SQL／Hybrid 權重、0.7 門檻與 3–5 引用契約不變。完整結果見
-  `../../docs/project/rag-routing-quality-20260930.md`；current byte attestation 為 audit v013。
+- 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
+- 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
+- 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。
+- v020 及以前 audit、舊人工覆核／acceptance／rechunk 報告與 pinned 資料僅為歷史紀錄，不代表今天的程式，也不構成新增 successor 的義務；保留其 bytes。先前 707 原記錄＋28 重切候選、41 facts 與本機 v005 未因此寫外部 DB 或切換 release。
+- 有效操作及後續批次見 [`RAG 簡化第 1 批`](../../docs/project/rag-simplification-phase1-20261002.md)。舊報告中的強制逐筆覆核、反覆 audit／封存要求已被使用者本次授權取代。真實來源、secret、Consent、身分及權限規則不變。
 
 - 更新日期：2026-09-29（RAG 現況段落）；其餘段落仍校準於 2026-09-02
 - 校準基準：`main` at `03cd170`；RAG 同步狀態另見下方 2026-09-10／09-29 條目

@@ -1,18 +1,10 @@
 # CLAUDE.md
 
-- 2026-10-01 RAG admission 評測：44 題 × 四角色的唯讀候選快照，可離線重播
-  development 門檻比較；holdout 只跑 baseline。`evals/rag/ADMISSION.md` 說明覆核流程。
-  qrels／answerability／sufficient sets 均待獨立人工覆核，null 不能算無關或通過。
-  新合成改寫不是獨立盲測；新工具不改 runtime 排名、0.7 門檻、3–5 引用或功能開關。
-  current byte attestation 為 v013；v012 與更早 package bytes 保留封存。
-
-- 2026-09-30 RAG 路由／品質候選：`KNOWLEDGE_ROUTER_V2_ENABLED`、
-  `RAG_QUERY_NORMALIZATION_ENABLED` 均預設 false。新增 120 題合成路由與 40 組 live retrieval
-  比較；anchor 標記尚待獨立人工覆核，不是 production quality acceptance。
-  現行 Hybrid 排序、0.7 門檻、3–5 引用與 v004 release／policy 均保留；沒有新增 sparse model。
-  current code attestation 已由後續 audit v013 接續（`scripts/rag/quality_audit.py validate`），v009–v012
-  保留歷史封存，不再代表 current source bytes。詳細結果與後續 admission 校準見
-  `docs/project/rag-routing-quality-20260930.md`；不得把本次局部品質評測描述成已上線。
+- 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
+- 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
+- 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。
+- v020 及以前 audit、舊人工覆核／acceptance／rechunk 報告與 pinned 資料僅為歷史紀錄，不代表今天的程式，也不構成新增 successor 的義務；保留其 bytes。先前 707 原記錄＋28 重切候選、41 facts 與本機 v005 未因此寫外部 DB 或切換 release。
+- 有效操作及後續批次見 [`RAG 簡化第 1 批`](docs/project/rag-simplification-phase1-20261002.md)。舊報告中的強制逐筆覆核、反覆 audit／封存要求已被使用者本次授權取代。真實來源、secret、Consent、身分及權限規則不變。
 
 - pytest 必須能從 repo root 以 `uv run --project services/agent-runtime pytest services/agent-runtime/tests`
   執行；測試不得以 `tests.unit.*` 匯入另一測試檔的 helper。Dialog 由 effect 關閉時，
@@ -331,7 +323,8 @@ Dashboard 不可因 `MultipleResultsFound` 回 500，也不可任選第一筆／
 - Managed zh/en 與 SageMaker nan/hak adapters 已有 code/tests；真實 endpoint、service credential、
   WebSocket binary transport、quality／cost gate 尚未完成，不得宣稱 production-ready。
 - `services/rag-ingestion` 與 Agent RAG 都是 staging-only。Allowlist、hash、來源、chunk 數、receipt 與
-  human review 規則不得被繞過；unsigned development override 不是 production approval。
+  現行 runtime／資料完整性 gate 仍有效；逐筆人工 review 不再是開發流程要求，
+  runtime 新准入待第 3 批。unsigned development override 不是 production approval。
 - `services/notification-worker` 目前只有 scheduler boundary README；工作邏輯仍在 Core，尚無獨立
   worker framework、Scheduler、SQS 或 DLQ deployment。`projection-worker`、`report-worker` 也不存在。
 
@@ -402,16 +395,16 @@ PR 由永遠執行的 `changes`／`scripts/ci/impact.py` 選擇 workers，main p
 `synthetic-gate1` 是 `always()` aggregate，needs 含 changes 與八個 workers。changes 與選定
 worker 須 success 且有 metrics；只有有效、同 run／commit 的計畫明確排除者才能 skipped。
 意外 skip／失敗／取消／缺少結果或計畫均不可放行；未知路徑或 diff 不完整回退全跑。
-新增跨服務依賴須補影響規則測試：RAG hash inputs 包含 Agent 程式／測試與 public retrieval
-plan Markdown，不能把全部 .md 當純文件。PR diff 用 merge-base→head、NUL 分隔且停用 rename
+新增跨服務依賴須補影響規則測試。按實際執行依賴選 workers，不再因歷史 audit code hash
+把純 Markdown 或無關 Core 變更強制選取 RAG／Agent；真正 retrieval／policy／ingestion
+或共用契約變更仍須驗證。PR diff 用 merge-base→head、NUL 分隔且停用 rename
 detection，保留新舊路徑；不能用 HEAD~1 或截斷的 files API，也不加 workflow-level paths filter。
 只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready`
 也需要 DB。Core／Agent 保留分離的 uv environment（httpx constraints 不同），uv cache 以 job
 suffix 隔離。Artifact 名稱含 run attempt，failed-jobs rerun 可沿用同 run／commit 的先前成功
 worker metrics。Aggregate 不等於已啟用 branch protection，也不是部署 E2E 證據。
 
-法規修復稽核會雜湊 Core `app/rag_*`、`test_rag_*`、`test_law_*`，因此這些變更也必須選取
-RAG／Agent jobs；提交前跑 CI instrumentation／impact 測試，不能只驗證服務測試。
+提交前跑 CI instrumentation／impact 測試；歷史 hash inventory 不再決定 CI 影響範圍。
 
 只改文件時至少跑 `git diff --check`、檢查連結與 diff。程式變更依影響範圍執行下列命令。
 
@@ -563,10 +556,9 @@ synthetic 證據、`.qa/` 的 Supabase smoke、live RAG Golden Query、Playwrigh
 - 不依賴舊 README 的 `allowed_tools` callback 敘述；以 proposal-only canonical path 為準。
 - 本機啟動器必須支援 dotenv 變數展開，不能把 `RAG_DATABASE_URL=${DATABASE_URL}` 原樣寫進
   process environment。BFF 登入測試使用 `strictRelativeReturnTo` 的既有 allowlist，不猜返回路徑。
-- RAG 最終回歸須先凍結 `.gitattributes`，執行期間不修改 LF 規則或其他驗證輸入；打包後雜湊漂移
-  會使 deterministic rebuild 測試正確失敗，必須保留證據並在輸入穩定後重跑。
-  根目錄 `.gitattributes` 本身受歷史 acceptance v006 雜湊保護；新 LF 規則使用子目錄層級檔案，
-  不覆寫根目錄或歷史核准紀錄。
+- 測試執行時維持輸入穩定，新文件 LF 規則放適用子目錄。歷史 acceptance 的
+  `.gitattributes` hash 僅描述當時 bytes；保留根目錄 attributes 與舊 pinned 報告，
+  不為正常程式改動重建 audit／封存鏈。
 - 不用 email 自動連結 Google／LINE 身份，不讓 Client 自稱角色或 scope。
 - 不修改 frozen baseline migration，不以 dual write 更新 PostgreSQL 與 projection store。
 - 派案 `IN_PROGRESS`／`COMPLETED` 的授權分別使用 schema 既定的 `assignment:start`／

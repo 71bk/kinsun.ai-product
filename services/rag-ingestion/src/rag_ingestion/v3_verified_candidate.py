@@ -347,51 +347,11 @@ def validate_verified_build_preflight_snapshot(
     }
 
 
-def build_verified_audit_preflight(
-    repository_root: Path,
-    *,
-    output_path: Path | None = None,
-) -> V3VerifiedSummary:
-    """Freeze the immutable candidate and current validator inputs for audit renewal."""
-
-    root = repository_root.resolve()
-    package = _resolve_output(root, output_path, AUDIT_PREFLIGHT_PACKAGE)
-    _refuse_overwrite(package)
-    validate_verified_candidate(root, require_current_audit=False)
-    candidate_entries = _artifact_entries(root, AUDIT_FORMAL_ROOTS)
-    validation_entries = _validation_input_entries(root, candidate_entries)
-    candidate_lock = _inventory_document(
-        kind="rag_v3_verified_candidate_immutable_lock",
-        scope="verified v003 candidate, owner acceptance, and build preflight",
-        entries=candidate_entries,
-    )
-    inventory = _inventory_document(
-        kind="rag_v3_verified_audit_validation_input_inventory",
-        scope="current schemas, validator, tests, config, and immutable v003 candidate",
-        entries=validation_entries,
-    )
-    staged = _new_staging_directory(root, "verified-audit-preflight")
-    try:
-        _write_json(staged / "candidate-artifact-lock.json", candidate_lock)
-        _write_json(staged / "validation-input-inventory.json", inventory)
-        _write_text(staged / "README.md", _audit_preflight_readme(candidate_lock, inventory))
-        _write_checksums(staged)
-        validate_verified_audit_preflight(root, staged)
-        _publish_directory(staged, package)
-    finally:
-        _cleanup_staging_directory(root, staged)
-    return V3VerifiedSummary(
-        "v003_verified_audit_preflight",
-        package,
-        inventory_sha256=inventory["inventory_sha256"],
-        prior_lock_sha256=candidate_lock["inventory_sha256"],
-    )
-
-
-def validate_verified_audit_preflight(
+def validate_verified_audit_snapshot(
     repository_root: Path,
     package_path: Path | None = None,
 ) -> dict[str, Any]:
+    """Validate historical audit integrity without comparing current code bytes."""
     root = repository_root.resolve()
     package = _resolve_output(root, package_path, AUDIT_PREFLIGHT_PACKAGE)
     _validate_package_checksums(package)
@@ -403,15 +363,16 @@ def validate_verified_audit_preflight(
         scope="verified v003 candidate, owner acceptance, and build preflight",
         entries=candidate_entries,
     )
-    current_inventory = _inventory_document(
-        kind="rag_v3_verified_audit_validation_input_inventory",
-        scope="current schemas, validator, tests, config, and immutable v003 candidate",
-        entries=_validation_input_entries(root, candidate_entries),
-    )
     if stored_lock != current_lock:
         raise V3VerifiedCandidateError("verified candidate immutable lock mismatch")
-    if stored_inventory != current_inventory:
-        raise V3VerifiedCandidateError("verified audit validation input inventory mismatch")
+    entries = stored_inventory.get("entries")
+    if (
+        not isinstance(entries, list)
+        or stored_inventory.get("entry_count") != len(entries)
+        or stored_inventory.get("inventory_sha256") != _canonical_sha256(entries)
+        or stored_inventory.get("kind") != "rag_v3_verified_audit_validation_input_inventory"
+    ):
+        raise V3VerifiedCandidateError("verified audit snapshot inventory mismatch")
     return {
         "candidate_artifact_entry_count": stored_lock["entry_count"],
         "candidate_lock_sha256": stored_lock["inventory_sha256"],
@@ -489,7 +450,6 @@ def build_verified_candidate(
             root,
             staged,
             prior_by_id=prior_by_id,
-            require_current_audit=False,
         )
         _publish_directory(staged, package)
     finally:
@@ -502,7 +462,6 @@ def validate_verified_candidate(
     package_path: Path | None = None,
     *,
     prior_by_id: Mapping[str, Mapping[str, Any]] | None = None,
-    require_current_audit: bool = True,
 ) -> dict[str, Any]:
     root = repository_root.resolve()
     package = _resolve_output(root, package_path, CANDIDATE_PACKAGE)
@@ -562,16 +521,7 @@ def validate_verified_candidate(
         raise V3VerifiedCandidateError("candidate validation report is not PASS")
     if report.get("verified_chunk_count") != CHUNK_COUNT:
         raise V3VerifiedCandidateError("candidate validation report count mismatch")
-    audit = (
-        validate_verified_audit_preflight(root)
-        if require_current_audit
-        else {
-            "inventory_sha256": None,
-            "status": "NOT_REQUIRED_DURING_ATOMIC_CANDIDATE_BUILD",
-        }
-    )
     return {
-        "audit_inventory_sha256": audit["inventory_sha256"],
         "chunk_count": CHUNK_COUNT,
         "current_chunk_count": sum(
             record["governance"]["current_status"] == "current" for record in records
@@ -1054,25 +1004,6 @@ def _preflight_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> 
         "- External synchronization: not authorized\n"
         "- Production: blocked\n\n"
         "Any selected-byte change invalidates this package. Do not edit v002 in place.\n"
-    )
-
-
-def _audit_preflight_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> str:
-    return (
-        "# RAG v003 verified candidate audit preflight v001\n\n"
-        "This audit-renewal package locks the immutable v003 candidate, its owner acceptance, "
-        "and its build-time preflight. It separately freezes the current schemas, validator, "
-        "tests, and retrieval configuration so later formatting or validator maintenance does "
-        "not rewrite the candidate or pretend its original build inventory is current.\n\n"
-        f"- Candidate artifact entries: `{lock['entry_count']}`\n"
-        f"- Candidate lock SHA-256: `{lock['inventory_sha256']}`\n"
-        f"- Current validation input entries: `{inventory['entry_count']}`\n"
-        f"- Current validation inventory SHA-256: `{inventory['inventory_sha256']}`\n"
-        "- Sources/chunks: `17` / `726`\n"
-        "- Review status: `verified`\n"
-        "- External synchronization: not authorized\n"
-        "- Production: blocked\n\n"
-        "Any selected-byte change requires a new audit version. Do not edit v001 in place.\n"
     )
 
 

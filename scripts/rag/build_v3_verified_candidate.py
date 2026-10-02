@@ -13,7 +13,6 @@ sys.path.insert(0, str(REPO_ROOT / "services" / "rag-ingestion" / "src"))
 from rag_ingestion.v3_verified_candidate import (  # noqa: E402
     V3VerifiedCandidateError,
     build_owner_human_review_acceptance,
-    build_verified_audit_preflight,
     build_verified_candidate,
     build_verified_preflight,
 )
@@ -35,7 +34,6 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("preflight")
     subparsers.add_parser("candidate")
-    subparsers.add_parser("audit-preflight")
     args = parser.parse_args(argv)
     root = args.repository_root.resolve()
     try:
@@ -52,10 +50,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "preflight":
             summary = build_verified_preflight(root)
-        elif args.command == "candidate":
-            summary = build_verified_candidate(root)
         else:
-            summary = build_verified_audit_preflight(root)
+            summary = build_verified_candidate(root)
     except (OSError, UnicodeDecodeError, ValueError, V3VerifiedCandidateError) as exc:
         print(
             json.dumps(

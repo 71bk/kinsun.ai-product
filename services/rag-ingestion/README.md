@@ -1,11 +1,39 @@
 # RAG Ingestion Service
 
-Offline, staging-only ingestion for the approved kinsun.ai RAG chunk set. The
+This README documents the **legacy OpenSearch staging CLI**. Its offline,
+staging-only ingestion operates on the approved kinsun.ai RAG chunk set. The
 service validates the complete allowlisted dataset before any external call,
 embeds documents with Bedrock Cohere Embed v4, creates documents with
 `chunk_id` as OpenSearch `_id`, bulk ingests into a fresh staging index, and
 verifies count, duplicate IDs, and every vector dimension before moving the
 staging alias.
+
+The current development retrieval path uses Supabase/PostgreSQL public RAG
+projections and Google document/query embeddings, with release/profile/policy
+configured in Agent Runtime. The Cohere/Bedrock and OpenSearch commands below
+remain legacy staging tooling; they do not describe the current primary path or
+authorize switching providers, importing data or activating a release.
+
+## Current development workflow (2026-10-02, phase 1)
+
+Code is versioned by Git. Keep real source provenance, source/data versions and
+text/embedding-text content hashes; do not fabricate human `verified` status.
+Current-byte audit successors, repeated code snapshots and per-change archival
+packages are retired: do not create audit v021. The standalone answer-evidence
+review UI/workbook entry points are retired; users need not fill 1,055 qrels.
+Historical pinned packages remain unchanged as records of their capture time.
+
+This batch retires development workflow only. Existing runtime/SQL admission,
+production authorization and ingestion gates remain in force. Phase 2 simplifies
+the data pipeline/admission metadata, consolidates the 735
+candidates, reuses content hashes and adds automatic source/content validation.
+Phase 3 adjusts runtime and SQL together for natural-question Hybrid RAG, removing
+exact-question matching, manual support sets, fixed answers and the three-citation
+minimum. Phase 4 evaluates real questions; subsequent import/environment switching
+and rollback require authorization. All these changes remain to be implemented.
+Legacy human review/owner acceptance validators remain only where existing staging embedding,
+verified-candidate or source-family tools depend on them; they are not mandatory
+assignments for new development. See [phase 1 record](../../docs/project/rag-simplification-phase1-20261002.md).
 
 ## Safety boundaries
 
@@ -96,46 +124,18 @@ runtime origin.
 
 ## Commands
 
-### RagChunkV2 local metadata candidate
+### Historical metadata and review packages
 
-The metadata-only V2 workflow is separate from the six-step AWS ingestion
-sequence. It freezes the current repository inputs and validates the immutable
-17-source, 726-chunk local candidate against the strict, separately versioned
-`rag-chunk-v2.1.schema.json` contract:
+`data/rag-v2/` and earlier acceptance/review outputs document their original
+source versions and validation state. Their pinned bytes are preserved; code
+changes no longer require frozen inventories, deterministic archival rebuilds
+or a new review successor. `needs_review` remains an honest historical status.
 
-```powershell
-uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py preflight
-uv run --project services/rag-ingestion python scripts/rag/build_v2_artifacts.py evidence
-uv run --project services/rag-ingestion python scripts/rag/validate_v2_artifacts.py
-```
-
-Preflight, evidence, and deterministic rebuilds refuse to overwrite their
-versioned outputs.
-The evidence runner binds the full-suite JUnit report to the frozen validation
-inventory, writes a standalone evidence summary, and atomically records
-pytest's exact subprocess argv and exit code.
-The active `candidates/v002` package preserves V1 `text` and `embedding_text`
-UTF-8 bytes, keeps every row in `needs_review`, and never calls Bedrock,
-OpenSearch, cloud storage, or a production service. See `data/rag-v2/README.md`
-for the artifact boundaries and superseded evidence versions.
-
-### RagChunkV2 human-review assignment
-
-The pending-only review package covers all 726 v002 chunks across 17
-source-specific batches. It preserves the existing 648 blocker/warning rows
-and adds 78 baseline assignments; it does not infer that a row without a
-blocker has already been reviewed.
-
-```powershell
-uv run --project services/rag-ingestion python scripts/rag/build_human_review_package.py
-uv run --project services/rag-ingestion python scripts/rag/validate_human_review_package.py
-```
-
-The package records missing local source bytes and performs no external
-access. Every source/chunk decision remains pending, owner acceptance remains
-unsigned, and embedding, indexing, and Production stay blocked. Never edit a
-published review package in place; human decisions require a versioned
-successor submission.
+The old human-review package and owner acceptance validators are retained for
+compatibility with existing staging-embedding, verified-candidate and
+source-family tools until phase 2. They are not the daily development path and
+no new full-corpus manual assignment is required. The separate answer-evidence
+review UI and workbook prepare/validate entry points are retired in this batch.
 
 ### Staging ingestion
 
