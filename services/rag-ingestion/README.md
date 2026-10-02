@@ -43,6 +43,41 @@ truncation or other preprocessing requires a new `config_version`/profile identi
 
 See [phase 2 usage and findings](../../docs/project/rag-simplification-phase2-20261002.md).
 
+## Missing embeddings and a targeted audience correction
+
+The optional audience patch changes only the independent public BA13 chunk to
+also address family caregivers. It checks the original source, text hash and
+audiences first; source text, review status and all other policy fields remain.
+
+```powershell
+uv run --project services/rag-ingestion python scripts/rag/prepare_knowledge.py --dataset-version v008 --audience-patches config/rag/knowledge-audience-patches.json --cache .rag-work/cache/v004-cache.json --write --output .rag-work/knowledge-v008
+uv run --project services/rag-ingestion python scripts/rag/embed_knowledge.py --dataset .rag-work/knowledge-v008 --cache .rag-work/cache/v004-cache.json
+```
+
+The second command is a dry-run: it loads no credentials and calls no provider.
+With this verified cache it reports 631 reusable vectors and 27 missing inputs.
+Explicit `--generate --output .rag-work/cache/v008-complete-cache.json` generates
+only missing unique inputs, using the same registered Google profile. At most
+32 new inputs are permitted per invocation; existing output files are rejected.
+The result is one complete cache, checked for profile, content hashes, vector
+dimension, finite/nonzero values and full coverage. No database write occurs.
+Run `prepare_knowledge.py` again with that cache to verify all 658 available.
+
+On 2026-10-02 the 27 vectors were generated and the complete 658-vector cache
+passed validation. Following explicit user authorization, candidate
+`knowledge-v008-aae34e5095e6` was imported as 658 projections and 658 vectors in
+one transaction. Readback verified content/profile/vector bindings and completed
+receipts; v004 remained unchanged. Runtime configuration and activation are unchanged.
+
+To independently validate the prepared projection and complete embedding cache:
+
+```powershell
+uv run --project services/core-api python scripts/rag/import_knowledge.py --expected-release-id knowledge-v008-aae34e5095e6 --expected-candidate-sha256 aae34e5095e6d02f57203939276f9abaf9b39db37b0eed3a54c19c68c87a7fb2
+```
+
+This command only produces a dry-run summary. It neither connects to the database
+nor imports or activates a release; no write flag is provided.
+
 ## Development workflow
 
 Code is versioned by Git. Keep real source provenance, source/data versions and
@@ -59,7 +94,9 @@ authorization remain in force; preparing 658 chunks does not make all 658 eligib
 Phase 3 adjusts runtime and SQL together for natural-question Hybrid RAG, removing
 exact-question matching, manual support sets, fixed answers and the three-citation
 minimum. Phase 4 evaluates real questions; subsequent import/environment switching
-and rollback require authorization. Phases 3 and 4 remain to be implemented.
+and rollback require authorization. Phases 3 and 4 have now been implemented and
+tested locally/live respectively; outstanding quality findings and import scope
+are recorded in [the live test record](../../docs/project/rag-simplification-phase4-20261002.md).
 Legacy human review/owner acceptance validators remain only where existing staging embedding,
 verified-candidate or source-family tools depend on them; they are not mandatory
 assignments for new development. See [phase 1 record](../../docs/project/rag-simplification-phase1-20261002.md).

@@ -92,6 +92,100 @@ def _required_text(value) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
+def _audience_patch_differences(chunks: list[dict], path: Path) -> list[dict]:
+    """Apply explicit additive metadata corrections after exact preconditions.
+
+    Validate the entire patch set before mutating any compiled row. This changes
+    public information audiences, never source text or human review provenance.
+    """
+    try:
+        document = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_object,
+            parse_constant=_constant,
+            parse_float=_finite_float,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise KnowledgePipelineError("UNREADABLE_AUDIENCE_PATCHES") from exc
+    if (
+        not isinstance(document, dict)
+        or set(document) != {"schema_version", "patches"}
+        or document["schema_version"] != "knowledge-audience-patches-v1"
+        or not isinstance(document["patches"], list)
+        or not document["patches"]
+    ):
+        raise KnowledgePipelineError("INVALID_AUDIENCE_PATCHES")
+    by_id = {chunk["chunk_id"]: chunk for chunk in chunks}
+    identifiers = set()
+    differences = []
+    fields = {
+        "chunk_id",
+        "expected_source_id",
+        "expected_text_sha256",
+        "from_audiences",
+        "to_audiences",
+        "reason",
+    }
+    roles = {"elder", "family_caregiver", "care_professional", "system_admin"}
+    for patch in document["patches"]:
+        if not isinstance(patch, dict) or set(patch) != fields:
+            raise KnowledgePipelineError("INVALID_AUDIENCE_PATCH")
+        if (
+            any(
+                not _required_text(patch[key])
+                for key in (
+                    "chunk_id",
+                    "expected_source_id",
+                    "expected_text_sha256",
+                    "reason",
+                )
+            )
+            or len(patch["reason"]) > 256
+        ):
+            raise KnowledgePipelineError("INVALID_AUDIENCE_PATCH")
+        if re.fullmatch(r"[a-f0-9]{64}", patch["expected_text_sha256"]) is None:
+            raise KnowledgePipelineError("INVALID_AUDIENCE_PATCH_HASH")
+        for field in ("from_audiences", "to_audiences"):
+            values = patch[field]
+            if (
+                not isinstance(values, list)
+                or not values
+                or any(not isinstance(value, str) or value not in roles for value in values)
+                or len(set(values)) != len(values)
+            ):
+                raise KnowledgePipelineError("INVALID_AUDIENCE_PATCH_ROLES")
+        before, after = patch["from_audiences"], patch["to_audiences"]
+        if after[: len(before)] != before or len(after) <= len(before):
+            raise KnowledgePipelineError("AUDIENCE_PATCH_MUST_BE_ADDITIVE")
+        cid = patch["chunk_id"]
+        if cid in identifiers:
+            raise KnowledgePipelineError("DUPLICATE_AUDIENCE_PATCH_ID")
+        identifiers.add(cid)
+        chunk = by_id.get(cid)
+        if chunk is None:
+            raise KnowledgePipelineError("AUDIENCE_PATCH_CHUNK_NOT_FOUND")
+        if (
+            chunk["source"]["id"] != patch["expected_source_id"]
+            or chunk["content"]["text_sha256"] != patch["expected_text_sha256"]
+            or chunk["policy"]["audiences"] != before
+        ):
+            raise KnowledgePipelineError("AUDIENCE_PATCH_PRECONDITION_MISMATCH")
+        differences.append(
+            {
+                "chunk_id": cid,
+                "source_id": chunk["source"]["id"],
+                "text_sha256": chunk["content"]["text_sha256"],
+                "field": "policy.audiences",
+                "from": list(before),
+                "to": list(after),
+                "reason": patch["reason"],
+            }
+        )
+    for difference in differences:
+        by_id[difference["chunk_id"]]["policy"]["audiences"] = list(difference["to"])
+    return differences
+
+
 def _content_errors(row: dict, *, require_counts: bool = True) -> list[str]:
     content = row.get("content")
     if not isinstance(content, dict):
@@ -225,7 +319,11 @@ def _source_errors(chunk: dict) -> list[str]:
 
 
 def compile_corpus(
-    corpus_path: Path, *, dataset_version: str = "v007", baseline_path: Path | None = None
+    corpus_path: Path,
+    *,
+    dataset_version: str = "v007",
+    baseline_path: Path | None = None,
+    audience_patches_path: Path | None = None,
 ) -> Compilation:
     """Prepare supplied official chunks without creating any human review task.
 
@@ -340,6 +438,12 @@ def compile_corpus(
     chunks.sort(key=lambda c: c["chunk_id"])
     if not chunks:
         issue("corpus", "ERROR", "EMPTY_RETAINED_CORPUS")
+    applied_differences = []
+    if audience_patches_path is not None and not any(i["severity"] == "ERROR" for i in issues):
+        try:
+            applied_differences = _audience_patch_differences(chunks, audience_patches_path)
+        except KnowledgePipelineError as exc:
+            issue("corpus", "ERROR", str(exc))
     errors = sum(item["severity"] == "ERROR" for item in issues)
     report = {
         "schema_version": "knowledge-dataset-v1",
@@ -366,6 +470,8 @@ def compile_corpus(
         ),
         "issues": issues,
     }
+    if audience_patches_path is not None:
+        report["audience_patch_differences"] = applied_differences
     if baseline_path is not None:
         baseline = _rows(baseline_path)
         hashes = set()

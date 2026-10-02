@@ -160,6 +160,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--profile")
     parser.add_argument("--cache", type=Path)
+    parser.add_argument(
+        "--audience-patches",
+        type=Path,
+        help="Explicit hash-bound additive public audience corrections",
+    )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
@@ -172,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
             args.corpus,
             dataset_version=args.dataset_version,
             baseline_path=args.baseline,
+            audience_patches_path=args.audience_patches,
         )
         report = compilation.report
         summary = {
@@ -183,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
                 "excluded_by_reason",
                 "warnings_by_code",
                 "embedding_comparison",
+                "audience_patch_differences",
             )
             if key in report
         }

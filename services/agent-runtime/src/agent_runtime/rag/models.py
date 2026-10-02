@@ -592,6 +592,8 @@ class HybridSearchPlan(RagBaseModel):
     governed_citations: bool
     allow_needs_review: bool
     allow_all_audiences: bool = False
+    public_knowledge_mode: bool = False
+    require_current: bool = False
     search_result_limit: Literal[5, 50] = 5
     policy_candidate_chunk_ids: tuple[str, ...] | None = Field(
         default=None,
@@ -604,6 +606,20 @@ class HybridSearchPlan(RagBaseModel):
 
     @model_validator(mode="after")
     def runtime_policy_candidate_shape_is_fixed(self) -> HybridSearchPlan:
+        if self.public_knowledge_mode:
+            if (
+                not self.governed_citations
+                or self.audience
+                not in {"elder", "family_caregiver", "care_professional", "system_admin"}
+                or self.purpose not in {"general_information", "legal_reference"}
+                or self.allow_all_audiences
+                or self.policy_candidate_chunk_ids is not None
+                or self.search_result_limit != 50
+            ):
+                raise ValueError("public knowledge requires explicit scope and bounded search")
+            return self
+        if self.require_current:
+            raise ValueError("currency selection is only supported by public knowledge search")
         if self.policy_candidate_chunk_ids is None:
             if self.search_result_limit != 5:
                 raise ValueError("unprojected search result limit must remain five")

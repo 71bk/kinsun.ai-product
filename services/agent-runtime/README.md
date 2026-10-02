@@ -12,6 +12,7 @@
 - `POST /api/v1/agent/runs`
 - `POST /api/v1/rag/retrievals`
 - `POST /api/v2/rag/retrievals`
+- `POST /api/v3/rag/retrievals`（預設關閉）
 
 契約在 [`contracts/openapi/agent-runtime.v1.yaml`](../../contracts/openapi/agent-runtime.v1.yaml)
 與 [`contracts/openapi/agent-runtime.v2.yaml`](../../contracts/openapi/agent-runtime.v2.yaml)。
@@ -20,6 +21,47 @@ V1 retrieval 保留作相容路徑。V2 是 Agent 內部採用的完整治理 ci
 `source_locator`、公開來源 URL、版本證據、`review_status` 與
 `production_approved`，且永遠不回傳 `storage_url`。任一候選 citation 不完整時，V2
 整批回傳空結果，不以其他 chunk 掩蓋資料缺口。
+
+### 自然問句 Hybrid RAG（第 3 批）
+
+V3 已完成本機實作，仍預設 `RAG_EVIDENCE_V3_ENABLED=false`。啟用後，Agent 的
+`general_information`／`legal_reference` 回合與 V3 私有端點共用同一條路徑：
+pgvector dense＋PostgreSQL FTS／trigram → 最多 5 筆來源 → 一次模型生成 → 引用驗證。
+一般聊天與私人記憶的處理不受此開關影響。
+
+不需要人工 support sets、精確題目清單、固定答案或湊滿 3 筆引用。回答可用 1–5 筆來源；
+資料只涵蓋部分問題時回 `PARTIAL` 與 `missing_facets`，來源不足則明示 fallback。
+模型回傳的引用 ID 與原文錨點必須符合已檢索來源，來源連結由伺服器產生。
+這些檢查不保證回答的每個推論正確；真實問句的檢索與答案品質留待第 4 批實測。
+
+啟用僅限非 production、`RAG_MODE=staging`、PostgreSQL、完整 release／embedding profile
+與可用的 provider；`RAG_STAGING_ALLOW_ALL_AUDIENCES` 必須 false。V3 不使用
+`RAG_EVIDENCE_POLICY_PATH`／SHA 或 `RAG_SOURCE_FAMILY_POLICY_PATH`／SHA，殘留舊設定會被忽略。
+V1／V2 的 3–5 筆契約與一般嚴格 gate 保留；歷史 source-family overlay 只在 V3 關閉時載入。
+
+官方來源、角色／用途、版本、內容 hash、高風險及 stop 封鎖仍檢查。unknown 現行性只允許
+非現行性的一般資訊並附提醒；法律及命中現行性關鍵詞的問題要求 current。
+review 狀態仍如實保存，不將 needs_review 改成 verified。
+
+本批未切換環境或資料。准入統計、相容規則與驗證限制見
+[`第 3 批說明`](../../docs/project/rag-simplification-phase3-20261002.md)，契約見
+[`agent-runtime.v3.yaml`](../../contracts/openapi/agent-runtime.v3.yaml)。
+
+### 小批真實資料測試
+
+於 repo root 執行 `uv run --project services/agent-runtime python scripts/rag/evaluate_knowledge.py`，
+預設僅檢查 16 題 developer smoke，沒有外部呼叫。明確加 `--live` 才會對目前設定的 v004
+726 筆既有資料，使用真實 query embedding 與生成模型；新 v007 658 筆仍須另外匯入才能測其排名。
+可用 `--case-id apply-family law-article3-definition` 選題，或 `--retrieval-only` 單測檢索。
+
+每個 DB transaction 都顯式設為 read-only 及有界 timeout，再確認實際唯讀狀態。
+V3 只在該評測程序生效，不改 `.env` 或正在執行的服務。公開來源、回答與診斷放在 ignored
+`.rag-work/knowledge-evaluation-v004.json`；anchor 命中僅是診斷指標，不是語意正確率。
+
+`uv run --project services/core-api python scripts/rag/export_knowledge_cache.py` 預設 dry-run。
+需唯讀取得舊向量時，明確加 `--read-live --output .rag-work/cache/v004-cache.json`；
+再交給 `scripts/rag/prepare_knowledge.py --cache ...` 計算可重用向量與待產生項目。
+這兩個工具都不匯入資料、不切換 release，也不需要人工工作簿或額外封存。
 
 ## 執行
 
@@ -36,8 +78,9 @@ provider 時，retrieval endpoint 會明確回傳 `FAILED` fallback 與空結果
 
 ### RAG query embedding
 
-預設 `RAG_EMBEDDING_CONFIG_PATH=config/rag/embedding.yaml` 仍選 Bedrock/Cohere。Google query
-embedding 是 opt-in，使用獨立的 Agent Runtime override，不會改動 ingestion 共用設定：
+Runtime 預設 `RAG_QUERY_EMBEDDING_CONFIG_PATH=config/rag/embedding-google.yaml`，使用 Google
+query embedding；共用 `RAG_EMBEDDING_CONFIG_PATH` 仍保留 Bedrock/Cohere 設定。兩者不能混用
+向量 profile，Runtime override 不會改動 ingestion 共用設定：
 
 ```dotenv
 GEMINI_API_KEY=<runtime-secret>

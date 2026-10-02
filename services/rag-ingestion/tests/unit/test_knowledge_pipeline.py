@@ -197,3 +197,95 @@ def test_normalized_baseline_still_validates_content_and_metadata(tmp_path, offi
     baseline.write_text(json.dumps(row) + "\n", encoding="utf-8")
     with pytest.raises(KnowledgePipelineError, match="INVALID_BASELINE_CONTENT"):
         compile_corpus(source, baseline_path=baseline)
+
+
+AUDIENCE_PATCHES = ROOT / "config/rag/knowledge-audience-patches.json"
+BA13_ID = "mohw_a_unit_case_manager_manual_appendix_20230719_rechunk_successor_v006_0012"
+
+
+def save_patches(tmp_path, document):
+    path = tmp_path / "patches.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+    return path
+
+
+def test_real_ba13_patch_changes_only_target_audience_and_not_input_bytes():
+    before_bytes = CORPUS.read_bytes()
+    original = compile_corpus(CORPUS)
+    patched = compile_corpus(CORPUS, dataset_version="v008", audience_patches_path=AUDIENCE_PATCHES)
+    assert patched.report["status"] == "PASS"
+    assert patched.report["summary"] == original.report["summary"]
+    differences = patched.report["audience_patch_differences"]
+    assert len(differences) == 1
+    assert differences[0]["chunk_id"] == BA13_ID
+    assert differences[0]["field"] == "policy.audiences"
+    assert "audience_patch_differences" not in original.report
+    for before, after in zip(original.chunks, patched.chunks, strict=True):
+        expected = copy.deepcopy(before)
+        if before["chunk_id"] == BA13_ID:
+            expected["policy"]["audiences"] = ["care_professional", "family_caregiver"]
+        assert after == expected
+    assert CORPUS.read_bytes() == before_bytes
+
+
+@pytest.mark.parametrize(
+    "defect", ["missing", "source", "hash", "roles", "duplicate", "remove", "extra"]
+)
+def test_patch_precondition_failures_cannot_write_or_mutate_chunks(tmp_path, defect):
+    document = json.loads(AUDIENCE_PATCHES.read_text(encoding="utf-8"))
+    patch = document["patches"][0]
+    if defect == "missing":
+        patch["chunk_id"] = "missing-chunk"
+    elif defect == "source":
+        patch["expected_source_id"] = "other-source"
+    elif defect == "hash":
+        patch["expected_text_sha256"] = "0" * 64
+    elif defect == "roles":
+        patch["from_audiences"] = ["elder"]
+        patch["to_audiences"] = ["elder", "family_caregiver"]
+    elif defect == "duplicate":
+        document["patches"].append(copy.deepcopy(patch))
+    elif defect == "remove":
+        patch["to_audiences"] = ["family_caregiver"]
+    else:
+        patch["review_status"] = "verified"
+    original = compile_corpus(CORPUS)
+    failed = compile_corpus(CORPUS, audience_patches_path=save_patches(tmp_path, document))
+    assert failed.report["status"] == "FAILED"
+    assert failed.report["audience_patch_differences"] == []
+    assert failed.chunks == original.chunks
+    with pytest.raises(KnowledgePipelineError):
+        write_dataset(failed, tmp_path / "output")
+
+
+def test_patch_set_is_atomic_when_later_patch_has_no_match(tmp_path):
+    document = json.loads(AUDIENCE_PATCHES.read_text(encoding="utf-8"))
+    second = copy.deepcopy(document["patches"][0])
+    second["chunk_id"] = "not-in-corpus"
+    document["patches"].append(second)
+    failed = compile_corpus(CORPUS, audience_patches_path=save_patches(tmp_path, document))
+    assert failed.report["status"] == "FAILED"
+    assert failed.report["audience_patch_differences"] == []
+    target = next(row for row in failed.chunks if row["chunk_id"] == BA13_ID)
+    assert target["policy"]["audiences"] == ["care_professional"]
+
+
+def test_patch_config_rejects_duplicate_json_keys(tmp_path):
+    path = tmp_path / "patches.json"
+    path.write_text('{"schema_version":"a","schema_version":"b","patches":[]}', encoding="utf-8")
+    failed = compile_corpus(CORPUS, audience_patches_path=path)
+    assert failed.report["status"] == "FAILED"
+    assert failed.report["audience_patch_differences"] == []
+
+
+def test_explicit_patch_repeat_is_idempotent_against_original_input(tmp_path):
+    original = compile_corpus(
+        CORPUS, dataset_version="v008", audience_patches_path=AUDIENCE_PATCHES
+    )
+    repeated = compile_corpus(
+        CORPUS, dataset_version="v008", audience_patches_path=AUDIENCE_PATCHES
+    )
+    output = tmp_path / "v008"
+    write_dataset(original, output)
+    write_dataset(repeated, output)
+    assert original == repeated

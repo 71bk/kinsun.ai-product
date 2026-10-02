@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/retrieval-request-v3.schema.json",
+  "title": "RetrievalRequestV3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "query",
+    "query_profile",
+    "top_k",
+    "audience",
+    "purpose"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "3.0.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
+    "query_profile": {
+      "type": "string",
+      "enum": [
+        "natural_language",
+        "legal"
+      ]
+    },
+    "top_k": {
+      "type": "integer",
+      "const": 5
+    },
+    "audience": {
+      "type": "string",
+      "enum": [
+        "elder",
+        "family_caregiver",
+        "care_professional",
+        "system_admin"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "general_information",
+        "legal_reference"
+      ]
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(?:-[A-Za-z]{2})?$",
+      "default": "zh-TW"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "purpose": {
+            "const": "general_information"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "query_profile": {
+            "const": "natural_language"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "purpose": {
+            "const": "legal_reference"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "query_profile": {
+            "const": "legal"
+          }
+        }
+      }
+    }
+  ]
+}

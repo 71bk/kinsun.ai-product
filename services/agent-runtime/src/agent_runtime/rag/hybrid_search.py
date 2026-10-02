@@ -73,3 +73,24 @@ class HybridSearch:
             vector_weight=profile.vector_weight,
             min_score=profile.vector_min_score,
         )
+
+    def build_public(
+        self, request: RetrievalRequestV2, query_vector: list[float], *, require_current: bool
+    ) -> HybridSearchPlan:
+        profile = self._settings.for_profile(request.query_profile)
+        return HybridSearchPlan(
+            query=request.query,
+            query_vector=query_vector,
+            profile=profile.profile,
+            top_k=request.top_k,
+            audience=request.audience,
+            purpose=request.purpose,
+            governed_citations=True,
+            allow_needs_review=False,
+            public_knowledge_mode=True,
+            require_current=require_current,
+            search_result_limit=50,
+            bm25_weight=profile.bm25_weight,
+            vector_weight=profile.vector_weight,
+            min_score=profile.vector_min_score,
+        )

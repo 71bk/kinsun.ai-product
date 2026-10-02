@@ -1,3 +1,13 @@
 rag-law-*.json text eol=lf
+
+# Narrow LF rules for answer-evidence inputs; preserve the existing law JSON rule.
+rag-answer-evidence-plan-20261001.md text eol=lf
+rag-answer-evidence-offline-20261001.md text eol=lf
+rag-answer-evidence-human-review-20261001.md text eol=lf
+rag-answer-evidence-review-ui-20261001.md text eol=lf
+rag-public-admission-fix-20261001.md text eol=lf
+rag-evidence-successor-20261002.md text eol=lf
 rag-simplification-phase1-20261002.md text eol=lf
 rag-simplification-phase2-20261002.md text eol=lf
+rag-simplification-phase3-20261002.md text eol=lf
+rag-simplification-phase4-20261002.md text eol=lf

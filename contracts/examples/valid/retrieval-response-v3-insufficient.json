@@ -1,0 +1,16 @@
+{
+  "data": {
+    "schema_version": "3.0.0",
+    "request_id": "rag-v2-request-001",
+    "status": "NO_DATA",
+    "fallback_message": "Synthetic explicit fallback.",
+    "results": [],
+    "decision": "INSUFFICIENT",
+    "answer_text": null,
+    "reason_codes": [],
+    "missing_facets": [],
+    "release_id": "synthetic-release",
+    "embedding_profile_id": "synthetic-google-1024",
+    "policy_version": "public-knowledge-v1"
+  }
+}

@@ -1,5 +1,19 @@
 # CLAUDE.md
 
+- 2026-10-02 使用者明確授權「匯入開始」後，`knowledge-v008-aae34e5095e6` 已以單一交易新增 658 projections＋658 embeddings；回讀驗證 counts／profile／hash／向量與兩份完成 receipt 通過，v004 的 release／projections／vectors 指紋不變。未改 `.env`、未 activation；新版題集結果見第 4 批文件末節。
+- 2026-10-02 第 4 批後續：V3 加 Gemini schema、內容不落盤的生成診斷與保守 PDF 縮排行整理；原 16 題複測為 8 SUCCESS／6 NO_DATA／2 FAILED，仍非品質驗收。保留 tab／行內空格／段落邊界、數字與英文識別碼；不能全域去空白或 NFKC 後就聲稱引用正確。詳見第 4 批文件末節。
+- 本機 `knowledge-v008-aae34e5095e6` 為 658 筆，僅相對 v007 增加 BA13 單筆 family_caregiver audience；可選 `--audience-patches` 綁原 source／text hash／roles。`embed_knowledge.py` 預設 dry-run，已補 27 筆向量並重用 631 筆，完整 cache 驗證 658 available／0 required。尚未新增 DB candidate、改 .env 或 activation。
+- 使用者要求注意 CPU：後續本機測試單工、BelowNormal 優先序，subagents 不同時跑測試；已有完整測試後僅重跑實際變更涵蓋的定向檢查。
+
+- 2026-10-02 RAG 簡化第 4 批完成第一輪真實基準：既有 v004／726 筆，16 題為 7 SUCCESS、5 NO_DATA、4 FAILED；狀態不是語意評分，導覽式 PARTIAL 與申請程序推論仍有品質問題。詳見 [`第 4 批`](docs/project/rag-simplification-phase4-20261002.md)。
+- 已唯讀驗證 726 筆真實向量，新版 658 chunks 可重用 631 筆，另需 27 筆 embedding；後者尚未產生，v007 尚未匯入。真實 query embedding／Gemini 已測，V3 僅測試程序內啟用，未改 .env、寫 DB 或 activation。下方第 2／3 批的未呼叫 provider 敘述為當時狀態。
+- PostgreSQL session 預設 read-only 可能未生效；檢索及實測每個交易須先明確 SET TRANSACTION READ ONLY 與 timeout，設定失敗不得繼續查詢。Gemini JSON MIME 已設，但仍有 INVALID_GENERATION_JSON；不能將格式配置或原文錨點通過當作答案品質通過。
+
+- 2026-10-02 RAG 簡化第 3 批已完成本機實作：V3 自然問句以 pgvector dense＋FTS／trigram Hybrid 檢索，再生成附 1–5 筆引用的回答；移除人工 support sets、精確題目、固定答案與最低 3 筆前提。允許明示缺口的 PARTIAL；無資料／錯誤回 fallback。引用 ID／原文錨點驗證不等於語意正確性評分。
+- `RAG_EVIDENCE_V3_ENABLED` 仍預設 false；未改 .env、匯入外部 DB、呼叫真實 embedding／模型或 activation。V3 啟用時不讀舊 evidence／source-family policy，保留 release/profile、角色／用途、官方來源、stop／risk／時效與內容 hash 檢查；只限非 production staging PostgreSQL。V1／V2 契約仍維持 3–5 筆，V3 關閉時保留原 overlay 流程。
+- 第 3 批相容舊 `older_adult`／`elder` 名稱與四個已有公開使用證據的官方來源；不把其他 internal 或空 scope 全面放行。法律 current 候選依原 scope：長者／家屬各 21、專業人員 71、管理員 50；高風險法條仍拒絕。完整限制與第 4 批實測方向見 [`第 3 批`](docs/project/rag-simplification-phase3-20261002.md)。
+- SQL regex 須經 SQLAlchemy `text()` 編譯檢查 bind keys；POSIX `[:space:]` 的冒號可能被誤認為參數，不能只測 SQL 字串包含。pgvector cosine 查詢另須拒絕零向量與非有限數值。
+
 - 2026-10-02 RAG 簡化第 2 批：新本機入口 `scripts/rag/prepare_knowledge.py` 預設 dry-run；735 候選整理為 658 官方 chunks，排除 75 研究／量表、1 舊版流程、1 導覽文字，原始資料不變。輸出僅 chunks／report／embedding-plan；新 compiler／Core loader 不依賴人工工作簿、allowlist 或 acceptance。詳見 [`第 2 批`](docs/project/rag-simplification-phase2-20261002.md)。
 - 第 2 批只完成本機整理與讀取：631 筆 embedding 文字未變、27 筆已變，不等於已有可重用向量；須供應完整 cache profile snapshot 與有效向量才計為 REUSE。未知現行性／assessment、原 review 與 retrieval policy 保留；未改 runtime／SQL gate，未 import、呼叫 provider 或 activation。自然問句 Hybrid 與准入調整仍屬第 3 批。
 

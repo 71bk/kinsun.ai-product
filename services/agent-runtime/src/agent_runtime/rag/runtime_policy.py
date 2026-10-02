@@ -284,11 +284,82 @@ class RuntimePolicyDocumentV4(_StrictModel):
         return self.base_policy.chunks
 
 
+class _PublicRepairProjectionBinding(_StrictModel):
+    release_id: str = Field(pattern=r"^rag-v2-v005-[a-f0-9]{12}$")
+    candidate_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    embedding_profile_id: Literal["ep-google-00a12ec45096fa9d97d9e9b6"]
+    crosswalk_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    prior_release_id: Literal["rag-v2-v004-f3339ceae77c"]
+    id_mapping: Literal["PRESERVE_SOURCE_AND_INDEX_V004_TO_V005"]
+    production_approved: Literal[False]
+
+
+class _PublicInformationPurposeOverride(_StrictModel):
+    prior_chunk_id: str = Field(min_length=1, max_length=256)
+    source_id: str = Field(min_length=1, max_length=256)
+    add_source_purposes: tuple[Literal["general_information"], ...] = Field(max_length=1)
+    add_chunk_purposes: tuple[Literal["general_information"], ...] = Field(max_length=1)
+    review_status: Literal["needs_review"]
+    production_approved: Literal[False]
+
+
+PUBLIC_REPAIR_APPLICATION_SOURCE = "mohw_1966_apply_ltc"
+PUBLIC_REPAIR_MANUAL_SOURCE = "mohw_a_unit_case_manager_manual_appendix_20230719"
+PUBLIC_REPAIR_PURPOSE_SCOPE = {
+    f"{PUBLIC_REPAIR_APPLICATION_SOURCE}_rag_v2_v004_0004": (
+        PUBLIC_REPAIR_APPLICATION_SOURCE,
+        (),
+        ("general_information",),
+    ),
+    **{
+        f"{PUBLIC_REPAIR_MANUAL_SOURCE}_rag_v2_v004_{index:04d}": (
+            PUBLIC_REPAIR_MANUAL_SOURCE,
+            ("general_information",),
+            (),
+        )
+        for index in (64, 65, 66)
+    },
+}
+
+
+class RuntimePolicyDocumentV5(_StrictModel):
+    """Local staging repair with exactly four narrowly scoped purpose additions."""
+
+    schema_version: Literal["5.0.0"]
+    runtime_policy_version: Literal["v005"]
+    base_policy_sha256: Literal["a7d8dd163e54bb5cb11f1ea4004e3a6b75b9faff98290067e745125cc6ac5758"]
+    base_policy: RuntimePolicyDocumentV4
+    projection_binding: _PublicRepairProjectionBinding
+    purpose_overrides: tuple[_PublicInformationPurposeOverride, ...] = Field(
+        min_length=4, max_length=4
+    )
+
+    @property
+    def chunks(self) -> tuple[RuntimePolicyChunkV2, ...]:
+        overrides = {item.prior_chunk_id: item for item in self.purpose_overrides}
+        output = []
+        for candidate in self.base_policy.chunks:
+            key = candidate.prior_chunk_id.replace("_rag_v2_v002_", "_rag_v2_v004_")
+            override = overrides.get(key)
+            if override is not None:
+                candidate = candidate.model_copy(
+                    update={
+                        "source_allowed_purposes": candidate.source_allowed_purposes
+                        + override.add_source_purposes,
+                        "chunk_allowed_purposes": candidate.chunk_allowed_purposes
+                        + override.add_chunk_purposes,
+                    }
+                )
+            output.append(candidate)
+        return tuple(output)
+
+
 RuntimePolicyDocument = (
     RuntimePolicyDocumentV1
     | RuntimePolicyDocumentV2
     | RuntimePolicyDocumentV3
     | RuntimePolicyDocumentV4
+    | RuntimePolicyDocumentV5
 )
 RuntimePolicyCandidate = RuntimePolicyChunk | RuntimePolicyChunkV2
 
@@ -308,7 +379,7 @@ class SourceFamilyRuntimePolicy:
     def validate_search_binding(
         self, *, backend: str, release_id: str | None, embedding_profile_id: str | None
     ) -> None:
-        if not isinstance(self.document, RuntimePolicyDocumentV4):
+        if not isinstance(self.document, RuntimePolicyDocumentV4 | RuntimePolicyDocumentV5):
             return
         binding = self.document.projection_binding
         if (
@@ -399,6 +470,8 @@ def load_source_family_runtime_policy(
             document = RuntimePolicyDocumentV3.model_validate_json(raw)
         elif version == "v004":
             document = RuntimePolicyDocumentV4.model_validate_json(raw)
+        elif version == "v005":
+            document = RuntimePolicyDocumentV5.model_validate_json(raw)
         else:
             raise RuntimePolicyError("source-family runtime policy version is unsupported")
     except ValidationError as exc:
@@ -406,8 +479,10 @@ def load_source_family_runtime_policy(
     _validate_semantics(document)
     by_prior_chunk_id = {
         (
-            candidate.prior_chunk_id.replace("_rag_v2_v002_", "_rag_v2_v004_")
-            if isinstance(document, RuntimePolicyDocumentV4)
+            candidate.prior_chunk_id.replace(
+                "_rag_v2_v002_", f"_rag_v2_{document.runtime_policy_version}_"
+            )
+            if isinstance(document, RuntimePolicyDocumentV4 | RuntimePolicyDocumentV5)
             else candidate.prior_chunk_id
         ): candidate
         for candidate in document.chunks
@@ -420,6 +495,45 @@ def load_source_family_runtime_policy(
 
 
 def _validate_semantics(document: RuntimePolicyDocument) -> None:
+    if isinstance(document, RuntimePolicyDocumentV5):
+        _validate_semantics(document.base_policy)
+        base_bytes = (
+            json.dumps(
+                document.base_policy.model_dump(mode="json"),
+                ensure_ascii=False,
+                sort_keys=True,
+                indent=2,
+            )
+            + "\n"
+        ).encode("utf-8")
+        if hashlib.sha256(base_bytes).hexdigest() != document.base_policy_sha256:
+            raise RuntimePolicyError("public repair changed its pinned v004 base")
+        binding = document.projection_binding
+        if binding.release_id != f"rag-v2-v005-{binding.candidate_sha256[:12]}":
+            raise RuntimePolicyError("public repair release digest mismatch")
+        if tuple(o.prior_chunk_id for o in document.purpose_overrides) != tuple(
+            sorted(PUBLIC_REPAIR_PURPOSE_SCOPE)
+        ):
+            raise RuntimePolicyError("public repair purpose scope diverged")
+        candidates = {
+            c.prior_chunk_id.replace("_rag_v2_v002_", "_rag_v2_v004_"): c
+            for c in document.base_policy.chunks
+        }
+        for override in document.purpose_overrides:
+            expected = PUBLIC_REPAIR_PURPOSE_SCOPE[override.prior_chunk_id]
+            candidate = candidates.get(override.prior_chunk_id)
+            if (
+                candidate is None
+                or (override.source_id, override.add_source_purposes, override.add_chunk_purposes)
+                != expected
+                or candidate.source_id != override.source_id
+            ):
+                raise RuntimePolicyError("public repair purpose delta diverged")
+            if set(override.add_source_purposes) & set(candidate.source_allowed_purposes) or (
+                set(override.add_chunk_purposes) & set(candidate.chunk_allowed_purposes)
+            ):
+                raise RuntimePolicyError("public repair duplicated an existing purpose")
+        return
     if isinstance(document, RuntimePolicyDocumentV4):
         base_bytes = (
             json.dumps(

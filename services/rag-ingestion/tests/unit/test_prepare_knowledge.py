@@ -38,6 +38,27 @@ def invoke(registry, capsys, *args):
     return code, json.loads(capsys.readouterr().out)
 
 
+def test_explicit_audience_patch_cli_reports_single_local_diff(registry, capsys):
+    original = ROOT / "data/rag-rechunk/successor/v001/corpus.jsonl"
+    before = original.read_bytes()
+    code, report = invoke(
+        registry,
+        capsys,
+        "--dataset-version",
+        "v008",
+        "--audience-patches",
+        ROOT / "config/rag/knowledge-audience-patches.json",
+    )
+    assert code == 0
+    assert report["mode"] == "DRY_RUN"
+    assert len(report["audience_patch_differences"]) == 1
+    assert report["audience_patch_differences"][0]["to"] == [
+        "care_professional",
+        "family_caregiver",
+    ]
+    assert original.read_bytes() == before
+
+
 def write_cache(tmp_path, entries, profiles=(PROFILE,)):
     path = tmp_path / "cache.json"
     path.write_text(

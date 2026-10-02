@@ -1,5 +1,16 @@
 # AGENTS.md — agent-runtime
 
+- 第 4 批同日後續：Gemini grounded schema 只約束形狀；parser 繼續檢查來源 ID 與原文支持，不是語意判官。長動態 ID enum 已撤，家屬高負荷題的 HTTP 400 在 A/B 重測解除；專業高負荷題仍有引用不匹配。PDF 排版相容僅移除漢字間有至少兩格縮排的續行，保留 tab、行內空格、未縮排換行、空白行及所有非空白字元；禁用全域去空白／NFKC 當來源驗證。16 題複測 8 SUCCESS／6 NO_DATA／2 FAILED 為前一輪，後續單題結果不可拼成新整批分數。
+- 使用者授權後，`knowledge-v008-aae34e5095e6` 已匯入 658 筆資料與向量並回讀驗證；固定 16 題為 9 SUCCESS／6 NO_DATA／1 FAILED，仍待修正口語申請檢索與專業高負荷題引用。未修改目前服務設定或 activation。詳見第 4 批文件末節；本機測試依使用者要求單工、BelowNormal，不與 subagent 測試並行。
+
+- 2026-10-02 第 4 批已用真實 v004／726 筆與 Gemini 測 16 題：7 SUCCESS、5 NO_DATA、4 FAILED，尚未通過答案品質驗收。631 個 document vectors 已驗證可重用，27 個尚需產生；v007／658 筆未匯入。V3 只在實測程序啟用，未改 .env、寫 DB 或 activation。詳見 [`第 4 批`](../../docs/project/rag-simplification-phase4-20261002.md)；下方第 3 批未呼叫 provider 的描述為歷史狀態。
+- 不可只依賴 engine server settings 的 read-only 預設；真實環境可能未生效。每次檢索連線／交易第一步須執行共用 configure_readonly_transaction，明確 READ ONLY 與 timeout，失敗不得執行搜尋 SQL。實測 preflight 同樣套用。
+- Gemini grounded JSON MIME 已設但 BA13 仍 INVALID_GENERATION_JSON；原文 quote mismatch 原因也待區分。先診斷再修正，不能放寬驗證冒充通過；SUCCESS／PARTIAL、引用 ID 與錨點皆不等於語意正確或有回答問題。
+
+- 2026-10-02 RAG 簡化第 3 批已完成本機實作：V3 自然問句以 pgvector dense＋FTS／trigram Hybrid 檢索，再生成附 1–5 筆引用的回答；移除人工 support sets、精確題目、固定答案與最低 3 筆前提。允許明示缺口的 PARTIAL；無資料／錯誤回 fallback。引用 ID／原文錨點驗證不等於語意正確性評分。
+- `RAG_EVIDENCE_V3_ENABLED` 仍預設 false；未改 .env、匯入外部 DB、呼叫真實 embedding／模型或 activation。V3 啟用時不讀舊 evidence／source-family policy，保留 release/profile、角色／用途、官方來源、stop／risk／時效與內容 hash 檢查；只限非 production staging PostgreSQL。V1／V2 契約仍維持 3–5 筆，V3 關閉時保留原 overlay 流程。
+- 完整實作、准入筆數與剩餘限制見 [`第 3 批`](../../docs/project/rag-simplification-phase3-20261002.md)。SQL predicate 的 regex 也須經 SQLAlchemy `text()` 編譯檢查 bind keys；POSIX `[:space:]` 的冒號可能被誤認為參數，不能只用字串包含測試。
+
 - 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
 - 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
 - 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。

@@ -47,7 +47,7 @@ EXCEPTION_MAP: dict[type[DomainError], int] = {
 }
 
 _STATUS_CODE_SLUGS: dict[int, str] = {
-    401: "unauthorized",
+    401: "authentication_required",
     400: "bad_request",
     422: "validation_error",
     500: "internal_error",

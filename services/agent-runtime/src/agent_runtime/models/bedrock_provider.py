@@ -15,7 +15,7 @@ from typing import Any, Protocol, cast
 
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
-from agent_runtime.models.prompting import build_model_prompts
+from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
 from agent_runtime.models.provider import ModelProvider
 
 
@@ -58,7 +58,7 @@ class BedrockModelProvider(ModelProvider):
                 system=[{"text": system_prompt}],
                 messages=[{"role": "user", "content": [{"text": user_prompt}]}],
                 inferenceConfig={
-                    "maxTokens": self.max_tokens,
+                    "maxTokens": grounded_generation_token_limit(context_manifest, self.max_tokens),
                     "temperature": self.temperature,
                 },
             )

@@ -8,7 +8,7 @@ import httpx
 
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
-from agent_runtime.models.prompting import build_model_prompts
+from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
 from agent_runtime.models.provider import ModelProvider
 
 _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -71,7 +71,7 @@ class OpenAICompatibleModelProvider(ModelProvider):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "max_tokens": self.max_tokens,
+            "max_tokens": grounded_generation_token_limit(context_manifest, self.max_tokens),
             "temperature": self.temperature,
             "stream": False,
         }

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import logging
+from hashlib import sha256
 
 from pydantic import ValidationError
 
 from agent_runtime.rag.client import build_opensearch_client
+from agent_runtime.rag.evidence_models import RetrievalRequestV3, RetrievalResultV3
+from agent_runtime.rag.evidence_sufficiency import EvidenceCandidate, EvidenceRequest
 from agent_runtime.rag.fallback import (
     failed_response,
     failed_response_v2,
@@ -27,6 +30,7 @@ from agent_runtime.rag.models import (
     RetrievalResultV2,
 )
 from agent_runtime.rag.postgres_backend import build_postgres_search_backend
+from agent_runtime.rag.public_knowledge_policy import evaluate_public_knowledge
 from agent_runtime.rag.query_embedder import EmbeddingProvider, build_embedding_provider
 from agent_runtime.rag.query_normalization import normalize_legal_query
 from agent_runtime.rag.runtime_policy import SourceFamilyRuntimePolicy
@@ -48,6 +52,8 @@ class Retriever:
         allow_all_audiences: bool = False,
         source_family_policy: SourceFamilyRuntimePolicy | None = None,
         normalize_legal_queries: bool = False,
+        public_release_id: str | None = None,
+        public_embedding_profile_id: str | None = None,
     ) -> None:
         self._embedding_provider = embedding_provider
         self._search_backend = search_backend
@@ -56,6 +62,8 @@ class Retriever:
         self._allow_all_audiences = allow_all_audiences
         self._source_family_policy = source_family_policy
         self._normalize_legal_queries = normalize_legal_queries
+        self.public_release_id = public_release_id
+        self.public_embedding_profile_id = public_embedding_profile_id
 
     async def aclose(self) -> None:
         try:
@@ -146,6 +154,151 @@ class Retriever:
             results=results,
         )
 
+    async def load_public_candidates(
+        self, request: RetrievalRequestV3, *, require_current: bool
+    ) -> list[RetrievalResultV3]:
+        """Natural V3 retrieval; admission is shared with the PostgreSQL predicate."""
+        if not self.public_release_id or not self.public_embedding_profile_id:
+            raise ValueError("public knowledge requires a configured release and profile")
+        query = (
+            normalize_legal_query(request.query)
+            if request.query_profile == "legal"
+            else request.query
+        )
+        search_request = RetrievalRequestV2(
+            **{**request.model_dump(), "schema_version": "2.0.0", "query": query}
+        )
+        vector = await self._embedding_provider.embed_query(query)
+        if len(vector) != self._embedding_provider.dimension:
+            raise ValueError("query embedding dimension mismatch")
+        plan = self._hybrid_search.build_public(
+            search_request, vector, require_current=require_current
+        )
+        hits = _above_relevance_floor(await self._search_backend.search(plan), plan.min_score)
+        results: list[RetrievalResultV3] = []
+        seen: set[str] = set()
+        for hit in hits:
+            source = hit.source
+            decision = evaluate_public_knowledge(
+                source,
+                audience=request.audience,
+                purpose=request.purpose,
+                require_current=require_current,
+            )
+            if not decision.allowed:
+                continue
+            text = source.get("text")
+            if (
+                source.get("release_id") != self.public_release_id
+                or source.get("embedding_profile_id") != self.public_embedding_profile_id
+                or not isinstance(text, str)
+                or sha256(text.encode("utf-8")).hexdigest() != source.get("text_sha256")
+            ):
+                raise ValueError("public source content binding mismatch")
+            values = {name: source.get(name) for name in RetrievalResultV2.model_fields}
+            values.update(
+                score=hit.score,
+                current_status=source.get("current_status"),
+                warnings=list(decision.warnings),
+            )
+            # Web sources and normalized chunks may have no section heading.
+            values["section"] = source.get("section") or source.get("source_locator")
+            result = RetrievalResultV3.model_validate(values)
+            result.bind_assessment_requirements(
+                official=decision.requires_official_assessment,
+                professional=decision.requires_professional_assessment,
+            )
+            if result.chunk_id in seen:
+                continue
+            results.append(result)
+            seen.add(result.chunk_id)
+            if len(results) == request.top_k:
+                break
+        return results
+
+    async def load_evidence_candidates(self, request: EvidenceRequest) -> list[EvidenceCandidate]:
+        """V3 candidate adapter: reuse all V2 gates without its minimum-three rule."""
+        policy = self._source_family_policy
+        if policy is None or policy.sha256 != request.runtime_policy_sha256:
+            raise ValueError("evidence requires an exact source-family policy binding")
+        # The policy's independently verified deployment release must agree.
+        if policy.document.projection_binding.release_id != request.release_id:
+            raise ValueError("evidence release binding mismatch")
+        v2 = RetrievalRequestV2(
+            schema_version="2.0.0",
+            request_id=request.request_id,
+            query=request.query,
+            query_profile=request.query_profile,
+            top_k=5,
+            audience=request.role,
+            purpose=request.purpose,
+        )
+        vector = await self._embedding_provider.embed_query(v2.query)
+        if len(vector) != self._embedding_provider.dimension:
+            raise ValueError("query embedding has an unexpected dimension")
+        plan = self._hybrid_search.build_v2(
+            v2,
+            vector,
+            allow_needs_review=self._allow_needs_review_citations,
+            allow_all_audiences=False,
+            policy_candidate_chunk_ids=policy.candidate_chunk_ids,
+        )
+        hits = _above_relevance_floor(await self._search_backend.search(plan), plan.min_score)
+        results = _eligible_unique_results_v2(
+            hits,
+            5,
+            v2.query_profile,
+            audience=v2.audience,
+            purpose=v2.purpose,
+            allow_needs_review=self._allow_needs_review_citations,
+            allow_all_audiences=False,
+            source_family_policy=policy,
+        )
+        if results is None:
+            raise ValueError("defective governed citation batch")
+        result_by_id = {r.chunk_id: r for r in results}
+        candidates: list[EvidenceCandidate] = []
+        seen: set[str] = set()
+        for hit in hits:
+            source = hit.source
+            if not is_policy_overlay_live_eligible(
+                source, allow_needs_review=self._allow_needs_review_citations
+            ):
+                continue
+            binding = policy.response_candidate(
+                source, audience=request.role, purpose=request.purpose
+            )
+            if (
+                binding is None
+                or binding.chunk_id not in result_by_id
+                or binding.prior_chunk_id in seen
+            ):
+                continue
+            # Only policy-owned fields receive overlay. Current/stop/eligibility/
+            # review-production state stays authoritative from the live hit.
+            governed = dict(source)
+            governed.update(
+                risk_level=binding.effective_risk_level,
+                allowed_audiences=list(binding.retrieval_audiences),
+                allowed_purposes=list(
+                    set(binding.source_allowed_purposes) & set(binding.chunk_allowed_purposes)
+                ),
+                requires_official_assessment=binding.requires_official_assessment,
+                requires_professional_assessment=binding.requires_professional_assessment,
+            )
+            candidates.append(
+                EvidenceCandidate(
+                    request_id=request.request_id,
+                    search_chunk_id=binding.prior_chunk_id,
+                    release_id=request.release_id,
+                    runtime_policy_sha256=policy.sha256,
+                    result=result_by_id[binding.chunk_id],
+                    live_source=governed,
+                )
+            )
+            seen.add(binding.prior_chunk_id)
+        return candidates
+
 
 def _log_retrieval_failure(exc: Exception, backend: SearchBackend) -> None:
     logger.warning(
@@ -198,6 +351,10 @@ def build_retriever(
         allow_all_audiences=settings.allow_all_audiences,
         source_family_policy=source_family_policy,
         normalize_legal_queries=normalize_legal_queries,
+        public_release_id=settings.postgres.release_id if settings.postgres else None,
+        public_embedding_profile_id=settings.postgres.embedding_profile_id
+        if settings.postgres
+        else None,
     )
 
 

@@ -213,6 +213,32 @@ DATA_SCHEMA_FOR = {
     "retrieval-response-half-populated-page-range.json": "rag/retrieval-response.schema.json",
     "retrieval-request-v2.json": "rag/retrieval-request-v2.schema.json",
     "retrieval-response-v2.json": "rag/retrieval-response-v2.schema.json",
+    **{
+        f"retrieval-request-v3{suffix}.json": "rag/retrieval-request-v3.schema.json"
+        for suffix in ("", "-scope", "-clarified_facets", "-policy", "-profile-purpose")
+    },
+    **{
+        f"retrieval-response-v3{suffix}.json": "rag/retrieval-response-v3.schema.json"
+        for suffix in (
+            "",
+            "-unknown",
+            "-clarify",
+            "-insufficient",
+            "-failed",
+            "-empty-results",
+            "-blank-answer",
+            "-missing-binding",
+            "-decision-mismatch",
+            "-fallback-success",
+            "-duplicate-citation",
+            "-missing-facets",
+            "-no-data-answer",
+            "-failed-decision",
+            "-partial",
+            "-unknown-currency",
+            "-partial-no-gap",
+        )
+    },
     "retrieval-response-v2-storage-url.json": ("rag/retrieval-response-v2.schema.json"),
     "retrieval-response-v2-missing-locator.json": (
         "rag/retrieval-response-v2.schema.json"
