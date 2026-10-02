@@ -3,7 +3,8 @@
 This suite separates Core routing, candidate retrieval, score admission, citation
 governance, and the final minimum-three-results contract. All questions are
 synthetic. Evidence anchors were drafted from the pinned corpus, not from search
-results, and **still require independent human review**.
+results. They are draft diagnostics, not established human relevance judgments.
+Phase 1 retires mandatory manual labeling as a daily development prerequisite.
 
 ## Inputs and interpretation
 
@@ -85,18 +86,20 @@ The lexical leg is PostgreSQL FTS/trigram, not BM25 or learned sparse embeddings
   lower score threshold, candidate-pool expansion, or minimum-count change was
   activated. All existing consent, scope and production gates remain enforced.
 
-## Promotion gates still outstanding
+## Current development scope
 
-Independent review must confirm relevance labels and source coverage before
-changing score thresholds or the 3–5 citation contract. Add near-domain negatives,
-an independent paraphrase sample, all four audiences, graded alternative evidence,
-and generated-answer claim/citation checks. Report answer grounding and unsupported
-claim rates only after those checks actually run; this suite does not estimate them.
-Browser E2E, isolated DB integration, and production approval remain separate gates.
+Report answer grounding and unsupported-claim rates only after the corresponding
+checks actually run; this historical suite does not estimate them. Keep source
+coverage, near-domain negatives, representative paraphrases, audience boundaries
+and claim/citation support visible in future regression checks. Existing runtime,
+SQL, consent, scope and production gates remain until their planned changes are
+implemented; phase 1 does not relax them or require exhaustive human labels.
 
-The next evaluation slice adds four-audience admission snapshots, pending human
-review packets and a development-only raw-score comparison. See [ADMISSION.md](ADMISSION.md).
+The historical admission slice contains four-audience snapshots, pending review
+packets and development-only score comparisons. See [ADMISSION.md](ADMISSION.md).
 
-Current implementation byte attestation is `audits/v013/preflight`, validated by
-`scripts/rag/quality_audit.py validate`. Audits v009/v010/v011/v012 are sealed historical
-evidence. None of these byte attestations constitutes relevance acceptance.
+Audits v009–v013 and later pinned packages record historical capture bytes only;
+they are not current implementation attestation or relevance acceptance. The
+current-byte audit command and successor chain are retired. Code is managed by
+Git; keep real source/data versions and embedding content hashes. The effective
+workflow and planned phases are documented in [RAG simplification phase 1](../../docs/project/rag-simplification-phase1-20261002.md).

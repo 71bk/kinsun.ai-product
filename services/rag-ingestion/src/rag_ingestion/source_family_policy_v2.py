@@ -17,7 +17,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from rag_ingestion.v3_verified_candidate import (
     validate_owner_human_review_acceptance,
-    validate_verified_audit_preflight,
+    validate_verified_audit_snapshot,
     validate_verified_candidate,
 )
 
@@ -160,7 +160,7 @@ def build_owner_source_family_policy_acceptance(
     destination = _destination(root, output_path, ACCEPTANCE_ROOT)
     _refuse_overwrite(destination, "owner source-family acceptance")
     validate_owner_human_review_acceptance(root)
-    validate_verified_audit_preflight(root)
+    validate_verified_audit_snapshot(root)
     validate_verified_candidate(root)
     manifest = _read_json(root / SOURCE_MANIFEST_PATH)
     records = _load_chunk_records(root)
@@ -204,7 +204,7 @@ def validate_owner_source_family_policy_acceptance(
     root = repository_root.resolve()
     package = _destination(root, package_path, ACCEPTANCE_ROOT)
     validate_owner_human_review_acceptance(root)
-    validate_verified_audit_preflight(root)
+    validate_verified_audit_snapshot(root)
     validate_verified_candidate(root)
     _validate_package_checksums(package)
     acceptance = _read_json(package / ACCEPTANCE_FILE.name)
@@ -442,60 +442,11 @@ def validate_source_family_policy_v2(
     }
 
 
-def build_source_family_policy_v2_audit_preflight(
-    repository_root: Path,
-    *,
-    output_path: Path | None = None,
-) -> PolicyArtifactSummary:
-    """Bind the immutable candidate and prior audit to current validation inputs."""
-
-    root = repository_root.resolve()
-    destination = _destination(root, output_path, POLICY_AUDIT_ROOT)
-    _refuse_overwrite(destination, "source-family policy v002 audit preflight v002")
-    validate_source_family_policy_v2(root)
-    _validate_package_checksums(root / PRIOR_POLICY_AUDIT_ROOT)
-    candidate_entries = _entries_for_roots(
-        root,
-        AUDIT_FORMAL_ROOTS,
-        "source_family_policy_v002_formal_artifacts",
-    )
-    input_entries = _audit_input_entries(root)
-    candidate_lock = _inventory_document(
-        "source_family_policy_v002_candidate_artifact_lock",
-        candidate_entries,
-        (
-            "immutable acceptance v003, policy preflight v002, policy candidate v002, "
-            "and audit preflight v001 bytes"
-        ),
-    )
-    inventory = _inventory_document(
-        "source_family_policy_v002_current_validation_input_inventory",
-        input_entries,
-        "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
-    )
-    staged = _new_staging_directory(root, "source-policy-audit-v002")
-    try:
-        _write_json(staged / "candidate-artifact-lock.json", candidate_lock)
-        _write_json(staged / "validation-input-inventory.json", inventory)
-        _write_text(staged / "README.md", _audit_readme(candidate_lock, inventory))
-        _write_checksums(staged)
-        validate_source_family_policy_v2_audit_preflight(root, staged)
-        _publish_directory(staged, destination)
-    finally:
-        _cleanup_staging_directory(root, staged)
-    return PolicyArtifactSummary(
-        artifact="source_family_policy_v002_audit_preflight_v002",
-        output_path=destination,
-        inventory_sha256=inventory["inventory_sha256"],
-        prior_lock_sha256=candidate_lock["inventory_sha256"],
-    )
-
-
-def validate_source_family_policy_v2_audit_preflight(
+def validate_source_family_policy_v2_audit_snapshot(
     repository_root: Path,
     package_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Validate current inputs and the immutable v002 candidate as separate axes."""
+    """Validate historical audit integrity without comparing current code bytes."""
 
     root = repository_root.resolve()
     package = _destination(root, package_path, POLICY_AUDIT_ROOT)
@@ -519,19 +470,10 @@ def validate_source_family_policy_v2_audit_preflight(
     )
     if lock != expected_lock:
         raise SourceFamilyPolicyV2Error("source-family policy v002 candidate lock mismatch")
-    if package == (root / POLICY_AUDIT_ROOT).resolve():
-        _validate_frozen_audit_inventory(
-            inventory,
-            "source_family_policy_v002_current_validation_input_inventory",
-        )
-    else:
-        expected_inventory = _inventory_document(
-            "source_family_policy_v002_current_validation_input_inventory",
-            _audit_input_entries(root),
-            "current policy v002 schemas, config, code, tests, evidence, and v003 chunks",
-        )
-        if inventory != expected_inventory:
-            raise SourceFamilyPolicyV2Error("source-family policy v002 audit input mismatch")
+    _validate_frozen_audit_inventory(
+        inventory,
+        "source_family_policy_v002_current_validation_input_inventory",
+    )
     return {
         "candidate_artifact_entry_count": lock["entry_count"],
         "candidate_lock_sha256": lock["inventory_sha256"],
@@ -1323,22 +1265,6 @@ def _preflight_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> 
         f"- Validation inventory SHA-256: `{inventory['inventory_sha256']}`\n"
         f"- Protected prior artifacts: `{lock['entry_count']}`\n"
         f"- Prior lock SHA-256: `{lock['inventory_sha256']}`\n"
-        "- External synchronization: not authorized\n"
-        "- Production: blocked\n"
-    )
-
-
-def _audit_readme(lock: Mapping[str, Any], inventory: Mapping[str, Any]) -> str:
-    return (
-        "# Source-family policy v002 audit preflight v002\n\n"
-        "This successor keeps the original build preflight and audit preflight v001 immutable "
-        "while binding the completed policy candidate to the current formatted schemas, config, "
-        "code, tests, evidence, and v003 chunk inventory.\n\n"
-        f"- Current validation inputs: `{inventory['entry_count']}`\n"
-        f"- Current inventory SHA-256: `{inventory['inventory_sha256']}`\n"
-        f"- Candidate artifact entries: `{lock['entry_count']}`\n"
-        f"- Candidate lock SHA-256: `{lock['inventory_sha256']}`\n"
-        "- Runtime integration: local hash-pinned runtime policy v002 integrated\n"
         "- External synchronization: not authorized\n"
         "- Production: blocked\n"
     )

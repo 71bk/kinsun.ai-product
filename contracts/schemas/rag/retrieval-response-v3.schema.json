@@ -1,0 +1,599 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/retrieval-response-v3.schema.json",
+  "title": "RetrievalResponseV3",
+  "description": "Natural public knowledge answers with grounded citations; V1/V2 remain unchanged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "status",
+    "fallback_message",
+    "results",
+    "decision",
+    "answer_text"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "3.0.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "SUCCESS",
+        "NO_DATA",
+        "FAILED"
+      ]
+    },
+    "fallback_message": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    },
+    "results": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/RetrievalResultV3"
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT",
+        "UNKNOWN",
+        "CLARIFY",
+        "FAILED",
+        "PARTIAL"
+      ]
+    },
+    "answer_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 50000
+    },
+    "reason_codes": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "\\S"
+      }
+    },
+    "missing_facets": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "\\S"
+      }
+    },
+    "release_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "embedding_profile_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "\\S"
+    },
+    "policy_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "\\S"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUCCESS"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "answer_text",
+          "release_id",
+          "embedding_profile_id",
+          "policy_version"
+        ],
+        "properties": {
+          "decision": {
+            "enum": [
+              "SUFFICIENT",
+              "PARTIAL"
+            ]
+          },
+          "results": {
+            "minItems": 1,
+            "maxItems": 5,
+            "uniqueItems": true
+          },
+          "fallback_message": {
+            "type": "null"
+          },
+          "answer_text": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "release_id": {
+            "type": "string"
+          },
+          "embedding_profile_id": {
+            "type": "string"
+          },
+          "policy_version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "NO_DATA",
+              "FAILED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fallback_message": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "results": {
+            "maxItems": 0
+          },
+          "answer_text": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "NO_DATA"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "UNKNOWN",
+              "INSUFFICIENT",
+              "CLARIFY"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "FAILED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "FAILED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "PARTIAL"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "SUCCESS"
+          },
+          "missing_facets": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "missing_facets"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "SUFFICIENT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "missing_facets": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "NullableHttpUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https?://",
+      "maxLength": 4096
+    },
+    "NullableEvidenceText": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "\\S"
+    },
+    "NullablePositiveInteger": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "RetrievalResultV3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chunk_id",
+        "source_id",
+        "text",
+        "score",
+        "artifact_version",
+        "title",
+        "publisher",
+        "section",
+        "physical_page_start",
+        "physical_page_end",
+        "printed_page_start",
+        "printed_page_end",
+        "source_locator",
+        "direct_official_source_url",
+        "official_source_page_url",
+        "direct_source_url",
+        "source_page_url",
+        "is_official_source",
+        "source_version",
+        "source_version_date",
+        "version_published_at",
+        "source_page_updated_at",
+        "published_at",
+        "last_verified_at",
+        "review_status",
+        "production_approved",
+        "current_status"
+      ],
+      "properties": {
+        "chunk_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50000,
+          "pattern": "\\S"
+        },
+        "score": {
+          "type": "number"
+        },
+        "artifact_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "\\S"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "\\S"
+        },
+        "physical_page_start": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "physical_page_end": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "printed_page_start": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "printed_page_end": {
+          "$ref": "#/$defs/NullablePositiveInteger"
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "\\S"
+        },
+        "direct_official_source_url": {
+          "$ref": "#/$defs/NullableHttpUrl",
+          "pattern": "^https?://[^\\s/@]+(?:[/?#][^\\s]*)?$"
+        },
+        "official_source_page_url": {
+          "$ref": "#/$defs/NullableHttpUrl",
+          "pattern": "^https?://[^\\s/@]+(?:[/?#][^\\s]*)?$"
+        },
+        "direct_source_url": {
+          "$ref": "#/$defs/NullableHttpUrl",
+          "pattern": "^https?://[^\\s/@]+(?:[/?#][^\\s]*)?$"
+        },
+        "source_page_url": {
+          "$ref": "#/$defs/NullableHttpUrl",
+          "pattern": "^https?://[^\\s/@]+(?:[/?#][^\\s]*)?$"
+        },
+        "is_official_source": {
+          "const": true
+        },
+        "source_version": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "source_version_date": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "version_published_at": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "source_page_updated_at": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "published_at": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "last_verified_at": {
+          "$ref": "#/$defs/NullableEvidenceText"
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "needs_review",
+            "verified"
+          ]
+        },
+        "production_approved": {
+          "type": "boolean"
+        },
+        "current_status": {
+          "enum": [
+            "current",
+            "unknown"
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "pattern": "\\S"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "physical_page_start": {
+                  "type": "integer"
+                },
+                "physical_page_end": {
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "properties": {
+                "physical_page_start": {
+                  "type": "null"
+                },
+                "physical_page_end": {
+                  "type": "null"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "printed_page_start": {
+                  "type": "integer"
+                },
+                "printed_page_end": {
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "properties": {
+                "printed_page_start": {
+                  "type": "null"
+                },
+                "printed_page_end": {
+                  "type": "null"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "direct_source_url": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "properties": {
+                "source_page_url": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "is_official_source": {
+                "const": true
+              }
+            },
+            "required": [
+              "is_official_source"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "properties": {
+                  "direct_official_source_url": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "official_source_page_url": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "properties": {
+              "direct_official_source_url": {
+                "type": "null"
+              },
+              "official_source_page_url": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "production_approved": {
+                "const": true
+              }
+            },
+            "required": [
+              "production_approved"
+            ]
+          },
+          "then": {
+            "properties": {
+              "review_status": {
+                "const": "verified"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "official_source_page_url": {
+                "type": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "official_source_page_url": {
+                "pattern": "^[hH][tT][tT][pP][sS]?://(?:[A-Za-z0-9-]+\\.)*[gG][oO][vV]\\.[tT][wW](?::[0-9]+)?(?:[/?#][^\\s]*)?$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "direct_official_source_url": {
+                "type": "string",
+                "pattern": "^[hH][tT][tT][pP][sS]?://(?:[A-Za-z0-9-]+\\.)*[gG][oO][vV]\\.[tT][wW](?::[0-9]+)?(?:[/?#][^\\s]*)?$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

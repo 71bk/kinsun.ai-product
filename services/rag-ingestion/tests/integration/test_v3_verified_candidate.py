@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -7,11 +9,10 @@ import pytest
 from rag_ingestion.v3_verified_candidate import (
     V3VerifiedCandidateError,
     build_owner_human_review_acceptance,
-    build_verified_audit_preflight,
     build_verified_candidate,
     build_verified_preflight,
     validate_owner_human_review_acceptance,
-    validate_verified_audit_preflight,
+    validate_verified_audit_snapshot,
     validate_verified_build_preflight_snapshot,
     validate_verified_candidate,
 )
@@ -39,8 +40,8 @@ def test_committed_verified_build_preflight_snapshot_is_valid() -> None:
     assert result["production_approved"] is False
 
 
-def test_committed_verified_audit_preflight_is_current() -> None:
-    result = validate_verified_audit_preflight(REPOSITORY_ROOT)
+def test_committed_verified_audit_snapshot_integrity() -> None:
+    result = validate_verified_audit_snapshot(REPOSITORY_ROOT)
 
     assert result["status"] == "PASS"
     assert result["source_count"] == 17
@@ -74,5 +75,32 @@ def test_verified_formal_packages_refuse_overwrite() -> None:
         build_verified_preflight(REPOSITORY_ROOT)
     with pytest.raises(V3VerifiedCandidateError, match="refuse to overwrite"):
         build_verified_candidate(REPOSITORY_ROOT)
-    with pytest.raises(V3VerifiedCandidateError, match="refuse to overwrite"):
-        build_verified_audit_preflight(REPOSITORY_ROOT)
+
+
+def test_candidate_validation_does_not_require_capture_time_code_bytes(monkeypatch) -> None:
+    from rag_ingestion import v3_verified_candidate as candidate
+
+    def fail_current_inputs(*args):
+        raise AssertionError("historical code inputs must not gate candidate validation")
+
+    monkeypatch.setattr(candidate, "_validation_input_entries", fail_current_inputs)
+    assert candidate.validate_verified_candidate(REPOSITORY_ROOT)["verified_count"] == 726
+    assert candidate.validate_verified_audit_snapshot(REPOSITORY_ROOT)["status"] == "PASS"
+
+
+@pytest.mark.parametrize(
+    "target", ["validation-input-inventory.json", "candidate-artifact-lock.json"]
+)
+def test_audit_snapshot_rejects_tampered_inventory_or_candidate_lock(tmp_path, target) -> None:
+    from rag_ingestion import v3_verified_candidate as candidate
+
+    package = tmp_path / "snapshot"
+    shutil.copytree(REPOSITORY_ROOT / candidate.AUDIT_PREFLIGHT_PACKAGE, package)
+    document_path = package / target
+    document = json.loads(document_path.read_text(encoding="utf-8"))
+    document["inventory_sha256"] = "0" * 64
+    document_path.write_text(json.dumps(document) + "\n", encoding="utf-8", newline="\n")
+    candidate._write_checksums(package)
+
+    with pytest.raises(V3VerifiedCandidateError, match="immutable lock|snapshot inventory"):
+        candidate.validate_verified_audit_snapshot(REPOSITORY_ROOT, package)

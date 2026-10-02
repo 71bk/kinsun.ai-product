@@ -4,6 +4,7 @@ from typing import Protocol
 
 from agent_runtime.common.enums import ActorRole, RiskLevel, SafetyDecision
 from agent_runtime.contracts.models import AgentRunRequest, SafetyEvaluation
+from agent_runtime.rag.evidence_models import RetrievalRequestV3, RetrievalResponseV3
 from agent_runtime.rag.fallback import failed_response_v2
 from agent_runtime.rag.models import (
     QueryProfile,
@@ -36,6 +37,24 @@ AUDIENCE_BY_ROLE = {
 
 class RagRetriever(Protocol):
     async def retrieve_v2(self, request: RetrievalRequestV2) -> RetrievalResponseV2: ...
+
+
+class EvidenceRagRetriever(Protocol):
+    async def retrieve_v3(self, request: RetrievalRequestV3) -> RetrievalResponseV3: ...
+
+
+def build_evidence_request(request: AgentRunRequest) -> RetrievalRequestV3:
+    purpose = _normalized_purpose(request.purpose)
+    return RetrievalRequestV3(
+        schema_version="3.0.0",
+        request_id=request.request_id,
+        query=request.input_text,
+        query_profile=RAG_PURPOSES[purpose],
+        top_k=5,
+        audience=AUDIENCE_BY_ROLE[request.actor_role],
+        purpose=purpose,
+        language=request.language,
+    )
 
 
 def is_rag_request(request: AgentRunRequest) -> bool:

@@ -5,12 +5,18 @@ from collections.abc import Mapping
 from typing import Protocol, cast
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from agent_runtime.rag.models import (
     HybridSearchPlan,
     PostgresSearchSettings,
     QueryEmbeddingSettings,
+)
+from agent_runtime.rag.public_knowledge_policy import (
+    LEGACY_PUBLIC_PROJECT_SOURCE_IDS,
+    PUBLIC_KNOWLEDGE_SQL_PREDICATE,
+    RETIRED_BLOCK_REASONS,
+    evaluate_public_knowledge,
 )
 from agent_runtime.rag.search_backend import SearchHit
 
@@ -273,8 +279,79 @@ ORDER BY ranked.score DESC, eligible.chunk_id
 """
 
 
+def _public_knowledge_sql() -> str:
+    """Keep ranking and exact release/profile integrity identical to legacy SQL."""
+    sql = POSTGRES_HYBRID_SEARCH_SQL
+    sql = sql.replace(
+        "    SELECT projection.*, embedding.embedding\n",
+        "    SELECT projection.*, embedding.embedding, embedding.embedding_profile_id\n",
+    )
+    sql = sql.replace(
+        "    SELECT release.release_id\n",
+        "    SELECT release.release_id,\n"
+        "           release.production_approved AS release_production_approved\n",
+    )
+    release_start = sql.index("      AND (\n          (release.review_status")
+    release_end = sql.index("      AND release.chunk_count", release_start)
+    sql = (
+        sql[:release_start]
+        + """      AND (
+          (release.release_status = 'STAGING_CANDIDATE' AND release.production_approved IS FALSE)
+          OR (release.release_status = 'APPROVED' AND release.production_approved IS TRUE
+              AND release.review_status = 'verified')
+      )
+"""
+        + sql[release_end:]
+    )
+    gate_start = sql.index("    WHERE projection.current_status")
+    gate_end = sql.index("\n),\nlexical_raw", gate_start)
+    sql = (
+        sql[:gate_start]
+        + "    WHERE "
+        + PUBLIC_KNOWLEDGE_SQL_PREDICATE
+        + """
+      AND projection.production_approved IS NOT DISTINCT FROM
+          release_scope.release_production_approved
+      AND (release_scope.release_production_approved IS FALSE
+           OR (projection.production_approved IS TRUE AND projection.review_status = 'verified'))
+"""
+        + sql[gate_end:]
+    )
+    sql = sql.replace(
+        "    TRUE AS is_official_source,",
+        "    (eligible.provenance -> 'is_official_source' = 'true'::jsonb) AS is_official_source,",
+    )
+    sql = sql.replace(
+        "    eligible.current_status,",
+        """    eligible.release_id,
+    eligible.embedding_profile_id,
+    eligible.text_sha256,
+    eligible.embedding_text_sha256,
+    eligible.governance ->> 'data_classification' AS data_classification,
+    eligible.governance ->> 'distribution_scope' AS distribution_scope,
+    eligible.current_status,""",
+    )
+    return sql
+
+
+POSTGRES_PUBLIC_KNOWLEDGE_SEARCH_SQL = _public_knowledge_sql()
+
+
 class PostgresSearchBackendError(RuntimeError):
     """PostgreSQL did not return a complete governed search response."""
+
+
+async def configure_readonly_transaction(
+    connection: AsyncConnection, statement_timeout_ms: int
+) -> None:
+    """Set transaction guarantees explicitly before any database reads."""
+    if type(statement_timeout_ms) is not int or not 1_000 <= statement_timeout_ms <= 60_000:
+        raise PostgresSearchBackendError("invalid statement timeout")
+    await connection.execute(text("SET TRANSACTION READ ONLY"), {})
+    await connection.execute(
+        text("SELECT set_config('statement_timeout', :timeout, true)"),
+        {"timeout": str(statement_timeout_ms)},
+    )
 
 
 class _MappingResult(Protocol):
@@ -300,11 +377,16 @@ class PostgresSearchBackend:
 
     async def search(self, plan: HybridSearchPlan) -> list[SearchHit]:
         parameters = self._parameters(plan)
+        public_mode = getattr(plan, "public_knowledge_mode", False)
+        sql = POSTGRES_PUBLIC_KNOWLEDGE_SEARCH_SQL if public_mode else POSTGRES_HYBRID_SEARCH_SQL
         try:
             async with self._engine.connect() as connection:
+                await configure_readonly_transaction(
+                    connection, self._settings.statement_timeout_ms
+                )
                 result = cast(
                     _ExecuteResult,
-                    await connection.execute(text(POSTGRES_HYBRID_SEARCH_SQL), parameters),
+                    await connection.execute(text(sql), parameters),
                 )
                 rows = result.mappings().all()
         except Exception as exc:
@@ -313,7 +395,19 @@ class PostgresSearchBackend:
             raise PostgresSearchBackendError(
                 f"PostgreSQL search failed: {type(exc).__name__}"
             ) from exc
-        return _to_search_hits(rows)
+        hits = _to_search_hits(rows)
+        if public_mode:
+            hits = [
+                hit
+                for hit in hits
+                if evaluate_public_knowledge(
+                    hit.source,
+                    audience=plan.audience or "",
+                    purpose=plan.purpose or "",
+                    require_current=getattr(plan, "require_current", False),
+                ).allowed
+            ]
+        return hits
 
     def _parameters(self, plan: HybridSearchPlan) -> dict[str, object]:
         """One parameter binding for runtime search and offline quality diagnostics."""
@@ -332,6 +426,9 @@ class PostgresSearchBackend:
             "policy_candidate_chunk_ids": list(plan.policy_candidate_chunk_ids or ()),
             "audience": plan.audience,
             "purpose": plan.purpose,
+            "require_current": getattr(plan, "require_current", False),
+            "retired_block_reasons": list(RETIRED_BLOCK_REASONS),
+            "legacy_public_project_source_ids": list(LEGACY_PUBLIC_PROJECT_SOURCE_IDS),
             "candidate_limit": POSTGRES_CANDIDATE_LIMIT,
             "top_k": plan.search_result_limit,
             "min_score": plan.min_score,
@@ -351,6 +448,7 @@ def build_postgres_engine(settings: PostgresSearchSettings) -> AsyncEngine:
         database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     return create_async_engine(
         database_url,
+        hide_parameters=True,
         pool_size=settings.pool_min_size,
         max_overflow=settings.pool_max_size - settings.pool_min_size,
         pool_pre_ping=True,
@@ -379,8 +477,12 @@ def build_postgres_search_backend(
 def _vector_literal(vector: list[float], expected_dimension: int) -> str:
     if len(vector) != expected_dimension:
         raise PostgresSearchBackendError("query embedding dimension mismatch")
+    if any(isinstance(value, bool) or not isinstance(value, int | float) for value in vector):
+        raise PostgresSearchBackendError("query embedding contains non-numeric values")
     if any(not math.isfinite(value) for value in vector):
         raise PostgresSearchBackendError("query embedding contains a non-finite value")
+    if not any(value != 0 for value in vector):
+        raise PostgresSearchBackendError("query embedding is a zero vector")
     return "[" + ",".join(format(value, ".17g") for value in vector) + "]"
 
 

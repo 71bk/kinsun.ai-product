@@ -226,6 +226,7 @@ def test_repo_relative_rag_config_paths_work_from_service_directory(
 
 def test_runtime_factory_passes_settings_provider_values_to_rag_loader(monkeypatch) -> None:
     class StubSettings:
+        RAG_EVIDENCE_V3_ENABLED = False
         RAG_MODE = "staging"
         RAG_SEARCH_BACKEND = "opensearch"
         RAG_ALLOW_NEEDS_REVIEW_CITATIONS = True

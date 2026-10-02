@@ -49,12 +49,29 @@ _RESPONSE_LENGTH_RULES = {
 }
 
 
+def grounded_generation_token_limit(manifest: ContextManifest, configured_limit: int) -> int:
+    """Allow bounded JSON/quote overhead only for server-built grounded turns.
+
+    Ordinary turns retain their configured budget. The grounded 2048-token
+    floor is still one generation with the existing output character limits.
+    """
+    from agent_runtime.rag.grounded_answer import GROUNDED_SOURCE_TYPE
+
+    if any(item.source_type == GROUNDED_SOURCE_TYPE for item in manifest.items):
+        return max(configured_limit, 2048)
+    return configured_limit
+
+
 def build_model_prompts(
     request: AgentRunRequest,
     context_manifest: ContextManifest,
     language: str,
 ) -> tuple[str, str]:
     """Build the same bounded instructions regardless of the selected model provider."""
+    from agent_runtime.rag.grounded_answer import GROUNDED_SOURCE_TYPE, build_grounded_prompts
+
+    if any(item.source_type == GROUNDED_SOURCE_TYPE for item in context_manifest.items):
+        return build_grounded_prompts(request, context_manifest, language)
     excerpts = [
         item.content for item in context_manifest.items if item.source_type == RAG_SOURCE_TYPE
     ]

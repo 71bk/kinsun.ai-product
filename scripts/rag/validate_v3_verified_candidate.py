@@ -13,7 +13,7 @@ sys.path.insert(0, str(REPO_ROOT / "services" / "rag-ingestion" / "src"))
 from rag_ingestion.v3_verified_candidate import (  # noqa: E402
     V3VerifiedCandidateError,
     validate_owner_human_review_acceptance,
-    validate_verified_audit_preflight,
+    validate_verified_audit_snapshot,
     validate_verified_build_preflight_snapshot,
     validate_verified_candidate,
 )
@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         acceptance = validate_owner_human_review_acceptance(root)
         build_preflight = validate_verified_build_preflight_snapshot(root)
-        audit_preflight = validate_verified_audit_preflight(root)
+        audit_snapshot = validate_verified_audit_snapshot(root)
         candidate = validate_verified_candidate(root)
     except (OSError, UnicodeDecodeError, ValueError, V3VerifiedCandidateError) as exc:
         print(
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
                 "status": "PASS",
                 "acceptance": acceptance,
                 "build_preflight": build_preflight,
-                "audit_preflight": audit_preflight,
+                "audit_snapshot": audit_snapshot,
                 "candidate": candidate,
                 "external_sync": "NOT_AUTHORIZED",
                 "production_approved": False,

@@ -1,0 +1,13 @@
+{
+  "schema_version": "knowledge-audience-patches-v1",
+  "patches": [
+    {
+      "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rechunk_successor_v006_0012",
+      "expected_source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "expected_text_sha256": "ca1b529e681a4650115ef1dff8acf1d106a9aa97ebf754d084ad098fc7cded01",
+      "from_audiences": ["care_professional"],
+      "to_audiences": ["care_professional", "family_caregiver"],
+      "reason": "公開官方BA13陪同外出注意事項亦供家屬理解服務範圍；保留主管機關評估要求，不代為認定或申報。"
+    }
+  ]
+}

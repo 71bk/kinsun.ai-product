@@ -17,7 +17,6 @@ def _load_builder():
     from rag_ingestion.source_family_policy_v2 import (  # noqa: PLC0415
         build_owner_source_family_policy_acceptance,
         build_source_family_policy_v2,
-        build_source_family_policy_v2_audit_preflight,
         build_source_family_policy_v2_preflight,
     )
 
@@ -25,18 +24,16 @@ def _load_builder():
         build_owner_source_family_policy_acceptance,
         build_source_family_policy_v2_preflight,
         build_source_family_policy_v2,
-        build_source_family_policy_v2_audit_preflight,
     )
 
 
 def main() -> int:
     root = _repository_root()
-    build_acceptance, build_preflight, build_policy, build_audit = _load_builder()
+    build_acceptance, build_preflight, build_policy = _load_builder()
     summaries = [
         build_acceptance(root).to_dict(),
         build_preflight(root).to_dict(),
         build_policy(root).to_dict(),
-        build_audit(root).to_dict(),
     ]
     print(
         json.dumps(

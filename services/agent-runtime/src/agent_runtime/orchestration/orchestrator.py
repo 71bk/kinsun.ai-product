@@ -12,6 +12,7 @@ from agent_runtime.agents.safety_evaluator.evaluator import SafetyEvaluator
 from agent_runtime.common.enums import RiskLevel, SafetyDecision
 from agent_runtime.common.errors import StepLimitError
 from agent_runtime.context.builder import (
+    build_evidence_context_manifest,
     build_minimal_context_manifest,
     build_rag_context_manifest,
 )
@@ -28,13 +29,16 @@ from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.execution_budget import ExecutionBudget
 from agent_runtime.orchestration.fallback import fallback_reply
 from agent_runtime.orchestration.rag_integration import (
+    EvidenceRagRetriever,
     RagRetriever,
+    build_evidence_request,
     is_rag_request,
     retrieval_fallback_safety,
     retrieve_for_agent,
 )
 from agent_runtime.orchestration.stop_conditions import map_to_status
 from agent_runtime.rag.citations import append_citations
+from agent_runtime.rag.evidence_service import FALLBACK as EVIDENCE_FALLBACK
 from agent_runtime.rag.fallback import failed_response_v2
 from agent_runtime.rag.models import RetrievalResponseV2
 from agent_runtime.tracing.trace import new_agent_run_id, new_trace_id
@@ -80,6 +84,7 @@ class AgentOrchestrator:
         request: AgentRunRequest,
         *,
         rag_retriever: RagRetriever | None = None,
+        evidence_retriever: EvidenceRagRetriever | None = None,
     ) -> AgentRunResponse:
         if request.max_steps > self.max_steps:
             raise StepLimitError("max_steps exceeds system limit")
@@ -96,6 +101,7 @@ class AgentOrchestrator:
                     request,
                     budget=budget,
                     rag_retriever=rag_retriever,
+                    evidence_retriever=evidence_retriever,
                 )
         except TimeoutError:
             logger.warning(
@@ -131,6 +137,7 @@ class AgentOrchestrator:
         *,
         budget: ExecutionBudget,
         rag_retriever: RagRetriever | None,
+        evidence_retriever: EvidenceRagRetriever | None = None,
     ) -> AgentRunResponse:
         trace_id = request.trace_id or new_trace_id()
         selected_agent = self.select_agent(request)
@@ -143,6 +150,72 @@ class AgentOrchestrator:
         retrieval: RetrievalResponseV2 | None = None
         if is_rag_request(request):
             input_safety = self.safety_evaluator.evaluate(request, "")
+            if evidence_retriever is not None:
+                # V3 owns one grounded model call; do not generate a second reply.
+                if input_safety.decision != SafetyDecision.ALLOW:
+                    return self._response(
+                        request=request,
+                        trace_id=trace_id,
+                        selected_agent=selected_agent,
+                        context_manifest=context_manifest,
+                        step_count=step_count,
+                        safety_result=input_safety,
+                        reply_text=fallback_reply(input_safety, ""),
+                    )
+                try:
+                    evidence = await budget.wait_for(
+                        lambda: evidence_retriever.retrieve_v3(build_evidence_request(request))
+                    )
+                    if evidence.request_id != request.request_id:
+                        raise ValueError("evidence request binding mismatch")
+                    if (
+                        evidence.status == "SUCCESS"
+                        and evidence.decision in {"SUFFICIENT", "PARTIAL"}
+                        and evidence.answer_text
+                    ):
+                        context_manifest = build_evidence_context_manifest(
+                            request,
+                            selected_agent,
+                            evidence.results,
+                        )
+                        safety_result = self.safety_evaluator.evaluate(
+                            request, evidence.answer_text
+                        )
+                        reply = fallback_reply(safety_result, evidence.answer_text)
+                        if safety_result.decision != SafetyDecision.ALLOW:
+                            context_manifest = build_minimal_context_manifest(
+                                request, selected_agent
+                            )
+                    else:
+                        safety_result = SafetyEvaluation(
+                            decision=SafetyDecision.SAFE_FALLBACK,
+                            risk_level=RiskLevel.LOW,
+                            reason_codes=[f"RAG_EVIDENCE_{evidence.decision}"],
+                            matched_terms=[],
+                            safe_reply=evidence.fallback_message or EVIDENCE_FALLBACK,
+                        )
+                        reply = evidence.fallback_message or EVIDENCE_FALLBACK
+                except TimeoutError:
+                    raise
+                except Exception:
+                    context_manifest = build_minimal_context_manifest(request, selected_agent)
+                    safety_result = SafetyEvaluation(
+                        decision=SafetyDecision.SAFE_FALLBACK,
+                        risk_level=RiskLevel.LOW,
+                        reason_codes=["RAG_EVIDENCE_UNAVAILABLE"],
+                        matched_terms=[],
+                        safe_reply=EVIDENCE_FALLBACK,
+                    )
+                    reply = EVIDENCE_FALLBACK
+                return self._response(
+                    request=request,
+                    trace_id=trace_id,
+                    selected_agent=selected_agent,
+                    context_manifest=context_manifest,
+                    step_count=step_count,
+                    safety_result=safety_result,
+                    reply_text=reply,
+                )
             if input_safety.decision == SafetyDecision.ALLOW:
                 retrieval = await budget.wait_for(
                     lambda: retrieve_for_agent(request, rag_retriever)

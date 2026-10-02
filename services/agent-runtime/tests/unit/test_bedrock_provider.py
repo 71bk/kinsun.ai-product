@@ -102,6 +102,7 @@ async def test_knowledge_turn_sends_only_the_approved_excerpts_as_grounding() ->
     assert reply == "節錄提到家庭照顧者的定義。"
     call = client.calls[0]
     assert call["modelId"] == "configured-model-id"
+    assert call["inferenceConfig"]["maxTokens"] == 512
     system_text = call["system"][0]["text"]
     assert KNOWLEDGE_SYSTEM_PROMPT in system_text
     assert "zh-TW" in system_text
@@ -121,6 +122,24 @@ async def test_turn_without_excerpts_uses_the_companion_prompt() -> None:
     system_text = client.calls[0]["system"][0]["text"]
     assert COMPANION_SYSTEM_PROMPT in system_text
     assert KNOWLEDGE_SYSTEM_PROMPT not in system_text
+
+
+@pytest.mark.asyncio
+async def test_grounded_json_turn_has_bounded_token_overhead_budget() -> None:
+    from agent_runtime.rag.grounded_answer import GROUNDED_SOURCE_TYPE
+
+    client = FakeConverseClient(reply='{"status":"INSUFFICIENT"}')
+    manifest = make_manifest(with_excerpts=False)
+    manifest.items.append(
+        ContextItem(
+            item_id="grounded-test-evidence",
+            source_type=GROUNDED_SOURCE_TYPE,
+            content='[{"chunk_id":"synthetic","text":"Synthetic source."}]',
+            token_estimate=10,
+        )
+    )
+    await make_provider(client).generate_reply(make_request(), manifest, "zh-TW")
+    assert client.calls[0]["inferenceConfig"]["maxTokens"] == 2048
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "schema_version": "3.0.0",
+    "request_id": "rag-v2-request-001",
+    "status": "SUCCESS",
+    "fallback_message": null,
+    "results": [
+      {
+        "chunk_id": "synthetic_official_guide_v002_0001",
+        "source_id": "synthetic_official_guide",
+        "text": "Synthetic eligibility guidance used only for contract validation.",
+        "score": 0.97,
+        "artifact_version": "v002",
+        "title": "Synthetic Long-Term-Care Guide",
+        "publisher": "Synthetic Health Authority",
+        "section": "Eligibility",
+        "physical_page_start": 3,
+        "physical_page_end": 3,
+        "printed_page_start": 1,
+        "printed_page_end": 1,
+        "source_locator": "PDF physical page 3, Eligibility",
+        "direct_official_source_url": "https://synthetic.mohw.gov.tw/guide",
+        "official_source_page_url": "https://synthetic.mohw.gov.tw/guide",
+        "direct_source_url": "https://synthetic.mohw.gov.tw/guide",
+        "source_page_url": "https://synthetic.mohw.gov.tw/guide",
+        "is_official_source": true,
+        "source_version": "2026-08",
+        "source_version_date": "2026-08-01",
+        "version_published_at": null,
+        "source_page_updated_at": "2026-08-01",
+        "published_at": null,
+        "last_verified_at": "2026-08-19",
+        "review_status": "needs_review",
+        "production_approved": false,
+        "current_status": "current",
+        "warnings": []
+      }
+    ],
+    "decision": "SUFFICIENT",
+    "answer_text": "Synthetic source-grounded answer for contract validation only.",
+    "reason_codes": [],
+    "missing_facets": [],
+    "release_id": "synthetic-release"
+  }
+}

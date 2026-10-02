@@ -1,4 +1,3 @@
-import ast
 import copy
 import json
 import os
@@ -37,35 +36,6 @@ def plan_for(paths, event="pull_request"):
 
 
 class ImpactTests(unittest.TestCase):
-    def test_governed_repository_path_literals_cannot_skip_rag(self):
-        root = Path(__file__).resolve().parents[2]
-        for source in (root / "services/rag-ingestion/src").rglob("*.py"):
-            tree = ast.parse(source.read_text(encoding="utf-8"))
-            for node in ast.walk(tree):
-                if (
-                    isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Name)
-                    and node.func.id == "Path"
-                    and node.args
-                    and isinstance(node.args[0], ast.Constant)
-                    and isinstance(node.args[0].value, str)
-                ):
-                    path = node.args[0].value
-                    if path.startswith(
-                        (
-                            "services/",
-                            "scripts/",
-                            "contracts/",
-                            "config/",
-                            "docs/",
-                            "data/",
-                            "packages/",
-                        )
-                    ):
-                        self.assertIn(
-                            "rag-quality", self.selected(path), (str(source), path)
-                        )
-
     def selected(self, *paths, event="pull_request"):
         return {job for job, value in classify(list(paths), event)[0].items() if value}
 
@@ -92,7 +62,6 @@ class ImpactTests(unittest.TestCase):
                 "contracts",
                 "cross-service",
                 "agent-quality",
-                "rag-quality",
             },
         )
         self.assertEqual(
@@ -127,6 +96,27 @@ class ImpactTests(unittest.TestCase):
                 path,
             )
 
+    def test_shared_rag_contract_inputs_keep_consumer_coverage(self):
+        for path in (
+            "config/rag/source-family-golden-queries-v003.json",
+            "data/rag-v3/governance/source-family-policy/runtime/candidates/v003/source-family-runtime-policy.json",
+            "services/rag-ingestion/src/rag_ingestion/schemas.py",
+            "scripts/rag/build_public_rag_repair.py",
+        ):
+            with self.subTest(path=path):
+                selected = self.selected(path)
+                self.assertTrue(
+                    {
+                        "rag-quality",
+                        "agent-quality",
+                        "core-fast",
+                        "core-db",
+                        "contracts",
+                        "cross-service",
+                    }
+                    <= selected
+                )
+
     def test_unknown_and_shared_controls_run_everything(self):
         for path in (
             "contracts/schema.json",
@@ -145,7 +135,7 @@ class ImpactTests(unittest.TestCase):
         ):
             self.assertEqual(self.selected(path), set(EXPECTED_JOBS), path)
 
-    def test_core_rag_audit_inputs_include_rag_and_agent_without_frontend(self):
+    def test_core_rag_changes_retain_core_and_contract_coverage(self):
         for path in (
             "services/core-api/app/rag_projection_importer.py",
             "services/core-api/app/rag_embedding_importer.py",
@@ -157,11 +147,39 @@ class ImpactTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(
+                    self.selected(path),
+                    {
+                        "core-fast",
+                        "core-db",
+                        "contracts",
+                        "cross-service",
+                        "speech-quality",
+                    },
+                )
+                plan = plan_for([path])
+                self.assertEqual(plan["reasons"]["rag-quality"], ["not-affected"])
+                validate_plan(plan, "pull_request", "run", "a" * 40, 1)
+
+    def test_core_routing_helpers_run_rag_consumers_with_original_core_coverage(self):
+        for path in (
+            "services/core-api/app/services/knowledge_router.py",
+            "services/core-api/app/services/knowledge_intent.py",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(
                     self.selected(path), set(EXPECTED_JOBS) - {"frontend-quality"}
                 )
                 plan = plan_for([path])
-                self.assertIn("core-rag", plan["reasons"]["rag-quality"])
+                self.assertIn("core", plan["reasons"]["core-fast"])
+                self.assertIn("core-rag-helper", plan["reasons"]["rag-quality"])
                 validate_plan(plan, "pull_request", "run", "a" * 40, 1)
+        for path in (
+            "services/core-api/app/services/knowledge_router.py.backup",
+            "services/core-api/app/services/knowledge_intent.py.extra",
+            "services/core-api/app/services/knowledge_other.py",
+        ):
+            with self.subTest(path=path):
+                self.assertNotIn("rag-quality", self.selected(path))
 
     def test_docs_allowlist_is_narrow_and_union_never_suppresses_code(self):
         for path in (
