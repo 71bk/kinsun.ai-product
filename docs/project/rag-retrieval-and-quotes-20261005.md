@@ -164,3 +164,29 @@ GitHub 上 #68 的最新 checks／合併紀錄為最終狀態依據。
 涵蓋 retrieval／generation／context／response 失敗、wrapped timeout、JSON／引用拒絕、
 deadline／取消、併發 context 隔離及敏感文字不出現在日誌。此次沒有重跑真實 16 題，
 也沒有用合成測試宣稱前述兩筆偶發備援已查明或修復。
+
+## 2026-10-05 文字陪伴提示改善
+
+前述 #67／#68 均已合併，main 為 `9d633bb`。本次由該 main 新建
+`fix/companion-fallback-messages-20261005`，只處理 `CompanionTextPanel` 的提示：
+
+- `RAG_EVIDENCE_INSUFFICIENT` 提示資料不足並補充細節，`RAG_EVIDENCE_CLARIFY` 提示說明服務／規定／步驟。
+- FAILED／UNAVAILABLE／LATENCY_BUDGET_EXCEEDED 提示服務暫時無法回答、稍後再試。
+- HIGH_RISK_REQUEST／UNSAFE_MEDICAL_REPLY 提示醫療安全與專業確認；BLOCK／HUMAN_REVIEW
+  優先於服務重試提示，其他原因用中性說明，沒有宣稱已轉交人工。
+- 成功回覆與新對話清除舊提示。後端 reply_text、安全決策、權限與 API 契約不變。
+
+驗證：文字陪伴 17 項＋語音回覆 10 項測試通過，typecheck、兩個修改檔 lint、production build、
+28 項 CI 規則測試通過；均依既有單工／BelowNormal 原則執行。
+重建後以合成 Core 回應檢查資料不足／服務失敗／醫療拒答三種狀態，CSS viewport
+375×812、390×844、430×932、1440×900 共 12 組；逐張目視確認提示完整、不重疊，
+DOM scrollWidth 等於 clientWidth，無瀏覽器錯誤或未預期 API。
+
+先用 Playwright MCP 發現 Windows 縮放造成手機 innerWidth 多 1 px；最終改用獨立
+Playwright Chromium，確認精確 CSS 尺寸。桌面最初提示下緣超出 viewport 約 1 px
+是 scrollIntoViewIfNeeded 的截圖捲動定位；改成置中捲動後重拍正常，未因此修改 CSS。
+證據：`.qa/companion-notices-result.json` 與 `.qa/companion-notice-{insufficient|unavailable|medical}-{width}.png`。
+
+日常前端 3000 已重建並重啟，Core／Agent 繼續運作。瀏覽器 fixture 完全攔截測試 API，
+沒有真實帳號登入、照護資料寫入或模型呼叫；本次是 UI 分支驗證，不代表新增真實服務 E2E。
+真機、真人語音與 Lighthouse 未驗；家屬／專業獨立問答入口仍待後續處理。
