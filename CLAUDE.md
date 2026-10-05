@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-05：#69 已合併，家屬公開長照問答已實作於 `/family/knowledge`，ACTIVE FAMILY_MEMBER 限定、固定公開受眾，不查個人紀錄、不儲存問答；僅在非 production 及既有知識開關啟用時可用。詳見 `docs/project/family-public-knowledge-20261005.md`；前階段「未新增家屬入口」已由本次進度取代。
+
 - 2026-10-05：文字陪伴提示已區分資料不足／釐清、服務失敗／逾時與醫療安全拒答，安全決策優先；未知原因不猜醫療風險。27 項相關前端測試、typecheck、定向 lint、build、28 項 CI 規則及四種寬度 × 三種合成畫面通過。本機 3000 已更新；後端行為未改。#67／#68 均已合併，詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節。
 
 - 2026-10-05：PR #67 已合併，#68 重建為最新 main 上的增量。V3 新增不含內容的常駐失敗診斷（`rag_v3_failure`），區分階段／typed timeout／JSON／引用／deadline／取消；保留通用失敗回應與取消傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過。詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節；先前偶發備援不能宣稱已修復。

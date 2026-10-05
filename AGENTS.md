@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- 2026-10-05：PR #69 已合併（`65d389c`），新增家屬公開長照問答 `/family/knowledge` 與專用 Core API。僅 ACTIVE FAMILY_MEMBER，server 固定 family_caregiver；無長輩 scope、個人紀錄、對話儲存或寫入。只回傳回答與官方来源摘要；原始 payload 仍經 family redline guard。非 production 且既有知識開關啟用時可用。驗證與限制見 [家屬問答報告](docs/project/family-public-knowledge-20261005.md)；下方「未新增家屬入口」為前階段歷史。專業入口與 55 筆版面來源修復未包含。
+
 - 2026-10-05 文字陪伴提示：依 Core 回傳 reason_codes 區分資料不足／待釐清、服務失敗／逾時、醫療安全拒答；BLOCK／HUMAN_REVIEW 優先於稍後重試，未知原因用中性說明。27 項相關前端測試、typecheck、定向 lint、production build、28 項 CI 規則通過；375／390／430／1440 寬度各三種合成畫面共 12 組通過。日常 3000 前端已更新；此次未改後端、安全判斷或新增家屬／專業問答入口。#67、#68 均已合併（main `9d633bb`）；下方 draft 敘述為歷史。詳見本次 RAG 報告末節。
 
 - 2026-10-05 收尾：PR #67 已合併；#68 已從最新 main 重建為增量分支，補上 V3 常駐 `rag_v3_failure` 日誌。只記錄 request ID 的 SHA-256 前 16 碼、階段、固定分類及耗時，不記錄問句／來源／模型原文／例外或 secrets。區分檢索、模型 typed timeout、JSON／引用驗證、整體 deadline 與外部取消；取消仍向上傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過；合併狀態以 GitHub 為準。初次兩筆備援原因仍未確認，詳見本次報告末節。

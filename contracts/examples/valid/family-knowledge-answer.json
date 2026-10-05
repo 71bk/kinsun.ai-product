@@ -1,0 +1,19 @@
+{
+  "data": {
+    "status": "ANSWER",
+    "answer": "Synthetic public information for contract validation only.",
+    "sources": [
+      {
+        "title": "Synthetic official guide",
+        "url": "https://www.mohw.gov.tw/",
+        "locator": "Synthetic page 3",
+        "current_status": "unknown"
+      }
+    ]
+  },
+  "meta": {
+    "correlation_id": "family-knowledge-synthetic",
+    "timestamp": "2026-10-05T00:00:00Z",
+    "schema_version": "1.0"
+  }
+}

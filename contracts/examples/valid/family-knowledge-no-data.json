@@ -1,0 +1,12 @@
+{
+  "data": {
+    "status": "NO_DATA",
+    "answer": "Insufficient information.",
+    "sources": []
+  },
+  "meta": {
+    "correlation_id": "family-knowledge-synthetic",
+    "timestamp": "2026-10-05T00:00:00Z",
+    "schema_version": "1.0"
+  }
+}

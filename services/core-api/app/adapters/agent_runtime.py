@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 from datetime import datetime
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
@@ -233,6 +235,51 @@ class AgentRuntimeClient:
         self._timeout_seconds = timeout_seconds
         self._credential_signer = credential_signer
         self._transport = transport
+
+    async def retrieve_public_knowledge(self, *, request_payload: dict, correlation_id: str):
+        from app.adapters.public_knowledge import public_answer, unavailable_answer
+
+        path = "/api/v3/rag/retrievals"
+        body = canonical_json_bytes(request_payload)
+        credential = self._credential_signer.sign(
+            method="POST", path=path, body=body, correlation_id=correlation_id
+        )
+        language = str(request_payload["language"])
+        try:
+            async with asyncio.timeout(self._timeout_seconds):
+                async with httpx.AsyncClient(
+                    base_url=self._base_url,
+                    timeout=self._timeout_seconds,
+                    transport=self._transport,
+                    trust_env=False,
+                    follow_redirects=False,
+                ) as client:
+                    async with client.stream(
+                        "POST",
+                        path,
+                        content=body,
+                        headers={
+                            "Content-Type": "application/json",
+                            "X-Correlation-ID": correlation_id,
+                            SERVICE_CREDENTIAL_HEADER: credential,
+                        },
+                    ) as response:
+                        response.raise_for_status()
+                        raw = bytearray()
+                        async for chunk in response.aiter_bytes():
+                            if len(raw) + len(chunk) > 1_048_576:
+                                raise ValueError("Oversized evidence response")
+                            raw.extend(chunk)
+                return public_answer(
+                    json.loads(raw),
+                    request_id=str(request_payload["request_id"]),
+                    correlation_id=correlation_id,
+                    language=language,
+                )
+        except (httpx.HTTPError, ValueError, TimeoutError):
+            # Never expose provider text, validation inputs or service credentials.
+            # External cancellation propagates; no implicit retry or prompt logging.
+            return unavailable_answer(language)
 
     async def run(
         self,

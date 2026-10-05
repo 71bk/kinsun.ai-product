@@ -1,6 +1,6 @@
 'use client';
 
-import { House, NewspaperClipping } from '@phosphor-icons/react';
+import { BookOpen, House, NewspaperClipping } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -10,9 +10,10 @@ import styles from './FamilyNav.module.css';
 const NAV_ITEMS = [
   { href: '/family', key: 'familyNav.home', icon: House },
   { href: '/family/reports', key: 'familyNav.reports', icon: NewspaperClipping },
+  { href: '/family/knowledge', key: 'familyNav.knowledge', icon: BookOpen },
 ] as const;
 
-/** Persistent nav for the two authenticated family destinations. Scoped to the
+/** Persistent nav for authenticated family destinations. Scoped to the
  *  `(app)` route group so `/family/join` and `/family/sign-in` — reached before
  *  the elder relationship is established — stay exactly as they were. */
 export function FamilyNav({ children }: { children: ReactNode }) {
@@ -21,7 +22,8 @@ export function FamilyNav({ children }: { children: ReactNode }) {
 
   const navigation = NAV_ITEMS.map((item) => {
     const Icon = item.icon;
-    const active = item.href === '/family' ? pathname === '/family' : pathname.startsWith(item.href);
+    const active =
+      item.href === '/family' ? pathname === '/family' : pathname.startsWith(item.href);
 
     return (
       <Link
