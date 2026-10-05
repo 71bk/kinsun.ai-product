@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- 2026-10-05 後續整合：本機 development 已切換 `knowledge-v008-aae34e5095e6`，`RAG_EVIDENCE_V3_ENABLED=true`、`KNOWLEDGE_ROUTER_V2_ENABLED=true`；已實測 v008 啟用及 v004 回退後恢復 v008。localhost:3000／8000／8001 為日常服務，隔離 3110／8110／8111 已停止。最終版面規則 16 題仍為 11 SUCCESS／5 NO_DATA／0 FAILED；200 項 Agent 回歸及 PR #68 程式 CI 通過。瀏覽器實測長者問答／來源／拒答；家屬及專業僅既有登入與權限驗收，未新增公共問答入口。55 筆專業准入來源因版面保守排除；初次兩筆服務備援未再重現但保留紀錄。詳見 [報告及回退方式](docs/project/rag-retrieval-and-quotes-20261005.md)。下方未啟用／未提交敘述為前一階段歷史；production 未啟用，PR #68 仍為依賴 #67 的 draft。
+
 - 2026-10-05 V3 口語檢索／引用修正完成本機驗證：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另外 6 題改述／負例為 4 SUCCESS／2 NO_DATA，分開報告、不當準確率。未改 `.env`、DB 或 activation，未 commit／push；詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。
 - V3 融合分數只作候選排序：弱 trigram 不再 min-max 放大，不沿用 V1／V2 的 0.7 門檻；授權／來源／hash gate 與最多 5 筆不變。生成選擇來源衍生的連續 span ID，仍非語意驗證；有三行以上欄間寬空白的疑似交錯來源不送生成，全部排除則 NO_DATA。不得將正確 span ID 當成 PDF 欄位順序已釐清；不自行拼接或重排來源。
 

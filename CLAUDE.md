@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-05 後續整合：development 日常服務已切到 `knowledge-v008-aae34e5095e6`，V3／Core router v2 均啟用；已演練 v004 回退並恢復 v008。最終 16 題 11 SUCCESS／5 NO_DATA／0 FAILED，200 Agent 回歸及 PR #68 程式 CI 通過；瀏覽器長者問答／來源／拒答通過，家屬與專業未新增問答入口。版面規則保守排除 55 筆專業准入資料，初測兩筆備援未再重現，保留風險紀錄。日常埠 3000／8000／8001；隔離服務已停。詳見 [報告及回退](docs/project/rag-retrieval-and-quotes-20261005.md)。以下「未啟用／未提交」為歷史；production 未啟用，PR #68 依賴 #67、保持 draft。
+
 - 2026-10-05 V3 口語檢索／引用修正：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另 6 題改述／負例為 4 SUCCESS／2 NO_DATA，不能拼成準確率。未改 `.env`、DB、activation 或 commit／push。詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。
 - V3 排序不用 legacy 0.7 門檻，弱 trigram 不再 min-max 放大；角色／用途、來源與 hash gate、最多 5 筆限制不變。生成用來源衍生 span ID 定位連續原文；正確 ID 不代表語意或欄位順序正確。三行以上有欄間寬空白的疑似交錯來源整筆排除於生成；全部排除回 NO_DATA，不重排或拼接 PDF。V1／V2 排序與舊 quote 嚴格比對保留。
 

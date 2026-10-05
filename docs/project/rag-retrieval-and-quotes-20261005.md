@@ -97,3 +97,45 @@ V1／V2 的 SQL 與 relevance floor 不變。
 本機證據：`.rag-work/layout-audit-20261005.json`、`.qa/v008-bff-result.json`、
 `.rag-work/bff-diagnostics-20261005.json`。新 review worktree 從 origin/main 建立，帶入 PR #67
 的三個必要前置提交；僅複製明列的 16 個修正檔案，既有 untracked 產物未加入。
+
+## 整合完成及本機開發切換
+
+後續加入的本機診斷只記固定分類、耗時及 token 數，不記問句、prompt、模型原始輸出或 DSN。
+相同 BFF 問句複測、兩輪真實瀏覽器問答均成功；初次兩次 `RAG_EVIDENCE_FAILED` 的原因未再重現，
+不能宣稱已定位或修復該偶發問題。既有 fail-closed 行為保留，未增加自動重試或放寬引用驗證。
+
+- 最終版面例外後，完整 16 題重新執行：**11 SUCCESS／5 NO_DATA／0 FAILED**，14 次 query embedding、
+  14 次生成；仍不是語意準確率。兩個目標題的答案及來源片段另行檢視，申請流程及未評估先評估的
+  支持來源均保持。報告：`.rag-work/knowledge-v008-post-layout-20261005.json`。
+- BFF 複測各項通過：三角色合成登入／登出、未登入、跨長者權限、CSRF、長者申請／法條、
+  未來補助備援、用藥攔截；報告 `.qa/v008-bff-result.json`。初次報告另存
+  `.qa/v008-bff-initial-result.json`，沒有覆蓋失敗紀錄。
+- 實際瀏覽器由登入表單進入文字陪伴，送出問句並展開官方來源連結。回答檢查 375×812、390×844、
+  430×932、1440×900；兩種拒答各檢查 390×844。六張 `.qa/v008-{oral|unknown|medication}-{width}.png`
+  已目視覆核，DOM `scrollWidth == clientWidth`。初次圖片的浮動連結位置為捲動後 full-page 截圖假象，
+  角色空白為影片未就緒的瞬態；等待 media ready 並捲回頂端後重拍正常，沒有 UI 程式修改。
+  既有拒答提示仍泛稱高風險／醫療安全，對資料不足題不夠精準，列為後續文案改善。
+- `8807785` 程式提交的 PR #68 Gate 1 十項 checks 全過。PR 仍為 draft，依賴未合併的 #67，
+  沒有合併 main，也沒有關閉 #67。原工作區保留，審查 worktree 為 `D:/Hackthon/kinsun-rag-20261005`。
+- 在使用者授權的本機 development 執行 v008 → v004 → v008。日常 3000／8000／8001 的 v008
+  申請與法條問答成功；回退到原 v004／原 flags 後，登入、權限與法條問答成功。
+  `.qa/v008-bff-3000-daily.json`、`v008-bff-3000-rollback.json`、`v008-bff-3000-final.json`
+  記錄各次驗收。日常服務保留，隔離 3110／8110／8111 與暫時診斷 wrapper 已停。
+
+最終只修改本機 `.env` 的 `RAG_POSTGRES_RELEASE_ID`、`RAG_EVIDENCE_V3_ENABLED`、
+`KNOWLEDGE_ROUTER_V2_ENABLED` 三個非秘密設定；未寫入新知識資料、重建向量或更動 v004。
+`.rag-work/v008-development-rollback.json` 只保存這三個設定原值／是否不存在，沒有複製任何 secrets。
+日常 PID 記錄在 `.qa/development-stack-pids.json`，停止腳本先核對監聽埠與程序父子關係。
+
+需要回退時，在原專案根目錄依序執行（本機 ignored 操作輔助檔，不是 production 部署介面）：
+
+```powershell
+.qa/stop_recorded_stack.ps1 -RecordName development-stack-pids.json
+services/agent-runtime/.venv/Scripts/python.exe .rag-work/local_v008_config.py rollback
+.qa/start_v008_stack.ps1 -Everyday -UseEnvironment
+services/core-api/.venv/Scripts/python.exe .qa/v008_bff_smoke.py 3000 rollback
+```
+
+恢復 v008 使用相同流程，將 `rollback` 設定動作改為 `activate`，smoke 模式改 `final`。
+啟動／回退前若設定或 PID 與記錄不符，腳本拒絕操作，應先檢查而非停掉其他服務。
+真人語音、真機、Lighthouse、三角色獨立問答介面與 production 仍未在此次驗收範圍。
