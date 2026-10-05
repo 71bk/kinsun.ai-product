@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-05：文字陪伴提示已區分資料不足／釐清、服務失敗／逾時與醫療安全拒答，安全決策優先；未知原因不猜醫療風險。27 項相關前端測試、typecheck、定向 lint、build、28 項 CI 規則及四種寬度 × 三種合成畫面通過。本機 3000 已更新；後端行為未改。#67／#68 均已合併，詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節。
+
 - 2026-10-05：PR #67 已合併，#68 重建為最新 main 上的增量。V3 新增不含內容的常駐失敗診斷（`rag_v3_failure`），區分階段／typed timeout／JSON／引用／deadline／取消；保留通用失敗回應與取消傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過。詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節；先前偶發備援不能宣稱已修復。
 
 - 2026-10-05 後續整合：development 日常服務已切到 `knowledge-v008-aae34e5095e6`，V3／Core router v2 均啟用；已演練 v004 回退並恢復 v008。最終 16 題 11 SUCCESS／5 NO_DATA／0 FAILED，200 Agent 回歸及 PR #68 程式 CI 通過；瀏覽器長者問答／來源／拒答通過，家屬與專業未新增問答入口。版面規則保守排除 55 筆專業准入資料，初測兩筆備援未再重現，保留風險紀錄。日常埠 3000／8000／8001；隔離服務已停。詳見 [報告及回退](docs/project/rag-retrieval-and-quotes-20261005.md)。以下「未啟用／未提交」為歷史；production 未啟用，PR #68 依賴 #67、保持 draft。

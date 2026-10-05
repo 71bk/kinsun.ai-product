@@ -24,6 +24,40 @@ function safeErrorMessage(error: unknown): string {
   return '目前無法確認這次操作結果，請稍後再試，或到「我的記憶」查看。';
 }
 
+function turnNotice(turn: CompanionTurn): string | null {
+  if (turn.result_status === 'SUCCESS' && turn.safety_decision === 'ALLOW') return null;
+  const reasons = turn.reason_codes ?? [];
+  if (reasons.some((reason) => ['HIGH_RISK_REQUEST', 'UNSAFE_MEDICAL_REPLY'].includes(reason))) {
+    return '這個問題涉及醫療安全，請先與照護人員或醫師確認。';
+  }
+  if (
+    turn.result_status === 'BLOCKED' ||
+    turn.safety_decision === 'BLOCK' ||
+    turn.safety_decision === 'HUMAN_REVIEW'
+  ) {
+    return '這個問題需要進一步確認，請向照護人員或相關專業人員尋求協助。';
+  }
+  if (
+    turn.result_status === 'FAILED' ||
+    reasons.some((reason) =>
+      ['RAG_EVIDENCE_FAILED', 'RAG_EVIDENCE_UNAVAILABLE', 'LATENCY_BUDGET_EXCEEDED'].includes(
+        reason,
+      ),
+    )
+  ) {
+    return '問答服務暫時無法完成回答，請稍後再試。';
+  }
+  if (reasons.includes('RAG_EVIDENCE_CLARIFY')) {
+    return '請再說明您想了解的服務、規定或申請步驟，讓問題更清楚。';
+  }
+  if (reasons.includes('RAG_EVIDENCE_INSUFFICIENT')) {
+    return '目前找到的資料不足以回答，請補充您想了解的服務或問題細節。';
+  }
+  return turn.safety_decision === 'ALLOW'
+    ? null
+    : '目前無法提供完整回答，請參考上方說明，或向照護人員尋求協助。';
+}
+
 export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelProps) {
   const [inputText, setInputText] = useState('');
   const [submittedText, setSubmittedText] = useState('');
@@ -114,6 +148,7 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
   const message = busy
     ? '我正在整理回答，請稍等一下。'
     : (turn?.reply_text ?? '你好啊！今天想聊什麼呢？');
+  const fallbackNotice = turn ? turnNotice(turn) : null;
 
   return (
     <section aria-labelledby="companion-title" className={styles.panel}>
@@ -126,9 +161,7 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
         message={message}
       />
 
-      {turn && (
-        <CompanionReplyAudio key={`${elderId}:${turn.agent_run_id}`} turn={turn} />
-      )}
+      {turn && <CompanionReplyAudio key={`${elderId}:${turn.agent_run_id}`} turn={turn} />}
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.label} id="companion-title" htmlFor="companion-input">
@@ -177,9 +210,7 @@ export function CompanionTextPanel({ apiConfig, elderId }: CompanionTextPanelPro
           </div>
         ))}
         {notice && <p role="status">{notice}</p>}
-        {turn && turn.safety_decision !== 'ALLOW' && (
-          <p className={styles.safetyMessage}>系統已套用安全回覆，沒有把高風險內容當成醫療建議。</p>
-        )}
+        {fallbackNotice && <p className={styles.safetyMessage}>{fallbackNotice}</p>}
         {error && (
           <p className={styles.error} role="alert">
             {error}
