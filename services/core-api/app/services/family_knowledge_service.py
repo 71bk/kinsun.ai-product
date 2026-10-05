@@ -1,14 +1,22 @@
 """Stateless public-information routing with no elder record or memory access."""
 
+from typing import Protocol
 from uuid import uuid4
 
-from app.adapters.agent_runtime import AgentRuntimeClient
 from app.schemas.family_knowledge import FamilyKnowledgeAnswer, FamilyKnowledgeQuestion
 from app.services.knowledge_router import route_knowledge
 
 
+class PublicKnowledgeReader(Protocol):
+    """Application-owned interface implemented by the private-service adapter."""
+
+    async def retrieve_public_knowledge(
+        self, *, request_payload: dict[str, object], correlation_id: str
+    ) -> FamilyKnowledgeAnswer: ...
+
+
 async def answer_public_question(
-    question: FamilyKnowledgeQuestion, *, client: AgentRuntimeClient, correlation_id: str
+    question: FamilyKnowledgeQuestion, *, client: PublicKnowledgeReader, correlation_id: str
 ) -> FamilyKnowledgeAnswer:
     route = route_knowledge(question.question, enabled=True)
     if route.reason_code == "LOOKUP_DECLINED":
