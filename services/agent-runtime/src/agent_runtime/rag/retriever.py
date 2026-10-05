@@ -174,7 +174,10 @@ class Retriever:
         plan = self._hybrid_search.build_public(
             search_request, vector, require_current=require_current
         )
-        hits = _above_relevance_floor(await self._search_backend.search(plan), plan.min_score)
+        # V3 scores rank candidates, not answer confidence. The legacy floor can
+        # exclude the best dense hit when the query has no literal word overlap.
+        # Keep all policy checks below and send at most five sources to generation.
+        hits = await self._search_backend.search(plan)
         results: list[RetrievalResultV3] = []
         seen: set[str] = set()
         for hit in hits:

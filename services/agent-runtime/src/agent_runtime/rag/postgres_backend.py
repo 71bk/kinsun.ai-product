@@ -280,7 +280,13 @@ ORDER BY ranked.score DESC, eligible.chunk_id
 
 
 def _public_knowledge_sql() -> str:
-    """Keep ranking and exact release/profile integrity identical to legacy SQL."""
+    """Bound public candidates by rank, preserving exact release/profile integrity.
+
+    Legacy min-max lexical scores can turn tiny, tied trigram overlaps into 1.0.
+    Use bounded raw lexical evidence in V3. A fused ranking score is not calibrated
+    answer confidence: select up to five candidates downstream, then require the
+    grounded generator to establish question coverage and exact quote anchors.
+    """
     sql = POSTGRES_HYBRID_SEARCH_SQL
     sql = sql.replace(
         "    SELECT projection.*, embedding.embedding\n",
@@ -320,6 +326,24 @@ def _public_knowledge_sql() -> str:
     sql = sql.replace(
         "    TRUE AS is_official_source,",
         "    (eligible.provenance -> 'is_official_source' = 'true'::jsonb) AS is_official_source,",
+    )
+    lexical_start = sql.index("lexical_normalized AS (")
+    lexical_end = sql.index("vector_raw AS (", lexical_start)
+    sql = (
+        sql[:lexical_start]
+        + """lexical_normalized AS (
+    SELECT chunk_id, raw_score, least(1.0, raw_score) AS normalized_score
+    FROM lexical_raw
+),
+"""
+        + sql[lexical_end:]
+    )
+    rank_start = sql.index("    WHERE score >= CAST(:min_score")
+    rank_end = sql.index("    ORDER BY score DESC, chunk_id", rank_start)
+    sql = (
+        sql[:rank_start]
+        + "    WHERE raw_vector_score > 0 OR raw_lexical_score > 0\n"
+        + sql[rank_end:]
     )
     sql = sql.replace(
         "    eligible.current_status,",

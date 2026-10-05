@@ -1,5 +1,8 @@
 # RAG 簡化第 4 批：第一輪真實資料測試
 
+後續：口語檢索與專業題引用已於 [2026-10-05 修正並複測](rag-retrieval-and-quotes-20261005.md)。
+最終原 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED，未 activation；以下保留 10 月 2 日當時紀錄。
+
 本批完成既有 v004 資料的唯讀檢查、embedding cache 重用驗證，以及 16 題真實 Hybrid／Gemini
 基準測試。三位 GPT-6.1 Sol subagents 分工 cache 匯出、實測工具、題目與答案覆核，主代理整合驗證。
 結果暴露生成、引用、流程完整性與角色 metadata 問題，**尚未通過回答品質驗收**。

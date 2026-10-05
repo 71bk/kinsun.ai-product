@@ -166,6 +166,10 @@ async def test_grounded_json_turn_has_bounded_token_overhead_budget() -> None:
     }
     assert "synthetic" not in str(schema)
     assert schema["properties"]["answer_text"]["type"] == ["string", "null"]
+    support = schema["properties"]["support_quotes"]["items"]
+    assert set(support["required"]) == {"chunk_id", "span_id"}
+    assert set(support["properties"]) == {"chunk_id", "span_id"}
+    assert support["properties"]["span_id"] == {"type": "string"}
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+- 2026-10-05 V3 口語檢索／引用修正：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另 6 題改述／負例為 4 SUCCESS／2 NO_DATA，不能拼成準確率。未改 `.env`、DB、activation 或 commit／push。詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。
+- V3 排序不用 legacy 0.7 門檻，弱 trigram 不再 min-max 放大；角色／用途、來源與 hash gate、最多 5 筆限制不變。生成用來源衍生 span ID 定位連續原文；正確 ID 不代表語意或欄位順序正確。三行以上有欄間寬空白的疑似交錯來源整筆排除於生成；全部排除回 NO_DATA，不重排或拼接 PDF。V1／V2 排序與舊 quote 嚴格比對保留。
+
 - 2026-10-02 使用者明確授權「匯入開始」後，`knowledge-v008-aae34e5095e6` 已以單一交易新增 658 projections＋658 embeddings；回讀驗證 counts／profile／hash／向量與兩份完成 receipt 通過，v004 的 release／projections／vectors 指紋不變。未改 `.env`、未 activation；新版題集結果見第 4 批文件末節。
 - 2026-10-02 第 4 批後續：V3 加 Gemini schema、內容不落盤的生成診斷與保守 PDF 縮排行整理；原 16 題複測為 8 SUCCESS／6 NO_DATA／2 FAILED，仍非品質驗收。保留 tab／行內空格／段落邊界、數字與英文識別碼；不能全域去空白或 NFKC 後就聲稱引用正確。詳見第 4 批文件末節。
 - 本機 `knowledge-v008-aae34e5095e6` 為 658 筆，僅相對 v007 增加 BA13 單筆 family_caregiver audience；可選 `--audience-patches` 綁原 source／text hash／roles。`embed_knowledge.py` 預設 dry-run，已補 27 筆向量並重用 631 筆，完整 cache 驗證 658 available／0 required。尚未新增 DB candidate、改 .env 或 activation。

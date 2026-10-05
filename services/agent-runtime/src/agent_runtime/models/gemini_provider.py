@@ -136,10 +136,10 @@ def _grounded_response_json_schema() -> dict[str, Any]:
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
-                    "required": ["chunk_id", "quote"],
+                    "required": ["chunk_id", "span_id"],
                     "properties": {
                         "chunk_id": identifier,
-                        "quote": {"type": "string"},
+                        "span_id": {"type": "string"},
                     },
                 },
             },
