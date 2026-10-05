@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/PublicKnowledgeAnswerV1.json",
+  "title": "PublicKnowledgeAnswerV1",
+  "description": "Shared public-only DTO, preserving the established family contract shape.",
+  "$ref": "https://kinsun.ai/contracts/schemas/domain/FamilyKnowledgeAnswerV1.json"
+}

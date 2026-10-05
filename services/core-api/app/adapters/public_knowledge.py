@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.schemas.family_knowledge import FamilyKnowledgeAnswer, PublicKnowledgeSource
+from app.schemas.public_knowledge import PublicKnowledgeAnswer, PublicKnowledgeSource
 
 
 class _Source(BaseModel):
@@ -83,8 +83,8 @@ class _Envelope(BaseModel):
     meta: _Meta
 
 
-def unavailable_answer(language: str) -> FamilyKnowledgeAnswer:
-    return FamilyKnowledgeAnswer(
+def unavailable_answer(language: str) -> PublicKnowledgeAnswer:
+    return PublicKnowledgeAnswer(
         status="UNAVAILABLE",
         answer=(
             "The knowledge service could not complete your answer. Please try again later."
@@ -126,9 +126,9 @@ def public_answer(payload: object, *, request_id: str, correlation_id: str, lang
                 "Please add details about the service or question.",
             ),
         }
-        return FamilyKnowledgeAnswer(status=status, answer=messages[status][language == "en-US"])
+        return PublicKnowledgeAnswer(status=status, answer=messages[status][language == "en-US"])
     body, separator, _ = (evidence.answer_text or "").rpartition("\n\n引用來源：\n")
-    return FamilyKnowledgeAnswer(
+    return PublicKnowledgeAnswer(
         status="PARTIAL" if evidence.decision == "PARTIAL" else "ANSWER",
         answer=(body if separator else evidence.answer_text or "").strip(),
         sources=[source.public_source() for source in evidence.results],

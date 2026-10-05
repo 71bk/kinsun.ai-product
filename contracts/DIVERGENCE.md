@@ -8,6 +8,13 @@
 
 ## 已在本次收斂
 
+### 2026-10-05 專業公開知識問答
+
+- 新增 `POST /api/v1/staff/knowledge/questions`，限 active 日照／居服角色、固定 care_professional 受眾。
+- 重用公開問答的 question／answer 形狀與官方引用限制；不暴露個人資料、不擴張個案 scope。
+- 新增契約 alias、範例與 live verifier；非 production 與既有知識 gate 不變。
+- 實作及驗證見 `docs/project/staff-public-knowledge-20261005.md`。
+
 ### 2026-10-05 家屬公開知識問答
 
 - 已實作 `POST /api/v1/family/knowledge/questions`，active family 帳號限定；固定公開知識受眾，不讀取個人照護資料。

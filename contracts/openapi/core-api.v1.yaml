@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "kinsun.ai Core API",
-    "version": "1.10.0",
+    "version": "1.11.0",
     "summary": "Implemented Core Domain, Kinsun authentication, LINE linking, consent, security, assisted Elder Session, professional Care Action, human-gated Care Action Candidate and outbox APIs.",
     "description": "Current executable Core API contract. Every protected operation re-evaluates tenant, elder, relationship or assignment scope. Core-owned opaque App Sessions authenticate browser actors after Kinsun Email/Password or direct Google/LINE OIDC. LINE webhooks require a raw-body HMAC signature; Core stores keyed identity digests and, only for scheduled push, an authenticated encrypted destination. Stateless family knowledge queries require an active family account and use only public official information, without elder context."
   },
@@ -8417,6 +8417,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "../schemas/common/FamilyKnowledgeAnswerEnvelopeV1.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundOrForbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/staff/knowledge/questions": {
+      "post": {
+        "tags": [
+          "staff-knowledge"
+        ],
+        "summary": "Ask a professional public long-term-care question",
+        "operationId": "ask_staff_knowledge_api_v1_staff_knowledge_questions_post",
+        "description": "Active DAYCARE_CARE_WORKER or HOME_CARE_WORKER only. The server fixes care_professional audience; no elder records, assignments, history or writes are loaded. Non-production and existing knowledge gates only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/domain/PublicKnowledgeQuestionV1.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public answer or explicit fallback; never private retrieval payloads.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/common/PublicKnowledgeAnswerEnvelopeV1.json"
                 }
               }
             }

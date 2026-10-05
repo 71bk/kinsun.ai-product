@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-05：#70 已合併（`01165c3`）；專業公開問答 `/staff/knowledge` 已實作，限 ACTIVE DAYCARE_CARE_WORKER／HOME_CARE_WORKER，固定 care_professional，無個案資料存取或寫入。共用家屬 DTO／service／UI，保留原家屬契約與角色隔離。74 後端、83 前端、68 組合成畫面及居服 demo 真實回答／引用／權限驗收完成；初次法條定義範例資料不足保留於報告，改為中性法條範例。55 筆來源修復與 production 未包含。詳見 `docs/project/staff-public-knowledge-20261005.md`。
+
 - 2026-10-05：#69 已合併，家屬公開長照問答已實作於 `/family/knowledge`，ACTIVE FAMILY_MEMBER 限定、固定公開受眾，不查個人紀錄、不儲存問答；僅在非 production 及既有知識開關啟用時可用。詳見 `docs/project/family-public-knowledge-20261005.md`；前階段「未新增家屬入口」已由本次進度取代。
 
 - 2026-10-05：文字陪伴提示已區分資料不足／釐清、服務失敗／逾時與醫療安全拒答，安全決策優先；未知原因不猜醫療風險。27 項相關前端測試、typecheck、定向 lint、build、28 項 CI 規則及四種寬度 × 三種合成畫面通過。本機 3000 已更新；後端行為未改。#67／#68 均已合併，詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節。
