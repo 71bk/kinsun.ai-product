@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Literal
 from agent_runtime.context.manifest import build_context_manifest, estimate_tokens
 from agent_runtime.contracts.models import AgentRunRequest, ContextItem, ContextManifest
 from agent_runtime.models.provider import ModelProvider
+from agent_runtime.rag.diagnostics import mark_stage, record_exception, record_validation_failure
 
 if TYPE_CHECKING:
     from agent_runtime.rag.evidence_models import RetrievalResultV3
@@ -370,12 +371,17 @@ async def generate_grounded_answer(
     if not results:
         return GroundedAnswer("INSUFFICIENT", reason_code="GROUNDED_AMBIGUOUS_LAYOUT")
     try:
+        mark_stage("context")
         manifest = build_grounded_context(request, results)
+        mark_stage("generation")
         raw = await provider.generate_reply(request, manifest, language)
+        mark_stage("validation")
         return parse_grounded_answer(raw, results)
     except GroundedAnswerError as exc:
+        record_validation_failure(str(exc))
         return GroundedAnswer("FAILED", reason_code=str(exc))
-    except Exception:
+    except Exception as exc:
+        record_exception(exc)
         # Provider exceptions can echo prompts/credentials. Cancellation is a
         # BaseException and propagates to the outer execution budget.
         return GroundedAnswer("FAILED", reason_code="GROUNDED_GENERATION_FAILED")

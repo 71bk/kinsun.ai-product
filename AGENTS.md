@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- 2026-10-05 收尾：PR #67 已合併；#68 已從最新 main 重建為增量分支，補上 V3 常駐 `rag_v3_failure` 日誌。只記錄 request ID 的 SHA-256 前 16 碼、階段、固定分類及耗時，不記錄問句／來源／模型原文／例外或 secrets。區分檢索、模型 typed timeout、JSON／引用驗證、整體 deadline 與外部取消；取消仍向上傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過；合併狀態以 GitHub 為準。初次兩筆備援原因仍未確認，詳見本次報告末節。
+
 - 2026-10-05 後續整合：本機 development 已切換 `knowledge-v008-aae34e5095e6`，`RAG_EVIDENCE_V3_ENABLED=true`、`KNOWLEDGE_ROUTER_V2_ENABLED=true`；已實測 v008 啟用及 v004 回退後恢復 v008。localhost:3000／8000／8001 為日常服務，隔離 3110／8110／8111 已停止。最終版面規則 16 題仍為 11 SUCCESS／5 NO_DATA／0 FAILED；200 項 Agent 回歸及 PR #68 程式 CI 通過。瀏覽器實測長者問答／來源／拒答；家屬及專業僅既有登入與權限驗收，未新增公共問答入口。55 筆專業准入來源因版面保守排除；初次兩筆服務備援未再重現但保留紀錄。詳見 [報告及回退方式](docs/project/rag-retrieval-and-quotes-20261005.md)。下方未啟用／未提交敘述為前一階段歷史；production 未啟用，PR #68 仍為依賴 #67 的 draft。
 
 - 2026-10-05 V3 口語檢索／引用修正完成本機驗證：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另外 6 題改述／負例為 4 SUCCESS／2 NO_DATA，分開報告、不當準確率。未改 `.env`、DB 或 activation，未 commit／push；詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。

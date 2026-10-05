@@ -139,3 +139,28 @@ services/core-api/.venv/Scripts/python.exe .qa/v008_bff_smoke.py 3000 rollback
 恢復 v008 使用相同流程，將 `rollback` 設定動作改為 `activate`，smoke 模式改 `final`。
 啟動／回退前若設定或 PID 與記錄不符，腳本拒絕操作，應先檢查而非停掉其他服務。
 真人語音、真機、Lighthouse、三角色獨立問答介面與 production 仍未在此次驗收範圍。
+
+## 2026-10-05 合併整理與常駐失敗診斷
+
+使用者授權收尾後，PR #67 已合併（main `fdb3562`）。由該 main 建立乾淨分支，僅 cherry-pick
+#68 的兩個增量提交，再補此診斷；#68 不再依賴未合併 PR，舊工作區及歷史證據保留。
+GitHub 上 #68 的最新 checks／合併紀錄為最終狀態依據。
+
+`EvidenceService.retrieve_v3` 現在於失敗邊界輸出一筆 warning JSON，event 為 `rag_v3_failure`。
+日常 Uvicorn logger 可直接呈現，不需 `.qa` wrapper 或另外開啟診斷 flag。欄位只有：
+
+- `request_tag`：request_id 的 SHA-256 前 16 碼；排查時可對已知 request_id 計算同值，並非原始 ID。
+- `stage`：safety／retrieval／context／generation／validation／response。
+- `code`：對應階段的 FAILED／TIMEOUT，或 CONTEXT_REJECTED、JSON_REJECTED、
+  CITATION_REJECTED、VALIDATION_REJECTED、PIPELINE_FAILED、DEADLINE_EXCEEDED、REQUEST_CANCELLED。
+- `elapsed_ms`：本次 V3 服務處理耗時；不是整個 BFF 請求耗時。
+
+只依 exception 型別及最多八層明確 cause 鏈辨識 TimeoutError／httpx timeout；沒有 typed cause
+的 SDK 錯誤仍為一般失敗，不解析上游訊息猜測原因。30 秒服務 deadline 與外部取消分開，
+取消保持向上傳遞。JSON／引用錯誤採固定集合分類，未知理由不輸出原文。正常無資料與安全拒答
+不當成基礎設施失敗。未加 retry，未放寬來源、權限、引用或回應契約。
+
+離線合成故障驗證：203 項相關回歸、28 項 CI 工具測試、Agent Ruff check／format 通過；
+涵蓋 retrieval／generation／context／response 失敗、wrapped timeout、JSON／引用拒絕、
+deadline／取消、併發 context 隔離及敏感文字不出現在日誌。此次沒有重跑真實 16 題，
+也沒有用合成測試宣稱前述兩筆偶發備援已查明或修復。

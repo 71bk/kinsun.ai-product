@@ -1,14 +1,18 @@
 """Scripted offline natural RAG tests; not real model-quality evaluation."""
 
+import asyncio
+import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
 import agent_runtime.app as app_module
 from agent_runtime.app import build_configured_evidence_service
+from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.rag.evidence_models import (
     RetrievalRequestV3,
     RetrievalResponseV3,
@@ -84,6 +88,171 @@ def service(loader=None, provider=None):
         release_id="local-release",
         embedding_profile_id="google-1024",
     )
+
+
+def failure_events(caplog):
+    records = [r for r in caplog.records if r.name == "agent_runtime.rag.diagnostics"]
+    assert all(r.exc_info is None and r.stack_info is None for r in records)
+    return [json.loads(r.getMessage()) for r in records]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("phase", ["retrieval", "generation", "json", "citation"])
+async def test_failure_diagnostics_classify_without_content(caplog, phase):
+    class InvalidJson(Provider):
+        async def generate_reply(self, *args):
+            return "private-model-output"
+
+    loader, provider = Loader(), Provider()
+    expected = (phase, f"{phase.upper()}_FAILED")
+    if phase == "retrieval":
+        loader.failure = True
+    elif phase == "generation":
+        provider.failure = True
+    elif phase == "json":
+        provider = InvalidJson()
+        expected = ("validation", "JSON_REJECTED")
+    else:
+        provider.output["support_quotes"][0]["quote"] = "private-forged-quote"
+        expected = ("validation", "CITATION_REJECTED")
+    req = request(request_id="private-request-id")
+    response = await service(loader, provider).retrieve_v3(req)
+    assert response.status == "FAILED"
+    [event] = failure_events(caplog)
+    assert (event["stage"], event["code"]) == expected
+    assert event["request_tag"] == hashlib.sha256(req.request_id.encode()).hexdigest()[:16]
+    assert event["elapsed_ms"] >= 0
+    assert set(event) == {"event", "request_tag", "stage", "code", "elapsed_ms"}
+    assert "private-" not in caplog.text
+    assert req.query not in caplog.text
+    assert TEXT not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_wrapped_provider_timeout_is_classified_without_traceback(caplog):
+    class TimedOut(Provider):
+        async def generate_reply(self, *args):
+            try:
+                raise httpx.ReadTimeout("private-url-and-prompt")
+            except httpx.ReadTimeout as exc:
+                raise ModelDependencyError("private-wrapper") from exc
+
+    assert (await service(provider=TimedOut()).retrieve_v3(request())).status == "FAILED"
+    [event] = failure_events(caplog)
+    assert (event["stage"], event["code"]) == ("generation", "GENERATION_TIMEOUT")
+    assert "private-" not in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("external", [False, True])
+async def test_deadline_and_cancellation_are_distinct_and_emit_once(caplog, monkeypatch, external):
+    entered = asyncio.Event()
+
+    class Blocked(Provider):
+        async def generate_reply(self, *args):
+            entered.set()
+            await asyncio.Event().wait()
+
+    if not external:
+        original_timeout = asyncio.timeout
+        monkeypatch.setattr(asyncio, "timeout", lambda _: original_timeout(0.03))
+    task = asyncio.create_task(service(provider=Blocked()).retrieve_v3(request()))
+    await entered.wait()
+    if external:
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    else:
+        assert (await task).status == "FAILED"
+    [event] = failure_events(caplog)
+    assert event["stage"] == "generation"
+    assert event["code"] == ("REQUEST_CANCELLED" if external else "DEADLINE_EXCEEDED")
+    caplog.clear()
+    assert (await service().retrieve_v3(request())).status == "SUCCESS"
+    assert failure_events(caplog) == []
+
+
+@pytest.mark.asyncio
+async def test_concurrent_requests_keep_failure_stage_and_tag_isolated(caplog):
+    entered, release = asyncio.Event(), asyncio.Event()
+
+    class Interleaved(Provider):
+        async def generate_reply(self, *args):
+            entered.set()
+            await release.wait()
+            raise RuntimeError("private-interleaved-prompt")
+
+    first = asyncio.create_task(
+        service(provider=Interleaved()).retrieve_v3(request(request_id="generation-request"))
+    )
+    await entered.wait()
+    second = await service(loader=Loader(failure=True)).retrieve_v3(
+        request(request_id="retrieval-request")
+    )
+    release.set()
+    assert (await first).status == second.status == "FAILED"
+    events = failure_events(caplog)
+    assert len(events) == 2
+    for event, stage in zip(events, ["retrieval", "generation"], strict=True):
+        assert event["stage"] == stage
+        assert event["code"] == f"{stage.upper()}_FAILED"
+        assert event["request_tag"] == hashlib.sha256(f"{stage}-request".encode()).hexdigest()[:16]
+    assert "private-" not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_unknown_validation_reason_never_enters_logs(caplog, monkeypatch):
+    import agent_runtime.rag.grounded_answer as grounded
+
+    def rejected(*args):
+        raise grounded.GroundedAnswerError("private-unknown-validation-reason")
+
+    monkeypatch.setattr(grounded, "parse_grounded_answer", rejected)
+    assert (await service().retrieve_v3(request())).status == "FAILED"
+    [event] = failure_events(caplog)
+    assert event["code"] == "VALIDATION_REJECTED"
+    assert "private-" not in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("phase", ["retrieval", "context", "response"])
+async def test_other_pipeline_failures_keep_their_actual_stage(caplog, monkeypatch, phase):
+    import agent_runtime.rag.evidence_service as evidence
+    import agent_runtime.rag.grounded_answer as grounded
+
+    loader = Loader()
+    if phase == "retrieval":
+
+        async def fail(*args, **kwargs):
+            raise TimeoutError("private-retrieval-timeout")
+
+        monkeypatch.setattr(loader, "load_public_candidates", fail)
+        expected = "RETRIEVAL_TIMEOUT"
+    elif phase == "context":
+
+        def fail(*args, **kwargs):
+            raise grounded.GroundedAnswerError("private-context-error")
+
+        monkeypatch.setattr(grounded, "build_grounded_context", fail)
+        expected = "CONTEXT_REJECTED"
+    else:
+
+        def fail(*args, **kwargs):
+            raise ValueError("private-response-error")
+
+        monkeypatch.setattr(evidence, "append_citations", fail)
+        expected = "RESPONSE_FAILED"
+    assert (await service(loader=loader).retrieve_v3(request())).status == "FAILED"
+    [event] = failure_events(caplog)
+    assert (event["stage"], event["code"]) == (phase, expected)
+    assert "private-" not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_expected_no_data_and_safety_denial_are_not_failure_logs(caplog):
+    assert (await service(loader=Loader(rows=[])).retrieve_v3(request())).status == "NO_DATA"
+    assert (await service().retrieve_v3(request("我要自行停藥，怎麼做？"))).status == "NO_DATA"
+    assert failure_events(caplog) == []
 
 
 @pytest.mark.asyncio
