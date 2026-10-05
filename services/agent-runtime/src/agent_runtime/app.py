@@ -15,6 +15,7 @@ from agent_runtime.models.mock_provider import MockModelProvider
 from agent_runtime.models.openai_compatible_provider import OpenAICompatibleModelProvider
 from agent_runtime.models.provider import ModelProvider
 from agent_runtime.orchestration.orchestrator import AgentOrchestrator
+from agent_runtime.rag.evidence_service import EvidenceService
 from agent_runtime.rag.models import RagRuntimeSettings
 from agent_runtime.rag.retriever import build_retriever, close_retriever
 from agent_runtime.rag.runtime_policy import load_source_family_runtime_policy
@@ -98,6 +99,13 @@ def build_configured_rag_retriever():
     settings = get_settings()
     if settings.RAG_MODE.casefold() != "staging":
         return None
+    if settings.RAG_EVIDENCE_V3_ENABLED and (
+        settings.APP_ENV.strip().casefold() == "production"
+        or settings.RAG_SEARCH_BACKEND != "postgresql"
+        or settings.RAG_STAGING_ALLOW_ALL_AUDIENCES
+    ):
+        logger.warning("natural_rag_configuration_rejected")
+        return None
     try:
         provider_environment = {
             key: str(value)
@@ -145,6 +153,13 @@ def build_configured_rag_retriever():
             logger.warning("staging_rag_all_audiences_enabled")
         policy_path = settings.RAG_SOURCE_FAMILY_POLICY_PATH
         policy_sha256 = settings.RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256
+        if settings.RAG_EVIDENCE_V3_ENABLED:
+            # The natural path binds its release/profile directly and never loads
+            # the historical manual support policy. V1/V2 retain their ordinary
+            # strict gates; the legacy overlay is loaded only when V3 is disabled.
+            if policy_path is not None or policy_sha256 is not None:
+                logger.info("legacy_source_family_policy_unused_in_v3")
+            policy_path = policy_sha256 = None
         if (policy_path is None) != (policy_sha256 is None):
             raise ValueError("source-family runtime policy path and SHA-256 are both required")
         source_family_policy = None
@@ -192,6 +207,37 @@ def _resolve_config_path(configured_path: str) -> Path:
     if cwd_candidate.is_file():
         return cwd_candidate
     return (REPOSITORY_ROOT / path).resolve()
+
+
+def build_configured_evidence_service(settings: Settings, retriever, provider=None):
+    """V3 is opt-in; an invalid opt-in must never silently select V2."""
+    if not settings.RAG_EVIDENCE_V3_ENABLED:
+        return None
+    if (
+        settings.APP_ENV.strip().casefold() == "production"
+        or settings.RAG_MODE.casefold() != "staging"
+        or settings.RAG_SEARCH_BACKEND != "postgresql"
+        or retriever is None
+        or provider is None
+        or settings.RAG_STAGING_ALLOW_ALL_AUDIENCES
+        or not settings.RAG_POSTGRES_RELEASE_ID
+        or not settings.RAG_POSTGRES_EMBEDDING_PROFILE_ID
+    ):
+        raise ValueError("V3 knowledge requires a complete staging PostgreSQL release/profile")
+    try:
+        if (
+            retriever.public_release_id != settings.RAG_POSTGRES_RELEASE_ID
+            or retriever.public_embedding_profile_id != settings.RAG_POSTGRES_EMBEDDING_PROFILE_ID
+        ):
+            raise ValueError("retriever release/profile binding mismatch")
+        return EvidenceService(
+            release_id=settings.RAG_POSTGRES_RELEASE_ID,
+            embedding_profile_id=settings.RAG_POSTGRES_EMBEDDING_PROFILE_ID,
+            retriever=retriever,
+            provider=provider,
+        )
+    except Exception:
+        raise ValueError("V3 knowledge configuration is unavailable or invalid") from None
 
 
 def validate_production_configuration(settings: Settings) -> None:
@@ -297,6 +343,9 @@ def create_app() -> FastAPI:
         max_total_tools=settings.MAX_TOTAL_TOOLS,
     )
     app.state.rag_retriever = build_configured_rag_retriever()
+    app.state.rag_evidence_service = build_configured_evidence_service(
+        settings, app.state.rag_retriever, app.state.provider
+    )
     app.state.service_identity_replay_store = build_service_identity_replay_store(settings)
     app.state.service_identity_verifier = ServiceCredentialVerifier(
         secret=settings.SERVICE_IDENTITY_HMAC_SECRET.get_secret_value(),

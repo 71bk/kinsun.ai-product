@@ -91,6 +91,7 @@ class FakeConnection:
     def __init__(self, rows: list[Mapping[str, object]]) -> None:
         self._rows = rows
         self.statement: object | None = None
+        self.statements: list[tuple[str, Mapping[str, object]]] = []
         self.parameters: Mapping[str, object] | None = None
 
     async def __aenter__(self) -> FakeConnection:
@@ -105,6 +106,7 @@ class FakeConnection:
         parameters: Mapping[str, object],
     ) -> FakeExecuteResult:
         self.statement = statement
+        self.statements.append((str(statement), parameters))
         self.parameters = parameters
         return FakeExecuteResult(self._rows)
 
@@ -163,6 +165,11 @@ async def test_postgres_backend_uses_one_parameterized_bounded_query() -> None:
     assert engine.connection.parameters["allow_all_audiences"] is True
     assert ":allow_all_audiences" in rendered_sql
     assert str(engine.connection.parameters["query_vector"]).startswith("[")
+    assert engine.connection.statements[:2] == [
+        ("SET TRANSACTION READ ONLY", {}),
+        ("SELECT set_config('statement_timeout', :timeout, true)", {"timeout": "10000"}),
+    ]
+    assert len(engine.connection.statements) == 3
 
 
 @pytest.mark.asyncio
@@ -296,6 +303,7 @@ def test_postgres_engine_is_read_only_and_bounded(monkeypatch: pytest.MonkeyPatc
     engine = build_postgres_engine(make_postgres_settings())
 
     assert engine is sentinel
+    assert captured["hide_parameters"] is True
     assert captured["pool_size"] == 1
     assert captured["max_overflow"] == 4
     assert captured["pool_pre_ping"] is True
@@ -303,6 +311,28 @@ def test_postgres_engine_is_read_only_and_bounded(monkeypatch: pytest.MonkeyPatc
     server_settings = connect_args["server_settings"]
     assert server_settings["default_transaction_read_only"] == "on"
     assert server_settings["statement_timeout"] == "10000"
+
+
+@pytest.mark.parametrize(
+    "vector",
+    [
+        [0.0, -0.0],
+        [True, 0.5],
+        [False, 0.5],
+        [float("nan"), 0.5],
+        [float("inf"), 0.5],
+        [float("-inf"), 0.5],
+        ["1", 0.5],
+    ],
+)
+def test_query_vector_integrity_rejects_invalid_cosine_inputs(vector):
+    # Offline adapter boundary; no claim that PostgreSQL cosine was executed.
+    with pytest.raises(PostgresSearchBackendError):
+        postgres_module._vector_literal(vector, 2)
+
+
+def test_nonzero_signed_vector_is_preserved():
+    assert postgres_module._vector_literal([-0.25, 0.5, 0.0], 3) == "[-0.25,0.5,0]"
     assert POSTGRES_HYBRID_SEARCH_SQL.count(":release_id") >= 1
 
 
@@ -379,3 +409,19 @@ def test_retriever_factory_selects_postgres_without_building_opensearch(
         "postgres": settings.postgres,
         "embedding": settings.embedding,
     }
+
+
+@pytest.mark.asyncio
+async def test_readonly_setup_failure_prevents_search(monkeypatch):
+    engine = FakeEngine([])
+    calls = []
+
+    async def fail_execute(statement, parameters):
+        calls.append(str(statement))
+        raise RuntimeError("synthetic private driver details")
+
+    monkeypatch.setattr(engine.connection, "execute", fail_execute)
+    backend = PostgresSearchBackend(engine, make_postgres_settings(), make_embedding_settings())
+    with pytest.raises(PostgresSearchBackendError, match="RuntimeError"):
+        await backend.search(make_plan())
+    assert calls == ["SET TRANSACTION READ ONLY"]

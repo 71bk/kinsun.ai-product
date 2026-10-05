@@ -9,8 +9,13 @@ from google.genai import types
 
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
-from agent_runtime.models.prompting import build_model_prompts
+from agent_runtime.models.generation_diagnostics import (
+    record_generation_diagnostics,
+    record_generation_failure,
+)
+from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
 from agent_runtime.models.provider import ModelProvider
+from agent_runtime.rag.grounded_answer import GROUNDED_SOURCE_TYPE
 
 _VERTEX_EXPRESS_KEY_PREFIX = "AQ."
 
@@ -63,8 +68,13 @@ class GeminiModelProvider(ModelProvider):
         try:
             generation_config: dict[str, Any] = {
                 "system_instruction": system_prompt,
-                "max_output_tokens": self.max_tokens,
+                "max_output_tokens": grounded_generation_token_limit(
+                    context_manifest, self.max_tokens
+                ),
             }
+            if any(item.source_type == GROUNDED_SOURCE_TYPE for item in context_manifest.items):
+                generation_config["response_mime_type"] = "application/json"
+                generation_config["response_json_schema"] = _grounded_response_json_schema()
             if self.model_id == "gemini-3.6-flash":
                 generation_config["thinking_config"] = types.ThinkingConfig(
                     include_thoughts=False,
@@ -78,9 +88,11 @@ class GeminiModelProvider(ModelProvider):
                 config=types.GenerateContentConfig(**generation_config),
             )
         except Exception as exc:
+            record_generation_failure(exc)
             # Google errors can contain project metadata or echo request content.
             # Only the exception class crosses the provider boundary.
             raise ModelDependencyError(f"Gemini reply failed: {type(exc).__name__}") from exc
+        record_generation_diagnostics(response)
         return _extract_reply_text(response)
 
     async def aclose(self) -> None:
@@ -101,3 +113,40 @@ def _extract_reply_text(response: Any) -> str:
     if len(reply) > 4000:
         raise ModelDependencyError("Gemini response exceeds the reply limit")
     return reply
+
+
+def _grounded_response_json_schema() -> dict[str, Any]:
+    """Constrain shape; the parser validates envelope and source anchors."""
+    identifier = {"type": "string"}
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["status", "answer_text", "citation_ids", "support_quotes", "missing_facets"],
+        "properties": {
+            "status": {"type": "string", "enum": ["ANSWER", "PARTIAL", "INSUFFICIENT", "CLARIFY"]},
+            "answer_text": {"type": ["string", "null"]},
+            "citation_ids": {
+                "type": "array",
+                "items": identifier,
+                "maxItems": 5,
+            },
+            "support_quotes": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["chunk_id", "quote"],
+                    "properties": {
+                        "chunk_id": identifier,
+                        "quote": {"type": "string"},
+                    },
+                },
+            },
+            "missing_facets": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {"type": "string"},
+            },
+        },
+    }

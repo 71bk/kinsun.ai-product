@@ -30,6 +30,7 @@ async def run_agent(
     response = await orchestrator.run(
         payload,
         rag_retriever=getattr(request.app.state, "rag_retriever", None),
+        evidence_retriever=getattr(request.app.state, "rag_evidence_service", None),
     )
     return _envelope(response)
 

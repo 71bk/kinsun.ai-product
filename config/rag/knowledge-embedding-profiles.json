@@ -1,0 +1,15 @@
+{
+  "schema_version": "knowledge-embedding-profiles-v1",
+  "target_profile_id": "ep-google-00a12ec45096fa9d97d9e9b6",
+  "profiles": [
+    {
+      "profile_id": "ep-google-00a12ec45096fa9d97d9e9b6",
+      "provider": "google",
+      "model_id": "gemini-embedding-001",
+      "model_version": "gemini-embedding-001",
+      "document_task_type": "RETRIEVAL_DOCUMENT",
+      "dimension": 1024,
+      "config_version": "1.0.0"
+    }
+  ]
+}

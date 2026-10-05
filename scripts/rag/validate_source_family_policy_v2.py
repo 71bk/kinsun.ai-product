@@ -17,7 +17,7 @@ def _load_validators():
     from rag_ingestion.source_family_policy_v2 import (  # noqa: PLC0415
         validate_owner_source_family_policy_acceptance,
         validate_source_family_policy_v2,
-        validate_source_family_policy_v2_audit_preflight,
+        validate_source_family_policy_v2_audit_snapshot,
         validate_source_family_policy_v2_build_preflight_snapshot,
     )
 
@@ -25,18 +25,20 @@ def _load_validators():
         validate_owner_source_family_policy_acceptance,
         validate_source_family_policy_v2_build_preflight_snapshot,
         validate_source_family_policy_v2,
-        validate_source_family_policy_v2_audit_preflight,
+        validate_source_family_policy_v2_audit_snapshot,
     )
 
 
 def main() -> int:
     root = _repository_root()
-    validate_acceptance, validate_preflight, validate_policy, validate_audit = _load_validators()
+    validate_acceptance, validate_preflight, validate_policy, validate_audit = (
+        _load_validators()
+    )
     print(
         json.dumps(
             {
                 "acceptance": validate_acceptance(root),
-                "audit_preflight": validate_audit(root),
+                "audit_snapshot": validate_audit(root),
                 "external_sync": "NOT_AUTHORIZED",
                 "policy": validate_policy(root),
                 "preflight": validate_preflight(root),

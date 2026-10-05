@@ -84,7 +84,6 @@ class WorkflowTests(unittest.TestCase):
                 "install-rag",
                 "rag-lint",
                 "rag-format",
-                "rag-policy-audit",
                 "rag-tests",
             ],
             "contracts": [
@@ -122,6 +121,22 @@ class WorkflowTests(unittest.TestCase):
             "--ignore=services/core-api/tests/integration/test_migrations.py",
             integration,
         )
+
+    def test_rag_checks_do_not_depend_on_retired_audit_commands(self):
+        commands = "\n".join(
+            step.get("run", "") for step in self.jobs["rag-quality"]["steps"]
+        )
+        for retired in (
+            "rag-policy-audit",
+            "source_family_policy_audit",
+            "quality_audit.py",
+            "law_sync_audit.py",
+        ):
+            self.assertNotIn(retired, commands)
+        self.assertIn("pytest services/rag-ingestion/tests", commands)
+        self.assertIn("scripts/rag/admission_quality.py", commands)
+        self.assertIn("scripts/rag/evaluate_admission.py", commands)
+        self.assertIn("scripts/rag/prepare_knowledge.py", commands)
 
     def test_worker_metrics_and_isolated_caches(self):
         for name in EXPECTED_JOBS:

@@ -31,6 +31,32 @@ def build_rag_context_manifest(
     )
 
 
+def build_evidence_context_manifest(
+    request: AgentRunRequest,
+    agent_id: str,
+    results: Sequence[RetrievalResultV2],
+) -> ContextManifest:
+    """Record complete cited V3 source text without silently truncating conditions."""
+    if not 1 <= len(results) <= 5:
+        raise ValueError("evidence context requires one to five validated chunks")
+    items = []
+    for position, result in enumerate(results, 1):
+        content = render_controlled_cited_chunk(result, max_length=len(result.text) + 10000)
+        for offset in range(0, len(content), 2048):
+            fragment = content[offset : offset + 2048]
+            items.append(
+                ContextItem(
+                    item_id=f"{_rag_context_item_id(result.chunk_id, position)}-{offset // 2048}",
+                    source_type="rag-approved",
+                    content=fragment,
+                    token_estimate=_estimate_context_tokens(fragment),
+                )
+            )
+    if sum(len(item.content) for item in items) > 60000:
+        raise ValueError("complete evidence exceeds the context budget")
+    return build_context_manifest(request, agent_id, additional_items=items)
+
+
 def _rag_context_item_id(chunk_id: str, position: int) -> str:
     digest = sha256(chunk_id.encode("utf-8")).hexdigest()[:16]
     return f"rag-{position}-{digest}"

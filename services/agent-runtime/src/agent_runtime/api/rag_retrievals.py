@@ -4,6 +4,11 @@ from fastapi import APIRouter, Request
 
 from agent_runtime.core.envelopes import ResponseMeta, SuccessEnvelope
 from agent_runtime.middleware.correlation import get_correlation_id
+from agent_runtime.rag.evidence_models import (
+    RetrievalRequestV3,
+    RetrievalResponseV3,
+    evidence_failure,
+)
 from agent_runtime.rag.fallback import failed_response, failed_response_v2
 from agent_runtime.rag.models import (
     RetrievalRequestV1,
@@ -14,6 +19,34 @@ from agent_runtime.rag.models import (
 from agent_runtime.security.service_identity import SERVICE_CREDENTIAL_HEADER
 
 router = APIRouter(tags=["rag"])
+
+
+@router.post(
+    "/api/v3/rag/retrievals",
+    response_model=SuccessEnvelope[RetrievalResponseV3],
+)
+async def retrieve_supported_knowledge(
+    request: Request,
+    payload: RetrievalRequestV3,
+) -> SuccessEnvelope[RetrievalResponseV3]:
+    """Answer natural questions from eligible evidence, with explicit gaps or fallback."""
+    await request.app.state.service_identity_verifier.verify(
+        request.headers.get(SERVICE_CREDENTIAL_HEADER),
+        method=request.method,
+        path=request.url.path,
+        body=await request.body(),
+        correlation_id=get_correlation_id(),
+    )
+    service = getattr(request.app.state, "rag_evidence_service", None)
+    result = (
+        evidence_failure(payload.request_id)
+        if service is None
+        else await service.retrieve_v3(payload)
+    )
+    return SuccessEnvelope(
+        data=result,
+        meta=ResponseMeta(correlation_id=get_correlation_id()),
+    )
 
 
 @router.post(

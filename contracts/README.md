@@ -5,12 +5,18 @@
 
 ## 目前有什麼
 
+`schemas/rag/knowledge-chunk-v1.schema.json` 是第 2 批本機公開知識資料契約，
+由 `prepare_knowledge.py` 產生、Core `load_knowledge_batch` 讀取；不是新 HTTP endpoint。
+保留 source／content／policy／provenance，取消人工工作簿作為建置前提；
+通過 schema 不代表人工 verified、runtime 可檢索或 release 已啟用。
+
 ```
 contracts/
 ├── openapi/
 │   ├── core-api.v1.yaml              OpenAPI 3.1，74 個已實作的 path
 │   ├── agent-runtime.v1.yaml         OpenAPI 3.1，3 個已實作的 V1 endpoint
-│   └── agent-runtime.v2.yaml         OpenAPI 3.1，治理 citation retrieval endpoint
+│   ├── agent-runtime.v2.yaml         OpenAPI 3.1，治理 citation retrieval endpoint
+│   └── agent-runtime.v3.yaml         OpenAPI 3.1，預設關閉的自然問句知識回答 endpoint
 ├── asyncapi/
 │   └── core-events.v1.yaml           AsyncAPI 3.x，Core Domain Event channel
 ├── schemas/
@@ -38,6 +44,16 @@ Agent Runtime 保留 `POST /api/v1/rag/retrievals` 作相容路徑，並新增
 未設定 Bedrock／OpenSearch 時兩版仍會 HTTP 200，且 `data.status = FAILED`、
 `results = []` 並帶明確 fallback，Agent 不得自行猜測答案。這不代表 V2 reindex、staging
 ingestion、Human Review、production projection 或 deletion 已完成。
+
+V3 私有 `POST /api/v3/rag/retrievals` 預設關閉；啟用時以自然問句執行
+pgvector＋FTS／trigram Hybrid，再以模型生成回答，回傳實際使用的 1–5 筆引用。
+不再依賴人工 support sets、精確題目或固定答案；V1／V2 的最低 3 筆契約不變。
+`SUFFICIENT` 為完整回答，`PARTIAL` 必須列出 `missing_facets`；證據不足、待澄清與
+上游故障有明確 fallback。Client 不能供應 scope／policy／clarified facets，
+query profile 必須與用途一致；來源角色與用途仍由伺服器檢查。
+引用含 `current_status`／warnings；unknown 僅可用於非現行性的一般資訊，法律查詢要求 current。
+模型引用 ID 與原文錨點須符合檢索來源，但這不等於語意正確性或現行性已獨立驗證。
+成功 fixtures 僅證明工程行為，不代表資料已匯入、開關已啟用或 production 核准。
 
 ## §8.2 的明示例外
 

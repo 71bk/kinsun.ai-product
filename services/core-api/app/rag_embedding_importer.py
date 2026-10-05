@@ -111,7 +111,7 @@ class EmbeddingImportBatch:
     release_id: str
     artifact_version: str
     candidate_sha256: str
-    allowlist_sha256: str
+    allowlist_sha256: str | None
     artifact_sha256: str
     source_count: int
     chunk_count: int

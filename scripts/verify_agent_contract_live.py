@@ -40,6 +40,7 @@ sys.path.insert(0, str(SERVICE_SRC))
 os.environ["APP_ENV"] = "test"
 os.environ["MODEL_PROVIDER"] = "mock"
 os.environ["RAG_MODE"] = "disabled"
+os.environ["RAG_EVIDENCE_V3_ENABLED"] = "false"
 os.environ["AWS_EC2_METADATA_DISABLED"] = "true"
 os.environ["SERVICE_IDENTITY_ENABLED"] = "true"
 os.environ["SERVICE_IDENTITY_HMAC_SECRET"] = (
@@ -67,11 +68,15 @@ OPENAPIS = {
     2: yaml.safe_load(
         (CONTRACTS / "openapi" / "agent-runtime.v2.yaml").read_text(encoding="utf-8")
     ),
+    3: yaml.safe_load(
+        (CONTRACTS / "openapi" / "agent-runtime.v3.yaml").read_text(encoding="utf-8")
+    ),
 }
 
 RUNS_PATH = "/api/v1/agent/runs"
 RAG_PATH = "/api/v1/rag/retrievals"
 RAG_V2_PATH = "/api/v2/rag/retrievals"
+RAG_V3_PATH = "/api/v3/rag/retrievals"
 
 failures: list[str] = []
 
@@ -176,7 +181,10 @@ def _resolve_component_refs(node, openapi: dict):
 
 def inline_schema(path: str, method: str, status: str) -> dict:
     """Pull the inline response schema the OpenAPI doc declares for a path."""
-    openapi = OPENAPIS[2 if path.startswith("/api/v2/") else 1]
+    version = (
+        3 if path.startswith("/api/v3/") else 2 if path.startswith("/api/v2/") else 1
+    )
+    openapi = OPENAPIS[version]
     node = openapi["paths"][path][method]["responses"][status]
     return _resolve_component_refs(
         node["content"]["application/json"]["schema"],
@@ -265,6 +273,51 @@ def make_rag_v2_payload(**overrides) -> dict:
     )
     payload.update(overrides)
     return payload
+
+
+def build_live_v3_service():
+    """Real grounded parser and service with synthetic I/O; no semantic approval."""
+    from agent_runtime.models.provider import ModelProvider
+    from agent_runtime.rag.evidence_models import RetrievalResultV3
+    from agent_runtime.rag.evidence_service import EvidenceService
+
+    example = json.loads(
+        (CONTRACTS / "examples/valid/retrieval-response-v3.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    result = RetrievalResultV3.model_validate(example["data"]["results"][0])
+
+    class SyntheticLoader:
+        async def load_public_candidates(self, request, *, require_current):
+            # No exact-question or manually reviewed support-set gate.
+            return [result]
+
+    class FakeProvider(ModelProvider):
+        async def generate_reply(self, request, context_manifest, language):
+            # Exercise the same prompt route and strict parser as real adapters.
+            from agent_runtime.models.prompting import build_model_prompts
+
+            build_model_prompts(request, context_manifest, language)
+            return json.dumps(
+                {
+                    "status": "ANSWER",
+                    "answer_text": "這是僅供介面契約驗證的合成服務說明。",
+                    "citation_ids": [result.chunk_id],
+                    "support_quotes": [
+                        {"chunk_id": result.chunk_id, "quote": result.text}
+                    ],
+                    "missing_facets": [],
+                },
+                ensure_ascii=False,
+            )
+
+    return EvidenceService(
+        retriever=SyntheticLoader(),
+        provider=FakeProvider(),
+        release_id=example["data"]["release_id"],
+        embedding_profile_id=example["data"]["embedding_profile_id"],
+    )
 
 
 class LiveQueryEmbedder:
@@ -380,6 +433,7 @@ async def main() -> int:
     # caller's shell happens to contain AWS/OpenSearch environment variables.
     # The executable boundary must be safe when no retrieval adapter exists.
     app.state.rag_retriever = None
+    app.state.rag_evidence_service = None
     transport = httpx.ASGITransport(app=app)
 
     async with (
@@ -400,6 +454,59 @@ async def main() -> int:
         # Staging RAG remains callable without AWS/OpenSearch. It must return a
         # schema-valid, explicit fail-closed outcome with no partial chunks and
         # must never copy the query into the fallback response.
+        v3_payload = make_rag_v2_payload(
+            schema_version="3.0.0", query="synthetic-v3-private"
+        )
+        response = await client.post(RAG_V3_PATH, json=v3_payload)
+        if expect_status("V3 disabled returns 200", response.status_code, 200):
+            body = response.json()
+            check(
+                "V3 disabled envelope", body, inline_schema(RAG_V3_PATH, "post", "200")
+            )
+            data = body.get("data", {})
+            if data.get("status") != "FAILED" or data.get("decision") != "FAILED":
+                failures.append("V3 disabled did not fail closed")
+            if v3_payload["query"] in response.text:
+                failures.append("V3 disabled echoed query")
+        for forbidden in ("scope", "clarified_facets", "policy"):
+            response = await client.post(
+                RAG_V3_PATH, json={**v3_payload, forbidden: "invalid"}
+            )
+            if expect_status(
+                f"V3 rejects client {forbidden}", response.status_code, 422
+            ):
+                check(
+                    "V3 malformed envelope",
+                    response.json(),
+                    load("common/ErrorEnvelopeV1.json"),
+                )
+                if v3_payload["query"] in response.text:
+                    failures.append("V3 validation echoed query")
+        response = await client.post(RAG_V3_PATH, json=v3_payload, auth=None)
+        if expect_status(
+            "V3 rejects missing service credential", response.status_code, 401
+        ):
+            check(
+                "V3 unauthorized envelope",
+                response.json(),
+                load("common/ErrorEnvelopeV1.json"),
+            )
+        app.state.rag_evidence_service = build_live_v3_service()
+        response = await client.post(RAG_V3_PATH, json=v3_payload)
+        if expect_status(
+            "V3 synthetic grounded answer success", response.status_code, 200
+        ):
+            check(
+                "V3 real adapter success envelope",
+                response.json(),
+                inline_schema(RAG_V3_PATH, "post", "200"),
+            )
+            data = response.json().get("data", {})
+            if data.get("status") != "SUCCESS" or len(data.get("results", [])) != 1:
+                failures.append(
+                    "V3 synthetic grounded answer did not return one supplied citation"
+                )
+        app.state.rag_evidence_service = None
         private_query = "合成查詢-不得回填-9f6c2b1a"
         response = await client.post(
             RAG_PATH,

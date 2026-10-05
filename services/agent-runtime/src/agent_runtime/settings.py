@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     RAG_ALLOW_NEEDS_REVIEW_CITATIONS: bool = False
     RAG_STAGING_ALLOW_ALL_AUDIENCES: bool = False
     RAG_QUERY_NORMALIZATION_ENABLED: bool = False
+    RAG_EVIDENCE_V3_ENABLED: bool = False
+    # Legacy configuration compatibility only; the natural V3 path ignores these.
+    RAG_EVIDENCE_POLICY_PATH: str | None = None
+    RAG_EVIDENCE_POLICY_EXPECTED_SHA256: str | None = None
     # Immutable runtime policy path and independently pinned digest must move together.
     RAG_SOURCE_FAMILY_POLICY_PATH: str | None = None
     RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256: str | None = None
