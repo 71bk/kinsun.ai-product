@@ -9,6 +9,7 @@ from agent_runtime.agents.safety_evaluator.evaluator import SafetyEvaluator
 from agent_runtime.common.enums import ActorRole, SafetyDecision
 from agent_runtime.contracts.models import AgentRunRequest
 from agent_runtime.rag.citations import append_citations
+from agent_runtime.rag.diagnostics import failure_diagnostics, mark_stage, record_exception
 from agent_runtime.rag.evidence_models import (
     RetrievalRequestV3,
     RetrievalResponseV3,
@@ -97,11 +98,23 @@ class EvidenceService:
         )
 
     async def retrieve_v3(self, request: RetrievalRequestV3) -> RetrievalResponseV3:
-        try:
-            async with asyncio.timeout(30):
-                return await self._retrieve(request)
-        except Exception:
-            return evidence_failure(request.request_id)
+        with failure_diagnostics(request.request_id) as diagnostic:
+            deadline = asyncio.timeout(30)
+            try:
+                async with deadline:
+                    response = await self._retrieve(request)
+                if response.status == "FAILED" and diagnostic.code is None:
+                    diagnostic.code = "PIPELINE_FAILED"
+                return response
+            except asyncio.CancelledError:
+                diagnostic.code = "REQUEST_CANCELLED"
+                raise
+            except Exception as exc:
+                if deadline.expired():
+                    diagnostic.code = "DEADLINE_EXCEEDED"
+                else:
+                    record_exception(exc)
+                return evidence_failure(request.request_id)
 
     async def _retrieve(self, request: RetrievalRequestV3) -> RetrievalResponseV3:
         generation_request = _public_generation_request(request)
@@ -109,6 +122,7 @@ class EvidenceService:
         if safety.decision != SafetyDecision.ALLOW:
             return self._no_data(request, reason="SAFETY_GATE", message=safety.safe_reply)
         require_current = requires_current_source(request.query, request.purpose)
+        mark_stage("retrieval")
         results = await self.retriever.load_public_candidates(
             request, require_current=require_current
         )
@@ -132,6 +146,7 @@ class EvidenceService:
         )
         if generated.status == "FAILED":
             return evidence_failure(request.request_id)
+        mark_stage("response")
         if generated.status in {"INSUFFICIENT", "CLARIFY"}:
             gap_safety = self.safety.evaluate(
                 generation_request, "、".join(generated.missing_facets)

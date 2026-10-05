@@ -14,7 +14,9 @@ from agent_runtime.rag.grounded_answer import (
     GroundedAnswerError,
     build_grounded_context,
     build_grounded_prompts,
+    evidence_quote_spans,
     generate_grounded_answer,
+    has_ambiguous_columns,
     normalize_evidence_layout,
     parse_grounded_answer,
 )
@@ -88,6 +90,54 @@ def test_one_source_is_enough_and_natural_paraphrase_is_preserved():
     assert result.answer_text == "可以向測試中心提出申請。"
     assert result.citation_ids == ("source-1",)
     assert result.reason_code == "GROUNDED_ANSWER"
+
+
+def test_source_span_selection_binds_exact_contiguous_source_without_rewriting():
+    text = "第一項條件。\n 第二項條件；另有例外。\n雙欄甲    側欄乙\n後續甲    後續乙"
+    evidence = source(text=text)
+    spans = evidence_quote_spans(text)
+    assert list(spans.values()) == [
+        "第一項條件。",
+        "第二項條件；",
+        "另有例外。",
+        "雙欄甲    側欄乙",
+        "後續甲    後續乙",
+    ]
+    for span_id, quote in spans.items():
+        assert quote in normalize_evidence_layout(text)
+        parsed = parse_grounded_answer(
+            envelope(support_quotes=[{"chunk_id": "source-1", "span_id": span_id}]), [evidence]
+        )
+        assert parsed.status == "ANSWER"
+    assert evidence.text == text
+
+
+@pytest.mark.parametrize("span_id", ["s0:9999", "s1:3", "source-2:s0:5", None, [], ""])
+def test_unknown_or_arbitrary_span_offsets_are_rejected(span_id):
+    with pytest.raises(GroundedAnswerError, match="SUPPORT_SPAN"):
+        parse_grounded_answer(
+            envelope(support_quotes=[{"chunk_id": "source-1", "span_id": span_id}]), [source()]
+        )
+
+
+def test_span_ids_are_resolved_in_cited_chunk_and_cannot_include_model_text():
+    first, second = source(), source("source-2", "短句。")
+    span_id = next(iter(evidence_quote_spans(first.text)))
+    with pytest.raises(GroundedAnswerError, match="UNKNOWN_SUPPORT_SPAN"):
+        parse_grounded_answer(
+            envelope(
+                citation_ids=["source-2"],
+                support_quotes=[{"chunk_id": "source-2", "span_id": span_id}],
+            ),
+            [first, second],
+        )
+    with pytest.raises(GroundedAnswerError, match="INVALID_SUPPORT_QUOTE"):
+        parse_grounded_answer(
+            envelope(
+                support_quotes=[{"chunk_id": "source-1", "span_id": span_id, "quote": "自行改寫"}]
+            ),
+            [first],
+        )
 
 
 def test_partial_answer_keeps_supported_text_and_explicit_gaps():
@@ -194,6 +244,7 @@ def test_pdf_layout_quotes_match_without_mutating_source_content():
         ("申請管道   評估責任", "申請管道評估責任"),
         ("第一段\n第二段", "第一段第二段"),
         ("第一段\n\n    第二段", "第一段第二段"),
+        ("申請測試服務    注意：需評估\n請洽測試中心    不保證資格", "申請測試服務請洽測試中心"),
     ],
 )
 def test_layout_matching_rejects_changed_numbers_identifiers_content_and_joined_spans(
@@ -276,6 +327,50 @@ async def test_generation_calls_existing_provider_once_without_retry():
     assert result.status == "ANSWER"
     assert len(provider.calls) == 1
     assert any(item.source_type == GROUNDED_SOURCE_TYPE for item in provider.calls[0][1].items)
+
+
+@pytest.mark.asyncio
+async def test_interleaved_columns_cannot_be_cited_or_reconstructed_by_generator():
+    mixed = source("mixed", "第一欄甲    右欄乙\n第一欄丙    右欄丁\n第一欄戊    右欄己")
+    assert has_ambiguous_columns(mixed.text)
+    assert not has_ambiguous_columns("    第一段\n    第二段\n    第三段")
+    provider = StubProvider()
+    outcome = await generate_grounded_answer(provider, request(), [mixed], "zh-TW")
+    assert outcome.status == "INSUFFICIENT"
+    assert outcome.reason_code == "GROUNDED_AMBIGUOUS_LAYOUT"
+    assert not provider.calls
+    outcome = await generate_grounded_answer(provider, request(), [mixed, source()], "zh-TW")
+    assert outcome.status == "ANSWER"
+    req, context, language = provider.calls[0]
+    _, user = build_grounded_prompts(req, context, language)
+    assert [item["chunk_id"] for item in json.loads(user)["evidence_data"]] == ["source-1"]
+    for support in (
+        {"chunk_id": "mixed", "quote": "第一欄甲"},
+        {"chunk_id": "mixed", "span_id": next(iter(evidence_quote_spans(mixed.text)))},
+    ):
+        with pytest.raises(GroundedAnswerError, match="AMBIGUOUS_SOURCE_LAYOUT"):
+            parse_grounded_answer(
+                envelope(citation_ids=["mixed"], support_quotes=[support]), [mixed]
+            )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "(一)   基本資料：\n(二)   服務目的：\n(三)   辦理方式：",
+        "1.   服務目的\n2.   服務對象\n3.   辦理方式",
+        "相關權益，A       單位應\n原則不得攜出      A單位之外。\n"
+        "歸檔存放，並須保存      7年以上。",
+    ],
+)
+def test_pdf_list_markers_and_inline_labels_are_not_columns(text):
+    assert not has_ambiguous_columns(text)
+
+
+@pytest.mark.parametrize("gap", ["    ", "\t\t\t", "\u3000\u3000\u3000"])
+def test_column_detection_keeps_tables_and_sidebars_blocked(gap):
+    text = "\n".join(f"服務申請的說明{gap}側欄注意事項" for _ in range(3))
+    assert has_ambiguous_columns(text)
 
 
 @pytest.mark.asyncio

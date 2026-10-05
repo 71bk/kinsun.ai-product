@@ -151,6 +151,19 @@ def test_sql_predicate_structurally_matches_policy_without_legacy_allowlist():
         assert invariant in sql and invariant in POSTGRES_HYBRID_SEARCH_SQL
 
 
+def test_public_ranking_does_not_amplify_weak_lexical_ties_or_use_legacy_floor():
+    # Compilation guards bind names; live read-only evaluation exercises PostgreSQL.
+    public = POSTGRES_PUBLIC_KNOWLEDGE_SEARCH_SQL
+    lexical = public.split("lexical_normalized AS (", 1)[1].split("vector_raw AS (", 1)[0]
+    assert "least(1.0, raw_score)" in lexical
+    assert "max(raw_score)" not in lexical
+    assert "min_score" not in text(public).compile(dialect=postgresql.dialect()).params
+    assert "WHERE raw_vector_score > 0 OR raw_lexical_score > 0" in public
+    assert "LIMIT CAST(:candidate_limit AS integer)" in public
+    assert "LIMIT CAST(:top_k AS integer)" in public
+    assert "WHERE score >= CAST(:min_score" in POSTGRES_HYBRID_SEARCH_SQL
+
+
 @pytest.mark.asyncio
 async def test_opt_in_backend_binds_shared_policy_and_rechecks_returned_rows():
     class Connection:

@@ -1,5 +1,12 @@
 # AGENTS.md
 
+- 2026-10-05 收尾：PR #67 已合併；#68 已從最新 main 重建為增量分支，補上 V3 常駐 `rag_v3_failure` 日誌。只記錄 request ID 的 SHA-256 前 16 碼、階段、固定分類及耗時，不記錄問句／來源／模型原文／例外或 secrets。區分檢索、模型 typed timeout、JSON／引用驗證、整體 deadline 與外部取消；取消仍向上傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過；合併狀態以 GitHub 為準。初次兩筆備援原因仍未確認，詳見本次報告末節。
+
+- 2026-10-05 後續整合：本機 development 已切換 `knowledge-v008-aae34e5095e6`，`RAG_EVIDENCE_V3_ENABLED=true`、`KNOWLEDGE_ROUTER_V2_ENABLED=true`；已實測 v008 啟用及 v004 回退後恢復 v008。localhost:3000／8000／8001 為日常服務，隔離 3110／8110／8111 已停止。最終版面規則 16 題仍為 11 SUCCESS／5 NO_DATA／0 FAILED；200 項 Agent 回歸及 PR #68 程式 CI 通過。瀏覽器實測長者問答／來源／拒答；家屬及專業僅既有登入與權限驗收，未新增公共問答入口。55 筆專業准入來源因版面保守排除；初次兩筆服務備援未再重現但保留紀錄。詳見 [報告及回退方式](docs/project/rag-retrieval-and-quotes-20261005.md)。下方未啟用／未提交敘述為前一階段歷史；production 未啟用，PR #68 仍為依賴 #67 的 draft。
+
+- 2026-10-05 V3 口語檢索／引用修正完成本機驗證：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另外 6 題改述／負例為 4 SUCCESS／2 NO_DATA，分開報告、不當準確率。未改 `.env`、DB 或 activation，未 commit／push；詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。
+- V3 融合分數只作候選排序：弱 trigram 不再 min-max 放大，不沿用 V1／V2 的 0.7 門檻；授權／來源／hash gate 與最多 5 筆不變。生成選擇來源衍生的連續 span ID，仍非語意驗證；有三行以上欄間寬空白的疑似交錯來源不送生成，全部排除則 NO_DATA。不得將正確 span ID 當成 PDF 欄位順序已釐清；不自行拼接或重排來源。
+
 - 2026-10-02 使用者明確授權「匯入開始」後，`knowledge-v008-aae34e5095e6` 已以單一交易新增 658 projections＋658 embeddings；回讀驗證 counts／profile／hash／向量與兩份完成 receipt 通過，v004 的 release／projections／vectors 指紋不變。未改 `.env`、未 activation；新版題集結果見第 4 批文件末節。
 - 2026-10-02 第 4 批後續：V3 加 Gemini schema、內容不落盤的生成診斷與保守 PDF 縮排行整理；原 16 題複測為 8 SUCCESS／6 NO_DATA／2 FAILED，仍非品質驗收。保留 tab／行內空格／段落邊界、數字與英文識別碼；不能全域去空白或 NFKC 後就聲稱引用正確。詳見第 4 批文件末節。
 - 本機 `knowledge-v008-aae34e5095e6` 為 658 筆，僅相對 v007 增加 BA13 單筆 family_caregiver audience；可選 `--audience-patches` 綁原 source／text hash／roles。`embed_knowledge.py` 預設 dry-run，已補 27 筆向量並重用 631 筆，完整 cache 驗證 658 available／0 required。尚未新增 DB candidate、改 .env 或 activation。

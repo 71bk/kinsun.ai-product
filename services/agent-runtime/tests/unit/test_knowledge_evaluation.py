@@ -19,6 +19,7 @@ from agent_runtime.rag.knowledge_evaluation import (
     KnowledgeEvaluationError,
     SmokeCase,
     _quote_diagnostics,
+    _selected_support_spans,
     evaluate_cases,
     load_cases,
 )
@@ -60,6 +61,28 @@ def test_quote_diagnostics_only_export_counts(quote, category):
     )
     assert diagnostics == {category: 1}
     assert quote not in json.dumps(diagnostics)
+
+
+def test_span_diagnostics_export_only_validated_source_ids_and_counts():
+    from agent_runtime.rag.grounded_answer import evidence_quote_spans
+
+    source = result()
+    span_id = next(iter(evidence_quote_spans(source.text)))
+    support = {"chunk_id": source.chunk_id, "span_id": span_id}
+    document = {
+        "status": "ANSWER",
+        "answer_text": "Synthetic answer.",
+        "citation_ids": [source.chunk_id],
+        "support_quotes": [support],
+        "missing_facets": [],
+    }
+    raw = json.dumps(document)
+    assert _quote_diagnostics(raw, [source]) == {"source-span": 1}
+    assert _selected_support_spans(raw, [source]) == [support]
+    document["support_quotes"] = [{"chunk_id": source.chunk_id, "span_id": "SECRET_FAKE_ID"}]
+    raw = json.dumps(document)
+    assert _quote_diagnostics(raw, [source]) == {"unknown-span": 1}
+    assert _selected_support_spans(raw, [source]) == []
 
 
 def case(identifier="first", **changes):

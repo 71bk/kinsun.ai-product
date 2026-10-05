@@ -138,6 +138,19 @@ async def test_unlisted_natural_question_can_return_one_source_without_legacy_po
 
 
 @pytest.mark.asyncio
+async def test_public_candidates_below_legacy_floor_stay_bounded_and_scoped():
+    hits = [
+        SearchHit(score=0.6, raw_vector_score=0.689, source=hit("dense-best").source),
+        SearchHit(score=0.59, source=hit("private", data_classification="restricted").source),
+        *[SearchHit(score=0.5, source=hit(f"candidate-{i}").source) for i in range(8)],
+    ]
+    retriever, _, _ = setup(hits)
+    results = await retriever.load_public_candidates(request(), require_current=False)
+    assert [r.chunk_id for r in results] == ["dense-best", *[f"candidate-{i}" for i in range(4)]]
+    assert all(r.review_status == "needs_review" for r in results)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "changes",
     [

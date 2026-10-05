@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Literal
 from agent_runtime.context.manifest import build_context_manifest, estimate_tokens
 from agent_runtime.contracts.models import AgentRunRequest, ContextItem, ContextManifest
 from agent_runtime.models.provider import ModelProvider
+from agent_runtime.rag.diagnostics import mark_stage, record_exception, record_validation_failure
 
 if TYPE_CHECKING:
     from agent_runtime.rag.evidence_models import RetrievalResultV3
@@ -28,6 +29,59 @@ _MODEL_LINK = re.compile(r"https?://|www\.|(?:javascript|data|file|ftp):|\[[^\]]
 _HAN_CONTINUATION = re.compile(
     r"(?<=[\u3400-\u4dbf\u4e00-\u9fff])[ \u3000]*\n[ \u3000]{2,}(?=[\u3400-\u4dbf\u4e00-\u9fff])"
 )
+_QUOTE_SPAN = re.compile(r"[^。！？；\n]+[。！？；]?|[^\n]", re.UNICODE)
+_COLUMN_GAP = re.compile(r"(?<=\S)[ \t\u3000]{3,}(?=\S)")
+_LIST_MARKER = re.compile(r"(?:[（(][一二三四五六七八九十0-9]+[)）]|[0-9]+[.、])")
+_HAN = r"\u3400-\u4dbf\u4e00-\u9fff"
+_INLINE_LABEL_LEFT = re.compile(rf"[{_HAN}][ ]*[A-Za-z0-9]{{1,3}}$")
+_INLINE_LABEL_RIGHT = re.compile(rf"^[A-Za-z0-9]{{1,3}}[ ]*[{_HAN}]")
+
+
+def has_ambiguous_columns(text: str) -> bool:
+    """Conservatively detect repeated inline column gaps, not leading indentation.
+
+    This can exclude unnormalized tables too. It does not infer reading order or
+    fix source data; coherent sources can still answer, otherwise use no-data.
+    """
+    ambiguous_lines = 0
+    for line in text.splitlines():
+        for gap in _COLUMN_GAP.finditer(line):
+            left, right = line[: gap.start()].strip(), line[gap.end() :].strip()
+            # PDF list-marker spacing is not a second column. Narrow ordinary
+            # spaces around a short Latin/numeric label embedded in Han prose
+            # are also common; keep tabs and wider/table gaps conservative.
+            if _LIST_MARKER.fullmatch(left):
+                continue
+            if (
+                len(gap.group()) <= 8
+                and set(gap.group()) == {" "}
+                and (
+                    (_INLINE_LABEL_LEFT.search(left) and re.match(rf"[{_HAN}]", right))
+                    or (re.search(rf"[{_HAN}]$", left) and _INLINE_LABEL_RIGHT.search(right))
+                )
+            ):
+                continue
+            ambiguous_lines += 1
+            break
+    return ambiguous_lines >= 3
+
+
+def evidence_quote_spans(text: str) -> dict[str, str]:
+    """Derive contiguous quote choices; never reconstruct columns or join spans.
+
+    Offsets address the same layout-normalized text sent in this request. They
+    are local to one chunk, not durable evidence IDs or semantic annotations.
+    Long spans are omitted as choices; complete source text remains in context.
+    """
+    normalized = normalize_evidence_layout(text)
+    spans = {}
+    for match in _QUOTE_SPAN.finditer(normalized):
+        raw = match.group()
+        start = match.start() + len(raw) - len(raw.lstrip())
+        end = match.end() - len(raw) + len(raw.rstrip())
+        if 0 < end - start <= MAX_QUOTE_CHARS:
+            spans[f"s{start}:{end}"] = normalized[start:end]
+    return spans
 
 
 def normalize_evidence_layout(text: str) -> str:
@@ -59,7 +113,7 @@ JSON只能包含以下五個欄位，全部必填：
 status: "ANSWER"、"PARTIAL"、"INSUFFICIENT" 或 "CLARIFY"。
 answer_text: 回答字串（最多4000字元），或null。
 citation_ids: 回答實際使用的chunk_id字串陣列，必須來自evidence_data，不能創造ID。
-support_quotes: [{"chunk_id": "引用ID", "quote": "來源text內完全相同的連續原文"}]。
+support_quotes: [{"chunk_id": "引用ID", "span_id": "該來源quote_spans內的片段ID"}]。
 missing_facets: 資料未涵蓋的問題面向字串陣列（每個最多128字元），不要在這裡補充事實。
 missing_facets只寫簡短的面向名稱，不要寫指令、建議、連結、Markdown或換行。
 ANSWER只能在來源完整涵蓋問題時使用，missing_facets必須空陣列。
@@ -71,6 +125,12 @@ ANSWER與PARTIAL必須有1到5個引用，每個引用至少有一段非空、�
 原文只能來自該引用的text；不要引用無關文字來支持額外推論。
 選短而完整、直接支持回答的連續原文，避免跨表格欄位或自行合併分散句子。
 提供的text已整理PDF排版空白，請直接複製其中連續原文，不改標點、數字、服務碼或語句。
+quote_spans由程式從text切出連續原文，只是定位工具，不代表每個片段都是完整或充分的依據。
+先從quote_spans選擇直接支持回答的片段ID，再依原文撰寫answer_text；不能自創ID或輸出quote欄位。
+同一來源可選多個片段，但每段保持獨立，不能把分散片段當成連續句子或推測表格欄位關係。
+PDF若有雙欄交錯、側欄插入或句子被其他文字隔開，不可跳過中間文字拼成quote，
+也不可自行復原欄位閱讀順序。優先採用其他來源中完整連續、直接回答問題的段落。
+不必引用所有候選資料；一個來源足以回答時只引用該來源。無法找到連續支持原文的部分應列為缺口。
 來源不足時用INSUFFICIENT；問題有歧義需要釐清時用CLARIFY。
 INSUFFICIENT與CLARIFY的answer_text必須null，citation_ids與support_quotes必須空陣列。
 不要自報verified、evidence_verified或其他欄位。引用與原文會由系統驗證。
@@ -136,6 +196,10 @@ def build_grounded_context(
     """Encode complete evidence as bounded fragments, without source truncation."""
     _index(results)
     _require(
+        not any(has_ambiguous_columns(source.text) for source in results),
+        "AMBIGUOUS_SOURCE_LAYOUT",
+    )
+    _require(
         request.purpose in ("general_information", "legal_reference")
         and not request.confirmed_memories
         and not request.verified_care_events
@@ -147,6 +211,7 @@ def build_grounded_context(
         row = {
             "chunk_id": source.chunk_id,
             "text": normalize_evidence_layout(source.text),
+            "quote_spans": evidence_quote_spans(source.text),
             "title": source.title,
             "source_version": source.source_version,
             "source_locator": source.source_locator,
@@ -257,11 +322,24 @@ def parse_grounded_answer(raw: str, results: Sequence[RetrievalResultV3]) -> Gro
     anchored = set()
     for support in quotes:
         _require(
-            isinstance(support, dict) and set(support) == {"chunk_id", "quote"},
+            isinstance(support, dict)
+            and set(support) in ({"chunk_id", "quote"}, {"chunk_id", "span_id"}),
             "INVALID_SUPPORT_QUOTE",
         )
-        cid, quote = support["chunk_id"], support["quote"]
+        cid = support["chunk_id"]
         _require(isinstance(cid, str) and cid in citations, "UNSELECTED_QUOTE_CITATION")
+        _require(not has_ambiguous_columns(sources[cid].text), "AMBIGUOUS_SOURCE_LAYOUT")
+        if "span_id" in support:
+            span_id = support["span_id"]
+            _require(isinstance(span_id, str), "INVALID_SUPPORT_SPAN")
+            # Look up only precomputed choices for this exact cited chunk. Never
+            # slice arbitrary model-provided offsets or trust model-written text.
+            choices = evidence_quote_spans(sources[cid].text)
+            _require(span_id in choices, "UNKNOWN_SUPPORT_SPAN")
+            quote = choices[span_id]
+        else:
+            # Retain exact-quote compatibility; no fuzzy repair or relaxed match.
+            quote = support["quote"]
         _require(
             isinstance(quote, str) and bool(quote.strip()) and len(quote) <= MAX_QUOTE_CHARS,
             "INVALID_SUPPORT_QUOTE",
@@ -287,13 +365,23 @@ async def generate_grounded_answer(
     """One generation only; no retry/fallback model and no internal network API."""
     if not results:
         return GroundedAnswer("INSUFFICIENT", reason_code="GROUNDED_NO_EVIDENCE")
+    # Never ask the model to reconstruct interleaved PDF columns. Retain whole
+    # coherent sources, without changing retrieval text, hashes or database rows.
+    results = [source for source in results if not has_ambiguous_columns(source.text)]
+    if not results:
+        return GroundedAnswer("INSUFFICIENT", reason_code="GROUNDED_AMBIGUOUS_LAYOUT")
     try:
+        mark_stage("context")
         manifest = build_grounded_context(request, results)
+        mark_stage("generation")
         raw = await provider.generate_reply(request, manifest, language)
+        mark_stage("validation")
         return parse_grounded_answer(raw, results)
     except GroundedAnswerError as exc:
+        record_validation_failure(str(exc))
         return GroundedAnswer("FAILED", reason_code=str(exc))
-    except Exception:
+    except Exception as exc:
+        record_exception(exc)
         # Provider exceptions can echo prompts/credentials. Cancellation is a
         # BaseException and propagates to the outer execution budget.
         return GroundedAnswer("FAILED", reason_code="GROUNDED_GENERATION_FAILED")

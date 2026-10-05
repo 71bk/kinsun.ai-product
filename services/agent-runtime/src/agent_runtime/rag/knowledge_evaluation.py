@@ -228,6 +228,18 @@ def _quote_diagnostics(raw, results):
         if not isinstance(item, dict):
             categories["content-mismatch"] += 1
             continue
+        if set(item) == {"chunk_id", "span_id"}:
+            from agent_runtime.rag.grounded_answer import evidence_quote_spans
+
+            cid, span_id = item["chunk_id"], item["span_id"]
+            valid = (
+                isinstance(cid, str)
+                and cid in sources
+                and isinstance(span_id, str)
+                and span_id in evidence_quote_spans(sources[cid])
+            )
+            categories["source-span" if valid else "unknown-span"] += 1
+            continue
         quote, cid = item.get("quote"), item.get("chunk_id")
         text = sources.get(cid) if isinstance(cid, str) else None
         if not isinstance(quote, str) or not quote.strip() or text is None:
@@ -246,6 +258,28 @@ def _quote_diagnostics(raw, results):
             category = "content-mismatch"
         categories[category] += 1
     return dict(categories)
+
+
+def _selected_support_spans(raw, results):
+    """Export only IDs validated against source-derived choices, never raw output."""
+    from agent_runtime.rag.grounded_answer import (
+        GroundedAnswerError,
+        parse_grounded_answer,
+    )
+
+    if not isinstance(raw, str):
+        return []
+    try:
+        parsed = parse_grounded_answer(raw, results)
+        if parsed.status not in ("ANSWER", "PARTIAL"):
+            return []
+        return [
+            {"chunk_id": item["chunk_id"], "span_id": item["span_id"]}
+            for item in json.loads(raw)["support_quotes"]
+            if "span_id" in item
+        ]
+    except GroundedAnswerError:
+        return []
 
 
 def _candidate(result) -> dict:
@@ -405,6 +439,11 @@ async def evaluate_cases(
                 "generation_diagnostic_code": diagnostic,
                 "generation_exception_type": exception_type,
                 "generation_quote_matches": quote_diagnostics,
+                "selected_support_spans": _selected_support_spans(
+                    provider._last_raw_output, recorder.results
+                )
+                if isinstance(provider, CountedProvider)
+                else [],
                 "generation_metadata": provider._generation_metadata
                 if isinstance(provider, CountedProvider)
                 else None,

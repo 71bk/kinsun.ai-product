@@ -1,5 +1,11 @@
 # AGENTS.md — agent-runtime
 
+- 2026-10-05：V3 邊界以 task-local context 記錄 `rag_v3_failure`；標準 logger 輸出精簡 JSON，request_tag 為 request_id SHA-256 前 16 碼，只有階段、固定 code、耗時。不得附 exception／traceback／問句／模型原文；未知驗證理由映射通用分類。typed provider cause timeout、服務 deadline 與外部取消分開，取消仍傳遞；正常 SUCCESS／NO_DATA 不記為失敗。203 項相關回歸及 lint／format 通過。#67 已合併；#68 已重建增量，最終狀態看 GitHub。
+
+- 2026-10-05 整合後：本機 development 日常 v008＋V3＋Core router v2 已啟用，已實測 v004 回退再恢復；不是 production activation。最終 16 題 11 SUCCESS／5 NO_DATA／0 FAILED，200 項相關回歸通過。版面規則補編號／短英數例外，658 筆排除 70 筆；實際 professional general_information 准入 464 筆中排除 55，elder／family 准入無排除。BFF 初次兩筆生成備援後續未重現，不能宣稱原因已修復或模型永不失敗。PR #68 依賴 #67；詳見 [完整報告](../../docs/project/rag-retrieval-and-quotes-20261005.md)。
+
+- 2026-10-05 V3：raw lexical capped score＋dense 排序，不沿用 legacy 0.7 候選門檻；V1／V2 不變。原 16 題最終 11 SUCCESS／5 NO_DATA，另外 6 題改述／負例 4 SUCCESS／2 NO_DATA，無 FAILED；非品質準確率、未 activation。生成以來源連續 span ID 定位，未知 ID／任意 offsets 拒絕；舊 quote 精確比對仍保留。疑似多欄（至少三行有欄間寬空白）整筆不送生成，避免把原文定位成功誤當欄位語意釐清。詳見 [本次報告](../../docs/project/rag-retrieval-and-quotes-20261005.md)。
+
 - 第 4 批同日後續：Gemini grounded schema 只約束形狀；parser 繼續檢查來源 ID 與原文支持，不是語意判官。長動態 ID enum 已撤，家屬高負荷題的 HTTP 400 在 A/B 重測解除；專業高負荷題仍有引用不匹配。PDF 排版相容僅移除漢字間有至少兩格縮排的續行，保留 tab、行內空格、未縮排換行、空白行及所有非空白字元；禁用全域去空白／NFKC 當來源驗證。16 題複測 8 SUCCESS／6 NO_DATA／2 FAILED 為前一輪，後續單題結果不可拼成新整批分數。
 - 使用者授權後，`knowledge-v008-aae34e5095e6` 已匯入 658 筆資料與向量並回讀驗證；固定 16 題為 9 SUCCESS／6 NO_DATA／1 FAILED，仍待修正口語申請檢索與專業高負荷題引用。未修改目前服務設定或 activation。詳見第 4 批文件末節；本機測試依使用者要求單工、BelowNormal，不與 subagent 測試並行。
 
