@@ -381,6 +381,52 @@ async def main() -> int:
             check(f"POST {path} 401 vs ErrorEnvelopeV1",
                   response.json(), load("common/ErrorEnvelopeV1.json"))
 
+        response = await client.post(
+            "/api/v1/family/knowledge/questions",
+            json={"question": "Synthetic public knowledge probe", "language": "en-US"},
+        )
+        if response.status_code != 401:
+            failures.append(f"POST family knowledge: expected 401, got {response.status_code}")
+        check("POST family knowledge 401 vs ErrorEnvelopeV1",
+              response.json(), load("common/ErrorEnvelopeV1.json"))
+
+        # Public knowledge has no DB context. Exercise the real route/envelope
+        # with a synthetic authenticated family and a private-service double.
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+        from uuid import UUID
+        from app.adapters.agent_runtime import get_agent_runtime_client
+        from app.api import family_knowledge
+        from app.core.auth import ActorContext
+        from app.middleware.auth import get_actor_context
+        from app.schemas.family_knowledge import FamilyKnowledgeAnswer
+
+        saved_overrides = dict(app.dependency_overrides)
+        try:
+            app.dependency_overrides[get_actor_context] = lambda: ActorContext(
+                actor_id=UUID(sample_uuid), tenant_id=UUID(sample_uuid),
+                actor_role="FAMILY_MEMBER", status="ACTIVE",
+            )
+            fixture = json.loads((CONTRACTS / "examples/valid/family-knowledge-answer.json").read_text(encoding="utf-8"))["data"]
+            upstream = SimpleNamespace(retrieve_public_knowledge=AsyncMock())
+            app.dependency_overrides[get_agent_runtime_client] = lambda: upstream
+            with patch.object(family_knowledge, "get_settings", return_value=SimpleNamespace(
+                app_env="test", knowledge_router_v2_enabled=True,
+            )):
+                for status in ("ANSWER", "PARTIAL", "NO_DATA", "CLARIFY", "BLOCKED", "UNAVAILABLE"):
+                    upstream.retrieve_public_knowledge.return_value = FamilyKnowledgeAnswer(
+                        **{**fixture, "status": status, "sources": fixture["sources"] if status in {"ANSWER", "PARTIAL"} else []}
+                    )
+                    response = await client.post("/api/v1/family/knowledge/questions",
+                        json={"question": "Synthetic public question", "language": "en-US"})
+                    if response.status_code != 200:
+                        failures.append(f"Family knowledge {status}: expected 200, got {response.status_code}")
+                    check(f"Family knowledge {status} vs envelope", response.json(),
+                          load("common/FamilyKnowledgeAnswerEnvelopeV1.json"))
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(saved_overrides)
+
         # Staff report routes must reject anonymous callers before any data access.
         for method, suffix, body in [
             ("GET", "family-report-workspace", None),

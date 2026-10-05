@@ -43,11 +43,12 @@ function report(overrides: Partial<FamilyReportView> = {}): FamilyReportView {
 }
 
 describe('Family Surface safety semantics', () => {
-  it('offers only the two authenticated family destinations', () => {
+  it('offers reports and public knowledge as authenticated family destinations', () => {
     const nav = source('./FamilyNav.tsx');
 
     expect(nav).toContain("href: '/family'");
     expect(nav).toContain("href: '/family/reports'");
+    expect(nav).toContain("href: '/family/knowledge'");
     expect(nav).not.toMatch(/href:\s*['"]\/(admin|family\/settings|dashboard)/i);
   });
 

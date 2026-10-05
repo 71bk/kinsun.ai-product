@@ -8,6 +8,13 @@
 
 ## 已在本次收斂
 
+### 2026-10-05 家屬公開知識問答
+
+- 已實作 `POST /api/v1/family/knowledge/questions`，active family 帳號限定；固定公開知識受眾，不讀取個人照護資料。
+- 新增問句／答案／來源契約與 valid/invalid examples；live verifier 驗證未登入拒絕與六種合成回應。
+- 非 production 且既有知識開關啟用時提供服務；個人報表發布與分享規則未更動。
+- 實作與驗收見 `docs/project/family-public-knowledge-20261005.md`。
+
 ### 2026-09-30 照服員收案生命週期
 
 - 新增四個 operations：清單、單筆、歷史、狀態命令；命令 action enum 為 suspend／resume／end。

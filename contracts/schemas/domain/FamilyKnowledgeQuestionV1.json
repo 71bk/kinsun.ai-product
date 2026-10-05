@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "question": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Question",
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "language": {
+      "default": "zh-TW",
+      "enum": [
+        "zh-TW",
+        "en-US"
+      ],
+      "title": "Language",
+      "type": "string"
+    }
+  },
+  "required": [
+    "question"
+  ],
+  "title": "FamilyKnowledgeQuestionV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyKnowledgeQuestionV1.json"
+}

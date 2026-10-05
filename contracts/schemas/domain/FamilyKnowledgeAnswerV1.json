@@ -1,0 +1,111 @@
+{
+  "$defs": {
+    "PublicKnowledgeSource": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string",
+          "pattern": "^https?://[A-Za-z0-9.-]+\\.gov\\.tw(?::[0-9]+)?(?:[/?#][^\\s\\\\]*)?$"
+        },
+        "locator": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "current_status": {
+          "enum": [
+            "current",
+            "unknown"
+          ],
+          "title": "Current Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "url",
+        "locator",
+        "current_status"
+      ],
+      "title": "PublicKnowledgeSource",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "ANSWER",
+        "PARTIAL",
+        "NO_DATA",
+        "CLARIFY",
+        "BLOCKED",
+        "UNAVAILABLE"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "answer": {
+      "maxLength": 50000,
+      "minLength": 1,
+      "title": "Answer",
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/PublicKnowledgeSource"
+      },
+      "maxItems": 5,
+      "title": "Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "answer",
+    "sources"
+  ],
+  "title": "FamilyKnowledgeAnswerV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyKnowledgeAnswerV1.json",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ANSWER",
+              "PARTIAL"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sources": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "sources": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
+}
