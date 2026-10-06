@@ -1,52 +1,13 @@
-"""Stateless public-information routing with no elder record or memory access."""
-
-from typing import Protocol
-from uuid import uuid4
+"""Keep the family audience fixed while sharing public query orchestration."""
 
 from app.schemas.family_knowledge import FamilyKnowledgeAnswer, FamilyKnowledgeQuestion
-from app.services.knowledge_router import route_knowledge
-
-
-class PublicKnowledgeReader(Protocol):
-    """Application-owned interface implemented by the private-service adapter."""
-
-    async def retrieve_public_knowledge(
-        self, *, request_payload: dict[str, object], correlation_id: str
-    ) -> FamilyKnowledgeAnswer: ...
+from app.services.public_knowledge_service import PublicKnowledgeReader
+from app.services.public_knowledge_service import answer_public_question as _answer
 
 
 async def answer_public_question(
     question: FamilyKnowledgeQuestion, *, client: PublicKnowledgeReader, correlation_id: str
 ) -> FamilyKnowledgeAnswer:
-    route = route_knowledge(question.question, enabled=True)
-    if route.reason_code == "LOOKUP_DECLINED":
-        return FamilyKnowledgeAnswer(
-            status="NO_DATA",
-            answer="No search was performed." if question.language == "en-US" else "已停止查詢。",
-        )
-    if route.reason_code == "PRIVATE_CONTEXT":
-        return FamilyKnowledgeAnswer(
-            status="NO_DATA",
-            answer=(
-                "This page only provides public care information "
-                "and cannot access personal records."
-                if question.language == "en-US"
-                else "此處只提供公開長照資訊，無法查詢個人的照護紀錄。"
-            ),
-        )
-    # This dedicated entry never switches to private memory/companion tools.
-    purpose = "legal_reference" if route.purpose == "legal_reference" else "general_information"
-    answer = await client.retrieve_public_knowledge(
-        request_payload={
-            "schema_version": "3.0.0",
-            "request_id": f"knowledge-{uuid4()}",
-            "query": question.question,
-            "query_profile": "legal" if purpose == "legal_reference" else "natural_language",
-            "top_k": 5,
-            "audience": "family_caregiver",
-            "purpose": purpose,
-            "language": question.language,
-        },
-        correlation_id=correlation_id,
+    return await _answer(
+        question, client=client, correlation_id=correlation_id, audience="family_caregiver"
     )
-    return answer

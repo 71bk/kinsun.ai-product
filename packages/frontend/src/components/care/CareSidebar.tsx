@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarCheck, UsersThree } from '@phosphor-icons/react';
+import { BookOpen, CalendarCheck, UsersThree } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -10,6 +10,7 @@ import styles from './CareSidebar.module.css';
 const NAV_ITEMS = [
   { href: '/staff', key: 'careNav.elders', icon: UsersThree },
   { href: '/staff/assignments', key: 'careNav.assignments', icon: CalendarCheck },
+  { href: '/staff/knowledge', key: 'careNav.knowledge', icon: BookOpen },
 ] as const;
 
 export function CareSidebar({ children }: { children: ReactNode }) {
