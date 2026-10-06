@@ -11,6 +11,7 @@ docs/project/*.sql text eol=lf
 # RagChunkV2 byte-level manifests and their versioned validation inputs.
 data/rag-v2/** text eol=lf
 data/rag-v3/** text eol=lf
+data/rag-layout/** text eol=lf
 data/rag-chunks/** text eol=lf
 data/rag-manifest/** text eol=lf
 config/rag/** text eol=lf

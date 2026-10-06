@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/rag/knowledge-layout-extraction-v1.schema.json",
+  "title": "Public PDF layout extraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "parser", "sources", "groups"],
+  "properties": {
+    "schema_version": {"const": "knowledge-layout-extraction-v1"},
+    "parser": {"$ref": "#/$defs/text"},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+    "groups": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/group"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "box": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number", "minimum": 0}},
+    "block": {
+      "type": "object", "additionalProperties": false, "required": ["bbox", "text"],
+      "properties": {"bbox": {"$ref": "#/$defs/box"}, "text": {"type": "string"}}
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version", "url", "pdf_sha256", "page_count"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text"}, "version": {"$ref": "#/$defs/text"},
+        "url": {"type": "string", "format": "uri"}, "pdf_sha256": {"$ref": "#/$defs/hash"},
+        "page_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "parent": {
+      "type": "object", "additionalProperties": false, "required": ["chunk_id", "text_sha256"],
+      "properties": {"chunk_id": {"$ref": "#/$defs/text"}, "text_sha256": {"$ref": "#/$defs/hash"}}
+    },
+    "table": {
+      "type": "object", "additionalProperties": false, "required": ["axes", "headers", "cells"],
+      "properties": {
+        "axes": {"type": "array", "minItems": 3, "items": {"type": "number", "minimum": 0}},
+        "headers": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+        "cells": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/block"}}
+      }
+    },
+    "node": {
+      "type": "object", "additionalProperties": false, "required": ["id", "bbox", "text"],
+      "properties": {"id": {"$ref": "#/$defs/text"}, "bbox": {"$ref": "#/$defs/box"}, "text": {"$ref": "#/$defs/text"}}
+    },
+    "graphNote": {
+      "type": "object", "additionalProperties": false, "required": ["node_ids", "bbox", "text"],
+      "properties": {
+        "node_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/text"}},
+        "bbox": {"$ref": "#/$defs/box"}, "text": {"$ref": "#/$defs/text"}
+      }
+    },
+    "graph": {
+      "type": "object", "additionalProperties": false, "required": ["nodes", "edges", "notes"],
+      "properties": {
+        "nodes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/node"}},
+        "edges": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/text"}}},
+        "notes": {"type": "array", "items": {"$ref": "#/$defs/graphNote"}}
+      }
+    },
+    "page": {
+      "type": "object", "additionalProperties": false,
+      "required": ["number", "context", "blocks", "tables", "graphs"],
+      "properties": {
+        "number": {"type": "integer", "minimum": 1}, "context": {"type": "string"},
+        "blocks": {"type": "array", "items": {"$ref": "#/$defs/block"}},
+        "tables": {"type": "array", "items": {"$ref": "#/$defs/table"}},
+        "graphs": {"type": "array", "items": {"$ref": "#/$defs/graph"}}
+      }
+    },
+    "note": {
+      "type": "object", "additionalProperties": false, "required": ["page", "bbox", "text"],
+      "properties": {
+        "page": {"type": "integer", "minimum": 1}, "bbox": {"$ref": "#/$defs/box"}, "text": {"$ref": "#/$defs/text"}
+      }
+    },
+    "omission": {
+      "type": "object", "additionalProperties": false, "required": ["page", "bbox", "reason"],
+      "properties": {
+        "page": {"type": "integer", "minimum": 1}, "bbox": {"$ref": "#/$defs/box"},
+        "reason": {"enum": ["ORGANIZATION_SAMPLE_DOTTED_RELATION_UNRESOLVED", "EMPTY_RESOURCE_INVENTORY_FORM_NOT_INDEXED"]}
+      }
+    },
+    "group": {
+      "type": "object", "additionalProperties": false, "required": ["parents", "pages", "notes", "omissions"],
+      "properties": {
+        "parents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/parent"}},
+        "pages": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/page"}},
+        "notes": {"type": "array", "items": {"$ref": "#/$defs/note"}},
+        "omissions": {"type": "array", "items": {"$ref": "#/$defs/omission"}}
+      }
+    }
+  }
+}

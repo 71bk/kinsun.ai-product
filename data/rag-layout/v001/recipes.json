@@ -1,0 +1,3603 @@
+{
+  "schema_version": "knowledge-layout-recipes-v1",
+  "sources": [
+    {
+      "id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "version": "2023-07-19",
+      "url": "https://1966.gov.tw/LTC/cp-6459-70023-207.html",
+      "pdf_sha256": "f6c31f2ffafaf4e1b467878231786e08a6f39ce386b503bd02b7741489089f3c",
+      "page_count": 255
+    },
+    {
+      "id": "mohw_family_caregiver_support_manual_202507",
+      "version": "114年7月",
+      "url": "https://1966.gov.tw/LTC/cp-6455-69938-207.html",
+      "pdf_sha256": "c8ca94cfed07239676ce8ade678a2396f768cc347f9b51c714e909d095ecc486",
+      "page_count": 93
+    }
+  ],
+  "groups": [
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0002",
+          "text_sha256": "e6a0238016ae8170759bd9d6e5643a3a394c9c6a34867770fdddd721bc76438d"
+        }
+      ],
+      "pages": [
+        {
+          "number": 111,
+          "blocks": [
+            [
+              70,
+              280,
+              540,
+              789
+            ]
+          ]
+        }
+      ],
+      "omissions": [
+        {
+          "page": 111,
+          "bbox": [
+            110,
+            80,
+            510,
+            270
+          ],
+          "reason": "ORGANIZATION_SAMPLE_DOTTED_RELATION_UNRESOLVED"
+        }
+      ]
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0003",
+          "text_sha256": "242ad6991373bae289db5b37c2cf7f75fadf70889aedbb584a55964d5d380004"
+        }
+      ],
+      "pages": [
+        {
+          "number": 112,
+          "blocks": [
+            [
+              65,
+              60,
+              555,
+              789
+            ]
+          ]
+        },
+        {
+          "number": 113,
+          "blocks": [
+            [
+              65,
+              60,
+              555,
+              789
+            ]
+          ]
+        },
+        {
+          "number": 114,
+          "blocks": [
+            [
+              65,
+              60,
+              555,
+              789
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0004",
+          "text_sha256": "c45d283589e6d28f41eabb1a6d17a9fd4e4318f026a3002d634a89e76d122aff"
+        }
+      ],
+      "pages": [
+        {
+          "number": 115,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    205,
+                    120,
+                    316,
+                    155
+                  ],
+                  "expected": "確認召開會議"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    184,
+                    171,
+                    347,
+                    200
+                  ],
+                  "expected": "明確討論議題"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    184,
+                    212,
+                    347,
+                    243
+                  ],
+                  "expected": "時間及場所安排"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    184,
+                    253,
+                    347,
+                    284
+                  ],
+                  "expected": "及早發會議通知"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    184,
+                    295,
+                    347,
+                    327
+                  ],
+                  "expected": "分配會議的工作"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    184,
+                    335,
+                    347,
+                    365
+                  ],
+                  "expected": "準備會議資料"
+                },
+                {
+                  "id": "n6",
+                  "bbox": [
+                    184,
+                    377,
+                    347,
+                    408
+                  ],
+                  "expected": "準備器材"
+                },
+                {
+                  "id": "n7",
+                  "bbox": [
+                    207,
+                    418,
+                    324,
+                    447
+                  ],
+                  "expected": "會議召開"
+                },
+                {
+                  "id": "n8",
+                  "bbox": [
+                    207,
+                    456,
+                    324,
+                    486
+                  ],
+                  "expected": "會議紀錄"
+                },
+                {
+                  "id": "n9",
+                  "bbox": [
+                    207,
+                    501,
+                    324,
+                    535
+                  ],
+                  "expected": "會議結束"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ],
+                [
+                  "n5",
+                  "n6"
+                ],
+                [
+                  "n6",
+                  "n7"
+                ],
+                [
+                  "n7",
+                  "n8"
+                ],
+                [
+                  "n8",
+                  "n9"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n7"
+                  ],
+                  "bbox": [
+                    31,
+                    257,
+                    182,
+                    565
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n7"
+                  ],
+                  "bbox": [
+                    388,
+                    139,
+                    576,
+                    477
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              185,
+              550,
+              450,
+              580
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0005",
+          "text_sha256": "3a2184968b1e82fb0e26280cc5d685c3a7b6956934265407a33b9305bd6c7386"
+        }
+      ],
+      "pages": [
+        {
+          "number": 116,
+          "blocks": [
+            [
+              65,
+              60,
+              555,
+              789
+            ]
+          ]
+        },
+        {
+          "number": 117,
+          "blocks": [
+            [
+              65,
+              60,
+              555,
+              789
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0007",
+          "text_sha256": "b40316c802a7435e8b4c19fcba122373a3c015ecccf4bac28402850efb335b22"
+        }
+      ],
+      "pages": [
+        {
+          "number": 122,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    120,
+                    90,
+                    315,
+                    122
+                  ],
+                  "expected": "安排個督時間與地點"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    145,
+                    135,
+                    280,
+                    168
+                  ],
+                  "expected": "個別督導開始"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    145,
+                    181,
+                    278,
+                    216
+                  ],
+                  "expected": "被督導者工作報告"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    145,
+                    225,
+                    282,
+                    263
+                  ],
+                  "expected": "督導者提問、補充"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    128,
+                    272,
+                    288,
+                    310
+                  ],
+                  "expected": "受督導者回覆督導者問題"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    153,
+                    322,
+                    270,
+                    355
+                  ],
+                  "expected": "督導者引導、建議"
+                },
+                {
+                  "id": "n6",
+                  "bbox": [
+                    147,
+                    365,
+                    285,
+                    398
+                  ],
+                  "expected": "受督導者反思、回饋"
+                },
+                {
+                  "id": "n7",
+                  "bbox": [
+                    129,
+                    411,
+                    303,
+                    444
+                  ],
+                  "expected": "雙向互動討論問題解決方案"
+                },
+                {
+                  "id": "n8",
+                  "bbox": [
+                    158,
+                    454,
+                    258,
+                    487
+                  ],
+                  "expected": "督導者評價"
+                },
+                {
+                  "id": "n9",
+                  "bbox": [
+                    142,
+                    495,
+                    283,
+                    529
+                  ],
+                  "expected": "個別督導結束"
+                },
+                {
+                  "id": "n10",
+                  "bbox": [
+                    160,
+                    539,
+                    276,
+                    581
+                  ],
+                  "expected": "個別督導紀錄(參考表單六)"
+                },
+                {
+                  "id": "n11",
+                  "bbox": [
+                    334,
+                    533,
+                    480,
+                    574
+                  ],
+                  "expected": "個督事項後續追蹤"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ],
+                [
+                  "n5",
+                  "n6"
+                ],
+                [
+                  "n6",
+                  "n7"
+                ],
+                [
+                  "n7",
+                  "n8"
+                ],
+                [
+                  "n8",
+                  "n9"
+                ],
+                [
+                  "n9",
+                  "n10"
+                ],
+                [
+                  "n10",
+                  "n11"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n2",
+                    "n3",
+                    "n4",
+                    "n5",
+                    "n6",
+                    "n7",
+                    "n8"
+                  ],
+                  "bbox": [
+                    338,
+                    197,
+                    532,
+                    485
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              200,
+              591,
+              475,
+              620
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0009",
+          "text_sha256": "05b797d93921b50725f6e3ddbd13affa0705743ffd9c2f741dcc87ba736876c4"
+        }
+      ],
+      "pages": [
+        {
+          "number": 124,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    115,
+                    88,
+                    270,
+                    123
+                  ],
+                  "expected": "團體督導準備"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    138,
+                    127,
+                    249,
+                    159
+                  ],
+                  "expected": "團體督導開始"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    157,
+                    168,
+                    219,
+                    197
+                  ],
+                  "expected": "暖場"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    141,
+                    207,
+                    257,
+                    241
+                  ],
+                  "expected": "團督議題說明"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    150,
+                    248,
+                    232,
+                    282
+                  ],
+                  "expected": "請求協助"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    152,
+                    286,
+                    235,
+                    321
+                  ],
+                  "expected": "成員提問"
+                },
+                {
+                  "id": "n6",
+                  "bbox": [
+                    143,
+                    330,
+                    246,
+                    361
+                  ],
+                  "expected": "回饋與諮詢"
+                },
+                {
+                  "id": "n7",
+                  "bbox": [
+                    143,
+                    370,
+                    246,
+                    402
+                  ],
+                  "expected": "休息片刻"
+                },
+                {
+                  "id": "n8",
+                  "bbox": [
+                    143,
+                    409,
+                    246,
+                    442
+                  ],
+                  "expected": "討論與成果"
+                },
+                {
+                  "id": "n9",
+                  "bbox": [
+                    143,
+                    449,
+                    246,
+                    480
+                  ],
+                  "expected": "總結與回饋"
+                },
+                {
+                  "id": "n10",
+                  "bbox": [
+                    146,
+                    489,
+                    241,
+                    521
+                  ],
+                  "expected": "結束"
+                },
+                {
+                  "id": "n11",
+                  "bbox": [
+                    144,
+                    526,
+                    246,
+                    569
+                  ],
+                  "expected": "團體督導紀錄(參考表單七)"
+                },
+                {
+                  "id": "n12",
+                  "bbox": [
+                    329,
+                    529,
+                    476,
+                    557
+                  ],
+                  "expected": "團督事項後續追蹤"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ],
+                [
+                  "n5",
+                  "n6"
+                ],
+                [
+                  "n6",
+                  "n7"
+                ],
+                [
+                  "n7",
+                  "n8"
+                ],
+                [
+                  "n8",
+                  "n9"
+                ],
+                [
+                  "n9",
+                  "n10"
+                ],
+                [
+                  "n10",
+                  "n11"
+                ],
+                [
+                  "n11",
+                  "n12"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n0"
+                  ],
+                  "bbox": [
+                    322,
+                    84,
+                    470,
+                    135
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n2"
+                  ],
+                  "bbox": [
+                    322,
+                    148,
+                    470,
+                    216
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n3"
+                  ],
+                  "bbox": [
+                    20,
+                    197,
+                    126,
+                    251
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n4"
+                  ],
+                  "bbox": [
+                    322,
+                    240,
+                    470,
+                    281
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n5"
+                  ],
+                  "bbox": [
+                    322,
+                    285,
+                    470,
+                    322
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n6"
+                  ],
+                  "bbox": [
+                    322,
+                    329,
+                    470,
+                    368
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n7"
+                  ],
+                  "bbox": [
+                    322,
+                    369,
+                    470,
+                    412
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n8"
+                  ],
+                  "bbox": [
+                    18,
+                    387,
+                    130,
+                    457
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n9"
+                  ],
+                  "bbox": [
+                    322,
+                    440,
+                    470,
+                    480
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              200,
+              569,
+              475,
+              589
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0011",
+          "text_sha256": "fd6e368faa80a61311bc32524106625a9f1ff85bf21f304ae573f4fa5d92e17b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 127,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 0,
+            "columns": 2,
+            "expected_headers": [
+              "",
+              ""
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0013",
+          "text_sha256": "fba216cc3a2885dcfd947b5873c1a0e85a9ba9c0664b4e87a9800457f349540d"
+        }
+      ],
+      "pages": [
+        {
+          "number": 130,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    244,
+                    103,
+                    356,
+                    138
+                  ],
+                  "expected": "確認服務目標"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    247,
+                    153,
+                    351,
+                    185
+                  ],
+                  "expected": "確認品質面向"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    244,
+                    205,
+                    352,
+                    239
+                  ],
+                  "expected": "確認規劃方向"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    234,
+                    250,
+                    359,
+                    299
+                  ],
+                  "expected": "可能的品質衡量(擇其要者列監測指標)"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    234,
+                    308,
+                    359,
+                    346
+                  ],
+                  "expected": "品質規劃衡量表"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    212,
+                    363,
+                    376,
+                    435
+                  ],
+                  "expected": "此段程序結束(接續品質指標監測程序)"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n0"
+                  ],
+                  "bbox": [
+                    376,
+                    87,
+                    557,
+                    184
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n1"
+                  ],
+                  "bbox": [
+                    47,
+                    96,
+                    221,
+                    193
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n2"
+                  ],
+                  "bbox": [
+                    376,
+                    190,
+                    557,
+                    275
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n3"
+                  ],
+                  "bbox": [
+                    26,
+                    220,
+                    202,
+                    362
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n4"
+                  ],
+                  "bbox": [
+                    376,
+                    301,
+                    519,
+                    348
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n5"
+                  ],
+                  "bbox": [
+                    395,
+                    378,
+                    519,
+                    428
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              175,
+              440,
+              480,
+              466
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0015",
+          "text_sha256": "f3c90836ec050380830692293c8cb966e06e3288229ecfca7a13f6d93cf2c3c8"
+        }
+      ],
+      "pages": [
+        {
+          "number": 132,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    234,
+                    97,
+                    375,
+                    132
+                  ],
+                  "expected": "確認欲監測之品質指標"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    243,
+                    192,
+                    374,
+                    234
+                  ],
+                  "expected": "界定組織標準"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    242,
+                    280,
+                    375,
+                    326
+                  ],
+                  "expected": "不良/良件登錄"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    231,
+                    386,
+                    379,
+                    428
+                  ],
+                  "expected": "依據組織標準設定閾值"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    237,
+                    469,
+                    375,
+                    513
+                  ],
+                  "expected": "閾值檢測登錄"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    241,
+                    545,
+                    383,
+                    587
+                  ],
+                  "expected": "列監測改善指標"
+                },
+                {
+                  "id": "n6",
+                  "bbox": [
+                    228,
+                    613,
+                    406,
+                    673
+                  ],
+                  "expected": "此段程序結束(接續品質指標改善與確認程序)"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ],
+                [
+                  "n5",
+                  "n6"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n0"
+                  ],
+                  "bbox": [
+                    397,
+                    77,
+                    573,
+                    177
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n1"
+                  ],
+                  "bbox": [
+                    14,
+                    71,
+                    209,
+                    326
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n2"
+                  ],
+                  "bbox": [
+                    397,
+                    183,
+                    576,
+                    445
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n3"
+                  ],
+                  "bbox": [
+                    14,
+                    330,
+                    209,
+                    569
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n4"
+                  ],
+                  "bbox": [
+                    397,
+                    448,
+                    576,
+                    585
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n5"
+                  ],
+                  "bbox": [
+                    16,
+                    571,
+                    209,
+                    692
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n6"
+                  ],
+                  "bbox": [
+                    430,
+                    613,
+                    576,
+                    664
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              209,
+              677,
+              480,
+              703
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0018",
+          "text_sha256": "c570b4b9345c46d1ae784d97c674ae94f0df1cfe749cfa532d4675d1f4f67ac8"
+        }
+      ],
+      "pages": [
+        {
+          "number": 135,
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    234,
+                    108,
+                    376,
+                    143
+                  ],
+                  "expected": "確認改善指標"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    234,
+                    159,
+                    376,
+                    199
+                  ],
+                  "expected": "召開品質改善會議"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    234,
+                    216,
+                    376,
+                    257
+                  ],
+                  "expected": "確認問題"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    234,
+                    274,
+                    376,
+                    315
+                  ],
+                  "expected": "問題原因分析"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    234,
+                    332,
+                    376,
+                    373
+                  ],
+                  "expected": "問題的改良對策"
+                },
+                {
+                  "id": "n5",
+                  "bbox": [
+                    234,
+                    389,
+                    376,
+                    430
+                  ],
+                  "expected": "追蹤"
+                },
+                {
+                  "id": "n6",
+                  "bbox": [
+                    234,
+                    446,
+                    376,
+                    487
+                  ],
+                  "expected": "成效與確認"
+                },
+                {
+                  "id": "n7",
+                  "bbox": [
+                    234,
+                    502,
+                    376,
+                    548
+                  ],
+                  "expected": "服務品質管控表"
+                },
+                {
+                  "id": "n8",
+                  "bbox": [
+                    234,
+                    566,
+                    376,
+                    609
+                  ],
+                  "expected": "結案"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n5"
+                ],
+                [
+                  "n5",
+                  "n6"
+                ],
+                [
+                  "n6",
+                  "n7"
+                ],
+                [
+                  "n7",
+                  "n8"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n0"
+                  ],
+                  "bbox": [
+                    401,
+                    88,
+                    573,
+                    216
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n1"
+                  ],
+                  "bbox": [
+                    18,
+                    135,
+                    211,
+                    224
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n2"
+                  ],
+                  "bbox": [
+                    397,
+                    222,
+                    574,
+                    316
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n3"
+                  ],
+                  "bbox": [
+                    22,
+                    234,
+                    213,
+                    351
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n4"
+                  ],
+                  "bbox": [
+                    400,
+                    322,
+                    578,
+                    453
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n5"
+                  ],
+                  "bbox": [
+                    20,
+                    360,
+                    213,
+                    475
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n6",
+                    "n7"
+                  ],
+                  "bbox": [
+                    397,
+                    462,
+                    577,
+                    618
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n8"
+                  ],
+                  "bbox": [
+                    20,
+                    527,
+                    211,
+                    630
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              175,
+              642,
+              480,
+              669
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0019",
+          "text_sha256": "bf38fcc1cfb017a3007b39ee2f259d45d623f956c9fbcf174f400fa75a00067c"
+        }
+      ],
+      "pages": [
+        {
+          "number": 136,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 0,
+            "columns": 2,
+            "expected_headers": [
+              "",
+              ""
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0020",
+          "text_sha256": "281b5f552ae2aa8c6cd24bbae0708b06d239f640363374e8b3275b4b0cb26d4f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 137,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 38,
+            "columns": 5,
+            "expected_headers": [
+              "編號",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 138,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 38,
+            "columns": 5,
+            "expected_headers": [
+              "編號",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 139,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 38,
+            "columns": 5,
+            "expected_headers": [
+              "編號",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0021",
+          "text_sha256": "c9e5f8689b1ea8ad22d5d7d3c27d6635961094d9afb8b250270479c6da981c6a"
+        }
+      ],
+      "pages": [
+        {
+          "number": 140,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 0,
+            "columns": 2,
+            "expected_headers": [
+              "",
+              ""
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0022",
+          "text_sha256": "32851aa1c3d2e15b62dbedbbec90e283fd04193c3dddc445601903fcb7fe262a"
+        }
+      ],
+      "pages": [
+        {
+          "number": 141,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 28,
+            "columns": 5,
+            "expected_headers": [
+              "類別",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 142,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 28,
+            "columns": 5,
+            "expected_headers": [
+              "類別",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 143,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 28,
+            "columns": 5,
+            "expected_headers": [
+              "類別",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 144,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 28,
+            "columns": 5,
+            "expected_headers": [
+              "類別",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 145,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 28,
+            "columns": 5,
+            "expected_headers": [
+              "類別",
+              "課程主題",
+              "課程目標",
+              "內涵說明",
+              "時數"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0023",
+          "text_sha256": "cddfb14b569ec75a45e2e7a8ce93185c40ba4bca9d567dcc0b58eca1c4d3339a"
+        }
+      ],
+      "pages": [
+        {
+          "number": 146,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true,
+            "open_boundary_cells": [
+              {
+                "bbox": [
+                  21.36,
+                  167.78,
+                  109.22,
+                  744.57601
+                ],
+                "expected": "1-1 專業能力"
+              }
+            ]
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0024",
+          "text_sha256": "c30b0d453ad9a87df1266abed66c39059bd899d32983c9dc03d80868abf8c7d9"
+        }
+      ],
+      "pages": [
+        {
+          "number": 147,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true,
+            "open_boundary_cells": [
+              {
+                "bbox": [
+                  21.36,
+                  492.43,
+                  109.22,
+                  742.6560099999999
+                ],
+                "expected": "1-2 資源盤點及服務媒合"
+              }
+            ]
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0025",
+          "text_sha256": "76735922ac5fb92df561a8445f1ad0289e6ef0bc66790bccb6e4f9776fa99824"
+        }
+      ],
+      "pages": [
+        {
+          "number": 148,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true,
+            "open_boundary_cells": [
+              {
+                "bbox": [
+                  21.36,
+                  552.43,
+                  109.22,
+                  755.9760099999999
+                ],
+                "expected": "2-1 行政組織與管理"
+              }
+            ]
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0026",
+          "text_sha256": "6665c3bfa31280b4dbc316c188bc8fb076912b49e15d07bdf37a3299b7736918"
+        }
+      ],
+      "pages": [
+        {
+          "number": 149,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true,
+            "open_boundary_cells": [
+              {
+                "bbox": [
+                  21.36,
+                  258.74,
+                  109.22,
+                  759.33601
+                ],
+                "expected": "2-2 人員專業"
+              }
+            ]
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0027",
+          "text_sha256": "95577f8f7fadc59708839ce33ada25a502d4de5c65103ac68ce7f12cf57cb682"
+        }
+      ],
+      "pages": [
+        {
+          "number": 150,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true,
+            "open_boundary_cells": [
+              {
+                "bbox": [
+                  21.36,
+                  459.77,
+                  109.22,
+                  741.8159799999999
+                ],
+                "expected": "3-1 服務品質"
+              }
+            ]
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0028",
+          "text_sha256": "313db719308298ae134adad910169e28aa9df884dad507d4b3cf91d226cd70f4"
+        }
+      ],
+      "pages": [
+        {
+          "number": 151,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0029",
+          "text_sha256": "73f52a31daba88479652a31610f4960ce80bc6d49eae82a4f00c0afa2da7efee"
+        }
+      ],
+      "pages": [
+        {
+          "number": 152,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 29,
+            "columns": 5,
+            "expected_headers": [
+              "基準",
+              "內容",
+              "基準說明",
+              "評核方式/操作說明",
+              "備註說明"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0032",
+          "text_sha256": "d64b54b47b4881dd0e9ca3b25d8606a2f7f37ae76954fd342d0a1b0e332c6e58"
+        }
+      ],
+      "pages": [
+        {
+          "number": 156,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 157,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 158,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 159,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 160,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0033",
+          "text_sha256": "8e00d902533cfb1e5c746a08f0bfa37339e2b12bf5b94e6738e7560553046759"
+        }
+      ],
+      "pages": [
+        {
+          "number": 161,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 162,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0034",
+          "text_sha256": "2597636ef40d75690cafc6204dedc92e84461b43b65ddfea2beb840942fc2bad"
+        }
+      ],
+      "pages": [
+        {
+          "number": 163,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 164,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0035",
+          "text_sha256": "13235e27abf7290248777d364f7e1912caffa9c337d7a1ba0b687d6d68f76636"
+        }
+      ],
+      "pages": [
+        {
+          "number": 165,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 166,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0036",
+          "text_sha256": "23e8c5360f7bbb27a6dc4e9d997392bfd48e06c997bd824ef0581b26bcb2df73"
+        }
+      ],
+      "pages": [
+        {
+          "number": 167,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 168,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 169,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0037",
+          "text_sha256": "e0b37619fb0e3e65624985aacaf7629950468021fab76068edf69c808996945b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 170,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 171,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0038",
+          "text_sha256": "d2f0a89b647cdcbb9ff9f14d8e5368da684bf24fab8931cf4f0eb4adc1e963fb"
+        }
+      ],
+      "pages": [
+        {
+          "number": 172,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 173,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0039",
+          "text_sha256": "23e0e31317450c07bf64265e59322abad462a3115a7271f2c44ec7880e79d78b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 174,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 175,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0040",
+          "text_sha256": "b54e469f7e093e7a9a53d83bb3abb7b61f50b30cc833e28a18e1c906abbc7d9e"
+        }
+      ],
+      "pages": [
+        {
+          "number": 176,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 177,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0041",
+          "text_sha256": "9d3e3a98dc30701b7a5a113a6f5a0cc28ef22b2a452af2df8f605a2898a9a616"
+        }
+      ],
+      "pages": [
+        {
+          "number": 178,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 179,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0042",
+          "text_sha256": "caf1e45e1fca8baeca18de448c689149d3f7a1d88e7817b18a8252f701b1827e"
+        }
+      ],
+      "pages": [
+        {
+          "number": 180,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 181,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0043",
+          "text_sha256": "8909f9f50facdd8c86b6491f71f3ad44bd019fb2f3ccb22c1651e8a7dd3a905c"
+        }
+      ],
+      "pages": [
+        {
+          "number": 182,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 183,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0044",
+          "text_sha256": "12e516f0e7769c959e362ad9e1504061b2bbd3a3db8cf337704269bd7384db22"
+        }
+      ],
+      "pages": [
+        {
+          "number": 184,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 185,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0046",
+          "text_sha256": "515d5eb4f1c4cdf24522630992bb80b053f66b605413e7c845d322bc21d2d633"
+        }
+      ],
+      "pages": [
+        {
+          "number": 188,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 189,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0047",
+          "text_sha256": "b295c789de34cb8f3dc4dc2ebbcbdc230860a29f0103e287a5f9b0135e79061b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 190,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 191,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0048",
+          "text_sha256": "e9e4580caf5dea6d6633a295305e5a93d06e0425b4efc0f477155381640d954f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 192,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0050",
+          "text_sha256": "a4d05c7e30203d3c18f657e4c8f99ec3c9b472da0f313dc908392f7ee7c75f98"
+        }
+      ],
+      "pages": [
+        {
+          "number": 195,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 196,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0051",
+          "text_sha256": "1c9d2a57bcc933d2426804b84cd3eed65518dddd626ea9391edbe7c5c5c7657c"
+        }
+      ],
+      "pages": [
+        {
+          "number": 197,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 198,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0053",
+          "text_sha256": "739b28fb23e58ad6b0f1d67ce1049a024ea67980e671fbe4f107822daaea5a87"
+        }
+      ],
+      "pages": [
+        {
+          "number": 201,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 202,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 203,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0054",
+          "text_sha256": "5eb120c8a7bb0a2deb767b3bc2adb8f709ce712c4cfa6049871cc027818a910f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 204,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 205,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 206,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0055",
+          "text_sha256": "b6ded4a04d987e4919b7918f84fb3479241b5a6ec9db01163ed889777f127260"
+        }
+      ],
+      "pages": [
+        {
+          "number": 207,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 208,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0058",
+          "text_sha256": "a874b860a51d2cdb367f8c7b1a9840d2f90bec199ec7c5a8f17faf2a452c2b20"
+        }
+      ],
+      "pages": [
+        {
+          "number": 213,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 214,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0059",
+          "text_sha256": "fc07fb4f13ee4da78f380e8b9b651c7aeccbf8b2b3269641ea084f455c8818a9"
+        }
+      ],
+      "pages": [
+        {
+          "number": 215,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 216,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 217,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0060",
+          "text_sha256": "0c9cd8e877f275a40cafdb15d3863afa1571cd468094956c8156218200c36f7f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 218,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 219,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0061",
+          "text_sha256": "3f0f61425fbac70a963a8ed1bcbb86faa92e98b15c0e9a840bc622faffb6e45b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 220,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 221,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0062",
+          "text_sha256": "1ce49bb83bf579e8e6331578327089c81e1717f9e9c6b2ba20a53e9ef6c9c304"
+        }
+      ],
+      "pages": [
+        {
+          "number": 222,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 223,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 40,
+            "columns": 4,
+            "expected_headers": [
+              "問題面向",
+              "問題面向",
+              "對應之給付碼",
+              "建議可介入的專業人員（非建議介入順序）"
+            ],
+            "outside_context": true
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_a_unit_case_manager_manual_appendix_20230719",
+      "parents": [
+        {
+          "chunk_id": "mohw_a_unit_case_manager_manual_appendix_20230719_rag_v2_v005_0067",
+          "text_sha256": "932c2dad57a2a0fefc98e541a7b9f42a49ced1cb886a8e0d23652f05b1dc31de"
+        }
+      ],
+      "pages": [
+        {
+          "number": 232,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 38,
+            "columns": 3,
+            "expected_headers": [
+              "情境",
+              "勞動部審核外看異動程序、文件及期程",
+              "可作為判斷外看異動之文件"
+            ],
+            "outside_context": true
+          }
+        },
+        {
+          "number": 233,
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 0,
+            "columns": 3,
+            "expected_headers": [
+              "情境",
+              "勞動部審核外看異動程序、文件及期程",
+              "可作為判斷外看異動之文件"
+            ],
+            "outside_context": true,
+            "inherited_headers": [
+              "情境",
+              "勞動部審核外看異動程序、文件及期程",
+              "可作為判斷外看異動之文件"
+            ],
+            "inherited_headers_from": 232
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0008",
+          "text_sha256": "219fa2ca75f92579cd08f80f0dc3fdf221d9fb16c15f3a5df710738f6a25edd8"
+        }
+      ],
+      "pages": [
+        {
+          "number": 10,
+          "context_regions": [
+            [
+              35,
+              110,
+              554,
+              130
+            ],
+            [
+              35,
+              385,
+              554,
+              400
+            ]
+          ],
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 17,
+            "columns": 2,
+            "expected_headers": [
+              "2017年老人狀況調查-主要家庭照顧者",
+              "2016年身心障礙者生活狀況調查-主要家庭照顧者"
+            ],
+            "outside_context": false
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0029",
+          "text_sha256": "3ae2ea00b310efcffc28b4f5a781806e2a878ce5e4228a66e4d4c1f3a937ffe4"
+        }
+      ],
+      "pages": [
+        {
+          "number": 20,
+          "blocks": [
+            [
+              42,
+              327,
+              313,
+              652
+            ],
+            [
+              42,
+              652,
+              555,
+              760
+            ],
+            [
+              319,
+              333,
+              546,
+              665
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0047",
+          "text_sha256": "0153adf8d558a0d4b3f25b0302fc0d7d3eef260bcb003f25dcbc46da77f2516f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 30,
+          "blocks": [
+            [
+              42,
+              498,
+              555,
+              789
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0048",
+          "text_sha256": "039d669c4224db6c000b4f35e5eac57824bf019247eabb35009a707e72af8d46"
+        },
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0049",
+          "text_sha256": "f9aed5dd07d9f6de161e94b3d62343e268a16e04cd43851cdfedcee6eb88135f"
+        }
+      ],
+      "pages": [
+        {
+          "number": 31,
+          "context_regions": [
+            [
+              35,
+              70,
+              554,
+              98
+            ]
+          ],
+          "table": {
+            "count": 1,
+            "index": 0,
+            "header_depth": 15,
+            "columns": 3,
+            "expected_headers": [
+              "照顧者的狀態",
+              "照顧者說出的話",
+              "家照專員可以選擇運用的回應範例"
+            ],
+            "outside_context": false
+          }
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0073",
+          "text_sha256": "3b106a319155ed046010d10567effb325757cbd00e6d46eb1c918a433b56ab8b"
+        }
+      ],
+      "pages": [
+        {
+          "number": 47,
+          "blocks": [
+            [
+              55,
+              69,
+              554,
+              205
+            ]
+          ],
+          "graphs": [
+            {
+              "nodes": [
+                {
+                  "id": "n0",
+                  "bbox": [
+                    268,
+                    282,
+                    355,
+                    326
+                  ],
+                  "expected": "成員特性"
+                },
+                {
+                  "id": "n1",
+                  "bbox": [
+                    346,
+                    339,
+                    433,
+                    385
+                  ],
+                  "expected": "成員的改變"
+                },
+                {
+                  "id": "n2",
+                  "bbox": [
+                    315,
+                    426,
+                    403,
+                    472
+                  ],
+                  "expected": "團體情境"
+                },
+                {
+                  "id": "n3",
+                  "bbox": [
+                    220,
+                    426,
+                    311,
+                    472
+                  ],
+                  "expected": "團體的發展"
+                },
+                {
+                  "id": "n4",
+                  "bbox": [
+                    192,
+                    338,
+                    281,
+                    385
+                  ],
+                  "expected": "統合運作過程"
+                }
+              ],
+              "edges": [
+                [
+                  "n0",
+                  "n1"
+                ],
+                [
+                  "n1",
+                  "n2"
+                ],
+                [
+                  "n2",
+                  "n3"
+                ],
+                [
+                  "n3",
+                  "n4"
+                ],
+                [
+                  "n4",
+                  "n0"
+                ]
+              ],
+              "notes": [
+                {
+                  "node_ids": [
+                    "n0"
+                  ],
+                  "bbox": [
+                    367,
+                    201,
+                    547,
+                    291
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n1"
+                  ],
+                  "bbox": [
+                    410,
+                    370,
+                    582,
+                    480
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n2"
+                  ],
+                  "bbox": [
+                    340,
+                    478,
+                    532,
+                    570
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n3"
+                  ],
+                  "bbox": [
+                    30,
+                    454,
+                    224,
+                    542
+                  ]
+                },
+                {
+                  "node_ids": [
+                    "n4"
+                  ],
+                  "bbox": [
+                    30,
+                    235,
+                    210,
+                    349
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_regions": [
+            [
+              120,
+              576,
+              545,
+              607
+            ]
+          ]
+        }
+      ],
+      "omissions": []
+    },
+    {
+      "source_id": "mohw_family_caregiver_support_manual_202507",
+      "parents": [
+        {
+          "chunk_id": "mohw_family_caregiver_support_manual_202507_rag_v2_v005_0087",
+          "text_sha256": "e56b2e29cd3aa92d07a0724f9a61fee5e8db04a86eb541143ccc62a692372393"
+        }
+      ],
+      "pages": [
+        {
+          "number": 54,
+          "blocks": [
+            [
+              42,
+              211,
+              550,
+              471.24999749999995
+            ],
+            [
+              42,
+              680.98001,
+              555,
+              789
+            ]
+          ]
+        }
+      ],
+      "omissions": [
+        {
+          "page": 54,
+          "bbox": [
+            147.50000428571428,
+            471.24999749999995,
+            462.30999142857144,
+            680.98001
+          ],
+          "reason": "EMPTY_RESOURCE_INVENTORY_FORM_NOT_INDEXED"
+        }
+      ]
+    }
+  ]
+}
