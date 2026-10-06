@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-06：本機 generation 已由 3.6 升為 `gemini-3.8-flash`，Native adapter 用 LOW thinking 並保留舊模型相容設定。157 項相關回歸、定向 lint／format 與真實 Vertex／家屬／居服公開問答驗收通過。Embedding 維持 `gemini-embedding-001`；見 `docs/project/gemini38-upgrade-20261006.md`。
+
 - 2026-10-05：#69 已合併，家屬公開長照問答已實作於 `/family/knowledge`，ACTIVE FAMILY_MEMBER 限定、固定公開受眾，不查個人紀錄、不儲存問答；僅在非 production 及既有知識開關啟用時可用。詳見 `docs/project/family-public-knowledge-20261005.md`；前階段「未新增家屬入口」已由本次進度取代。
 
 - 2026-10-05：文字陪伴提示已區分資料不足／釐清、服務失敗／逾時與醫療安全拒答，安全決策優先；未知原因不猜醫療風險。27 項相關前端測試、typecheck、定向 lint、build、28 項 CI 規則及四種寬度 × 三種合成畫面通過。本機 3000 已更新；後端行為未改。#67／#68 均已合併，詳見 `docs/project/rag-retrieval-and-quotes-20261005.md` 末節。
