@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- 2026-10-06：55 筆因 PDF 版面排除的專業公開來源已在本機修整為 54 完整單位；v009 候選 `knowledge-v009-c33f6b2199e7` 共 657 筆，603 未變且向量可重用、54 待新 embedding。現有版面／准入 gate 未放寬，兩個不適合索引的圖表區塊明確排除；54 筆合成引用及 657 筆 Core 載入通過，39 定向測試、53 既有準備測試、28 CI 規則與 lint／format／contract 通過。維持 needs_review，尚未呼叫 provider、匯入、啟用或驗收新版真實回答；日常仍 v008。詳見 [版面修整報告](docs/project/rag-pdf-layout-repair-20261006.md)。下方「55 筆未修」為前階段歷史。
+
 - 2026-10-06：使用者授權將 generation model 由 `gemini-3.6-flash` 升為穩定版 `gemini-3.8-flash`，本機 GEMINI／相容備援 model ID 均已更新。Native adapter 對 3.8 明確用 LOW thinking（不支援 MINIMAL），保留 3.6 MINIMAL 與其他模型 temperature 行為。157 項相關回歸及定向 lint／format 通過；真實 Vertex 合成陪伴呼叫、家屬／居服各申請／法條／資料不足／用藥拒答通過。Embedding 仍 `gemini-embedding-001`；來源版面修復另案。詳見 [模型升級報告](docs/project/gemini38-upgrade-20261006.md)。
 
 - 2026-10-05：PR #70 已合併（`01165c3`），新增專業公開問答 `/staff/knowledge` 與專用 API，限 ACTIVE DAYCARE_CARE_WORKER／HOME_CARE_WORKER，server 固定 `care_professional`。公開 DTO／service／UI 與家屬共用，家屬 API 相容且受眾固定；無個案查詢或寫入。74 項後端、83 項前端、68 組合成畫面通過；居服 demo 真實申請／法條引用及權限驗收完成。初次帶錯誤前提的法條範例回資料不足，已改中性範例並保留紀錄。55 筆版面來源及 production 均未動；詳見 [專業問答報告](docs/project/staff-public-knowledge-20261005.md)。下方「專業入口未包含」為前階段歷史。

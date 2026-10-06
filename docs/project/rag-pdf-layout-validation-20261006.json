@@ -1,0 +1,77 @@
+{
+  "schema_version": "knowledge-layout-local-validation-v1",
+  "status": "PASS",
+  "dataset_version": "v009",
+  "candidate_release_id": "knowledge-v009-c33f6b2199e7",
+  "candidate_sha256": "c33f6b2199e769e35fc0f33a8453863ee9dbe7b478dd072c8e4ccc6215d5dee4",
+  "source_count": 2,
+  "selected_physical_page_count": 96,
+  "parser": "pdfplumber-0.11.9",
+  "input_count": 658,
+  "candidate_count": 657,
+  "unchanged_count": 603,
+  "replacement_count": 54,
+  "replaced_count": 55,
+  "omitted_block_count": 2,
+  "general_information_admission": {
+    "elder": {
+      "v008": {
+        "policy_admitted": 97,
+        "layout_excluded": 0
+      },
+      "v009": {
+        "policy_admitted": 97,
+        "layout_excluded": 0
+      }
+    },
+    "family_caregiver": {
+      "v008": {
+        "policy_admitted": 136,
+        "layout_excluded": 0
+      },
+      "v009": {
+        "policy_admitted": 136,
+        "layout_excluded": 0
+      }
+    },
+    "care_professional": {
+      "v008": {
+        "policy_admitted": 464,
+        "layout_excluded": 55
+      },
+      "v009": {
+        "policy_admitted": 463,
+        "layout_excluded": 0
+      }
+    },
+    "system_admin": {
+      "v008": {
+        "policy_admitted": 50,
+        "layout_excluded": 0
+      },
+      "v009": {
+        "policy_admitted": 50,
+        "layout_excluded": 0
+      }
+    }
+  },
+  "whole_corpus_layout_excluded": {
+    "v008": 70,
+    "v009": 15
+  },
+  "synthetic_grounded_envelope_pass_count": 54,
+  "core_loader_pass_count": 657,
+  "embedding_plan": {
+    "total": 657,
+    "potential_reuse": 603,
+    "available_reuse": 603,
+    "unique_embeddings_required": 54,
+    "deduplicated": 0
+  },
+  "real_hybrid_search_executed": false,
+  "real_generation_executed": false,
+  "external_embedding_generated": false,
+  "database_imported": false,
+  "activated": false,
+  "production_approved": false
+}

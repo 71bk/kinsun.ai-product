@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-06：55 筆 PDF 版面來源本機修整為 54 完整單位，v009 候選 `knowledge-v009-c33f6b2199e7` 共 657 筆；603 向量可重用、54 待產生。保留現有版面／准入 gate 與 needs_review，兩個區塊明確排除。54 合成引用、657 Core 載入、39 定向測試、53 既有準備測試、28 CI 規則及 lint／format／contract 通過。尚未 provider 呼叫／匯入／啟用／真實品質驗收；日常仍 v008。詳見 `docs/project/rag-pdf-layout-repair-20261006.md`，先前「55 筆未修」為歷史。
+
 - 2026-10-06：本機 generation 已由 3.6 升為 `gemini-3.8-flash`，Native adapter 用 LOW thinking 並保留舊模型相容設定。157 項相關回歸、定向 lint／format 與真實 Vertex／家屬／居服公開問答驗收通過。Embedding 維持 `gemini-embedding-001`；見 `docs/project/gemini38-upgrade-20261006.md`。
 
 - 2026-10-05：#70 已合併（`01165c3`）；專業公開問答 `/staff/knowledge` 已實作，限 ACTIVE DAYCARE_CARE_WORKER／HOME_CARE_WORKER，固定 care_professional，無個案資料存取或寫入。共用家屬 DTO／service／UI，保留原家屬契約與角色隔離。74 後端、83 前端、68 組合成畫面及居服 demo 真實回答／引用／權限驗收完成；初次法條定義範例資料不足保留於報告，改為中性法條範例。55 筆來源修復與 production 未包含。詳見 `docs/project/staff-public-knowledge-20261005.md`。
