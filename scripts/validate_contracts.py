@@ -28,6 +28,11 @@ EXAMPLES = CONTRACTS / "examples"
 
 # example file -> schema that its "data" member must satisfy
 DATA_SCHEMA_FOR = {
+    "staff-knowledge-question.json": "domain/PublicKnowledgeQuestionV1.json",
+    "staff-knowledge-answer.json": "domain/PublicKnowledgeAnswerV1.json",
+    "staff-knowledge-client-scope.json": "domain/PublicKnowledgeQuestionV1.json",
+    "staff-knowledge-restricted-field.json": "domain/PublicKnowledgeAnswerV1.json",
+
     "family-knowledge-question.json": "domain/FamilyKnowledgeQuestionV1.json",
     "family-knowledge-answer.json": "domain/FamilyKnowledgeAnswerV1.json",
     "family-knowledge-no-data.json": "domain/FamilyKnowledgeAnswerV1.json",

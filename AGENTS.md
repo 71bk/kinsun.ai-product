@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- 2026-10-05：PR #70 已合併（`01165c3`），新增專業公開問答 `/staff/knowledge` 與專用 API，限 ACTIVE DAYCARE_CARE_WORKER／HOME_CARE_WORKER，server 固定 `care_professional`。公開 DTO／service／UI 與家屬共用，家屬 API 相容且受眾固定；無個案查詢或寫入。74 項後端、83 項前端、68 組合成畫面通過；居服 demo 真實申請／法條引用及權限驗收完成。初次帶錯誤前提的法條範例回資料不足，已改中性範例並保留紀錄。55 筆版面來源及 production 均未動；詳見 [專業問答報告](docs/project/staff-public-knowledge-20261005.md)。下方「專業入口未包含」為前階段歷史。
+
 - 2026-10-05：PR #69 已合併（`65d389c`），新增家屬公開長照問答 `/family/knowledge` 與專用 Core API。僅 ACTIVE FAMILY_MEMBER，server 固定 family_caregiver；無長輩 scope、個人紀錄、對話儲存或寫入。只回傳回答與官方来源摘要；原始 payload 仍經 family redline guard。非 production 且既有知識開關啟用時可用。驗證與限制見 [家屬問答報告](docs/project/family-public-knowledge-20261005.md)；下方「未新增家屬入口」為前階段歷史。專業入口與 55 筆版面來源修復未包含。
 
 - 2026-10-05 文字陪伴提示：依 Core 回傳 reason_codes 區分資料不足／待釐清、服務失敗／逾時、醫療安全拒答；BLOCK／HUMAN_REVIEW 優先於稍後重試，未知原因用中性說明。27 項相關前端測試、typecheck、定向 lint、production build、28 項 CI 規則通過；375／390／430／1440 寬度各三種合成畫面共 12 組通過。日常 3000 前端已更新；此次未改後端、安全判斷或新增家屬／專業問答入口。#67、#68 均已合併（main `9d633bb`）；下方 draft 敘述為歷史。詳見本次 RAG 報告末節。
