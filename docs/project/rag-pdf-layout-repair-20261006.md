@@ -51,6 +51,8 @@ Local checks completed:
 
 No destructive local database tests were run. Disposable database integration and the broader service suites are delegated to the PR's existing Gate 1 workflow.
 
+The first CI run passed 460 RAG tests but rejected a new root `.gitattributes` line because the historical v006 acceptance package binds that file's bytes. The LF rule was moved to `data/rag-layout/.gitattributes`; the root file and archived inventories remain unchanged. This preserves historical validation without creating another audit successor or altering runtime admission.
+
 ## Remaining work
 
 Review and merge the code/source package, then separately authorize generation of 54 embeddings and the v009 development import. Before activation, verify counts, hashes and vectors and preserve v008 as the rollback release. After controlled activation, rerun real Hybrid retrieval and the existing natural-language question set with `gemini-3.8-flash`, including table/code questions, role isolation, insufficient-data cases and medical refusals. Earlier sporadic BFF fallback and answer-quality limitations remain open until that verification supplies evidence. Production remains disabled.
