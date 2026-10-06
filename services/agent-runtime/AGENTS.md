@@ -1,5 +1,7 @@
 # AGENTS.md — agent-runtime
 
+- 2026-10-06 generation model 升級：本機使用 `gemini-3.8-flash`，其 thinking level 最低為 LOW，MINIMAL 會被 API 拒絕。Native adapter 明確區分 3.8 LOW／3.6 MINIMAL／其他模型原 temperature 行為，不用寬鬆名稱比對推測未來模型能力。512 一般 token budget、2048 grounded floor 與回覆／JSON／引用／安全限制維持。157 項定向回歸與真實 Vertex／兩種公開問答驗收通過；Embedding 未變。詳見 [報告](../../docs/project/gemini38-upgrade-20261006.md)。
+
 - 2026-10-05：V3 邊界以 task-local context 記錄 `rag_v3_failure`；標準 logger 輸出精簡 JSON，request_tag 為 request_id SHA-256 前 16 碼，只有階段、固定 code、耗時。不得附 exception／traceback／問句／模型原文；未知驗證理由映射通用分類。typed provider cause timeout、服務 deadline 與外部取消分開，取消仍傳遞；正常 SUCCESS／NO_DATA 不記為失敗。203 項相關回歸及 lint／format 通過。#67 已合併；#68 已重建增量，最終狀態看 GitHub。
 
 - 2026-10-05 整合後：本機 development 日常 v008＋V3＋Core router v2 已啟用，已實測 v004 回退再恢復；不是 production activation。最終 16 題 11 SUCCESS／5 NO_DATA／0 FAILED，200 項相關回歸通過。版面規則補編號／短英數例外，658 筆排除 70 筆；實際 professional general_information 准入 464 筆中排除 55，elder／family 准入無排除。BFF 初次兩筆生成備援後續未重現，不能宣稱原因已修復或模型永不失敗。PR #68 依賴 #67；詳見 [完整報告](../../docs/project/rag-retrieval-and-quotes-20261005.md)。

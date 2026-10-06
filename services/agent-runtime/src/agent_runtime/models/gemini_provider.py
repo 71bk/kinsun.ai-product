@@ -80,6 +80,13 @@ class GeminiModelProvider(ModelProvider):
                     include_thoughts=False,
                     thinking_level=types.ThinkingLevel.MINIMAL,
                 )
+            elif self.model_id == "gemini-3.8-flash":
+                # 3.8 rejects MINIMAL. Keep the lowest supported thinking level
+                # and the model's default temperature for bounded care replies.
+                generation_config["thinking_config"] = types.ThinkingConfig(
+                    include_thoughts=False,
+                    thinking_level=types.ThinkingLevel.LOW,
+                )
             else:
                 generation_config["temperature"] = self.temperature
             response = await self._async_client.models.generate_content(
