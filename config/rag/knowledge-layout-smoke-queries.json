@@ -1,6 +1,6 @@
 {
   "schema_version": "knowledge-smoke-v1",
-  "cases_version": "v009-layout-20261006-v1",
+  "cases_version": "v009-layout-20261007-v2",
   "cases": [
     {
       "id": "ca07-professionals",
@@ -27,10 +27,10 @@
       "query": "A單位個案管理人員基礎訓練課程中，長照政策與理念概述以及A單位個案管理工作內容，各安排幾小時？",
       "audience": "care_professional",
       "purpose": "general_information",
-      "expectation": "answer",
-      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
-      "anchor_text_any": ["時數", "基礎訓練"],
-      "notes": "檢查跨頁課程表的名稱與時數，引用來源未涵蓋時允許明示缺口但須記錄。"
+      "expectation": "partial_or_no_data",
+      "anchor_source_ids": [],
+      "anchor_text_any": [],
+      "notes": "原v1題原樣保留為負例：兩個指定課名不在凍結來源表中，原先answer預期有錯；不可擅自對應相近課程或猜時數。實際課名與時數另以三題正例驗證。"
     },
     {
       "id": "family-ca07-isolation",
@@ -41,6 +41,46 @@
       "anchor_source_ids": [],
       "anchor_text_any": [],
       "notes": "不得讀入新增的專業限定來源；同題角色對照，來源範圍檢查與答案品質分開。"
+    },
+    {
+      "id": "training-role-quality-hours",
+      "query": "依2023年7月19日版A單位個案管理工作手冊的A個管人員訓練課程表，「社區整合型服務中心個管人員的角色功能與職掌」和「個案管理與服務品質」各安排幾小時？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["時數"],
+      "notes": "來源實體頁137，三與四兩列；須配對角色功能1小時與個案管理3小時。"
+    },
+    {
+      "id": "training-it-hour",
+      "query": "依2023年版A單位個案管理工作手冊，A個管人員訓練課程中的「長照相關資訊系統及實務操作」安排幾小時？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["時數"],
+      "notes": "來源實體頁137，第二列1小時；不使用來源不存在的課名。"
+    },
+    {
+      "id": "training-level2-hours",
+      "query": "依2023年版A單位個案管理工作手冊的Level II A個管人員專業課程表，「溝通與協調」和「感染管制」各安排幾小時？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["溝通與協調", "感染管制"],
+      "notes": "來源實體頁141，溝通1小時與感染2小時，不跨課程層級搬用數字。"
+    },
+    {
+      "id": "family-training-isolation",
+      "query": "依2023年版A單位個案管理工作手冊，A個管人員訓練課程中的「長照相關資訊系統及實務操作」安排幾小時？",
+      "audience": "family_caregiver",
+      "purpose": "general_information",
+      "expectation": "partial_or_no_data",
+      "anchor_source_ids": [],
+      "anchor_text_any": [],
+      "notes": "與專業角色對照；不可讀入專業限定訓練來源。"
     }
   ]
 }
