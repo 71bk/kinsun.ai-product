@@ -1,5 +1,7 @@
 # RAG PDF layout repair — 2026-10-06
 
+This records the pre-provider 657-chunk candidate merged in PR #73. The subsequent [v009 rollout](rag-v009-rollout-20261006.md) replaces it with a token-safe 713-chunk candidate; its import and runtime status supersede the statements below. The original validation file remains historical evidence.
+
 55 chunks previously excluded by the grounded-answer layout guard have been rebuilt into 54 complete source units. The local v009 candidate contains 657 chunks: 603 unchanged and 54 replacements. The current development runtime remains `knowledge-v008-aae34e5095e6`; v009 has no new embeddings, database import, or activation.
 
 The candidate is `knowledge-v009-c33f6b2199e7`, with chunk-file SHA-256 `c33f6b2199e769e35fc0f33a8453863ee9dbe7b478dd072c8e4ccc6215d5dee4`. Local output is `.rag-work/layout-v009-final-20261006/`. [Validation results](rag-pdf-layout-validation-20261006.json) record the actual v008 baseline, candidate counts, policy admission, local Core loading, and synthetic citation checks.

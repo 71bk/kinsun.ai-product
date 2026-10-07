@@ -239,6 +239,7 @@ async def test_signed_adapter_fails_closed_on_malformed_or_unbound_evidence(fail
         assert claims["body_sha256"] == hashlib.sha256(request.content).hexdigest()
         assert claims["path"] == request.url.path
         assert request.headers["X-Correlation-ID"] == "correlation-test"
+        assert request.extensions["timeout"]["read"] == 50
         if failure == "timeout":
             raise httpx.ReadTimeout("private-provider-secret")
         if failure == "http":
@@ -341,6 +342,7 @@ async def test_total_deadline_bounds_a_stream_that_never_finishes():
     client = AgentRuntimeClient(
         base_url="http://localhost:8001",
         timeout_seconds=0.05,
+        public_knowledge_timeout_seconds=0.05,
         credential_signer=SIGNER,
         transport=httpx.MockTransport(lambda request: httpx.Response(200, stream=SlowBody())),
     )

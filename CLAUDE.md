@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+- 2026-10-07：開發環境已啟用 `knowledge-v009-5046fa3d59c4`，713 筆資料／向量已匯入回讀；603 重用、110 新向量全部確認未截斷。CLI 預設 1500 字元完整單位切分，Vertex 禁止自動截斷；v008／v004 保留且已實測 v009→v008→v009 回退。公開問答期限分層 40／45／50／60 秒，最終 BFF 24 項全過含 CA07／CB01 清單與引用、家屬隔離及拒答。固定 16 題首輪 11 SUCCESS／4 NO_DATA／1 FAILED（provider 504），後續單題不拼成整批；訓練時數題仍 NO_DATA。RAG 469、最終定向 43、Agent 180、Core 69、BFF 11、單 worker build／TypeScript 與 lint／format／contract 通過。保留 needs_review，production 未啟用；3000 使用隔離 worktree build，日常後端只套用無衝突的提示／期限修正。見 `docs/project/rag-v009-rollout-20261006.md`；下方 657／尚未啟用為歷史。
+
 - 2026-10-06：55 筆 PDF 版面來源本機修整為 54 完整單位，v009 候選 `knowledge-v009-c33f6b2199e7` 共 657 筆；603 向量可重用、54 待產生。保留現有版面／准入 gate 與 needs_review，兩個區塊明確排除。54 合成引用、657 Core 載入、39 定向測試、53 既有準備測試、28 CI 規則及 lint／format／contract 通過。尚未 provider 呼叫／匯入／啟用／真實品質驗收；日常仍 v008。詳見 `docs/project/rag-pdf-layout-repair-20261006.md`，先前「55 筆未修」為歷史。
 
 - 2026-10-06：本機 generation 已由 3.6 升為 `gemini-3.8-flash`，Native adapter 用 LOW thinking 並保留舊模型相容設定。157 項相關回歸、定向 lint／format 與真實 Vertex／家屬／居服公開問答驗收通過。Embedding 維持 `gemini-embedding-001`；見 `docs/project/gemini38-upgrade-20261006.md`。

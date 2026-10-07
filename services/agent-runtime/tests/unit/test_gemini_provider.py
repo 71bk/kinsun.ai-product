@@ -120,6 +120,7 @@ async def test_provider_sends_bounded_prompts_through_native_async_client(
     request = _request()
 
     reply = await provider.generate_reply(request, _manifest(request), "zh-TW")
+    assert client.aio.models.calls[0]["config"].http_options is None
 
     assert reply == "那我們聊聊您喜歡的老歌。"
     assert provider.uses_vertex_ai is True
@@ -163,6 +164,7 @@ async def test_grounded_json_turn_has_bounded_token_overhead_budget() -> None:
     ]
     await _provider(client).generate_reply(request, manifest, "zh-TW")
     assert client.aio.models.calls[0]["config"].max_output_tokens == 2048
+    assert client.aio.models.calls[0]["config"].http_options.timeout == 40000
     assert client.aio.models.calls[0]["config"].response_mime_type == "application/json"
     schema = client.aio.models.calls[0]["config"].response_json_schema
     assert set(schema["required"]) == {

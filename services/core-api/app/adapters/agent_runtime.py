@@ -218,6 +218,7 @@ class AgentRuntimeClient:
         timeout_seconds: float,
         credential_signer: ServiceCredentialSigner,
         transport: httpx.AsyncBaseTransport | None = None,
+        public_knowledge_timeout_seconds: float = 50,
     ) -> None:
         normalized_url = base_url.rstrip("/")
         parsed_url = urlsplit(normalized_url)
@@ -232,6 +233,9 @@ class AgentRuntimeClient:
         if parsed_url.username or parsed_url.password or parsed_url.query or parsed_url.fragment:
             raise ValueError("Agent Runtime URL must not contain credentials, query, or fragment")
         self._base_url = normalized_url
+        if not 0 < public_knowledge_timeout_seconds <= 50:
+            raise ValueError("Public knowledge timeout must be between zero and 50 seconds")
+        self._public_knowledge_timeout_seconds = public_knowledge_timeout_seconds
         self._timeout_seconds = timeout_seconds
         self._credential_signer = credential_signer
         self._transport = transport
@@ -246,10 +250,12 @@ class AgentRuntimeClient:
         )
         language = str(request_payload["language"])
         try:
-            async with asyncio.timeout(self._timeout_seconds):
+            # Public V3 answers have a 45-second inner deadline. Keep a margin
+            # for its typed fallback; other Agent operations retain their budget.
+            async with asyncio.timeout(self._public_knowledge_timeout_seconds):
                 async with httpx.AsyncClient(
                     base_url=self._base_url,
-                    timeout=self._timeout_seconds,
+                    timeout=self._public_knowledge_timeout_seconds,
                     transport=self._transport,
                     trust_env=False,
                     follow_redirects=False,

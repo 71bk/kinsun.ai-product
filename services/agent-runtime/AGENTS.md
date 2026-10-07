@@ -1,5 +1,7 @@
 # AGENTS.md — agent-runtime
 
+- 2026-10-07：development 已由 v008 切換 `knowledge-v009-5046fa3d59c4`，713 筆資料與向量回讀驗證及 v008 回退／恢復完成。Grounded 回答補同列欄名／碼值、完整名單與不補空格規則，縮短 JSON 目標而不放寬引用驗證；Gemini grounded timeout 40 秒、V3 全程 45 秒、Core public 50 秒、問答 BFF 60 秒。一般 ungrounded／Core companion／其他 BFF timeout 不變，外部取消仍傳遞。180 項受影響 Agent 測試及最終 BFF 24 項通過；CA07／CB01 清單符合來源。首輪固定 16 題有一筆 provider 504，訓練时數題仍 NO_DATA；不得以定向複測拼出新整批分數或宣稱 provider 永不失敗。維持 needs_review，production 未啟用；見 [報告](../../docs/project/rag-v009-rollout-20261006.md)。
+
 - 2026-10-06 generation model 升級：本機使用 `gemini-3.8-flash`，其 thinking level 最低為 LOW，MINIMAL 會被 API 拒絕。Native adapter 明確區分 3.8 LOW／3.6 MINIMAL／其他模型原 temperature 行為，不用寬鬆名稱比對推測未來模型能力。512 一般 token budget、2048 grounded floor 與回覆／JSON／引用／安全限制維持。157 項定向回歸與真實 Vertex／兩種公開問答驗收通過；Embedding 未變。詳見 [報告](../../docs/project/gemini38-upgrade-20261006.md)。
 
 - 2026-10-05：V3 邊界以 task-local context 記錄 `rag_v3_failure`；標準 logger 輸出精簡 JSON，request_tag 為 request_id SHA-256 前 16 碼，只有階段、固定 code、耗時。不得附 exception／traceback／問句／模型原文；未知驗證理由映射通用分類。typed provider cause timeout、服務 deadline 與外部取消分開，取消仍傳遞；正常 SUCCESS／NO_DATA 不記為失敗。203 項相關回歸及 lint／format 通過。#67 已合併；#68 已重建增量，最終狀態看 GitHub。

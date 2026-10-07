@@ -84,9 +84,12 @@ class GoogleDocumentEmbedder:
                     config=types.EmbedContentConfig(
                         task_type=self.document_input_type,
                         output_dimensionality=self.dimension,
+                        auto_truncate=False if self._vertex_express else None,
                     ),
                 )
-                parsed_vectors = _parse_google_vectors(response, self.dimension)
+                parsed_vectors = _parse_google_vectors(
+                    response, self.dimension, require_statistics=self._vertex_express
+                )
                 if len(parsed_vectors) != len(batch):
                     raise EmbeddingError("Google response vector count does not match request")
                 vectors.extend(parsed_vectors)
@@ -110,7 +113,9 @@ class GoogleDocumentEmbedder:
             self._client.close()
 
 
-def _parse_google_vectors(response: object, dimension: int) -> tuple[tuple[float, ...], ...]:
+def _parse_google_vectors(
+    response: object, dimension: int, *, require_statistics: bool = False
+) -> tuple[tuple[float, ...], ...]:
     embeddings = (
         response.get("embeddings")
         if isinstance(response, Mapping)
@@ -118,6 +123,19 @@ def _parse_google_vectors(response: object, dimension: int) -> tuple[tuple[float
     )
     if not isinstance(embeddings, list) or not embeddings:
         raise EmbeddingError("Google response is missing embeddings")
+    for embedding in embeddings:
+        statistics = (
+            embedding.get("statistics")
+            if isinstance(embedding, Mapping)
+            else getattr(embedding, "statistics", None)
+        )
+        truncated = (
+            statistics.get("truncated")
+            if isinstance(statistics, Mapping)
+            else getattr(statistics, "truncated", None)
+        )
+        if (require_statistics or statistics is not None) and truncated is not False:
+            raise EmbeddingError("Google response does not confirm a complete input")
     return tuple(_parse_google_vector(embedding, dimension) for embedding in embeddings)
 
 

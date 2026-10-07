@@ -10,6 +10,7 @@ const RESPONSE_HEADERS = ['content-type', 'content-disposition', 'retry-after'] 
 const RESTRICTED_QUERY_KEYS = new Set(['token', 'access_token', 'id_token', 'refresh_token']);
 const MAX_REQUEST_BODY_BYTES = 1_048_576;
 const CORE_TIMEOUT_MS = 30_000;
+const PUBLIC_KNOWLEDGE_TIMEOUT_MS = 60_000;
 
 function targetUrl(request: NextRequest, path: string[]): URL | null {
   if (
@@ -82,13 +83,16 @@ export async function proxyCoreRequest(request: NextRequest, path: string[]): Pr
   }
 
   try {
+    const publicQuestion =
+      request.method === 'POST' &&
+      /^api\/v1\/(family|staff)\/knowledge\/questions$/.test(path.join('/'));
     const upstream = await fetch(target, {
       method: request.method,
       headers: requestHeaders(request, credential),
       body,
       cache: 'no-store',
       redirect: 'manual',
-      signal: AbortSignal.timeout(CORE_TIMEOUT_MS),
+      signal: AbortSignal.timeout(publicQuestion ? PUBLIC_KNOWLEDGE_TIMEOUT_MS : CORE_TIMEOUT_MS),
     });
     const headers = new Headers({
       'Cache-Control': 'no-store',

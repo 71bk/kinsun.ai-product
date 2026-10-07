@@ -73,6 +73,9 @@ class GeminiModelProvider(ModelProvider):
                 ),
             }
             if any(item.source_type == GROUNDED_SOURCE_TYPE for item in context_manifest.items):
+                # Leave time for source-rich public answers inside the 45-second
+                # V3 deadline; companion requests keep the configured timeout.
+                generation_config["http_options"] = types.HttpOptions(timeout=40000)
                 generation_config["response_mime_type"] = "application/json"
                 generation_config["response_json_schema"] = _grounded_response_json_schema()
             if self.model_id == "gemini-3.6-flash":

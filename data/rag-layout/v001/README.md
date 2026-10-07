@@ -2,6 +2,8 @@
 
 This package rebuilds 55 layout-excluded chunks from two frozen official PDFs into 54 complete semantic units. It contains coordinates and extracted public source text, without embeddings, private elder records, runtime configuration, or database writes.
 
+The current CLI packs those source groups into 110 complete row/graph/region fragments, producing 713 chunks with 603 unchanged. Its default 1,500-character embedding budget avoids oversized whole groups; this is not a tokenizer guarantee. Vertex generation disables automatic truncation and requires `statistics.truncated=false`. See the [v009 rollout report](../../../docs/project/rag-v009-rollout-20261006.md).
+
 - `recipes.json`: source PDF hashes, parent text hashes, page/region coordinates, expected headers and diagram labels, explicit edges, and omissions.
 - `extraction.jsonl`: one strict `knowledge-layout-extraction-v1` document containing actual PDF cells, diagram labels, notes, and page references. Generated with `pdfplumber==0.11.9`.
 - Contract: [knowledge-layout-extraction-v1.schema.json](../../../contracts/schemas/rag/knowledge-layout-extraction-v1.schema.json).
@@ -40,14 +42,15 @@ uv run --project services/rag-ingestion python scripts/rag/repair_knowledge_layo
 uv run --project services/rag-ingestion python scripts/rag/repair_knowledge_layout.py `
   --baseline .rag-work/knowledge-v008/chunks.jsonl `
   --cache .rag-work/cache/v008-complete-cache.json `
-  --write --output .rag-work/layout-v009-final-20261006
+  --max-embedding-characters 1500 `
+  --write --output .rag-work/layout-v009-bounded-20261006
 ```
 
 The first command is dry-run. Explicit writing produces only `chunks.jsonl`, `report.json`, and `embedding-plan.json` in a named destination; existing different output is rejected. Parent IDs/text hashes, source versions/URLs, page scope, and metadata compatibility are checked before writing. Omit `--cache` when unavailable; potential text reuse then does not count as available vectors.
 
 ## Fidelity and exclusions
 
-Each table record retains its headers and complete cells. A merged cell is repeated only where its physical rectangle spans a row. Empty codes or assessment fields stay empty. Original semantic groups remain intact across page boundaries; family manual page 31 merges two previous chunks that split the same dialogue row. No global whitespace removal, NFKC conversion, guessed data continuation, or model-based PDF repair is used.
+Each table record retains its headers and complete cells. A merged cell is repeated only where its physical rectangle spans a row. Empty codes or assessment fields stay empty. Bounded fragments repeat page context and shared notes, preserve complete graphs/regions/rows, and keep the last and first table rows across page boundaries together without filling continuation cells. An oversized atomic unit fails rather than being cropped. Family manual page 31 merges two previous chunks that split the same dialogue row. No global whitespace removal, NFKC conversion, guessed data continuation, or model-based PDF repair is used.
 
 Seven diagrams retain actual labels, recorded edges/cycles, and attached notes. Two blocks are explicitly omitted: the A manual page 111 organization diagram has an unresolved dotted relation; family manual page 54 contains an empty resource inventory form. Their usable surrounding prose remains. Family parent `..._0073` retains its original 46–47 page range, while the repaired group-design unit is correctly extracted from physical page 47.
 
