@@ -1,5 +1,7 @@
 # AGENTS.md — agent-runtime
 
+- 2026-10-07 訓練時數題已釐清：來源沒有原診斷題的兩個課名；既有檢索找到表格但無法對應，NO_DATA 合理。v2 題集保留原題為負例，另加來源實際課名正例，3 題 SUCCESS 與 5 組課名／時數配對及引用通過；原題及家屬對照 NO_DATA，BFF 19 項全過。PR #74 已合併，日常公開服務程式與 main 一致；本次不改 runtime gate、來源 span 驗證、資料或向量。勿把整個 A 手冊 source_id 當專業限定；排除專業片段但保留既有家屬可用記錄。仍 needs_review／非 production，固定 16 題不重算；見 [報告](../../docs/project/rag-training-diagnostics-20261007.md)。
+
 - 2026-10-07：development 已由 v008 切換 `knowledge-v009-5046fa3d59c4`，713 筆資料與向量回讀驗證及 v008 回退／恢復完成。Grounded 回答補同列欄名／碼值、完整名單與不補空格規則，縮短 JSON 目標而不放寬引用驗證；Gemini grounded timeout 40 秒、V3 全程 45 秒、Core public 50 秒、問答 BFF 60 秒。一般 ungrounded／Core companion／其他 BFF timeout 不變，外部取消仍傳遞。180 項受影響 Agent 測試及最終 BFF 24 項通過；CA07／CB01 清單符合來源。首輪固定 16 題有一筆 provider 504，訓練时數題仍 NO_DATA；不得以定向複測拼出新整批分數或宣稱 provider 永不失敗。維持 needs_review，production 未啟用；見 [報告](../../docs/project/rag-v009-rollout-20261006.md)。
 
 - 2026-10-06 generation model 升級：本機使用 `gemini-3.8-flash`，其 thinking level 最低為 LOW，MINIMAL 會被 API 拒絕。Native adapter 明確區分 3.8 LOW／3.6 MINIMAL／其他模型原 temperature 行為，不用寬鬆名稱比對推測未來模型能力。512 一般 token budget、2048 grounded floor 與回覆／JSON／引用／安全限制維持。157 項定向回歸與真實 Vertex／兩種公開問答驗收通過；Embedding 未變。詳見 [報告](../../docs/project/gemini38-upgrade-20261006.md)。
