@@ -8,7 +8,13 @@ import sys
 
 import pytest
 
-from rag_ingestion.knowledge_layout import graph_text, repair_corpus, table_records
+from rag_ingestion.knowledge_layout import (
+    _bounded_group_units,
+    _text,
+    graph_text,
+    repair_corpus,
+    table_records,
+)
 from rag_ingestion.knowledge_pipeline import (
     ROOT,
     KnowledgePipelineError,
@@ -170,6 +176,50 @@ def test_family_split_row_and_multi_page_tables_remain_complete(prepared):
     assert all(f"【PDF實體頁{page}】" in courses["content"]["text"] for page in range(141, 146))
 
 
+def test_bounded_candidate_preserves_every_source_atom_and_note(prepared):
+    candidate = repair_corpus(prepared[0], EXTRACTION, max_embedding_characters=1500)
+    original = {c["chunk_id"]: c for c in prepared[1]}
+    changed = [c for c in candidate.chunks if c["chunk_id"] not in original]
+    assert candidate.report["summary"]["unchanged_count"] == 603
+    assert len(changed) > 54
+    assert all(len(c["content"]["embedding_text"]) <= 1500 for c in changed)
+    document = json.loads(EXTRACTION.read_text(encoding="utf-8"))
+    for group in document["groups"]:
+        parents = [p["chunk_id"] for p in group["parents"]]
+        fragments = [c for c in changed if c["provenance"]["prior_chunk_ids"] == parents]
+        assert fragments
+        for note in group["notes"]:
+            assert all(_text(note["text"]) in c["content"]["text"] for c in fragments)
+        for page in group["pages"]:
+            atoms = [_text(b["text"]) for b in page.get("blocks", [])]
+            atoms += [graph_text(g) for g in page.get("graphs", [])]
+            atoms += [r["text"] for t in page.get("tables", []) for r in table_records(t)]
+            for atom in atoms:
+                assert any(
+                    atom in c["content"]["text"]
+                    and f"【PDF實體頁{page['number']}】" in c["content"]["text"]
+                    for c in fragments
+                )
+        for c in fragments:
+            assert c["policy"] == original[parents[0]]["policy"]
+            assert c["provenance"]["human_source_review"] == "not_completed"
+
+
+def test_page_boundary_rows_stay_together_and_never_fill_empty_cells():
+    first, second = merged_table(), merged_table()
+    second["cells"][0]["text"] = ""
+    group = {"pages": [{"number": 1, "tables": [first]}, {"number": 2, "tables": [second]}]}
+    units = _bounded_group_units(group, "來源", "共同註解", 200)
+    ending, starting = table_records(first)[-1]["text"], table_records(second)[0]["text"]
+    assert any(ending in u["text"] and starting in u["text"] for u in units)
+    assert "問題面向：\n\n對應之給付碼：\nCA07" in starting
+
+
+def test_bounded_candidate_rejects_an_oversized_atomic_region(prepared):
+    with pytest.raises(KnowledgePipelineError, match="LAYOUT_ATOMIC_INPUT_TOO_LONG"):
+        repair_corpus(prepared[0], EXTRACTION, max_embedding_characters=200)
+
+
 def test_real_professional_cells_keep_code_and_professionals_together():
     source = json.loads(EXTRACTION.read_text(encoding="utf-8"))
     page = next(p for g in source["groups"] for p in g["pages"] if p["number"] == 156)
@@ -240,11 +290,18 @@ def test_cli_dry_run_does_not_write_and_explicit_write_never_overwrites(prepared
     output = tmp_path / "new-candidate"
     args = ["--baseline", str(prepared[0]), "--output", str(output)]
     assert repair_main(args) == 0
-    assert json.loads(capsys.readouterr().out)["mode"] == "DRY_RUN"
+    report = json.loads(capsys.readouterr().out)
+    assert report["mode"] == "DRY_RUN"
+    assert report["summary"]["replacement_count"] > 54
     assert not output.exists()
     assert repair_main([*args, "--write"]) == 0
     assert json.loads(capsys.readouterr().out)["mode"] == "WRITE"
     file = output / "chunks.jsonl"
+    assert all(
+        len(json.loads(line)["content"]["embedding_text"]) <= 1500
+        for line in file.read_text(encoding="utf-8").splitlines()
+        if json.loads(line)["provenance"]["artifact_version"] == "v009"
+    )
     file.write_text("existing-different-content", encoding="utf-8")
     assert repair_main([*args, "--write"]) == 1
     assert json.loads(capsys.readouterr().out)["status"] == "FAILED"

@@ -89,6 +89,7 @@ async def test_agent_runtime_client_posts_contract_and_validates_response() -> N
     captured: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
+        assert request.extensions["timeout"]["read"] == 1
         captured["path"] = request.url.path
         captured["correlation_id"] = request.headers["X-Correlation-ID"]
         captured["has_service_credential"] = request.headers[

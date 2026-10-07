@@ -26,9 +26,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument(
-        "--extraction", type=Path, default=ROOT / "data/rag-layout/v001/extraction.jsonl"
+        "--extraction",
+        type=Path,
+        default=ROOT / "data/rag-layout/v001/extraction.jsonl",
     )
     parser.add_argument("--dataset-version", default="v009")
+    parser.add_argument("--max-embedding-characters", type=int, default=1500)
     parser.add_argument(
         "--profile-registry",
         type=Path,
@@ -43,7 +46,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.write and args.output is None:
             raise KnowledgePipelineError("WRITE_REQUIRES_OUTPUT")
         compilation = repair_corpus(
-            args.baseline, args.extraction, dataset_version=args.dataset_version
+            args.baseline,
+            args.extraction,
+            dataset_version=args.dataset_version,
+            max_embedding_characters=args.max_embedding_characters,
         )
         target, profiles = load_profiles(args.profile_registry, args.profile)
         cache = load_cache(args.cache, profiles)

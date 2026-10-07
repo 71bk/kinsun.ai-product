@@ -32,6 +32,42 @@ describe('HttpOnly authentication session', () => {
 });
 
 describe('Core BFF proxy', () => {
+  it.each([
+    ['POST', ['api', 'v1', 'family', 'knowledge', 'questions'], 60_000],
+    ['POST', ['api', 'v1', 'staff', 'knowledge', 'questions'], 60_000],
+    ['GET', ['api', 'v1', 'staff', 'knowledge', 'questions'], 30_000],
+    ['POST', ['api', 'v1', 'staff', 'knowledge', 'questions', 'extra'], 30_000],
+    ['GET', ['api', 'v1', 'me'], 30_000],
+  ])('bounds %s %s independently of companion requests', async (method, path, timeoutMs) => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('FRONTEND_ORIGIN', 'http://localhost');
+    vi.stubEnv('CORE_API_INTERNAL_URL', 'http://127.0.0.1:8000');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ data: {}, meta: {} })),
+    );
+    const timeout = vi
+      .spyOn(AbortSignal, 'timeout')
+      .mockImplementation(() => new AbortController().signal);
+
+    const response = await proxyCoreRequest(
+      request(`/backend/core/${path.join('/')}`, {
+        method,
+        headers: {
+          Cookie: `kinsun_session=ks1_${'a'.repeat(43)}`,
+          Origin: 'http://localhost',
+          'Content-Type': 'application/json',
+        },
+        ...(method === 'POST' ? { body: '{}' } : {}),
+      }),
+      path,
+    );
+
+    expect(response.status).toBe(200);
+    expect(timeout).toHaveBeenCalledTimes(1);
+    expect(timeout).toHaveBeenCalledWith(timeoutMs);
+  });
+
   it('forwards a valid App Session as the Core bearer credential', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('CORE_API_INTERNAL_URL', 'http://127.0.0.1:8000');
@@ -69,7 +105,9 @@ describe('Core BFF proxy', () => {
     expect(response.status).toBe(401);
     expect(fetchMock).not.toHaveBeenCalled();
     fetchMock.mockResolvedValue(response);
-    await expect(apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example')).rejects.toMatchObject({
+    await expect(
+      apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example'),
+    ).rejects.toMatchObject({
       status: 401,
       reasonCode: 'AUTHENTICATION_REQUIRED',
       retryable: false,
@@ -112,7 +150,9 @@ describe('Core BFF proxy', () => {
     expect(response.status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();
     fetchMock.mockResolvedValue(response);
-    await expect(apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example')).rejects.toMatchObject({
+    await expect(
+      apiFetch({ apiBaseUrl: '/backend/core' }, '/api/v1/example'),
+    ).rejects.toMatchObject({
       status: 403,
       reasonCode: 'CSRF_ORIGIN_REJECTED',
       retryable: false,

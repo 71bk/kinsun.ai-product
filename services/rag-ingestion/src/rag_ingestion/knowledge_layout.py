@@ -155,10 +155,75 @@ def _page_units(page: dict) -> list[dict]:
     return [{"text": "\n\n".join(t for t in (marker, context, *blocks) if t), "page": number}]
 
 
+def _bounded_group_units(group: dict, prefix: str, notes: str, limit: int) -> list[dict]:
+    """Pack complete rows/graphs/regions, keeping page-boundary rows together.
+
+    This is a character budget, not a tokenizer. The provider must separately
+    reject over-limit inputs with truncation disabled before any import.
+    """
+    atoms = []
+    contexts = {}
+    for page in group["pages"]:
+        number = page["number"]
+        contexts[number] = _text(page.get("context", ""))
+        blocks = [("block", _text(b["text"])) for b in page.get("blocks", [])]
+        blocks += [("graph", graph_text(g)) for g in page.get("graphs", [])]
+        blocks += [
+            ("row", r["text"]) for table in page.get("tables", []) for r in table_records(table)
+        ]
+        atoms.extend({"page": number, "kind": kind, "text": text} for kind, text in blocks if text)
+
+    def render(items):
+        blocks, pages = [], []
+        for atom in items:
+            page = atom["page"]
+            if page not in pages:
+                pages.append(page)
+                blocks.extend(t for t in (f"【PDF實體頁{page}】", contexts[page]) if t)
+            blocks.append(atom["text"])
+        return {"text": "\n\n".join(blocks), "page": "、".join(map(str, pages))}
+
+    def fits(items):
+        text = "\n\n".join(t for t in (render(items)["text"], notes) if t)
+        return len("｜".join(t for t in (prefix, text) if t)) <= limit
+
+    # Preserve both sides of a potentially continued row, without copying a
+    # value into an empty cell or claiming that the rows are the same record.
+    bundles = []
+    for atom in atoms:
+        if (
+            bundles
+            and bundles[-1][-1]["kind"] == atom["kind"] == "row"
+            and bundles[-1][-1]["page"] != atom["page"]
+        ):
+            bundles[-1].append(atom)
+        else:
+            bundles.append([atom])
+    packed, pending = [], []
+    for bundle in bundles:
+        _require(fits(bundle), "LAYOUT_ATOMIC_INPUT_TOO_LONG")
+        if pending and not fits(pending + bundle):
+            packed.append(render(pending))
+            pending = []
+        pending.extend(bundle)
+    if pending:
+        packed.append(render(pending))
+    return packed
+
+
 def repair_corpus(
-    baseline: Path, extraction: Path, *, dataset_version: str = "v009"
+    baseline: Path,
+    extraction: Path,
+    *,
+    dataset_version: str = "v009",
+    max_embedding_characters: int | None = None,
 ) -> Compilation:
     _require(re.fullmatch(r"v[0-9]{3,}", dataset_version) is not None, "INVALID_DATASET_VERSION")
+    _require(
+        max_embedding_characters is None
+        or (type(max_embedding_characters) is int and 200 <= max_embedding_characters <= 12000),
+        "INVALID_EMBEDDING_CHARACTER_BUDGET",
+    )
     rows = read_jsonl(baseline)
     validators = Draft202012Validator(
         json.loads(SCHEMA_PATH.read_text(encoding="utf-8")), format_checker=FormatChecker()
@@ -252,6 +317,9 @@ def repair_corpus(
                 "LAYOUT_PAGE_OUT_OF_SCOPE",
             )
         notes = "\n\n".join(_text(n["text"]) for n in group.get("notes", []))
+        if max_embedding_characters is not None:
+            prefix = "｜".join(t for t in (base["source"]["title"], base["source"]["section"]) if t)
+            group_units = _bounded_group_units(group, prefix, notes, max_embedding_characters)
         new_ids = []
         for unit in group_units:
             text = "\n\n".join(t for t in (unit["text"], notes) if t)
@@ -313,4 +381,10 @@ def repair_corpus(
         },
         "layout_differences": differences,
     }
+    if max_embedding_characters is not None:
+        report["embedding_input_policy"] = {
+            "max_characters": max_embedding_characters,
+            "atomic_units": "COMPLETE_ROWS_GRAPHS_REGIONS",
+            "provider_token_validation_required": True,
+        }
     return Compilation(tuple(sorted(chunks, key=lambda c: c["chunk_id"])), report)

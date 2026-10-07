@@ -1,0 +1,46 @@
+{
+  "schema_version": "knowledge-smoke-v1",
+  "cases_version": "v009-layout-20261006-v1",
+  "cases": [
+    {
+      "id": "ca07-professionals",
+      "query": "依A單位個案管理工作手冊，關節活動度不足或肌力、耐力不佳時，表格列出的建議介入專業人員與對應給付碼是什麼？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["CA07-IADLs"],
+      "notes": "檢查實體頁156身體功能問題列的給付碼與完整專業人員欄；服務碼會在其他問題列重複，故不能把所有CA07列當成同一筆。"
+    },
+    {
+      "id": "cb01-professionals",
+      "query": "依A單位個案管理工作手冊，CB01營養照護的建議介入專業人員包含哪些人？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["CB01-營養照護"],
+      "notes": "檢查表格列與專業人員配對，不以其他列的專業名單補齊。"
+    },
+    {
+      "id": "case-manager-training",
+      "query": "A單位個案管理人員基礎訓練課程中，長照政策與理念概述以及A單位個案管理工作內容，各安排幾小時？",
+      "audience": "care_professional",
+      "purpose": "general_information",
+      "expectation": "answer",
+      "anchor_source_ids": ["mohw_a_unit_case_manager_manual_appendix_20230719"],
+      "anchor_text_any": ["時數", "基礎訓練"],
+      "notes": "檢查跨頁課程表的名稱與時數，引用來源未涵蓋時允許明示缺口但須記錄。"
+    },
+    {
+      "id": "family-ca07-isolation",
+      "query": "依A單位個案管理工作手冊的表格，CA07-IADLs復能照護可由哪些專業人員提供？",
+      "audience": "family_caregiver",
+      "purpose": "general_information",
+      "expectation": "partial_or_no_data",
+      "anchor_source_ids": [],
+      "anchor_text_any": [],
+      "notes": "不得讀入新增的專業限定來源；同題角色對照，來源範圍檢查與答案品質分開。"
+    }
+  ]
+}

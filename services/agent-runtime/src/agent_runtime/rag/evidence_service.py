@@ -64,7 +64,7 @@ def _public_generation_request(request: RetrievalRequestV3) -> AgentRunRequest:
         policy_version=POLICY_VERSION,
         language=request.language,
         input_text=request.query,
-        latency_budget_ms=30000,
+        latency_budget_ms=45000,
     )
 
 
@@ -99,7 +99,7 @@ class EvidenceService:
 
     async def retrieve_v3(self, request: RetrievalRequestV3) -> RetrievalResponseV3:
         with failure_diagnostics(request.request_id) as diagnostic:
-            deadline = asyncio.timeout(30)
+            deadline = asyncio.timeout(45)
             try:
                 async with deadline:
                     response = await self._retrieve(request)

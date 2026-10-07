@@ -33,7 +33,13 @@ class FakeModels:
             raise RuntimeError("sensitive provider detail and document text")
         contents = kwargs["contents"]
         return SimpleNamespace(
-            embeddings=[SimpleNamespace(values=[0.25] * self.dimension) for _ in contents]
+            embeddings=[
+                SimpleNamespace(
+                    values=[0.25] * self.dimension,
+                    statistics=SimpleNamespace(truncated=False),
+                )
+                for _ in contents
+            ]
         )
 
 
@@ -89,6 +95,7 @@ def test_vertex_express_key_uses_single_document_requests() -> None:
     result = embedder.embed_documents(["document one", "document two"])
 
     assert result.success_count == 2
+    assert all(r["config"].auto_truncate is False for r in models.requests)
     assert [request["contents"] for request in models.requests] == [
         ["document one"],
         ["document two"],
@@ -107,6 +114,24 @@ def test_google_provider_failure_is_scrubbed_and_reports_remaining_count() -> No
     assert "sensitive provider detail" not in str(raised.value)
     assert "private second" not in str(raised.value)
     assert "AQ.synthetic-express-key" not in str(raised.value)
+
+
+@pytest.mark.parametrize("statistics", [None, {}, {"truncated": True}, {"truncated": "false"}])
+def test_vertex_never_caches_truncated_or_unconfirmed_input(statistics) -> None:
+    class Models(FakeModels):
+        def embed_content(self, **kwargs):
+            return {"embeddings": [{"values": [0.25] * DIMENSION, "statistics": statistics}]}
+
+    with pytest.raises(EmbeddingBatchError) as raised:
+        make_embedder(Models(), api_key="AQ.synthetic-key").embed_documents(["document"])
+    assert isinstance(raised.value.__cause__, EmbeddingError)
+    assert raised.value.success_count == 0
+
+
+def test_developer_surface_does_not_send_vertex_only_parameter() -> None:
+    models = FakeModels()
+    make_embedder(models).embed_documents(["document"])
+    assert models.requests[0]["config"].auto_truncate is None
 
 
 def test_google_dimension_mismatch_fails_closed() -> None:
