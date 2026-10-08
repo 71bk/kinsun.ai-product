@@ -87,9 +87,24 @@ outbox、task 與正式 JSON 報告。要額外檢查本機 bootstrap 已清除�
   [治理同步報告](../docs/project/rag-law-governance-sync-plan-20260909.md) 記錄其背景。
   保留原始 bytes 與 `SHA256SUMS.txt`；內部 README 是當時候選內容，不表示已核准。
 
-## 不同步的本機檔案
+## 本機產物與清理規則
 
-`.gitignore` 精確排除已完成的一次性 source/contract 改寫工具、6 份過期 PR 草稿、
-2 份執行旗標，以及可重建的 QA 圖片；檔案保留在本機，未整批刪除。
-未來暫存輸出放 `local/`。環境檔、log、依賴與瀏覽器憑證繼續由忽略規則排除。
-新增腳本或 JSON 預設仍會出現在 Git status，提交前先審查；不要忽略整個 `.qa/`。
+2026-10-08 已依使用者要求清理可重建、未被引用的產物，以及明列退役的一次性
+source／contract 改寫工具、6 份過期 PR 草稿、2 份執行旗標；退役工具不可重跑。
+清理數量與範圍見 [整理紀錄](../docs/project/project-organization-20261008.md)。
+
+| 種類 | 處理方式 |
+| --- | --- |
+| 可重用 QA／環境／啟動工具 | 保留，遵守現行權限與 campaign 規則 |
+| 報告引用附件、正式 JSON、失敗回歸 | 保留，不將歷史 PASS 當作目前驗收 |
+| 未被引用的可重建圖片、音訊、舊日誌、快取 | 確認無程序使用後可刪除 |
+| 與正式 data 副本 SHA-256 相同的無引用報告 | 刪除 QA 副本，保留正式來源 |
+| worktree-backups/ | 保留復原檔案與提交紀錄，不納入一般清理 |
+| dotenv、private bootstrap、credentials、匯入／退場證據 | 保留且不提交，不可整批刪除 |
+
+新產物放 `local/<topic>/`，該目錄繼續由忽略規則排除。新增可重用腳本與已審查
+JSON 預設仍出現在 Git status，提交前先審查；不要忽略整個 `.qa/`。
+Windows 清理前檢查 ReparsePoint／Junction，不跟隨連接，並確認實際服務工作目錄。
+
+`development-stack-pids.json` 是日常服務紀錄。3000 前端已於 2026-10-08 移回
+`kinsun.ai/packages/frontend`；舊文件中的工作副本路徑屬歷史。

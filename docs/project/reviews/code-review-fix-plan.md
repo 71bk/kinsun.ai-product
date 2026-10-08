@@ -1,5 +1,7 @@
 # Repository Code Review Fix Plan
 
+> 2026-10-08 歸入審查紀錄。保留原審查進度；未勾選事項仍須依目前程式與交付證據確認。
+
 > 來源：repository-wide code review（commit `be25802`）
 >
 > 本文件追蹤 review findings、修正進度與驗證結果。
@@ -550,7 +552,7 @@ live Agent → VERIFY HTTP → DB 全鏈路驗證；各 endpoint `data` 的完�
   regression 僅 collect，等待既有 CI 的 disposable DB；沒有重建 development Supabase。
 - 本次核准的新四小時 membership 已提前失效，未恢復舊授權；服務已關閉、staff 已登出。
 - 尚未 commit／push／開 PR；不以歷史 CI 代表本次修正已過 CI，也不宣稱 voice／production E2E。
-  詳見 [驗收報告](docs/project/wave2-agent-chain-qa-20260908.md)。
+  詳見 [驗收報告](../wave2-agent-chain-qa-20260908.md)。
 
 ### 2026-09-08 後續結案與 Dashboard 增量
 
@@ -559,7 +561,7 @@ live Agent → VERIFY HTTP → DB 全鏈路驗證；各 endpoint `data` 的完�
 - C04/F02 第一切片結案。US-C01 本機新增每位授權長者未結案待辦數，延用 live
   `care_action:read` gate；無權限／家屬隱藏、零筆顯示 0，不新增全域總數或 CI job。
 - 新增 Dashboard DB regression 僅收集、待新 CI；沒有重建開發資料庫，沒有本次 commit／push。
-  詳見 [Dashboard count report](docs/project/dashboard-care-action-count-20260908.md)。
+  詳見 [Dashboard count report](../dashboard-care-action-count-20260908.md)。
 
 ### 2026-09-04 歷史基線
 

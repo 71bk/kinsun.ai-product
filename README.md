@@ -10,6 +10,8 @@ Voice-first 智慧長照 AI 陪伴系統。長者以語音互動，系統從對�
 供照服員覆核、家屬檢視。核心設計原則是**模型輸出只能是候選**——未經長者確認的記憶與未經
 人工覆核的事件，都不得成為正式照護事實。
 
+文件入口見 [專案文件索引](docs/README.md)，功能與驗收見 [主題索引](docs/project/README.md)。
+
 規則與邊界見 [`AGENTS.md`](AGENTS.md)，產品規格見 [`docs/spec/`](docs/spec/)。
 新協作者請先依 [`docs/project/COLLABORATOR_SETUP.md`](docs/project/COLLABORATOR_SETUP.md)
 完成工具、ENV、資料庫與本機服務建置。

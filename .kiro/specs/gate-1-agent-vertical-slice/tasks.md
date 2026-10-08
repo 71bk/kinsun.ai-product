@@ -10,7 +10,7 @@
 ## Overview
 
 本計畫只列從目前 canonical baseline 到 Gate 1 閉環的**淨新增工作**。所有任務初始均未完成；
-不得匯入或計算 `.kiro/specs/elderly-care-ai-companion/tasks.legacy.md`、`legacy/backend`（原
+不得匯入或計算已退役架構的歷史任務清單、`legacy/backend`（原
 `packages/backend`）、legacy Lambda／DynamoDB stack 或既有 foundation 的完成標記。
 
 執行前先完成 Requirements Review、Design Review 與 Task Review。尚未實作的介面不得提前寫入

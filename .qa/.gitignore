@@ -28,3 +28,6 @@
 # Process coordination markers, not retirement evidence.
 /workbench-ready-to-retire.json
 /workbench-retired.json
+
+# Recovery files can contain private local evidence.
+/worktree-backups/
