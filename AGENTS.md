@@ -1,5 +1,9 @@
 # AGENTS.md
 
+- 2026-10-08 Markdown 整理：移除 11 份無引用的 PR 草稿，以及 5 份已標記退役的 Kiro 舊架構／登入文件；歷史規格由 Git 取回，工作樹保留 [舊架構退役入口](.kiro/specs/elderly-care-ai-companion/tasks.md)與[舊登入退役入口](.kiro/specs/role-based-login/README.md)。目前產品規格、ADR、Kiro 現行 spec、核准決策、驗收證據及固定稽核 README 仍保留；退役內容不得作為目前進度或授權依據。
+
+- 2026-10-08 Windows worktree 清理：副本的 node_modules 或 .next/standalone/node_modules 可能是指向主專案的 Junction。移除前須以不跟隨連接的方式掃描整棵副本，先非遞迴解除連接本身，再執行 git worktree remove；不可直接對含連接的副本做強制遞迴刪除。另確認程序的實際工作目錄，僅查 command line 會漏掉相對路徑啟動的日常前端。先保存未提交／未追蹤／非快取忽略資料與 detached commits，主專案有未提交內容時保存檔案或 patch，不能只保存 status 清單；將日常服務移回主專案後才清理副本。恢復後核對內容與原 Git 狀態，並驗證型別、建置及服務健康。
+
 - 2026-10-07 訓練時數診斷：PR #74 已合併（`628015a`，10 CI 全過），日常公開服務相關 409 程式檔已與 main 一致，另同步 13 個合併後 RAG 檔案並保留使用者其他修改。先前時數題使用來源沒有的兩個課名，NO_DATA 合理；v2 題集保留原題負例、加入實際課名正例與家屬對照，共 8 題。真實 direct 5 題為 3 SUCCESS／2 NO_DATA，5 組課名／時數配對及引用通過；BFF 19 項全過含角色隔離與拒答。本次只校正診斷及文件，runtime／713 筆資料與向量／啟用設定不變、production 未啟用、needs_review 保留；原固定 16 題不拼成新分數。詳見 [診斷修正報告](docs/project/rag-training-diagnostics-20261007.md)；下方「訓練時數缺口」為本次已釐清的歷史。
 
 - 2026-10-07：v009 開發啟用完成；原 657 候選因 embedding 輸入過長，改為 713 筆 `knowledge-v009-5046fa3d59c4`（603 重用、110 新向量）。CLI 預設 1500 字元完整列／圖／區塊切分；Vertex 明確禁截斷，110 筆均確認未截斷。713 projections＋vectors 單一交易匯入及回讀驗證完成，v008／v004 指紋不變；已實測 v009→v008→v009 回退。日常 development 已用 v009＋V3＋router v2，公開問答 deadline 分層 40／45／50／60 秒；最終 BFF 24 項全過，CA07／CB01 專業清單及引用通過、家屬隔離與醫療拒答通過。固定 16 題首輪為 11 SUCCESS／4 NO_DATA／1 FAILED（provider 504），單題複測不得拼成新整批分數；訓練時數題仍 NO_DATA。RAG 469、最終定向 43、Agent 180、Core 69、BFF 11、單 worker build／TypeScript、lint／format／contract 通過。needs_review、human review 未完成、production 未啟用；3000 前端為隔離 worktree build，日常後端只套用確認無其他變更的提示／期限修正。詳見 [啟用報告](docs/project/rag-v009-rollout-20261006.md)；下方未匯入／未啟用為歷史。

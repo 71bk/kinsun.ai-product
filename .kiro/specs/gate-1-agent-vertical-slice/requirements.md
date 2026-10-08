@@ -20,7 +20,7 @@ Domain、Security 與 Test 規格轉成可執行工作，不取代下列權威�
 5. `AGENTS.md` 與 ADR 0007
 
 尚未實作的 endpoint、event 或 schema 只留在本 Spec；實作完成前不得寫入 `contracts/`。
-舊 `.kiro/specs/elderly-care-ai-companion/tasks.legacy.md`、`legacy/backend`（原
+已退役架構的歷史任務清單、`legacy/backend`（原
 `packages/backend`）與 legacy Lambda／DynamoDB stack 不屬於本 Spec 的完成證據。
 
 **狀態：Implemented for canonical synthetic Gate 1（2026-08-31）。**
