@@ -7,7 +7,8 @@
 | 主題 | 文件 |
 | --- | --- |
 | 本機建置 | [協作者指南](COLLABORATOR_SETUP.md) |
-| CI | [實作與量測](ci-pipeline-optimization.md)、[歷史審查](reviews/ci-pipeline-optimization-review.md) |
+| 進度紀錄 | [AI 協作進度摘要](progress-log.md)（原 AGENTS.md／CLAUDE.md 頂部日期紀錄） |
+| CI | [規則](../runbooks/ci-gate1.md)、[實作與量測](ci-pipeline-optimization.md)、[歷史審查](reviews/ci-pipeline-optimization-review.md) |
 | 工程修復 | [Code review 修正進度與未完成事項](reviews/code-review-fix-plan.md) |
 | 團隊交付 | [B 交付狀態](B-柏成交付狀態.md)、[分支結案](branch-closeout-20260916.md)、[Kiro 開發證據](kiro-development-evidence.md) |
 | 前端計畫 | [Stitch 畫面盤點](stitch-frontend-implementation-plan.md) |
@@ -15,7 +16,7 @@
 
 ## 公開知識與目前 RAG 交付
 
-先讀 v009 rollout 與 10-07 診斷修正。舊版資料數、前端副本路徑與啟用狀態是當時快照；
+先讀 [RAG 現況、有效規則與沿革](rag-release-history.md)，再看 v009 rollout 與 10-07 診斷修正。舊版資料數、前端副本路徑與啟用狀態是當時快照；
 這些交付不代表 production 啟用或人工來源覆核完成。
 
 | 主題 | 文件與摘要 |

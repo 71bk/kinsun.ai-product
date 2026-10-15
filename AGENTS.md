@@ -1,1226 +1,192 @@
 # AGENTS.md
 
-- 2026-10-08 Markdown 整理：移除 11 份無引用的 PR 草稿，以及 5 份已標記退役的 Kiro 舊架構／登入文件；歷史規格由 Git 取回，工作樹保留 [舊架構退役入口](.kiro/specs/elderly-care-ai-companion/tasks.md)與[舊登入退役入口](.kiro/specs/role-based-login/README.md)。目前產品規格、ADR、Kiro 現行 spec、核准決策、驗收證據及固定稽核 README 仍保留；退役內容不得作為目前進度或授權依據。
+- 適用範圍：整個 `kinsun.ai` repository。所有代理在分析、設計、實作、測試與文件更新時遵守本檔與 `docs/spec/` 的產品規格。
+- 子目錄 `AGENTS.md` 補充該模組的細節與地雷；衝突時以本檔為準。安全、授權與資料規則不得被子目錄放寬。
+- 本檔只放跨模組必要規則。現況、進度、指令細節與歷史依下方索引按需讀取；描述進度以可執行程式、contract、
+  migration、測試與部署證據為準，不以 README、舊 handover、commit 標題或文件快照判定完成。
+- 整理日期：2026-10-15。
 
-- 2026-10-08 Windows worktree 清理：副本的 node_modules 或 .next/standalone/node_modules 可能是指向主專案的 Junction。移除前須以不跟隨連接的方式掃描整棵副本，先非遞迴解除連接本身，再執行 git worktree remove；不可直接對含連接的副本做強制遞迴刪除。另確認程序的實際工作目錄，僅查 command line 會漏掉相對路徑啟動的日常前端。先保存未提交／未追蹤／非快取忽略資料與 detached commits，主專案有未提交內容時保存檔案或 patch，不能只保存 status 清單；將日常服務移回主專案後才清理副本。恢復後核對內容與原 Git 狀態，並驗證型別、建置及服務健康。
+## 0. 按需讀取索引
 
-- 2026-10-07 訓練時數診斷：PR #74 已合併（`628015a`，10 CI 全過），日常公開服務相關 409 程式檔已與 main 一致，另同步 13 個合併後 RAG 檔案並保留使用者其他修改。先前時數題使用來源沒有的兩個課名，NO_DATA 合理；v2 題集保留原題負例、加入實際課名正例與家屬對照，共 8 題。真實 direct 5 題為 3 SUCCESS／2 NO_DATA，5 組課名／時數配對及引用通過；BFF 19 項全過含角色隔離與拒答。本次只校正診斷及文件，runtime／713 筆資料與向量／啟用設定不變、production 未啟用、needs_review 保留；原固定 16 題不拼成新分數。詳見 [診斷修正報告](docs/project/rag-training-diagnostics-20261007.md)；下方「訓練時數缺口」為本次已釐清的歷史。
-
-- 2026-10-07：v009 開發啟用完成；原 657 候選因 embedding 輸入過長，改為 713 筆 `knowledge-v009-5046fa3d59c4`（603 重用、110 新向量）。CLI 預設 1500 字元完整列／圖／區塊切分；Vertex 明確禁截斷，110 筆均確認未截斷。713 projections＋vectors 單一交易匯入及回讀驗證完成，v008／v004 指紋不變；已實測 v009→v008→v009 回退。日常 development 已用 v009＋V3＋router v2，公開問答 deadline 分層 40／45／50／60 秒；最終 BFF 24 項全過，CA07／CB01 專業清單及引用通過、家屬隔離與醫療拒答通過。固定 16 題首輪為 11 SUCCESS／4 NO_DATA／1 FAILED（provider 504），單題複測不得拼成新整批分數；訓練時數題仍 NO_DATA。RAG 469、最終定向 43、Agent 180、Core 69、BFF 11、單 worker build／TypeScript、lint／format／contract 通過。needs_review、human review 未完成、production 未啟用；3000 前端為隔離 worktree build，日常後端只套用確認無其他變更的提示／期限修正。詳見 [啟用報告](docs/project/rag-v009-rollout-20261006.md)；下方未匯入／未啟用為歷史。
-
-- 2026-10-06：55 筆因 PDF 版面排除的專業公開來源已在本機修整為 54 完整單位；v009 候選 `knowledge-v009-c33f6b2199e7` 共 657 筆，603 未變且向量可重用、54 待新 embedding。現有版面／准入 gate 未放寬，兩個不適合索引的圖表區塊明確排除；54 筆合成引用及 657 筆 Core 載入通過，39 定向測試、53 既有準備測試、28 CI 規則與 lint／format／contract 通過。維持 needs_review，尚未呼叫 provider、匯入、啟用或驗收新版真實回答；日常仍 v008。詳見 [版面修整報告](docs/project/rag-pdf-layout-repair-20261006.md)。下方「55 筆未修」為前階段歷史。
-
-- 2026-10-06：使用者授權將 generation model 由 `gemini-3.6-flash` 升為穩定版 `gemini-3.8-flash`，本機 GEMINI／相容備援 model ID 均已更新。Native adapter 對 3.8 明確用 LOW thinking（不支援 MINIMAL），保留 3.6 MINIMAL 與其他模型 temperature 行為。157 項相關回歸及定向 lint／format 通過；真實 Vertex 合成陪伴呼叫、家屬／居服各申請／法條／資料不足／用藥拒答通過。Embedding 仍 `gemini-embedding-001`；來源版面修復另案。詳見 [模型升級報告](docs/project/gemini38-upgrade-20261006.md)。
-
-- 2026-10-05：PR #70 已合併（`01165c3`），新增專業公開問答 `/staff/knowledge` 與專用 API，限 ACTIVE DAYCARE_CARE_WORKER／HOME_CARE_WORKER，server 固定 `care_professional`。公開 DTO／service／UI 與家屬共用，家屬 API 相容且受眾固定；無個案查詢或寫入。74 項後端、83 項前端、68 組合成畫面通過；居服 demo 真實申請／法條引用及權限驗收完成。初次帶錯誤前提的法條範例回資料不足，已改中性範例並保留紀錄。55 筆版面來源及 production 均未動；詳見 [專業問答報告](docs/project/staff-public-knowledge-20261005.md)。下方「專業入口未包含」為前階段歷史。
-
-- 2026-10-05：PR #69 已合併（`65d389c`），新增家屬公開長照問答 `/family/knowledge` 與專用 Core API。僅 ACTIVE FAMILY_MEMBER，server 固定 family_caregiver；無長輩 scope、個人紀錄、對話儲存或寫入。只回傳回答與官方来源摘要；原始 payload 仍經 family redline guard。非 production 且既有知識開關啟用時可用。驗證與限制見 [家屬問答報告](docs/project/family-public-knowledge-20261005.md)；下方「未新增家屬入口」為前階段歷史。專業入口與 55 筆版面來源修復未包含。
-
-- 2026-10-05 文字陪伴提示：依 Core 回傳 reason_codes 區分資料不足／待釐清、服務失敗／逾時、醫療安全拒答；BLOCK／HUMAN_REVIEW 優先於稍後重試，未知原因用中性說明。27 項相關前端測試、typecheck、定向 lint、production build、28 項 CI 規則通過；375／390／430／1440 寬度各三種合成畫面共 12 組通過。日常 3000 前端已更新；此次未改後端、安全判斷或新增家屬／專業問答入口。#67、#68 均已合併（main `9d633bb`）；下方 draft 敘述為歷史。詳見本次 RAG 報告末節。
-
-- 2026-10-05 收尾：PR #67 已合併；#68 已從最新 main 重建為增量分支，補上 V3 常駐 `rag_v3_failure` 日誌。只記錄 request ID 的 SHA-256 前 16 碼、階段、固定分類及耗時，不記錄問句／來源／模型原文／例外或 secrets。區分檢索、模型 typed timeout、JSON／引用驗證、整體 deadline 與外部取消；取消仍向上傳遞。203 項相關回歸、28 項 CI 規則及 Agent lint／format 通過；合併狀態以 GitHub 為準。初次兩筆備援原因仍未確認，詳見本次報告末節。
-
-- 2026-10-05 後續整合：本機 development 已切換 `knowledge-v008-aae34e5095e6`，`RAG_EVIDENCE_V3_ENABLED=true`、`KNOWLEDGE_ROUTER_V2_ENABLED=true`；已實測 v008 啟用及 v004 回退後恢復 v008。localhost:3000／8000／8001 為日常服務，隔離 3110／8110／8111 已停止。最終版面規則 16 題仍為 11 SUCCESS／5 NO_DATA／0 FAILED；200 項 Agent 回歸及 PR #68 程式 CI 通過。瀏覽器實測長者問答／來源／拒答；家屬及專業僅既有登入與權限驗收，未新增公共問答入口。55 筆專業准入來源因版面保守排除；初次兩筆服務備援未再重現但保留紀錄。詳見 [報告及回退方式](docs/project/rag-retrieval-and-quotes-20261005.md)。下方未啟用／未提交敘述為前一階段歷史；production 未啟用，PR #68 仍為依賴 #67 的 draft。
-
-- 2026-10-05 V3 口語檢索／引用修正完成本機驗證：v008 固定 16 題為 11 SUCCESS／5 NO_DATA／0 FAILED；另外 6 題改述／負例為 4 SUCCESS／2 NO_DATA，分開報告、不當準確率。未改 `.env`、DB 或 activation，未 commit／push；詳見 [本次報告](docs/project/rag-retrieval-and-quotes-20261005.md)。
-- V3 融合分數只作候選排序：弱 trigram 不再 min-max 放大，不沿用 V1／V2 的 0.7 門檻；授權／來源／hash gate 與最多 5 筆不變。生成選擇來源衍生的連續 span ID，仍非語意驗證；有三行以上欄間寬空白的疑似交錯來源不送生成，全部排除則 NO_DATA。不得將正確 span ID 當成 PDF 欄位順序已釐清；不自行拼接或重排來源。
-
-- 2026-10-02 使用者明確授權「匯入開始」後，`knowledge-v008-aae34e5095e6` 已以單一交易新增 658 projections＋658 embeddings；回讀驗證 counts／profile／hash／向量與兩份完成 receipt 通過，v004 的 release／projections／vectors 指紋不變。未改 `.env`、未 activation；新版題集結果見第 4 批文件末節。
-- 2026-10-02 第 4 批後續：V3 加 Gemini schema、內容不落盤的生成診斷與保守 PDF 縮排行整理；原 16 題複測為 8 SUCCESS／6 NO_DATA／2 FAILED，仍非品質驗收。保留 tab／行內空格／段落邊界、數字與英文識別碼；不能全域去空白或 NFKC 後就聲稱引用正確。詳見第 4 批文件末節。
-- 本機 `knowledge-v008-aae34e5095e6` 為 658 筆，僅相對 v007 增加 BA13 單筆 family_caregiver audience；可選 `--audience-patches` 綁原 source／text hash／roles。`embed_knowledge.py` 預設 dry-run，已補 27 筆向量並重用 631 筆，完整 cache 驗證 658 available／0 required。尚未新增 DB candidate、改 .env 或 activation。
-- 使用者要求注意 CPU：後續本機測試單工、BelowNormal 優先序，subagents 不同時跑測試；已有完整測試後僅重跑實際變更涵蓋的定向檢查。
-
-- 2026-10-02 RAG 簡化第 4 批完成第一輪真實基準：既有 v004／726 筆，16 題為 7 SUCCESS、5 NO_DATA、4 FAILED；狀態不是語意評分，導覽式 PARTIAL 與申請程序推論仍有品質問題。詳見 [`第 4 批`](docs/project/rag-simplification-phase4-20261002.md)。
-- 已唯讀驗證 726 筆真實向量，新版 658 chunks 可重用 631 筆，另需 27 筆 embedding；後者尚未產生，v007 尚未匯入。真實 query embedding／Gemini 已測，V3 僅測試程序內啟用，未改 .env、寫 DB 或 activation。下方第 2／3 批的未呼叫 provider 敘述為當時狀態。
-- PostgreSQL session 預設 read-only 可能未生效；檢索及實測每個交易須先明確 SET TRANSACTION READ ONLY 與 timeout，設定失敗不得繼續查詢。Gemini JSON MIME 已設，但仍有 INVALID_GENERATION_JSON；不能將格式配置或原文錨點通過當作答案品質通過。
-
-- 2026-10-02 RAG 簡化第 3 批已完成本機實作：V3 自然問句以 pgvector dense＋FTS／trigram Hybrid 檢索，再生成附 1–5 筆引用的回答；移除人工 support sets、精確題目、固定答案與最低 3 筆前提。允許明示缺口的 PARTIAL；無資料／錯誤回 fallback。引用 ID／原文錨點驗證不等於語意正確性評分。
-- `RAG_EVIDENCE_V3_ENABLED` 仍預設 false；未改 .env、匯入外部 DB、呼叫真實 embedding／模型或 activation。V3 啟用時不讀舊 evidence／source-family policy，保留 release/profile、角色／用途、官方來源、stop／risk／時效與內容 hash 檢查；只限非 production staging PostgreSQL。V1／V2 契約仍維持 3–5 筆，V3 關閉時保留原 overlay 流程。
-- 第 3 批相容舊 `older_adult`／`elder` 名稱與四個已有公開使用證據的官方來源；不把其他 internal 或空 scope 全面放行。法律 current 候選依原 scope：長者／家屬各 21、專業人員 71、管理員 50；高風險法條仍拒絕。完整限制與第 4 批實測方向見 [`第 3 批`](docs/project/rag-simplification-phase3-20261002.md)。
-- SQL regex 須經 SQLAlchemy `text()` 編譯檢查 bind keys；POSIX `[:space:]` 的冒號可能被誤認為參數，不能只測 SQL 字串包含。pgvector cosine 查詢另須拒絕零向量與非有限數值。
-
-- 2026-10-02 RAG 簡化第 2 批：新本機入口 `scripts/rag/prepare_knowledge.py` 預設 dry-run；735 候選整理為 658 官方 chunks，排除 75 研究／量表、1 舊版流程、1 導覽文字，原始資料不變。輸出僅 chunks／report／embedding-plan；新 compiler／Core loader 不依賴人工工作簿、allowlist 或 acceptance。詳見 [`第 2 批`](docs/project/rag-simplification-phase2-20261002.md)。
-- 第 2 批只完成本機整理與讀取：631 筆 embedding 文字未變、27 筆已變，不等於已有可重用向量；須供應完整 cache profile snapshot 與有效向量才計為 REUSE。未知現行性／assessment、原 review 與 retrieval policy 保留；未改 runtime／SQL gate，未 import、呼叫 provider 或 activation。自然問句 Hybrid 與准入調整仍屬第 3 批。
-
-- 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
-- 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
-- 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。
-- v020 及以前 audit、舊人工覆核／acceptance／rechunk 報告與 pinned 資料僅為歷史紀錄，不代表今天的程式，也不構成新增 successor 的義務；保留其 bytes。先前 707 原記錄＋28 重切候選、41 facts 與本機 v005 未因此寫外部 DB 或切換 release。
-- 有效操作及後續批次見 [`RAG 簡化第 1 批`](docs/project/rag-simplification-phase1-20261002.md)。舊報告中的強制逐筆覆核、反覆 audit／封存要求已被使用者本次授權取代。真實來源、secret、Consent、身分及權限規則不變。
-
-- pytest 必須能從 repo root 以 `uv run --project services/agent-runtime pytest services/agent-runtime/tests`
-  執行；測試不得以 `tests.unit.*` 匯入另一測試檔的 helper。Dialog 由 effect 關閉時，
-  測試須等待 dialog 不再可見；頁面權限提示更新不代表 dialog 的 effect 已完成。
-
-- 2026-09-30 收案管理：`/staff/enrollments` 與四個 enrollment API operations，限原建立人的
-  無帳號機構長者，獨立 `enrollment:read`／`enrollment:manage`。暫停／結案原子停止平板、
-  未完成對話及派案；恢復不復活舊 token 或派案。Development head `f0b2c4d6e879`，70 張業務表。
-  詳見 `docs/project/staff-enrollment-lifecycle-20260930.md`，真人語音測試仍延後。
-- 收案管理授權不能依賴一般 ElderAccessPolicy，否則暫停後無法恢復；仍須 live Actor、tenant、
-  據點／機構會員、原建立人及同一筆 read＋manage grant。Enrollment 寫入先鎖 Elder 再鎖 Enrollment。
-  一般機構照護 query 使用 `enrollment_allows_service`；日期行程的收案 gate 用目前時間，
-  不用當日零時。新表同步 runtime principal allowlist；歷史僅 SELECT／INSERT，收案只允許狀態欄位 UPDATE。
-- JSONB receipt 的物件鍵順序可能與首次 HTTP 回應不同；冪等測試要比較物件內容，
-  不比較未排序的 JSON 字串。共享 development 上不得執行 `committed_session` 的 TRUNCATE teardown。
-
-- 2026-09-30 長者資料維護：profile／care-profile／history 共七條 API，寫入需獨立
-  `elder:profile:update`／`care_profile:write`，版本、冪等、受限前後歷史及同交易 outbox。
-  無帳號長者另驗有效收案，限定舊建立人預設 scope 回填；development head 為
-  `e9a1b3c5d768`。驗證與限制見 `docs/project/staff-elder-profile-maintenance-20260930.md`。
-- 重驗 scope 的 repository query 需 `populate_existing=True`；否則同一 AsyncSession
-  identity map 可能沿用鎖等待前的關係／派案內容。交易測試新增 row 後重跑 migration SQL 時，
-  注意 PostgreSQL `now()` 是交易起點，模擬既有資料的 effective_from 須早於該時間。
-- 此 repo 使用 npm workspaces；執行 `npm run typecheck --workspace=@elderly-care/frontend`。
-  不使用 `pnpm --filter frontend typecheck`，以免不同 package manager 搬移既有 node_modules。
-- 新增 migration 資料表時，除 `_HEAD_REVISION` 也須同步 `test_migrations.py` 的
-  `_TOTAL_HEAD_TABLE_COUNT` 與預期表名集合；目前 head 為 70 張業務表。
-- Profile HTTP 整合測試須自行啟用 `assisted_elder_sessions_enabled`，不可依賴本機
-  `.env` 開關；以 scoped monkeypatch 還原設定，保留產品預設關閉的行為。
-
-- 2026-09-29 無帳號長者語音切片：照服員可記錄長者本人明確口頭意願，再交付平板；
-  `conversation_session.assisted_session_id` 將 ASR／Agent／TTS 綁定到當次有效 handoff。
-  migration head `d8f0a2b4c657` 已 additive 套用 development。更新本機金鑰並將區域改為
-  `japanwest` 後，已以真實登入／Supabase／Deepgram／Gemini／Azure 完成合成音訊兩輪
-  對話、續聽、暫停、無聲／低信心阻擋、停止與換發後舊票券／TTS 拒絕。只有收音來源
-  是合成 MediaStream；真人麥克風與聽感仍未驗收，不能將此標為真人通過。
-  狀態與操作見 `docs/project/staff-assisted-voice-20260929.md`。
-- Core `Settings.model_dump()` 會遮蔽 DSN／secret，不能拿 dump 重建可用設定。
-  測試需要重驗目前設定時，在程序內以 `{name: getattr(settings, name) for name in
-  Settings.model_fields}` 傳給 `Settings.model_validate`；不得列印該資料或例外內 input。
-
-- 2026-09-10 RAG 已完成外部同步，2026-09-29 唯讀複驗與原紀錄一致：Supabase development 現行 release 是
-  `rag-v2-v004-f3339ceae77c`，runtime policy v004，長照法 71 筆可檢索。查 RAG 現況要以
-  `scripts/rag/sync_law_repair.py verify` 的當次輸出為準，不要沿用本檔 08-2x 的舊敘述。
-  `data/rag-v3/candidates/v003/` **不是** v004 的後繼，而是同樣分支自 v002 的平行候選：直接同步它
-  會新開放 224 筆但關掉那 71 筆長照法。要採用 v003 的覆核狀態，必須另建以 v004 為基底的 successor。
-  全庫仍 `review_status=needs_review`、`production_approved=false`，Production 與外部 activation 仍封鎖。
-  複驗證據：[2026-09-29 唯讀報告](docs/project/rag-law-sync-verification-20260929.json)。
-
-- Native Email 註冊以 `PendingExternalIdentity.provider="KINSUN"` 進入共用 onboarding／
-  invitation redemption；名稱含 Google／External 不代表只支援 OIDC。新增或調整登入路徑時，
-  須穿過實際下游 service 驗證 provider allowlist 與 invitation／consent gates，不能只 mock
-  redemption 就宣稱家屬註冊已通過。
-
-- 跨角色 UI 合成 fixture 的照護關係除 `elder:basic:read`，還須明列
-  `elder:access_context:read`；長者總覽可見不代表詳情頁 access-context 可讀。
-  測試缺 scope 時只補正該 campaign，不放寬產品授權或既有帳號。
-
-- `report_version` 是資料庫強制不可變的版本表；來源摘要版本等 provenance 必須在
-  首次 INSERT 時一併保存，不可先建立草稿再 UPDATE 補 metadata。發布前重讀當前
-  摘要版本／狀態，舊草稿不能自動沿用新摘要覆核。
-
-- 獨立埠號的 frontend production QA server 必須為該程序設定相符的 `FRONTEND_ORIGIN`。
-  沿用 3000 origin 啟動 3104 會讓登入／寫入被 CSRF 拒絕；修正 launcher 設定，
-  不可放寬來源檢查。既有 `.env.local` 不需因此改寫。
-
-- Kinsun native-auth integration tests must supply all four independent synthetic secrets,
-  including `FAMILY_INVITATION_HMAC_SECRET`, and disable Settings dotenv loading. Local `.env`
-  values must not hide missing CI setup; validate Settings before database writes.
-
-- pytest `parametrize` 管理的測試參數不可另設 Python 預設值，否則整個 suite 在 collection
-  就失敗；integration 無獨立 DB 時仍可用合成設定執行 `--collect-only`，但不代表 SQL 已驗證。
-  Consent request 新增欄位時，同步 `core-integration.test.ts` 的完整 payload assertion。
-
-- 2026-09-18 語音個人記憶依 ADR 0023：除文字保存 scope，還須明確
-  `personal_memory_voice_auto_save=true`。只能使用 Core 授權的本人 ASR evidence，
-  保存與讀取均保留 voice extractor／ASR reference；UI 修正不可轉成 text extractor。
-  ASR TTL 限制新回合，不限制已保存記憶壽命。TTS／播放失敗不得宣稱記憶未保存。
-  舊同意不自動升級；不得代替真實使用者授予 consent。
-
-- 個人記憶 Demo 的 3110／8010 launcher flags 不會套用到 IDE 3000／8000 服務。
-  排查未保存時先確認實際服務的 EVIDENCE_AWARE_MEMORY／PERSONAL_MEMORY_ENABLED 與
-  新同意 scope；不能只因句型通過就宣稱該次已保存。不得代替真實使用者授予 Consent。
-
-- Browser QA 的 Core 成功回應 fixture 也必須有完整 meta：correlation_id、合法 timestamp、
-  schema_version="1.0"；空 meta 會被前端拒絕，不能用來驗證已登入／已同意畫面。
-
-- Migration 測試呼叫 Alembic 前須結束其他連線的 schema reset、DML 及查詢交易；
-  不只 DROP，UPDATE 後直接 downgrade 或驗證 constraint 後直接 upgrade 也可能互相等鎖。
-  Alembic 使用獨立連線，測試必須在兩次操作間 commit／離開 transaction context。
-
-- 2026-09-17 個人自述記憶新增獨立分支（ADR 0022）：只有本人文字回合、明確
-  `personal_memory_auto_save=true` 的 LONG_TERM_MEMORY 同意、STANDARD profile 與兩項
-  `EVIDENCE_AWARE_MEMORY`／`PERSONAL_MEMORY_ENABLED` flags 全部符合才自動保存。
-  Core 有界語法擷取音樂、嗜好、稱呼、飲食偏好及早餐習慣；不是任意語句或語音擷取。
-  本分支可直接從 SQL 取用，不需 Care Event VERIFY／Graph SYNCED；來源明示為本人自述，
-  不得改成已核實照護紀錄。既有記憶仍走原本 evidence gate；舊同意不默認升級。
-  同類新陳述更新版本；receipt 撤銷與記憶頁修正／刪除都必須檢查當前版本。
-  詳見 `docs/project/personal-memory-demo.md`。原始 baseline SQL 不變；新 head `b6d8f0a2c435`。
-
-- 家屬報表讀取須重驗目前 `family_relationship.share_scope` 與報表類型；
-  `care_relationship.scope`、有效 Consent 或發布時 snapshot 都不能單獨替代此檢查。
-  摘要來源事件單筆 API 只提供目前版本，不可標示為生成當時快照或原始逐字稿。
-- Browser QA 的 Core 錯誤 fixture 必須符合完整 ErrorEnvelopeV1（含 correlation_id、
-  reason_code、retryable、details），否則會測到 malformed response，而非目標錯誤提示。
-
-- Care Event 的 evidence ref 必須使用 `evidence:<UUID>`；測試資料也須遵守契約。
-  `synthetic:evidence` 會被 API 安全過濾，不能為了測試通過而放寬來源格式。
-
-- PR 標題與說明一律使用英文；與 Owner 的對話維持繁體中文（2026-09-16 指示）。
-- 資料用途的 Consent 必須在查詢／超限判斷前檢查；不能讓提前回傳的筆數錯誤跳過
-  授權邊界。前端應依驗證過的固定錯誤代碼顯示提示，不直接呈現伺服器細節。
-- AsyncSession.execute 的 mock 應使用 AsyncMock 回傳同步 MagicMock Result，
-  `Result.all()` 不是 coroutine。摘要／事件更新後若立即序列化 server-generated
-  `updated_at`，必須在 async flush 載入該值，避免隱式 IO；以實際 ORM 更新驗證。
-
-- 更新日期：2026-09-02
-- 校準基準：`main` at `03cd170`
-- 適用範圍：整個 `kinsun.ai` repository；`services/agent-runtime/AGENTS.md` 在該子目錄追加規則，衝突時以本檔為準。
-- 協作流程：先讀本檔，再讀根目錄 `CLAUDE.md`；每次 AI 因專案特性犯錯，都要把該地雷補回這兩份文件。
-
-居服工作台的跨分頁更新只傳 invalidation，不傳派案或長者資料。BroadcastChannel 的發送者若與
-訂閱者是同頁的不同 instance，仍會收到自己發出的訊息；要以文件生命週期的 source ID 排除自己，
-避免開始服務後重載、清掉尚未提交的表單。同層交班／待辦元件的 React key 要包含元件用途。
-Vitest lifecycle hook 要用 block body 返回 void，不直接返回 `vi.unstubAllGlobals()` 的
-VitestUtils；單跑 Vitest 不會抓到這個型別錯誤，新增測試後須再跑 frontend typecheck。
-
-Vitest 的 `vi.fn(async () => ...)` 會把 `mock.calls` 推論成零參數 tuple；需要檢查 callback／
-fetch 的呼叫參數時，本專案 Vitest 1 使用 `vi.fn<Parameters<F>, ReturnType<F>>(...)`，
-避免測試執行通過但 typecheck／build 因 tuple 越界失敗。此版本不接受新版的單一函式型別
-generic；不要以多重型別斷言掩蓋 mock 簽名不符。
-
-同一居服員／長者可能同時存在多筆有效派案；elder-level lookup 不得以
-`scalar_one_or_none()` 的多筆例外讓 Dashboard 回 500。未指定派案且來源有歧義時應拒絕
-授權，不能任選第一筆或聯集 scopes；工作台仍經 `AssignmentAccessService` 核對指定派案。
-
-所有代理在分析、設計、實作、測試與文件更新時，都必須遵守本文件及 `docs/` 中的產品規格。描述進度時以可執行程式、contract、migration、測試與部署證據為準，不以 README、舊 handover 或 commit 標題單獨判定完成。
+| 要做的事 | 先讀 |
+| --- | --- |
+| 改 `services/core-api/`（API、service、ORM、migration、Core 測試） | [`services/core-api/AGENTS.md`](services/core-api/AGENTS.md) |
+| 改 `packages/frontend/`（頁面、BFF、i18n、Vitest、Browser QA） | [`packages/frontend/AGENTS.md`](packages/frontend/AGENTS.md)＋[MASTER.md](docs/design-system/MASTER.md) |
+| 新增或修改 API、Event、Schema、contract | [`contracts/AGENTS.md`](contracts/AGENTS.md)＋core-api AGENTS |
+| 改 `services/agent-runtime/`、模型 provider、RAG | [`services/agent-runtime/AGENTS.md`](services/agent-runtime/AGENTS.md)＋[RAG 現況與規則](docs/project/rag-release-history.md) |
+| 改 `services/speech-gateway/` 或語音流程 | [`services/speech-gateway/AGENTS.md`](services/speech-gateway/AGENTS.md) |
+| 改 CI、`scripts/ci/`、新增跨服務依賴 | [CI Gate 1](docs/runbooks/ci-gate1.md) |
+| 啟停本機服務、QA 埠號、清理 worktree、檢查 `.env` | [本機開發與 QA](docs/runbooks/local-dev.md) |
+| 了解各元件現況與已退役項目 | [系統現況](docs/architecture/current-state.md) |
+| 查某功能做到哪、上次驗收結果 | [進度紀錄](docs/project/progress-log.md)、[交付索引](docs/project/README.md) |
+| 產品需求、Persona、驗收條件 | §2 的 `docs/spec/`、[ADR](docs/adr/) |
 
 ## 1. 專案狀態
 
-- 本專案源自 AWS Hackathon，現為可獨立維護、可替換雲端 provider 的 Voice-first 智慧長照 AI 陪伴系統。
-- 目前 repository 是可在本機執行與測試的 Monorepo，不只是文件 12 的空骨架；主要單元如下：
-  - `services/core-api`：正式 Domain Core。已有 Identity／Actor、Kinsun-owned Email＋Password、Core App
-    Session authentication、direct Google／LINE OIDC handoff、受限帳號連結、Elder scope、Consent、Voice
-    Ticket／ASR Gate、Care Event、Memory、Daily Summary、Family Report、Assignment、Deletion、Agent
-    Run、受控 Tool、LINE Messaging／通知，以及 transactional outbox 與 provider-neutral event
-    publisher／consumer foundation。正式狀態仍只由 Core database 與 Command Gate 擁有。
-    2026-09-01 另加入兩條軸線，兩者都**預設關閉**：
-    - **Staff-assisted accountless Elder Session**（migration `f7a9b1c3d456`）：新增
-      `elder_enrollment`、`elder_care_profile_entry`、`assisted_elder_session` 三張表與
-      `app/api/assisted_elders.py` 的 8 個 route。照服員可建立沒有 Actor／identity 的長者，
-      再發一次性 `ep1_` pairing token 換成 HttpOnly `es1_` Elder Session；`ks1_`／`ep1_`／`es1_`
-      是三種不同憑證，一般 Core endpoint 只收 `ks1_`。Token 不攜帶任何可信 role／tenant／elder／
-      scope／expiry claim，每次請求都由 Core 重建 initiator 的 live ActorContext 再跑既有
-      ElderAccessPolicy。migration `b8c2d4e5f607` additive 補上 `consent_grant` 的
-      `confirmation_method`／`recorded_by_actor_id`／`assisted_session_id`：
-      `ASSISTED_TABLET_ACKNOWLEDGEMENT` 要求 `granted_by_actor_id` 為 NULL，只會建立
-      `BASIC_VOICE`，不得授予 Memory、event extraction、family sharing 或 Care Profile projection。
-      無帳號長者沒有 Elder Actor，speaker gate 無法判定為 verified Elder speech，Event／Memory
-      proposal 因此維持關閉。`ASSISTED_ELDER_SESSIONS_ENABLED` 預設 `false` 且在
-      `APP_ENV=production` 一律拒絕。Kiro spec 為 `.kiro/specs/staff-assisted-elder-session/`，
-      7 項任務全部完成，release blocker 見該目錄 `traceability.md`。
-    - **Speech Gateway → Core request-bound service identity**（`app/middleware/speech_service_auth.py`
-      ＋ `app/adapters/service_identity.py`）：取代原本 `require_system_service_actor` 的長效
-      bearer。憑證綁 issuer／subject／audience／method／path／body SHA-256／correlation ID 與
-      single-use credential ID，TTL 1–60s，claim 必須完全相符，比對用 `hmac.compare_digest`，
-      所有失敗都回同一句 "Authentication required"，不得當成資源存在與否的 oracle。2026-09-02 起
-      replay state 不再是 process-local：migration `e2f4a6c8b013` 在 `eldercare_ai` 之外建立
-      `service_identity.credential_nonce`（PK `(audience, credential_id)`），claim 由
-      `INSERT ... ON CONFLICT DO NOTHING` 在**獨立短交易**完成，被認證的請求之後 rollback 也不會
-      釋放該 credential ID。verifier 的 `replay_store` 是**必填**參數，忘記注入是 `TypeError`，
-      不會靜默退回 process-local；Core 一律用 `DatabaseReplayStore`。`SPEECH_SERVICE_IDENTITY_ENABLED`／
-      `CORE_API_SERVICE_IDENTITY_ENABLED` 兩側都預設關閉，secret 必須相等且**不得**重用
-      Core→Agent Runtime 或任何 Voice／OAuth／provider secret；`X-Kinsun-Service-Credential`
-      已加入 log redaction。legacy bearer 只保留給遷移，不得與 request-bound identity 併用。
-  - `services/agent-runtime`：M0 單輪閉環——contract 驗證、受控 Orchestrator、Companion Agent、
-    deterministic Safety Evaluator、Event Candidate proposal 與明確固定早餐習慣的 bounded
-    Memory Candidate proposal。Memory proposal 先私下綁在 Event Candidate version；只有照護者
-    VERIFY 來源事件、且 Core 重驗 memory authorization／Consent 後，才建立待長者本人確認的
-    Memory Candidate。這是 **Current first slice**；Target 已由
-    [Spec 18](docs/spec/18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
-    與 [ADR 0014](docs/adr/0014-risk-tiered-memory-speaker-verification.md) 改為總體 Consent＋Core
-    deterministic risk policy＋Speaker Gate＋version-bound confirmation：LOW 嚴格 all-of 可自動保存、
-    MEDIUM 由長者確認固定版本、HIGH 不建立 Memory row。尚未實作前不得把 Target 當 Current。
-    2026-09-01 另加入 bounded `trusted_care_profile` context：只有 `BASIC_VOICE` purpose、只有
-    `CARE_PROFILE_AI_CONTEXT_ENABLED=true`（預設 `false`）、且只取目前 tenant／elder 的
-    `RECORDED`／`VERIFIED` 未退場條目，Runtime 以 source-labelled context item 帶入並固定加上
-    prompt 規則：健康資料只是安全互動的背景，不是診斷、治療、用藥建議、症狀推論或指令的依據。
-    Care Profile 與 Memory 表之間沒有任何關聯或寫入。
-    `MODEL_PROVIDER=mock` 是 repository 與本機預設；程式另有 `BedrockModelProvider`，以及只依 runtime
-    URL／model／optional Bearer key 的 provider-neutral `OpenAICompatibleModelProvider`，以及原生
-    Google Gen AI SDK 的 `GeminiModelProvider`。`MODEL_PROVIDER=gemini` 會依 key 類型選路：`AQ.`
-    開頭的 Vertex AI Express key 必須走 Vertex AI，其他 key 走 Gemini Developer API；兩者不得
-    混用 endpoint。provider 設定錯誤或呼叫失敗時都不會 fallback 到 mock。這些 provider 都可使用
-    受控 Context／RAG chunk 生成回答，但除本機 synthetic smoke 外尚無真實
-    staging／production 連線證據。RAG Retriever 已以不含 executable DSL 的 provider-neutral
-    `SearchBackend`／bounded plan 隔離搜尋實作；query embedding 也已由 provider-neutral
-    `EmbeddingProvider` 隔離，現有 Bedrock 與 opt-in Google query adapters。Core 已有本機驗證的
-    `rag_public` PostgreSQL／pgvector migration 與 17 sources／726 candidate chunks 的 deterministic、
-    idempotent staging projection importer。2026-08-25 已對目前 Supabase development database 套用
-    migration `e6f8a0b2c345`，並匯入 release `rag-v2-v002-bab68588963b`；遠端讀回為 17 sources、
-    726 chunks、全部 record/text/embedding-text hash 一致、`needs_review=726`、
-    `production_approved=0`。2026-08-25 已使用確認的 Google
-    `gemini-embedding-001`／1024／`RETRIEVAL_DOCUMENT` profile 產生 726 成功、0 失敗的 repository 外
-    staging artifact，SHA-256 為
-    `599d194db552433710ec6aff69318e962cb5b4b1c9f7a3050d527b369a3df7d5`；經使用者確認後已以單一
-    transaction 匯入 726 document embeddings，Supabase 獨立讀回的 profile、embedding-text hash 與
-    vector fingerprint 全部 `VERIFIED`。2026-08-25 已新增固定模板、全參數化的 PostgreSQL
-    FTS／trigram＋pgvector hybrid `SearchBackend`，runtime 可用
-    `RAG_SEARCH_BACKEND=postgresql` 精確綁定上述 release／profile；Supabase data-plane smoke 與
-    Google `RETRIEVAL_QUERY` → Supabase → V2 citation smoke 均回傳 5 筆合規 staging chunks。
-    2026-08-26 已依 Owner 明確人工確認，在 repository 內產生 immutable successor
-    `data/rag-v3/candidates/v003/`：17 sources／726 chunks 全部 `review_status=verified`，文字與
-    embedding text 均未變更，且 726／726 通過既有 embedding profile reuse 檢查。**v003 至今未同步，
-    且它與下述 2026-09-10 上線的 v004 同為 `rag-v2-v002` 的平行分支，不是 v004 的後繼**：兩者 726 筆
-    `prior_chunk_id` 完全相同；v003 建於 08-26，早於 09-09 的法規修復，其 72 筆長照法全部仍是
-    `requires_professional_assessment_missing`。逐筆比對為新開放 224 筆、關閉 71 筆，關掉的正是線上
-    已驗收的長照法。要採用 v003 的覆核狀態必須另建以 v004 為基底的 successor，不可直接同步 v003。
-    2026-08-26 已另建本機 source-family policy v002：13 個缺少 license URL 的來源改以 Owner 已記錄的
-    staging project-use review 作為依據，不再因 URL 缺少而自動封鎖，且不改寫既有 `license_status`；
-    5 筆表單範例的「一般風險值」以 policy overlay 映射為 canonical `low`，v003 Chunk bytes 保持不變。
-    14 個官方來源對 Elder／Family／Care Professional／System Admin 形成 554 筆 ordinary retrieval
-    candidates。2026-08-27 已依 Owner 明確決定建立 hash-pinned runtime policy v002：ordinary runtime
-    candidates 的 220 筆 professional assessment null 與 5 筆 official assessment null 映射為 true，
-    不改寫 v003 Chunk bytes；522 筆具完整 response metadata，其中 372 筆命中時由 Runtime 固定附上
-    主管機關／專業人員諮詢提醒，個人診斷、長照資格、等級與補助額度仍禁止由 AI 判定。32 筆空
-    purpose、69 筆 high／high-red-line、`stop_normal_rag` 與非 current 內容持續 fail closed。Runtime
-    先在固定 554 筆 v002 chunk IDs 搜尋最多 50 筆，再以 v003 text SHA-256、角色、purpose 與
-    assessment metadata 決定可回覆的 3–5 筆。9 個離線 policy／advisory／citation Golden cases 已通過；
-    2026-08-27 長者帳號詢問「長照法是什麼？」的 live smoke 已為 `SUCCESS/ALLOW`，取得 5 筆長照法
-    chunks，最終顯示 2 個去重引用與 deterministic advisory；完整 backend relevance／ranking Golden
-    Query suite 仍為 `NOT_EXECUTED`。2026-08-27 已在其上建立 successor runtime policy v003，不改寫
-    v002 bytes：以 staging-only purpose overlay 分類原本空白的 32 筆 A 單位手冊 chunks，沿用既有
-    enum 並讓來源層與 chunk 層都含 `general_information`，554 筆因此全部具備 response metadata
-    （v002 為 522），Core 的自然語言知識提問才能通過 purpose gate。這 32 筆仍標記 `needs_review`，
-    不等於人工確認或 Production 核准，v003 Chunk bytes 未修改。啟用必須同時提供
-    `RAG_SOURCE_FAMILY_POLICY_PATH`（2026-09-10 起為 `…/runtime/candidates/v004/source-family-runtime-policy.json`；
-    v003 路徑僅適用於當時綁定的舊 release）
-    與 `RAG_SOURCE_FAMILY_POLICY_EXPECTED_SHA256`；path／digest 缺一或不符、或仍開著
-    `RAG_STAGING_ALLOW_ALL_AUDIENCES`，Agent Runtime 就不建立 Retriever 並 fail closed。Runtime
-    image 不內建任何 `data/rag*`，container staging 必須以唯讀 config mount 注入。
-    `config/rag/source-family-golden-queries-v003.json` 固定 10 個離線 case ＋ 2 個 exclusion case，
-    本機全部通過。2026-08-27 當時的啟用方式、限制與封鎖（Supabase／外部 backend 未同步、32 筆
-    purpose 待 Owner 逐筆確認、獨立 read-only principal 與 activation／rollback 未建立、Production
-    不得使用 `RAG_ALLOW_NEEDS_REVIEW_CITATIONS=true`）見
-    [`docs/project/rag-v3-runtime-policy-integration.md`](docs/project/rag-v3-runtime-policy-integration.md)；
-    後續同步現況以下方紀錄為準。
-    **2026-09-10 已對 Supabase development database 完成外部同步**，依獨立授權
-    `docs/project/rag-law-sync-authorization-20260910.json`（SHA-256 `03fa6991…`），工具為
-    `scripts/rag/sync_law_repair.py`：新 immutable release `rag-v2-v004-f3339ceae77c` 在**單一交易**
-    匯入 726 projections ＋ 726 既有向量（`document_embeddings_generated=0`，未重新付費產生），
-    只變更 71 筆長照法治理欄位，其餘 655 筆限制與 `_0048` 的 high-red-line／stop 封鎖不變，
-    **舊 release v002 未刪除**；獨立唯讀連線全量讀回 `VERIFIED`。runtime policy 同步升為 v004
-    （SHA-256 `a7d8dd16…`，包裝原 v003 policy、554 筆 pool 不擴大、改綁新 release），本機 `.env` 的
-    `RAG_POSTGRES_RELEASE_ID`／`RAG_SOURCE_FAMILY_POLICY_PATH`／`..._EXPECTED_SHA256` 三項已切換。
-    因此 `RAG_STAGING_ALLOW_ALL_AUDIENCES` 目前是 `false`，2026-08-25 的 legacy all-audience override
-    已不在使用中；runtime policy 啟用時本來就不得與它併用。逐筆結果見
-    `docs/project/rag-law-sync-live-result-20260910.json`。2026-09-29 以 `sync_law_repair.py verify`
-    重跑唯讀確認：`status=VERIFIED`、726 chunks／726 stored embeddings、profile
-    `ep-google-00a12ec45096fa9d97d9e9b6`，且 source／target／identity export SHA-256 與 09-10 紀錄
-    逐一相符，**本次快照與 09-10 紀錄一致**；證據見
-    [唯讀複驗報告](docs/project/rag-law-sync-verification-20260929.json)。
-    仍未解除：全庫 `review_status=needs_review`、`production_approved=false`、
-    `retrieval_activation_status=NOT_AUTHORIZED`、`runtime_activated=false`；本機暫時重用 Core DB URL，
-    獨立 read-only DB principal、live relevance／ranking Golden Query 與 quality gate、
-    activation／rollback 未完成，外部 runtime activation／Production 仍封鎖。legacy OpenSearch adapter 保留，
-    不接 Neptune，不得描述成 production runtime
-    （[ADR 0004](docs/adr/0004-agent-runtime-into-monorepo.md)）。
-  - `services/rag-ingestion`：RAG 文件 ingestion 與 allowlist 建置。搭配
-    agent-runtime 的 **staging-only** RAG 路徑，尚未對真實 AWS／OpenSearch 環境驗證，
-    不得描述成可用於 production（見 `services/agent-runtime/AGENTS.md`）。
-  - `packages/frontend`：**唯一的前端**，單一 multi-role PWA，Next.js 16 App Router + React 19，
-    同時是 BFF（direct Google／LINE OIDC exchange 與 Core App Session 留在伺服器端，反向代理 core-api）
-    （[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）。
-    [ADR 0010](docs/adr/0010-provider-neutral-oidc-and-application-sessions.md) 的 direct Google／LINE
-    OIDC＋Core-owned opaque Session application flow 已實作：BFF start／callback／onboarding routes、Core
-    verifier／handoff／pending identity、App Session authenticator／logout，以及 Google→LINE explicit
-    linking 都已存在。[ADR 0015](docs/adr/0015-email-password-primary-authenticator.md) 的 Kinsun-owned
-    Email＋Password primary flow 也已實作：credential 綁 Actor、password 使用 Argon2id、verification／
-    login 採 bounded attempt 與 lockout，Browser 只經 private BFF→Core boundary 換取 Core App Session。
-    目前寄信只有 synthetic development delivery；production email delivery、password reset／change、MFA 與
-    breached-password screening 仍未完成。[ADR 0011](docs/adr/0011-bounded-empty-account-consolidation.md) 只允許對沒有正式
-    domain data 的 ELDER onboarding 骨架做二次確認後的受限合併；其他情況一律人工覆核，不得依 email
-    自動合併 Actor。Cognito runtime、Hosted UI callback、SDK、IaC reference 與 `actor.cognito_sub` 已
-    從目前 repository 移除；committed example 的 direct OIDC／App Session gates 仍預設關閉，實際環境
-    必須明確注入 provider、transaction、handoff 與 identity secrets。不得把本機可登入描述成雲端 E2E
-    已部署驗證。
-    前端不拆成多個應用：長者端、照護端、家屬端以 route 區分角色。**不要建立
-    `apps/elder-web`／`care-web`／`family-web`**（文件 12 的三-app 骨架，已由 ADR 0006 取代）。
-    2026-08-31 起三個角色各自只有一個 route prefix，且 shell 由 route group layout 擁有：
-    `app/elder/(app)/*`（layout＝ElderShell）、`app/staff/(app)/*`（layout＝CareSidebar）、
-    `app/family/(app)/*`；sign-in 頁刻意留在 group 外，因為 shell 帶著登出與尚無 session 時
-    沒有意義的連結。`data-surface="voice"` 由 layout 統一掛上，**不要在 page 自行 import
-    ElderShell 或手寫該屬性**——那正是舊寫法讓新頁面靜默失去 640px measure、64px 觸控目標
-    （MASTER.md §6.1）與較粗 focus ring 的原因。舊 URL（`/dashboard*`、`/consent` 等）由
-    `next.config.mjs` 以 **307 暫時** redirect 承接，IA 未定案前不得改成永久 redirect；
-    `src/lib/server/oauth-transaction.ts` 的登入後 allowlist 隨 route 搬移而**不是**新增別名。
-    route 搬移由 `src/lib/server/route-migration.test.ts` 釘住 redirect map 與 allowlist。
-    2026-09-01 新增平板交接路徑：`/staff/elders/new`（建立長者＋一次性交接）、`/elder/pair`
-    （由 URL fragment 或手動貼上 token，POST 給同源 BFF 交換）、`/elder/session`（首次使用
-    白話說明、文字陪伴、二次確認的停止、明確結束），BFF 邊界在
-    `app/backend/elder-session/*`。BFF 固定 acknowledgement body，**不接受 client 指定的
-    policy、actor、reason、deletion、tenant 或 elder scope**；交換 token 時會先清掉該瀏覽器
-    既有的 App Session cookie，再設定獨立的 Elder Session cookie。
-    ADR 0006 當時要求以 `apps/README.md` 承載這個警告；該檔與空的 `apps/` 目錄已於
-    2026-08-06 移除，警告改由本檔承載。要拆成獨立部署單元請先寫 ADR 推翻 0006。
-  - `packages/shared`：前端使用的 TypeScript 型別（原本也被已刪除的 legacy backend 共用，
-    現在只剩前端一個 consumer，可能有未使用的型別）；不是 Domain authority，
-    跨服務形狀以 `contracts/` 為準。
-  - `services/speech-gateway`：ASR／TTS adapter 與 Core Voice Ticket／server-side ASR Gate
-    整合邊界（`asr.py`、`tts.py`、`sagemaker_asr.py`、`core_voice_gate.py`）。Browser 已有受 Voice
-    Ticket 保護的 JSON audio upload 與低信心確認 UI；Gateway 先 consume，再把
-    ASR Final 交給 Core 判定，前端不得自行 threshold。華語／英語 managed adapter 與台語／客語
-    SageMaker adapter 已有程式與本機測試；WebSocket binary transport、production service credential、
-    真實 endpoint、成本與 quality gate 尚未部署／驗證，不得描述成 production 語音路徑。
-    2026-09-01 起對 Core 的私有呼叫改用 `src/speech_gateway/service_identity.py` 簽出的
-    request-bound 短效憑證（見上方 core-api 條目）；secret 少於 32 bytes 或 TTL 不在 1–60s
-    會在啟動時失敗，不是等到第一次呼叫。`/internal/.../voice-confirmation` 與 voice-session
-    endpoint 現在於認證後從已存的 ConversationSession 解析 tenant／actor scope，不再信任
-    呼叫端傳入的任何值。
-  - `services/notification-worker`：只有 LINE Daily Notification 的 scheduler boundary README；可執行
-    job 邏輯仍在 Core。沒有 Worker framework，也沒有 Scheduler／SQS／DLQ deployment。
-  `projection-worker` 與 `report-worker` 目前不存在；需要時依 §9 的結構與 ADR 建立，不要先放空殼。
-- **ADR 0007 判定為 legacy 的那一整套已於 2026-08-06 刪除**（原 `packages/backend`
-  → `legacy/backend` 的 TypeScript 後端 155 檔、`infra/bin/app.ts`、`cdk.legacy.json`、
-  `infra/lib/elderly-care-stack.ts` 與其專屬 constructs `api`／`data-store`／
-  `voice-workflow`、`infra/lambda-stubs/`）。
-  [ADR 0007](docs/adr/0007-canonical-backend-and-aws-deployment-authority.md) 的決策不變，
-  只是被判死的程式碼不再留在工作樹；要查歷史用 `git log --follow`。
-  一般 HTTP 主線只走 Next.js BFF → Python Core → Agent Runtime。歷史紀錄顯示 AWS Hackathon 曾有
-  staging foundation 與 application template，但目前沒有使用中的 AWS 服務；可執行 CDK profile、
-  AWS preflight／deployment scripts 與 active runbook 已於 2026-09-02 依
-  [ADR 0019](docs/adr/0019-retire-aws-cdk-deployment-profile.md) 退役。歷史 AWS spec／ADR／handover
-  只保留決策與證據，不得當成現行 resource inventory 或部署能力。四個 runtime／migration image
-  仍可由 provider-neutral 的 `scripts/build_runtime_images.ps1`／`.sh` 在本機建立與驗證，但不會
-  push registry 或部署資源。Frontend 已依
-  [ADR 0008](docs/adr/0008-next-16-supported-release-upgrade.md) 升至受支援 release，且本機
-  production audit／Linux image smoke 已通過；這只解除 framework dependency blocker，
-  不代表 registry push、provider callback、application deploy 或公開流量 gate 已完成。
-- **CI quality gate 已啟用**：`.github/workflows/gate1.yml`（Gate 1 Quality Gate）於 2026-08-26
-  建立，在對 `main` 的 pull request 與 push 觸發，在 `ubuntu-latest` 搭 pinned pgvector service
-  container 執行，timeout 30 分鐘。涵蓋範圍：
-  - Core API `ruff check`、`ruff format --check`、`scripts/rag/project_postgres.py dry-run`、
-    `tests/unit` 與 **`tests/integration`**。CI 自建 disposable `kinsun_test` database，**這是目前唯一
-    會實際執行 Core integration 測試的環境**；本機因為沒有獨立 `TEST_DATABASE_URL` 一直略過。
-    `test_migrations.py` 會反覆 drop／rebuild 完整 schema，必須先在獨立 pytest process 執行，再以
-    第二個 process 跑其餘 integration tests。Alembic 會另開 database connection，因此 migration test
-    內的 schema reset 必須先結束並 commit transaction，才可呼叫 Alembic rebuild；不得在同一個
-    `test_engine.begin()` 先 `_drop_all_tables` 再 `_run_upgrade`，否則 PostgreSQL 會等未提交的 DDL lock
-    直到 CI timeout。
-  - Agent Runtime、Speech Gateway、RAG Ingestion 三者各自的 `ruff check` ＋ `ruff format --check`
-    ＋ `pytest`。
-  - 靜態 `validate_contracts.py` 與兩支 live verifier。live verifier 以 `httpx.ASGITransport`
-    就地 `create_app()`，不需要另外啟動服務。
-  - 五輪 synthetic Core-to-Agent 證據（`scripts/verify_gate1_cross_service.py`），成功時上傳
-    artifact 保留 30 天。
-  - Frontend `npm ci`／typecheck／test／lint／production build。
-  - Core formatting 已由 L-06 納入 CI；`ruff check` 與 `ruff format --check` 都是正式 gate。
-  - **新增 router／model 時，import 字母序是 CI 等級的地雷。** `8adba0f` 把
-    `assisted_elders` 排在 `assignments` 之前、`assisted_elder_session` 排在 `asr_gate` 之前，
-    使 `app/main.py` 與 `app/models/__init__.py` 各出現一個 `I001`；`ruff check` **在 CI 內**，
-    等於直接擋住 gate1。同一個 commit 也讓 agent-runtime 的 `context/manifest.py` 與
-    `contracts/models.py` 沒過 `ruff format --check`，那項對 agent-runtime **同樣在 CI 內**。
-    兩者已於 2026-09-01 修掉。排序是 ASCII 比較（`assignments` < `assisted_*`、
-    `asr_gate` < `assisted_*`），肉眼很容易排錯：新增 import 後先跑一次該服務的
-    `ruff check`／`ruff format --check`，不要靠 review 目測。
-- 已被 `gate1.yml` 取代的 `.github/workflows-disabled/pr.yml` 已於 2026-09-02 隨 AWS CDK profile
-  一併移除；不要重建或啟用該草稿。外部部署 endpoint 可用 provider-neutral 的
-  `scripts/smoke_test_deployment.py` 驗證，但結果不代表 hosting infrastructure 已完成。
-- 不得把 Target Architecture、建議目錄或候選服務描述成已實作功能。
-- 開始實作前，先確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
-
-### 技術棧與刻意未採用項目
-
-| 範圍 | 已採用 | 不要自行引入／誤判 |
-| --- | --- | --- |
-| Core | Python 3.12、FastAPI、SQLAlchemy 2 async、Alembic、PostgreSQL 16、uv | Django、Flask、同步 ORM、第二套 schema 管理器 |
-| Agent／RAG／Speech | Python 3.12、FastAPI、Pydantic、boto3、OpenSearch adapter、uv | 自由 Agent loop、直接 SQL／DSL、未受控 SDK 呼叫 |
-| Frontend／BFF | Next.js 16 App Router、React 19、TypeScript、CSS Modules、npm workspaces | Vite、Tailwind、獨立 elder／care／family apps、browser-held access token |
-| Deployment | 目前沒有 production IaC；runtime 以環境變數／adapter 解耦 | 未經 ADR 選定 provider／IaC、legacy Lambda／DynamoDB backend、恢復 Cognito |
-| Contract | OpenAPI 3.1、AsyncAPI、JSON Schema、Pydantic | 未實作先寫 executable contract、相對 `$ref`、寬鬆額外欄位 |
+- Voice-first 智慧長照 AI 陪伴系統，源自 AWS Hackathon，現為可獨立維護、可替換雲端 provider 的 Monorepo；可在本機執行與測試。
+- 元件：`services/core-api`（唯一 Domain Core）、`services/agent-runtime`（受控 Agent／RAG）、`services/speech-gateway`
+  （ASR／TTS 邊界）、`services/rag-ingestion`（staging-only）、`services/notification-worker`（單次 CLI，未部署排程）、
+  `packages/frontend`（唯一前端＋BFF）、`packages/shared`（前端型別，非權威）。細節見 [系統現況](docs/architecture/current-state.md)。
+- 沒有 production IaC、沒有使用中的 AWS 服務；RAG 全庫 `needs_review`、production 未啟用；真人語音未驗收。
+- 功能旗標預設關閉；未經明確授權不啟用 OIDC、ASR、通知、RAG activation 或其他 staging／production 功能。
+- 不得把 Target Architecture、mock、adapter、disabled gate、本機或合成測試描述成已實作、已部署或 production-ready。
+- 數字型現況（migration head、表數、operation 數、測試數）以當次命令輸出為準，不沿用文件快照。
+- 開始實作前，確認工作項目對應的 Persona、User Story、Acceptance Criteria、Domain State、Security Gate 與 Test Gate。
 
 ## 2. 規格來源與優先順序
 
-需求解讀依下列順序：
+需求解讀依序：
 
-1. `docs/spec/01智慧長照 AI 陪伴系統－產品方向與範圍基準 v1.2.md`：產品範圍、成功條件與非目標。
-2. `docs/spec/01A智慧長照 AI 陪伴系統－使用者研究與 Demo Persona v0.2.md`：Persona、情境與證據邊界。
-3. `docs/spec/02智慧長照 AI 陪伴系統－使用者故事與驗收條件 v1.3.2.md`：User Story 與 Acceptance Criteria。
-4. `docs/spec/03智慧長照 AI 陪伴系統－Story Map v1.2.md`：Wave、Gate、Backlog 狀態與 Demo
-   Traceability（原 .xlsx 的六個工作表都保留成 markdown 表格）。
-5. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract 與 Test 規格。
-6. 其他 `docs/spec/` 文件：UX、Workflow、AWS、Agent、交付、維運、評估與退場規則。
-7. 新增且明確取代舊條款的 Accepted Target spec／ADR。目前
-   [Spec 17](docs/spec/17智慧長照%20AI%20陪伴系統－Account、Elder、Enrollment%20與%20Service%20Entitlement%20v0.1.md)
-   處理 Account／Elder 分離；[Spec 18](docs/spec/18智慧長照%20AI%20陪伴系統－風險分級長期記憶、Speaker%20驗證與版本綁定確認%20v0.1.md)
-   處理 Memory Policy，並在其明列的衝突範圍內優先於舊規格。
+1. `docs/spec/01…產品方向與範圍基準`、`01A…使用者研究與 Demo Persona`。
+2. `docs/spec/02…使用者故事與驗收條件`、`03…Story Map`（Wave、Gate、Backlog、Demo Traceability）。
+3. `docs/spec/` 的 `06`、`07`、`10`、`11`：Domain、Security、Contract、Test；其他 spec 為 UX、Workflow、Agent、交付、維運。
+4. 明確取代舊條款的 Accepted spec／ADR：Spec 17（Account／Elder 分離）、Spec 18（Memory Policy，在其衝突範圍內優先）。
 
-**`docs/spec/*.md` 是規格的權威版本。** 2026-08-06 之前同一份內容存在四種格式——`.md`、
-結構化 `.json`、Story Map 的 `.csv`、以及 `origin/` 的 `.docx`／`.xlsx` 原始檔，其中
-`origin/` 曾被指定為權威。四份無人同步維護，且 `.json` 沒有任何程式讀取、`.csv` 的內容
-已完整含在 Story Map 的 `.md` 裡，二進位原始檔則無法 grep 或 diff。現已只留 `.md`。
-需要原始檔時用 `git log --follow` 或 `git show <commit>:docs/spec/origin/<檔名>` 取回。
-Google Drive 上的團隊文件若與此處不一致，依下方衝突規則處理。
-
-若文件互相衝突：
-
-- 不要自行挑選最方便的版本。
-- 優先採取較安全、較不會洩漏資料、較可回復的行為。
-- 在 PR／變更說明中列出衝突、採用的暫定解讀與需要 Owner 決策的項目。
-- 目前已知需要收斂：01／02 與 07／11 的延遲門檻不完全一致；Story Map 總覽可能有 Wave 標籤重複。
+- `docs/spec/*.md` 是唯一權威格式；原始檔由 git 歷史取回。退役的 Kiro 文件不得作為進度或授權依據。
+- 文件衝突時：不挑最方便的版本，採較安全、較不洩漏、較可回復的行為，並在變更說明列出衝突、暫定解讀與需 Owner 決策項目。
+  已知待收斂：01／02 與 07／11 的延遲門檻、Story Map 總覽 Wave 標籤。
 
 ## 3. 核心交付順序
 
-第一條 Gate 1 Vertical Slice 是主要實作脊柱：
-
-1. 林阿嬤明確同意後開始語音互動。
-2. ASR 對低信心內容要求簡短確認，不假裝辨識成功。
-3. Orchestrator 產生安全、簡短且符合語言偏好的回覆。
-4. Agent 的 Event／Memory 輸出只能是 proposal；Event 先成為 Candidate，Memory 由 Core policy 決策。
-5. 長期記憶先驗有效總體 Consent 與 Speaker：LOW all-of 才可自動保存，MEDIUM 由長者對固定版本
-   明確確認，HIGH 不建立 Memory；照護事件仍依規格完成人工覆核。
-6. 正式狀態寫入 PostgreSQL，並透過 Transactional Outbox 發布。
-7. Neptune／OpenSearch 完成可追蹤、可重建的 Projection。
-8. 後續對話只能重用每次通過 current ACTIVE、Consent、Speaker、verification、version binding、
-   validity、tenant／elder scope 與 tombstone deterministic Gate 的 Trusted Memory。
-9. 產生有來源連結的 Daily Summary，供照服員覆核。
-10. 保存 Demo、Trace、Contract、Safety 與 Failure-path 證據。
-
-Wave 順序：
-
-- Wave 1：Voice、Event、Confirmed Memory、Graph reuse。
-- Wave 2：照服員摘要、覆核與待辦。
-- Wave 3：RAG、Care Signal、家屬報表／通知、受控主動陪伴、English。
-- Wave 4：遊戲、Gamification、低資源語言與進階 ASR。
-
-除非使用者明確改變優先順序，不要為後期功能犧牲 Gate 1 的可演示閉環。
+Gate 1 Vertical Slice 是實作脊柱：明確同意後開始語音互動 → 低信心 ASR 要求確認 → 安全簡短的回覆 → Agent 的 Event／Memory
+只能是 proposal → Memory 依 Spec 18 的 Consent／Speaker／風險分級決策、照護事件人工覆核 → 正式狀態寫 PostgreSQL 並經 Outbox
+發布 → 可重建的 Projection → 後續對話只重用通過 deterministic gate 的 Trusted Memory → 有來源連結的 Daily Summary → 保存
+Demo／Trace／Contract／Safety／Failure-path 證據。Wave 與 Backlog 見 `docs/spec/03`。除非使用者明確改變優先順序，不為後期功能犧牲已可演示的閉環。
 
 ## 4. 不可違反的產品與安全邊界
 
-- 不提供診斷、治療建議或取代專業照護決策。
+- 不提供診斷、治療建議或取代專業照護決策；個人診斷、長照資格、等級、補助額度不由 AI 判定。
 - 不把模型輸出、推論、缺少資料或失敗結果描述成已確認事實。
-- MEDIUM 未確認／stale confirmation、HIGH、unverified Speaker、失效 Consent 或不符 lifecycle／scope 的
-  Memory 不得進 Trusted Memory、Graph、報表或後續對話事實；LOW 必須通過 Spec 18 的 all-of policy。
-- 未覆核的 Event Candidate 不得成為 Verified Event。
-- Draft Family Report 不得被家屬或通知預覽取得。
-- Family App／Web 的 `PUBLISHED` Report 是正式內容來源；LINE／Email 只能做最小通知與安全連結。
-- 長者的「不要記」、「不要再提」、「停止」與 Consent Revocation 必須立即優先於 Retry、Replay、Backfill、Scheduler 與主動陪伴。
-- 不使用恐懼、內疚、壓力、欺騙或情緒依賴設計提高互動率。
-- Demo、測試、Eval 與截圖只能使用 Synthetic 或完成去識別的資料。
+- 不符合 Spec 18 final gate 的 Memory（unverified Speaker、MEDIUM 未確認／stale、HIGH、失效 Consent、不符 lifecycle／scope）
+  不得進 Trusted Memory、Graph、報表或後續對話；未覆核的 Event Candidate 不得成為 Verified Event。
+- Draft Family Report 不得被家屬或通知預覽取得；`PUBLISHED` Report 是正式內容來源，LINE／Email 只做最小通知與安全連結。
+- 長者的「不要記」、「不要再提」、「停止」與 Consent Revocation 立即優先於 Retry、Replay、Backfill、Scheduler 與主動陪伴。
+- 不用恐懼、內疚、壓力、欺騙或情緒依賴設計提高互動率。
+- Demo、測試、Eval、截圖、Prompt、fixture 只用 Synthetic 或已去識別資料；不得代替真實使用者授予 Consent。
 
-零容忍結果：
+零容忍：
 
-- Cross-elder 或 Cross-tenant 資料暴露。
-- 未授權讀寫、Tool 執行或 Consent bypass。
-- Secret、Token、完整 Prompt、完整 Transcript／Audio 出現在一般 Log。
-- 檢查 `.env` 不得使用只匹配 `NAME=` 前綴的 `rg --replace` 當遮罩：未匹配的 value
-  仍會接在替代字串後輸出。需以 dotenv parser 在程序內讀取，只輸出明確 allowlist 的
-  設定名稱、存在與否或相等布林值；不得把原始行或 secret 值送到 tool output。
-- SQLAlchemy development `echo` 也不得輸出 bind parameter；engine 必須維持
-  `hide_parameters=True`，避免 Email、credential hash、token digest 或其他 Restricted Data
-  因本機 SQL diagnostics 寫入 log。
-- 手動 DB 檢查也用 `app.database_url.to_psycopg_database_url`，不可只替換 driver 字串；
-  asyncpg 的 `ssl` 需轉成 psycopg 的 `sslmode`。Alembic revision 表位於 `public.alembic_version`，
-  不要因 domain schema 是 `eldercare_ai` 就猜測版本表位置；錯誤只輸出類型／SQLSTATE，不印 DSN。
-- 一般 log 不得出現 `str(exc)`、`exc_info=True`、`traceback.format_exc()` 或任何 DSN。
-  2026-09-02 起 core-api 由 `app/core/log_safety.py` 統一處理：一般 log 只留 exception type、
-  內部 code 與 correlation ID；traceback 一律送 `app.diagnostics`（`propagate=False` ＋
-  `NullHandler`，預設不落地，需 operator 自行掛受治理的 handler）。DSN 由 `redact_dsn()`
-  **只保留 scheme**，其餘整段丟棄而不解析。`Settings` 的名稱子字串比對
-  （`password`／`secret`／`key`／`token`）看不到藏在值裡面的 credential，`database_url` 與
-  `test_database_url` 因此另由 `_DSN_FIELD_NAMES` 依形狀 redact——新增任何把 credential 放在
-  值內部的設定時要一併登記。
-- 醫療危險建議。
-- 未確認記憶被當成事實。
-- 已刪除或已撤回資料因 Replay／Projection rebuild 再次出現。
-- Draft Report、錯誤收件或超出 Family Share Scope 的內容外洩。
+- Cross-elder 或 Cross-tenant 資料暴露；未授權讀寫、Tool 執行或 Consent bypass。
+- Secret、Token、完整 Prompt、完整 Transcript／Audio、DSN 出現在一般 log、tool output、錯誤回應或 contract。
+  一般 log 不得出現 `str(exc)`、`exc_info=True`、`traceback.format_exc()`；SQLAlchemy 維持 `hide_parameters=True`。
+- 檢查 `.env` 只用 dotenv parser 在程序內讀取，輸出 allowlist 名稱、存在與否或相等布林值（細節見[本機開發](docs/runbooks/local-dev.md)）。
+- 醫療危險建議；未確認記憶被當成事實；已刪除或撤回資料因 Replay／Projection rebuild 再次出現；
+  Draft Report、錯誤收件或超出 Family Share Scope 的內容外洩。
 
 ## 5. Authorization、Consent 與資料範圍
 
-- 採 RBAC + ABAC，並預設拒絕。
-- 每次正式讀取、寫入及 Agent Tool Command 都由 Core 重新驗證：
-  - `tenant_id`
-  - `elder_id`
-  - `care_unit_id`
-  - relationship／family share scope
-  - assignment
-  - consent purpose／version
-  - actor role
-  - resource state
-  - time／purpose
-- 不信任 Client 或模型傳入的 Actor、Tenant、Elder、Assignment 或 Permission Scope。
-- Real-auth synthetic fixture 的登入 session 需要 tenant-level membership
-  （`care_unit_id IS NULL`，role 與 Actor type 一致）；據點 row 不能取代它。
-  派案 gate 可接受 tenant-level 或相符據點 row，因此測撤權要讓所有可授權路徑都到期，
-  不能只撤據點 row 卻保留 tenant-level。勿修改產品 gate 來遷就 fixture。
-- 單一資源的「未授權」與「不存在」必須回一致的回應，避免以回應差異探測資源是否存在。
-- 失敗的授權不得產生資料修改、Outbox Event 或其他副作用。
-- Consent Purpose 必須分離，不得以單一總開關代替：
-  - `BASIC_VOICE`
-  - `TRANSCRIPT_STORAGE`
-  - `CARE_EVENT_EXTRACTION`
-  - `LONG_TERM_MEMORY`
-  - `COMPANION_SIGNAL_ANALYSIS`
-  - `PROACTIVE_COMPANION`
-  - `FAMILY_SHARING`
-- Consent 撤回後先停止未來處理，再依 Retention／Deletion Workflow 處置資料。
+- RBAC＋ABAC，預設拒絕。每次正式讀取、寫入及 Agent Tool Command 由 Core 重新驗證 tenant、elder、care unit、
+  relationship／family share scope、assignment、consent purpose／version、actor role、resource state、time／purpose。
+- 不信任 Client 或模型傳入的 Actor、Tenant、Elder、Assignment、Role 或 Permission Scope；email 不是 Actor authority，不得依 email 自動合併或連結帳號。
+- 單一資源的「未授權」與「不存在」回一致回應；失敗的授權不得產生資料修改、Outbox Event 或其他副作用。
+- Consent 檢查在資料查詢與超限判斷之前。Consent Purpose 分離，不以總開關代替：`BASIC_VOICE`、`TRANSCRIPT_STORAGE`、
+  `CARE_EVENT_EXTRACTION`、`LONG_TERM_MEMORY`、`COMPANION_SIGNAL_ANALYSIS`、`PROACTIVE_COMPANION`、`FAMILY_SHARING`。
+  新 scope（如個人記憶自動保存）需明確 opt-in，舊同意不自動升級。撤回後先停止未來處理，再依 Retention／Deletion 處置。
+- 家屬報表每次讀取重驗目前 `family_relationship.share_scope`；Consent 或發布 snapshot 不能替代。
+- 憑證不可互換：一般 endpoint 只收 `ks1_` Core App Session；`ep1_`／`es1_` 只限 assisted session；服務間呼叫用
+  request-bound 短效憑證。照服員代錄的平板同意只建立 `BASIC_VOICE`。
+- 測試 fixture 缺權限時修 fixture，不放寬產品 gate 或既有帳號授權。
 
 ## 6. 架構不變量
 
-- PostgreSQL／Domain Core 是正式交易資料與狀態的 Source of Truth；目前 provider 是 Supabase
-  PostgreSQL，不使用 Supabase Auth 或專有 Data API。
-- **開發與登入／註冊 E2E 預設直接連 Supabase PostgreSQL**：由 repository 根目錄未版控的
-  `.env` 提供 `DATABASE_URL`，一般開發、除錯、migration 檢查與 E2E 不啟動 Docker、
-  `docker compose` 或本機 PostgreSQL。只有使用者明確要求 Docker 隔離環境時才可例外。
-- Supabase development database 不得承接破壞性的 integration rebuild、`downgrade base`、reset、
-  truncate 或 fixture 全量重建。需要這類測試時，必須另有可丟棄且與 development database 分離的
-  `TEST_DATABASE_URL`；沒有就略過並如實回報。
-- Neptune、OpenSearch、Cache 與 Agent Memory 是 Projection 或 Working State，必須可由正式資料重建。
-- 不從 Graph、Search 或模型輸出反推正式授權或正式狀態。
-- 正式寫入使用 Transactional Outbox；採 Outbox → EventBridge → 每個 Consumer 專屬 SQS／DLQ。
-  **正式寫入與 Outbox 寫入必須位於同一交易**，不得先 commit 再補發。
-- Projection 只接受已通過狀態、授權、同意與刪除檢查的正式資料。
-- 不使用 Database + Graph／Index／Event Bus 的無保護 Dual Write。
-- 非同步 Consumer 必須 Idempotent、可重試、可觀測，並在處理前重新檢查撤回、刪除與 Scope。
-- 長流程／人工流程使用顯式 State Machine；不得以隱含 Prompt 狀態代替 Domain State。
-- 正式刪除使用 Tombstone 防止 DLQ Replay、Backfill、Graph rebuild、Index rebuild 或 Backup restore 復活資料。
-
-歷史 AWS Target Architecture 曾包含：
-
-- Single multi-role PWA。
-- Python modular monolith on ECS/Fargate。
-- API Gateway HTTP／WebSocket；身份驗證以 Kinsun Email／Password＋Core App Session 為 primary，
-  direct Google／LINE OIDC 為 optional provider handoff。
-- Bedrock AgentCore Runtime、Bedrock Models／Guardrails。
-- Aurora PostgreSQL、Neptune Serverless、OpenSearch Serverless、S3。
-- EventBridge、SQS／DLQ、Step Functions、Scheduler。
-- SES／LINE Notification Adapter。
-
-以上只保留為歷史規劃，不代表服務已建立，也不是現行 deployment baseline；可執行 CDK profile 已由
-ADR 0019 退役。
+- PostgreSQL／Domain Core 是正式資料與狀態的 Source of Truth；provider 為 Supabase PostgreSQL，不用 Supabase Auth 或專有 Data API。
+- Supabase development database 不得承接 integration rebuild、`downgrade base`、reset、truncate 或 fixture 全量重建；
+  這些只可用獨立、可丟棄的 `TEST_DATABASE_URL`，沒有就略過並如實回報。
+- Graph、Search、Cache、Agent Memory 是 Projection 或 Working State，必須可由正式資料重建；不從它們或模型輸出反推授權或狀態。
+- 正式寫入與 Outbox 寫入位於同一交易；投遞依 ADR 0021（PostgreSQL `outbox_event` 為 delivery control plane 與 DLQ 權威）。
+  不做 Database＋Graph／Index／Event Bus 的無保護 Dual Write。
+- Projection 只接受已通過狀態、授權、同意與刪除檢查的資料；非同步 Consumer 必須 Idempotent、可重試、可觀測，處理前重查撤回、刪除與 Scope。
+- 長流程／人工流程用顯式 State Machine，不以 Prompt 狀態代替 Domain State。
+- 正式刪除使用 Tombstone，防止 DLQ Replay、Backfill、rebuild 或 Backup restore 復活資料。
 
 ## 7. Agent 與 AI 實作規則
 
-- 採受控 Orchestrator，不建立 Agent Debate、無限遞迴或自由互相呼叫。
-- 同步流程上限依 Agent 規格：最多 3 次模型決策、2 輪 Tool、5 次 Tool Call，以及 1 次 Rewrite／Context rebuild；若規格更新則依新版本執行。
-- 上述是安全上限，不代表目前都已實作。現行 runtime 只有一次模型決策、optional RAG 與
-  deterministic Event／bounded Memory Candidate proposal；沒有通用 Tool loop，也不會從
-  `allowed_tools` callback Core。Memory first slice 只辨識明確固定早餐習慣，不推論健康、情緒、
-  陪伴需求或一次性事件；proposal 必須先隨 Event Candidate 保存，來源事件 VERIFY 後才可由 Core
-  建立仍需長者本人確認的 Memory Candidate。這段只描述 Current；Target 的 Agent＝proposal、Core＝
-  decision、Event／Memory 分離、LOW／MEDIUM／HIGH 與 Speaker Gate 依 Spec 18／ADR 0014。
-  Canonical path 由 Core 以 `requested_outputs` 要求最小 proposal，再由 Core 重驗授權與 Consent 後寫入。
-- Agent 只能呼叫 Allowlist 中且有版本的 Tool。
-- 高風險 Tool 即使由 Agent 選擇，也必須由 Python Core 重新執行 Authorization、Consent、State 與 Idempotency 檢查。
-- Context 目標層次是 Policy → Auth → Consent → Current turn → Session → Trusted memory after deterministic
-  retrieval gate →
-  Verified care data → Graph → RAG → Tool results → Output constraints。`BASIC_VOICE` canonical path
-  已能在 Core 重驗 `memory:read` 與 active `LONG_TERM_MEMORY` Consent 後，帶入同 tenant／elder、
-  current version、`ACTIVE`、未刪除且不超過目前 Consent version 的最近 5 筆 Confirmed Memory；
-  Knowledge／RAG purpose 不得夾帶私人記憶。這是 bounded first slice，尚未有語意相關性排序；
-  Verified care data／Graph 仍未接入 Agent Context。
-- 每次重要 Agent 執行需能追溯實際的 Agent、Prompt、Model route、Policy、Guardrail、Tool schema、Context manifest 與 Release Version。
-- RAG 必須保存來源、版本、有效日期、覆核狀態與 Metadata Filter；沒有可靠來源時明確回覆資料不足。
-- RAG `NO_DATA` 先核對 live projection 的 `retrieval_eligible`／block reasons，不得只憑本機
-  runtime policy 已補 metadata 就判定為排序問題。2026-09-09 法規唯讀預覽發現本機 assessment
-  overlay 與遠端缺失封鎖並存。acceptance v004 的 `external_sync=NOT_AUTHORIZED` 只在 2026-09-10
-  由獨立授權 `docs/project/rag-law-sync-authorization-20260910.json` 就該次 71 筆法規範圍解除，
-  不是全面解除；其他範圍的外部寫入仍須另取授權。
-  不可直接改 immutable release rows 卻沿用原 record／candidate hashes；同步前先產生差異、
-  另取外部寫入授權並設計 successor／安全回復。見 `docs/project/rag-law-governance-sync-plan-20260909.md`。
-- LLM-as-Judge 不得覆蓋 Deterministic Security／Schema／Permission Gate。
-- 本機啟動器不得用逐行 split 取代 dotenv：`RAG_DATABASE_URL=${DATABASE_URL}` 需要變數展開，
-  否則 shell 環境中的字面值會蓋過正確設定，導致 `staging_rag_unavailable`。
-  BFF 登入測試的 `returnTo` 必須取自 `strictRelativeReturnTo` allowlist；拒絕任意路徑不是密碼錯誤。
-- 測試執行時維持輸入穩定，新文件使用適用子目錄 LF 規則。歷史 acceptance 的
-  `.gitattributes` hash 僅描述當時 bytes，不再要求當前程式重建封存鏈。保留根目錄
-  `.gitattributes` 與歷史 pinned 報告；不為正常程式改動建立新的 audit package。
+- 受控 Orchestrator；不做 Agent Debate、無限遞迴或自由互相呼叫。上限依 Agent 規格（最多 3 次模型決策、2 輪 Tool、5 次 Tool Call、1 次 Rewrite）；
+  目前 runtime 只有單一模型決策與 deterministic proposal，沒有通用 Tool loop。
+- Agent 只產生不可信 proposal；Core 重新授權、重驗 Consent 並寫入。Agent 不 callback Core、不寫 Domain DB；只能呼叫 Allowlist 中有版本的 Tool，高風險 Tool 由 Core 重做授權、Consent、State、Idempotency 檢查。
+- Context 層次：Policy → Auth → Consent → Current turn → Session → Trusted memory → Verified care data → Graph → RAG → Tool results → Output constraints。
+  Knowledge／RAG purpose 不得夾帶私人記憶。Current 與 Target（Spec 18／ADR 0014）分開描述，未實作前不得把 Target 當 Current。
+- LLM 判斷（含 LLM-as-Judge）不得覆蓋 deterministic Security／Schema／Permission Gate；provider 錯誤不 fallback 到 mock。
+- RAG 保存來源、版本、有效日期、覆核狀態與 Metadata Filter；無可靠來源時明確回覆資料不足。外部 RAG 寫入或 activation 需逐次明確授權；
+  不得把 needs_review、AI 判定或 synthetic 結果冒充人工 verified。
+- 重要 Agent 執行需可追溯 Agent、Prompt、Model route、Policy、Guardrail、Tool schema、Context manifest 與 Release Version。
 
 ## 8. API、Event 與版本規則
 
-- REST 使用 `/api/v1/...` Major Path Version。
-- WebSocket 只傳輸 Voice Session State 與已定義事件，不暴露內部 Prompt、Agent Trace、Secret 或其他長者 Context。
-- OpenAPI 3.1、AsyncAPI 與 JSON Schema 是機器可驗證 Contract，放在 `contracts/`。細節見 §8.1、§8.2。
-- API、Domain Event、Agent Handoff、Tool、Candidate、Report 與 Export 都需要 Schema Validation。
-- 正式 Event 發布後視為不可變歷史契約；破壞性變更建立新 `event_version`。
-- Consumer 先支援新舊版本，Producer 才切換。
-- Database 變更採 Expand → Migrate → Contract。
-- 新功能沒有 ORM 不代表沒有表；先查 frozen baseline 的 `.sql`，不能只搜尋 migration `.py`。
-  `service_record` 原已存在（JSONB content、`worker_actor_id`、DRAFT default、updated_at）；
-  新 API 必須 additive 擴充並隔離 legacy rows，不可重建表或把舊內容自動當成正式 v1 紀錄。
+- REST 用 `/api/v1/...` Major Path Version；WebSocket 只傳 Voice Session State 與已定義事件，不暴露 Prompt、Trace、Secret 或其他長者 Context。
+- API、Domain Event、Agent Handoff、Tool、Candidate、Report、Export 都需 Schema Validation。
+- 已發布 Event 為不可變契約，破壞性變更建新 `event_version`；Consumer 先支援新舊版本，Producer 才切換。Database 變更採 Expand → Migrate → Contract。
 - 使用 Idempotency Key、Optimistic Concurrency、Correlation／Causation ID 與明確 Error Code。
-- 不可只記錄 `latest`；需保存實際使用的 API、Event、Schema、Agent、Prompt、Model、Policy、Speech、RAG、Graph、Export 與 Release Version。
+- 保存實際使用的 API、Event、Schema、Agent、Prompt、Model、Policy、Speech、RAG、Graph、Export 與 Release Version，不只記 `latest`。
 
 ## 8.1 Contract 規格
 
-### 目前狀態
-
-`contracts/` **以目前實作為準，不是以文件 10 為準**。兩者在 envelope 結構、錯誤欄位與
-狀態碼對應上有實質差異，以 [`contracts/DIVERGENCE.md`](contracts/DIVERGENCE.md) 追蹤。
-**改動 contract 或 API 之前先讀那份清單並跑 validator**；其更新日期與末段「尚未實作」摘要可能
-落後於 2026-08-10 之後的 Voice／LINE／Auth 變更，不能只看單一段落判定現況。
-
-2026-09-01 靜態驗證基準：Core OpenAPI 76 paths／81 operations（`info.version` 1.6.0）、
-Agent Runtime OpenAPI 3 paths、AsyncAPI 1 channel；Core app 實際有 80 paths／85 operations
-（同一路徑可含多個 method）。多出來的 4 條全部是 FastAPI 自動掛的 `/docs`、
-`/docs/oauth2-redirect`、`/openapi.json`、`/redoc`——**每一條實際 API path 都已登記在 contract**，
-反向也沒有 contract 有而 app 沒有的 path。`contracts/openapi/core-api.v1.yaml` 副檔名是 `.yaml` 但
-**內容其實是 JSON**（由 `scripts/export_core_openapi.py` 產生），用 YAML 縮排規則 grep 會得到 0。
-數字會隨實作變更，應以 `scripts/validate_contracts.py` 與 live verifier 的當次輸出為準，
-不要手動維護第二份 operation 清單。
-
-若你的變更消除或新增了一項差異，同步更新 `DIVERGENCE.md`。
-
-OpenAPI 目前仍有人工補充的 route description／response；全量執行 `export_core_openapi.py`
-可能覆蓋這些內容並重排無關 paths。新增 endpoint 時檢查 semantic diff，保留既有描述與回應，
-只納入本次實作的 operation；不要把 exporter 的全量輸出直接當成無差異更新。
-
-### 目錄與檔名
-
-```
-contracts/
-├── openapi/<service>.v<major>.yaml   REST，一個服務一份
-├── asyncapi/<service>.v<major>.yaml  Domain Event；目前有 core-events.v1.yaml
-├── schemas/
-│   ├── common/    跨領域共用：envelope、分頁、錯誤
-│   ├── domain/    業務 DTO
-│   ├── events/    Domain Event envelope／failure payload
-│   ├── rag/       RAG ingestion／retrieval
-│   ├── tools/     Agent Tool request／result
-│   └── agent/     Agent Run、Handoff、Context Manifest、Safety Evaluation
-└── examples/{valid,invalid}/
-```
-
-### 命名
-
-- Schema 檔名與 `title` 為 PascalCase＋版本：`ElderSummaryV1.json`（文件 10 §3.1）。
-- `$id` 用絕對 URI：`https://kinsun.ai/contracts/schemas/<dir>/<Name>.json`。
-  跨檔 `$ref` 一律指 `$id`，不要用相對路徑，否則換工具就解不開。
-  上述適用 JSON Schema；既有 OpenAPI exporter／validator 則以文件相對路徑
-  `../schemas/...` 解析外部 response schema，新增 OpenAPI operation 應沿用此慣例，
-  不可直接套用 JSON Schema 的絕對 `$id` 規則。
-- HTTP 拒絕狀態須依 `app/api/error_handlers.py` 的實際映射驗證：
-  `AuthorizationDeniedError` 是隱藏資源存在的 404，不是一般角色拒絕的 403。
-  新 endpoint 應補不依賴 DB 的 route／error-handler 回歸，並同步 OpenAPI error response。
-- JSON 欄位 snake_case；REST 路徑複數名詞、kebab-case；時間 ISO 8601 UTC。
-- ID 一律 UUID，不得暴露遞增流水號。
-
-### 硬性規則
-
-- **`additionalProperties: false`**。契約要能擋下多餘欄位，否則洩漏了也測不出來。
-- **enum 必須與 `eldercare_ai` schema 一致**（PG ENUM 的 label 或 CHECK 的允許值）。
-  contract 比資料庫寬鬆，錯誤會延到 INSERT 才爆；比資料庫嚴格則是合法的收斂。
-- **分頁只能用 opaque cursor**，不得出現 `offset`、`page_number` 或 `total`。
-  可猜測的 offset 違反文件 10 §4.6；`total` 會洩漏授權範圍外的長者數量。
-- **不得包含 Restricted Data**：逐字稿、ASR 信心值、內部筆記、未覆核事件、
-  診斷式分數、Secret、完整 Prompt。家屬版尤其要對照 §4 的零容忍清單。
-- 錯誤訊息欄位不得回填被拒絕的原值，若該值本身是敏感資料。
-- `security` 區塊描述的是目前 executable authentication；若 verifier 尚未實作，必須在 description
-  明說，不得讓讀者誤以為 credential 已被驗證。
-
-### 範例
-
-- `scripts/validate_contracts.py` 的一般 domain example mapping 會取 envelope 的 `data` 驗證。
-  新增這類 invalid example 必須沿用 `data`／`meta` 包裝並在頂層加 `_why_invalid`；
-  裸 domain payload 會造成 `KeyError: data`，並不是預期的 schema rejection。
-
-- `examples/valid/` 至少一個，代表正常回應。
-- `examples/invalid/` 至少一個，且**必須帶 `_why_invalid` 欄位**說明為何該被拒絕。
-- invalid 範例通過驗證＝schema 太寬鬆，視同測試失敗。這些範例的用途是把
-  「差點寫錯的地方」變成由測試守著，不是湊數。
+- `contracts/`（OpenAPI 3.1、AsyncAPI、JSON Schema）以目前實作為準，與文件 10 的差異記在 `contracts/DIVERGENCE.md`。
+- 硬規則：`additionalProperties: false`、enum 與 DB 一致、只用 opaque cursor 分頁（不得有 `offset`／`total`）、不含 Restricted Data、
+  invalid 範例必須被拒絕。命名、`$ref`、範例與驗證細節見 [`contracts/AGENTS.md`](contracts/AGENTS.md)。
 
 ## 8.2 何時要新增或更新 Contract
 
-### 必須新增
-
-- 新 endpoint、新 Domain Event、新 Agent Tool **實作完成之後、合併之前**。
-- 既有 endpoint 新增欄位、新增狀態碼、或改變分頁／篩選行為。
-- 新增 enum 值（同時檢查 §9 的 baseline 對齊要求）。
-
-### 不得新增
-
-- **尚未實作的 API 不寫進 contract**（§1）。需要先給前端一個形狀時，寫進
-  `docs/` 的設計文件或 spec，不要放進 `contracts/`——`contracts/` 的語意是
-  「這個可以現在打」。
-- 不要為了讓驗證通過而放寬 schema。schema 與實作不符時，先判斷哪一邊錯了。
-
-### 更新既有 contract
-
-先判斷變更類型（文件 10 §22）：
-
-| 類型 | 例子 | 做法 |
-| --- | --- | --- |
-| 相容 | 新增選填欄位、新增 enum 值、放寬長度上限 | 直接改，同一 major |
-| 破壞性 | 刪欄位、改欄位名、改型別、收緊 enum、改 envelope 結構 | 走 Deprecation 流程，新 major |
-
-破壞性變更依 §8 的規則：Consumer 先支援新舊版本，Producer 才切換。
-
-### 流程
-
-1. 確認實作真的完成，且能實際呼叫。
-2. 改／新增 `schemas/` 底下的 JSON Schema。
-3. 改 `openapi/`，以 `$ref` 指向 schema，不要把 schema 內嵌重複一份。
-4. 補 `examples/valid/` 與 `examples/invalid/`。
-5. 兩支驗證都要通過，缺一不可：
-
-```powershell
-uv run --with pyyaml --with jsonschema --with referencing python scripts/validate_contracts.py contracts
-
-cd services/core-api
-$env:DATABASE_URL = "postgresql+asyncpg://kinsun:kinsun_local_dev@localhost:5432/kinsun"
-uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/verify_contract_live.py ../../contracts
-```
-
-第 2 支是對**執行中的服務**驗證。沒有跑過它的 contract 不算數——契約的價值在於
-它與現實一致，只通過自我驗證的契約只是散文。新增 endpoint 時，記得同步在
-`scripts/verify_contract_live.py` 加上對應檢查，否則它永遠只驗舊的那幾條。
-
-6. 若變更牽涉 `DIVERGENCE.md` 列出的任何一項，同步更新該檔。
+- 新 endpoint、Domain Event、Agent Tool 在實作完成後、合併前登記；欄位、狀態碼、分頁或 enum 變更同步更新。
+- **尚未實作的 API 不寫進 contract**（`contracts/` 的語意是「這個可以現在打」；設計放 `docs/` 或 Kiro spec）。不為通過驗證放寬 schema。
+- 靜態 validator 與 live verifier 都通過才算完成。
 
 ## 8.3 回應與例外處理慣例
 
-契約要能穩定，回應與錯誤的組裝方式就必須只有一條路。
-
-- 對外 API 一律以 `SuccessEnvelope` / `ErrorEnvelope`（`app/core/envelopes.py`）
-  作為統一回應格式，不得讓任何 endpoint 自行拼裝頂層結構。
-- 服務層可以保留 `AuthorizedEldersResult` 這類明確的資料容器（frozen dataclass）
-  來表達方法回傳結果。**服務層回傳 domain 型別，由 API 層轉成 envelope**，
-  不要讓 service 認識 HTTP。
-- **不要在 service 層拼裝 HTTP 錯誤 payload**。一律拋 `DomainException` 的子類，
-  由 `app/api/error_handlers.py` 統一轉為 `ErrorEnvelope` 與對應狀態碼。
-- 例外流程固定為：`DomainException → error_handlers → ErrorEnvelope`。
-  這樣狀態碼對應只有一份（`EXCEPTION_MAP`），不會每個 endpoint 各寫一套而逐漸分歧。
-- `error_handlers` 的 status／reason mapping 使用 exact exception type；新增子類時也要明確登記。
-  DB optimistic write 的 `OptimisticConcurrencyError` 必須對應 409 與
-  `VERSION_OR_IDEMPOTENCY_CONFLICT`，不能只登記父類 `ConflictError`，否則真實並行失敗會變成 500。
-- 非 `DomainException` 的例外若需要特定狀態碼，要在 `register_exception_handlers()`
-  明確註冊，否則會掉進 catch-all 變成 500。已知案例：
-  `NoAuthenticatorConfiguredError` 必須是 401（fail closed），不是 500。
-- 錯誤訊息在 production 會經 `_sanitize_message()` 過濾；不要依賴訊息內容傳遞
-  結構化資訊，那是 `code` 與（待補的）`reason_code` 的職責。
-
-### 跨層 mapping（不要自行猜）
-
-| 邊界 | 外部／Runtime 值 | Core／DB 值 |
-| --- | --- | --- |
-| ORM 主鍵 | Python 一律 `model.id` | 實體欄位如 `actor_id`／`elder_id`，由 `__pk_name__` 對應 |
-| Agent actor role | `elder`／`family`／`system`，其他可信角色映成 `staff` | `ELDER`／`FAMILY_MEMBER`／`SYSTEM_SERVICE` 等正式 actor role |
-| 語言 | `zh-TW`／`nan-TW`／`hak-TW`／`en-US` | `ZH_TW`／`NAN_TW`／`HAK_TW`／`EN_US`；`MIXED`、`UNKNOWN` 暫映 `zh-TW` |
-| Agent result | `SUCCESS`／`BLOCKED`／`SAFE_FALLBACK`／`FAILED` | AgentRun 保存 `SUCCESS`／`BLOCKED`／`HUMAN_REVIEW`／`DEPENDENCY_FAILED` |
-| Auth credential | 一般 endpoint 只收 `ks1_` Core App Session；`ep1_`（一次性 pairing）與 `es1_`（Elder Session）只由 assisted-session 專屬 dependency 解析，另有 `X-Kinsun-Service-Credential` 供 Speech→Core | Session／Actor／Membership 每次由 live DB 重查；assisted 憑證不帶可信 claim，initiator ActorContext 由 Core 重建；失敗不得 fallback |
-
-上述 mapping 的 executable authority 分別位於 `services/core-api/app/services/companion_service.py`、
-`services/core-api/app/middleware/auth.py` 與各 ORM model；跨層改值時要同時更新 contract、migration、
-adapter、前端 label 與測試，不能只改其中一層。
+- 對外回應一律統一 envelope；例外流程固定 `DomainException → error_handlers → ErrorEnvelope`，service 不組裝 HTTP 錯誤。
+- 細節（exact-type mapping、404 隱藏資源、跨層值對照）見 [`services/core-api/AGENTS.md`](services/core-api/AGENTS.md)。
 
 ## 9. 程式與 Repository 工作方式
 
-- 已核准的主線不得自行替換：Core／Agent／Speech 用 Python＋FastAPI＋uv，Frontend 用 Next.js＋npm
-  workspaces。Production hosting provider、IaC 與 region 尚未定案；需要選擇時先提出候選、Trade-off
-  與 ADR，取得明確決策後再建立骨架，不得復原歷史 CDK profile 代替新決策。
-- Repository 結構（2026-09-01 實際狀態，非文件 12 的原始骨架）：
-
-```text
-kinsun.ai/
-├── .github/               CI；workflows/gate1.yml 已啟用
-├── .kiro/                 Kiro specs 與 hooks；steering 只轉發本檔，不重述規則
-├── .qa/                   手動執行的 smoke／schema 驗證腳本（Supabase、登入、RAG、assisted session）
-├── config/                RAG 與 LINE 設定；config/rag 由 agent-runtime、rag-ingestion 共用
-├── contracts/             OpenAPI、AsyncAPI、JSON Schema、valid/invalid examples
-├── data/                  RAG chunks、manifest、seed
-├── docker/                docker-compose 引用的 PostgreSQL 初始化腳本
-├── evals/speech/          Synthetic speech evaluation 工具、fixtures 與結果
-├── docs/
-│   ├── spec/              17 份規格 Markdown（唯一保留格式，見 §2）
-│   ├── design-system/     MASTER.md：視覺、RWD、無障礙規範
-│   ├── adr/               ADR
-│   ├── architecture/      架構文件
-│   ├── handover/          交接紀錄
-│   ├── ownership/         範圍與責任分工
-│   ├── demo/              Demo 資產（含 demo/ui/，前端與 ADR 0006 引用）
-│   ├── runbooks/          維運手冊
-│   └── project/           Kiro 開發證據、交付狀態、DB schema 快照
-├── packages/
-│   ├── frontend/          單一 multi-role PWA＋BFF（Next.js App Router）
-│   └── shared/            前端使用的 TypeScript 型別
-├── scripts/               Contract 與 repository 驗證腳本
-└── services/
-    ├── core-api/          正式 Domain Core 與 API
-    ├── agent-runtime/     受控 Agent Runtime
-    ├── rag-ingestion/     RAG ingestion 與 allowlist 建置
-    ├── speech-gateway/    ASR／TTS、Core Voice Gate 與 SageMaker adapter
-    └── notification-worker/ 只有 scheduler boundary；job 邏輯仍在 Core
-```
-
-- **分類軸線是 runtime／toolchain，不是 app／library。** Python 服務進 `services/`，npm
-  workspace 成員進 `packages/`（根 `package.json` 的 `workspaces` 字面上就是
-  `["packages/*"]`）。**不要套用 Turborepo／Nx 的 `apps/` vs `packages/`
-  慣例**——這個 repo 從未採用它，證據是 `services/core-api` 同樣是可部署應用卻也不在
-  `apps/`。文件 12 的 `/apps` 是被 ADR 0006 廢掉的三-app 方案殘骸，已於 2026-08-06 移除。
-- 文件 12 原本只有 `.gitkeep` 的 `/tests`、`/ops` 已移除；`evals/` 後來因 multilingual speech
-  evaluation 重新建立，現在只有 `evals/speech/` 有實質內容。**不要用空目錄表達規劃**；真的有
-  executable evaluation／test／ops artifact 時才建立對應目錄。
-- **`config/rag/` 不要搬。** 路徑寫死在 `agent-runtime/src/agent_runtime/settings.py`、
-  `agent-runtime/Dockerfile`、`Dockerfile.dockerignore`、`.env.example` 與
-  `tests/unit/test_container_contract.py`（有測試在守），且由 agent-runtime 與 rag-ingestion
-  共用。搬進任一服務底下都會讓另一個服務跨目錄取用。
-- 在 Framework 與 Deployment 設計核准前，只維持中立的服務／責任邊界，不加入框架專屬內部結構。
-
-### 分層規則
-
-- API route 只處理 HTTP 邊界、呼叫 service 並包裝 envelope。
-- Service 協調 domain、policy、repository 與 outbox，不組裝 HTTP 錯誤。
-- Policy 採 deny-by-default，正式授權資料必須由 server-side context 取得。
-- Repository 查詢必須明確攜帶 tenant scope。
-- ORM model 只負責資料映射；schema 變更由新的 Alembic revision 管理。
-- 外部 Provider／SDK 只能出現在 adapter 或 provider 邊界，不散入 domain 與 orchestration。
-- Contract 只描述已實作、可實際呼叫的介面；未實作設計放在 `docs/` 或 Kiro Spec。
-
-### 變更同步
-
-- Endpoint 或 envelope 改變時同步 contract、examples、live verification 與 divergence 文件。
-- Domain state 改變時同步 migration、tests、traceability 與必要文件。
-- 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威來源。
-- 派案 command 的 target state 不等於 scope 名稱：`IN_PROGRESS` 對應 `assignment:start`，
-  `COMPLETED` 對應 `assignment:complete`，以 `app/schemas/assignment.py` 的 `AssignmentScope`
-  為準。不得用 target.lower() 產生這兩項授權。紀錄與完成命令共用 assignment→idempotency
-  鎖定順序，等鎖後重讀版本；不得用舊 ORM snapshot 覆寫已完成派案。指定派案本人、
-  即時 membership／時窗與 scopes 共用 `AssignmentAccessService`，不能借同長者其他派案授權。
-- 目前開發資料庫以 repository 根目錄 `.env` 的 `DATABASE_URL` 直接連 Supabase PostgreSQL：
-  - 一般工作不得自行啟動 `docker-compose.yml`、本機 PostgreSQL 或 Adminer。
-  - `docker-compose.yml` 與 `docker/postgres/init/` 只保留為可重建參考與使用者明確要求時的隔離工具，
-    不是預設開發路徑；初始化腳本不得成為第二個 Schema Source of Truth。
-  - Schema 仍只由 Alembic 管理；Supabase 只提供 PostgreSQL，不使用 Supabase Auth 或專有 Data API。
-  - `.env` 不進版控；新增設定時同步維護無 Secret 的 `.env.example`。
-- Core API 已定案，程式在 `services/core-api/`：
-  - 套件與環境管理採 uv（[ADR 0001](docs/adr/0001-package-manager-uv.md)）；`uv.lock` 必須進版控。
-  - Web Framework 採 FastAPI ＋ SQLAlchemy 2.0 async（[ADR 0003](docs/adr/0003-core-api-framework-and-schema-authority.md)）。
-  - 兩個 driver 並存且刻意如此：Alembic 用同步的 psycopg，應用層用非同步的 asyncpg。
-    `DATABASE_URL` 只維護一份，寫成 asyncpg 形式，`alembic/env.py` 自行轉換。
-  - Table／Index／Constraint／Trigger 一律由 Alembic 管理，PostgreSQL schema 名稱為 `eldercare_ai`。
-  - v0.1 baseline 是凍結的 SQL 快照並以 SHA-256 驗證（[ADR 0002](docs/adr/0002-alembic-baseline-strategy.md)）。
-    已套用的 migration 不可變；要改 schema 就新增 revision。
-  - Windows checkout 可能把 baseline SQL 從 LF 轉成 CRLF，導致內容看似相同但 SHA-256
-    驗證失敗。`.gitattributes` 必須維持
-    `services/core-api/alembic/versions/sql/*.sql text eol=lf`；遇到 checksum 不符時，
-    先檢查並將工作樹換行正規化為 LF，不得修改凍結 SQL 內容或預期 checksum 來讓驗證通過。
-  - `docs/project/smart_eldercare_schema_v0_1.sql` 與 baseline **逐位元相同**
-    （122058 bytes），依 ADR 0002 §63 保留為設計產出物與 ER 圖匯入來源（`COMMENT ON
-    TABLE／COLUMN` 匯進 DBeaver／DataGrip 可顯示欄位說明）。它**不是** schema 權威——
-    §9「不建立第二份 schema 作為競爭權威來源」仍然適用，要改 schema 一律新增 Alembic
-    revision。2026-08-06 前它沒有 `.gitattributes` 保護，Windows 工作樹上是 CRLF
-    （123925 bytes），與 ADR 0002 宣稱的逐位元相同不符；現已補上
-    `docs/project/*.sql text eol=lf`。兩份若出現實質差異，以 Alembic baseline 為準。
-  - ORM model 的 Python 屬性統一是 `id`，實際對應各表自己的 PK 欄位（`__pk_name__`）。
-    新增 model 時必須宣告 `__pk_name__`，否則 SQLAlchemy 會在 class 建立時失敗。
-  - `CareActionCandidateEventProvenance` 的 append-only migration 只有 `created_at`，必須繼承
-    `Base` 並明確映射 `id`／`created_at`；不能繼承會帶入 `updated_at` 的 `BaseModel`。
-    否則 ORM SELECT／INSERT RETURNING 會引用不存在欄位；不要為配合錯誤 ORM 修改已套用 migration。
-  - `CareAction`／`CareActionCandidate` 的 async UPDATE 必須在 flush 時 eager fetch server／on-update
-    timestamps，避免 response DTO 讀取 expired `updated_at` 時隱含 SQL 而發生 `MissingGreenlet`。
-  - **domain enum 的每個值都必須在 baseline 中存在**（PG ENUM 的 label 或 CHECK 的允許值）。
-    加了沒有 migration 的值，錯誤會在 INSERT 當下才爆，不是驗證期。
-  - 2026-09-04 工作樹有 32 個 revision，head 是 `a7c9e1f3b5d6`。baseline 仍是 48 張 table，
-    後續 revision 另外加了 `elder_enrollment`、`elder_care_profile_entry`、
-    `assisted_elder_session`、`care_action_event_provenance` 等表；`app/models/` 目前宣告 52 個
-    `__tablename__`。
-    Alembic 另外擁有兩個非 domain schema：`rag_public`（RAG projection）與
-    `service_identity`（service credential replay claims）。兩者都**沒有** ORM model，
-    因此不在 `Base.metadata`；`database_runtime_principal.py` 對它們用
-    `RUNTIME_SHARED_SCHEMA_PRIVILEGES` 逐表授權，不要放進 `RUNTIME_TABLE_PRIVILEGES`
-    （那份有 ORM 交叉檢查測試會紅）。
-    `alembic revision --autogenerate` 仍會把未映射 table 誤判為應刪除；產生的 migration
-    一律需人工檢查後才可使用。
-- 前端已定案，程式在 `packages/frontend/`（[ADR 0006](docs/adr/0006-frontend-stack-and-app-topology.md)）：
-  - Next.js 16 App Router + React 19 + TypeScript。**不是 Vite，不用 Tailwind**；
-    樣式一律 CSS Modules ＋ `src/app/tokens.css` 的 CSS 變數。
-  - TypeScript 側用 npm workspaces（根 `package.json` ＋ `package-lock.json`），
-    與 Python 側的 uv 不共用。
-  - 視覺、RWD 與無障礙規範見 [`docs/design-system/MASTER.md`](docs/design-system/MASTER.md)，
-    建立任一頁面前先讀。元件內不得出現 raw hex（MASTER.md §14）。
-  - 前端是 BFF：OAuth code exchange 與 access token 只存在伺服器端，
-    token 不得進入瀏覽器可讀的位置。`src/app/backend/core/[...path]` 以 header
-    allowlist 轉發，**不轉發 cookie**；新增轉發欄位前先確認不會夾帶憑證。
-  - 家屬端的資料紅線（MASTER.md §11）在前端也要擋一次，不得只依賴後端不回傳。
-  - UI 語言切換（`src/lib/i18n/`）只改瀏覽器偏好，**不得寫入任何 domain state**，
-    尤其不得改動長者語言偏好或 consent。新增使用者可見字串時同時補 `zh-Hant` 與 `en`。
-- 優先做最小、可測試、可回復且能貫穿 Vertical Slice 的變更。
-- Core unit test 載入根目錄 `scripts/` 工具時，使用檔案路徑的 `importlib.util` loader；
-  不要假設 `from scripts...` 指向 repository 根目錄，Core 自己的 `scripts` package 可能遮蔽它。
-  手動 DB 工具的 import 不得載入 `.env`、建立 connection 或執行 provisioning。
-- Agent proposal 寫入 JSONB 前，應保存通過 schema／policy 的 `model_dump(mode="json")`，
-  不可原封保存含 Python `datetime` 的 adapter dictionary。事件行動建議曾因此在 live
-  companion 回合回 500；回歸測試需用標準 JSON serializer，不以 `default=str` 掩蓋問題。
-- Async ORM flush 後若 DTO 立即讀取 server/on-update timestamp，mutable aggregate
-  應以 `eager_defaults=True` 或明確 async refresh 取回欄位；僅 `expire_on_commit=False`
-  不足以防止 `MissingGreenlet`。CareEvent VERIFY 曾因 `updated_at` 過期而回 500。
-- 不進行與任務無關的大規模重構、格式化、依賴升級或文件重寫。
-- 保留使用者既有變更；不要以 Reset、Checkout 或大量覆寫清除未知修改。
-- 任何變更需要 Push 到遠端時，必須先從最新的 `origin/main` 建立新的工作分支；
-  禁止直接 Push `main`，也不得沿用混有其他任務變更的既有分支。
-- 任何狀態或契約變更都同步更新相關 Schema、Test、Traceability 與必要文件。
-
-### 常用檔案位置
-
-| 工作 | 位置 |
-| --- | --- |
-| Core routes／services／repositories | `services/core-api/app/api/`、`app/services/`、`app/repositories/` |
-| Authentication／Session | `services/core-api/app/middleware/auth.py`、`app/adapters/auth/`、`app/services/*identity*`、`*session*` |
-| Service-to-service identity | `services/core-api/app/adapters/service_identity.py`、`app/middleware/speech_service_auth.py`、`services/speech-gateway/src/speech_gateway/service_identity.py` |
-| Assisted Elder Session | `services/core-api/app/api/assisted_elders.py`、`app/services/assisted_elder_session_service.py`、`app/services/assisted_session_tokens.py`、`app/services/elder_onboarding_service.py` |
-| 平板交接前端／BFF | `packages/frontend/src/app/elder/pair/`、`src/app/elder/session/`、`src/app/backend/elder-session/`、`src/lib/server/elder-session-cookie.ts` |
-| 手動 smoke／schema 驗證 | `.qa/`（需要真實 Supabase 連線，不在 CI 內，執行前先確認是唯讀或可回復） |
-| DB models／migration | `services/core-api/app/models/`、`services/core-api/alembic/versions/` |
-| Agent request／orchestration／provider | `services/agent-runtime/src/agent_runtime/contracts/`、`orchestration/`、`models/` |
-| RAG config／runtime／ingestion | `config/rag/`、`services/agent-runtime/src/agent_runtime/rag/`、`services/rag-ingestion/` |
-| Speech boundary | `services/speech-gateway/src/speech_gateway/`；低資源模型在 `services/speech-gateway/sagemaker/` |
-| Frontend pages／BFF／API client | `packages/frontend/src/app/`、`src/lib/server/`、`src/lib/api/` |
-| UI tokens／translations | `packages/frontend/src/app/tokens.css`、`packages/frontend/src/lib/i18n/messages.ts` |
-| Contracts／差異／驗證 | `contracts/`、`contracts/DIVERGENCE.md`、`scripts/validate_contracts.py`、`scripts/verify_*_live.py` |
-| Portable runtime images／deployment smoke | `scripts/build_runtime_images.ps1`、`scripts/build_runtime_images.sh`、`scripts/smoke_test_deployment.py` |
+- 技術棧（不得自行替換）：Core／Agent／Speech 用 Python 3.12＋FastAPI＋uv（各服務獨立 `pyproject.toml`／`uv.lock`）；Core 用
+  SQLAlchemy 2 async＋Alembic＋PostgreSQL；Frontend 用 Next.js 16 App Router＋React 19＋TypeScript＋CSS Modules＋npm workspaces。
+  不引入 Django／Flask、同步 ORM、第二套 schema 管理器、Vite、Tailwind、pnpm、自由 Agent loop、直接 SQL／DSL 生成或 browser-held token。
+- Production hosting、IaC 與 region 未定案；需要時先提出候選、Trade-off 與 ADR，不復原歷史 CDK profile。
+- 結構：Python 服務在 `services/`，npm workspace 成員在 `packages/`；不建 `apps/`、不建獨立 elder／care／family app、不用空目錄表達規劃；
+  `projection-worker`／`report-worker` 需要時依 ADR 建立。`config/rag/` 被多個服務與測試寫死，不要搬。
+- 分層：route 只處理 HTTP；service 協調 domain／policy／repository／outbox；policy deny-by-default；repository 明確帶 tenant scope；
+  外部 Provider／SDK 只在 adapter 邊界。
+- Schema 只由 Alembic 管理（`eldercare_ai`）；baseline 與已套用 migration 不可改，新增 revision；autogenerate 必須人工檢查。
+- 不建立第二份 schema、authorization mapping 或 response mapping 作為競爭權威。狀態或契約變更同步 Schema、Migration、Test、Traceability 與必要文件。
+- `.env` 不進版控；新增設定同步維護只含安全假值的 `.env.example`。新文件使用 LF；保留根目錄 `.gitattributes`。
+- 優先做最小、可測試、可回復且能貫穿 Vertical Slice 的變更；不做與任務無關的重構、格式化、依賴升級或文件重寫。
+- 保留使用者既有變更；不以 Reset、Checkout 或大量覆寫清除未知修改。
+- 需要 Push 時先從最新 `origin/main` 建新分支；禁止直接 Push `main`，不沿用混有其他任務的分支。PR 標題與說明用英文；與 Owner 對話用繁體中文。
 
 ## 10. 驗證與完成條件
 
-目前 Gate 1 的 pull_request trigger 只接受 main。依賴尚未合併 PR 時，不能假設以 feature
-branch 為 base 的 stacked PR 會跑 CI；可先建立以 main 為 base 的 draft PR，清楚標依賴與
-增量比較連結，待前案合併後整理 branch／重驗，不為單次任務硬編碼 feature branch trigger。
+每個變更依 Acceptance Criteria 驗證，至少涵蓋：
 
-新增 migration 時同步更新 `tests/integration/test_migrations.py` 的 `_HEAD_REVISION`；
-只跑 `alembic heads` 或 collection 不會發現固定預期版本已過期。
-
-獨立 worktree 的 Core 單元測試仍可能在 collection 匯入 Settings 而要求 `DATABASE_URL`；
-使用測試用 localhost DSN 即可，不為單元測試複製共用 Supabase 的 `.env`。
-JSON Schema 的 `format: date-time` 依賴 validator 的 optional format 套件，不能單靠它驗證時區；
-Review correction 的 timezone pattern 與 Pydantic `AwareDatetime` 必須一起維護。
-新增可清除欄位時，idempotency fingerprint 必須區分省略與 explicit null，並保留舊請求的
-default 欄位；全域改成 `exclude_unset=True` 可能讓已存成功回應無法重送。
-
-Membership 過期測試須建立合法的過去期間（effective_from < effective_to < now）。
-新 fixture 的 effective_from 預設為 now，只把 effective_to 改為 now−1 秒會違反
-`ck_membership_period`，測不到授權拒絕；不要以 sleep 等待或移除 DB constraint 掩蓋。
-
-CI 命令耗時與 bounded 測試報告由 `scripts/ci/telemetry.py` 收集，說明見
-`docs/project/ci-pipeline-optimization.md`。輸出一律放 runner 暫存目錄，不能讓報告污染
-synthetic evidence 的 working-tree 狀態。Wrapper 必須保留原始 exit code；上傳報告成功
-不代表測試通過。Native job/step 與 command 耗時分開計算，不能把平行 job 秒數相加當總等待時間。
-
-Gate 1 有八個 worker；PR 由永遠執行的 `changes` job 與 `scripts/ci/impact.py` 判斷影響，
-main push 仍全跑。`synthetic-gate1` 必須 `always()` 且 needs 包含 changes 與八個 worker。
-changes 與選定 worker 必須 success 並有 metrics；只有有效、同 run／commit 的計畫明確
-排除的 worker 才可 skipped。意外 skip／failure／cancelled／缺少結果或計畫皆不可放行。
-未知路徑／無法取得完整 diff 回退全跑；不得用 workflow-level paths filter 消除 aggregate。
-新增檔案或跨服務依賴時同步影響規則與測試。CI 按實際執行依賴選 workers，
-不再以歷史 audit code hash inventory 擴大 RAG 影響範圍；純 Markdown 或無關 Core
-變更不應僅因歷史 hash 強制選取 RAG／Agent。真正 retrieval／policy／ingestion／共用
-契約變更仍須對應驗證；開 PR 前跑 `scripts/ci/test_*.py` 檢查影響規則。
-PR 使用 merge-base→head 的 NUL-delimited Git diff，停用 rename detection 以納入新舊路徑；
-不能只比 HEAD~1 或用可能截斷的 PR files API。純文件白名單也必須過 CI 規則與 diff 檢查。
-只有 `core-db` 啟動 PostgreSQL；Core live contract 的 `/ready` 也依賴 DB，不可移到無 DB job。
-Core 與 Agent 的 httpx 依賴不同，維持各自 uv project environment。平行 uv cache 使用 job suffix。
-Artifact 名稱須含 run attempt；rerun failed jobs 可沿用同 run／commit 的先前成功 worker metrics。
-此 gate 不等於已設定 branch protection，也不代表真實部署 E2E 已完成。
-
-每個變更至少驗證：
-
-- Acceptance Criteria 的正常、低信心、拒絕、撤回、失敗與重試路徑。
-- Cross-elder／Cross-tenant／Expired assignment／Revoked share 的 Negative Test。
-- 不符合 Spec 18 final gate 的 Memory（含 unverified Speaker、MEDIUM unconfirmed／stale、HIGH、失效
-  Consent、expired／inactive／deleted／cross-scope）、Unreviewed Event 與 Draft Report 無法進入正式讀取路徑。
-- Assisted Elder Session 的憑證分離（`ks1_`／`ep1_`／`es1_` 不可互換）、pairing token 單次使用、
-  replay、過期、重新發放、cross-tenant，以及 acknowledgement 撤回後既有對話確實被取消。
+- 正常、低信心、拒絕、撤回、失敗與重試路徑。
+- Cross-elder／Cross-tenant／Expired assignment／Revoked share 的 Negative Test；不合格 Memory、Unreviewed Event、Draft Report 進不了正式讀取路徑。
+- Assisted session 憑證分離、pairing token 單次使用、replay、過期、cross-tenant 與撤回後對話取消。
 - Agent Tool Allowlist、Schema、Max-step、Timeout、Fallback 與 Core reauthorization。
-- Outbox、Consumer Idempotency、DLQ、Projection Lag 與 Rebuild 行為。
-- Delete／Revoke 後資料不會被 Retry、Replay 或 Restore 復活。
-- Log、Metric、Trace 與 Error Response 不含 Restricted Data。
-- 所有測試資料均為 Synthetic／De-identified。
+- Outbox、Consumer Idempotency、DLQ、Projection Lag 與 Rebuild；Delete／Revoke 後不會被 Retry、Replay 或 Restore 復活。
+- Log、Metric、Trace、Error Response 不含 Restricted Data；測試資料全為 Synthetic。
 
-不要虛構測試結果。
-
-`asyncio_default_fixture_loop_scope="session"` 只設定 fixture，不會把 test body 改成 session loop。
-`committed_session`／`db_session` 及持有它們的 async seed fixture 必須明確使用
-`loop_scope="function"`，讓 setup、測試內 SELECT 所開啟的交易、rollback／close 都留在同一 loop。
-NullPool 只避免閒置連線重用，不能讓持有中的 session 跨 loop。不得靠每個測試尾端補 commit
-掩蓋問題；disposable DB 清理須先釋放連線，再 truncate，且保留原始及清理失敗。
-
-`services/core-api`：
-
-```powershell
-cd services/core-api
-uv sync --extra test --extra dev
-uv run pytest tests/unit          # 不需資料庫
-# 下列兩支只可使用獨立、可丟棄的 TEST_DATABASE_URL，且 migration lifecycle 必須隔離 process
-uv run pytest tests/integration/test_migrations.py
-uv run pytest tests/integration --ignore=tests/integration/test_migrations.py
-uv run ruff check .
-uv run ruff format --check .
-```
-
-`services/agent-runtime/tests/conftest.py` 會在 test module 匯入 app 前強制
-`APP_ENV=test`、`MODEL_PROVIDER=mock`。不得讓 developer `.env` 的真實 provider／secret 進入
-一般測試；完整 suite 必須維持不需網路。
-
-`services/agent-runtime`（不需資料庫、AWS 憑證或網路）：
-
-```powershell
-cd services/agent-runtime
-uv sync --extra test --extra dev
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-```
-
-`services/speech-gateway`（contract boundary test 不需資料庫、AWS 憑證或網路）：
-
-```powershell
-cd services/speech-gateway
-uv sync --extra test --extra dev
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-```
-
-本機直接啟動 Speech Gateway 時必須使用
-`uv run uvicorn --app-dir src speech_gateway.app:app --reload --port 8002`。該元件在
-`pyproject.toml` 設定 `tool.uv.package = false`，不能假設 `speech_gateway` 已安裝成可直接匯入的套件。
-
-`services/rag-ingestion`（本機測試不需真實 AWS）：
-
-```powershell
-cd services/rag-ingestion
-uv sync --extra test --extra dev
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-```
-
-四個 Python component 各自維護 `pyproject.toml` 與 `uv.lock`，不共用虛擬環境。
-
-Frontend：
-
-```powershell
-npm run test --workspace @elderly-care/frontend
-npm run typecheck --workspace @elderly-care/frontend
-npm run build --workspace @elderly-care/frontend
-npm run lint
-```
-
-Frontend 非同步元件測試必須等待可觀察的 UI 狀態，再操作元素；mock 呼叫次數只代表請求已發出，
-不保證 Promise 已完成或 React 已更新 DOM。`CareActionPanel.pagination.test.ts` 曾在等待
-`listEvents` 呼叫兩次後立即查按鈕，造成 CI 偶發取得 `null`；應使用
-`await screen.findByRole(...)` 等待按鈕出現，再驗證呼叫次數與分頁行為。
-
-前端 synthetic Browser QA 的 `/backend/auth/session` mock 必須使用實際回應欄位
-`credential_present: true`，不是 `authenticated: true`。後者會讓 runtime config 判成未登入，
-完全不載入 dashboard API；不要把這類 fixture 錯誤當成產品權限／資料載入 regression。
-Skeleton 的穩定 QA selector 是 `role="status"`／`aria-busy="true"`；不要猜 CSS Modules
-產生的 class 名稱或大小寫（例如 `[class*="skeleton"]`），否則會把已出現的 loading 誤判成 timeout。
-
-整合測試會對 `TEST_DATABASE_URL` 指向的資料庫執行 `alembic upgrade head`，
-預設是 `kinsun_test`，不要指向 `kinsun`。測試資料全部由 fixture 產生，
-均為 Synthetic，不得改用任何真實長者資料。
-
-尚未建立的項目（不要描述成已完成）：Python Type Check（mypy／pyright）、自動化 browser E2E、
-外部部署的跨服務 E2E。Frontend TypeScript typecheck、靜態 Contract validator 與兩支 live contract
-verifier 已存在，但不能取代上述 E2E。Repository 目前沒有 production IaC；舊 CDK 的
-typecheck／test／synth 已隨 ADR 0019 退役。
-
-CI Quality Gate 已於 2026-08-26 啟用（§1 的 `gate1.yml`），它涵蓋四個 Python 服務的 lint／測試、
-Core integration、contract 三支驗證、五輪 synthetic Core-to-Agent 證據與完整 Frontend build。
-但它跑的仍是 synthetic in-process 驗證，**不等於外部部署的跨服務 E2E**，也不含 browser E2E、
-Python type check 或 production IaC verification。
-
-Contract 驗證分三支：`scripts/validate_contracts.py` 驗 schema 與範例的自我一致性
-（會掃 `contracts/openapi/` 底下所有文件）；`scripts/verify_contract_live.py` 對執行中的
-core-api 驗證；`scripts/verify_agent_contract_live.py` 對執行中的 agent-runtime 驗證
-（不需資料庫、憑證或網路）。新增 endpoint 時要同步在對應那支加檢查，否則它永遠只驗舊的。
-
-下列 2026-08-13 至 2026-09-01 快照中的 Infra 結果，是 ADR 0019 退役前的歷史驗證紀錄，
-不表示目前仍有 CDK workspace 或應重跑該命令。
-
-2026-08-13 provider-neutral text adapter 完成後的本機校準結果：Core unit `755 passed`、
-Agent Runtime `296 passed`、Frontend `135 passed`、Infra `7 passed`；Core／Agent Runtime Ruff lint、
-Frontend ESLint／typecheck／production build、Infra typecheck／兩個
-synth、靜態 Contract 與 Core live verifier（68 operations）通過。較早且未受本次身份變更影響的
-RAG ingestion `138 passed`、Speech Gateway `22 passed` 未重跑。沒有獨立
-`TEST_DATABASE_URL`，所以未對遠端 Supabase 執行破壞性的 integration rebuild；只在確認
-`actor.cognito_sub` 非空筆數為 0 後套用 fail-closed migration 至 `f2c6d8a1e490`。完整 Core Ruff
-format 仍會指出兩個本次未修改的既有檔案；本次修改檔案的 format check 已通過。
-
-2026-08-17 Kinsun Email＋Password contract closure 的本機校準結果：Core unit `808 passed`、Frontend
-`220 passed`；Frontend typecheck／production build、靜態 Contract 與 Core live verifier（72 operations）
-通過。完整 Frontend ESLint 仍有一個本次未修改的既有 unused argument；完整 Core Ruff 仍有兩個本次未
-修改的既有問題。沒有獨立 `TEST_DATABASE_URL`，未執行破壞性的 integration rebuild；本機 Docker
-設定檔因執行環境權限無法讀取，`docker compose config --quiet` 本次未驗證。
-
-2026-08-27 runtime policy v003 併入 `main`（`a2b2b96`）後的本機校準結果：Core unit `913 passed`、
-Agent Runtime `406 passed`、RAG ingestion `311 passed`、Frontend `224 passed`（35 files）；Frontend
-ESLint 與 typecheck 通過。Speech Gateway、Infra、Frontend production build、兩支 live contract
-verifier 與靜態 contract validator 本次未重跑。沒有獨立 `TEST_DATABASE_URL`，未執行 Core
-integration 或破壞性 rebuild；v003 runtime policy 只有離線 policy／citation Golden cases 與單筆長者
-live smoke，完整 live relevance／ranking Golden Query 仍為 `NOT_EXECUTED`。
-
-2026-08-29 將 `origin/main` 合併回本機 `main`（合併後 `9f5bbe6`）後的本機校準結果：Core unit
-`916 passed`、Agent Runtime `407 passed`、RAG ingestion `320 passed`、Speech Gateway `81 passed`、
-Frontend `230 passed`（37 files）。Agent Runtime／Speech Gateway／RAG ingestion 的 `ruff check` 與
-`ruff format --check` 全數通過；Core `ruff check` 通過，但完整 `ruff format --check` 仍指出 5 個
-**既有**檔案（`app/core/config.py`、`app/services/kinsun_email_auth_service.py`、
-`scripts/redrive_legacy_family_invitation_events.py`、`tests/integration/test_migrations.py`、
-`tests/unit/test_memory_candidate_metadata.py`）——這 5 個在 `ba7569b..9f5bbe6` 之間完全未被修改，
-與本次合併無關，且 CI 不對 core-api 跑 format check。Frontend typecheck、ESLint 與 production
-build 通過，靜態 `validate_contracts.py` 全數通過。本次**未執行**：Core integration（仍無獨立
-`TEST_DATABASE_URL`）、兩支 live contract verifier、Infra typecheck／test／synth，以及
-`scripts/verify_gate1_cross_service.py` 的五輪 synthetic 證據——後三者會在 push 觸發 `gate1.yml`
-時於 CI 執行，屆時以 CI 結果為準。
-
-2026-09-01 對 `25f8d77` 的本機校準結果。同批另修掉兩個擋 CI 的 lint 失敗（見 §1）：
-core-api `ruff check --fix` 調整 `app/main.py`、`app/models/__init__.py` 的 import 順序，
-agent-runtime `ruff format` 重排 `context/manifest.py`、`contracts/models.py`；四個都只是
-排序／換行，沒有語意變更。表中結果為修正後重跑：
-
-| 項目 | 結果 |
+| 範圍 | 最低命令（細節見各模組 AGENTS） |
 | --- | --- |
-| Core API `pytest tests/unit` | `953 passed` |
-| Core API `ruff check` | 通過（修正前有 2 個 `I001`） |
-| Core API `ruff format --check` | FAILED——12 檔（5 個 08-29 就有的既有檔案 ＋ 7 個 `9f5bbe6..25f8d77` 之間新增／修改的檔案）。**CI 不跑此項**，本次刻意不整批重排，以免混入與需求無關的 diff |
-| Agent Runtime `pytest` | `426 passed` |
-| Agent Runtime `ruff check` | 通過 |
-| Agent Runtime `ruff format --check` | 通過（修正前有 2 檔未過；此項在 CI 內） |
-| RAG Ingestion | `320 passed`；`ruff check`＋`format` 通過 |
-| Speech Gateway | `83 passed`；`ruff check`＋`format` 通過 |
-| Frontend | typecheck 通過、`277 passed`（44 files）、ESLint 乾淨、production build 通過 |
-| Infra | typecheck 通過、`7 passed`、`synth` 與 `synth:application` 皆成功 |
-| `scripts/validate_contracts.py` | all contract checks passed |
-| `scripts/verify_contract_live.py` | all live contract checks passed |
-| `scripts/verify_agent_contract_live.py` | all live contract checks passed |
+| 每次 | `git diff --check`、`git status --short` |
+| Python 服務 | `uv sync --extra test --extra dev`、`uv run pytest`、`uv run ruff check .`、`uv run ruff format --check .`（Core 為 `tests/unit`；integration 只用 disposable DB） |
+| Frontend | `npm run test`／`typecheck`／`build --workspace @elderly-care/frontend`、`npm run lint` |
+| Contract | `scripts/validate_contracts.py` 與對應 live verifier |
+| Schema | 對 Supabase 先唯讀 `alembic current`／`heads`，人工審查後 additive `upgrade head`；不得 downgrade、reset 或空庫重建 |
 
-本次**未執行**：Core `tests/integration`（仍無獨立 `TEST_DATABASE_URL`）、
-`scripts/verify_gate1_cross_service.py` 五輪 synthetic 證據、`.qa/` 需要真實 Supabase 的
-smoke、live RAG relevance／ranking Golden Query、Playwright 視覺 QA。
-Frontend ESLint 在此次為完全乾淨，先前紀錄的那個既有 unused argument 已不存在。
-這個快照同樣不可取代當次驗證。
-
-每次變更至少執行：
-
-```powershell
-git diff --check
-git status --short
-```
-
-動到 Database Schema 時，先對 Supabase 做唯讀 revision 檢查並人工審查 migration，再執行 additive
-upgrade；不得對 Supabase 執行 downgrade、reset 或空庫重建：
-
-```powershell
-cd services/core-api
-uv run alembic current
-uv run alembic heads
-uv run alembic upgrade head
-```
-
-文件 13 §六.6 的空 DB 重建只可在另行提供的 disposable `TEST_DATABASE_URL` 執行；沒有獨立測試
-資料庫時標記未驗證，不得拿 Supabase development database 代替。
-
-並在交付說明中清楚列出已驗證、未驗證與受環境限制的項目。
+- 不虛構測試結果。交付時列出已驗證、未驗證與受環境限制的項目；CI、合成或本機結果不等於外部部署 E2E。
+- 本機測試單工、BelowNormal 優先序；subagents 不同時跑測試；已有完整測試後只重跑實際變更涵蓋的定向檢查。
+- 尚未建立（不要描述成已完成）：Python type check、自動化 browser E2E、外部部署跨服務 E2E、production IaC。
 
 ## 11. 仍待 ADR／Owner 決策
 
-- Production hosting provider、Region、Account／Environment、IaC 工具與成本上限；歷史 AWS profile
-  曾固定 `us-west-2`，但已退役且不構成未來 provider 決策。
-- 若未來重新選用 AWS，service 規模、database、network 與費用都必須在新帳號重新設計、實測；
-  舊 template 或歷史紀錄不能當成現在的部署基準。
-- Bedrock Model／Inference Profile 與 Fallback。
-- Neptune、OpenSearch、LINE、Email、Custom ASR／TTS 採真實服務或 Demo Adapter。
-- Production API／Event／Client 支援期限。
-- 正式 Retention、Export、Legal Hold 與 Offboarding 政策。
-- 統一的 Voice／Agent／TTS Performance Gate。
+- Production hosting provider、Region、Account／Environment、IaC 工具與成本上限（歷史 AWS profile 不構成決策）。
+- 正式模型與 Fallback；Neptune、OpenSearch、LINE、Email、Custom ASR／TTS 採真實服務或 Demo Adapter；service credential。
+- Scheduler 頻率；Production API／Event／Client 支援期限；Retention、Export、Legal Hold 與 Offboarding；Voice／Agent／TTS Performance Gate。
 
-不要用暫時實作偷偷取代這些決策；暫時方案必須標示 Owner、Expiry、Fallback 與移除條件。
+不要用暫時實作偷偷取代這些決策；暫時方案標示 Owner、Expiry、Fallback 與移除條件。
+
+## 文件維護規則
+
+- 本檔維持 200 行以內，只放跨模組規則；章節編號 §1–§11 被 ADR 與其他文件引用，不要重新編號。
+- 模組地雷寫進該模組的 `AGENTS.md`；交付進度寫進 `docs/project/` 報告並在[進度紀錄](docs/project/progress-log.md)加一筆；
+  操作步驟寫進 `docs/runbooks/`。不要在本檔頂部追加日期紀錄。
+- 會變動的數字不要寫死，改寫成「以某命令輸出為準」。

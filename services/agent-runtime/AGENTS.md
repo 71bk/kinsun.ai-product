@@ -1,207 +1,97 @@
 # AGENTS.md — agent-runtime
 
-- 2026-10-07 訓練時數題已釐清：來源沒有原診斷題的兩個課名；既有檢索找到表格但無法對應，NO_DATA 合理。v2 題集保留原題為負例，另加來源實際課名正例，3 題 SUCCESS 與 5 組課名／時數配對及引用通過；原題及家屬對照 NO_DATA，BFF 19 項全過。PR #74 已合併，日常公開服務程式與 main 一致；本次不改 runtime gate、來源 span 驗證、資料或向量。勿把整個 A 手冊 source_id 當專業限定；排除專業片段但保留既有家屬可用記錄。仍 needs_review／非 production，固定 16 題不重算；見 [報告](../../docs/project/rag-training-diagnostics-20261007.md)。
+本檔補充根目錄 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`；根目錄規則一律適用，衝突時以根目錄為準。
+整理日期：2026-10-15。負責範圍見 [`docs/ownership/member-c-scope.md`](../../docs/ownership/member-c-scope.md)。
 
-- 2026-10-07：development 已由 v008 切換 `knowledge-v009-5046fa3d59c4`，713 筆資料與向量回讀驗證及 v008 回退／恢復完成。Grounded 回答補同列欄名／碼值、完整名單與不補空格規則，縮短 JSON 目標而不放寬引用驗證；Gemini grounded timeout 40 秒、V3 全程 45 秒、Core public 50 秒、問答 BFF 60 秒。一般 ungrounded／Core companion／其他 BFF timeout 不變，外部取消仍傳遞。180 項受影響 Agent 測試及最終 BFF 24 項通過；CA07／CB01 清單符合來源。首輪固定 16 題有一筆 provider 504，訓練时數題仍 NO_DATA；不得以定向複測拼出新整批分數或宣稱 provider 永不失敗。維持 needs_review，production 未啟用；見 [報告](../../docs/project/rag-v009-rollout-20261006.md)。
-
-- 2026-10-06 generation model 升級：本機使用 `gemini-3.8-flash`，其 thinking level 最低為 LOW，MINIMAL 會被 API 拒絕。Native adapter 明確區分 3.8 LOW／3.6 MINIMAL／其他模型原 temperature 行為，不用寬鬆名稱比對推測未來模型能力。512 一般 token budget、2048 grounded floor 與回覆／JSON／引用／安全限制維持。157 項定向回歸與真實 Vertex／兩種公開問答驗收通過；Embedding 未變。詳見 [報告](../../docs/project/gemini38-upgrade-20261006.md)。
-
-- 2026-10-05：V3 邊界以 task-local context 記錄 `rag_v3_failure`；標準 logger 輸出精簡 JSON，request_tag 為 request_id SHA-256 前 16 碼，只有階段、固定 code、耗時。不得附 exception／traceback／問句／模型原文；未知驗證理由映射通用分類。typed provider cause timeout、服務 deadline 與外部取消分開，取消仍傳遞；正常 SUCCESS／NO_DATA 不記為失敗。203 項相關回歸及 lint／format 通過。#67 已合併；#68 已重建增量，最終狀態看 GitHub。
-
-- 2026-10-05 整合後：本機 development 日常 v008＋V3＋Core router v2 已啟用，已實測 v004 回退再恢復；不是 production activation。最終 16 題 11 SUCCESS／5 NO_DATA／0 FAILED，200 項相關回歸通過。版面規則補編號／短英數例外，658 筆排除 70 筆；實際 professional general_information 准入 464 筆中排除 55，elder／family 准入無排除。BFF 初次兩筆生成備援後續未重現，不能宣稱原因已修復或模型永不失敗。PR #68 依賴 #67；詳見 [完整報告](../../docs/project/rag-retrieval-and-quotes-20261005.md)。
-
-- 2026-10-05 V3：raw lexical capped score＋dense 排序，不沿用 legacy 0.7 候選門檻；V1／V2 不變。原 16 題最終 11 SUCCESS／5 NO_DATA，另外 6 題改述／負例 4 SUCCESS／2 NO_DATA，無 FAILED；非品質準確率、未 activation。生成以來源連續 span ID 定位，未知 ID／任意 offsets 拒絕；舊 quote 精確比對仍保留。疑似多欄（至少三行有欄間寬空白）整筆不送生成，避免把原文定位成功誤當欄位語意釐清。詳見 [本次報告](../../docs/project/rag-retrieval-and-quotes-20261005.md)。
-
-- 第 4 批同日後續：Gemini grounded schema 只約束形狀；parser 繼續檢查來源 ID 與原文支持，不是語意判官。長動態 ID enum 已撤，家屬高負荷題的 HTTP 400 在 A/B 重測解除；專業高負荷題仍有引用不匹配。PDF 排版相容僅移除漢字間有至少兩格縮排的續行，保留 tab、行內空格、未縮排換行、空白行及所有非空白字元；禁用全域去空白／NFKC 當來源驗證。16 題複測 8 SUCCESS／6 NO_DATA／2 FAILED 為前一輪，後續單題結果不可拼成新整批分數。
-- 使用者授權後，`knowledge-v008-aae34e5095e6` 已匯入 658 筆資料與向量並回讀驗證；固定 16 題為 9 SUCCESS／6 NO_DATA／1 FAILED，仍待修正口語申請檢索與專業高負荷題引用。未修改目前服務設定或 activation。詳見第 4 批文件末節；本機測試依使用者要求單工、BelowNormal，不與 subagent 測試並行。
-
-- 2026-10-02 第 4 批已用真實 v004／726 筆與 Gemini 測 16 題：7 SUCCESS、5 NO_DATA、4 FAILED，尚未通過答案品質驗收。631 個 document vectors 已驗證可重用，27 個尚需產生；v007／658 筆未匯入。V3 只在實測程序啟用，未改 .env、寫 DB 或 activation。詳見 [`第 4 批`](../../docs/project/rag-simplification-phase4-20261002.md)；下方第 3 批未呼叫 provider 的描述為歷史狀態。
-- 不可只依賴 engine server settings 的 read-only 預設；真實環境可能未生效。每次檢索連線／交易第一步須執行共用 configure_readonly_transaction，明確 READ ONLY 與 timeout，失敗不得執行搜尋 SQL。實測 preflight 同樣套用。
-- Gemini grounded JSON MIME 已設但 BA13 仍 INVALID_GENERATION_JSON；原文 quote mismatch 原因也待區分。先診斷再修正，不能放寬驗證冒充通過；SUCCESS／PARTIAL、引用 ID 與錨點皆不等於語意正確或有回答問題。
-
-- 2026-10-02 RAG 簡化第 3 批已完成本機實作：V3 自然問句以 pgvector dense＋FTS／trigram Hybrid 檢索，再生成附 1–5 筆引用的回答；移除人工 support sets、精確題目、固定答案與最低 3 筆前提。允許明示缺口的 PARTIAL；無資料／錯誤回 fallback。引用 ID／原文錨點驗證不等於語意正確性評分。
-- `RAG_EVIDENCE_V3_ENABLED` 仍預設 false；未改 .env、匯入外部 DB、呼叫真實 embedding／模型或 activation。V3 啟用時不讀舊 evidence／source-family policy，保留 release/profile、角色／用途、官方來源、stop／risk／時效與內容 hash 檢查；只限非 production staging PostgreSQL。V1／V2 契約仍維持 3–5 筆，V3 關閉時保留原 overlay 流程。
-- 完整實作、准入筆數與剩餘限制見 [`第 3 批`](../../docs/project/rag-simplification-phase3-20261002.md)。SQL predicate 的 regex 也須經 SQLAlchemy `text()` 編譯檢查 bind keys；POSIX `[:space:]` 的冒號可能被誤認為參數，不能只用字串包含測試。
-
-- 2026-10-02 RAG 簡化第 1 批：程式由 Git 管理；保留真實來源、來源／資料版本與 text／embedding_text 內容 hash。停止 current byte audit successor 鏈，不建立 v021；不再要求每次程式改動新增 manifest、snapshot、封存或 byte attestation。
-- 逐筆人工覆核、E3 review 工作台／prepare／validate 與 1,055 qrels 填寫退出日常必經路徑。不要求使用者填完作業包；不得把 pending、needs_review、AI 判定或 synthetic 結果冒充人工 verified。
-- 本批只退役開發流程，未完成 runtime／SQL 新准入、自然生成或資料 import。現行 flags、v004 release／policy 與外部寫入／production 授權規則仍有效：`RAG_EVIDENCE_V3_ENABLED=false`，真實 needs_review 的 V3 支持集合仍不能通過，V1／V2 最低引用數與既有 gate 尚未改。第 2–4 批才處理這些行為。
-- v020 及以前 audit、舊人工覆核／acceptance／rechunk 報告與 pinned 資料僅為歷史紀錄，不代表今天的程式，也不構成新增 successor 的義務；保留其 bytes。先前 707 原記錄＋28 重切候選、41 facts 與本機 v005 未因此寫外部 DB 或切換 release。
-- 有效操作及後續批次見 [`RAG 簡化第 1 批`](../../docs/project/rag-simplification-phase1-20261002.md)。舊報告中的強制逐筆覆核、反覆 audit／封存要求已被使用者本次授權取代。真實來源、secret、Consent、身分及權限規則不變。
-
-- 更新日期：2026-09-29（RAG 現況段落）；其餘段落仍校準於 2026-09-02
-- 校準基準：`main` at `03cd170`；RAG 同步狀態另見下方 2026-09-10／09-29 條目
-
-本檔補充 repository 根目錄的 [`AGENTS.md`](../../AGENTS.md)，只涵蓋 `services/agent-runtime/`。
-根目錄那份的規則一律適用；兩者衝突時以根目錄為準。
-
-負責範圍與邊界見 [`docs/ownership/member-c-scope.md`](../../docs/ownership/member-c-scope.md)。
+| 需要 | 讀 |
+| --- | --- |
+| RAG 目前 release、資料／外部寫入／驗收規則、版本沿革 | [`docs/project/rag-release-history.md`](../../docs/project/rag-release-history.md) |
+| 各次交付與驗收結果 | [`docs/project/progress-log.md`](../../docs/project/progress-log.md)、[交付索引](../../docs/project/README.md) |
+| Agent 架構背景 | [`docs/architecture/agent-runtime-overview.md`](../../docs/architecture/agent-runtime-overview.md) |
 
 ## 目前狀態
 
-M0 Agent Foundation。可執行的最小 Agent 閉環：HTTP → contract 驗證 → Orchestrator
-→ Companion Agent → Safety Evaluator → 回應。Repository 預設走 `MockModelProvider`；程式碼另有
-`models/bedrock_provider.py`，設定
-`MODEL_PROVIDER=bedrock`、`AWS_REGION` 與 `BEDROCK_TEXT_MODEL_ID` 後才會選用。Bedrock provider
-能接收已通過 RAG 治理的 context，但尚未用真實 AWS 憑證與模型端點驗證，不得描述成已部署。
-`MODEL_PROVIDER=openai-compatible` 則使用 provider-neutral text adapter；base URL、model ID 與
-optional Bearer key 全由 runtime 設定，可接相容本機服務或 Google Gemini API。它只支援文字
-Chat Completions、不跟隨 redirect、錯誤時不會 fallback 到 mock，且帶 key 的遠端 HTTP 會在
-啟動時被拒絕。RAG Retriever 已透過 provider-neutral `SearchBackend` 與不含 executable DSL 的
-bounded plan 隔離搜尋 provider；runtime factory 可明確選 legacy OpenSearch 或 PostgreSQL。
-`MODEL_PROVIDER=gemini` 則使用原生 Google Gen AI SDK；`AQ.` 開頭的 Vertex AI Express key 自動
-走 Vertex AI，其他 key 走 Gemini Developer API。這兩種 key 不得混用 endpoint；設定不完整或
-Google provider 失敗時一律 fail closed，不會退回 mock，也不得把上游訊息帶出 provider 邊界。
-
-2026-09-02 起，RAG 啟用時的預設 search backend 是 PostgreSQL，預設 query embedding config 是
-`config/rag/embedding-google.yaml`；仍需完整 release／profile／database／policy 設定才會啟動。
-OpenSearch／Bedrock 只在明確設定時選用，沒有現行 AWS deployment evidence。
-
-另有第一版 **staging-only** RAG endpoint、provider-neutral `EmbeddingProvider`／`SearchBackend`
-boundaries、Bedrock 與 opt-in Google query embedding adapters、legacy OpenSearch Hybrid adapter，
-以及固定模板、全參數化的 PostgreSQL FTS／trigram＋pgvector Hybrid adapter。2026-08-25 已將
-726 個 Google document embeddings 匯入 Supabase development database，並以
-`RAG_SEARCH_BACKEND=postgresql` 對固定 release／profile 完成 data-plane 與 Google query embedding
-全鏈路 smoke；兩者皆回傳 5 筆合規 V2 staging chunks。2026-08-25 的
-`RAG_STAGING_ALLOW_ALL_AUDIENCES=true` legacy override 已不在使用中（目前 `.env` 為 `false`），
-Production 本來就禁止此 override。
-
-**2026-09-10 已對 Supabase development database 完成外部同步**（授權
-`docs/project/rag-law-sync-authorization-20260910.json`，工具 `scripts/rag/sync_law_repair.py`）：
-新 immutable release `rag-v2-v004-f3339ceae77c` 以單一交易匯入 726 projections ＋ 726 既有向量，
-只改 71 筆長照法治理欄位（`requires_professional_assessment` null→true、移除該筆 block reason），
-其餘 655 筆與 `_0048` 的 high-red-line／stop 封鎖不變，舊 release v002 保留，獨立唯讀讀回 `VERIFIED`。
-runtime policy 升為 v004（SHA-256 `a7d8dd16…`）包裝原 v003 policy、554 筆 pool 不擴大、改綁新 release。
-「長照法」「長照法第二條」經真實 BFF → Core → Agent 為 `SUCCESS / ALLOW`，並已補 Playwright
-瀏覽器驗收（[09-10 瀏覽器證據](../../.qa/rag-law-browser-verification-20260910.json)）。
-2026-09-29 以 `sync_law_repair.py verify` 唯讀複驗：`status=VERIFIED`、726／726、
-profile `ep-google-00a12ec45096fa9d97d9e9b6`、export SHA-256 與 09-10 紀錄逐一相符；
-證據見 [09-29 唯讀複驗報告](../../docs/project/rag-law-sync-verification-20260929.json)。
-
-**`data/rag-v3/candidates/v003/` 不是 v004 的後繼**，而是同樣分支自 `rag-v2-v002` 的平行候選
-（726 筆 `prior_chunk_id` 相同），且建於 09-09 法規修復之前——它的 72 筆長照法全數仍被
-`requires_professional_assessment_missing` 封鎖。逐筆比對：同步 v003 會新開放 224 筆、**關閉 71 筆
-長照法**。要採用 v003 的 `review_status=verified` 必須另建以 v004 為基底的 successor，不可直接同步。
-全庫仍 `review_status=needs_review`、`production_approved=false`、
-`retrieval_activation_status=NOT_AUTHORIZED`。
-
-2026-08-26 已把本機 source-family policy v002 投影為
-immutable、hash-pinned runtime policy v001 並接入 V2：search backend 先在固定 554 筆 v002 chunk IDs
-搜尋最多 50 筆，Retriever 再以 v003 text SHA-256、四角色、purpose 與 assessment metadata 決定
-3–5 筆回覆；遠端 live current／stop／retrieval／block reasons／review-production 狀態不可被 policy
-覆蓋，並在搜尋與回覆階段各自 fail closed；high／unknown、stop、非 current 與 research 不在搜尋
-projection。policy 啟用時不得與
-legacy all-audience override 併用。10 個離線 policy／citation Golden cases 已通過，但真實 backend
-relevance／ranking Golden Query 尚未執行。2026-08-28 Owner v006 closeout acceptance 已人工確認
-runtime v003 中 32 筆 A 單位 purpose，並核准 27 筆 `stop_normal_rag=true` 進入身份別條件開放複核；
-此 acceptance 沒有修改 runtime v003，27 筆在逐筆 audience／purpose 驗證完成前仍不進 current 554 筆
-候選池。Google query
-adapter 不得查詢 Cohere document vectors。只有明確標示
-`general_information`／`legal_reference` purpose 的回合會檢索；成功時 3–5 個帶引用 chunk
-進入 Context Manifest，無資料或 provider 失敗時直接 no-guess fallback。未設定 provider
-時明確 fail closed。Supplied Allowlist 尚未簽署；只有 staging 明確設定
-`RAG_REQUIRE_OWNER_SIGNATURE=false` 時，才允許 unsigned development override。Override
-不得關閉外部 `RAG_ALLOWLIST_EXPECTED_SHA256` 精確比對，也不得略過來源、Chunk、數量或
-完整 Allowlist 驗證；receipt／log 必須標示
-`governance_status=UNSIGNED_DEVELOPMENT_OVERRIDE`、`production_approved=false`。
-Production 仍須正式簽署 Allowlist，並明確設定 `RAG_PRODUCTION_ENABLED=true`。獨立 PostgreSQL
-read-only principal、live relevance Golden Query／quality gate、activation／rollback 與正式 runtime
-deployment 均未完成；本機目前暫時重用 Core DB URL。AWS/OpenSearch 亦未完成真實環境驗證，
-因此不得描述成已部署或可用於
-production。
-
-Event／Memory Candidate 採 Core-owned proposal flow：request 的 `requested_outputs` 明確包含
-`event_candidate`，並可在另外通過 memory authorization／Consent 時包含 `memory_candidate`。
-Safety 為 `ALLOW` 且 deterministic extractor 找到受支援內容時，Runtime 只回傳不含
-actor／tenant／elder／session／consent／source ID／逐字稿的 typed proposal。Memory first slice
-只辨識明確固定早餐習慣，且必須同時有 Event proposal；一般聊天、一次性事件、健康／情緒／
-陪伴需求推論都不產生 Memory proposal。Runtime
-不向 Core 註冊或完成 AgentRun、不呼叫 Core Tool，也不寫 domain DB；Core 才能在重新授權、
-重驗 Consent 並完成 conversation session 後建立 review-required Event Candidate。Memory proposal
-先私下保存在 Event version；照護者 VERIFY 來源事件後，Core 再重驗 memory gate 並建立仍須長者
-本人確認的 Memory Candidate。舊 `allowed_tools` 欄位保留解析相容，但 canonical Core path 固定
-傳空陣列。尚未實作（不要描述成已完成）：其他類型的 Memory 自動擷取與 conflict detection、
-Model Router、Prompt Registry、完整 Agent Trace、Neptune、通用 Tool 執行
-迴圈與 RAG／Graph Evaluation。`BASIC_VOICE` request 現可接收 Core 已重驗授權／Consent 的最多
-5 筆 current ACTIVE Confirmed Memory；Runtime 以獨立 `confirmed-memory` context item 標記，並把
-內容當資料而非指令。Knowledge／RAG purpose 的 request 不得帶這個欄位。現行 selection 仍只是
-Core 依更新時間做 bounded first slice，尚未有語意相關性排序；Verified Care Data 與 Graph 仍未
-進入 Runtime Context。Repository 內仍有早期
-Core Tool client／request 相容程式，但 canonical orchestrator 不會依 `allowed_tools` 呼叫 Core；
-若 README 或舊測試敘述相反，以目前 orchestrator、Core companion service 與本檔為準。
-
-上述是 Current first slice。Accepted Target 依根目錄 Spec 18／ADR 0014：Runtime 仍只輸出不可信
-proposal 與 risk hint；Core 依 versioned policy、verified Elder speaker、第一人稱／否定／時間語意、
-confidence、Consent 與 scope 決定 LOW all-of auto-save、MEDIUM fixed-version Elder confirmation 或 HIGH
-restriction。Runtime 不得宣告 actual risk、confirmation 或 ACTIVE；Staff／Family witness 不得替 Elder
-consent。Care Event VERIFIED 不自動 promotion 成 Memory，HIGH 不建立 Memory row／content。
+- 單輪閉環：HTTP → contract 驗證 → Orchestrator → Companion Agent → deterministic Safety Evaluator → 回應。
+  目前只有單一模型決策；Event proposal 是 deterministic output，不是 Tool call。
+- Model provider（`MODEL_PROVIDER`）：`mock`（repository 預設）、`bedrock`（另需 `AWS_REGION`、`BEDROCK_TEXT_MODEL_ID`）、`openai-compatible`（只依 runtime URL／model／
+  optional Bearer key，不跟隨 redirect，帶 key 的遠端 HTTP 啟動即拒絕）、`gemini`（Google Gen AI SDK；`AQ.` 開頭的 Vertex AI
+  Express key 走 Vertex AI，其他走 Gemini Developer API，不得混用 endpoint）。設定不完整或呼叫失敗一律 fail closed，不 fallback
+  到 mock，也不把上游訊息帶出 provider 邊界。本機 development 以真實 Vertex 驗收；Bedrock／OpenSearch 無現行部署證據。
+- RAG：`RAG_MODE` 預設 `disabled`。啟用時預設 PostgreSQL FTS／trigram＋pgvector Hybrid backend 與
+  `config/rag/embedding-google.yaml`，仍需完整 release／profile／database／policy 設定才會啟動；legacy OpenSearch 只在明確設定時選用。
+  Endpoint：`POST /api/v1/rag/retrievals`（相容）、`/api/v2/...`（治理 citation，3–5 筆）、`/api/v3/...`（預設關閉，自然問句
+  Hybrid＋生成，1–5 筆引用）。只有標示 `general_information`／`legal_reference` purpose 的回合會檢索；無資料或 provider 失敗走
+  no-guess fallback。
+- Event／Memory：Core 以 `requested_outputs` 要求 proposal（`event_candidate`；另通過 memory 授權／Consent 時可含 `memory_candidate`）；Safety 為 `ALLOW` 且 extractor 找到受支援內容時，Runtime 只回傳不含
+  actor／tenant／elder／session／consent／source ID／逐字稿的 typed proposal。Memory first slice 只辨識明確固定早餐習慣，且需同時有
+  Event proposal。Runtime 不註冊或完成 AgentRun、不呼叫 Core Tool、不寫 domain DB；canonical path 的 `allowed_tools` 固定空陣列
+  （舊欄位與早期 Core Tool client 只為相容，README 或舊測試敘述相反時以 orchestrator 與本檔為準）。
+- Context：`BASIC_VOICE` 可接收 Core 已重驗的最多 5 筆 current ACTIVE Confirmed Memory，以獨立 `confirmed-memory` item 標記並視為資料
+  而非指令；Knowledge／RAG purpose 的 request 不得帶此欄位。尚無語意相關性排序；Verified Care Data 與 Graph 未進 Context。
+- 尚未實作（不要描述成已完成）：其他類型 Memory 自動擷取與 conflict detection、Model Router、Prompt Registry、完整 Agent Trace、
+  Neptune、通用 Tool 執行迴圈、RAG／Graph Evaluation。
+- 以上是 Current first slice。Accepted Target 依 Spec 18／ADR 0014：Runtime 仍只輸出不可信 proposal 與 risk hint；Core 依 versioned
+  policy、verified Elder speaker、語意、confidence、Consent 與 scope 決定 LOW auto-save、MEDIUM 固定版本確認或 HIGH restriction。
+  Runtime 不得宣告 actual risk、confirmation 或 ACTIVE；Staff／Family witness 不得替 Elder consent；Care Event VERIFIED 不自動成為 Memory。
 
 ## 硬性規則
 
-- **不得讓 Agent 直接改變正式 Domain State**。Event 轉 `VERIFIED`、Memory 轉 `ACTIVE`、
-  Consent 變更、Report 發布，一律透過 Core API 的 Command Gate，由 Core 重新授權。
-- **不得繞過 ElderScope、Consent 或 Authorization**。本地用 Mock 不是省略這些檢查的理由。
-- **不得跨 `elder_id` 或 `tenant_id` 讀取資料**。
-- **只有每次通過 Core final retrieval gate 的 Trusted Memory 可進 Context**：current ACTIVE、有效 Consent、
-  Speaker ownership、risk verification、version binding（如需要）、validity、tenant／elder scope 與
-  tombstone 缺一不可；MEDIUM 未確認／stale、HIGH 與 legacy 缺證據資料一律排除。
-- **`APP_ENV=production` 有啟動 gate**。`create_app()` 第一件事是
-  `validate_production_configuration()`：`MODEL_PROVIDER` 必須是
-  `bedrock`／`gemini`／`openai-compatible`，`RAG_ALLOW_NEEDS_REVIEW_CITATIONS` 與
-  `RAG_STAGING_ALLOW_ALL_AUDIENCES` 必須是 false，而
-  **`PRODUCTION_APPROVED_RAG_MODES` 目前刻意是空集合**——`disabled` 沒有受治理檢索，
-  `staging` 綁 `production_approved=false` 的 release，所以 production 現階段一律啟動失敗。
-  這不是 bug，解除條件只有一條：Owner 核准 production retrieval release 後，把該 mode 加進
-  `app.py` 的那個常數。`local`／`test`／`staging` 完全不受影響。Dockerfile 的出廠預設
-  （`APP_ENV=production`＋`mock`＋`disabled`）被測試釘住必須被拒絕，image 不得以預設啟動成
-  production runtime。
-- **Service credential 的 replay 判定必須可跨 replica**。`ServiceCredentialVerifier` 的
-  `replay_store` 是必填參數；`InMemoryReplayStore`（`durable=False`）只給 test 與單一 process 的
-  本機執行。設定 `SERVICE_IDENTITY_REPLAY_DATABASE_URL` 會改用 `PostgresReplayStore`，以 Core
-  migration 建立的 `service_identity.credential_nonce` 做 `INSERT ... ON CONFLICT DO NOTHING`
-  atomic claim；`APP_ENV=production` 沒有這項設定時 `create_app()` 直接失敗。Runtime 只碰這一張
-  非 domain 表，不對 `eldercare_ai` 有任何 grant。claim 因 driver 失敗而無法判定時 fail closed，
-  錯誤訊息只帶 exception type。
-- **不得產生可執行的 SQL、Gremlin 或 OpenSearch DSL**。查詢一律走參數化的 Planner。
-- **不得建立無上限的 Agent Loop**。每條控制流都要有 step 上限與明確停止條件。
-- 所有 Agent 輸出必須同時通過 Pydantic model 與 `contracts/schemas/` 的 JSON Schema。
-- 不得在 Prompt、測試、fixture 或 log 放入真實個資。測試資料一律 Synthetic。
-- Contract 不明確時使用 Adapter／Stub，不自行發明跨團隊 Contract。
+- **不得讓 Agent 直接改變正式 Domain State**。Event 轉 `VERIFIED`、Memory 轉 `ACTIVE`、Consent 變更、Report 發布，一律透過 Core
+  Command Gate，由 Core 重新授權。
+- **不得繞過 ElderScope、Consent 或 Authorization**；本地用 Mock 不是省略檢查的理由。不得跨 `elder_id` 或 `tenant_id` 讀取資料。
+- **只有每次通過 Core final retrieval gate 的 Trusted Memory 可進 Context**：current ACTIVE、有效 Consent、Speaker ownership、risk
+  verification、version binding（如需要）、validity、tenant／elder scope 與 tombstone 缺一不可。
+- **`APP_ENV=production` 有啟動 gate**：`create_app()` 先跑 `validate_production_configuration()`。`MODEL_PROVIDER` 必須是真實 provider，
+  `RAG_ALLOW_NEEDS_REVIEW_CITATIONS` 與 `RAG_STAGING_ALLOW_ALL_AUDIENCES` 必須 false，且 `app.py` 的
+  **`PRODUCTION_APPROVED_RAG_MODES` 刻意是空集合**，所以 production 現階段一律啟動失敗。這不是 bug；只有 Owner 核准 production
+  retrieval release 後才把該 mode 加入。Dockerfile 出廠預設（production＋mock＋disabled）被測試釘住必須被拒絕。
+- **Service credential replay 判定必須可跨 replica**：`ServiceCredentialVerifier` 的 `replay_store` 必填；`InMemoryReplayStore` 只給
+  test 與單一 process 本機。`SERVICE_IDENTITY_REPLAY_DATABASE_URL` 改用 `PostgresReplayStore`（`service_identity.credential_nonce` 的
+  `INSERT ... ON CONFLICT DO NOTHING`）；production 缺此設定 `create_app()` 直接失敗。Runtime 對 `eldercare_ai` 沒有任何 grant；
+  claim 無法判定時 fail closed，錯誤只帶 exception type。
+- **不得產生可執行的 SQL、Gremlin 或 OpenSearch DSL**；查詢走參數化 Planner／bounded plan。
+- **不得建立無上限的 Agent Loop**；每條控制流都要有 step 上限與明確停止條件。
+- 所有 Agent 輸出同時通過 Pydantic model 與 `contracts/schemas/` 的 JSON Schema。
+- Prompt、測試、fixture、log 不放真實個資。Contract 不明確時用 Adapter／Stub，不自行發明跨團隊 Contract。
+
+## RAG 與生成的實作規則
+
+- Retriever 只依賴 `SearchBackend`；遠端 live current／stop／retrieval／block reasons／review-production 狀態不可被本機 policy 覆蓋，
+  搜尋與回覆階段各自 fail closed。Google query adapter 不得查詢 Cohere document vectors。
+- 每次檢索連線／交易第一步執行共用 `configure_readonly_transaction`（明確 READ ONLY 與 timeout），失敗不得執行搜尋 SQL；實測
+  preflight 同樣套用。SQL predicate 的 regex 須經 SQLAlchemy `text()` 編譯檢查 bind keys。
+- V3 排序：raw lexical capped score＋dense，不沿用 legacy 0.7 門檻，弱 trigram 不 min-max 放大；授權／來源／hash gate 與最多 5 筆不變。
+  V1／V2 排序與舊 quote 精確比對保留。
+- 生成以來源連續 span ID 定位，未知 ID 或任意 offsets 拒絕。至少三行有欄間寬空白的疑似多欄來源整筆不送生成，全部排除回
+  NO_DATA；不自行拼接或重排來源。正確 span ID 不代表欄位順序或語意已釐清。
+- PDF 排版相容只移除漢字間至少兩格縮排的續行；保留 tab、行內空格、未縮排換行、空白行與所有非空白字元。禁用全域去空白或 NFKC 當來源驗證。
+- Gemini grounded schema 只約束形狀；parser 繼續檢查來源 ID 與原文支持，不是語意判官。不放寬驗證冒充通過。
+- 不要把整個來源（例如 A 手冊）的 `source_id` 當成專業限定；只排除專業片段，保留家屬可用記錄。
+- 生成預算：一般 token 512；grounded JSON 下限 4096 token（`models/prompting.py`），外層 parser 20000 字元，一般文字與解析後答案仍限
+  4000。公開問答各層 deadline 見 RAG 文件；外部取消必須向上傳遞，typed provider timeout、服務 deadline 與外部取消分開。
+- Gemini 3.8 最低 thinking level 為 LOW（MINIMAL 會被拒），3.6 用 MINIMAL，其他模型維持原 temperature 行為；不用寬鬆名稱比對推測未來模型能力。
+- `rag_v3_failure` 以 task-local context 記錄，標準 logger 輸出精簡 JSON：request_tag 為 request_id SHA-256 前 16 碼，只有階段、固定
+  code、耗時；不得附 exception、traceback、問句或模型原文。未知驗證理由映射通用分類；正常 SUCCESS／NO_DATA 不記為失敗。
 
 ## 實作慣例
 
-- **Contract first**。`contracts/schemas/agent/`、`contracts/schemas/tools/` 的 JSON Schema
-  與 `src/agent_runtime/contracts/models.py` 的 Pydantic model 必須一致，由
-  `tests/unit/test_contract_schema_consistency.py` 守著（含 `additionalProperties: false`
-  對應 `extra="forbid"`）。
-- **外部服務只在 Provider／Adapter 邊界出現**。模型邊界包含 `models/provider.py` 的
-  `ModelProvider` 介面、`models/mock_provider.py`、`models/bedrock_provider.py` 與
-  `models/openai_compatible_provider.py`；共用安全 prompt 位於 `models/prompting.py`。RAG 邊界位於
-  `rag/`，Retriever 只依賴 `SearchBackend`；OpenSearch DSL 必須留在其 adapter。新增或調整
-  Bedrock、Google embedding、OpenSearch、PostgreSQL search 或 Neptune 整合時，不要把 SDK 呼叫散進
-  orchestration 或 agent 層。
-- Step／Tool 上限來自 `settings.py`：`MAX_AGENT_DECISIONS`、`MAX_TOOL_ROUNDS`、
-  `MAX_TOTAL_TOOLS`、`MAX_REWRITE`。目前 companion 仍只有單一模型決策；Event proposal 是
-  deterministic output，不是 Tool call。`MAX_TOOL_ROUNDS`／`MAX_TOTAL_TOOLS` 保留供未來
-  受控 Tool loop，`MAX_REWRITE` 尚未有程式使用。
+- **Contract first**：`contracts/schemas/agent/`、`contracts/schemas/tools/` 與 `src/agent_runtime/contracts/models.py` 必須一致，由
+  `tests/unit/test_contract_schema_consistency.py` 守著（`additionalProperties: false` 對應 `extra="forbid"`）。
+- **外部服務只在 Provider／Adapter 邊界**：模型邊界在 `models/`（`models/provider.py` 的 `ModelProvider` 介面與各 provider），共用安全 prompt 在
+  `models/prompting.py`；RAG 邊界在 `rag/`，OpenSearch DSL 留在其 adapter。不要把 SDK 呼叫散進 orchestration 或 agent 層。
+- Step／Tool 上限來自 `settings.py`：`MAX_AGENT_DECISIONS`、`MAX_TOOL_ROUNDS`、`MAX_TOTAL_TOOLS`、`MAX_REWRITE`；後三者保留給未來
+  受控 Tool loop，`MAX_REWRITE` 尚無程式使用。
 
 ## 對外 API 慣例
 
 依 [ADR 0005](../../docs/adr/0005-agent-runtime-api-conventions.md)：
 
-- 路徑 `/api/v1/agent/runs`；`/health` 維持在根層。
-- 成功回應 `{"data", "meta"}`、錯誤回應 `{"error"}`，型別在
-  `core/envelopes.py`，JSON Schema 共用 `contracts/schemas/common/`。
-  **不要讓任何 endpoint 自行拼裝頂層結構。**
-- 錯誤一律 `DomainError → api/error_handlers.py → ErrorEnvelope`。狀態碼對應只有一份
-  （`EXCEPTION_MAP`）。不在 endpoint 或 orchestrator 裡組裝 HTTP 錯誤。
-- `EXCEPTION_MAP` 沒收錄的 `DomainError` 子類會變成 500——這是刻意的 fail loud，
-  新增例外時要同步登記。
-- **錯誤回應不得回填被拒絕的值**。request body 是長者逐字稿；`details[].reason` 只帶
-  pydantic 的 error type，不帶內容。
-
-安全阻擋是 200 不是錯誤：`result_status` 為 `BLOCKED`、`reply_text` 換成安全訊息。
-拒絕是對話結果，長者仍然會收到回覆。
+- 路徑 `/api/v1/agent/runs`；`/health` 在根層。成功 `{"data", "meta"}`、錯誤 `{"error"}`，型別在 `core/envelopes.py`，JSON Schema
+  共用 `contracts/schemas/common/`。**不要讓任何 endpoint 自行拼裝頂層結構。**
+- 錯誤一律 `DomainError → api/error_handlers.py → ErrorEnvelope`，狀態碼對應只有一份 `EXCEPTION_MAP`；未收錄的子類刻意變成 500
+  （fail loud），新增例外要登記。
+- **錯誤回應不得回填被拒絕的值**：request body 是長者逐字稿，`details[].reason` 只帶 pydantic error type。
+- 安全阻擋是 200 不是錯誤：`result_status` 為 `BLOCKED`、`reply_text` 換成安全訊息。
 
 ## 測試
 
@@ -211,27 +101,13 @@ uv sync --extra test --extra dev
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
-```
-
-不需要資料庫、不需要 AWS 憑證、不需要網路。`tests/conftest.py` 在 test module 匯入 app 前
-固定 `APP_ENV=test`、`MODEL_PROVIDER=mock`；不得移除這層隔離，否則 developer `.env` 可能讓
-一般 integration tests 呼叫真實模型並讀取 secret。
-
-2026-08-25 本機基準：377 tests passed；Ruff check、完整 Ruff format check、靜態 contract
-validator 與本機 Agent live contract verifier 均通過。另完成一次 PostgreSQL data-plane smoke 與
-一次 Google query embedding → Supabase → V2 citation smoke，各回傳 5 筆受治理 staging chunks。
-這不是 runtime deployment 或 Production 驗證；Bedrock／OpenSearch staging 仍未驗證。
-
-`tests/unit/test_contract_schema_consistency.py` 掃的是 repository 根目錄的
-`contracts/schemas/`，因此它同時會驗證 core-api 的 schema 是否為合法的 JSON Schema。
-core-api 那邊加了壞掉的 schema，這裡會紅——這是刻意保留的交叉守護。
-
-改到 endpoint 或回應形狀時，另外跑 live 驗證（AGENTS.md §8.2）：
-
-```powershell
-cd services/agent-runtime
+# 改到 endpoint 或回應形狀時（對執行中的服務驗證，不需 DB、憑證或網路）
 uv run --with pyyaml --with jsonschema --with referencing python ../../scripts/verify_agent_contract_live.py ../../contracts
 ```
 
-它對**實際執行中的服務**驗證，包含安全阻擋回合仍是 200、超過 step 上限走 domain
-handler 而非 catch-all、以及錯誤回應不回填被拒絕的輸入。新增 endpoint 要同步在裡面加檢查。
+- 不需資料庫、雲端憑證或網路。`tests/conftest.py` 在匯入 app 前固定 `APP_ENV=test`、`MODEL_PROVIDER=mock`；不得移除這層隔離。
+- pytest 也必須能從 repo root 以 `uv run --project services/agent-runtime pytest services/agent-runtime/tests` 執行；測試不得以
+  `tests.unit.*` 匯入另一測試檔的 helper。
+- `test_contract_schema_consistency.py` 掃整個 `contracts/schemas/`，core-api 加了壞 schema 這裡也會紅（刻意的交叉守護）。
+- Live verifier 涵蓋安全阻擋仍是 200、超過 step 上限走 domain handler、錯誤不回填輸入；新增 endpoint 要同步加檢查。
+- 實測 RAG 時：SUCCESS／PARTIAL、引用 ID 與錨點不等於語意正確；定向複測不得拼成新整批分數（見 RAG 文件）。
