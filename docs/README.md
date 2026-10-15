@@ -7,7 +7,9 @@
 | 目的 | 文件 |
 | --- | --- |
 | 第一次接手 | [專案介紹](../README.md)、[協作者建置指南](project/COLLABORATOR_SETUP.md) |
-| AI 協作規則 | [AGENTS.md](../AGENTS.md)、[CLAUDE.md](../CLAUDE.md) |
+| AI 協作規則 | [AGENTS.md](../AGENTS.md)（§0 為按需讀取索引）、[CLAUDE.md](../CLAUDE.md)；模組規則見 [core-api](../services/core-api/AGENTS.md)、[frontend](../packages/frontend/AGENTS.md)、[contracts](../contracts/AGENTS.md)、[agent-runtime](../services/agent-runtime/AGENTS.md)、[speech-gateway](../services/speech-gateway/AGENTS.md) |
+| 系統現況與進度 | [系統現況](architecture/current-state.md)、[進度紀錄](project/progress-log.md)、[RAG 現況與沿革](project/rag-release-history.md) |
+| 本機開發與 CI 規則 | [本機開發與 QA](runbooks/local-dev.md)、[CI Gate 1](runbooks/ci-gate1.md) |
 | 功能、修復與驗收 | [交付主題索引](project/README.md) |
 | 產品需求與驗收條件 | [編號規格](spec/)；Markdown 為規格權威版本 |
 | 已採用的技術決策 | [ADR](adr/)；依狀態與取代關係閱讀 |
