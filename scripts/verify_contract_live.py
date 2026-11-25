@@ -134,7 +134,7 @@ async def main() -> int:
     assert CreateConsentRequest.model_validate(voice_grant).personal_memory_voice_auto_save
     legacy_grant = {k: v for k, v in voice_grant.items() if k != "personal_memory_voice_auto_save"}
     assert not CreateConsentRequest.model_validate(legacy_grant).personal_memory_voice_auto_save
-    methods = {"get", "post", "patch", "delete"}
+    methods = {"get", "post", "put", "patch", "delete"}
     runtime_operations = {
         (path, method)
         for path, item in runtime_openapi["paths"].items()
@@ -181,6 +181,8 @@ async def main() -> int:
 
         # No credentials configured -> must fail closed as a contract-shaped 401.
         for method, path, body in [
+            ("GET", "/api/v1/family/elders/30000000-0000-4000-8000-000000000001/line-notification-preference", None),
+            ("PUT", "/api/v1/family/elders/30000000-0000-4000-8000-000000000001/line-notification-preference", {"line_enabled": False, "expected_version": 0}),
             ("GET", "/api/v1/admin/care-units", None),
             ("GET", "/api/v1/admin/staff-invitations", None),
             ("POST", "/api/v1/admin/staff-invitations", {

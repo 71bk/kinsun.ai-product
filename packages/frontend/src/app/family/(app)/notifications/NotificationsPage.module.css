@@ -1,0 +1,89 @@
+.page {
+  container: line-notifications / inline-size;
+  display: grid;
+  gap: var(--block-gap);
+  min-width: 0;
+}
+.page p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.form {
+  display: grid;
+  gap: var(--space-3);
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-min);
+  cursor: pointer;
+}
+.toggle input {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  accent-color: var(--color-primary);
+}
+.button {
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-interactive-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  justify-self: start;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.button:hover {
+  background: var(--color-primary-weak);
+}
+.button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.button:focus-visible,
+.toggle input:focus-visible {
+  outline: 3px solid var(--color-primary-text);
+  outline-offset: 3px;
+}
+.primary {
+  background: var(--color-primary-strong);
+  color: var(--color-on-primary);
+}
+.primary:hover {
+  background: var(--color-primary-text);
+}
+.notice {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-weak);
+  color: var(--color-primary-text);
+}
+.status {
+  font-weight: 700;
+}
+.muted {
+  color: var(--color-muted-foreground);
+}
+
+/* Preserve room for whole words when zoom leaves a narrow content column. */
+@container line-notifications (max-width: 16rem) {
+  .page > section {
+    padding: var(--space-2);
+  }
+  .toggle {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .toggle span {
+    flex: 1 1 8em;
+  }
+  .button {
+    padding-inline: var(--space-1);
+  }
+}

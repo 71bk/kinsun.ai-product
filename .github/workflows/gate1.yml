@@ -102,6 +102,12 @@ jobs:
       - name: Core format
         run: python scripts/ci/telemetry.py run --id core-format -- uv run --frozen --project services/core-api ruff format --check services/core-api scripts/verify_gate1_cross_service.py scripts/rag/project_postgres.py scripts/rag/export_knowledge_cache.py scripts/rag/import_knowledge.py scripts/ci
 
+      - name: Notification worker lint
+        run: python scripts/ci/telemetry.py run --id notification-worker-lint -- uv run --frozen --project services/core-api ruff check --config services/core-api/pyproject.toml services/notification-worker
+
+      - name: Notification worker format
+        run: python scripts/ci/telemetry.py run --id notification-worker-format -- uv run --frozen --project services/core-api ruff format --check --config services/core-api/pyproject.toml services/notification-worker
+
       - name: RAG projection dry-run
         run: python scripts/ci/telemetry.py run --id core-rag-dry-run -- uv run --frozen --project services/core-api python scripts/rag/project_postgres.py dry-run
 

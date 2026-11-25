@@ -1,0 +1,22 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "line_enabled": {
+      "title": "Line Enabled",
+      "type": "boolean"
+    },
+    "expected_version": {
+      "minimum": 0,
+      "title": "Expected Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "line_enabled",
+    "expected_version"
+  ],
+  "title": "FamilyLineNotificationPreferenceUpdateV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyLineNotificationPreferenceUpdateV1.json"
+}

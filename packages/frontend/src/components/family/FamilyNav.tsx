@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, House, NewspaperClipping } from '@phosphor-icons/react';
+import { Bell, BookOpen, House, NewspaperClipping } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/family', key: 'familyNav.home', icon: House },
   { href: '/family/reports', key: 'familyNav.reports', icon: NewspaperClipping },
   { href: '/family/knowledge', key: 'familyNav.knowledge', icon: BookOpen },
+  { href: '/family/notifications', key: 'familyNav.notifications', icon: Bell },
 ] as const;
 
 /** Persistent nav for authenticated family destinations. Scoped to the

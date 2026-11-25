@@ -10,7 +10,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, Tim
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import SCHEMA_NAME, Base, BaseModel, pg_enum
+from app.db.base import SCHEMA_NAME, Base, BaseModel, VersionedMixin, pg_enum
 
 NOTIFICATION_CHANNEL_ENUM = pg_enum(
     "notification_channel_enum",
@@ -20,11 +20,16 @@ NOTIFICATION_CHANNEL_ENUM = pg_enum(
 )
 
 
-class NotificationPreference(BaseModel):
+class NotificationPreference(BaseModel, VersionedMixin):
     """One family member's opt-in notification settings for one elder."""
 
     __tablename__ = "notification_preference"
     __pk_name__ = "preference_id"
+    __mapper_args__ = {"eager_defaults": True}
+    __table_args__ = (
+        sa.UniqueConstraint("family_actor_id", "elder_id", name="uq_notification_preference"),
+        sa.CheckConstraint("version > 0", name="ck_notification_preference_version"),
+    )
 
     family_actor_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

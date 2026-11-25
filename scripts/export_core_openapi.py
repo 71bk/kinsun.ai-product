@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +40,7 @@ os.environ.setdefault("KINSUN_SYNTHETIC_EMAIL_CODE_SECRET", "246810")
 from app.main import create_app  # noqa: E402
 
 MODEL_FILES = {
+    "UpdateFamilyLineNotificationPreference": "domain/FamilyLineNotificationPreferenceUpdateV1.json",
     "EnrollmentCommand": "domain/EnrollmentCommandV1.json",
     "UpdateElderProfileRequest": "domain/UpdateElderProfileRequestV1.json",
     "CreateCareProfileRequest": "domain/CreateCareProfileRequestV1.json",
@@ -100,6 +102,8 @@ MODEL_FILES = {
 }
 
 SUCCESS_ENVELOPE_BY_OPERATION = {
+    "get_family_line_notification_preference_api_v1_family_elders__elder_id__line_notification_preference_get": "FamilyLineNotificationPreferenceEnvelopeV1",
+    "update_family_line_notification_preference_api_v1_family_elders__elder_id__line_notification_preference_put": "FamilyLineNotificationPreferenceEnvelopeV1",
     "list_enrollments_api_v1_elder_enrollments_get": "EnrollmentListEnvelopeV1",
     "get_enrollment_api_v1_elder_enrollments__enrollment_id__get": "EnrollmentEnvelopeV1",
     "enrollment_history_api_v1_elder_enrollments__enrollment_id__history_get": "EnrollmentHistoryEnvelopeV1",
@@ -333,7 +337,7 @@ SUCCESS_ENVELOPE_BY_OPERATION = {
     "execute_tool_api_v1_internal_tools_execute_post": "ToolResultEnvelopeV1",
 }
 
-HTTP_METHODS = {"get", "post", "patch", "delete"}
+HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
 LINE_WEBHOOK_PATH = "/api/v1/webhooks/line"
 KINSUN_AUTH_PATH_PREFIX = "/api/v1/internal/auth/kinsun/"
 ASSISTED_SESSION_PATH_PREFIX = "/api/v1/assisted-elder-sessions/current"
@@ -368,6 +372,9 @@ def replace_model_refs(node: object) -> None:
 
 
 def main() -> None:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--path", action="append", help="Update only these paths; preserve authored operations")
+    selected = parser.parse_args().path
     contract_path = ROOT / "contracts" / "openapi" / "core-api.v1.yaml"
     try:
         import yaml
@@ -383,7 +390,7 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.9.0",
+        "version": "1.13.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
             "security, assisted Elder Session, professional Care Action, human-gated "
@@ -457,6 +464,17 @@ def main() -> None:
                 "Short-lived request-bound HMAC credential for Speech Gateway. "
                 "Core binds it to method, path, body hash, correlation ID and a "
                 "durable single-use nonce."
+            ),
+        },
+        "notificationServiceCredential": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Kinsun-Service-Credential",
+            "description": (
+                "Local/test-only short-lived request-bound notification-worker credential. "
+                "Core checks a durable single-use nonce and resolves its configured "
+                "SYSTEM_SERVICE actor and tenant from live database state. "
+                "The HMAC profile is disabled in production."
             ),
         },
     }
@@ -586,6 +604,8 @@ def main() -> None:
                     operation["security"] = [{"kinsunBffAuth": []}]
                 elif path == ASSISTED_SESSION_EXCHANGE_PATH:
                     operation["security"] = []
+                elif path == "/api/v1/internal/notification-jobs/line-daily":
+                    operation["security"] = [{"notificationServiceCredential": []}]
                 elif path.startswith(ASSISTED_SESSION_PATH_PREFIX):
                     operation["security"] = [{"assistedElderSessionAuth": []}]
                 elif path in SPEECH_SERVICE_PATHS or path.startswith(
@@ -612,6 +632,19 @@ def main() -> None:
                 operation["security"] = []
 
     document["security"] = [{"bearerAuth": []}]
+    if selected:
+        if set(selected) - set(document["paths"]):
+            parser.error("Selected path is not implemented")
+        for path in selected:
+            prior["paths"][path] = document["paths"][path]
+            for method in HTTP_METHODS:
+                for requirement in document["paths"][path].get(method, {}).get("security", []):
+                    for scheme in requirement:
+                        prior["components"]["securitySchemes"].setdefault(
+                            scheme, document["components"]["securitySchemes"][scheme]
+                        )
+        prior["info"]["version"] = document["info"]["version"]
+        document = prior
     contract_path.write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
