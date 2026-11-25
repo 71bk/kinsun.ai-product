@@ -38,6 +38,7 @@ from app.api.elders import router as elders_router
 from app.api.error_handlers import register_exception_handlers
 from app.api.family_invitations import router as family_invitations_router
 from app.api.family_knowledge import router as family_knowledge_router
+from app.api.family_notification_preferences import router as family_notification_preferences_router
 from app.api.google_oidc_handoff import router as google_oidc_handoff_router
 from app.api.health import router as health_router
 from app.api.identity import router as identity_router
@@ -241,6 +242,7 @@ def create_app() -> FastAPI:
     app.include_router(care_events_router)
     app.include_router(memories_router)
     app.include_router(notifications_router)
+    app.include_router(family_notification_preferences_router)
     app.include_router(summaries_router)
     app.include_router(reports_router)
     app.include_router(staff_reports_router)

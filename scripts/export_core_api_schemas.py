@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,6 +78,10 @@ from app.schemas.family_invitation import (  # noqa: E402
     FamilyInvitationListResponse,
     FamilyInvitationStatusResponse,
 )
+from app.schemas.family_notification_preference import (  # noqa: E402
+    FamilyLineNotificationPreferenceResponse,
+    UpdateFamilyLineNotificationPreference,
+)
 from app.schemas.kinsun_email_auth import (  # noqa: E402
     CompletedKinsunEmailAuthResponse,
     CompleteKinsunEmailAuthRequest,
@@ -114,6 +119,8 @@ from app.schemas.tool import ToolRequest, ToolResult  # noqa: E402
 
 EXPORTS = {
     "domain": {
+        "FamilyLineNotificationPreferenceV1": FamilyLineNotificationPreferenceResponse,
+        "FamilyLineNotificationPreferenceUpdateV1": UpdateFamilyLineNotificationPreference,
         "RegisterAgentRunRequestV1": RegisterAgentRunRequest,
         "AgentRunRegistrationV1": AgentRunRegistrationResponse,
         "CompleteAgentRunRequestV1": CompleteAgentRunRequest,
@@ -198,6 +205,7 @@ EXPORTS = {
 }
 
 SUCCESS_ENVELOPES = {
+    "FamilyLineNotificationPreferenceEnvelopeV1": "domain/FamilyLineNotificationPreferenceV1.json",
     "ActorProfileEnvelopeV1": "domain/ActorProfileV1.json",
     "AuthorizedElderListEnvelopeV1": "domain/AuthorizedElderListV1.json",
     "ElderSummaryEnvelopeV1": "domain/ElderSummaryV1.json",
@@ -274,7 +282,10 @@ PRESERVE_EXISTING = {
 def apply_semantic_constraints(title: str, schema: dict) -> None:
     """Add cross-field constraints that Pydantic validators do not export."""
     properties = schema.get("properties", {})
-    if title == "CreateConsentRequestV1":
+    if title == "FamilyLineNotificationPreferenceV1":
+        # The browser validates the complete serialization, including schedule defaults.
+        schema["required"] = list(properties)
+    elif title == "CreateConsentRequestV1":
         properties["actor_confirmation"]["const"] = True
         properties["purposes"]["uniqueItems"] = True
     elif title == "CreateFamilyInvitationRequestV1":
@@ -686,11 +697,19 @@ def apply_semantic_constraints(title: str, schema: dict) -> None:
 
 
 def main() -> None:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--schema", action="append", help="Export only these named schemas")
+    selected = parser.parse_args().schema
+    known = {name for exports in EXPORTS.values() for name in exports} | set(SUCCESS_ENVELOPES)
+    if selected and set(selected) - known:
+        parser.error("Unknown schema name")
     base = ROOT / "contracts" / "schemas"
     for folder, exports in EXPORTS.items():
         destination = base / folder
         destination.mkdir(parents=True, exist_ok=True)
         for title, model in exports.items():
+            if selected and title not in selected:
+                continue
             path = destination / f"{title}.json"
             if title in PRESERVE_EXISTING and path.is_file():
                 print(f"preserved {path.relative_to(ROOT)}")
@@ -708,6 +727,8 @@ def main() -> None:
             print(path.relative_to(ROOT))
     common = base / "common"
     for title, data_schema in SUCCESS_ENVELOPES.items():
+        if selected and title not in selected:
+            continue
         schema = {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": f"https://kinsun.ai/contracts/schemas/common/{title}.json",

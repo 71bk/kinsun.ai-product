@@ -28,6 +28,9 @@ EXAMPLES = CONTRACTS / "examples"
 
 # example file -> schema that its "data" member must satisfy
 DATA_SCHEMA_FOR = {
+    "family-line-notification-preference.json": "domain/FamilyLineNotificationPreferenceV1.json",
+    "family-line-notification-preference-update.json": "domain/FamilyLineNotificationPreferenceUpdateV1.json",
+    "family-line-notification-preference-recipient-override.json": "domain/FamilyLineNotificationPreferenceUpdateV1.json",
     "staff-knowledge-question.json": "domain/PublicKnowledgeQuestionV1.json",
     "staff-knowledge-answer.json": "domain/PublicKnowledgeAnswerV1.json",
     "staff-knowledge-client-scope.json": "domain/PublicKnowledgeQuestionV1.json",

@@ -3,6 +3,8 @@
 
 .group {
   display: flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   align-items: center;
   gap: var(--space-2);
 }
@@ -28,12 +30,17 @@
   border: 0;
 }
 
-/* Two equal halves: each option is as wide as the wider label ("✓ English"),
-   so 中文／English never look like different-sized buttons and the group's
-   width is the same in both locales. */
+/* Equal columns at normal widths; stack whole labels when the available
+   space becomes narrow, including 200% zoom. Reserve the same check slot in
+   both locales so selecting an option does not change the control's width. */
 .options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6em), 1fr));
+  inline-size: calc(12em + 6px);
+  max-inline-size: 100%;
+  font-size: var(--text-sm);
+  gap: 2px;
+  background: var(--color-border-strong);
   border: 2px solid var(--color-border-strong);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -53,12 +60,9 @@
   font-size: var(--text-sm);
   font-weight: 700;
   line-height: var(--leading-body);
+  white-space: nowrap;
   cursor: pointer;
   transition: background var(--motion-fast) var(--ease-out);
-}
-
-.option + .option {
-  border-left: 2px solid var(--color-border-strong);
 }
 
 .option:hover {

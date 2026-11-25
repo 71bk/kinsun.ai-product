@@ -234,7 +234,7 @@ _TOTAL_HEAD_TABLE_COUNT = 70
 
 #: The baseline's revision id (see the migration file's Revision ID header).
 _BASELINE_REVISION = "f393b4452ce8"
-_HEAD_REVISION = "f0b2c4d6e879"
+_HEAD_REVISION = "a1c3e5f7b902"
 
 
 def _get_alembic_config() -> Config:
@@ -1058,6 +1058,7 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
 
     async with test_engine.begin() as conn:
         tables = await conn.run_sync(_get_tables)
+        notification_columns = await conn.run_sync(_get_columns, "notification_preference")
 
     assert len(tables) == _TOTAL_HEAD_TABLE_COUNT, (
         f"Expected {_TOTAL_HEAD_TABLE_COUNT} tables in eldercare_ai, "
@@ -1066,6 +1067,7 @@ async def test_head_upgrade_creates_expected_tables(test_engine):
     missing = set(_CORE_TABLES) - set(tables)
     assert not missing, f"Expected core tables {_CORE_TABLES} to be a subset, missing: {missing}"
     assert "decision_support_profile" in tables
+    assert "version" in notification_columns
     assert {
         "elder_enrollment",
         "elder_care_profile_entry",

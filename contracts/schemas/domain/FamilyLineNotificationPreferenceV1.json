@@ -1,0 +1,113 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "elder_id": {
+      "format": "uuid",
+      "title": "Elder Id",
+      "type": "string"
+    },
+    "preference_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preference Id"
+    },
+    "line_enabled": {
+      "title": "Line Enabled",
+      "type": "boolean"
+    },
+    "version": {
+      "minimum": 0,
+      "title": "Version",
+      "type": "integer"
+    },
+    "frequency": {
+      "const": "DAILY",
+      "default": "DAILY",
+      "title": "Frequency",
+      "type": "string"
+    },
+    "send_time_local": {
+      "const": "08:00",
+      "default": "08:00",
+      "title": "Send Time Local",
+      "type": "string"
+    },
+    "timezone": {
+      "const": "Asia/Taipei",
+      "default": "Asia/Taipei",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "line_status": {
+      "enum": [
+        "UNLINKED",
+        "LINKED",
+        "RELINK_REQUIRED"
+      ],
+      "title": "Line Status",
+      "type": "string"
+    },
+    "availability": {
+      "enum": [
+        "READY",
+        "LINE_LINK_REQUIRED",
+        "SERVICE_UNAVAILABLE",
+        "UNSUPPORTED_SCHEDULE"
+      ],
+      "title": "Availability",
+      "type": "string"
+    },
+    "line_link_available": {
+      "title": "Line Link Available",
+      "type": "boolean"
+    },
+    "can_enable": {
+      "title": "Can Enable",
+      "type": "boolean"
+    },
+    "updated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Updated At"
+    }
+  },
+  "required": [
+    "schema_version",
+    "elder_id",
+    "preference_id",
+    "line_enabled",
+    "version",
+    "frequency",
+    "send_time_local",
+    "timezone",
+    "line_status",
+    "availability",
+    "line_link_available",
+    "can_enable",
+    "updated_at"
+  ],
+  "title": "FamilyLineNotificationPreferenceV1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kinsun.ai/contracts/schemas/domain/FamilyLineNotificationPreferenceV1.json"
+}
