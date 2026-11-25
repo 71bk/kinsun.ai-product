@@ -185,6 +185,13 @@ class Settings(BaseSettings):
     line_daily_notification_enabled: bool = False
     line_daily_notification_timezone: str = Field(default="Asia/Taipei", max_length=64)
     line_daily_notification_send_time: str = Field(default="08:00", max_length=5)
+    # Local/test notification scheduler identity; never enable this HMAC profile in production.
+    notification_worker_identity_enabled: bool = False
+    notification_worker_hmac_secret: str = ""
+    notification_worker_issuer: str = Field(
+        default="kinsun-local", min_length=1, max_length=80, pattern=r"^[A-Za-z0-9._-]+$"
+    )
+    notification_worker_actor_id: UUID | None = None
 
     # Provider-neutral outbox delivery. The HTTPS endpoint is expected to be a
     # durable event ingress selected by the deployment owner; rollout is off by
@@ -449,6 +456,20 @@ class Settings(BaseSettings):
                     "LINE identity, LINE handoff, and family invitation secrets "
                     "must be independent"
                 )
+        if self.notification_worker_identity_enabled:
+            if self.app_env == AppEnv.PRODUCTION:
+                raise ValueError("Notification worker HMAC profile is not approved for production")
+            if self.notification_worker_actor_id is None:
+                raise ValueError("NOTIFICATION_WORKER_ACTOR_ID is required when enabled")
+            if len(self.notification_worker_hmac_secret.encode("utf-8")) < 32:
+                raise ValueError("NOTIFICATION_WORKER_HMAC_SECRET must contain at least 32 bytes")
+            if any(
+                getattr(self, name) == self.notification_worker_hmac_secret
+                for name in type(self).model_fields
+                if name != "notification_worker_hmac_secret"
+                and ("secret" in name or "token" in name)
+            ):
+                raise ValueError("NOTIFICATION_WORKER_HMAC_SECRET must be independent")
         if self.line_daily_notification_enabled:
             if not self.line_account_link_enabled:
                 raise ValueError(

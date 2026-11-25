@@ -66,6 +66,7 @@ E3 逐筆覆核與 successor audit 鏈已退出日常必經路徑；歷史資料
 | 長者資料 | [資料維護與歷史](staff-elder-profile-maintenance-20260930.md) |
 | 管理員與照服員邀請 | [邀請 demo 串接](staff-invitations-demo.md) |
 | 家屬加入 | [邀請碼與報表](family-invitation-acceptance-20260923.md) |
+| 家屬 LINE 通知 | [本人通知設定](family-line-notification-preferences-20261015.md)、[單次排程入口](line-notification-scheduler-20261015.md)：本機驗證完成，真實 Messaging API、每日部署與收訊待驗收 |
 | 本人同意 | [照護事件同意入口](care-event-consent-20260922.md) |
 | 報表與摘要 | [家屬 scope 與摘要](report-scope-summary-workflow-20260917.md)、[照護端日報](staff-family-report-workflow-20260922.md)、[B02 摘要驗收](b02-summary-acceptance-20260916.md) |
 | 驗證設定 | [Development 輪替待辦](development-auth-rotation-followup-20260914.md) |

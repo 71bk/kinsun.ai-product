@@ -58,6 +58,8 @@ class WorkflowTests(unittest.TestCase):
                 "install-core",
                 "core-lint",
                 "core-format",
+                "notification-worker-lint",
+                "notification-worker-format",
                 "core-rag-dry-run",
                 "core-unit",
             ],

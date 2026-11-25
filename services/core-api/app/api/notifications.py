@@ -14,7 +14,7 @@ from app.core.config import Settings, get_settings
 from app.core.exceptions import ServiceUnavailableError
 from app.db.engine import DatabaseEngine
 from app.db.session import get_db_engine
-from app.middleware.actor_guard import require_system_service_actor
+from app.middleware.notification_service_auth import require_notification_service_actor
 from app.schemas.notification import DailyLineNotificationJobRequest
 from app.services.daily_line_notification_service import DailyLineNotificationService
 
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/v1/internal/notification-jobs", tags=["notificat
 @router.post("/line-daily")
 async def run_daily_line_notifications(
     request: DailyLineNotificationJobRequest,
-    actor: ActorContext = Depends(require_system_service_actor),
+    actor: ActorContext = Depends(require_notification_service_actor),
     db_engine: DatabaseEngine = Depends(get_db_engine),
     settings: Settings = Depends(get_settings),
 ) -> dict:

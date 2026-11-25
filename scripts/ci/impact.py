@@ -12,7 +12,7 @@ from pathlib import Path
 
 from telemetry import identity, write_json
 
-POLICY_VERSION = 4
+POLICY_VERSION = 5
 EXPECTED_JOBS = (
     "core-fast",
     "core-db",
@@ -30,6 +30,11 @@ SPEECH = CORE | {"speech-quality", "agent-quality"}
 # Service prefixes include the trailing slash; RAG data additionally uses versioned names.
 RULES = (
     ("core", ("services/core-api/",), CORE | {"speech-quality"}),
+    (
+        "notification",
+        ("services/notification-worker/", "config/line/"),
+        {"core-fast", "contracts"},
+    ),
     # Runtime changes retain Core and contract coverage without archive hash coupling.
     ("agent", ("services/agent-runtime/",), AGENT),
     ("speech", ("services/speech-gateway/", "evals/speech/"), SPEECH),

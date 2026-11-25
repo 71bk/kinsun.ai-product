@@ -390,7 +390,7 @@ def main() -> None:
     document["openapi"] = "3.1.0"
     document["info"] = {
         "title": "kinsun.ai Core API",
-        "version": "1.12.0",
+        "version": "1.13.0",
         "summary": (
             "Implemented Core Domain, Kinsun authentication, LINE linking, consent, "
             "security, assisted Elder Session, professional Care Action, human-gated "
@@ -464,6 +464,17 @@ def main() -> None:
                 "Short-lived request-bound HMAC credential for Speech Gateway. "
                 "Core binds it to method, path, body hash, correlation ID and a "
                 "durable single-use nonce."
+            ),
+        },
+        "notificationServiceCredential": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Kinsun-Service-Credential",
+            "description": (
+                "Local/test-only short-lived request-bound notification-worker credential. "
+                "Core checks a durable single-use nonce and resolves its configured "
+                "SYSTEM_SERVICE actor and tenant from live database state. "
+                "The HMAC profile is disabled in production."
             ),
         },
     }
@@ -593,6 +604,8 @@ def main() -> None:
                     operation["security"] = [{"kinsunBffAuth": []}]
                 elif path == ASSISTED_SESSION_EXCHANGE_PATH:
                     operation["security"] = []
+                elif path == "/api/v1/internal/notification-jobs/line-daily":
+                    operation["security"] = [{"notificationServiceCredential": []}]
                 elif path.startswith(ASSISTED_SESSION_PATH_PREFIX):
                     operation["security"] = [{"assistedElderSessionAuth": []}]
                 elif path in SPEECH_SERVICE_PATHS or path.startswith(

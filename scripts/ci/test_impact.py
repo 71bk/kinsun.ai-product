@@ -49,6 +49,22 @@ class ImpactTests(unittest.TestCase):
         ):
             self.assertEqual(self.selected(path), {"frontend-quality"}, path)
 
+    def test_notification_runner_and_schedule_keep_core_tests_and_contracts(self):
+        for path in (
+            "services/notification-worker/run_daily.py",
+            "config/line/daily-family-report-notification-v1.json",
+        ):
+            self.assertEqual(self.selected(path), {"core-fast", "contracts"}, path)
+            plan = plan_for([path])
+            self.assertEqual(plan["reasons"]["core-fast"], ["notification"])
+            validate_plan(plan, "pull_request", "run", "a" * 40, 1)
+        self.assertEqual(
+            self.selected(
+                "services/notification-worker/run_daily.py", "packages/frontend/a.tsx"
+            ),
+            {"core-fast", "contracts", "frontend-quality"},
+        )
+
     def test_service_boundaries_are_conservative(self):
         self.assertEqual(
             self.selected("services/core-api/app/main.py"),
