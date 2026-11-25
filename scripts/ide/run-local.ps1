@@ -4,7 +4,10 @@ param(
     [ValidateSet("agent-runtime", "core-api", "frontend", "speech-gateway", "prepare-database")]
     [string]$Target,
 
-    [switch]$CheckOnly
+    [switch]$CheckOnly,
+
+    # prepare-database only: apply migrations even if the database is not local.
+    [switch]$AllowRemote
 )
 
 Set-StrictMode -Version Latest
@@ -53,6 +56,61 @@ function Invoke-LocalCommand {
         if ($LASTEXITCODE -ne 0) {
             throw "Command '$Executable' exited with code $LASTEXITCODE."
         }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Test-LocalDatabase {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$WorkingDirectory
+    )
+
+    # Let alembic/env.py resolve the URL offline (it never connects), so this
+    # judges exactly the database Alembic would use. Only the classification is
+    # printed, never the URL; any failure counts as not local.
+    $probe = @'
+import os
+
+scope = "unknown"
+try:
+    from alembic.config import Config
+    from alembic.runtime.environment import EnvironmentContext
+    from alembic.script import ScriptDirectory
+    from sqlalchemy.engine import make_url
+
+    class UrlResolved(Exception):
+        pass
+
+    def stop_at_configure(**kwargs):
+        raise UrlResolved(kwargs["url"])
+
+    config = Config("alembic.ini")
+    script = ScriptDirectory.from_config(config)
+    context = EnvironmentContext(config, script, as_sql=True)
+    context.configure = stop_at_configure
+    try:
+        with context:
+            script.run_env()
+    except UrlResolved as resolved:
+        url = make_url(resolved.args[0])
+        loopback = (url.host or "").lower() in {"localhost", "127.0.0.1", "::1"}
+        # libpq can send a loopback URL elsewhere through these overrides.
+        redirected = {"host", "hostaddr", "service"} & set(url.query) or any(
+            os.environ.get(name) for name in ("PGHOSTADDR", "PGSERVICE")
+        )
+        scope = "local" if loopback and not redirected else "remote"
+except Exception:
+    pass
+print("kinsun-database-scope=" + scope)
+'@
+
+    Push-Location -LiteralPath $WorkingDirectory
+    try {
+        $output = $probe | & uv run python -
+        return ($LASTEXITCODE -eq 0) -and (@($output) -contains "kinsun-database-scope=local")
     }
     finally {
         Pop-Location
@@ -112,9 +170,16 @@ if ($CheckOnly) {
 Write-Host "[kinsun] starting target=$Target"
 
 if ($Target -eq "prepare-database") {
-    Write-Host "[kinsun] Applying additive Alembic migrations only (no reset or downgrade)."
+    $isLocalDatabase = Test-LocalDatabase -WorkingDirectory $configuration.WorkingDirectory
+    Write-Host "[kinsun] database scope: $(if ($isLocalDatabase) { 'local' } else { 'remote or undetermined' })"
     Invoke-LocalCommand -WorkingDirectory $configuration.WorkingDirectory -Executable "uv" -Arguments @("run", "alembic", "current")
     Invoke-LocalCommand -WorkingDirectory $configuration.WorkingDirectory -Executable "uv" -Arguments @("run", "alembic", "heads")
+    if (-not $isLocalDatabase -and -not $AllowRemote) {
+        Write-Host "[kinsun] Migrations NOT applied: the database is not confirmed to be local."
+        Write-Host "[kinsun] Review the pending migrations, then re-run with -AllowRemote to apply them."
+        exit 2
+    }
+    Write-Host "[kinsun] Applying pending Alembic migrations (upgrade only, no reset or downgrade)."
     Invoke-LocalCommand -WorkingDirectory $configuration.WorkingDirectory -Executable "uv" -Arguments @("run", "alembic", "upgrade", "head")
     Write-Host "[kinsun] database preparation completed"
     exit 0

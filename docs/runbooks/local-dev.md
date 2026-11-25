@@ -8,6 +8,9 @@
 - 開發與登入／註冊 E2E 預設由 repository 根目錄未版控 `.env` 的 `DATABASE_URL` 直接連 Supabase PostgreSQL；
   不啟動 Docker、`docker compose`、本機 PostgreSQL 或 Adminer，除非使用者明確要求隔離環境。
   `docker-compose.yml` 與 `docker/postgres/init/` 只是參考與明確要求時的工具，不是第二個 schema 來源。
+- `scripts/ide/run-local.ps1 -Target prepare-database`（IDE 的 Prepare Database）只有在 Alembic 實際使用的 DB 為
+  loopback 時才直接升級；遠端或無法判斷時只顯示 `current`／`heads` 並以 exit 2 結束，人工審查 migration 後才加
+  `-AllowRemote`。不涵蓋直接執行 `alembic upgrade head`，也認不出轉送到遠端的本機 tunnel。
 - 日常服務埠：frontend 3000、Core 8000、Agent 8001、Speech 8002。隔離 QA 服務用其他埠，結束後停止。
 - 獨立埠號的 frontend production QA server 必須為該程序設定相符的 `FRONTEND_ORIGIN`；沿用 3000 origin 啟動 3104
   會讓登入／寫入被 CSRF 拒絕。修 launcher，不放寬來源檢查，不必改既有 `.env.local`。
