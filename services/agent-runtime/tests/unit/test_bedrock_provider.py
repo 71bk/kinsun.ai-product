@@ -139,7 +139,7 @@ async def test_grounded_json_turn_has_bounded_token_overhead_budget() -> None:
         )
     )
     await make_provider(client).generate_reply(make_request(), manifest, "zh-TW")
-    assert client.calls[0]["inferenceConfig"]["maxTokens"] == 2048
+    assert client.calls[0]["inferenceConfig"]["maxTokens"] == 4096
 
 
 @pytest.mark.asyncio

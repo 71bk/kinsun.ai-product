@@ -453,7 +453,7 @@ def test_grounded_token_floor_preserves_larger_configured_budgets(configured):
 
     req = request()
     assert grounded_generation_token_limit(build_grounded_context(req, [source()]), configured) == (
-        max(configured, 2048)
+        max(configured, 4096)
     )
     assert grounded_generation_token_limit(
         build_context_manifest(req, "companion"), configured
