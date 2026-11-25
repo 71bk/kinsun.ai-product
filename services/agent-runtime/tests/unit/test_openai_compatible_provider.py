@@ -156,7 +156,7 @@ async def test_grounded_json_turn_has_bounded_token_overhead_budget() -> None:
         await provider.generate_reply(request, manifest, "zh-TW")
     finally:
         await client.aclose()
-    assert captured["max_tokens"] == 2048
+    assert captured["max_tokens"] == 4096
 
 
 @pytest.mark.asyncio

@@ -13,7 +13,11 @@ from agent_runtime.models.generation_diagnostics import (
     record_generation_diagnostics,
     record_generation_failure,
 )
-from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
+from agent_runtime.models.prompting import (
+    build_model_prompts,
+    generation_reply_char_limit,
+    grounded_generation_token_limit,
+)
 from agent_runtime.models.provider import ModelProvider
 from agent_runtime.rag.grounded_answer import GROUNDED_SOURCE_TYPE
 
@@ -103,7 +107,9 @@ class GeminiModelProvider(ModelProvider):
             # Only the exception class crosses the provider boundary.
             raise ModelDependencyError(f"Gemini reply failed: {type(exc).__name__}") from exc
         record_generation_diagnostics(response)
-        return _extract_reply_text(response)
+        return _extract_reply_text(
+            response, max_chars=generation_reply_char_limit(context_manifest)
+        )
 
     async def aclose(self) -> None:
         if not self._owns_client:
@@ -112,7 +118,7 @@ class GeminiModelProvider(ModelProvider):
         self._client.close()
 
 
-def _extract_reply_text(response: Any) -> str:
+def _extract_reply_text(response: Any, *, max_chars: int = 4000) -> str:
     try:
         content = response.text
     except Exception as exc:
@@ -120,7 +126,7 @@ def _extract_reply_text(response: Any) -> str:
     if not isinstance(content, str) or not content.strip():
         raise ModelDependencyError("Gemini response has no text content")
     reply = content.strip()
-    if len(reply) > 4000:
+    if len(reply) > max_chars:
         raise ModelDependencyError("Gemini response exceeds the reply limit")
     return reply
 
