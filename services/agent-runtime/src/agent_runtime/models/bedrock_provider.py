@@ -15,7 +15,11 @@ from typing import Any, Protocol, cast
 
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
-from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
+from agent_runtime.models.prompting import (
+    build_model_prompts,
+    generation_reply_char_limit,
+    grounded_generation_token_limit,
+)
 from agent_runtime.models.provider import ModelProvider
 
 
@@ -67,10 +71,10 @@ class BedrockModelProvider(ModelProvider):
             # words. Only the exception class is safe to surface.
             raise ModelDependencyError(f"Bedrock reply failed: {type(exc).__name__}") from exc
 
-        return _extract_text(response)
+        return _extract_text(response, max_chars=generation_reply_char_limit(context_manifest))
 
 
-def _extract_text(response: Any) -> str:
+def _extract_text(response: Any, *, max_chars: int = 4000) -> str:
     """Read the Converse reply, refusing anything that is not usable text."""
 
     if not isinstance(response, dict):
@@ -88,6 +92,8 @@ def _extract_text(response: Any) -> str:
     reply = "\n".join(part.strip() for part in parts if part.strip()).strip()
     if not reply:
         raise ModelDependencyError("Bedrock returned an empty reply")
+    if len(reply) > max_chars:
+        raise ModelDependencyError("Bedrock response exceeds the reply limit")
     return reply
 
 

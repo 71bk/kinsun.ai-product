@@ -9,6 +9,8 @@
 | 本機建置 | [協作者指南](COLLABORATOR_SETUP.md) |
 | 進度紀錄 | [AI 協作進度摘要](progress-log.md)（原 AGENTS.md／CLAUDE.md 頂部日期紀錄） |
 | CI | [規則](../runbooks/ci-gate1.md)、[實作與量測](ci-pipeline-optimization.md)、[歷史審查](reviews/ci-pipeline-optimization-review.md) |
+| 功能 QA | [2026-10-12 回歸、SQL 與瀏覽器驗證](feature-qa-20261012.md) |
+| 真實使用驗收 | [2026-10-13 模型、BFF 與瀏覽器](live-acceptance-20261013.md)、[真人語音操作清單](../runbooks/manual-voice-acceptance.md) |
 | 工程修復 | [Code review 修正進度與未完成事項](reviews/code-review-fix-plan.md) |
 | 團隊交付 | [B 交付狀態](B-柏成交付狀態.md)、[分支結案](branch-closeout-20260916.md)、[Kiro 開發證據](kiro-development-evidence.md) |
 | 前端計畫 | [Stitch 畫面盤點](stitch-frontend-implementation-plan.md) |

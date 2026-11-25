@@ -8,7 +8,11 @@ import httpx
 
 from agent_runtime.common.errors import ModelDependencyError
 from agent_runtime.contracts.models import AgentRunRequest, ContextManifest
-from agent_runtime.models.prompting import build_model_prompts, grounded_generation_token_limit
+from agent_runtime.models.prompting import (
+    build_model_prompts,
+    generation_reply_char_limit,
+    grounded_generation_token_limit,
+)
 from agent_runtime.models.provider import ModelProvider
 
 _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -96,7 +100,7 @@ class OpenAICompatibleModelProvider(ModelProvider):
             body = response.json()
         except ValueError as exc:
             raise ModelDependencyError("OpenAI-compatible response is not JSON") from exc
-        return _extract_reply_text(body)
+        return _extract_reply_text(body, max_chars=generation_reply_char_limit(context_manifest))
 
     async def aclose(self) -> None:
         if self._owns_client:
@@ -117,7 +121,7 @@ def _chat_completions_endpoint(base_url: str) -> httpx.URL:
     return httpx.URL(f"{str(url).rstrip('/')}/chat/completions")
 
 
-def _extract_reply_text(body: Any) -> str:
+def _extract_reply_text(body: Any, *, max_chars: int = 4000) -> str:
     if not isinstance(body, dict):
         raise ModelDependencyError("OpenAI-compatible response must be an object")
     choices = body.get("choices")
@@ -127,6 +131,6 @@ def _extract_reply_text(body: Any) -> str:
     if not isinstance(content, str) or not content.strip():
         raise ModelDependencyError("OpenAI-compatible response has no text content")
     reply = content.strip()
-    if len(reply) > 4000:
+    if len(reply) > max_chars:
         raise ModelDependencyError("OpenAI-compatible response exceeds the reply limit")
     return reply
