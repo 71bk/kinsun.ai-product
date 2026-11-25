@@ -37,6 +37,18 @@
   background: var(--color-primary-weak);
 }
 
+.link span {
+  overflow-wrap: normal;
+}
+
+@media (max-width: 48rem) {
+  .link {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding-inline: var(--space-1);
+  }
+}
+
 .link[aria-current='page'] {
   border-color: var(--color-interactive-border);
   background: var(--color-surface);
